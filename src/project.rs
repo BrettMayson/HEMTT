@@ -4,8 +4,10 @@ extern crate serde_json;
 use armake;
 
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::BufReader;
 use std::io::Result;
+use std::io::prelude::*;
+use std::path::Path;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -56,13 +58,38 @@ pub fn create(name: String, prefix: String, author: String) -> Project {
 }
 
 
-pub fn get_version() -> Result<String> {
+pub fn get_version() -> String {
+  let mut version = String::from("0.0.0.0");
   if Path::new("addons/main/script_version.hpp").exists() {
     let f = BufReader::new(File::open("addons/main/script_version.hpp").expect("open failed"));
+    let mut major = String::new();
+    let mut minor = String::new();
+    let mut patch = String::new();
+    let mut build = String::new();
     for line in f.lines() {
-      let line = line.expect("lines failed")
+      let line = line.expect("lines failed");
+      let mut split = line.split(" ");
+      let define = split.next().unwrap();
+      if define != "#define" { continue; }
+      let key = split.next().unwrap();
+      let value = split.next().unwrap().clone();
+      match key {
+        "MAJOR" => {
+          major = String::from(value);
+        },
+        "MINOR" => {
+          minor = String::from(value);
+        },
+        "PATCHLVL" => {
+          patch = String::from(value);
+        },
+        "BUILD" => {
+          build = String::from(value);
+        },
+        _ => {}
+      }
     }
-  } else {
-    Err("script_version.hpp does not exist");
+    version = format!("{}.{}.{}.{}", major, minor, patch, build);
   }
+  version
 }

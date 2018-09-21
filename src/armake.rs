@@ -7,6 +7,8 @@ extern crate zip;
 
 extern crate walkdir;
 
+use colored::*;
+
 use project;
 
 use std::fs;
@@ -117,7 +119,8 @@ pub fn build(p: &project::Project) -> Result<()> {
       continue;
     }
     let cpath = path.clone();
-    let mut s = cpath.to_str().unwrap().split("/");
+    let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
+    let mut s = cpath.split("/");
     s.next();
     let name = s.next().unwrap().trim();
     let modified = modtime(name.to_owned());
@@ -125,20 +128,25 @@ pub fn build(p: &project::Project) -> Result<()> {
       let metadata = fs::metadata(format!("addons/{}_{}.pbo", p.prefix, name)).unwrap();
       if let Ok(time) = metadata.modified() {
         if time >= modified {
-          println!("Skipping: {}", name);
+          println!(" Skipping   {}", name);
           continue;
         }
       }
     }
-    println!("Building {}", name);
+    println!(" Building   {}", name);
     let output = Command::new("tools/armake")
             .arg("build")
-            .arg(path)
             .arg("-i")
-            .arg("include/")
+            .arg("include")
             .arg("--force")
+            .arg(path)
             .arg(format!("addons/{}_{}.pbo", p.prefix, name))
             .output()?;
+    if output.status.success() {
+      println!(" {}      {}", "Built".green(), name.green());
+    } else {
+      println!(" {}     {}", "Failed".red(), name.red());
+    }
     if !Path::new("logs").exists() {
       fs::create_dir("logs")?;
     }
@@ -151,6 +159,10 @@ pub fn build(p: &project::Project) -> Result<()> {
 }
 
 pub fn release(p: &project::Project) -> Result<()> {
-
+  let version = project::get_version();
+  println!("Version: {}", version);
+  if !Path::new("releases").exists() {
+    fs::create_dir("releases")?;
+  }
   Ok(())
 }
