@@ -169,9 +169,9 @@ pub fn build(p: &project::Project) -> Result<()> {
 }
 
 pub fn release(p: &project::Project) -> Result<()> {
-  build(&p);
   let version = project::get_version();
-  println!("Version: {}", version);
+  println!("Building Release Version: {}", version);
+  build(&p);
   if !Path::new("releases").exists() {
     fs::create_dir("releases")?;
   }
@@ -210,7 +210,6 @@ pub fn release(p: &project::Project) -> Result<()> {
     if !path.ends_with(".pbo") && !cpath.contains(p.prefix.as_str()) {
       continue;
     }
-    println!("{}", cpath);
     fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath));
     let output = Command::new("tools/armake")
             .arg("sign")
@@ -219,6 +218,11 @@ pub fn release(p: &project::Project) -> Result<()> {
             .arg(format!("keys/{}.biprivatekey", p.prefix))
             .arg(format!("releases/{}/@{}/{}", version, p.prefix, cpath))
             .output()?;
+    if output.status.success() {
+      println!(" {}     {}", "Signed".green(), cpath.green());
+    } else {
+      println!(" {} {}", "Not Signed".red(), cpath.red());
+    }
   }
   Ok(())
 }
