@@ -13,7 +13,7 @@ The `hemtt.json` file keeps track various properties of your project.
 
 ## Creating a new addon
 
-To add an additional addon to your project with all the sketelton files you need, use `hemtt addon [name]`
+To add an additional addon to your project with all the skeleton files you need, use `hemtt addon [name]`
 
 ## Building
 
