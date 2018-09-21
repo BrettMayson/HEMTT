@@ -14,12 +14,13 @@ pub struct Project {
   pub name: String,
   pub prefix: String,
   pub author: String,
-  pub armake: String
+  pub files: Vec<String>
 }
 
 impl Project {
   pub fn save(&self) -> Result<()> {
-    save_project(&self.name, &self.prefix, &self.author, &self.armake)?;
+    let mut out = File::create(::HEMTT_FILE).expect("Unable to create output file");
+    out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?));
     Ok(())
   }
 }
@@ -32,29 +33,17 @@ pub fn get_project() -> Project {
   p
 }
 
-pub fn save_project(name: &String, prefix: &String, author: &String, armake: &String) -> Result<()> {
-  let mut out = File::create(::HEMTT_FILE).expect("Unable to create output file");
-  out.write_fmt(
-    format_args!("{{\n  \"name\": \"{}\",\n  \"prefix\": \"{}\",\n  \"author\": \"{}\",\n  \"armake\": \"{}\"\n}}",
-      name,
-      prefix,
-      author,
-      armake
-    )
-  ).expect("Error writing to file");
-  Ok(())
-}
-
 pub fn create(name: String, prefix: String, author: String) -> Project {
   let releases = armake::get_releases().unwrap();
   let latest = armake::get_latest(releases);
-  save_project(&name, &prefix, &author, &latest.tag_name);
-  Project {
+  let p = Project {
     name: name,
     prefix: prefix,
     author: author,
-    armake: latest.tag_name
-  }
+    files: vec!["mod.cpp".to_owned()]
+  };
+  p.save();
+  p
 }
 
 

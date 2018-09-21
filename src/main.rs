@@ -138,13 +138,14 @@ fn main() {
           if let Some(args) = matches.subcommand_matches("build") {
             let releases = armake::get_releases().unwrap();
             let latest = armake::get_latest(releases);
-            let p = project::get_project();
-            println!("Current: {}", p.armake);
+            let installed = armake::get_installed();
+            println!("Current: {}", installed);
             println!("Available: {}", latest.tag_name);
-            if (!Path::new("tools/armake").exists() && !Path::new("tools/armake.exe").exists()) || p.armake != latest.tag_name {
+            if (!Path::new("tools/armake").exists() && !Path::new("tools/armake.exe").exists()) || installed != latest.tag_name {
               armake::download(&latest);
             }
             println!("Using armake {}", latest.tag_name);
+            let p = project::get_project();
             if args.is_present("release") {
               armake::release(&p);
             } else {
@@ -172,6 +173,6 @@ fn main() {
       }
     }
   } else {
-      println!("No command provided");
+    println!("No command provided");
   }
 }

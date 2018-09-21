@@ -46,6 +46,17 @@ pub fn get_latest(releases: Vec<Release>) -> Release {
   releases[0].clone()
 }
 
+pub fn get_installed() -> String {
+  if Path::new("tools/armake.version").exists() {
+    let mut f = File::open("tools/armake.version").expect("version file not found");
+    let mut contents = String::new();
+    f.read_to_string(&mut contents).expect("something went wrong reading the version file");
+    contents.trim().to_owned()
+  } else {
+    "".to_owned()
+  }
+}
+
 pub fn download(release: &Release) -> Result<()> {
   println!("Downloading armake {}", release.tag_name);
   let mut buf: Vec<u8> = Vec::new();
@@ -64,9 +75,8 @@ pub fn download(release: &Release) -> Result<()> {
     extract(outpath, file)?;
   }
   fs::remove_file("armake.zip");
-  let mut p = project::get_project();
-  p.armake = release.tag_name.clone();
-  p.save();
+  let mut out = File::create("tools/armake.version").expect("Unable to create version file");
+  out.write_fmt(format_args!("{}", release.tag_name));
   Ok(())
 }
 
@@ -159,10 +169,56 @@ pub fn build(p: &project::Project) -> Result<()> {
 }
 
 pub fn release(p: &project::Project) -> Result<()> {
+  build(&p);
   let version = project::get_version();
   println!("Version: {}", version);
   if !Path::new("releases").exists() {
     fs::create_dir("releases")?;
+  }
+  if !Path::new(&format!("releases/{}", version)).exists() {
+    fs::create_dir(format!("releases/{}", version))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}/addons", version, p.prefix))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}/keys", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}/keys", version, p.prefix))?;
+  }
+  for file in &p.files {
+    fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file));
+  }
+  if !Path::new("keys").exists() {
+    fs::create_dir("keys")?;
+  }
+  if !Path::new(&format!("keys/{}.bikey", p.prefix)).exists() {
+    let output = Command::new("tools/armake")
+            .arg("keygen")
+            .arg(&p.prefix)
+            .output()?;
+    fs::rename(format!("{}.bikey", p.prefix), format!("keys/{}.bikey", p.prefix));
+    fs::rename(format!("{}.biprivatekey", p.prefix), format!("keys/{}.biprivatekey", p.prefix));
+  }
+  fs::copy(format!("keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix));
+  for entry in fs::read_dir("addons").unwrap() {
+    let entry = entry.unwrap();
+    let path = entry.path();
+    let cpath = path.clone();
+    let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
+    if !path.ends_with(".pbo") && !cpath.contains(p.prefix.as_str()) {
+      continue;
+    }
+    println!("{}", cpath);
+    fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath));
+    let output = Command::new("tools/armake")
+            .arg("sign")
+            .arg("-s")
+            .arg(format!("releases/{}/@{}/{}", version, p.prefix, cpath))
+            .arg(format!("keys/{}.biprivatekey", p.prefix))
+            .arg(format!("releases/{}/@{}/{}", version, p.prefix, cpath))
+            .output()?;
   }
   Ok(())
 }
