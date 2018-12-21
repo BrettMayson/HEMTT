@@ -8,6 +8,42 @@ use std::io::Read;
 use std::io::Result;
 use std::io::Write;
 use std::path::Path;
+use std::time::SystemTime;
+use std::time::Duration;
+
+extern crate walkdir;
+
+pub fn modtime(addon: String) -> SystemTime {
+  let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
+  for entry in walkdir::WalkDir::new(format!("addons/{}", addon)) {
+    let metadata = fs::metadata(entry.unwrap().path()).unwrap();
+    if let Ok(time) = metadata.modified() {
+      if time > recent {
+        recent = time;
+      }
+    }
+  }
+  recent
+}
+
+pub fn clear_pbos(p: &project::Project) -> Result<()> {
+  for entry in fs::read_dir("addons")? {
+    let entry = entry?;
+    let path = entry.path();
+    if !path.is_dir() {
+      continue;
+    }
+    let cpath = path.clone();
+    let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
+    let mut s = cpath.split("/");
+    s.next();
+    let name = s.next().unwrap().trim();
+    if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
+      fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name));
+    }
+  }
+  Ok(())
+}
 
 pub fn modcpp(p: &project::Project) -> Result<()> {
   let mut out = File::create("mod.cpp")?;

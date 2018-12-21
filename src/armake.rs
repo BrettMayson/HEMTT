@@ -5,10 +5,9 @@ extern crate serde;
 
 extern crate zip;
 
-extern crate walkdir;
-
 use colored::*;
 
+use files;
 use project;
 
 use std::fs;
@@ -20,8 +19,6 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use std::time::Duration;
-use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Asset {
@@ -108,19 +105,6 @@ pub fn extract(name: PathBuf, mut source: zip::read::ZipFile) -> Result<()> {
   Ok(())
 }
 
-pub fn modtime(addon: String) -> SystemTime {
-  let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
-  for entry in walkdir::WalkDir::new(format!("addons/{}", addon)) {
-    let metadata = fs::metadata(entry.unwrap().path()).unwrap();
-    if let Ok(time) = metadata.modified() {
-      if time > recent {
-        recent = time;
-      }
-    }
-  }
-  recent
-}
-
 pub fn build(p: &project::Project) -> Result<()> {
   for entry in fs::read_dir("addons").unwrap() {
     let entry = entry.unwrap();
@@ -133,7 +117,7 @@ pub fn build(p: &project::Project) -> Result<()> {
     let mut s = cpath.split("/");
     s.next();
     let name = s.next().unwrap().trim();
-    let modified = modtime(name.to_owned());
+    let modified = files::modtime(name.to_owned());
     if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
       let metadata = fs::metadata(format!("addons/{}_{}.pbo", p.prefix, name)).unwrap();
       if let Ok(time) = metadata.modified() {

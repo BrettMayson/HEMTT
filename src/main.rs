@@ -1,17 +1,22 @@
 extern crate clap;
 use clap::{Arg, App, SubCommand};
 
-extern crate serde;
-extern crate serde_json;
+#[cfg(target_os = "windows")]
+extern crate winreg;
 
 #[macro_use]
 extern crate serde_derive;
+
+extern crate serde;
+extern crate serde_json;
 
 extern crate colored;
 
 mod files;
 mod project;
 mod armake;
+#[cfg(target_os = "windows")]
+mod mikero;
 
 use std::io::{stdin, stdout, Write};
 use std::path::Path;
@@ -24,10 +29,10 @@ fn input(text: &str) -> String {
   stdout().flush().unwrap();
   stdin().read_line(&mut s).expect("Did not enter a correct string");
   if let Some('\n')=s.chars().next_back() {
-      s.pop();
+    s.pop();
   }
   if let Some('\r')=s.chars().next_back() {
-      s.pop();
+    s.pop();
   }
   s
 }
@@ -56,6 +61,9 @@ fn main() {
                             .about("Build the project")
                             .version("0.1")
                             .arg(Arg::from_usage("-r --release 'Create a release version'"))
+                            .arg(Arg::from_usage("--force 'Recreate any existing pbos'"))
+                            .arg(Arg::with_name("toolchain")
+                                .help("Toolchain to use, armake or mikero"))
                           )
                 .subcommand(SubCommand::with_name("details")
                             .about("View the details of the current HEMTT project")
@@ -136,20 +144,69 @@ fn main() {
       "build" => {
         if Path::new(HEMTT_FILE).exists() {
           if let Some(args) = matches.subcommand_matches("build") {
-            let releases = armake::get_releases().unwrap();
-            let latest = armake::get_latest(releases);
-            let installed = armake::get_installed();
-            println!("Current: {}", installed);
-            println!("Available: {}", latest.tag_name);
-            if (!Path::new("tools/armake").exists() && !Path::new("tools/armake.exe").exists()) || installed != latest.tag_name {
-              armake::download(&latest);
-            }
-            println!("Using armake {}", latest.tag_name);
             let p = project::get_project();
-            if args.is_present("release") {
-              armake::release(&p);
-            } else {
-              armake::build(&p);
+            let mut toolchain = args.value_of("toolchain").unwrap_or("default");
+            if toolchain == "default" {
+              toolchain = &p.toolchain;
+            }
+            println!("Using Toolchain: {}", toolchain);
+            if args.is_present("force") {
+              println!("Removing existing PBOs");
+              files::clear_pbos(&p);
+            }
+            match toolchain {
+              "armake" => {
+                let releases = armake::get_releases().unwrap();
+                let latest = armake::get_latest(releases);
+                let installed = armake::get_installed();
+                println!("Current: {}", installed);
+                println!("Available: {}", latest.tag_name);
+                if (!Path::new("tools/armake").exists() && !Path::new("tools/armake.exe").exists()) || installed != latest.tag_name {
+                  armake::download(&latest);
+                }
+                println!("Using armake {}", latest.tag_name);
+
+                if args.is_present("release") {
+                  armake::release(&p);
+                } else {
+                  armake::build(&p);
+                }
+              },
+              #[cfg(target_os = "windows")]
+              "mikero" => {
+                if cfg!(windows) {
+                  let tmp_pdrive = !Path::new("P:").exists();
+                  if p.pdrive == "" {
+                    println!("PDrive is not set! Add \"pdrive\": \"[Path to P Drive]\" to your hemtt.json file");
+                    return;
+                  } else {
+                    if tmp_pdrive {
+                      mikero::create_pdrive(&p);
+                    }
+                  }
+                  let tools = mikero::toolchain();
+                  match tools {
+                    Ok(tools) => {
+                      if args.is_present("release") {
+                        tools.release(&p);
+                      } else {
+                        tools.build(&p);
+                      }
+                    },
+                    Err(e) => {
+                      panic!(e);
+                    }
+                  };
+                  if tmp_pdrive {
+                    mikero::remove_pdrive();
+                  };
+                } else {
+                  println!("The mikero toolchain is not supported on your platform.");
+                }
+              },
+              _ => {
+                println!("{} is not a valid toolchain. Toolchains: armake, mikero", toolchain);
+              }
             }
           }
         } else {
@@ -164,6 +221,8 @@ fn main() {
           let p = project::get_project();
           println!("Name: {}", p.name);
           println!("Prefix: {}", p.prefix);
+          println!("Author: {}", p.author);
+          println!("Toolchain: {}", p.toolchain);
         } else {
           println!("No HEMTT Project Found");
         }

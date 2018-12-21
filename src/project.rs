@@ -14,7 +14,21 @@ pub struct Project {
   pub name: String,
   pub prefix: String,
   pub author: String,
-  pub files: Vec<String>
+  pub files: Vec<String>,
+
+  #[serde(default = "default_toolchain")]
+  pub toolchain: String,
+
+  #[serde(default = "empty")]
+  pub pdrive: String
+}
+
+fn default_toolchain() -> String {
+  "armake".to_owned()
+}
+
+fn empty() -> String {
+  "".to_owned()
 }
 
 impl Project {
@@ -40,7 +54,9 @@ pub fn create(name: String, prefix: String, author: String) -> Project {
     name: name,
     prefix: prefix,
     author: author,
-    files: vec!["mod.cpp".to_owned()]
+    files: vec!["mod.cpp".to_owned()],
+    toolchain: "armake".to_owned(),
+    pdrive: "".to_owned()
   };
   p.save();
   p

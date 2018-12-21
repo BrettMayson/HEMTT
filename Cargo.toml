@@ -12,3 +12,6 @@ reqwest = "0.9.1"
 zip = "0.4"
 walkdir = "2"
 colored = "1.6"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.5"
