@@ -1,32 +1,13 @@
-extern crate reqwest;
-
-use project;
+use reqwest;
 
 use std::fs;
 use std::fs::File;
-use std::io::Read;
-use std::io::Result;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::Path;
-use std::time::SystemTime;
-use std::time::Duration;
 
-extern crate walkdir;
+use crate::project;
 
-pub fn modtime(addon: String) -> SystemTime {
-  let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
-  for entry in walkdir::WalkDir::new(format!("addons/{}", addon)) {
-    let metadata = fs::metadata(entry.unwrap().path()).unwrap();
-    if let Ok(time) = metadata.modified() {
-      if time > recent {
-        recent = time;
-      }
-    }
-  }
-  recent
-}
-
-pub fn clear_pbos(p: &project::Project) -> Result<()> {
+pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
   for entry in fs::read_dir("addons")? {
     let entry = entry?;
     let path = entry.path();
@@ -39,13 +20,13 @@ pub fn clear_pbos(p: &project::Project) -> Result<()> {
     s.next();
     let name = s.next().unwrap().trim();
     if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
-      fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name));
+      fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
     }
   }
   Ok(())
 }
 
-pub fn modcpp(p: &project::Project) -> Result<()> {
+pub fn modcpp(p: &project::Project) -> Result<(), std::io::Error> {
   let mut out = File::create("mod.cpp")?;
   out.write_fmt(
     format_args!("name = \"{}\";\ndir = \"@{}\";\nauthor = \"{}\";",
@@ -57,7 +38,7 @@ pub fn modcpp(p: &project::Project) -> Result<()> {
   Ok(())
 }
 
-pub fn scriptmodhpp(p: &project::Project) -> Result<()> {
+pub fn scriptmodhpp(p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new("addons/main").exists() {
     create_addon(&"main".to_owned(), &p)?;
   }
@@ -71,7 +52,7 @@ pub fn scriptmodhpp(p: &project::Project) -> Result<()> {
   Ok(())
 }
 
-pub fn scriptversionhpp(p: &project::Project) -> Result<()> {
+pub fn scriptversionhpp(p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new("addons/main").exists() {
     create_addon(&"main".to_owned(), &p)?;
   }
@@ -82,16 +63,14 @@ pub fn scriptversionhpp(p: &project::Project) -> Result<()> {
   Ok(())
 }
 
-pub fn scriptmacroshpp(p: &project::Project) -> Result<()> {
+pub fn scriptmacroshpp(p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new("addons/main").exists() {
     create_addon(&"main".to_owned(), &p)?;
   }
   let mut out = File::create("addons/main/script_macros.hpp")?;
   out.write_all(
 br#"#include "\x\cba\addons\main\script_macros_common.hpp"
-
 #define DFUNC(var1) TRIPLES(ADDON,fnc,var1)
-
 #ifdef DISABLE_COMPILE_CACHE
   #undef PREP
   #define PREP(fncName) DFUNC(fncName) = compile preprocessFileLineNumbers QPATHTOF(functions\DOUBLES(fnc,fncName).sqf)
@@ -103,7 +82,7 @@ br#"#include "\x\cba\addons\main\script_macros_common.hpp"
   Ok(())
 }
 
-pub fn script_component(addon: &String, p: &project::Project) -> Result<()> {
+pub fn script_component(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
     create_addon(&addon, &p)?;
   }
@@ -111,27 +90,23 @@ pub fn script_component(addon: &String, p: &project::Project) -> Result<()> {
   out.write_fmt(format_args!(
 r#"#define COMPONENT {0}
 #include "\z\{2}\addons\main\script_mod.hpp"
-
 // #define DEBUG_MODE_FULL
 // #define DISABLE_COMPILE_CACHE
 // #define CBA_DEBUG_SYNCHRONOUS
 // #define ENABLE_PERFORMANCE_COUNTERS
-
 #ifdef DEBUG_ENABLED_{1}
   #define DEBUG_MODE_FULL
 #endif
-
 #ifdef DEBUG_SETTINGS_{1}
   #define DEBUG_SETTINGS DEBUG_SETTINGS_{1}
 #endif
-
 #include "\z\{2}\addons\main\script_macros.hpp""#,
     addon, addon.to_uppercase(), p.prefix
   ))?;
   Ok(())
 }
 
-pub fn pboprefix(addon: &String, p: &project::Project) -> Result<()> {
+pub fn pboprefix(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
     create_addon(&addon, &p)?;
   }
@@ -142,14 +117,13 @@ pub fn pboprefix(addon: &String, p: &project::Project) -> Result<()> {
   Ok(())
 }
 
-pub fn configcpp(addon: &String, p: &project::Project, cba: bool) -> Result<()> {
+pub fn configcpp(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
     create_addon(&addon, &p)?;
   }
   let mut out = File::create(format!("addons/{}/config.cpp", addon))?;
   out.write_fmt(format_args!(
 r#"#include "script_component.hpp"
-
 class CfgPatches {{
   class ADDON {{
     name = COMPONENT;
@@ -161,13 +135,13 @@ class CfgPatches {{
     VERSION_CONFIG;
   }};
 }};"#, p.author))?;
-  if cba {
+  if addon != "main" {
     out.write_all(b"\n\n#include \"CfgEventHandlers.hpp\"")?;
   }
   Ok(())
 }
 
-pub fn xeh(addon: &String, p: &project::Project) -> Result<()> {
+pub fn xeh(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
     create_addon(&addon, &p)?;
   }
@@ -195,13 +169,11 @@ br#"class Extended_PreStart_EventHandlers {
     init = QUOTE(call COMPILE_FILE(XEH_preStart));
   };
 };
-
 class Extended_PreInit_EventHandlers {
   class ADDON {
     init = QUOTE(call COMPILE_FILE(XEH_preInit));
   };
 };
-
 class Extended_PostInit_EventHandlers {
   class ADDON {
     init = QUOTE(call COMPILE_FILE(XEH_postInit));
@@ -211,7 +183,7 @@ class Extended_PostInit_EventHandlers {
   Ok(())
 }
 
-pub fn create_include() -> Result<()> {
+pub fn create_include() -> Result<(), std::io::Error> {
   println!("Downloading script_macros_common.hpp");
   // TODO Obviously clean this up, I'm just really lazy right now
   if !Path::new("include").exists() {
@@ -231,7 +203,7 @@ pub fn create_include() -> Result<()> {
   }
   let mut buf: Vec<u8> = Vec::new();
   let mut req = reqwest::get("https://raw.githubusercontent.com/CBATeam/CBA_A3/master/addons/main/script_macros_common.hpp").unwrap();
-  req.read_to_end(&mut buf);
+  req.read_to_end(&mut buf)?;
   let mut out = File::create("include/x/cba/addons/main/script_macros_common.hpp")?;
   for c in &buf {
     out.write_all(&[*c])?;
@@ -239,7 +211,7 @@ pub fn create_include() -> Result<()> {
   Ok(())
 }
 
-pub fn create_addon(addon: &String, _p: &project::Project) -> Result<()> {
+pub fn create_addon(addon: &String, _p: &project::Project) -> Result<(), std::io::Error> {
   if !Path::new("addons").exists() {
     fs::create_dir("addons")?;
   }
