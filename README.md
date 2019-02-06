@@ -1,5 +1,7 @@
 # HEMTT
-Build System for Arma 3 powered by [armake2](https://github.com/KoffeinFlummi/armake2) for Linux and Windows
+Build System for Arma 3 powered by [armake2](https://github.com/KoffeinFlummi/armake2) for Linux and Windows.
+
+[Example Project](https://github.com/synixebrett/HEMTT-Example)
 
 ### THIS IS PROJECT IS IN ALPHA
 
