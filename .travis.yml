@@ -113,7 +113,7 @@ branches:
   only:
     # release tags
     - /^v\d+\.\d+\.\d+.*$/
-    - master
+    - armake2
 
 notifications:
   email:
