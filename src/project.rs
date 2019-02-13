@@ -14,6 +14,12 @@ pub struct Project {
   pub prefix: String,
   pub author: String,
   pub files: Vec<String>,
+  #[serde(default = "default_exclude")]
+  pub exclude: Vec<String>,
+}
+
+fn default_exclude() -> Vec<String> {
+  vec![]
 }
 
 impl Project {
@@ -30,6 +36,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
     prefix: prefix,
     author: author,
     files: vec!["mod.cpp".to_owned()],
+    exclude: vec![],
   };
   p.save()?;
   Ok(p)

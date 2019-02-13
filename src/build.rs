@@ -44,7 +44,7 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
       path,
       &mut outf,
       &vec![],
-      &vec![],
+      &p.exclude,
       &vec![PathBuf::from("./include"), PathBuf::from(".")],
     )?;
   }

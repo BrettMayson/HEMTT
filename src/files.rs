@@ -45,7 +45,7 @@ pub fn scriptmodhpp(p: &project::Project) -> Result<(), std::io::Error> {
   let mut out = File::create("addons/main/script_mod.hpp")?;
   out.write_fmt(
     format_args!(
-      "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCHLVL.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCHLVL,BUILD\n\n#define REQUIRED_VERSION 1.56",
+      "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCHLVL.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCHLVL,BUILD\n\n#define REQUIRED_VERSION 1.88",
       p.prefix
     )
   )?;
@@ -77,7 +77,8 @@ br#"#include "\x\cba\addons\main\script_macros_common.hpp"
 #else
   #undef PREP
   #define PREP(fncName) [QPATHTOF(functions\DOUBLES(fnc,fncName).sqf), QFUNC(fncName)] call CBA_fnc_compileFunction
-#endif"#
+#endif
+"#
 )?;
   Ok(())
 }
@@ -92,15 +93,14 @@ r#"#define COMPONENT {0}
 #include "\z\{2}\addons\main\script_mod.hpp"
 // #define DEBUG_MODE_FULL
 // #define DISABLE_COMPILE_CACHE
-// #define CBA_DEBUG_SYNCHRONOUS
-// #define ENABLE_PERFORMANCE_COUNTERS
 #ifdef DEBUG_ENABLED_{1}
   #define DEBUG_MODE_FULL
 #endif
 #ifdef DEBUG_SETTINGS_{1}
   #define DEBUG_SETTINGS DEBUG_SETTINGS_{1}
 #endif
-#include "\z\{2}\addons\main\script_macros.hpp""#,
+#include "\z\{2}\addons\main\script_macros.hpp"
+"#,
     addon, addon.to_uppercase(), p.prefix
   ))?;
   Ok(())
@@ -134,7 +134,8 @@ class CfgPatches {{
     author = "{}";
     VERSION_CONFIG;
   }};
-}};"#, p.author))?;
+}};
+"#, p.author))?;
   if addon != "main" {
     out.write_all(b"\n\n#include \"CfgEventHandlers.hpp\"")?;
   }
@@ -178,7 +179,8 @@ class Extended_PostInit_EventHandlers {
   class ADDON {
     init = QUOTE(call COMPILE_FILE(XEH_postInit));
   };
-};"#
+};
+"#
   )?;
   Ok(())
 }
