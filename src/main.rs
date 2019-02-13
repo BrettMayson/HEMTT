@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use docopt::Docopt;
 
+use self_update;
+
 use std::io::{stdin, stdout, Write};
 use std::path::Path;
 
@@ -19,6 +21,7 @@ Usage:
   hemtt create
   hemtt addon <name>
   hemtt build
+  hemtt update
   hemtt (-h | --help)
   hemtt --version
 
@@ -27,6 +30,7 @@ Commands:
   create      Create a new project from the CBA project template
   addon       Create a new addon folder
   build       Build the project
+  update      Update HEMTT
 
 Options:
   -v --verbose        Enable verbose output
@@ -41,6 +45,7 @@ struct Args {
   cmd_create: bool,
   cmd_addon: bool,
   cmd_build: bool,
+  cmd_update: bool,
   flag_verbose: bool,
   flag_force: bool,
   flag_version: bool,
@@ -61,13 +66,14 @@ fn input(text: &str) -> String {
   s
 }
 
+// TODO move code in main into an error wrapper
 fn main() {
   let args: Args = Docopt::new(USAGE)
                            .and_then(|d| d.deserialize())
                            .unwrap_or_else(|e| e.exit());
 
   if args.flag_version {
-    println!("v{}", VERSION);
+    println!("HEMTT Version {}", VERSION);
     std::process::exit(0);
   }
 
@@ -107,6 +113,18 @@ fn main() {
       files::clear_pbos(&p).unwrap();
     }
     build::build(&p).unwrap();
+  } else if args.cmd_update {
+    let target = self_update::get_target().unwrap();
+    let status = self_update::backends::github::Update::configure().unwrap()
+      .repo_owner("SynixeBrett")
+      .repo_name("HEMTT")
+      .target(&target)
+      .bin_name("hemtt")
+      .show_download_progress(true)
+      .current_version(VERSION)
+      .build().unwrap()
+      .update().unwrap();
+    println!("Update: {}", status.version());
   }
 }
 
