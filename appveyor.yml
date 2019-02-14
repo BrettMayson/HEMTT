@@ -5,6 +5,9 @@ environment:
   global:
     RUST_VERSION: stable
     CRATE_NAME: hemtt
+    OPENSSL_STATIC: 1
+    OPENSSL_LIBS: "libssl_static:libcrypto_static"
+    
 
   matrix:
     # MinGW
@@ -12,8 +15,10 @@ environment:
     - TARGET: x86_64-pc-windows-gnu
 
     # MSVC
-    # - TARGET: i686-pc-windows-msvc
-    # - TARGET: x86_64-pc-windows-msvc
+    - TARGET: i686-pc-windows-msvc
+      OPENSSL_DIR=C:\OpenSSL-v111-Win64
+    - TARGET: x86_64-pc-windows-msvc
+      OPENSSL_DIR=C:\OpenSSL-v111-Win64
 
     # Testing other channels
     # - TARGET: x86_64-pc-windows-gnu
