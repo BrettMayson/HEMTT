@@ -1,10 +1,13 @@
 use walkdir;
 use armake2;
 
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+
 use std::fs;
 use std::fs::File;
-use std::time::{Duration, SystemTime};
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, SystemTime};
 
 pub fn modtime(addon: String) -> Result<SystemTime, std::io::Error> {
   let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -20,6 +23,7 @@ pub fn modtime(addon: String) -> Result<SystemTime, std::io::Error> {
 }
 
 pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
+  let mut stdout = StandardStream::stdout(ColorChoice::Always);
   for entry in fs::read_dir("addons")? {
     let entry = entry?;
     let path = entry.path();
@@ -33,12 +37,17 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
       let metadata = fs::metadata(format!("addons/{}_{}.pbo", p.prefix, name)).unwrap();
       if let Ok(time) = metadata.modified() {
         if time >= modified {
-          println!(" Skipping   {}", name);
+          stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
+          println!("  Skipping {}", name);
           continue;
         }
       }
     }
-    println!("Building {}", name);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    write!(&mut stdout, "  Building ")?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
+    write!(&mut stdout, "{}\r", name)?;
+    stdout.flush()?;
     let mut outf = File::create(&format!("addons/{}_{}.pbo", p.prefix, name))?;
     armake2::pbo::cmd_build(
       path,
@@ -47,11 +56,16 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
       &p.exclude,
       &vec![PathBuf::from("./include"), PathBuf::from(".")],
     )?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    write!(&mut stdout, "     Built ")?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
+    writeln!(&mut stdout, "{}", name)?;
   }
   Ok(())
 }
 
 pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
+  let mut stdout = StandardStream::stdout(ColorChoice::Always);
   let version = crate::project::get_version()?;
   println!("Building Release Version: {}", version);
   build(&p)?;
@@ -91,13 +105,21 @@ pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
       continue;
     }
     fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    write!(&mut stdout, "   Signing ")?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
+    write!(&mut stdout, "{}\r", cpath)?;
+    stdout.flush()?;
     armake2::sign::cmd_sign(
       PathBuf::from(format!("keys/{}.biprivatekey", p.prefix)),
       PathBuf::from(format!("releases/{}/@{}/{}", version, p.prefix, cpath)),
       Some(PathBuf::from(format!("releases/{0}/@{1}/{2}.{0}.bisign", version, p.prefix, cpath))),
       armake2::sign::BISignVersion::V3
     )?;
-    println!(" {}     {}", "Signed", cpath);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    write!(&mut stdout, "    Signed ")?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::White)))?;
+    writeln!(&mut stdout, "{}", cpath)?;
   }
   Ok(())
 }
