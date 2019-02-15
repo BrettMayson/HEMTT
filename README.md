@@ -3,7 +3,7 @@ Build System for Arma 3 powered by [armake2](https://github.com/KoffeinFlummi/ar
 
 [Example Project](https://github.com/synixebrett/HEMTT-Example)
 
-### THIS IS PROJECT IS IN ALPHA
+### THIS IS PROJECT IS IN BETA
 
 ## Using HEMTT
 HEMTT is a CLI tool that must be called from the root of your project. HEMTT either needs to be placed in the root and called with `./hemtt`.
@@ -20,7 +20,6 @@ To add an additional addon to your project with all the skeleton files you need,
 ## Building
 
 You can create a build by using `hemtt build` or a release build by using `hemtt build --release`.
-**Release builds are temporarily not included in HEMTT, but will be added back shortly**.
 Any files you want to be included in the `releases` folder must be included in `files` in the `hemtt.json` file.
 HEMTT will use `addons/main/script_version.hpp` to get version information when doing a release build.
 
