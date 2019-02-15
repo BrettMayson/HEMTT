@@ -50,3 +50,54 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
   }
   Ok(())
 }
+
+pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
+  let version = crate::project::get_version()?;
+  println!("Building Release Version: {}", version);
+  build(&p)?;
+  if !Path::new("releases").exists() {
+    fs::create_dir("releases")?;
+  }
+  if !Path::new(&format!("releases/{}", version)).exists() {
+    fs::create_dir(format!("releases/{}", version))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}/addons", version, p.prefix))?;
+  }
+  if !Path::new(&format!("releases/{}/@{}/keys", version, p.prefix)).exists() {
+    fs::create_dir(format!("releases/{}/@{}/keys", version, p.prefix))?;
+  }
+  for file in &p.files {
+    fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;
+  }
+  if !Path::new("keys").exists() {
+    fs::create_dir("keys")?;
+  }
+  if !Path::new(&format!("keys/{}.bikey", p.prefix)).exists() {
+    armake2::sign::cmd_keygen(PathBuf::from(&p.prefix))?;
+    fs::rename(format!("{}.bikey", p.prefix), format!("keys/{}.bikey", p.prefix))?;
+    fs::rename(format!("{}.biprivatekey", p.prefix), format!("keys/{}.biprivatekey", p.prefix))?;
+  }
+  fs::copy(format!("keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
+  for entry in fs::read_dir("addons").unwrap() {
+    let entry = entry.unwrap();
+    let path = entry.path();
+    let cpath = path.clone();
+    let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
+    if !path.ends_with(".pbo") && !cpath.contains(p.prefix.as_str()) {
+      continue;
+    }
+    fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath))?;
+    armake2::sign::cmd_sign(
+      PathBuf::from(format!("keys/{}.biprivatekey", p.prefix)),
+      PathBuf::from(format!("releases/{}/@{}/{}", version, p.prefix, cpath)),
+      Some(PathBuf::from(format!("releases/{0}/@{1}/{2}.{0}.bisign", version, p.prefix, cpath))),
+      armake2::sign::BISignVersion::V3
+    )?;
+    println!(" {}     {}", "Signed", cpath);
+  }
+  Ok(())
+}

@@ -20,7 +20,7 @@ Usage:
   hemtt init
   hemtt create
   hemtt addon <name>
-  hemtt build
+  hemtt build [--release]
   hemtt update
   hemtt (-h | --help)
   hemtt --version
@@ -49,6 +49,7 @@ struct Args {
   flag_verbose: bool,
   flag_force: bool,
   flag_version: bool,
+  flag_release: bool,
   arg_name: String,
 }
 
@@ -112,7 +113,11 @@ fn main() {
     if args.flag_force {
       files::clear_pbos(&p).unwrap();
     }
-    build::build(&p).unwrap();
+    if args.flag_release {
+      build::release(&p).unwrap()
+    } else {
+      build::build(&p).unwrap();
+    }
   } else if args.cmd_update {
     let target = self_update::get_target().unwrap();
     let status = self_update::backends::github::Update::configure().unwrap()
@@ -124,7 +129,7 @@ fn main() {
       .current_version(VERSION)
       .build().unwrap()
       .update().unwrap();
-    println!("Update: {}", status.version());
+    println!("Using Version: {}", status.version());
   }
 }
 
