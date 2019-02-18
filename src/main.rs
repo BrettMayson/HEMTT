@@ -20,7 +20,7 @@ Usage:
   hemtt init
   hemtt create
   hemtt addon <name>
-  hemtt build [--release]
+  hemtt build [--release] [--force]
   hemtt update
   hemtt (-h | --help)
   hemtt --version
