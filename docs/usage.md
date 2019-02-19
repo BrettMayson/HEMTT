@@ -1,11 +1,11 @@
 # HEMTT Usage
 <pre>
 Usage:
-    hemtt <a href="/#/usage?id=init">init</a>
-    hemtt <a href="/#/usage?id=create">create</a>
-    hemtt <a href="/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/#/usage?id=build">build</a> [--release] [--force] [--nowarn]
-    hemtt <a href="/#/usage?id=update">update</a>
+    hemtt <a href="/HEMTT/#/usage?id=init">init</a>
+    hemtt <a href="/HEMTT/#/usage?id=create">create</a>
+    hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [--release] [--force] [--nowarn]
+    hemtt <a href="/HEMTT/#/usage?id=update">update</a>
     hemtt (-h | --help)
     hemtt --version
 
