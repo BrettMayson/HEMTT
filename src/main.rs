@@ -206,7 +206,7 @@ fn init() -> Result<crate::project::Project, std::io::Error> {
 #[cfg(windows)]
 fn ansi_support() {
     // Attempt to enable ANSI support in terminal
-    // Disable colored output if failed) {
+    // Disable colored output if failed
     if !ansi_term::enable_ansi_support().is_ok() {
         colored::control::set_override(false);
     }
