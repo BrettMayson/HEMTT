@@ -44,6 +44,10 @@ test_script:
       cargo build --target %TARGET% --release
     )
 
+artifacts:
+  - path: target\%TARGET%\debug\hemtt.exe
+  - path: target\%TARGET%\release\hemtt.exe
+
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin hemtt -- -C lto
   - ps: ci\before_deploy.ps1
