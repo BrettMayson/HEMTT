@@ -44,7 +44,7 @@ HEMTT is available for Linux and Windows via [GitHub Releases](https://github.co
 
 HEMTT is entirely open-source and all contributions are welcome. Check out the [issue list](https://github.com/synixebrett/HEMTT/issues) and open [pull requests](https://github.com/synixebrett/HEMTT/pulls)! All submitted code to HEMTT is assumed to be [licensed under GPLv3](https://github.com/synixebrett/HEMTT/blob/master/LICENSE).
 
-Ideas and discussions are welcome, author and other contributors can be reached on [ACE3 Slack]() in channel `#tools`. Feel free to join, ask questions or share ideas!
+Ideas and discussions are welcome, author and other contributors can be reached on [ACE3 Slack](https://slackin.ace3mod.com) in channel `#tools`. Feel free to join, ask questions or share ideas!
 
 ### Thanks
 
