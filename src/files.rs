@@ -47,7 +47,7 @@ pub fn clear_releases() -> Result<(), Error> {
 pub fn modcpp(p: &project::Project) -> Result<(), std::io::Error> {
   let mut out = File::create("mod.cpp")?;
   out.write_fmt(
-    format_args!("name = \"{}\";\ndir = \"@{}\";\nauthor = \"{}\";",
+    format_args!("name = \"{}\";\ndir = \"@{}\";\nauthor = \"{}\";\n",
         p.name,
         p.prefix,
         p.author
@@ -63,7 +63,7 @@ pub fn scriptmodhpp(p: &project::Project) -> Result<(), std::io::Error> {
   let mut out = File::create("addons/main/script_mod.hpp")?;
   out.write_fmt(
     format_args!(
-      "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCHLVL.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCHLVL,BUILD\n\n#define REQUIRED_VERSION 1.88",
+      "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCHLVL.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCHLVL,BUILD\n\n#define REQUIRED_VERSION 1.88\n",
       p.prefix
     )
   )?;
@@ -76,7 +76,7 @@ pub fn scriptversionhpp(p: &project::Project) -> Result<(), std::io::Error> {
   }
   let mut out = File::create("addons/main/script_version.hpp")?;
   out.write_all(
-    b"#define MAJOR 0\n#define MINOR 1\n#define PATCHLVL 0\n#define BUILD 0"
+    b"#define MAJOR 0\n#define MINOR 1\n#define PATCHLVL 0\n#define BUILD 0\n"
   )?;
   Ok(())
 }
@@ -109,14 +109,17 @@ pub fn script_component(addon: &String, p: &project::Project) -> Result<(), std:
   out.write_fmt(format_args!(
 r#"#define COMPONENT {0}
 #include "\z\{2}\addons\main\script_mod.hpp"
+
 // #define DEBUG_MODE_FULL
 // #define DISABLE_COMPILE_CACHE
+
 #ifdef DEBUG_ENABLED_{1}
   #define DEBUG_MODE_FULL
 #endif
 #ifdef DEBUG_SETTINGS_{1}
   #define DEBUG_SETTINGS DEBUG_SETTINGS_{1}
 #endif
+
 #include "\z\{2}\addons\main\script_macros.hpp"
 "#,
     addon, addon.to_uppercase(), p.prefix
@@ -175,11 +178,13 @@ pub fn xeh(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
 br#"#include "script_component.hpp"
 ADDON = false;
 #include "XEH_PREP.hpp"
-ADDON = true;"#)?;
+ADDON = true;
+"#)?;
   let mut out = File::create(format!("addons/{}/XEH_preStart.sqf", addon))?;
   out.write_all(
 br#"#include "script_component.hpp"
-#include "XEH_PREP.hpp""#
+#include "XEH_PREP.hpp"
+"#
   )?;
   let mut out = File::create(format!("addons/{}/CfgEventHandlers.hpp", addon))?;
   out.write_all(
@@ -205,21 +210,8 @@ class Extended_PostInit_EventHandlers {
 
 pub fn create_include() -> Result<(), std::io::Error> {
   println!("Downloading script_macros_common.hpp");
-  // TODO Obviously clean this up, I'm just really lazy right now
-  if !Path::new("include").exists() {
-    fs::create_dir("include")?;
-  }
-  if !Path::new("include/x").exists() {
-    fs::create_dir("include/x")?;
-  }
-  if !Path::new("include/x/cba").exists() {
-    fs::create_dir("include/x/cba")?;
-  }
-  if !Path::new("include/x/cba/addons").exists() {
-    fs::create_dir("include/x/cba/addons")?;
-  }
   if !Path::new("include/x/cba/addons/main").exists() {
-    fs::create_dir("include/x/cba/addons/main")?;
+    fs::create_dir_all("include/x/cba/addons/main")?;
   }
   let mut buf: Vec<u8> = Vec::new();
   let mut req = reqwest::get("https://raw.githubusercontent.com/CBATeam/CBA_A3/master/addons/main/script_macros_common.hpp").unwrap();

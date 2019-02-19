@@ -4,6 +4,7 @@ use colored::*;
 
 use self_update;
 
+use std::collections::{HashSet};
 use std::io::{stdin, stdout, Write, Error};
 use std::path::Path;
 
@@ -24,7 +25,7 @@ Usage:
   hemtt init
   hemtt create
   hemtt addon <name>
-  hemtt build [--release] [--force]
+  hemtt build [--release] [--force] [--nowarn]
   hemtt clean [--force]
   hemtt update
   hemtt (-h | --help)
@@ -41,6 +42,7 @@ Commands:
 Options:
   -v --verbose        Enable verbose output
   -f --force          Overwrite target files
+     --nowarn         Supress armake2 warnings
   -h --help           Show usage information and exit
      --version        Show version number and exit
 ";
@@ -55,6 +57,7 @@ struct Args {
   cmd_update: bool,
   flag_verbose: bool,
   flag_force: bool,
+  flag_nowarn: bool,
   flag_version: bool,
   flag_release: bool,
   arg_name: String,
@@ -112,6 +115,11 @@ fn run_command(args: &Args) -> Result<(), Error> {
     if args.flag_force {
       files::clear_pbos(&p).unwrap();
     }
+    if !args.flag_nowarn {
+      unsafe {
+        armake2::error::WARNINGS_MUTED = Some(HashSet::new());
+      }
+    }
     if args.flag_release {
       let version = match &p.version {
         Some(v) => v,
@@ -125,6 +133,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else {
       build::build(&p).unwrap();
       println!("  {} {}", "Finished".green().bold(), &p.name);
+    }
+    if !args.flag_nowarn {
+      armake2::error::print_warning_summary();
     }
     Ok(())
   } else if args.cmd_clean {

@@ -3,8 +3,6 @@ Build System for Arma 3 powered by [armake2](https://github.com/KoffeinFlummi/ar
 
 [Example Project](https://github.com/synixebrett/HEMTT-Example)
 
-### THIS IS PROJECT IS IN BETA
-
 ## Using HEMTT
 HEMTT is a CLI tool that must be called from the root of your project. HEMTT either needs to be placed in the root and called with `./hemtt`.
 
