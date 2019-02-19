@@ -41,17 +41,17 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
                     println!("  {} {}", "Skipping".white().bold(), name);
                     continue;
                 }
-                println!("  {} {}", "Building".green().bold(), name);
-                let mut outf = File::create(&format!("addons/{}_{}.pbo", p.prefix, name))?;
-                armake2::pbo::cmd_build(
-                    path,
-                    &mut outf,
-                    &vec![],
-                    &p.exclude,
-                    &vec![PathBuf::from("./include"), PathBuf::from(".")],
-                )?;
             }
         }
+        println!("  {} {}", "Building".green().bold(), name);
+        let mut outf = File::create(&format!("addons/{}_{}.pbo", p.prefix, name))?;
+        armake2::pbo::cmd_build(
+            path,
+            &mut outf,
+            &vec![],
+            &p.exclude,
+            &vec![PathBuf::from("./include"), PathBuf::from(".")],
+        )?;
     }
     Ok(())
 }
