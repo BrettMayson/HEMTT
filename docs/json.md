@@ -1,4 +1,4 @@
-# HEMTT.json Profile File
+# HEMTT.json Project File
 
 The `hemtt.json` file is used to configure your HEMTT Project.
 
