@@ -4,7 +4,7 @@ use colored::*;
 
 use self_update;
 
-use std::io::{stdin, stdout, Write};
+use std::io::{stdin, stdout, Write, Error};
 use std::path::Path;
 
 mod build;
@@ -74,20 +74,11 @@ fn input(text: &str) -> String {
   s
 }
 
-// TODO move code in main into an error wrapper
-fn main() {
-  let args: Args = Docopt::new(USAGE)
-                           .and_then(|d| d.deserialize())
-                           .unwrap_or_else(|e| e.exit());
-
-  if args.flag_version {
-    println!("HEMTT Version {}", VERSION);
-    std::process::exit(0);
-  }
-
+fn run_command(args: &Args) -> Result<(), Error> {
   if args.cmd_init {
     check(true, args.flag_force).unwrap();
     init().unwrap();
+    Ok(())
   } else if args.cmd_create {
     check(true, args.flag_force).unwrap();
     let p = init().unwrap();
@@ -101,12 +92,12 @@ fn main() {
     files::pboprefix(&main, &p).unwrap();
     files::configcpp(&main, &p).unwrap();
     files::create_include().unwrap();
+    Ok(())
   } else if args.cmd_addon {
     check(false, args.flag_force).unwrap();
     let p = project::get_project().unwrap();
     if Path::new(&format!("addons/{}", args.arg_name)).exists() {
-      println!("Addon {} already exists!", args.arg_name);
-      return;
+      return Err(error!("{} already exists", args.arg_name.bold()));
     }
     println!("Creating addon: {}", args.arg_name);
     files::create_addon(&args.arg_name, &p).unwrap();
@@ -114,6 +105,7 @@ fn main() {
     files::script_component(&args.arg_name, &p).unwrap();
     files::configcpp(&args.arg_name, &p).unwrap();
     files::xeh(&args.arg_name, &p).unwrap();
+    Ok(())
   } else if args.cmd_build {
     check(false, args.flag_force).unwrap();
     let p = project::get_project().unwrap();
@@ -134,6 +126,7 @@ fn main() {
       build::build(&p).unwrap();
       println!("  {} {}", "Finished".green().bold(), &p.name);
     }
+    Ok(())
   } else if args.cmd_clean {
     check(false, args.flag_force).unwrap();
     let p = project::get_project().unwrap();
@@ -141,6 +134,7 @@ fn main() {
     if args.flag_force {
       files::clear_releases().unwrap();
     }
+    Ok(())
   } else if args.cmd_update {
     let target = self_update::get_target().unwrap();
     let status = self_update::backends::github::Update::configure().unwrap()
@@ -153,22 +147,32 @@ fn main() {
       .build().unwrap()
       .update().unwrap();
     println!("Using Version: {}", status.version());
+    Ok(())
+  } else {
+    unreachable!()
   }
+}
+
+fn main() {
+  let args: Args = Docopt::new(USAGE)
+                           .and_then(|d| d.deserialize())
+                           .unwrap_or_else(|e| e.exit());
+
+  if args.flag_version {
+    println!("HEMTT Version {}", VERSION);
+    std::process::exit(0);
+  }
+
+  run_command(&args).print_error(true);
 }
 
 fn check(write: bool, force: bool) -> Result<(), std::io::Error> {
   if Path::new(HEMTT_FILE).exists() && write && !force {
-    Err(std::io::Error::new(
-        std::io::ErrorKind::AlreadyExists,
-        "HEMTT Project already exists in the current directory".to_owned()
-    ))
+    Err(error!("HEMTT Project already exists in the current directory"))
   } else if Path::new(HEMTT_FILE).exists() && write && force {
     Ok(())
   } else if !Path::new(HEMTT_FILE).exists() && !write {
-    Err(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        "A HEMTT Project does not exist in the current directory".to_owned()
-    ))
+    Err(error!("A HEMTT Project does not exist in the current directory"))
   } else {
     Ok(())
   }

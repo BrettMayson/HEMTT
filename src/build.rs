@@ -66,7 +66,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     fs::create_dir(format!("releases/{}", version))?;
   }
   if Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
-    return Err(error!("Release already exists! Run with --force to overwrite!"));
+    return Err(error!("Release already exists, run with --force to overwrite"));
   }
   fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
   if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
