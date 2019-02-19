@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
 use crate::error;
+use crate::error::*;
 
 pub fn modtime(addon: String) -> Result<SystemTime, std::io::Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -50,8 +51,8 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
             &mut outf,
             &vec![],
             &p.exclude,
-            &vec![PathBuf::from("./include"), PathBuf::from(".")],
-        )?;
+            &p.include,
+        ).print_error(false);
     }
     Ok(())
 }

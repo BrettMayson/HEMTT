@@ -4,7 +4,7 @@ use serde_json;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 use std::io::Write;
 
@@ -17,8 +17,19 @@ pub struct Project {
     #[serde(default = "get_version_unwrap")]
     pub version: Option<String>,
     pub files: Vec<String>,
+    #[serde(default = "default_include")]
+    pub include: Vec<PathBuf>,
     #[serde(default = "default_exclude")]
     pub exclude: Vec<String>,
+}
+
+fn default_include() -> Vec<PathBuf> {
+    let mut includes: Vec<PathBuf> = vec![PathBuf::from(".")];
+    if PathBuf::from("./include").exists() {
+        includes.push(PathBuf::from("./include"));
+    }
+
+    includes
 }
 
 fn default_exclude() -> Vec<String> {
@@ -39,6 +50,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         prefix: prefix,
         author: author,
         files: vec!["mod.cpp".to_owned()],
+        include: vec![],
         exclude: vec![],
         version: None,
     };
