@@ -1,8 +1,9 @@
 use serde::Deserialize;
 use docopt::Docopt;
 use colored::*;
+
 #[cfg(windows)]
-use ansi_term::*;
+use ansi_term;
 
 use self_update;
 
