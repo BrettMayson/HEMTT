@@ -72,7 +72,7 @@ pub fn get_version() -> Result<String, std::io::Error> {
         "MINOR" => {
           minor = String::from(value);
         },
-        "PATCHLVL" => {
+        "PATCHLVL" | "PATCH" => {
           patch = String::from(value);
         },
         "BUILD" => {
