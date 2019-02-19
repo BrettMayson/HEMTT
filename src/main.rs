@@ -19,7 +19,7 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const HEMTT_FILE: &str = "hemtt.json";
 
 const USAGE: &'static str = "
-HEMTT, a simple to use build manager for Arma 3 mods using CBA.
+HEMTT, a simple to use build manager for Arma 3 mods using the CBA project structure
 
 Usage:
     hemtt init
@@ -33,18 +33,18 @@ Usage:
 
 Commands:
     init        Initialize a project file in the current directory
-    create      Create a new project from the CBA project template
+    create      Create a new project using the CBA project structure
     addon       Create a new addon folder
     build       Build the project
   clean       Clean build files
     update      Update HEMTT
 
 Options:
-    -v --verbose        Enable verbose output
-    -f --force          Overwrite target files
-       --nowarn         Supress armake2 warnings
-    -h --help           Show usage information and exit
-       --version        Show version number and exit
+    -v  --verbose        Enable verbose output
+    -f  --force          Overwrite target files
+        --nowarn         Suppress armake2 warnings
+    -h  --help           Show usage information and exit
+        --version        Show version number and exit
 ";
 
 #[derive(Debug, Deserialize)]

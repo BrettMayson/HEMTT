@@ -59,21 +59,14 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
     build(&p)?;
-    if !Path::new("releases").exists() {
-        fs::create_dir("releases")?;
+    if Path::new(&format!("releases/{}", version)).exists() {
+        return Err(error!("Release already exists, run with --force to clean"));
     }
-    if !Path::new(&format!("releases/{}", version)).exists() {
-        fs::create_dir(format!("releases/{}", version))?;
-    }
-    if Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
-        return Err(error!("Release already exists, run with --force to overwrite"));
-    }
-    fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
-        fs::create_dir(format!("releases/{}/@{}/addons", version, p.prefix))?;
+        fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
     }
     if !Path::new(&format!("releases/{}/@{}/keys", version, p.prefix)).exists() {
-        fs::create_dir(format!("releases/{}/@{}/keys", version, p.prefix))?;
+        fs::create_dir_all(format!("releases/{}/@{}/keys", version, p.prefix))?;
     }
     for file in &p.files {
         fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;

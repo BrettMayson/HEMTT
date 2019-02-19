@@ -13,6 +13,7 @@ pub struct Project {
     pub name: String,
     pub prefix: String,
     pub author: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "get_version_unwrap")]
     pub version: Option<String>,
     pub files: Vec<String>,
