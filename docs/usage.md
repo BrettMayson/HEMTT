@@ -4,7 +4,9 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
     hemtt <a href="/HEMTT/#/usage?id=create">create</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [--release] [--force] [--nowarn]
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force-f">--force</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>]
+    hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
+    hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;utility&gt;
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
     hemtt (-h | --help)
     hemtt --version
@@ -102,6 +104,14 @@ would produce
 </pre>
 
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
+<hr/>
+
+# clean
+Cleans all the files generated from previous builds.
+<hr>
+
+# run
+Run a [Utility](/utilities.md).
 <hr/>
 
 # update

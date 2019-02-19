@@ -15,6 +15,7 @@ mod build;
 mod error;
 mod files;
 mod project;
+mod utilities;
 
 use crate::error::*;
 
@@ -30,6 +31,7 @@ Usage:
     hemtt addon <name>
     hemtt build [--release] [--force] [--nowarn]
     hemtt clean [--force]
+    hemtt run <utility>
     hemtt update
     hemtt (-h | --help)
     hemtt --version
@@ -57,6 +59,7 @@ struct Args {
     cmd_addon: bool,
     cmd_build: bool,
     cmd_clean: bool,
+    cmd_run: bool,
     cmd_update: bool,
     flag_verbose: bool,
     flag_force: bool,
@@ -64,6 +67,12 @@ struct Args {
     flag_version: bool,
     flag_release: bool,
     arg_name: String,
+    arg_utility: Option<Utility>
+}
+
+#[derive(Debug, Deserialize)]
+enum Utility {
+    Translation
 }
 
 fn input(text: &str) -> String {
@@ -147,6 +156,15 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::clear_pbos(&p).unwrap();
         if args.flag_force {
             files::clear_releases().unwrap();
+        }
+        Ok(())
+    } else if args.cmd_run {
+        if let Some(utility) = &args.arg_utility {
+            match utility {
+                Utility::Translation => {
+                    utilities::translation::check().unwrap();
+                }
+            }
         }
         Ok(())
     } else if args.cmd_update {

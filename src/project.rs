@@ -85,7 +85,11 @@ pub fn get_version() -> Result<String, std::io::Error> {
                 _ => {}
             }
         }
-        version = format!("{}.{}.{}.{}", major, minor, patch, build);
+        if build == "" {
+            version = format!("{}.{}.{}", major, minor, patch);
+        } else {
+            version = format!("{}.{}.{}.{}", major, minor, patch, build);
+        }
     }
     Ok(version)
 }
