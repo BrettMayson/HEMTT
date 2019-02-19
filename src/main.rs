@@ -3,6 +3,7 @@ use docopt::Docopt;
 
 use self_update;
 
+use std::collections::{HashSet};
 use std::io::{stdin, stdout, Write};
 use std::path::Path;
 
@@ -20,7 +21,7 @@ Usage:
   hemtt init
   hemtt create
   hemtt addon <name>
-  hemtt build [--release] [--force]
+  hemtt build [--release] [--force] [--nowarn]
   hemtt update
   hemtt (-h | --help)
   hemtt --version
@@ -35,6 +36,7 @@ Commands:
 Options:
   -v --verbose        Enable verbose output
   -f --force          Overwrite target files
+     --nowarn         Supress armake2 warnings
   -h --help           Show usage information and exit
      --version        Show version number and exit
 ";
@@ -48,6 +50,7 @@ struct Args {
   cmd_update: bool,
   flag_verbose: bool,
   flag_force: bool,
+  flag_nowarn: bool,
   flag_version: bool,
   flag_release: bool,
   arg_name: String,
@@ -113,10 +116,18 @@ fn main() {
     if args.flag_force {
       files::clear_pbos(&p).unwrap();
     }
+    if !args.flag_nowarn {
+      unsafe {
+        armake2::error::WARNINGS_MUTED = Some(HashSet::new());
+      }
+    }
     if args.flag_release {
       build::release(&p).unwrap()
     } else {
       build::build(&p).unwrap();
+    }
+    if !args.flag_nowarn {
+      armake2::error::print_warning_summary();
     }
   } else if args.cmd_update {
     let target = self_update::get_target().unwrap();

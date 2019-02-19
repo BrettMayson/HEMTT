@@ -5,7 +5,7 @@ authors = ["Brett <brett@bmandesigns.com>"]
 edition = "2018"
 
 [dependencies]
-armake2 = "0.3"
+armake2 = { git = "https://github.com/KoffeinFlummi/armake2", branch="master" }
 colored = "1.7"
 docopt = "1"
 reqwest = "0.9"
