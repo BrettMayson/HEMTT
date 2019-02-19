@@ -66,7 +66,10 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
 
 pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
   let mut stdout = StandardStream::stdout(ColorChoice::Always);
-  let version = crate::project::get_version()?;
+  let version = match &p.version {
+    Some(v) => v,
+    None => panic!("Unable to determine version number"),
+  };
   println!("Building Release Version: {}", version);
   build(&p)?;
   if !Path::new("releases").exists() {

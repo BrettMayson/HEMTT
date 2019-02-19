@@ -13,6 +13,8 @@ pub struct Project {
   pub name: String,
   pub prefix: String,
   pub author: String,
+  #[serde(default = "get_version_unwrap")]
+  pub version: Option<String>,
   pub files: Vec<String>,
   #[serde(default = "default_exclude")]
   pub exclude: Vec<String>,
@@ -37,6 +39,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
     author: author,
     files: vec!["mod.cpp".to_owned()],
     exclude: vec![],
+    version: None,
   };
   p.save()?;
   Ok(p)
@@ -84,4 +87,7 @@ pub fn get_version() -> Result<String, std::io::Error> {
     version = format!("{}.{}.{}.{}", major, minor, patch, build);
   }
   Ok(version)
+}
+fn get_version_unwrap() -> Option<String> {
+  Some(get_version().unwrap())
 }
