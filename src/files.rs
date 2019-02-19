@@ -213,7 +213,7 @@ class Extended_PostInit_EventHandlers {
 }
 
 pub fn create_include() -> Result<(), std::io::Error> {
-    println!("Downloading script_macros_common.hpp");
+    println!(" {} script_macros_common.hpp", "Downloading".green().bold());
     if !Path::new("include/x/cba/addons/main").exists() {
         fs::create_dir_all("include/x/cba/addons/main")?;
     }

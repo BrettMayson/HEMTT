@@ -58,10 +58,10 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
-    build(&p)?;
     if Path::new(&format!("releases/{}", version)).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
+    build(&p)?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
     }

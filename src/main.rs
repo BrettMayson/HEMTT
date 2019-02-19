@@ -26,7 +26,7 @@ Usage:
     hemtt create
     hemtt addon <name>
     hemtt build [--release] [--force] [--nowarn]
-  hemtt clean [--force]
+    hemtt clean [--force]
     hemtt update
     hemtt (-h | --help)
     hemtt --version
@@ -36,15 +36,15 @@ Commands:
     create      Create a new project using the CBA project structure
     addon       Create a new addon folder
     build       Build the project
-  clean       Clean build files
+    clean       Clean build files
     update      Update HEMTT
 
 Options:
-    -v  --verbose        Enable verbose output
-    -f  --force          Overwrite target files
-        --nowarn         Suppress armake2 warnings
-    -h  --help           Show usage information and exit
-        --version        Show version number and exit
+    -v --verbose        Enable verbose output
+    -f --force          Overwrite target files
+       --nowarn         Suppress armake2 warnings
+    -h --help           Show usage information and exit
+       --version        Show version number and exit
 ";
 
 #[derive(Debug, Deserialize)]
@@ -79,11 +79,11 @@ fn input(text: &str) -> String {
 
 fn run_command(args: &Args) -> Result<(), Error> {
     if args.cmd_init {
-        check(true, args.flag_force).unwrap();
+        check(true, args.flag_force).print_error(true);
         init().unwrap();
         Ok(())
     } else if args.cmd_create {
-        check(true, args.flag_force).unwrap();
+        check(true, args.flag_force).print_error(true);
         let p = init().unwrap();
         let main = "main".to_owned();
         files::modcpp(&p).unwrap();
@@ -97,7 +97,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::create_include().unwrap();
         Ok(())
     } else if args.cmd_addon {
-        check(false, args.flag_force).unwrap();
+        check(false, args.flag_force).print_error(true);
         let p = project::get_project().unwrap();
         if Path::new(&format!("addons/{}", args.arg_name)).exists() {
             return Err(error!("{} already exists", args.arg_name.bold()));
@@ -110,7 +110,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::xeh(&args.arg_name, &p).unwrap();
         Ok(())
     } else if args.cmd_build {
-        check(false, args.flag_force).unwrap();
+        check(false, args.flag_force).print_error(true);
         let p = project::get_project().unwrap();
         if args.flag_force {
             files::clear_pbos(&p).unwrap();
@@ -139,7 +139,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         Ok(())
     } else if args.cmd_clean {
-        check(false, args.flag_force).unwrap();
+        check(false, args.flag_force).print_error(true);
         let p = project::get_project().unwrap();
         files::clear_pbos(&p).unwrap();
         if args.flag_force {
