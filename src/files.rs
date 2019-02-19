@@ -58,7 +58,7 @@ pub fn scriptversionhpp(p: &project::Project) -> Result<(), std::io::Error> {
     }
     let mut out = File::create("addons/main/script_version.hpp")?;
     out.write_all(
-        b"#define MAJOR 0\n#define MINOR 1\n#define PATCHLVL 0\n#define BUILD 0\n"
+        b"#define MAJOR 0\n#define MINOR 1\n#define PATCH 0\n#define BUILD 0\n"
     )?;
     Ok(())
 }
