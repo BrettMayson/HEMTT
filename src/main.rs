@@ -34,10 +34,10 @@ Commands:
     update      Update HEMTT
 
 Options:
-    -v --verbose        Enable verbose output
-    -f --force          Overwrite target files
+    -v  --verbose        Enable verbose output
+    -f  --force          Overwrite target files
         --nowarn         Suppress armake2 warnings
-    -h --help           Show usage information and exit
+    -h  --help           Show usage information and exit
         --version        Show version number and exit
 ";
 
