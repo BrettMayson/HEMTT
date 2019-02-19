@@ -1,13 +1,15 @@
 use reqwest;
+use colored::*;
 
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, Error};
 use std::path::Path;
 
 use crate::project;
 
 pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
+    println!("  {} PBOs", "Cleaning".yellow().bold());
     for entry in fs::read_dir("addons")? {
         let entry = entry?;
         let path = entry.path();
@@ -22,6 +24,22 @@ pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
         if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
             fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
         }
+    }
+    Ok(())
+}
+
+pub fn clear_release(version: &String) -> Result<(), Error> {
+    if Path::new(&format!("releases/{}", version)).exists() {
+        println!("  {} release v{}", "Cleaning".yellow().bold(), version);
+        fs::remove_dir_all(format!("releases/{}", version))?;
+    }
+    Ok(())
+}
+
+pub fn clear_releases() -> Result<(), Error> {
+    println!("  {} all releases", "Cleaning".yellow().bold());
+    if Path::new("releases").exists() {
+        fs::remove_dir_all("releases")?;
     }
     Ok(())
 }
@@ -195,7 +213,7 @@ class Extended_PostInit_EventHandlers {
 }
 
 pub fn create_include() -> Result<(), std::io::Error> {
-    println!("Downloading script_macros_common.hpp");
+    println!(" {} script_macros_common.hpp", "Downloading".green().bold());
     if !Path::new("include/x/cba/addons/main").exists() {
         fs::create_dir_all("include/x/cba/addons/main")?;
     }
