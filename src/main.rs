@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use docopt::Docopt;
 use colored::*;
+#[cfg(windows)]
+use ansi_term::*;
 
 use self_update;
 
@@ -165,6 +167,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
 }
 
 fn main() {
+    if cfg!(windows) {
+        ansi_support();
+    }
+
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
@@ -194,4 +200,18 @@ fn init() -> Result<crate::project::Project, std::io::Error> {
     let prefix = input("Prefix (MCM)");
     let author = input("Author");
     Ok(crate::project::init(name, prefix, author)?)
+}
+
+#[cfg(windows)]
+fn ansi_support() {
+    // Attempt to enable ANSI support in terminal
+    // Disable colored output if failed) {
+    if !ansi_term::enable_ansi_support().is_ok() {
+        colored::control::set_override(false);
+    }
+}
+
+#[cfg(not(windows))]
+fn ansi_support() {
+    unreachable!();
 }
