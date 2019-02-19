@@ -29,7 +29,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn]
+    hemtt build [--release] [--force] [--nowarn] [--nozip]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -48,6 +48,7 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
+       --nozip          Disables archiving release builds
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -64,6 +65,7 @@ struct Args {
     flag_verbose: bool,
     flag_force: bool,
     flag_nowarn: bool,
+    flag_nozip: bool,
     flag_version: bool,
     flag_release: bool,
     arg_name: String,
@@ -140,7 +142,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             if args.flag_force {
                 files::clear_release(&version).unwrap();
             }
-            build::release(&p, &version).print_error(true);
+            build::release(&p, &version, &args.flag_nozip).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
             build::build(&p).unwrap();

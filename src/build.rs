@@ -1,11 +1,12 @@
 use walkdir;
 use armake2;
+use zip;
 
 use colored::*;
 
 use std::fs;
 use std::fs::File;
-use std::io::{Error};
+use std::io::{Read, Write, Error};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
@@ -56,11 +57,14 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
+pub fn release(p: &crate::project::Project, version: &String, nozip: &bool) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
-    if Path::new(&format!("releases/{}", version)).exists() {
+    let release_dir = format!("releases/{}", version);
+    if Path::new(&release_dir).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
+
+    // Build
     build(&p)?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
@@ -71,6 +75,8 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     for file in &p.files {
         fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;
     }
+
+    // Sign
     if !Path::new("keys").exists() {
         fs::create_dir("keys")?;
     }
@@ -97,5 +103,38 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
             armake2::sign::BISignVersion::V3
         )?;
     }
+
+    // Zip
+    if !nozip {
+        let zipname = format!("{}_{}.zip", p.name.replace(" ", "_"), version);
+        println!(" {} {}", "Archiving".green().bold(), zipname);
+
+        let zipsubpath = format!("releases/{}", zipname);
+        let zippath = Path::new(&zipsubpath);
+        let file = File::create(&zippath).unwrap();
+
+        let walkdir = walkdir::WalkDir::new(&release_dir);
+        let mut zip = zip::ZipWriter::new(file);
+        let options = zip::write::FileOptions::default();
+
+        let mut buffer = Vec::new();
+        for entry in walkdir.into_iter().filter_map(|e| e.ok()) {
+            let path = entry.path();
+
+            let name = path.strip_prefix(Path::new(&release_dir))
+                .unwrap().to_str().unwrap();
+
+            if path.is_file() {
+                zip.start_file(name, options)?;
+                let mut f = File::open(path)?;
+
+                f.read_to_end(&mut buffer)?;
+                zip.write_all(&*buffer)?;
+                buffer.clear();
+            }
+        }
+        zip.finish()?;
+    }
+
     Ok(())
 }
