@@ -21,4 +21,9 @@ cargo build
 cargo build --release
 ```
 ### Windows
-You will need to install the OpenSSL development libraries. On Windows you can download [precompiled OpenSSL binaries](http://slproweb.com/products/Win32OpenSSL.html) (non-light, 64bit).
+You will need to install the OpenSSL development libraries. On Windows you can download [precompiled OpenSSL binaries](http://slproweb.com/products/Win32OpenSSL.html) (non-light, 64bit). You build with
+```
+OPENSSL_DIR=C:\OpenSSL-WIN64 OPENSSL_LIBS=libssl_static:libcrypto_static cargo build
+```
+### Static Linking
+Static linking of OpenSSL is done by prepending the `cargo build` command with `OPENSSL_STATIC=1`.

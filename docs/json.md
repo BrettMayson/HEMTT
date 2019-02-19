@@ -1,4 +1,4 @@
-# TODO
+# HEMTT.json Profile File
 
 The `hemtt.json` file is used to configure your HEMTT Project.
 
@@ -20,6 +20,7 @@ Long name of your project.
 ```json
 "name": "Advanced Banana Environment"
 ```
+<hr/>
 
 ## prefix
 **Type**: String
@@ -38,6 +39,7 @@ Prefix used for CBA macros and the release directory name.
 ```
 
 `hemtt build --release` would create a release in the directory `releases/1.0.0.0/@ABE3/`.
+<hr/>
 
 ## author
 **Type**: String
@@ -47,6 +49,7 @@ Author of the project.
 ```json
 "author": "ACE Mod Team"
 ```
+<hr/>
 
 # Optional Fields
 
@@ -66,6 +69,7 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 #define PATCH 0
 #define BUILD 0
 ```
+<hr/>
 
 ## files
 **Type**: Array \[String\]
@@ -78,6 +82,7 @@ HEMTT will copy the files to the release directory after a successful release bu
     "logo.paa"
 ]
 ```
+<hr/>
 
 ## exclude
 **Type**: Array \[String\]

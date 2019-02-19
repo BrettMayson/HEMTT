@@ -63,7 +63,7 @@ pub fn scriptmodhpp(p: &project::Project) -> Result<(), std::io::Error> {
     let mut out = File::create("addons/main/script_mod.hpp")?;
     out.write_fmt(
         format_args!(
-            "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCHLVL.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCHLVL,BUILD\n\n#define REQUIRED_VERSION 1.88\n",
+            "#define MAINPREFIX z\n#define PREFIX {}\n\n#include \"script_version.hpp\"\n\n#define VERSION MAJOR.MINOR.PATCH.BUILD\n#define VERSION_AR MAJOR,MINOR,PATCH,BUILD\n\n#define REQUIRED_VERSION 1.88\n",
             p.prefix
         )
     )?;
