@@ -24,7 +24,8 @@ pub struct Project {
 }
 
 fn default_include() -> Vec<PathBuf> {
-    let mut includes: Vec<PathBuf> = vec![PathBuf::from(".")];
+    let mut includes = vec![];
+
     if PathBuf::from("./include").exists() {
         includes.push(PathBuf::from("./include"));
     }

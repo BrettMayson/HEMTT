@@ -44,16 +44,22 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
                 }
             }
         }
+
         println!("  {} {}", "Building".green().bold(), name);
         let mut outf = File::create(&format!("addons/{}_{}.pbo", p.prefix, name))?;
+
+        let mut include = p.include.to_owned();
+        include.push(PathBuf::from("."));
+
         armake2::pbo::cmd_build(
             path,
             &mut outf,
             &vec![],
             &p.exclude,
-            &p.include,
+            &include,
         ).print_error(false);
     }
+
     Ok(())
 }
 
@@ -72,15 +78,16 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     for file in &p.files {
         fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;
     }
-    if !Path::new("keys").exists() {
-        fs::create_dir("keys")?;
+    if !Path::new("releases/keys").exists() {
+        fs::create_dir("releases/keys")?;
     }
-    if !Path::new(&format!("keys/{}.bikey", p.prefix)).exists() {
+    if !Path::new(&format!("releases/keys/{}.bikey", p.prefix)).exists() {
+        println!(" {} {}.bikey", "Generating".green().bold(), p.prefix);
         armake2::sign::cmd_keygen(PathBuf::from(&p.prefix))?;
-        fs::rename(format!("{}.bikey", p.prefix), format!("keys/{}.bikey", p.prefix))?;
-        fs::rename(format!("{}.biprivatekey", p.prefix), format!("keys/{}.biprivatekey", p.prefix))?;
+        fs::rename(format!("{}.bikey", p.prefix), format!("releases/keys/{}.bikey", p.prefix))?;
+        fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
     }
-    fs::copy(format!("keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
+    fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
     for entry in fs::read_dir("addons").unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
@@ -92,7 +99,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath))?;
         println!("   {} {}", "Signing".green().bold(), cpath);
         armake2::sign::cmd_sign(
-            PathBuf::from(format!("keys/{}.biprivatekey", p.prefix)),
+            PathBuf::from(format!("releases/keys/{}.biprivatekey", p.prefix)),
             PathBuf::from(format!("releases/{}/@{}/{}", version, p.prefix, cpath)),
             Some(PathBuf::from(format!("releases/{0}/@{1}/{2}.{0}.bisign", version, p.prefix, cpath))),
             armake2::sign::BISignVersion::V3
