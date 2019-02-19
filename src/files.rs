@@ -1,4 +1,5 @@
 use reqwest;
+use colored::*;
 
 use std::fs;
 use std::fs::File;
@@ -8,7 +9,7 @@ use std::path::Path;
 use crate::project;
 
 pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
-  println!("Removing PBOs!");
+  println!("  {} PBOs", "Cleaning".yellow().bold());
   for entry in fs::read_dir("addons")? {
     let entry = entry?;
     let path = entry.path();
@@ -29,14 +30,14 @@ pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
 
 pub fn clear_release(version: &String) -> Result<(), Error> {
   if Path::new(&format!("releases/{}", version)).exists() {
-    println!("Removing release {}!", version);
+    println!("  {} release v{}", "Cleaning".yellow().bold(), version);
     fs::remove_dir_all(format!("releases/{}", version))?;
   }
   Ok(())
 }
 
 pub fn clear_releases() -> Result<(), Error> {
-  println!("Removing all releases!");
+  println!("  {} all releases", "Cleaning".yellow().bold());
   if Path::new("releases").exists() {
     fs::remove_dir_all("releases")?;
   }

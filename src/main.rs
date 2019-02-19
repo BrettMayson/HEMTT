@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use docopt::Docopt;
+use colored::*;
 
 use self_update;
 
@@ -128,8 +129,10 @@ fn main() {
         files::clear_release(&version).unwrap();
       }
       build::release(&p, &version).print_error(true);
+      println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
     } else {
       build::build(&p).unwrap();
+      println!("  {} {}", "Finished".green().bold(), &p.name);
     }
   } else if args.cmd_clean {
     check(false, args.flag_force).unwrap();
