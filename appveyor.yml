@@ -70,7 +70,7 @@ branches:
   only:
     # Release tags
     - /^v\d+\.\d+\.\d+.*$/
-    - armake2
+    - master
 
 notifications:
   - provider: Email
