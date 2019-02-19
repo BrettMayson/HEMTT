@@ -120,7 +120,10 @@ fn main() {
       files::clear_pbos(&p).unwrap();
     }
     if args.flag_release {
-      let version = project::get_version().unwrap();
+      let version = match &p.version {
+        Some(v) => v,
+        None => panic!("Unable to determine version number"),
+      };
       if args.flag_force {
         files::clear_release(&version).unwrap();
       }
