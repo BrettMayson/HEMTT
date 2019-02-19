@@ -4,6 +4,7 @@
 [![Documentation](https://img.shields.io/badge/docs-read-informational.svg)](https://synixebrett.github.io/HEMTT/#/)
 [![Travis CI](https://img.shields.io/travis/KoffeinFlummi/armake2.svg?logo=travis&style=flat)](https://travis-ci.org/KoffeinFlummi/armake2)
 [![AppVeyor CI](https://img.shields.io/appveyor/ci/KoffeinFlummi/armake2.svg?logo=appveyor&style=flat)](https://ci.appveyor.com/project/KoffeinFlummi/armake2)
+[![Chat](https://slackin.ace3mod.com/badge.svg?style=flat&label=chat)](https://slackin.ace3mod.com)
 
 Build System for Arma 3 powered by [armake2](https://github.com/KoffeinFlummi/armake2) for Linux and Windows - Heavy Expanded Mobility Tactical Truck for Arma 3 mods. HEMTT focuses on CBA and ACE3 standards while providing project configurability and additional utilities.
 
