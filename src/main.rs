@@ -6,9 +6,12 @@ use self_update;
 use std::io::{stdin, stdout, Write};
 use std::path::Path;
 
-mod project;
-mod files;
 mod build;
+mod error;
+mod files;
+mod project;
+
+use crate::error::*;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const HEMTT_FILE: &str = "hemtt.json";
@@ -21,6 +24,7 @@ Usage:
   hemtt create
   hemtt addon <name>
   hemtt build [--release] [--force]
+  hemtt clean [--force]
   hemtt update
   hemtt (-h | --help)
   hemtt --version
@@ -30,6 +34,7 @@ Commands:
   create      Create a new project from the CBA project template
   addon       Create a new addon folder
   build       Build the project
+  clean       Clean build files
   update      Update HEMTT
 
 Options:
@@ -45,6 +50,7 @@ struct Args {
   cmd_create: bool,
   cmd_addon: bool,
   cmd_build: bool,
+  cmd_clean: bool,
   cmd_update: bool,
   flag_verbose: bool,
   flag_force: bool,
@@ -114,9 +120,20 @@ fn main() {
       files::clear_pbos(&p).unwrap();
     }
     if args.flag_release {
-      build::release(&p).unwrap()
+      let version = project::get_version().unwrap();
+      if args.flag_force {
+        files::clear_release(&version).unwrap();
+      }
+      build::release(&p, &version).print_error(true);
     } else {
       build::build(&p).unwrap();
+    }
+  } else if args.cmd_clean {
+    check(false, args.flag_force).unwrap();
+    let p = project::get_project().unwrap();
+    files::clear_pbos(&p).unwrap();
+    if args.flag_force {
+      files::clear_releases().unwrap();
     }
   } else if args.cmd_update {
     let target = self_update::get_target().unwrap();

@@ -5,9 +5,11 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Write, Error};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+
+use crate::error;
 
 pub fn modtime(addon: String) -> Result<SystemTime, std::io::Error> {
   let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -64,9 +66,8 @@ pub fn build(p: &crate::project::Project) -> Result<(), std::io::Error> {
   Ok(())
 }
 
-pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
+pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
   let mut stdout = StandardStream::stdout(ColorChoice::Always);
-  let version = crate::project::get_version()?;
   println!("Building Release Version: {}", version);
   build(&p)?;
   if !Path::new("releases").exists() {
@@ -75,9 +76,10 @@ pub fn release(p: &crate::project::Project) -> Result<(), std::io::Error> {
   if !Path::new(&format!("releases/{}", version)).exists() {
     fs::create_dir(format!("releases/{}", version))?;
   }
-  if !Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
-    fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
+  if Path::new(&format!("releases/{}/@{}", version, p.prefix)).exists() {
+    return Err(error!("Release already exists! Run with --force to overwrite!"));
   }
+  fs::create_dir(format!("releases/{}/@{}", version, p.prefix))?;
   if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
     fs::create_dir(format!("releases/{}/@{}/addons", version, p.prefix))?;
   }

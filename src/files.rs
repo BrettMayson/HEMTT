@@ -2,12 +2,13 @@ use reqwest;
 
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, Error};
 use std::path::Path;
 
 use crate::project;
 
 pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
+  println!("Removing PBOs!");
   for entry in fs::read_dir("addons")? {
     let entry = entry?;
     let path = entry.path();
@@ -22,6 +23,22 @@ pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
     if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
       fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
     }
+  }
+  Ok(())
+}
+
+pub fn clear_release(version: &String) -> Result<(), Error> {
+  if Path::new(&format!("releases/{}", version)).exists() {
+    println!("Removing release {}!", version);
+    fs::remove_dir_all(format!("releases/{}", version))?;
+  }
+  Ok(())
+}
+
+pub fn clear_releases() -> Result<(), Error> {
+  println!("Removing all releases!");
+  if Path::new("releases").exists() {
+    fs::remove_dir_all("releases")?;
   }
   Ok(())
 }
