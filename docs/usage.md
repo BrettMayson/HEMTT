@@ -104,8 +104,9 @@ would produce
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
 
 ## --opts
-A comma seperated list of addtional compontents to build. HEMMT will look for these in the `./optionals` folder.
+A comma seperated list of addtional compontents to build. HEMTT will look for these in the `./optionals` folder. If no addons are provided HEMTT will build all optionals.
 
+`hemtt build --opts`
 `hemtt build --opts tracers`  
 `hemtt build --opts tracers,patrticles`
 

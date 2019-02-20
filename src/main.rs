@@ -8,6 +8,7 @@ use ansi_term;
 use self_update;
 
 use std::collections::{HashSet};
+use std::fs;
 use std::io::{stdin, stdout, Write, Error};
 use std::path::Path;
 
@@ -67,6 +68,7 @@ struct Args {
     flag_nowarn: bool,
     flag_version: bool,
     flag_release: bool,
+    flag_opts: bool,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_optionals: String,
@@ -137,6 +139,16 @@ fn run_command(args: &Args) -> Result<(), Error> {
         if args.arg_optionals != "" {
             let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
             p.optionals.append(&mut specified_optionals);
+            p.optionals.sort();
+            p.optionals.dedup();
+        } else if args.flag_opts {
+            let mut optionals: Vec<String> = Vec::new();
+            for entry in fs::read_dir("optionals")? {
+                let entry = entry.unwrap();
+                if !entry.path().is_dir() { continue };
+                optionals.push(entry.file_name().into_string().unwrap());
+            }
+            p.optionals = optionals;
         }
         if args.flag_release {
             let version = match &p.version {

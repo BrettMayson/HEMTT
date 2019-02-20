@@ -27,14 +27,10 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, std::io::Error> {
 pub fn build(p: &crate::project::Project) -> Result<(), Error> {
     for entry in fs::read_dir("addons")? {
         let entry = entry?;
-        let path = entry.path();
-        if !path.is_dir() { continue };
-        let cpath = path.clone().to_str().unwrap().replace(r#"\"#,"/");
-        let mut s = cpath.split("/");
-        s.next();
-        let name = s.next().unwrap().trim();
-        let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, name));
-        _build(&p, &path, &target, name)?;
+        if !entry.path().is_dir() { continue };
+        let name = entry.file_name().into_string().unwrap();
+        let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &name));
+        _build(&p, &entry.path(), &target, &name)?;
     }
     for opt in &p.optionals {
         let source = PathBuf::from(&format!("optionals/{}", opt));
