@@ -96,7 +96,7 @@ fn _build(p: &crate::project::Project, source: &Path, target: &Path, name: &str)
     let mut outf = File::create(target)?;
 
     let mut include = p.include.to_owned();
-    include.push(PathBuf::form("."));
+    include.push(PathBuf::from("."));
 
     armake2::pbo::cmd_build(
         source.to_path_buf(),
