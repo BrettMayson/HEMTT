@@ -39,15 +39,15 @@ install:
   - cargo -V
 
 test_script:
-  - if [%APPVEYOR_REPO_TAG%]==[false] (
-      cargo build --target %TARGET% &&
-      cargo build --target %TARGET% --release
-    )
-
   - ps: >-
       If ($ENV:APPVEYOR_REPO_TAG == false) {
         & ci\version.ps1
       }
+
+  - if [%APPVEYOR_REPO_TAG%]==[false] (
+      cargo build --target %TARGET% &&
+      cargo build --target %TARGET% --release
+    )
 
 artifacts:
   - path: target\%TARGET%\debug\hemtt.exe
