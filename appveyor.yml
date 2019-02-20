@@ -32,7 +32,6 @@ install:
       } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
         $Env:PATH += ';C:\msys64\mingw32\bin'
       }
-  - ps: ci\version.ps1
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
@@ -44,6 +43,11 @@ test_script:
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release
     )
+
+  - ps: >-
+      If ($ENV:APPVEYOR_REPO_TAG == false) {
+        & ci\version.ps1
+      }
 
 artifacts:
   - path: target\%TARGET%\debug\hemtt.exe
