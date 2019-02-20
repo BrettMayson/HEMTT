@@ -5,7 +5,7 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
     hemtt <a href="/HEMTT/#/usage?id=create">create</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force-f">--force</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>]
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">--force</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a> [&lt;optionals&gt;]]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
     hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;utility&gt;
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
@@ -69,15 +69,13 @@ Create a new addon folder. Requires a name to be used for the addon.
 # build
 Build the project into PBO files. HEMTT will only build the files that have changed.
 
-## Flags
-
-### --nowarn
+## --nowarn
 Hide warnings from the armake2 build process.
 
-### --force -f
+## --force
 Remove existing built files before starting the next build.
 
-### --release
+## --release
 Create and sign a release build of the project.
 
 A `hemtt.json` file of 
@@ -103,8 +101,14 @@ would produce
                 ├── TST_example.pbo
                 └── TST_main.pbo
 </pre>
-
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
+
+## --opts
+A comma seperated list of addtional compontents to build. HEMMT will look for these in the `./optionals` folder.
+
+`hemtt build --opts tracers`  
+`hemtt build --opts tracers,patrticles`
+
 <hr/>
 
 # clean

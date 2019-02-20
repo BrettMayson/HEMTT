@@ -29,7 +29,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn]
+    hemtt build [--release] [--force] [--nowarn] [--opts [<optionals>]]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -48,6 +48,7 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
+       --opts           Comma seperated list of addtional compontents to build
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -67,7 +68,8 @@ struct Args {
     flag_version: bool,
     flag_release: bool,
     arg_name: String,
-    arg_utility: Option<Utility>
+    arg_utility: Option<Utility>,
+    arg_optionals: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -123,7 +125,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
-        let p = project::get_project().unwrap();
+        let mut p = project::get_project().unwrap();
         if args.flag_force {
             files::clear_pbos(&p).unwrap();
         }
@@ -131,6 +133,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
+        }
+        if args.arg_optionals != "" {
+            let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
+            p.optionals.append(&mut specified_optionals);
         }
         if args.flag_release {
             let version = match &p.version {
@@ -140,7 +146,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             if args.flag_force {
                 files::clear_release(&version).unwrap();
             }
-            build::release(&p, &version).print_error(true);
+            build::release(&p,  &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
             build::build(&p).unwrap();

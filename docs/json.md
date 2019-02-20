@@ -56,7 +56,7 @@ Author of the project.
 ## version
 **Type**: String
 
-HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not that file, you can add a version number here.
+HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not have that file you can add a version number here.
 
 ```json
 "version": "1.0.0.0"
@@ -94,5 +94,17 @@ HEMTT will exclude matching files when building.
     "*.psd",
     "*.png",
     "*.tga"
-  ]
+]
+```
+
+## optionals
+**Type**: Array \[String\]
+
+HEMMT will build the specified optionals from the `./optionals` folder.
+
+```json
+"optionals": [
+    "tracers",
+    "particles"
+]
 ```
