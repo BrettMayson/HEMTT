@@ -16,11 +16,14 @@ pub struct Project {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "get_version_unwrap")]
     pub version: Option<String>,
+    #[serde(default="Vec::new")]
     pub files: Vec<String>,
     #[serde(default = "default_include")]
     pub include: Vec<PathBuf>,
-    #[serde(default = "default_exclude")]
+    #[serde(default = "Vec::new")]
     pub exclude: Vec<String>,
+    #[serde(default = "Vec::new")]
+    pub optionals: Vec<String>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -31,10 +34,6 @@ fn default_include() -> Vec<PathBuf> {
     }
 
     includes
-}
-
-fn default_exclude() -> Vec<String> {
-    vec![]
 }
 
 impl Project {
@@ -50,10 +49,11 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         name: name,
         prefix: prefix,
         author: author,
+        version: None,
         files: vec!["mod.cpp".to_owned()],
         include: vec![],
         exclude: vec![],
-        version: None,
+        optionals: vec![],
     };
     p.save()?;
     Ok(p)

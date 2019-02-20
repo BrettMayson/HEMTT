@@ -8,6 +8,7 @@ use ansi_term;
 use self_update;
 
 use std::collections::{HashSet};
+use std::fs;
 use std::io::{stdin, stdout, Write, Error};
 use std::path::Path;
 
@@ -29,7 +30,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn]
+    hemtt build [--release] [--force] [--nowarn] [--opts [<optionals>]]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -48,6 +49,7 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
+       --opts           Comma seperated list of addtional compontents to build
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -66,8 +68,10 @@ struct Args {
     flag_nowarn: bool,
     flag_version: bool,
     flag_release: bool,
+    flag_opts: bool,
     arg_name: String,
-    arg_utility: Option<Utility>
+    arg_utility: Option<Utility>,
+    arg_optionals: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -123,7 +127,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
-        let p = project::get_project().unwrap();
+        let mut p = project::get_project().unwrap();
         if args.flag_force {
             files::clear_pbos(&p).unwrap();
         }
@@ -131,6 +135,20 @@ fn run_command(args: &Args) -> Result<(), Error> {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
+        }
+        if args.arg_optionals != "" {
+            let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
+            p.optionals.append(&mut specified_optionals);
+            p.optionals.sort();
+            p.optionals.dedup();
+        } else if args.flag_opts {
+            let mut optionals: Vec<String> = Vec::new();
+            for entry in fs::read_dir("optionals")? {
+                let entry = entry.unwrap();
+                if !entry.path().is_dir() { continue };
+                optionals.push(entry.file_name().into_string().unwrap());
+            }
+            p.optionals = optionals;
         }
         if args.flag_release {
             let version = match &p.version {
