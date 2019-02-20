@@ -16,12 +16,15 @@ pub struct Project {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "get_version_unwrap")]
     pub version: Option<String>,
+    #[serde(default="empty_vec")]
     pub files: Vec<String>,
-    #[serde(default = "default_exclude")]
+    #[serde(default = "empty_vec")]
     pub exclude: Vec<String>,
+    #[serde(default = "empty_vec")]
+    pub optionals: Vec<String>,
 }
 
-fn default_exclude() -> Vec<String> {
+fn empty_vec() -> Vec<String> {
     vec![]
 }
 
@@ -38,9 +41,10 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         name: name,
         prefix: prefix,
         author: author,
+        version: None,
         files: vec!["mod.cpp".to_owned()],
         exclude: vec![],
-        version: None,
+        optionals: vec![],
     };
     p.save()?;
     Ok(p)
