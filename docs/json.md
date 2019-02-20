@@ -84,6 +84,19 @@ HEMTT will copy the files to the release directory after a successful release bu
 ```
 <hr/>
 
+## include
+**Type**: Array \[String (Path)\]
+
+HEMTT will include matching relative or absolute paths when building.
+
+```json
+"include": [
+    "./include"
+]
+```
+
+`./include` will be automatically added on project creation if "include" folder is present.
+
 ## exclude
 **Type**: Array \[String\]
 
