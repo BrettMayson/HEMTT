@@ -16,16 +16,12 @@ pub struct Project {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "get_version_unwrap")]
     pub version: Option<String>,
-    #[serde(default="empty_vec")]
+    #[serde(default="Vec::new")]
     pub files: Vec<String>,
-    #[serde(default = "empty_vec")]
+    #[serde(default = "Vec::new")]
     pub exclude: Vec<String>,
-    #[serde(default = "empty_vec")]
+    #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
-}
-
-fn empty_vec() -> Vec<String> {
-    vec![]
 }
 
 impl Project {
