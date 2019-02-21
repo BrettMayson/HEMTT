@@ -4,7 +4,7 @@ use serde_json;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 use std::io::Write;
 
@@ -18,10 +18,22 @@ pub struct Project {
     pub version: Option<String>,
     #[serde(default="Vec::new")]
     pub files: Vec<String>,
+    #[serde(default = "default_include")]
+    pub include: Vec<PathBuf>,
     #[serde(default = "Vec::new")]
     pub exclude: Vec<String>,
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
+}
+
+fn default_include() -> Vec<PathBuf> {
+    let mut includes = vec![];
+
+    if PathBuf::from("./include").exists() {
+        includes.push(PathBuf::from("./include"));
+    }
+
+    includes
 }
 
 impl Project {
@@ -39,6 +51,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         author: author,
         version: None,
         files: vec!["mod.cpp".to_owned()],
+        include: vec![],
         exclude: vec![],
         optionals: vec![],
     };

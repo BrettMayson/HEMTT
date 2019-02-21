@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
 use crate::error;
+use crate::error::*;
 
 pub fn modtime(addon: &Path) -> Result<SystemTime, std::io::Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -55,15 +56,16 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     for file in &p.files {
         fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;
     }
-    if !Path::new("keys").exists() {
-        fs::create_dir("keys")?;
+    if !Path::new("releases/keys").exists() {
+        fs::create_dir("releases/keys")?;
     }
-    if !Path::new(&format!("keys/{}.bikey", p.prefix)).exists() {
+    if !Path::new(&format!("releases/keys/{}.bikey", p.prefix)).exists() {
+        println!(" {} {}.bikey", "Generating".green().bold(), p.prefix);
         armake2::sign::cmd_keygen(PathBuf::from(&p.prefix))?;
-        fs::rename(format!("{}.bikey", p.prefix), format!("keys/{}.bikey", p.prefix))?;
-        fs::rename(format!("{}.biprivatekey", p.prefix), format!("keys/{}.biprivatekey", p.prefix))?;
+        fs::rename(format!("{}.bikey", p.prefix), format!("releases/keys/{}.bikey", p.prefix))?;
+        fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
     }
-    fs::copy(format!("keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
+    fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
     for entry in fs::read_dir("addons").unwrap() {
         _copy_sign(&entry.unwrap(), &p, &version)?;
     }
@@ -89,15 +91,20 @@ fn _build(p: &crate::project::Project, source: &Path, target: &Path, name: &str)
             }
         }
     }
+
     println!("  {} {}", "Building".green().bold(), name);
     let mut outf = File::create(target)?;
+
+    let mut include = p.include.to_owned();
+    include.push(PathBuf::from("."));
+
     armake2::pbo::cmd_build(
         source.to_path_buf(),
         &mut outf,
         &vec![],
         &p.exclude,
-        &vec![PathBuf::from("./include"), PathBuf::from(".")],
-    )?;
+        &include,
+    ).print_error(false);
     Ok(true)
 }
 
@@ -111,7 +118,7 @@ fn _copy_sign(entry: &DirEntry, p: &crate::project::Project, version: &String) -
     fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath))?;
     println!("   {} {}", "Signing".green().bold(), cpath);
     armake2::sign::cmd_sign(
-        PathBuf::from(format!("keys/{}.biprivatekey", p.prefix)),
+        PathBuf::from(format!("releases/keys/{}.biprivatekey", p.prefix)),
         PathBuf::from(format!("releases/{}/@{}/{}", version, p.prefix, cpath)),
         Some(PathBuf::from(format!("releases/{0}/@{1}/{2}.{0}.bisign", version, p.prefix, cpath))),
         armake2::sign::BISignVersion::V3
