@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use docopt::Docopt;
 use colored::*;
+use num_cpus;
 
 #[cfg(windows)]
 use ansi_term;
@@ -41,7 +42,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [---jobs=<n>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -63,6 +64,7 @@ Options:
        --addons         Comma seperated list of addons to build
        --opts=<addons>  Comma seperated list of addtional compontents to build
        --skip=<addons>  Comma seperated list of addons to skip building
+    -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -83,6 +85,7 @@ struct Args {
     flag_release: bool,
     flag_opts: String,
     flag_skip: String,
+    flag_jobs: usize,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_addons: String,
@@ -179,7 +182,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 files::clear_release(&version).unwrap();
                 files::clear_pbos(&p).unwrap();
             }
-            build::release(&p, &version).print_error(true);
+            build::release(&p, &version, &args.flag_jobs).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
             if args.arg_addons != "" {
@@ -194,8 +197,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 if args.flag_force {
                     files::clear_pbos(&p).unwrap();
                 }
-                build::build(&p).print_error(true);
+                build::build(&p, &args.flag_jobs).print_error(true);
             }
+            build::build(&p, &args.flag_jobs).unwrap();
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
         if !args.flag_nowarn {
@@ -242,13 +246,17 @@ fn main() {
         ansi_support();
     }
 
-    let args: Args = Docopt::new(USAGE)
+    let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
         println!("HEMTT Version {}", &VERSION());
         std::process::exit(0);
+    }
+
+    if args.flag_jobs == 0 {
+        args.flag_jobs = num_cpus::get();
     }
 
     run_command(&args).print_error(true);

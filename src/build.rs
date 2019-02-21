@@ -12,6 +12,8 @@ use std::time::{Duration, SystemTime};
 use crate::error;
 use crate::error::*;
 
+use rayon::prelude::*;
+
 pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
     for entry in walkdir::WalkDir::new(addon) {
@@ -25,21 +27,24 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     Ok(recent)
 }
 
-pub fn build(p: &crate::project::Project) -> Result<(), Error> {
-    for entry in fs::read_dir("addons")? {
-        let entry = entry?;
-        if !entry.path().is_dir() { continue }
+pub fn build(p: &crate::project::Project, jobs: &usize) -> Result<(), Error> {
+    rayon::ThreadPoolBuilder::new().num_threads(*jobs).build_global().unwrap();
+    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+        .map(|file| file.unwrap())
+        .filter(|file_or_dir| file_or_dir.path().is_dir())
+        .collect();
+    dirs.par_iter().for_each(|entry| {
         let name = entry.file_name().into_string().unwrap();
-        if p.skip.contains(&name) { continue }
+        if p.skip.contains(&name) { return };
         let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &name));
-        _build(&p, &entry.path(), &target, &name)?;
-    }
-    for opt in &p.optionals {
-        if p.skip.contains(opt) { continue }
+        _build(&p, &entry.path(), &target, &name).unwrap();
+    });
+    &p.optionals.par_iter().for_each(|opt| {
+        if p.skip.contains(opt) {return};
         let source = PathBuf::from(&format!("optionals/{}", opt));
         let target = PathBuf::from(&format!("optionals/{}_{}.pbo", p.prefix, opt));
-        _build(&p, &source, &target, &opt)?;
-    }
+        _build(&p, &source, &target, &opt).unwrap();
+    });
     Ok(())
 }
 
@@ -50,12 +55,12 @@ pub fn build_single(p: &crate::project::Project, addon: &String) -> Result<(), E
     Ok(())
 }
 
-pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
+pub fn release(p: &crate::project::Project, version: &String, jobs: &usize) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
     if Path::new(&format!("releases/{}", version)).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
-    build(&p)?;
+    build(&p, jobs)?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
     }
