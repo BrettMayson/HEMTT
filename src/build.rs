@@ -1,5 +1,6 @@
 use walkdir;
 use armake2;
+use rayon::prelude::*;
 
 use colored::*;
 
@@ -11,8 +12,6 @@ use std::time::{Duration, SystemTime};
 
 use crate::error;
 use crate::error::*;
-
-use rayon::prelude::*;
 
 pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -60,7 +59,7 @@ pub fn release(p: &crate::project::Project, version: &String, jobs: &usize) -> R
     if Path::new(&format!("releases/{}", version)).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
-    build(&p, jobs)?;
+    build(&p, &jobs)?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
     }
