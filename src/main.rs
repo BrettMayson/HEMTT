@@ -27,12 +27,12 @@ const USAGE: &'static str = "
 HEMTT, a simple to use build manager for Arma 3 mods using the CBA project structure
 
 Usage:
-    hemtt init
-    hemtt create
-    hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn] [--opts [<optionals>]]
-    hemtt clean [--force]
-    hemtt run <utility>
+    hemtt init [-v]
+    hemtt create [-v]
+    hemtt addon [-v] <name>
+    hemtt build [-v] [--release] [--force] [--nowarn] [--opts [<optionals>]]
+    hemtt clean [-v] [--force]
+    hemtt run [-v] <utility>
     hemtt update
     hemtt (-h | --help)
     hemtt --version
@@ -131,11 +131,17 @@ fn run_command(args: &Args) -> Result<(), Error> {
         if args.flag_force {
             files::clear_pbos(&p).unwrap();
         }
-        if !args.flag_nowarn {
-            unsafe {
+
+        // Set non-API flags directly in armake2 (replicated main.rs behaviour from armake2)
+        unsafe {
+            if !args.flag_nowarn {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
+            if args.flag_verbose {
+                armake2::error::WARNINGS_MAXIMUM = std::u32::MAX;
+            }
         }
+
         if args.arg_optionals != "" {
             let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
             p.optionals.append(&mut specified_optionals);
