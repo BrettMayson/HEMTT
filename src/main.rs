@@ -199,7 +199,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 }
                 build::build(&p, &args.flag_jobs).print_error(true);
             }
-            build::build(&p, &args.flag_jobs).unwrap();
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
         if !args.flag_nowarn {
