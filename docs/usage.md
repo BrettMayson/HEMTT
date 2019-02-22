@@ -5,7 +5,7 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
     hemtt <a href="/HEMTT/#/usage?id=create">create</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a> [&lt;optionals&gt;]]
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a>=&lt;addons&gt;] [<a href="/HEMTT/#/usage?id=-skip">--skip</a>=&lt;addons&gt;]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
     hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;utility&gt;
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
@@ -13,10 +13,12 @@ Usage:
     hemtt --version
 
 Options:
-    -f  --force          Overwrite target files
-        --nowarn         Suppress armake2 warnings
-    -h  --help           Show usage information and exit
-        --version        Show version number and exit
+    -f --force          Overwrite target files
+       --nowarn         Suppress armake2 warnings
+       --opts=&lt;addons&gt;  Comma seperated list of addtional compontents to build
+       --skip=&lt;addons&gt;  Comma seperated list of addons to skip building
+    -h --help           Show usage information and exit
+       --version        Show version number and exit
 </pre>
 <hr/>
 
@@ -116,11 +118,17 @@ would produce
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
 
 ## --opts
-A comma seperated list of addtional compontents to build. HEMTT will look for these in the `./optionals` folder. If no addons are provided HEMTT will build all optionals.
+A comma seperated list of addtional addons to build. HEMTT will look for these in the `./optionals` folder. Using `--opts all` will build all addons in the `./optionals` folder.
 
-`hemtt build --opts`
+`hemtt build --opts all`  
 `hemtt build --opts tracers`  
 `hemtt build --opts tracers,patrticles`
+
+## --skip
+A comma seperated list of additonal addons to skip building.
+
+`hemtt build --skip hearing`  
+`hemtt build --skip hearing,zeus`
 
 <hr/>
 

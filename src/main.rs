@@ -30,7 +30,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts [<optionals>]]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -49,8 +49,9 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --opts           Comma seperated list of addtional compontents to build
        --addons         Comma seperated list of addons to build
+       --opts=<addons>  Comma seperated list of addtional compontents to build
+       --skip=<addons>  Comma seperated list of addons to skip building
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -69,10 +70,10 @@ struct Args {
     flag_nowarn: bool,
     flag_version: bool,
     flag_release: bool,
-    flag_opts: bool,
+    flag_opts: String,
+    flag_skip: String,
     arg_name: String,
     arg_utility: Option<Utility>,
-    arg_optionals: String,
     arg_addons: String,
 }
 
@@ -135,12 +136,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
         }
-        if args.arg_optionals != "" {
-            let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
-            p.optionals.append(&mut specified_optionals);
-            p.optionals.sort();
-            p.optionals.dedup();
-        } else if args.flag_opts {
+        if args.flag_opts == "all" {
             let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
@@ -148,6 +144,17 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 optionals.push(entry.file_name().into_string().unwrap());
             }
             p.optionals = optionals;
+        } else if args.flag_opts != "" {
+            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            p.optionals.append(&mut specified_optionals);
+            p.optionals.sort();
+            p.optionals.dedup();
+        }
+        if args.flag_skip != "" {
+            let mut specified_skip = args.flag_skip.split(",").map(|s| s.to_string()).collect();
+            p.skip.append(&mut specified_skip);
+            p.skip.sort();
+            p.skip.dedup();
         }
         if args.flag_release {
             let version = match &p.version {

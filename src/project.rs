@@ -24,6 +24,8 @@ pub struct Project {
     pub exclude: Vec<String>,
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
+    #[serde(default = "Vec::new")]
+    pub skip: Vec<String>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -54,6 +56,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         include: vec![],
         exclude: vec![],
         optionals: vec![],
+        skip: vec![],
     };
     p.save()?;
     Ok(p)
