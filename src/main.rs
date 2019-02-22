@@ -41,7 +41,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -60,6 +60,7 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
+       --addons         Comma seperated list of addons to build
        --opts=<addons>  Comma seperated list of addtional compontents to build
        --skip=<addons>  Comma seperated list of addons to skip building
     -h --help           Show usage information and exit
@@ -84,6 +85,7 @@ struct Args {
     flag_skip: String,
     arg_name: String,
     arg_utility: Option<Utility>,
+    arg_addons: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -143,17 +145,11 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
         let mut p = project::get_project().unwrap();
-        // --force Clear PBOs
-        if args.flag_force {
-            files::clear_pbos(&p).unwrap();
-        }
-        // --no-warn Disable Armake 2 warnings
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
         }
-        // --opts Optional addons
         if args.flag_opts == "all" {
             let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
@@ -168,7 +164,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
             p.optionals.sort();
             p.optionals.dedup();
         }
-        // --skip Skip addons
         if args.flag_skip != "" {
             let mut specified_skip = args.flag_skip.split(",").map(|s| s.to_string()).collect();
             p.skip.append(&mut specified_skip);
@@ -182,11 +177,25 @@ fn run_command(args: &Args) -> Result<(), Error> {
             };
             if args.flag_force {
                 files::clear_release(&version).unwrap();
+                files::clear_pbos(&p).unwrap();
             }
             build::release(&p, &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
-            build::build(&p).unwrap();
+            if args.arg_addons != "" {
+                let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+                for addon in addons {
+                    if args.flag_force {
+                        files::clear_pbo(&p, &addon).unwrap();
+                    }
+                    build::build_single(&p, &addon).print_error(true);
+                }
+            } else {
+                if args.flag_force {
+                    files::clear_pbos(&p).unwrap();
+                }
+                build::build(&p).print_error(true);
+            }
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
         if !args.flag_nowarn {

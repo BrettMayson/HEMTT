@@ -43,6 +43,13 @@ pub fn build(p: &crate::project::Project) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn build_single(p: &crate::project::Project, addon: &String) -> Result<(), Error> {
+    let source = PathBuf::from(&format!("addons/{}", &addon));
+    let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &addon));
+    _build(&p, &source, &target, &addon)?;
+    Ok(())
+}
+
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
     if Path::new(&format!("releases/{}", version)).exists() {
