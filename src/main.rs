@@ -140,12 +140,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             }
         }
         // --opts Optional addons
-        if args.flag_opts != "all" {
-            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
-            p.optionals.append(&mut specified_optionals);
-            p.optionals.sort();
-            p.optionals.dedup();
-        } else {
+        if args.flag_opts == "all" {
             let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
@@ -153,6 +148,11 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 optionals.push(entry.file_name().into_string().unwrap());
             }
             p.optionals = optionals;
+        } else if args.flag_opts != "" {
+            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            p.optionals.append(&mut specified_optionals);
+            p.optionals.sort();
+            p.optionals.dedup();
         }
         // --skip Skip addons
         if args.flag_skip != "" {
