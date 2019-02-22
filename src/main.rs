@@ -156,6 +156,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             };
             if args.flag_force {
                 files::clear_release(&version).unwrap();
+                files::clear_pbos(&p).unwrap();
             }
             build::release(&p, &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
