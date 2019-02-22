@@ -30,7 +30,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn] [--opts [<optionals>]]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts [<optionals>]]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -50,6 +50,7 @@ Options:
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
        --opts           Comma seperated list of addtional compontents to build
+       --addons         Comma seperated list of addons to build
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -72,6 +73,7 @@ struct Args {
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_optionals: String,
+    arg_addons: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -128,9 +130,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
         let mut p = project::get_project().unwrap();
-        if args.flag_force {
-            files::clear_pbos(&p).unwrap();
-        }
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
@@ -161,7 +160,20 @@ fn run_command(args: &Args) -> Result<(), Error> {
             build::release(&p, &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
-            build::build(&p).unwrap();
+            if args.arg_addons != "" {
+                let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+                for addon in addons {
+                    if args.flag_force {
+                        files::clear_pbo(&p, &addon).unwrap();
+                    }
+                    build::build_single(&p, &addon).print_error(true);
+                }
+            } else {
+                if args.flag_force {
+                    files::clear_pbos(&p).unwrap();
+                }
+                build::build(&p).print_error(true);
+            }
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
         if !args.flag_nowarn {

@@ -5,7 +5,7 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
     hemtt <a href="/HEMTT/#/usage?id=create">create</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">--force</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a> [&lt;optionals&gt;]]
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a> [&lt;optionals&gt;]]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
     hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;utility&gt;
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
@@ -68,6 +68,18 @@ Create a new addon folder. Requires a name to be used for the addon.
 
 # build
 Build the project into PBO files. HEMTT will only build the files that have changed.
+
+## addons
+A comma seperated list of addon to build. HEMTT will build all addons in the `./addons` folder if no addons are specified.
+
+**Build all**  
+`hemtt build`
+
+**Build a single addon**  
+`hemtt build tracers`
+
+**Build multiple addons**  
+`hemtt build tracers,hearing`
 
 ## --nowarn
 Hide warnings from the armake2 build process.
