@@ -22,13 +22,15 @@ use crate::error::*;
 
 const HEMTT_FILE: &str = "hemtt.json";
 
+#[allow(non_snake_case)]
 #[cfg(debug_assertions)]
-fn version() -> String {
+fn VERSION() -> String {
     format!("{}-debug", env!("CARGO_PKG_VERSION"))
 }
 
+#[allow(non_snake_case)]
 #[cfg(not(debug_assertions))]
-fn version() -> String {
+fn VERSION() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
@@ -216,10 +218,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .target(&target)
             .bin_name("hemtt")
             .show_download_progress(true)
-            .current_version(&version())
+            .current_version(&VERSION())
             .build().unwrap()
             .update().unwrap();
-        println!("Using Version: {}", &status.version());
+        println!("Using Version: {}", status.version());
         Ok(())
     } else {
         unreachable!()
@@ -236,7 +238,7 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
-        println!("HEMTT Version {}", &version());
+        println!("HEMTT Version {}", &VERSION());
         std::process::exit(0);
     }
 
