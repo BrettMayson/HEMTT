@@ -27,7 +27,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 }
 
 pub fn build(p: &crate::project::Project, jobs: &usize) -> Result<(), Error> {
-    rayon::ThreadPoolBuilder::new().num_threads(*jobs).build_global().unwrap();
+    Some(rayon::ThreadPoolBuilder::new().num_threads(*jobs).build_global());
     let dirs: Vec<_> = fs::read_dir("addons").unwrap()
         .map(|file| file.unwrap())
         .filter(|file_or_dir| file_or_dir.path().is_dir())
