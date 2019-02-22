@@ -100,7 +100,7 @@ HEMTT will exclude matching files when building.
 ## optionals
 **Type**: Array \[String\]
 
-HEMTT will build the specified optionals from the `./optionals` folder.
+HEMTT will build the specified addons from the `./optionals` folder.
 
 ```json
 "optionals": [

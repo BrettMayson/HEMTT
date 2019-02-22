@@ -106,14 +106,14 @@ would produce
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
 
 ## --opts
-A comma seperated list of addtional compontents to build. HEMTT will look for these in the `./optionals` folder. Using `--opts all` will build all addons in the `./optionals` folder.
+A comma seperated list of addtional addons to build. HEMTT will look for these in the `./optionals` folder. Using `--opts all` will build all addons in the `./optionals` folder.
 
 `hemtt build --opts all`  
 `hemtt build --opts tracers`  
 `hemtt build --opts tracers,patrticles`
 
 ## --skip
-A comma seperated list of addtional compontents to skip building.
+A comma seperated list of additonal addons to skip building.
 
 `hemtt build --skip hearing`  
 `hemtt build --skip hearing,zeus`
