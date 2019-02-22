@@ -100,6 +100,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
         init().unwrap();
         Ok(())
     } else if args.cmd_create {
+        if Path::new("addons").exists() {
+            return Err(error!("The current directory already has a mod. Use init instead of create."));
+        }
         check(true, args.flag_force).print_error(true);
         let p = init().unwrap();
         let main = "main".to_owned();
@@ -231,7 +234,7 @@ fn main() {
     run_command(&args).print_error(true);
 }
 
-fn check(write: bool, force: bool) -> Result<(), std::io::Error> {
+fn check(write: bool, force: bool) -> Result<(), Error> {
     if Path::new(HEMTT_FILE).exists() && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
     } else if Path::new(HEMTT_FILE).exists() && write && force {
@@ -243,7 +246,7 @@ fn check(write: bool, force: bool) -> Result<(), std::io::Error> {
     }
 }
 
-fn init() -> Result<crate::project::Project, std::io::Error> {
+fn init() -> Result<crate::project::Project, Error> {
     let name = input("Project Name (My Cool Mod)");
     let prefix = input("Prefix (MCM)");
     let author = input("Author");
