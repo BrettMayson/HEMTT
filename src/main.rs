@@ -20,8 +20,17 @@ mod utilities;
 
 use crate::error::*;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const HEMTT_FILE: &str = "hemtt.json";
+
+#[cfg(debug_assertions)]
+fn version() -> String {
+    format!("{}-debug", env!("CARGO_PKG_VERSION"))
+}
+
+#[cfg(not(debug_assertions))]
+fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
 
 const USAGE: &'static str = "
 HEMTT, a simple to use build manager for Arma 3 mods using the CBA project structure
@@ -207,10 +216,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .target(&target)
             .bin_name("hemtt")
             .show_download_progress(true)
-            .current_version(VERSION)
+            .current_version(&version())
             .build().unwrap()
             .update().unwrap();
-        println!("Using Version: {}", status.version());
+        println!("Using Version: {}", &status.version());
         Ok(())
     } else {
         unreachable!()
@@ -227,7 +236,7 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
-        println!("HEMTT Version {}", VERSION);
+        println!("HEMTT Version {}", &version());
         std::process::exit(0);
     }
 
