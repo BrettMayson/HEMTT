@@ -22,6 +22,8 @@ pub struct Project {
     pub exclude: Vec<String>,
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
+    #[serde(default = "Vec::new")]
+    pub skip: Vec<String>,
 }
 
 impl Project {
@@ -41,6 +43,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         files: vec!["mod.cpp".to_owned()],
         exclude: vec![],
         optionals: vec![],
+        skip: vec![],
     };
     p.save()?;
     Ok(p)
