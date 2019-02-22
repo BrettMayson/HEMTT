@@ -70,7 +70,7 @@ Create a new addon folder. Requires a name to be used for the addon.
 Build the project into PBO files. HEMTT will only build the files that have changed.
 
 ## addons
-A comma seperated list of addon to build. HEMTT will build all addons in the `./addons` folder if no addons are specified.
+A comma seperated list of addon to build. HEMTT will build all addons in the `./addons` folder if no addons are specified. HEMTT will always build all addons when using `--release`.
 
 **Build all**  
 `hemtt build`
