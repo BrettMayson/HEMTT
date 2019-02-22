@@ -30,10 +30,12 @@ pub fn build(p: &crate::project::Project) -> Result<(), Error> {
         let entry = entry?;
         if !entry.path().is_dir() { continue };
         let name = entry.file_name().into_string().unwrap();
+        if p.skip.contains(&name) { continue };
         let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &name));
         _build(&p, &entry.path(), &target, &name)?;
     }
     for opt in &p.optionals {
+        if p.skip.contains(opt) { continue };
         let source = PathBuf::from(&format!("optionals/{}", opt));
         let target = PathBuf::from(&format!("optionals/{}_{}.pbo", p.prefix, opt));
         _build(&p, &source, &target, &opt)?;
