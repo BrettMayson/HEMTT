@@ -121,3 +121,36 @@ HEMMT will build the specified optionals from the `./optionals` folder.
     "particles"
 ]
 ```
+
+## headerexts
+**Type**: Array \[String\]
+
+HEMTT will apply specified header extensions to each PBO.
+
+```json
+"headerexts": [
+    "author=me"
+]
+```
+
+## modname
+**Type**: String
+
+HEMTT will use the specified mod name (without `@`) to form `@mod` folder.
+
+```json
+"modname": "my_mod"
+```
+
+## signame
+**Type**: String
+
+HEMTT will use the specified signature name as part of the full signature (`.bisign`) name.
+
+```json
+"signame": "my_custom_name"
+```
+
+### Replacements
+
+- `{{version}}`: Mod version in format `MAJOR.MINOR.PATCH.BUILD`
