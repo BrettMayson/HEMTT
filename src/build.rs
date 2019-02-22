@@ -134,7 +134,7 @@ fn _copy_sign(folder: &String, entry: &DirEntry, p: &crate::project::Project, ve
 
     let signame = p.get_signame(&pbo);
 
-    println!("   {0} {1}/{2} => {1}/{3}", "Signing".green().bold(), folder, pbo, signame);
+    println!("   {} {}/{}", "Signing".green().bold(), folder, pbo);
     armake2::sign::cmd_sign(
         PathBuf::from(format!("releases/keys/{}.biprivatekey", p.prefix)),
         PathBuf::from(format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo)),

@@ -30,7 +30,7 @@ pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
 
 pub fn clear_release(version: &String) -> Result<(), Error> {
     if Path::new(&format!("releases/{}", version)).exists() {
-        println!("  {} release v{}", "Cleaning".yellow().bold(), version);
+        println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
         fs::remove_dir_all(format!("releases/{}", version))?;
     }
     Ok(())
