@@ -42,7 +42,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [---jobs=<n>]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
