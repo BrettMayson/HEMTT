@@ -25,10 +25,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     Ok(recent)
 }
 
-pub fn build(p: &crate::project::Project, jobs: &usize) -> Result<(), Error> {
-    // We're only allowed to initialise a thread pool once
-    // This makes the first attempt the canonical one and allows all others to fail
-    Some(rayon::ThreadPoolBuilder::new().num_threads(*jobs).build_global());
+pub fn build(p: &crate::project::Project) -> Result<(), Error> {
     let dirs: Vec<_> = fs::read_dir("addons").unwrap()
         .map(|file| file.unwrap())
         .filter(|file_or_dir| file_or_dir.path().is_dir())
@@ -55,12 +52,12 @@ pub fn build_single(p: &crate::project::Project, addon: &String) -> Result<(), E
     Ok(())
 }
 
-pub fn release(p: &crate::project::Project, version: &String, jobs: &usize) -> Result<(), Error> {
+pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     println!(" {} release v{}", "Preparing".green().bold(), version);
     if Path::new(&format!("releases/{}", version)).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
-    build(&p, &jobs)?;
+    build(&p)?;
     if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
     }
@@ -80,9 +77,12 @@ pub fn release(p: &crate::project::Project, version: &String, jobs: &usize) -> R
         fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
     }
     fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
-    for entry in fs::read_dir("addons").unwrap() {
-        _copy_sign(&entry.unwrap(), &p, &version)?;
-    }
+    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+        .map(|file| file.unwrap())
+        .collect();
+    dirs.par_iter().for_each(|entry| {
+        _copy_sign(&entry, &p, &version).unwrap();
+    });
     if Path::new("optionals").exists() {
         if !Path::new(&format!("releases/{}/@{}/optionals", version, p.prefix)).exists() {
             fs::create_dir_all(format!("releases/{}/@{}/optionals", version, p.prefix))?;

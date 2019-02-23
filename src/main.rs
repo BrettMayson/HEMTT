@@ -1,7 +1,8 @@
-use serde::Deserialize;
-use docopt::Docopt;
 use colored::*;
+use docopt::Docopt;
 use num_cpus;
+use rayon::prelude::*;
+use serde::Deserialize;
 
 #[cfg(windows)]
 use ansi_term;
@@ -182,22 +183,22 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 files::clear_release(&version).unwrap();
                 files::clear_pbos(&p).unwrap();
             }
-            build::release(&p, &version, &args.flag_jobs).print_error(true);
+            build::release(&p, &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
             if args.arg_addons != "" {
                 let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
-                for addon in addons {
+                addons.par_iter().for_each(|addon| {
                     if args.flag_force {
                         files::clear_pbo(&p, &addon).unwrap();
                     }
                     build::build_single(&p, &addon).print_error(true);
-                }
+                });
             } else {
                 if args.flag_force {
                     files::clear_pbos(&p).unwrap();
                 }
-                build::build(&p, &args.flag_jobs).print_error(true);
+                build::build(&p).print_error(true);
             }
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
@@ -257,6 +258,7 @@ fn main() {
     if args.flag_jobs == 0 {
         args.flag_jobs = num_cpus::get();
     }
+    rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 
     run_command(&args).print_error(true);
 }
