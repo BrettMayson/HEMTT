@@ -25,6 +25,8 @@ pub struct Project {
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
     #[serde(default = "Vec::new")]
+    pub skip: Vec<String>,
+    #[serde(default = "Vec::new")]
     pub headerexts: Vec<String>,
     #[serde(default = "String::new")]
     pub modname: String,
@@ -85,6 +87,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         include: vec![],
         exclude: vec![],
         optionals: vec![],
+        skip: vec![],
         headerexts: vec![],
         modname: String::new(),
         signame: String::new(),

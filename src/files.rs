@@ -8,22 +8,20 @@ use std::path::Path;
 
 use crate::project;
 
-pub fn clear_pbos(p: &project::Project) -> Result<(), std::io::Error> {
+pub fn clear_pbos(p: &project::Project) -> Result<(), Error> {
     println!("  {} PBOs", "Cleaning".yellow().bold());
     for entry in fs::read_dir("addons")? {
         let entry = entry?;
-        let path = entry.path();
-        if !path.is_dir() {
-            continue;
-        }
-        let cpath = path.clone();
-        let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
-        let mut s = cpath.split("/");
-        s.next();
-        let name = s.next().unwrap().trim();
-        if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
-            fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
-        }
+        if !entry.path().is_dir() { continue }
+        let name = entry.file_name().into_string().unwrap();
+        clear_pbo(&p, &name)?;
+    }
+    Ok(())
+}
+
+pub fn clear_pbo(p: &project::Project, name: &String) -> Result<(), Error> {
+    if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
+        fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
     }
     Ok(())
 }

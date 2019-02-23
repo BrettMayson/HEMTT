@@ -20,8 +20,19 @@ mod utilities;
 
 use crate::error::*;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const HEMTT_FILE: &str = "hemtt.json";
+
+#[allow(non_snake_case)]
+#[cfg(debug_assertions)]
+fn VERSION() -> String {
+    format!("{}-debug", env!("CARGO_PKG_VERSION"))
+}
+
+#[allow(non_snake_case)]
+#[cfg(not(debug_assertions))]
+fn VERSION() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
 
 const USAGE: &'static str = "
 HEMTT, a simple to use build manager for Arma 3 mods using the CBA project structure
@@ -30,7 +41,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [--release] [--force] [--nowarn] [--opts [<optionals>]]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -49,7 +60,9 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --opts           Comma seperated list of addtional compontents to build
+       --addons         Comma seperated list of addons to build
+       --opts=<addons>  Comma seperated list of addtional compontents to build
+       --skip=<addons>  Comma seperated list of addons to skip building
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -68,10 +81,11 @@ struct Args {
     flag_nowarn: bool,
     flag_version: bool,
     flag_release: bool,
-    flag_opts: bool,
+    flag_opts: String,
+    flag_skip: String,
     arg_name: String,
     arg_utility: Option<Utility>,
-    arg_optionals: String,
+    arg_addons: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -99,6 +113,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
         init().unwrap();
         Ok(())
     } else if args.cmd_create {
+        if Path::new("addons").exists() {
+            return Err(error!("The current directory already has a mod. Use init instead of create."));
+        }
         check(true, args.flag_force).print_error(true);
         let p = init().unwrap();
         let main = "main".to_owned();
@@ -128,20 +145,12 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
         let mut p = project::get_project().unwrap();
-        if args.flag_force {
-            files::clear_pbos(&p).unwrap();
-        }
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
         }
-        if args.arg_optionals != "" {
-            let mut specified_optionals = args.arg_optionals.split(",").map(|s| s.to_string()).collect();
-            p.optionals.append(&mut specified_optionals);
-            p.optionals.sort();
-            p.optionals.dedup();
-        } else if args.flag_opts {
+        if args.flag_opts == "all" {
             let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
@@ -149,6 +158,17 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 optionals.push(entry.file_name().into_string().unwrap());
             }
             p.optionals = optionals;
+        } else if args.flag_opts != "" {
+            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            p.optionals.append(&mut specified_optionals);
+            p.optionals.sort();
+            p.optionals.dedup();
+        }
+        if args.flag_skip != "" {
+            let mut specified_skip = args.flag_skip.split(",").map(|s| s.to_string()).collect();
+            p.skip.append(&mut specified_skip);
+            p.skip.sort();
+            p.skip.dedup();
         }
         if args.flag_release {
             let version = match &p.version {
@@ -157,11 +177,25 @@ fn run_command(args: &Args) -> Result<(), Error> {
             };
             if args.flag_force {
                 files::clear_release(&version).unwrap();
+                files::clear_pbos(&p).unwrap();
             }
             build::release(&p, &version).print_error(true);
             println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
         } else {
-            build::build(&p).unwrap();
+            if args.arg_addons != "" {
+                let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+                for addon in addons {
+                    if args.flag_force {
+                        files::clear_pbo(&p, &addon).unwrap();
+                    }
+                    build::build_single(&p, &addon).print_error(true);
+                }
+            } else {
+                if args.flag_force {
+                    files::clear_pbos(&p).unwrap();
+                }
+                build::build(&p).print_error(true);
+            }
             println!("  {} {}", "Finished".green().bold(), &p.name);
         }
         if !args.flag_nowarn {
@@ -193,7 +227,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .target(&target)
             .bin_name("hemtt")
             .show_download_progress(true)
-            .current_version(VERSION)
+            .current_version(&VERSION())
             .build().unwrap()
             .update().unwrap();
         println!("Using Version: {}", status.version());
@@ -213,14 +247,14 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
-        println!("HEMTT Version {}", VERSION);
+        println!("HEMTT Version {}", &VERSION());
         std::process::exit(0);
     }
 
     run_command(&args).print_error(true);
 }
 
-fn check(write: bool, force: bool) -> Result<(), std::io::Error> {
+fn check(write: bool, force: bool) -> Result<(), Error> {
     if Path::new(HEMTT_FILE).exists() && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
     } else if Path::new(HEMTT_FILE).exists() && write && force {
@@ -232,7 +266,7 @@ fn check(write: bool, force: bool) -> Result<(), std::io::Error> {
     }
 }
 
-fn init() -> Result<crate::project::Project, std::io::Error> {
+fn init() -> Result<crate::project::Project, Error> {
     let name = input("Project Name (My Cool Mod)");
     let prefix = input("Prefix (MCM)");
     let author = input("Author");

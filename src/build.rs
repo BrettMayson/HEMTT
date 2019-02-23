@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime};
 use crate::error;
 use crate::error::*;
 
-pub fn modtime(addon: &Path) -> Result<SystemTime, std::io::Error> {
+pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
     for entry in walkdir::WalkDir::new(addon) {
         let metadata = fs::metadata(entry.unwrap().path())?;
@@ -28,16 +28,25 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, std::io::Error> {
 pub fn build(p: &crate::project::Project) -> Result<(), Error> {
     for entry in fs::read_dir("addons")? {
         let entry = entry?;
-        if !entry.path().is_dir() { continue };
+        if !entry.path().is_dir() { continue }
         let name = entry.file_name().into_string().unwrap();
+        if p.skip.contains(&name) { continue }
         let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &name));
         _build(&p, &entry.path(), &target, &name)?;
     }
     for opt in &p.optionals {
+        if p.skip.contains(opt) { continue }
         let source = PathBuf::from(&format!("optionals/{}", opt));
         let target = PathBuf::from(&format!("optionals/{}_{}.pbo", p.prefix, opt));
         _build(&p, &source, &target, &opt)?;
     }
+    Ok(())
+}
+
+pub fn build_single(p: &crate::project::Project, addon: &String) -> Result<(), Error> {
+    let source = PathBuf::from(&format!("addons/{}", &addon));
+    let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &addon));
+    _build(&p, &source, &target, &addon)?;
     Ok(())
 }
 
