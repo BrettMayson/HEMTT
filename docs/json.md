@@ -154,3 +154,13 @@ HEMTT will use the specified signature name as part of the full signature (`.bis
 ### Replacements
 
 - `{{version}}`: Mod version in format `MAJOR.MINOR.PATCH.BUILD`
+
+### Example
+
+```json
+"project": "TST",
+"version": "1.0.0.0",
+"signame": "my-{{version}}"
+```
+
+Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
