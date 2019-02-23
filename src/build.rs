@@ -1,8 +1,7 @@
-use walkdir;
 use armake2;
-use rayon::prelude::*;
-
 use colored::*;
+use rayon::prelude::*;
+use walkdir;
 
 use std::fs;
 use std::fs::{File, DirEntry};
