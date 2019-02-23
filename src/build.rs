@@ -26,6 +26,8 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 }
 
 pub fn build(p: &crate::project::Project, jobs: &usize) -> Result<(), Error> {
+    // We're only allowed to initialise a thread pool once
+    // This makes the first attempt the canonical one and allows all others to fail
     Some(rayon::ThreadPoolBuilder::new().num_threads(*jobs).build_global());
     let dirs: Vec<_> = fs::read_dir("addons").unwrap()
         .map(|file| file.unwrap())
