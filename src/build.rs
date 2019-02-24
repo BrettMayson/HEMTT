@@ -1,7 +1,7 @@
-use walkdir;
 use armake2;
-
 use colored::*;
+use rayon::prelude::*;
+use walkdir;
 
 use std::fs;
 use std::fs::{File, DirEntry};
@@ -26,20 +26,22 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 }
 
 pub fn build(p: &crate::project::Project) -> Result<(), Error> {
-    for entry in fs::read_dir("addons")? {
-        let entry = entry?;
-        if !entry.path().is_dir() { continue }
+    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+        .map(|file| file.unwrap())
+        .filter(|file_or_dir| file_or_dir.path().is_dir())
+        .collect();
+    dirs.par_iter().for_each(|entry| {
         let name = entry.file_name().into_string().unwrap();
-        if p.skip.contains(&name) { continue }
+        if p.skip.contains(&name) { return };
         let target = PathBuf::from(&format!("addons/{}_{}.pbo", p.prefix, &name));
-        _build(&p, &entry.path(), &target, &name)?;
-    }
-    for opt in &p.optionals {
-        if p.skip.contains(opt) { continue }
+        _build(&p, &entry.path(), &target, &name).unwrap();
+    });
+    &p.optionals.par_iter().for_each(|opt| {
+        if p.skip.contains(opt) {return};
         let source = PathBuf::from(&format!("optionals/{}", opt));
         let target = PathBuf::from(&format!("optionals/{}_{}.pbo", p.prefix, opt));
-        _build(&p, &source, &target, &opt)?;
-    }
+        _build(&p, &source, &target, &opt).unwrap();
+    });
     Ok(())
 }
 
@@ -75,9 +77,12 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
     }
     fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
-    for entry in fs::read_dir("addons").unwrap() {
-        _copy_sign(&entry.unwrap(), &p, &version)?;
-    }
+    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+        .map(|file| file.unwrap())
+        .collect();
+    dirs.par_iter().for_each(|entry| {
+        _copy_sign(&entry, &p, &version).unwrap();
+    });
     if Path::new("optionals").exists() {
         if !Path::new(&format!("releases/{}/@{}/optionals", version, p.prefix)).exists() {
             fs::create_dir_all(format!("releases/{}/@{}/optionals", version, p.prefix))?;

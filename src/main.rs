@@ -1,6 +1,8 @@
-use serde::Deserialize;
-use docopt::Docopt;
 use colored::*;
+use docopt::Docopt;
+use num_cpus;
+use rayon::prelude::*;
+use serde::Deserialize;
 
 #[cfg(windows)]
 use ansi_term;
@@ -41,7 +43,7 @@ Usage:
     hemtt init
     hemtt create
     hemtt addon <name>
-    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>]
+    hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
     hemtt run <utility>
     hemtt update
@@ -63,6 +65,7 @@ Options:
        --addons         Comma seperated list of addons to build
        --opts=<addons>  Comma seperated list of addtional compontents to build
        --skip=<addons>  Comma seperated list of addons to skip building
+    -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
     -h --help           Show usage information and exit
        --version        Show version number and exit
 ";
@@ -83,6 +86,7 @@ struct Args {
     flag_release: bool,
     flag_opts: String,
     flag_skip: String,
+    flag_jobs: usize,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_addons: String,
@@ -184,12 +188,12 @@ fn run_command(args: &Args) -> Result<(), Error> {
         } else {
             if args.arg_addons != "" {
                 let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
-                for addon in addons {
+                addons.par_iter().for_each(|addon| {
                     if args.flag_force {
                         files::clear_pbo(&p, &addon).unwrap();
                     }
                     build::build_single(&p, &addon).print_error(true);
-                }
+                });
             } else {
                 if args.flag_force {
                     files::clear_pbos(&p).unwrap();
@@ -242,7 +246,7 @@ fn main() {
         ansi_support();
     }
 
-    let args: Args = Docopt::new(USAGE)
+    let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
 
@@ -250,6 +254,11 @@ fn main() {
         println!("HEMTT Version {}", &VERSION());
         std::process::exit(0);
     }
+
+    if args.flag_jobs == 0 {
+        args.flag_jobs = num_cpus::get();
+    }
+    rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 
     run_command(&args).print_error(true);
 }
