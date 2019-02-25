@@ -87,9 +87,12 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         if !Path::new(&format!("releases/{}/@{}/optionals", version, p.prefix)).exists() {
             fs::create_dir_all(format!("releases/{}/@{}/optionals", version, p.prefix))?;
         }
-        for entry in fs::read_dir("optionals").unwrap() {
-            _copy_sign(&entry.unwrap(), &p, &version)?;
-        }
+        let opts: Vec<_> = fs::read_dir("optionals").unwrap()
+            .map(|file| file.unwrap())
+            .collect();
+        opts.par_iter().for_each(|entry| {
+            _copy_sign(&entry, &p, &version).unwrap();
+        });
     }
     Ok(())
 }
