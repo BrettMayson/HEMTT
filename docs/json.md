@@ -154,6 +154,28 @@ HEMTT will use the specified mod name (without `@`) to form `@mod` folder.
 "modname": "my_mod"
 ```
 
+## keyname
+**Type**: String
+
+HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names.
+
+```json
+"keyname": "my_key"
+```
+### Replacements
+
+- `{{version}}`: Mod version in format `MAJOR.MINOR.PATCH.BUILD`
+
+### Example
+
+```json
+"project": "TST",
+"version": "1.0.0.0",
+"keyname": "my_key-{{version}}"
+```
+
+Above will result in key name of `my_key-1.0.0.0.bikey` and private key name of `my_key-1.0.0.0.biprivatekey`.
+
 ## signame
 **Type**: String
 
