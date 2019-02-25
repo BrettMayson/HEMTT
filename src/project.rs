@@ -31,6 +31,8 @@ pub struct Project {
     #[serde(default = "String::new")]
     pub modname: String,
     #[serde(default = "String::new")]
+    pub keyname: String,
+    #[serde(default = "String::new")]
     pub signame: String,
 }
 
@@ -53,6 +55,18 @@ impl Project {
 
     pub fn get_modname(&self) -> &String {
         if self.modname.is_empty() { &self.prefix } else { &self.modname }
+    }
+
+    pub fn get_keyname(&self) -> String {
+        if self.keyname.is_empty() {
+            self.prefix.clone()
+        } else {
+            let mut keyname = self.keyname.clone();
+            // TODO Use handlebars or at least common single function (???)
+            keyname = keyname.replace("{{version}}", &self.version.clone().unwrap());
+            keyname = keyname.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
+            keyname
+        }
     }
 
     pub fn get_signame(&self, pbo: &String) -> String {
@@ -90,6 +104,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         skip: vec![],
         headerexts: vec![],
         modname: String::new(),
+        keyname: String::new(),
         signame: String::new(),
     };
     p.save()?;

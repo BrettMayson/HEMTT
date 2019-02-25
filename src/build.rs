@@ -76,15 +76,16 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     if !Path::new("releases/keys").exists() {
         fs::create_dir("releases/keys")?;
     }
-    if !Path::new(&format!("releases/keys/{}.bikey", p.prefix)).exists() {
-        println!(" {} {}.bikey", "Generating".green().bold(), p.prefix);
-        armake2::sign::cmd_keygen(PathBuf::from(&p.prefix))?;
-        fs::rename(format!("{}.bikey", p.prefix), format!("releases/keys/{}.bikey", p.prefix))?;
-        fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
+    let keyname = p.get_keyname();
+    if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
+        println!(" {} {}.bikey", "Generating".green().bold(), keyname);
+        armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
+        fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
+        fs::rename(format!("{}.biprivatekey", keyname), format!("releases/keys/{}.biprivatekey", keyname))?;
     }
 
     // Sign
-    fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{2}.bikey", version, modname, p.prefix))?;
+    fs::copy(format!("releases/keys/{}.bikey", keyname), format!("releases/{}/@{}/keys/{}.bikey", version, modname, keyname))?;
 
     let mut folder = String::from("addons");
     let dirs: Vec<_> = fs::read_dir(&folder).unwrap()
@@ -147,10 +148,11 @@ fn _copy_sign(folder: &String, entry: &DirEntry, p: &crate::project::Project, ve
     fs::copy(&cpath, format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo))?;
 
     let signame = p.get_signame(&pbo);
+    let keyname = p.get_keyname();
 
     println!("   {} {}/{}", "Signing".green().bold(), folder, pbo);
     armake2::sign::cmd_sign(
-        PathBuf::from(format!("releases/keys/{}.biprivatekey", p.prefix)),
+        PathBuf::from(format!("releases/keys/{}.biprivatekey", keyname)),
         PathBuf::from(format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo)),
         Some(PathBuf::from(format!("releases/{0}/@{1}/{2}/{3}", version, modname, folder, signame))),
         armake2::sign::BISignVersion::V3
