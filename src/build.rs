@@ -85,15 +85,19 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
 
     // Sign
     fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{2}.bikey", version, modname, p.prefix))?;
-    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+
+    let mut folder = String::from("addons");
+    let dirs: Vec<_> = fs::read_dir(&folder).unwrap()
         .map(|file| file.unwrap())
         .collect();
     dirs.par_iter().for_each(|entry| {
-        _copy_sign(&entry, &p, &version).unwrap();
+        _copy_sign(&folder, &entry, &p, &version).unwrap();
     });
-    if Path::new("optionals").exists() {
-        if !Path::new(&format!("releases/{}/@{}/optionals", version, p.prefix)).exists() {
-            fs::create_dir_all(format!("releases/{}/@{}/optionals", version, p.prefix))?;
+
+    folder = String::from("optionals");
+    if Path::new(&folder).exists() {
+        if !Path::new(&format!("releases/{}/@{}/{}", version, modname, folder)).exists() {
+            fs::create_dir_all(format!("releases/{}/@{}/{}", version, modname, folder))?;
         }
         for entry in fs::read_dir(&folder).unwrap() {
             _copy_sign(&folder, &entry.unwrap(), &p, &version)?;
