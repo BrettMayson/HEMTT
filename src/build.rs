@@ -53,45 +53,58 @@ pub fn build_single(p: &crate::project::Project, addon: &String) -> Result<(), E
 }
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
+    // Build
     println!(" {} release v{}", "Preparing".green().bold(), version);
     if Path::new(&format!("releases/{}", version)).exists() {
         return Err(error!("Release already exists, run with --force to clean"));
     }
     build(&p)?;
-    if !Path::new(&format!("releases/{}/@{}/addons", version, p.prefix)).exists() {
-        fs::create_dir_all(format!("releases/{}/@{}/addons", version, p.prefix))?;
+
+
+    let modname = p.get_modname();
+    if !Path::new(&format!("releases/{}/@{}/addons", version, modname)).exists() {
+        fs::create_dir_all(format!("releases/{}/@{}/addons", version, modname))?;
     }
-    if !Path::new(&format!("releases/{}/@{}/keys", version, p.prefix)).exists() {
-        fs::create_dir_all(format!("releases/{}/@{}/keys", version, p.prefix))?;
+    if !Path::new(&format!("releases/{}/@{}/keys", version, modname)).exists() {
+        fs::create_dir_all(format!("releases/{}/@{}/keys", version, modname))?;
     }
     for file in &p.files {
-        fs::copy(file, format!("releases/{}/@{}/{}", version, p.prefix, file))?;
+        fs::copy(file, format!("releases/{}/@{}/{}", version, modname, file))?;
     }
+
+    // Generate key
     if !Path::new("releases/keys").exists() {
         fs::create_dir("releases/keys")?;
     }
-    if !Path::new(&format!("releases/keys/{}.bikey", p.prefix)).exists() {
-        println!(" {} {}.bikey", "Generating".green().bold(), p.prefix);
-        armake2::sign::cmd_keygen(PathBuf::from(&p.prefix))?;
-        fs::rename(format!("{}.bikey", p.prefix), format!("releases/keys/{}.bikey", p.prefix))?;
-        fs::rename(format!("{}.biprivatekey", p.prefix), format!("releases/keys/{}.biprivatekey", p.prefix))?;
+    let keyname = p.get_keyname();
+    if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
+        println!(" {} {}.bikey", "Generating".green().bold(), keyname);
+        armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
+        fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
+        fs::rename(format!("{}.biprivatekey", keyname), format!("releases/keys/{}.biprivatekey", keyname))?;
     }
-    fs::copy(format!("releases/keys/{}.bikey", p.prefix), format!("releases/{0}/@{1}/keys/{1}.bikey", version, p.prefix))?;
-    let dirs: Vec<_> = fs::read_dir("addons").unwrap()
+
+    // Sign
+    fs::copy(format!("releases/keys/{}.bikey", keyname), format!("releases/{}/@{}/keys/{}.bikey", version, modname, keyname))?;
+
+    let mut folder = String::from("addons");
+    let dirs: Vec<_> = fs::read_dir(&folder).unwrap()
         .map(|file| file.unwrap())
         .collect();
     dirs.par_iter().for_each(|entry| {
-        _copy_sign(&entry, &p, &version).unwrap();
+        _copy_sign(&folder, &entry, &p, &version).unwrap();
     });
-    if Path::new("optionals").exists() {
-        if !Path::new(&format!("releases/{}/@{}/optionals", version, p.prefix)).exists() {
-            fs::create_dir_all(format!("releases/{}/@{}/optionals", version, p.prefix))?;
+
+    folder = String::from("optionals");
+    if Path::new(&folder).exists() {
+        if !Path::new(&format!("releases/{}/@{}/{}", version, modname, folder)).exists() {
+            fs::create_dir_all(format!("releases/{}/@{}/{}", version, modname, folder))?;
         }
-        let opts: Vec<_> = fs::read_dir("optionals").unwrap()
+        let opts: Vec<_> = fs::read_dir(&folder).unwrap()
             .map(|file| file.unwrap())
             .collect();
         opts.par_iter().for_each(|entry| {
-            _copy_sign(&entry, &p, &version).unwrap();
+            _copy_sign(&folder, &entry, &p, &version).unwrap();
         });
     }
     Ok(())
@@ -116,29 +129,36 @@ fn _build(p: &crate::project::Project, source: &Path, target: &Path, name: &str)
     include.push(PathBuf::from("."));
 
     armake2::pbo::cmd_build(
-        source.to_path_buf(),
-        &mut outf,
-        &vec![],
-        &p.exclude,
-        &include,
+        source.to_path_buf(),   // Source
+        &mut outf,              // Target
+        &p.get_headerexts(),    // Header extensions
+        &p.exclude,             // Exclude files glob patterns
+        &include,               // Include folders
     ).print_error(false);
     Ok(true)
 }
 
-fn _copy_sign(entry: &DirEntry, p: &crate::project::Project, version: &String) -> Result<bool, Error> {
+fn _copy_sign(folder: &String, entry: &DirEntry, p: &crate::project::Project, version: &String) -> Result<bool, Error> {
     let path = entry.path();
     let cpath = path.clone();
     let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
-    if !path.ends_with(".pbo") && !cpath.contains(p.prefix.as_str()) {
+    let pbo = cpath.replace((folder.clone() + "/").as_str(), "");
+    if !path.ends_with(".pbo") && !pbo.contains(p.prefix.as_str()) {
         return Ok(false);
     }
-    fs::copy(&cpath, format!("releases/{}/@{}/{}", version, p.prefix, cpath))?;
-    println!("   {} {}", "Signing".green().bold(), cpath);
+
+    let modname = p.get_modname();
+    fs::copy(&cpath, format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo))?;
+
+    let signame = p.get_signame(&pbo);
+    let keyname = p.get_keyname();
+
+    println!("   {} {}/{}", "Signing".green().bold(), folder, pbo);
     armake2::sign::cmd_sign(
-        PathBuf::from(format!("releases/keys/{}.biprivatekey", p.prefix)),
-        PathBuf::from(format!("releases/{}/@{}/{}", version, p.prefix, cpath)),
-        Some(PathBuf::from(format!("releases/{0}/@{1}/{2}.{0}.bisign", version, p.prefix, cpath))),
+        PathBuf::from(format!("releases/keys/{}.biprivatekey", keyname)),
+        PathBuf::from(format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo)),
+        Some(PathBuf::from(format!("releases/{0}/@{1}/{2}/{3}", version, modname, folder, signame))),
         armake2::sign::BISignVersion::V3
-    )?;
+    ).print_error(false);
     Ok(true)
 }

@@ -6,7 +6,7 @@ use std::io::BufReader;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::io::prelude::*;
-use std::io::Write;
+use std::io::{Write, Error};
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -26,6 +26,14 @@ pub struct Project {
     pub optionals: Vec<String>,
     #[serde(default = "Vec::new")]
     pub skip: Vec<String>,
+    #[serde(default = "Vec::new")]
+    pub headerexts: Vec<String>,
+    #[serde(default = "String::new")]
+    pub modname: String,
+    #[serde(default = "String::new")]
+    pub keyname: String,
+    #[serde(default = "String::new")]
+    pub signame: String,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -39,14 +47,51 @@ fn default_include() -> Vec<PathBuf> {
 }
 
 impl Project {
-    pub fn save(&self) -> Result<(), std::io::Error> {
+    pub fn save(&self) -> Result<(), Error> {
         let mut out = File::create(crate::HEMTT_FILE)?;
         out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
         Ok(())
     }
+
+    pub fn get_modname(&self) -> &String {
+        if self.modname.is_empty() { &self.prefix } else { &self.modname }
+    }
+
+    pub fn get_keyname(&self) -> String {
+        if self.keyname.is_empty() {
+            self.prefix.clone()
+        } else {
+            let mut keyname = self.keyname.clone();
+            // TODO Use handlebars or at least common single function (???)
+            keyname = keyname.replace("{{version}}", &self.version.clone().unwrap());
+            keyname = keyname.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
+            keyname
+        }
+    }
+
+    pub fn get_signame(&self, pbo: &String) -> String {
+        if self.signame.is_empty() {
+            format!("{}.{}.bisign", pbo, &self.version.clone().unwrap())
+        } else {
+            let mut signame = self.signame.clone();
+            // TODO Use handlebars or at least common single function (???)
+            signame = signame.replace("{{version}}", &self.version.clone().unwrap());
+            signame = signame.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
+            format!("{}.{}.bisign", pbo, signame)
+        }
+    }
+
+    pub fn get_headerexts(&self) -> Vec<String> {
+        let mut headerexts = self.headerexts.clone();
+        for headerext in headerexts.iter_mut() {
+            // TODO Use handlebars or at least common single function (???)
+            *headerext = headerext.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
+        }
+        headerexts
+    }
 }
 
-pub fn init(name: String, prefix: String, author: String) -> Result<Project, std::io::Error> {
+pub fn init(name: String, prefix: String, author: String) -> Result<Project, Error> {
     let p = Project {
         name: name,
         prefix: prefix,
@@ -57,12 +102,16 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, std
         exclude: vec![],
         optionals: vec![],
         skip: vec![],
+        headerexts: vec![],
+        modname: String::new(),
+        keyname: String::new(),
+        signame: String::new(),
     };
     p.save()?;
     Ok(p)
 }
 
-pub fn get_project() -> Result<Project, std::io::Error> {
+pub fn get_project() -> Result<Project, Error> {
     let mut f = File::open(crate::HEMTT_FILE)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
@@ -70,7 +119,7 @@ pub fn get_project() -> Result<Project, std::io::Error> {
     Ok(p)
 }
 
-pub fn get_version() -> Result<String, std::io::Error> {
+pub fn get_version() -> Result<String, Error> {
     let mut version = String::from("0.0.0.0");
     if Path::new("addons/main/script_version.hpp").exists() {
         let f = BufReader::new(File::open("addons/main/script_version.hpp")?);
