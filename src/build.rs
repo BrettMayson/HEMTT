@@ -100,9 +100,12 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         if !Path::new(&format!("releases/{}/@{}/{}", version, modname, folder)).exists() {
             fs::create_dir_all(format!("releases/{}/@{}/{}", version, modname, folder))?;
         }
-        for entry in fs::read_dir(&folder).unwrap() {
-            _copy_sign(&folder, &entry.unwrap(), &p, &version)?;
-        }
+        let opts: Vec<_> = fs::read_dir(&folder).unwrap()
+            .map(|file| file.unwrap())
+            .collect();
+        opts.par_iter().for_each(|entry| {
+            _copy_sign(&folder, &entry, &p, &version).unwrap();
+        });
     }
     Ok(())
 }
