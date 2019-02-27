@@ -48,7 +48,6 @@ pub struct Project {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub signame: String,
-
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub prebuild: Vec<String>,
@@ -61,6 +60,7 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub scripts: Vec<crate::build::script::BuildScript>,
+
     #[serde(skip_deserializing,skip_serializing)]
     template_data: BTreeMap<&'static str, String>,
 }
