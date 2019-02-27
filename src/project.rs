@@ -1,3 +1,4 @@
+use colored::*;
 use serde::{Serialize, Deserialize};
 use serde_json;
 use toml;
@@ -35,6 +36,19 @@ pub struct Project {
     pub keyname: String,
     #[serde(default = "String::new")]
     pub signame: String,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub prebuild: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub postbuild: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub releasebuild: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub scripts: Vec<crate::build::script::BuildScript>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -95,6 +109,37 @@ impl Project {
         }
         headerexts
     }
+
+    pub fn run_prebuild(&self) -> Result<(), Error> {
+        if !self.prebuild.is_empty() {
+            println!("  {} Pre Build", "Starting".green().bold());
+            self.run(&self.prebuild)?;
+            println!("  {} Pre Build", "Finished".green().bold());
+        }
+        Ok(())
+    }
+
+    pub fn run_postbuild(&self) -> Result<(), Error> {
+        if !self.postbuild.is_empty() {
+            println!("  {} Post Build", "Starting".green().bold());
+            self.run(&self.postbuild)?;
+            println!("  {} Post Build", "Finished".green().bold());
+        }
+        Ok(())
+    }
+
+    pub fn run_releasebuild(&self) -> Result<(), Error> {
+        if !self.releasebuild.is_empty() {
+            println!("  {} Release Build", "Starting".green().bold());
+            self.run(&self.releasebuild)?;
+            println!("  {} Release Build", "Finished".green().bold());
+        }
+        Ok(())
+    }
+
+    pub fn run(&self, commands: &Vec<String>) -> Result<(), Error> {
+        crate::build::script::run(commands)
+    }
 }
 
 pub fn init(name: String, prefix: String, author: String) -> Result<Project, Error> {
@@ -112,6 +157,10 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         modname: String::new(),
         keyname: String::new(),
         signame: String::new(),
+        prebuild: vec![],
+        postbuild: vec![],
+        releasebuild: vec![],
+        scripts: vec![],
     };
     p.save()?;
     Ok(p)

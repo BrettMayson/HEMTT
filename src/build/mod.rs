@@ -1,4 +1,5 @@
 pub mod release;
+pub mod script;
 pub mod sign;
 
 use colored::*;

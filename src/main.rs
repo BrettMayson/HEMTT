@@ -19,6 +19,7 @@ mod project;
 mod utilities;
 
 use crate::error::*;
+use crate::utilities::Utility;
 
 #[macro_export]
 macro_rules! repeat {
@@ -94,11 +95,6 @@ struct Args {
     arg_addons: String,
 }
 
-#[derive(Debug, Deserialize)]
-enum Utility {
-    Translation
-}
-
 fn input(text: &str) -> String {
     let mut s = String::new();
     print!("{}: ",text);
@@ -151,6 +147,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
         let p = project::get_project().unwrap();
+        p.run_prebuild().print_error(true);
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
@@ -248,8 +245,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
             }
         }
         let success = build::many(&p, addons).print_error(true).unwrap();
+        p.run_postbuild().print_error(true);
         if args.flag_release {
             build::release::release(&p, &version).print_error(true);
+            p.run_releasebuild().print_error(true);
             println!("  {} {} v{}", match success {
                 true => "Finished".green().bold(),
                 false => "Finished".yellow().bold(),
@@ -283,11 +282,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_run {
         if let Some(utility) = &args.arg_utility {
-            match utility {
-                Utility::Translation => {
-                    utilities::translation::check().unwrap();
-                }
-            }
+            crate::utilities::run(utility).print_error(true);
         }
         Ok(())
     } else if args.cmd_update {
