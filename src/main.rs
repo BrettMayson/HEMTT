@@ -16,6 +16,7 @@ mod build;
 mod error;
 mod files;
 mod project;
+mod template;
 mod utilities;
 
 use crate::error::*;
@@ -117,14 +118,14 @@ fn input(text: &str) -> String {
 
 fn run_command(args: &Args) -> Result<(), Error> {
     if args.cmd_init {
-        check(true, args.flag_force).print_error(true);
+        check(true, args.flag_force).unwrap_or_print();
         init().unwrap();
         Ok(())
     } else if args.cmd_create {
         if Path::new("addons").exists() {
             return Err(error!("The current directory already has a mod. Use init instead of create."));
         }
-        check(true, args.flag_force).print_error(true);
+        check(true, args.flag_force).unwrap_or_print();
         let p = init().unwrap();
         let main = "main".to_owned();
         files::modcpp(&p).unwrap();
@@ -138,7 +139,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::create_include().unwrap();
         Ok(())
     } else if args.cmd_addon {
-        check(false, args.flag_force).print_error(true);
+        check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
         if Path::new(&format!("addons/{}", args.arg_name)).exists() {
             return Err(error!("{} already exists", args.arg_name.bold()));
@@ -151,7 +152,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::xeh(&args.arg_name, &p).unwrap();
         Ok(())
     } else if args.cmd_build {
-        check(false, args.flag_force).print_error(true);
+        check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
         if !args.flag_nowarn {
             unsafe {
@@ -245,13 +246,13 @@ fn run_command(args: &Args) -> Result<(), Error> {
         if args.flag_force {
             for addon in &addons {
                 if !skip.contains(&addon.file_name().unwrap().to_str().unwrap().to_owned()) {
-                    crate::files::clear_pbo(&p, &addon).print_error(true);
+                    crate::files::clear_pbo(&p, &addon).unwrap_or_print();
                 }
             }
         }
-        let success = build::many(&p, addons).print_error(true).unwrap();
+        let success = build::many(&p, addons).unwrap_or_print();
         if args.flag_release {
-            build::release::release(&p, &version).print_error(true);
+            build::release::release(&p, &version).unwrap_or_print();
             println!("  {} {} v{}", match success {
                 true => "Finished".green().bold(),
                 false => "Finished".yellow().bold(),
@@ -267,7 +268,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         Ok(())
     } else if args.cmd_clean {
-        check(false, args.flag_force).print_error(true);
+        check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
         let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
             .map(|file| file.unwrap().path())
@@ -329,7 +330,7 @@ fn main() {
     }
     rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 
-    run_command(&args).print_error(true);
+    run_command(&args).unwrap_or_print();
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {

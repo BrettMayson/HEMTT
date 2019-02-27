@@ -1,12 +1,16 @@
+use chrono::prelude::*;
 use serde::{Serialize, Deserialize};
 use serde_json;
 
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Write, Error};
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+
+use crate::template::render;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -18,22 +22,32 @@ pub struct Project {
     pub version: Option<String>,
     #[serde(default="Vec::new")]
     pub files: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "default_include")]
     pub include: Vec<PathBuf>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub exclude: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub skip: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub headerexts: Vec<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub modname: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub keyname: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub signame: String,
+    #[serde(skip_deserializing,skip_serializing)]
+    template_data: BTreeMap<&'static str, String>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -61,11 +75,7 @@ impl Project {
         if self.keyname.is_empty() {
             self.prefix.clone()
         } else {
-            let mut keyname = self.keyname.clone();
-            // TODO Use handlebars or at least common single function (???)
-            keyname = keyname.replace("{{version}}", &self.version.clone().unwrap());
-            keyname = keyname.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
-            keyname
+            render(&self.keyname, &self.template_data)
         }
     }
 
@@ -73,19 +83,14 @@ impl Project {
         if self.signame.is_empty() {
             format!("{}.{}.bisign", pbo, &self.version.clone().unwrap())
         } else {
-            let mut signame = self.signame.clone();
-            // TODO Use handlebars or at least common single function (???)
-            signame = signame.replace("{{version}}", &self.version.clone().unwrap());
-            signame = signame.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
-            format!("{}.{}.bisign", pbo, signame)
+            format!("{}.{}.bisign", pbo, render(&self.signame, &self.template_data))
         }
     }
 
     pub fn get_headerexts(&self) -> Vec<String> {
         let mut headerexts = self.headerexts.clone();
         for headerext in headerexts.iter_mut() {
-            // TODO Use handlebars or at least common single function (???)
-            *headerext = headerext.replace("{{git_hash}}", "TODO"); // TODO Implement git hash look-up
+            *headerext = render(&headerext, &self.template_data);
         }
         headerexts
     }
@@ -106,6 +111,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         modname: String::new(),
         keyname: String::new(),
         signame: String::new(),
+        template_data: BTreeMap::new(),
     };
     p.save()?;
     Ok(p)
@@ -115,7 +121,16 @@ pub fn get_project() -> Result<Project, Error> {
     let mut f = File::open(crate::HEMTT_FILE)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
-    let p: Project = serde_json::from_str(contents.as_str())?;
+    let mut p: Project = serde_json::from_str(contents.as_str())?;
+    p.template_data = BTreeMap::new();
+    p.template_data.insert("name", p.name.clone());
+    p.template_data.insert("prefix", p.prefix.clone());
+    p.template_data.insert("author", p.author.clone());
+    p.template_data.insert("version", p.version.clone().unwrap());
+    let dt = Local::now();
+    p.template_data.insert("day", dt.day().to_string());
+    p.template_data.insert("month", dt.month().to_string());
+    p.template_data.insert("year", dt.year().to_string());
     Ok(p)
 }
 
