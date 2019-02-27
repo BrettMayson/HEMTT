@@ -2,8 +2,7 @@
 
 use colored::*;
 
-use std::fmt::{Display};
-use std::io::{Error};
+use std::fmt::{Debug, Display};
 
 #[macro_export]
 macro_rules! error {
@@ -12,27 +11,23 @@ macro_rules! error {
     )
 }
 
-pub trait ErrorExt<T> {
-    fn prepend_error<M: AsRef<[u8]> + Display>(self, msg: M) -> Result<T, Error>;
-    fn print_error(self, exit: bool) -> Option<T>;
+pub trait ErrorExt<T, E> {
+    fn print(self) -> Option<T>;
+    fn unwrap_or_print(self) -> T;
 }
-impl<T> ErrorExt<T> for Result<T, Error> {
-    fn prepend_error<M: AsRef<[u8]> + Display>(self, msg: M) -> Result<T, Error> {
-        match self {
-            Ok(t) => Ok(t),
-            Err(e) => Err(error!("{}\n{}", msg, e))
-        }
-    }
-
-    fn print_error(self, exit: bool) -> Option<T> {
+impl<T, E: Debug + Display> ErrorExt<T, E> for Result<T, E> {
+    fn print(self) -> Option<T> {
         if let Err(error) = &self {
             eprintln!("{}: {}", "error".red().bold(), error);
-
-            if exit {
-                std::process::exit(1);
-            }
             return None;
         }
         Some(self.unwrap())
+    }
+    fn unwrap_or_print(self) -> T {
+        if let Err(error) = &self {
+            eprintln!("{}: {}", "error".red().bold(), error);
+            std::process::exit(1);
+        }
+        self.unwrap()
     }
 }
