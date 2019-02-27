@@ -61,6 +61,7 @@ pub fn check() -> Result<(), std::io::Error> {
         }
     }
     pb.finish_print(&format!("{:<15} {:>5}", "Total", total));
+    println!();
     let mut count_vec: Vec<(&&str, &f64)> = keys.iter().collect();
     count_vec.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
     for (lang, count) in count_vec {

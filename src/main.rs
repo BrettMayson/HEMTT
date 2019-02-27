@@ -1,7 +1,6 @@
 use colored::*;
 use docopt::Docopt;
 use num_cpus;
-use rayon::prelude::*;
 use serde::Deserialize;
 
 #[cfg(windows)]
@@ -12,7 +11,7 @@ use self_update;
 use std::collections::{HashSet};
 use std::fs;
 use std::io::{stdin, stdout, Write, Error};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod build;
 mod error;
@@ -23,6 +22,13 @@ mod utilities;
 use crate::error::*;
 
 const HEMTT_FILE: &str = "hemtt.json";
+
+#[macro_export]
+macro_rules! repeat {
+    ($s: expr, $n: expr) => {{
+        &repeat($s).take($n).collect::<String>()
+    }}
+}
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
@@ -62,7 +68,6 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --addons         Comma seperated list of addons to build
        --opts=<addons>  Comma seperated list of addtional compontents to build
        --skip=<addons>  Comma seperated list of addons to skip building
     -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
@@ -148,59 +153,108 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_build {
         check(false, args.flag_force).print_error(true);
-        let mut p = project::get_project().unwrap();
+        let p = project::get_project().unwrap();
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
         }
+        let mut addons: Vec<PathBuf>  = Vec::new();
+        let mut skip: Vec<String> = p.skip.clone();
+        let version = match &p.version {
+            Some(v) => v,
+            None => panic!("Unable to determine version number"),
+        };
+        if args.flag_release {
+            if args.flag_force {
+                files::clear_release(&version).unwrap();
+                let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
+                    .map(|file| file.unwrap().path())
+                    .filter(|file_or_dir| file_or_dir.is_dir())
+                    .collect();
+                let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                    .map(|file| file.unwrap().path())
+                    .filter(|file_or_dir| file_or_dir.is_dir())
+                    .collect();
+                pbos.append(&mut optionals.clone());
+                files::clear_pbos(&p, &pbos).unwrap();
+            }
+            println!(" {} release v{}", "Preparing".green().bold(), version);
+            if Path::new(&format!("releases/{}", version)).exists() {
+                return Err(error!("Release already exists, run with --force to clean"));
+            }
+        }
+
+        if args.flag_skip != "" {
+            let mut specified_skip: Vec<String> = args.flag_skip.split(",").map(|s| s.to_string()).collect();
+            skip.append(&mut specified_skip);
+            skip.sort();
+            skip.dedup();
+        }
         if args.flag_opts == "all" {
-            let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
                 if !entry.path().is_dir() { continue };
-                optionals.push(entry.file_name().into_string().unwrap());
+                if skip.contains(&entry.path().file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(entry.path());
             }
-            p.optionals = optionals;
         } else if args.flag_opts != "" {
-            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
-            p.optionals.append(&mut specified_optionals);
-            p.optionals.sort();
-            p.optionals.dedup();
-        }
-        if args.flag_skip != "" {
-            let mut specified_skip = args.flag_skip.split(",").map(|s| s.to_string()).collect();
-            p.skip.append(&mut specified_skip);
-            p.skip.sort();
-            p.skip.dedup();
-        }
-        if args.flag_release {
-            let version = match &p.version {
-                Some(v) => v,
-                None => panic!("Unable to determine version number"),
-            };
-            if args.flag_force {
-                files::clear_release(&version).unwrap();
-                files::clear_pbos(&p).unwrap();
-            }
-            build::release(&p, &version).print_error(true);
-            println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
-        } else {
-            if args.arg_addons != "" {
-                let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
-                addons.par_iter().for_each(|addon| {
-                    if args.flag_force {
-                        files::clear_pbo(&p, &addon).unwrap();
-                    }
-                    build::build_single(&p, &addon).print_error(true);
-                });
-            } else {
-                if args.flag_force {
-                    files::clear_pbos(&p).unwrap();
+            let specified_optionals: Vec<String> = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            let optional_path = PathBuf::from("optionals");
+            for optional in specified_optionals {
+                let mut opt = optional_path.clone();
+                opt.push(&optional);
+                if !opt.exists() {
+                    return Err(error!("optionals/{} was not found", optional.bold()));
                 }
-                build::build(&p).print_error(true);
+                if skip.contains(&optional) { continue };
+                addons.push(opt);
             }
-            println!("  {} {}", "Finished".green().bold(), &p.name);
+            for optional in &p.optionals
+            {
+                let mut opt = optional_path.clone();
+                if skip.contains(&optional) { continue };
+                opt.push(optional);
+                addons.push(opt);
+            }
+        }
+        if args.arg_addons != "" {
+            let specified_addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+            let addon_path = PathBuf::from("addons");
+            for addon in specified_addons {
+                let mut adn = addon_path.clone();
+                adn.push(&addon);
+                if !adn.exists() {
+                    return Err(error!("addons/{} was not found", addon.bold()));
+                }
+                if skip.contains(&addon) { continue };
+                addons.push(adn);
+            }
+        } else {
+            for addon in crate::files::all_addons() {
+                if skip.contains(&addon.file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(addon);
+            }
+        }
+        if args.flag_force {
+            for addon in &addons {
+                if !skip.contains(&addon.file_name().unwrap().to_str().unwrap().to_owned()) {
+                    crate::files::clear_pbo(&p, &addon).print_error(true);
+                }
+            }
+        }
+        let success = build::many(&p, addons).print_error(true).unwrap();
+        if args.flag_release {
+            build::release::release(&p, &version).print_error(true);
+            println!("  {} {} v{}", match success {
+                true => "Finished".green().bold(),
+                false => "Finished".yellow().bold(),
+             }, &p.name, version);
+        } else {
+            println!("  {} {}", match success {
+                true => "Finished".green().bold(),
+                false => "Finished".yellow().bold(),
+             }, &p.name);
         }
         if !args.flag_nowarn {
             armake2::error::print_warning_summary();
@@ -209,7 +263,16 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_clean {
         check(false, args.flag_force).print_error(true);
         let p = project::get_project().unwrap();
-        files::clear_pbos(&p).unwrap();
+        let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
+            .map(|file| file.unwrap().path())
+            .filter(|file_or_dir| file_or_dir.is_dir())
+            .collect();
+        let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+            .map(|file| file.unwrap().path())
+            .filter(|file_or_dir| file_or_dir.is_dir())
+            .collect();
+        pbos.append(&mut optionals.clone());
+        files::clear_pbos(&p, &pbos).unwrap();
         if args.flag_force {
             files::clear_releases().unwrap();
         }
