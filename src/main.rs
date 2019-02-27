@@ -20,8 +20,6 @@ mod utilities;
 
 use crate::error::*;
 
-const HEMTT_FILE: &str = "hemtt.json";
-
 #[macro_export]
 macro_rules! repeat {
     ($s: expr, $n: expr) => {{
@@ -333,11 +331,11 @@ fn main() {
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {
-    if Path::new(HEMTT_FILE).exists() && write && !force {
+    if crate::project::exists() && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
-    } else if Path::new(HEMTT_FILE).exists() && write && force {
+    } else if crate::project::exists() && write && force {
         Ok(())
-    } else if !Path::new(HEMTT_FILE).exists() && !write {
+    } else if !crate::project::exists() && !write {
         Err(error!("A HEMTT Project does not exist in the current directory"))
     } else {
         Ok(())

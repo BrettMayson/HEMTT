@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 use serde_json;
+use toml;
 
 use std::fs::File;
 use std::io::{Write, Error};
@@ -48,8 +49,13 @@ fn default_include() -> Vec<PathBuf> {
 
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
-        let mut out = File::create(crate::HEMTT_FILE)?;
-        out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
+        let file = path().unwrap();
+        let mut out = File::create(file)?;
+        if toml_exists() {
+            out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
+        } else {
+            out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
+        }
         Ok(())
     }
 
@@ -111,11 +117,36 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
     Ok(p)
 }
 
+pub fn exists() -> bool {
+    toml_exists() || json_exists()
+}
+
+pub fn path() -> Result<&'static Path, Error> {
+    if exists() {
+        return Ok(Path::new(
+            if toml_exists() {"hemtt.toml"} else {"hemtt.json"}
+        ));
+    }
+    Err(error!("No HEMTT project file was found"))
+}
+
+fn json_exists() -> bool {
+    Path::new("hemtt.json").exists()
+}
+
+fn toml_exists() -> bool {
+    Path::new("hemtt.toml").exists()
+}
+
 pub fn get_project() -> Result<Project, Error> {
-    let mut f = File::open(crate::HEMTT_FILE)?;
+    let file = path()?;
+    let mut f = File::open(file)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
-    let p: Project = serde_json::from_str(contents.as_str())?;
+    let p: Project = match toml_exists() {
+        true => toml::from_str(contents.as_str()).unwrap(),
+        false => serde_json::from_str(contents.as_str())?
+    };
     Ok(p)
 }
 
