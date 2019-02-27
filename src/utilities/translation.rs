@@ -1,12 +1,13 @@
-use serde::Deserialize;
-use serde_xml_rs;
-
 use pbr::ProgressBar;
+use serde_xml_rs;
+use serde::Deserialize;
 use walkdir::WalkDir;
 
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
+
+use crate::error::*;
 
 pub fn check() -> Result<(), std::io::Error> {
     let mut total = 0.0;
@@ -22,7 +23,7 @@ pub fn check() -> Result<(), std::io::Error> {
     for stringtable in stringtables {
         pb.inc();
         let f = BufReader::new(File::open(stringtable)?);
-        let project: Project = serde_xml_rs::from_reader(f).unwrap();
+        let project: Project = serde_xml_rs::from_reader(f).unwrap_or_print();
         for mut package in project.packages {
             package = package.transfer();
             for container in package.containers {

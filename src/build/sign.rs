@@ -25,6 +25,6 @@ pub fn copy_sign(folder: &String, entry: &DirEntry, p: &crate::project::Project,
         PathBuf::from(format!("releases/{}/@{}/{}/{}", version, modname, folder, pbo)),
         Some(PathBuf::from(format!("releases/{0}/@{1}/{2}/{3}", version, modname, folder, signame))),
         armake2::sign::BISignVersion::V3
-    ).print_error(false);
+    ).print();
     Ok(true)
 }

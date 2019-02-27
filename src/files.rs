@@ -20,7 +20,7 @@ pub fn clear_pbos(p: &project::Project, addons: &Vec<PathBuf>) -> Result<(), Err
             if target.exists() {
                 let mut data = count.lock().unwrap();
                 *data += 1;
-                fs::remove_file(target).print_error(false);
+                fs::remove_file(target).print();
             }
         });
     println!("   {} {} PBOs", "Cleaned".yellow().bold(), *count.lock().unwrap());
