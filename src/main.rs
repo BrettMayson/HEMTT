@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 mod build;
 mod error;
 mod files;
+mod helpers;
 mod project;
 mod template;
 mod utilities;
