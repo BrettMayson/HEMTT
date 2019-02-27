@@ -14,7 +14,7 @@ macro_rules! error {
 
 pub trait ErrorExt<T> {
     fn prepend_error<M: AsRef<[u8]> + Display>(self, msg: M) -> Result<T, Error>;
-    fn print_error(self, exit: bool) -> T;
+    fn print_error(self, exit: bool) -> Option<T>;
 }
 impl<T> ErrorExt<T> for Result<T, Error> {
     fn prepend_error<M: AsRef<[u8]> + Display>(self, msg: M) -> Result<T, Error> {
@@ -24,14 +24,15 @@ impl<T> ErrorExt<T> for Result<T, Error> {
         }
     }
 
-    fn print_error(self, exit: bool) -> T {
+    fn print_error(self, exit: bool) -> Option<T> {
         if let Err(error) = &self {
             eprintln!("{}: {}", "error".red().bold(), error);
 
             if exit {
                 std::process::exit(1);
             }
+            return None;
         }
-        self.unwrap()
+        Some(self.unwrap())
     }
 }

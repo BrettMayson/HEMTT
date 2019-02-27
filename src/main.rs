@@ -249,7 +249,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 }
             }
         }
-        let success = build::many(&p, addons).print_error(true);
+        let success = build::many(&p, addons).print_error(true).unwrap();
         if args.flag_release {
             build::release::release(&p, &version).print_error(true);
             println!("  {} {} v{}", match success {
