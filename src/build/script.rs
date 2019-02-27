@@ -1,13 +1,14 @@
 use colored::*;
 use serde::{Serialize, Deserialize};
+use subprocess::Exec;
 
 use std::io::Error;
 
 use crate::error;
+use crate::error::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct BuildScript {
-    pub name: String,
     #[serde(skip_serializing_if = "is_true")]
     #[serde(default = "dft_true")]
     pub debug: bool,
@@ -40,21 +41,29 @@ impl BuildScript {
     }
 }
 
-pub fn run(commands: &Vec<String>) -> Result<(), Error> {
+pub fn run(p: &crate::project::Project, commands: &Vec<String>) -> Result<(), Error> {
     for command in commands {
         let mut name = command.clone();
         match name.remove(0) {
             '@' => {
-                println!("   {} {}", "Running".green().bold(), &name);
+                println!("   {} {}", "Utility".green().bold(), &name.bold());
                 match crate::utilities::find(&name) {
-                    Some(v) => crate::utilities::run(&v),
+                    Some(v) => crate::utilities::run(&v)?,
                     None => return Err(error!("Unknown Utility: {}", &name))
                 };
             },
             '!' => {
-                println!("   {} {} (scripts not implemented)", "Running".yellow().bold(), &name);
+                println!("    {} {}", "Script".green().bold(), &name);
+                p.script(&name)?;
             },
-            _   => println!("   Command {}", command)
+            _   => {
+                let cmd = command.clone().replace("\\", "\\\\");
+                println!(" {} {}", "Executing".green().bold(), &cmd.bold());
+                let out = Exec::shell(&command).capture().unwrap_or_print().stdout_str();
+                for line in out.lines() {
+                    println!("           {}", line);
+                }
+            }
         }
     }
     Ok(())

@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use serde_json;
 use toml;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::File;
 use std::io::{Write, Error};
 use std::io::BufReader;
@@ -57,9 +57,9 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub releasebuild: Vec<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(default = "Vec::new")]
-    pub scripts: Vec<crate::build::script::BuildScript>,
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default = "HashMap::new")]
+    pub script: HashMap<String, crate::build::script::BuildScript>,
 
     #[serde(skip_deserializing,skip_serializing)]
     template_data: BTreeMap<&'static str, String>,
@@ -143,7 +143,16 @@ impl Project {
     }
 
     pub fn run(&self, commands: &Vec<String>) -> Result<(), Error> {
-        crate::build::script::run(commands)
+        crate::build::script::run(&self, commands)
+    }
+
+    pub fn script(&self, name: &String) -> Result<(), Error> {
+        if self.script.contains_key(name) {
+            crate::build::script::run(&self, &self.script.get(name).unwrap().steps)?;
+        } else {
+            return Err(error!("Undefined script: {}", &name));
+        }
+        Ok(())
     }
 }
 
@@ -154,18 +163,18 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         author: author,
         version: None,
         files: vec!["mod.cpp".to_owned()],
-        include: vec![],
-        exclude: vec![],
-        optionals: vec![],
-        skip: vec![],
-        headerexts: vec![],
+        include: Vec::new(),
+        exclude: Vec::new(),
+        optionals: Vec::new(),
+        skip: Vec::new(),
+        headerexts: Vec::new(),
         modname: String::new(),
         keyname: String::new(),
         signame: String::new(),
-        prebuild: vec![],
-        postbuild: vec![],
-        releasebuild: vec![],
-        scripts: vec![],
+        prebuild: Vec::new(),
+        postbuild: Vec::new(),
+        releasebuild: Vec::new(),
+        script: HashMap::new(),
 
         template_data: BTreeMap::new(),
     };
@@ -200,7 +209,7 @@ pub fn get_project() -> Result<Project, Error> {
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
     let mut p: Project = match toml_exists() {
-        true => toml::from_str(contents.as_str()).unwrap(),
+        true => toml::from_str(contents.as_str()).unwrap_or_print(),
         false => serde_json::from_str(contents.as_str())?
     };
     p.template_data = BTreeMap::new();

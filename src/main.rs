@@ -51,18 +51,22 @@ Usage:
     hemtt addon <name>
     hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
-    hemtt run <utility>
+    hemtt run <script>
+    hemtt <utility>
     hemtt update
     hemtt (-h | --help)
     hemtt --version
 
 Commands:
-    init        Initialize a project file in the current directory
-    create      Create a new project using the CBA project structure
-    addon       Create a new addon folder
-    build       Build the project
-    clean       Clean build files
-    update      Update HEMTT
+    init                Initialize a project file in the current directory
+    create              Create a new project using the CBA project structure
+    addon               Create a new addon folder
+    build               Build the project
+    clean               Clean build files
+    update              Update HEMTT
+
+Utilities:
+    translation         Displays the translation progress of all stringtable files
 
 Options:
     -v --verbose        Enable verbose output
@@ -92,6 +96,7 @@ struct Args {
     flag_opts: String,
     flag_skip: String,
     flag_jobs: usize,
+    arg_script: String,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_addons: String,
@@ -149,7 +154,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
-        p.run_prebuild().print_error(true);
+        p.run_prebuild().unwrap_or_print();
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
@@ -283,9 +288,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         Ok(())
     } else if args.cmd_run {
-        if let Some(utility) = &args.arg_utility {
-            crate::utilities::run(utility).print_error(true);
-        }
+        check(false, args.flag_force).unwrap_or_print();
+        let p = project::get_project().unwrap();
+        p.script(&args.arg_script).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
         let target = self_update::get_target().unwrap();
@@ -301,7 +306,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
         println!("Using Version: {}", status.version());
         Ok(())
     } else {
-        unreachable!()
+        if let Some(utility) = &args.arg_utility {
+            crate::utilities::run(utility).unwrap_or_print();
+        }
+        Ok(())
     }
 }
 

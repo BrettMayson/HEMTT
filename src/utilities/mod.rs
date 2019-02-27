@@ -20,5 +20,6 @@ pub fn run(utility: &Utility) -> Result<(), std::io::Error> {
             return translation::check();
         }
     }
+    #[allow(unreachable_code)]
     Err(error!("Utility not implemented"))
 }
