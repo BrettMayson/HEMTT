@@ -166,6 +166,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         postbuild: vec![],
         releasebuild: vec![],
         scripts: vec![],
+
         template_data: BTreeMap::new(),
     };
     p.save()?;
@@ -198,7 +199,7 @@ pub fn get_project() -> Result<Project, Error> {
     let mut f = File::open(file)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
-    let p: Project = match toml_exists() {
+    let mut p: Project = match toml_exists() {
         true => toml::from_str(contents.as_str()).unwrap(),
         false => serde_json::from_str(contents.as_str())?
     };
