@@ -49,7 +49,7 @@ fn default_include() -> Vec<PathBuf> {
 
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
-        let file = path().unwrap();
+        let file = path().print_error(true);
         let mut out = File::create(file)?;
         if toml_exists() {
             out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
