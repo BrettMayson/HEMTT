@@ -17,6 +17,7 @@ mod error;
 mod files;
 mod helpers;
 mod project;
+mod state;
 mod template;
 mod utilities;
 
@@ -154,7 +155,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
-        p.run_prebuild().unwrap_or_print();
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
@@ -251,19 +251,24 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 }
             }
         }
-        let success = build::many(&p, addons).unwrap_or_print();
-        p.run_postbuild().unwrap_or_print();
+        let mut state = crate::state::State::new(&addons);
+        p.run(&state).unwrap_or_print();
+        let result = build::many(&p, &addons).unwrap_or_print();
+        state.stage = crate::state::Stage::PostBuild;
+        state.result = Some(&result);
+        p.run(&state).unwrap_or_print();
         if args.flag_release {
             build::release::release(&p, &version).unwrap_or_print();
-            p.run_releasebuild().unwrap_or_print();
-            println!("  {} {} v{}", match success {
-                true => "Finished".green().bold(),
-                false => "Finished".yellow().bold(),
+            state.stage = crate::state::Stage::ReleaseBuild;
+            p.run(&state).unwrap_or_print();
+            println!("  {} {} v{}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
              }, &p.name, version);
         } else {
-            println!("  {} {}", match success {
-                true => "Finished".green().bold(),
-                false => "Finished".yellow().bold(),
+            println!("  {} {}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
              }, &p.name);
         }
         if !args.flag_nowarn {
@@ -289,8 +294,8 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_run {
         check(false, args.flag_force).unwrap_or_print();
-        let p = project::get_project().unwrap();
-        p.script(&args.arg_script).unwrap_or_print();
+        //let p = project::get_project().unwrap();
+        //p.script(&args.arg_script).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
         let target = self_update::get_target().unwrap();

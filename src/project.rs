@@ -1,4 +1,3 @@
-use colored::*;
 use serde::{Serialize, Deserialize};
 use serde_json;
 use toml;
@@ -13,6 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::*;
 use crate::template::render;
+use crate::state::State;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -62,7 +62,7 @@ pub struct Project {
     pub script: HashMap<String, crate::build::script::BuildScript>,
 
     #[serde(skip_deserializing,skip_serializing)]
-    template_data: BTreeMap<&'static str, String>,
+    pub template_data: BTreeMap<&'static str, String>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -115,44 +115,21 @@ impl Project {
         headerexts
     }
 
-    pub fn run_prebuild(&self) -> Result<(), Error> {
-        if !self.prebuild.is_empty() {
-            println!("  {} Pre Build", "Starting".green().bold());
-            self.run(&self.prebuild)?;
-            println!("  {} Pre Build", "Finished".green().bold());
-        }
-        Ok(())
+    pub fn run(&self, state: &State) -> Result<(), Error> {
+        crate::build::script::run(&self, &state)
     }
 
-    pub fn run_postbuild(&self) -> Result<(), Error> {
-        if !self.postbuild.is_empty() {
-            println!("  {} Post Build", "Starting".green().bold());
-            self.run(&self.postbuild)?;
-            println!("  {} Post Build", "Finished".green().bold());
-        }
-        Ok(())
-    }
-
-    pub fn run_releasebuild(&self) -> Result<(), Error> {
-        if !self.releasebuild.is_empty() {
-            println!("  {} Release Build", "Starting".green().bold());
-            self.run(&self.releasebuild)?;
-            println!("  {} Release Build", "Finished".green().bold());
-        }
-        Ok(())
-    }
-
-    pub fn run(&self, commands: &Vec<String>) -> Result<(), Error> {
-        crate::build::script::run(&self, commands)
-    }
-
-    pub fn script(&self, name: &String) -> Result<(), Error> {
+    pub fn script(&self, name: &String, state: &State) -> Result<(), Error> {
         if self.script.contains_key(name) {
-            crate::build::script::run(&self, &self.script.get(name).unwrap().steps)?;
+            &self.script.get(name).unwrap().run(&self, &state);
         } else {
             return Err(error!("Undefined script: {}", &name));
         }
         Ok(())
+    }
+
+    pub fn render(&self, text: &String) -> String {
+        crate::template::render(text, &self.template_data)
     }
 }
 
