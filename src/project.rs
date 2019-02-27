@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use serde::{Serialize, Deserialize};
 use serde_json;
 
@@ -127,10 +126,6 @@ pub fn get_project() -> Result<Project, Error> {
     p.template_data.insert("prefix", p.prefix.clone());
     p.template_data.insert("author", p.author.clone());
     p.template_data.insert("version", p.version.clone().unwrap());
-    let dt = Local::now();
-    p.template_data.insert("day", dt.day().to_string());
-    p.template_data.insert("month", dt.month().to_string());
-    p.template_data.insert("year", dt.year().to_string());
     Ok(p)
 }
 
