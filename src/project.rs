@@ -2,11 +2,11 @@ use serde::{Serialize, Deserialize};
 use serde_json;
 
 use std::fs::File;
+use std::io::{Write, Error};
 use std::io::BufReader;
+use std::io::prelude::*;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::io::prelude::*;
-use std::io::{Write, Error};
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {

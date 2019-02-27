@@ -1,5 +1,5 @@
-use rayon::prelude::*;
 use colored::*;
+use rayon::prelude::*;
 
 use std::fs;
 use std::io::{Error};
@@ -41,7 +41,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         .collect();
     dirs.par_iter().for_each(|entry| {
         // TODO split copy and sign
-        if crate::build::signing::copy_sign(&folder, &entry, &p, &version).unwrap() {
+        if crate::build::sign::copy_sign(&folder, &entry, &p, &version).unwrap() {
             *count.lock().unwrap() += 1;
         }
     });
@@ -56,7 +56,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
             .collect();
         opts.par_iter().for_each(|entry| {
             // TODO split copy and sign
-            if crate::build::signing::copy_sign(&folder, &entry, &p, &version).unwrap() {
+            if crate::build::sign::copy_sign(&folder, &entry, &p, &version).unwrap() {
                 *count.lock().unwrap() += 1;
             }
         });

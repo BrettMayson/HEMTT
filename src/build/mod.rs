@@ -1,5 +1,5 @@
 pub mod release;
-pub mod signing;
+pub mod sign;
 
 use colored::*;
 use pbr::ProgressBar;
@@ -41,7 +41,7 @@ pub fn many(p: &crate::project::Project, addons: Vec<PathBuf>) -> Result<bool, E
         let name = entry.file_name().unwrap().to_str().unwrap().to_owned();
         let mut target = entry.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        match _build(&p, &entry, &target, &name, Some(&pbm)).unwrap() {
+        match _build(&p, &entry, &target, Some(&pbm)).unwrap() {
             0 => *skip.lock().unwrap() += 1,
             1 => *built.lock().unwrap() += 1,
             2 => *err.lock().unwrap() += 1,
@@ -72,11 +72,11 @@ pub fn single(p: &crate::project::Project, source: &PathBuf) -> Result<(), Error
     let name = source.file_name().unwrap().to_str().unwrap().to_owned();
     let mut target = source.parent().unwrap().to_path_buf();
     target.push(&format!("{}_{}.pbo", p.prefix, &name));
-    _build(&p, &source, &target, &name, None).unwrap();
+    _build(&p, &source, &target, None).unwrap();
     Ok(())
 }
 
-fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, name: &str, pbm: Option<&Arc<Mutex<ProgressBar<std::io::Stdout>>>>) -> Result<u32, Error> {
+fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: Option<&Arc<Mutex<ProgressBar<std::io::Stdout>>>>) -> Result<u32, Error> {
     let modified = modtime(source)?;
     if target.exists() {
         let metadata = fs::metadata(target).unwrap();

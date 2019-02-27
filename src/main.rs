@@ -1,12 +1,11 @@
 use colored::*;
 use docopt::Docopt;
 use num_cpus;
+use self_update;
 use serde::Deserialize;
 
 #[cfg(windows)]
 use ansi_term;
-
-use self_update;
 
 use std::collections::{HashSet};
 use std::fs;
@@ -217,6 +216,13 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 opt.push(optional);
                 addons.push(opt);
             }
+        } else if args.flag_release {
+            for entry in fs::read_dir("optionals")? {
+                let entry = entry.unwrap();
+                if !entry.path().is_dir() { continue };
+                if skip.contains(&entry.path().file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(entry.path());
+            }
         }
         if args.arg_addons != "" {
             let specified_addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
@@ -243,7 +249,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 }
             }
         }
-        let success = build::many(&p, addons).print_error(true).unwrap();
+        let success = build::many(&p, addons).print_error(true);
         if args.flag_release {
             build::release::release(&p, &version).print_error(true);
             println!("  {} {} v{}", match success {

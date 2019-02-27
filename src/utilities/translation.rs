@@ -1,8 +1,8 @@
 use serde::Deserialize;
 use serde_xml_rs;
 
-use walkdir::WalkDir;
 use pbr::ProgressBar;
+use walkdir::WalkDir;
 
 use std::collections::HashMap;
 use std::fs::File;

@@ -1,6 +1,6 @@
-use reqwest;
 use colored::*;
 use rayon::prelude::*;
+use reqwest;
 
 use std::fs;
 use std::fs::File;

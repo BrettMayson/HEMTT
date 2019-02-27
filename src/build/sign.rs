@@ -1,6 +1,6 @@
-use std::io::{Error};
 use std::fs;
 use std::fs::DirEntry;
+use std::io::{Error};
 use std::path::PathBuf;
 
 use crate::error::*;
