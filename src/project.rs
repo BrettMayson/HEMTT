@@ -10,6 +10,7 @@ use std::io::prelude::*;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use crate::error::*;
 use crate::template::render;
 
 #[derive(Serialize, Deserialize)]
@@ -62,7 +63,7 @@ fn default_include() -> Vec<PathBuf> {
 
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
-        let file = path().print_error(true);
+        let file = path().unwrap_or_print();
         let mut out = File::create(file)?;
         if toml_exists() {
             out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
