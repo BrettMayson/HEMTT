@@ -17,10 +17,12 @@ mod error;
 mod files;
 mod helpers;
 mod project;
+mod state;
 mod template;
 mod utilities;
 
 use crate::error::*;
+use crate::utilities::Utility;
 
 #[macro_export]
 macro_rules! repeat {
@@ -50,18 +52,22 @@ Usage:
     hemtt addon <name>
     hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
-    hemtt run <utility>
+    hemtt run <script>
+    hemtt <utility>
     hemtt update
     hemtt (-h | --help)
     hemtt --version
 
 Commands:
-    init        Initialize a project file in the current directory
-    create      Create a new project using the CBA project structure
-    addon       Create a new addon folder
-    build       Build the project
-    clean       Clean build files
-    update      Update HEMTT
+    init                Initialize a project file in the current directory
+    create              Create a new project using the CBA project structure
+    addon               Create a new addon folder
+    build               Build the project
+    clean               Clean build files
+    update              Update HEMTT
+
+Utilities:
+    translation         Displays the translation progress of all stringtable files
 
 Options:
     -v --verbose        Enable verbose output
@@ -91,14 +97,10 @@ struct Args {
     flag_opts: String,
     flag_skip: String,
     flag_jobs: usize,
+    arg_script: String,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_addons: String,
-}
-
-#[derive(Debug, Deserialize)]
-enum Utility {
-    Translation
 }
 
 fn input(text: &str) -> String {
@@ -249,17 +251,24 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 }
             }
         }
-        let success = build::many(&p, addons).unwrap_or_print();
+        let mut state = crate::state::State::new(&addons);
+        p.run(&state).unwrap_or_print();
+        let result = build::many(&p, &addons).unwrap_or_print();
+        state.stage = crate::state::Stage::PostBuild;
+        state.result = Some(&result);
+        p.run(&state).unwrap_or_print();
         if args.flag_release {
             build::release::release(&p, &version).unwrap_or_print();
-            println!("  {} {} v{}", match success {
-                true => "Finished".green().bold(),
-                false => "Finished".yellow().bold(),
+            state.stage = crate::state::Stage::ReleaseBuild;
+            p.run(&state).unwrap_or_print();
+            println!("  {} {} v{}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
              }, &p.name, version);
         } else {
-            println!("  {} {}", match success {
-                true => "Finished".green().bold(),
-                false => "Finished".yellow().bold(),
+            println!("  {} {}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
              }, &p.name);
         }
         if !args.flag_nowarn {
@@ -284,13 +293,12 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         Ok(())
     } else if args.cmd_run {
-        if let Some(utility) = &args.arg_utility {
-            match utility {
-                Utility::Translation => {
-                    utilities::translation::check().unwrap();
-                }
-            }
-        }
+        check(false, args.flag_force).unwrap_or_print();
+        let addons = Vec::new();
+        let mut state = crate::state::State::new(&addons);
+        state.stage = crate::state::Stage::Script;
+        let p = project::get_project().unwrap();
+        p.script(&args.arg_script, &state).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
         let target = self_update::get_target().unwrap();
@@ -306,7 +314,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
         println!("Using Version: {}", status.version());
         Ok(())
     } else {
-        unreachable!()
+        if let Some(utility) = &args.arg_utility {
+            crate::utilities::run(utility).unwrap_or_print();
+        }
+        Ok(())
     }
 }
 

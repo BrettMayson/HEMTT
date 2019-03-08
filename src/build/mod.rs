@@ -1,5 +1,7 @@
 pub mod release;
+pub mod script;
 pub mod sign;
+mod result;
 
 use colored::*;
 use pbr::ProgressBar;
@@ -11,7 +13,10 @@ use std::io::{Error};
 use std::iter::repeat;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, Instant};
+
+pub use crate::build::result::{BuildResult, PBOResult};
+use crate::error::*;
 
 pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -26,46 +31,49 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     Ok(recent)
 }
 
-pub fn many(p: &crate::project::Project, addons: Vec<PathBuf>) -> Result<bool, Error> {
+pub fn many(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
     println!("  {} {}", "Building".green().bold(), addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
-    pb.format("╢▌▌░╟");
     pb.show_speed = false;
     pb.show_time_left = false;
     pb.set_width(Some(60));
     let pbm = Arc::new(Mutex::new(pb));
-    let skip = Arc::new(Mutex::new(0));
-    let built = Arc::new(Mutex::new(0));
-    let err = Arc::new(Mutex::new(0));
+    let mut buildresult = BuildResult::new();
+    let result = Arc::new(Mutex::new(&mut buildresult));
     addons.par_iter().for_each(|entry| {
         let name = entry.file_name().unwrap().to_str().unwrap().to_owned();
         let mut target = entry.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        match _build(&p, &entry, &target, Some(&pbm)).unwrap() {
-            0 => *skip.lock().unwrap() += 1,
-            1 => *built.lock().unwrap() += 1,
-            2 => *err.lock().unwrap() += 1,
+        let now = Instant::now();
+        let buildresult = _build(&p, &entry, &target, Some(&pbm)).unwrap_or_print();
+        let elapsed = now.elapsed();
+        let pboresult = PBOResult::new(
+            entry.clone(),
+            target.clone(),
+            ((elapsed.as_secs() as u128) * 1000) + (elapsed.subsec_millis() as u128),
+        );
+        match buildresult {
+            0 => result.lock().unwrap().skipped.push(pboresult),
+            1 => result.lock().unwrap().built.push(pboresult),
+            2 => result.lock().unwrap().failed.push(pboresult),
             _ => (),
         }
         pbm.lock().unwrap().inc();
         print!("\r");
         eprint!("\r");
     });
-    let built = *built.lock().unwrap();
-    let errors = *err.lock().unwrap();
-    pbm.lock().unwrap().finish_print(&format!("\r     {} {} {}", match errors {
+    pbm.lock().unwrap().finish_print(&format!("\r     {} {} {}", match buildresult.failed.len() {
         0 => "Built".green().bold(),
         _ => "Built".yellow().bold()
-    }, built, crate::repeat!(" ", 50)));
+    }, buildresult.built.len(), crate::repeat!(" ", 50)));
     println!();
-    if errors != 0 {
-        println!("    {} {}", "Failed".red().bold(), errors);
+    if buildresult.failed.len() != 0 {
+        println!("    {} {}", "Failed".red().bold(), buildresult.failed.len());
     }
-    let skip = *skip.lock().unwrap();
-    if skip != 0 {
-        println!("   {} {}", "Skipped".bold(), skip);
+    if buildresult.skipped.len() != 0 {
+        println!("   {} {}", "Skipped".bold(), buildresult.skipped.len());
     }
-    Ok(errors == 0)
+    Ok(buildresult)
 }
 
 pub fn single(p: &crate::project::Project, source: &PathBuf) -> Result<(), Error> {

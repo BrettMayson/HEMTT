@@ -18,8 +18,13 @@ pub fn check() -> Result<(), std::io::Error> {
         if !path.ends_with("stringtable.xml") { continue };
         stringtables.push(path);
     }
+    for entry in WalkDir::new("optionals").into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path().to_path_buf();
+        if !path.ends_with("stringtable.xml") { continue };
+        stringtables.push(path);
+    }
     let mut pb = ProgressBar::new(stringtables.len() as u64);
-    pb.format("╢▌▌░╟");
+    pb.show_speed = false;
     for stringtable in stringtables {
         pb.inc();
         let f = BufReader::new(File::open(stringtable)?);
