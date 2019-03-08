@@ -68,7 +68,7 @@ pub fn many(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildR
     }, buildresult.built.len(), crate::repeat!(" ", 50)));
     println!();
     if buildresult.failed.len() != 0 {
-        println!("    {} {}", "Failed".red().bold(), buildresult.failed.len());
+        println!("    {} {} {:?}", "Failed".red().bold(), buildresult.failed.len(), buildresult.failed);
     }
     if buildresult.skipped.len() != 0 {
         println!("   {} {}", "Skipped".bold(), buildresult.skipped.len());

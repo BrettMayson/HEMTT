@@ -173,11 +173,13 @@ fn run_command(args: &Args) -> Result<(), Error> {
                     .map(|file| file.unwrap().path())
                     .filter(|file_or_dir| file_or_dir.is_dir())
                     .collect();
-                let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
-                    .map(|file| file.unwrap().path())
-                    .filter(|file_or_dir| file_or_dir.is_dir())
-                    .collect();
-                pbos.append(&mut optionals.clone());
+                if Path::new("optionals/").exists() {
+                    let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                        .map(|file| file.unwrap().path())
+                        .filter(|file_or_dir| file_or_dir.is_dir())
+                        .collect();
+                    pbos.append(&mut optionals.clone());
+                }
                 files::clear_pbos(&p, &pbos).unwrap();
             }
             println!(" {} release v{}", "Preparing".green().bold(), version);

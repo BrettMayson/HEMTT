@@ -30,3 +30,13 @@ impl PBOResult {
         }
     }
 }
+impl std::fmt::Display for PBOResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.source.file_name().unwrap().to_str().unwrap())
+    }
+}
+impl std::fmt::Debug for PBOResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.source.file_name().unwrap().to_str().unwrap())
+    }
+}
