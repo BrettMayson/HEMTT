@@ -23,3 +23,6 @@ Spanish          2015  75%
 Hungarian        1558  58%
 Turkish             3   0%
 ```
+
+# convert
+The convert utility will convert the HEMTT project file from `hemtt.json -> hemtt.toml` or `hemtt.toml -> hemtt.json`.
