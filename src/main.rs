@@ -53,8 +53,8 @@ Usage:
     hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
     hemtt run <script>
-    hemtt <utility>
     hemtt update
+    hemtt <utility>
     hemtt (-h | --help)
     hemtt --version
 
@@ -218,7 +218,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 opt.push(optional);
                 addons.push(opt);
             }
-        } else if args.flag_release {
+        } else if args.flag_release && Path::new("optionals/").exists() {
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
                 if !entry.path().is_dir() { continue };
