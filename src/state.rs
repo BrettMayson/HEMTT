@@ -23,7 +23,6 @@ pub enum Stage {
     PostBuild,
     ReleaseBuild,
     Script,
-    Utility,
 }
 impl std::fmt::Display for Stage {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

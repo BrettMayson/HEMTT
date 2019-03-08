@@ -24,7 +24,7 @@ pub fn check() -> Result<(), std::io::Error> {
         stringtables.push(path);
     }
     let mut pb = ProgressBar::new(stringtables.len() as u64);
-    pb.format("╢▌▌░╟");
+    pb.show_speed = false;
     for stringtable in stringtables {
         pb.inc();
         let f = BufReader::new(File::open(stringtable)?);

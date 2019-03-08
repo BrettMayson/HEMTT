@@ -294,8 +294,11 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_run {
         check(false, args.flag_force).unwrap_or_print();
-        //let p = project::get_project().unwrap();
-        //p.script(&args.arg_script).unwrap_or_print();
+        let addons = Vec::new();
+        let mut state = crate::state::State::new(&addons);
+        state.stage = crate::state::Stage::Script;
+        let p = project::get_project().unwrap();
+        p.script(&args.arg_script, &state).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
         let target = self_update::get_target().unwrap();

@@ -4,7 +4,6 @@ use rayon::prelude::*;
 use serde::{Serialize, Deserialize};
 use subprocess::Exec;
 
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::io::Error;
 use std::iter::repeat;
@@ -23,7 +22,6 @@ impl ScriptStatus {
         let mut obj = ScriptStatus {
             progressbar: ProgressBar::new(0)
         };
-        obj.progressbar.format("╢▌▌░╟");
         obj.progressbar.set_width(Some(70));
         obj.progressbar.show_speed = false;
         obj
@@ -87,7 +85,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 55)));
+                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
                         println!();
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
@@ -97,7 +95,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 55)));
+                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
                         println!()
                     },
                     _ => {}
@@ -110,7 +108,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 55)));
+                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
                         println!();
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
@@ -120,7 +118,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 55)));
+                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
                         println!()
                     },
                     _ => {}
@@ -210,7 +208,7 @@ pub fn run(p: &crate::project::Project, state: &State) -> Result<(), Error> {
 fn execute(p: &crate::project::Project, command: &String, state: &State, output: bool, pb: Option<&mut ScriptStatus>) -> Result<(), Error> {
     let mut name = command.clone();
     let prefix = match &pb {
-        Some(v) => "\r",
+        Some(_) => "\r",
         None => ""
     };
     match name.remove(0) {

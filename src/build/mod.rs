@@ -34,7 +34,6 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 pub fn many(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
     println!("  {} {}", "Building".green().bold(), addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
-    pb.format("╢▌▌░╟");
     pb.show_speed = false;
     pb.show_time_left = false;
     pb.set_width(Some(60));

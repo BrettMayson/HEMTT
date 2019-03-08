@@ -121,7 +121,13 @@ impl Project {
 
     pub fn script(&self, name: &String, state: &State) -> Result<(), Error> {
         if self.script.contains_key(name) {
-            &self.script.get(name).unwrap().run(&self, &state);
+            let script = self.script.get(name).unwrap();
+            if !script.foreach {
+                script.run(&self, &state);
+            } else {
+                println!("Unble to run scripts with 'foreach' outside of build steps");
+                std::process::exit(1);
+            }
         } else {
             return Err(error!("Undefined script: {}", &name));
         }
