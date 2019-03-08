@@ -142,7 +142,7 @@ impl BuildScript {
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("name", name.clone());
+        data.insert("addon", name.clone());
         data.insert("source", addon.to_str().unwrap().to_owned());
         let mut target = addon.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
@@ -163,7 +163,7 @@ impl BuildScript {
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("name", name.clone());
+        data.insert("addon", name.clone());
         data.insert("source", addon.source.to_str().unwrap().to_owned());
         let mut target = addon.source.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));

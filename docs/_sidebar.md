@@ -1,5 +1,7 @@
 * [HEMTT](/)
 * [Getting Started](/getting_started.md)
-* [HEMTT.json Project File](/json.md)
+* [HEMTT Project File](/project.md)
 * [Usage](/usage.md)
+* [Scripts](/scripts.md)
 * [Utilities](/utilities.md)
+* [Templating](/templating.md)

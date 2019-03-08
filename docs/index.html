@@ -17,6 +17,11 @@
       loadSidebar: true,
       subMaxLevel: 2
     }
+    Vue.mixin({
+        data: function() {
+            date: Date.now();
+        }
+    });
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-json.min.js"></script>

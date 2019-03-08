@@ -123,7 +123,7 @@ impl Project {
         if self.script.contains_key(name) {
             let script = self.script.get(name).unwrap();
             if !script.foreach {
-                script.run(&self, &state);
+                script.run(&self, &state).unwrap_or_print();
             } else {
                 println!("Unble to run scripts with 'foreach' outside of build steps");
                 std::process::exit(1);
