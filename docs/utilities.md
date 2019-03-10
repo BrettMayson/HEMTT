@@ -4,7 +4,7 @@
 
 The translation utility will scan your project for `stringtable.xml` files and will tally up the keys. It will display a table with the key counts and the completion percentage. Supports all [Arma 3 Languages](https://community.bistudio.com/wiki/Stringtable.xml#Supported_languages).
 
-`./hemtt run translation`
+`./hemtt translation`
 ```
 Total            2698
 English          2698 100%

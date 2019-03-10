@@ -1,27 +1,38 @@
-use reqwest;
 use colored::*;
+use rayon::prelude::*;
+use reqwest;
 
 use std::fs;
 use std::fs::File;
 use std::io::{Read, Write, Error};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use crate::project;
+use crate::error::*;
 
-pub fn clear_pbos(p: &project::Project) -> Result<(), Error> {
-    println!("  {} PBOs", "Cleaning".yellow().bold());
-    for entry in fs::read_dir("addons")? {
-        let entry = entry?;
-        if !entry.path().is_dir() { continue }
-        let name = entry.file_name().into_string().unwrap();
-        clear_pbo(&p, &name)?;
-    }
+pub fn clear_pbos(p: &project::Project, addons: &Vec<PathBuf>) -> Result<(), Error> {
+    let count = Arc::new(Mutex::new(0));
+    addons.par_iter()
+        .for_each(|folder| {
+            let mut target = folder.parent().unwrap().to_path_buf();
+            target.push(&format!("{}_{}.pbo", p.prefix, folder.file_name().unwrap().to_str().unwrap()));
+            if target.exists() {
+                let mut data = count.lock().unwrap();
+                *data += 1;
+                fs::remove_file(target).print();
+            }
+        });
+    println!("   {} {} PBOs", "Cleaned".yellow().bold(), *count.lock().unwrap());
     Ok(())
 }
 
-pub fn clear_pbo(p: &project::Project, name: &String) -> Result<(), Error> {
-    if Path::new(&format!("addons/{}_{}.pbo", p.prefix, name)).exists() {
-        fs::remove_file(&format!("addons/{}_{}.pbo", p.prefix, name))?;
+pub fn clear_pbo(p: &project::Project, source: &PathBuf) -> Result<(), Error> {
+    let mut target = source.parent().unwrap().to_path_buf();
+    let name = source.file_name().unwrap().to_str().unwrap().to_owned();
+    target.push(&format!("{}_{}.pbo", p.prefix, name));
+    if target.exists() {
+        fs::remove_file(target)?;
     }
     Ok(())
 }
@@ -40,6 +51,13 @@ pub fn clear_releases() -> Result<(), Error> {
         fs::remove_dir_all("releases")?;
     }
     Ok(())
+}
+
+pub fn all_addons() -> Vec<PathBuf> {
+    fs::read_dir("addons").unwrap()
+        .map(|file| file.unwrap().path())
+        .filter(|file_or_dir| file_or_dir.is_dir())
+        .collect()
 }
 
 pub fn modcpp(p: &project::Project) -> Result<(), std::io::Error> {

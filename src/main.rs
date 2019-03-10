@@ -1,28 +1,35 @@
 use colored::*;
 use docopt::Docopt;
 use num_cpus;
-use rayon::prelude::*;
+use self_update;
 use serde::Deserialize;
 
 #[cfg(windows)]
 use ansi_term;
 
-use self_update;
-
 use std::collections::{HashSet};
 use std::fs;
 use std::io::{stdin, stdout, Write, Error};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod build;
 mod error;
 mod files;
+mod helpers;
 mod project;
+mod state;
+mod template;
 mod utilities;
 
 use crate::error::*;
+use crate::utilities::Utility;
 
-const HEMTT_FILE: &str = "hemtt.json";
+#[macro_export]
+macro_rules! repeat {
+    ($s: expr, $n: expr) => {{
+        &repeat($s).take($n).collect::<String>()
+    }}
+}
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
@@ -45,24 +52,27 @@ Usage:
     hemtt addon <name>
     hemtt build [<addons>] [--release] [--force] [--nowarn] [--opts=<addons>] [--skip=<addons>] [--jobs=<n>]
     hemtt clean [--force]
-    hemtt run <utility>
+    hemtt run <script>
     hemtt update
+    hemtt <utility>
     hemtt (-h | --help)
     hemtt --version
 
 Commands:
-    init        Initialize a project file in the current directory
-    create      Create a new project using the CBA project structure
-    addon       Create a new addon folder
-    build       Build the project
-    clean       Clean build files
-    update      Update HEMTT
+    init                Initialize a project file in the current directory
+    create              Create a new project using the CBA project structure
+    addon               Create a new addon folder
+    build               Build the project
+    clean               Clean build files
+    update              Update HEMTT
+
+Utilities:
+    translation         Displays the translation progress of all stringtable files
 
 Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --addons         Comma seperated list of addons to build
        --opts=<addons>  Comma seperated list of addtional compontents to build
        --skip=<addons>  Comma seperated list of addons to skip building
     -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
@@ -87,14 +97,10 @@ struct Args {
     flag_opts: String,
     flag_skip: String,
     flag_jobs: usize,
+    arg_script: String,
     arg_name: String,
     arg_utility: Option<Utility>,
     arg_addons: String,
-}
-
-#[derive(Debug, Deserialize)]
-enum Utility {
-    Translation
 }
 
 fn input(text: &str) -> String {
@@ -113,14 +119,14 @@ fn input(text: &str) -> String {
 
 fn run_command(args: &Args) -> Result<(), Error> {
     if args.cmd_init {
-        check(true, args.flag_force).print_error(true);
+        check(true, args.flag_force).unwrap_or_print();
         init().unwrap();
         Ok(())
     } else if args.cmd_create {
         if Path::new("addons").exists() {
             return Err(error!("The current directory already has a mod. Use init instead of create."));
         }
-        check(true, args.flag_force).print_error(true);
+        check(true, args.flag_force).unwrap_or_print();
         let p = init().unwrap();
         let main = "main".to_owned();
         files::modcpp(&p).unwrap();
@@ -134,7 +140,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::create_include().unwrap();
         Ok(())
     } else if args.cmd_addon {
-        check(false, args.flag_force).print_error(true);
+        check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
         if Path::new(&format!("addons/{}", args.arg_name)).exists() {
             return Err(error!("{} already exists", args.arg_name.bold()));
@@ -147,81 +153,154 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::xeh(&args.arg_name, &p).unwrap();
         Ok(())
     } else if args.cmd_build {
-        check(false, args.flag_force).print_error(true);
-        let mut p = project::get_project().unwrap();
+        check(false, args.flag_force).unwrap_or_print();
+        let p = project::get_project().unwrap();
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
             }
         }
+        let mut addons: Vec<PathBuf>  = Vec::new();
+        let mut skip: Vec<String> = p.skip.clone();
+        let version = match &p.version {
+            Some(v) => v,
+            None => panic!("Unable to determine version number"),
+        };
+        if args.flag_release {
+            if args.flag_force {
+                files::clear_release(&version).unwrap();
+                let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
+                    .map(|file| file.unwrap().path())
+                    .filter(|file_or_dir| file_or_dir.is_dir())
+                    .collect();
+                if Path::new("optionals/").exists() {
+                    let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                        .map(|file| file.unwrap().path())
+                        .filter(|file_or_dir| file_or_dir.is_dir())
+                        .collect();
+                    pbos.append(&mut optionals.clone());
+                }
+                files::clear_pbos(&p, &pbos).unwrap();
+            }
+            println!(" {} release v{}", "Preparing".green().bold(), version);
+            if Path::new(&format!("releases/{}", version)).exists() {
+                return Err(error!("Release already exists, run with --force to clean"));
+            }
+        }
+
+        if args.flag_skip != "" {
+            let mut specified_skip: Vec<String> = args.flag_skip.split(",").map(|s| s.to_string()).collect();
+            skip.append(&mut specified_skip);
+            skip.sort();
+            skip.dedup();
+        }
         if args.flag_opts == "all" {
-            let mut optionals: Vec<String> = Vec::new();
             for entry in fs::read_dir("optionals")? {
                 let entry = entry.unwrap();
                 if !entry.path().is_dir() { continue };
-                optionals.push(entry.file_name().into_string().unwrap());
+                if skip.contains(&entry.path().file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(entry.path());
             }
-            p.optionals = optionals;
         } else if args.flag_opts != "" {
-            let mut specified_optionals = args.flag_opts.split(",").map(|s| s.to_string()).collect();
-            p.optionals.append(&mut specified_optionals);
-            p.optionals.sort();
-            p.optionals.dedup();
-        }
-        if args.flag_skip != "" {
-            let mut specified_skip = args.flag_skip.split(",").map(|s| s.to_string()).collect();
-            p.skip.append(&mut specified_skip);
-            p.skip.sort();
-            p.skip.dedup();
-        }
-        if args.flag_release {
-            let version = match &p.version {
-                Some(v) => v,
-                None => panic!("Unable to determine version number"),
-            };
-            if args.flag_force {
-                files::clear_release(&version).unwrap();
-                files::clear_pbos(&p).unwrap();
-            }
-            build::release(&p, &version).print_error(true);
-            println!("  {} {} v{}", "Finished".green().bold(), &p.name, version);
-        } else {
-            if args.arg_addons != "" {
-                let addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
-                addons.par_iter().for_each(|addon| {
-                    if args.flag_force {
-                        files::clear_pbo(&p, &addon).unwrap();
-                    }
-                    build::build_single(&p, &addon).print_error(true);
-                });
-            } else {
-                if args.flag_force {
-                    files::clear_pbos(&p).unwrap();
+            let specified_optionals: Vec<String> = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            let optional_path = PathBuf::from("optionals");
+            for optional in specified_optionals {
+                let mut opt = optional_path.clone();
+                opt.push(&optional);
+                if !opt.exists() {
+                    return Err(error!("optionals/{} was not found", optional.bold()));
                 }
-                build::build(&p).print_error(true);
+                if skip.contains(&optional) { continue };
+                addons.push(opt);
             }
-            println!("  {} {}", "Finished".green().bold(), &p.name);
+            for optional in &p.optionals
+            {
+                let mut opt = optional_path.clone();
+                if skip.contains(&optional) { continue };
+                opt.push(optional);
+                addons.push(opt);
+            }
+        } else if args.flag_release && Path::new("optionals/").exists() {
+            for entry in fs::read_dir("optionals")? {
+                let entry = entry.unwrap();
+                if !entry.path().is_dir() { continue };
+                if skip.contains(&entry.path().file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(entry.path());
+            }
+        }
+        if args.arg_addons != "" {
+            let specified_addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+            let addon_path = PathBuf::from("addons");
+            for addon in specified_addons {
+                let mut adn = addon_path.clone();
+                adn.push(&addon);
+                if !adn.exists() {
+                    return Err(error!("addons/{} was not found", addon.bold()));
+                }
+                if skip.contains(&addon) { continue };
+                addons.push(adn);
+            }
+        } else {
+            for addon in crate::files::all_addons() {
+                if skip.contains(&addon.file_name().unwrap().to_str().unwrap().to_owned()) { continue };
+                addons.push(addon);
+            }
+        }
+        if args.flag_force {
+            for addon in &addons {
+                if !skip.contains(&addon.file_name().unwrap().to_str().unwrap().to_owned()) {
+                    crate::files::clear_pbo(&p, &addon).unwrap_or_print();
+                }
+            }
+        }
+        let mut state = crate::state::State::new(&addons);
+        p.run(&state).unwrap_or_print();
+        let result = build::many(&p, &addons).unwrap_or_print();
+        state.stage = crate::state::Stage::PostBuild;
+        state.result = Some(&result);
+        p.run(&state).unwrap_or_print();
+        if args.flag_release {
+            build::release::release(&p, &version).unwrap_or_print();
+            state.stage = crate::state::Stage::ReleaseBuild;
+            p.run(&state).unwrap_or_print();
+            println!("  {} {} v{}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
+             }, &p.name, version);
+        } else {
+            println!("  {} {}", match result.failed.len() {
+                0 => "Finished".green().bold(),
+                _ => "Finished".yellow().bold(),
+             }, &p.name);
         }
         if !args.flag_nowarn {
             armake2::error::print_warning_summary();
         }
         Ok(())
     } else if args.cmd_clean {
-        check(false, args.flag_force).print_error(true);
+        check(false, args.flag_force).unwrap_or_print();
         let p = project::get_project().unwrap();
-        files::clear_pbos(&p).unwrap();
+        let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
+            .map(|file| file.unwrap().path())
+            .filter(|file_or_dir| file_or_dir.is_dir())
+            .collect();
+        let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+            .map(|file| file.unwrap().path())
+            .filter(|file_or_dir| file_or_dir.is_dir())
+            .collect();
+        pbos.append(&mut optionals.clone());
+        files::clear_pbos(&p, &pbos).unwrap();
         if args.flag_force {
             files::clear_releases().unwrap();
         }
         Ok(())
     } else if args.cmd_run {
-        if let Some(utility) = &args.arg_utility {
-            match utility {
-                Utility::Translation => {
-                    utilities::translation::check().unwrap();
-                }
-            }
-        }
+        check(false, args.flag_force).unwrap_or_print();
+        let addons = Vec::new();
+        let mut state = crate::state::State::new(&addons);
+        state.stage = crate::state::Stage::Script;
+        let p = project::get_project().unwrap();
+        p.script(&args.arg_script, &state).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
         let target = self_update::get_target().unwrap();
@@ -237,7 +316,10 @@ fn run_command(args: &Args) -> Result<(), Error> {
         println!("Using Version: {}", status.version());
         Ok(())
     } else {
-        unreachable!()
+        if let Some(utility) = &args.arg_utility {
+            crate::utilities::run(utility).unwrap_or_print();
+        }
+        Ok(())
     }
 }
 
@@ -260,15 +342,15 @@ fn main() {
     }
     rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 
-    run_command(&args).print_error(true);
+    run_command(&args).unwrap_or_print();
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {
-    if Path::new(HEMTT_FILE).exists() && write && !force {
+    if crate::project::exists() && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
-    } else if Path::new(HEMTT_FILE).exists() && write && force {
+    } else if crate::project::exists() && write && force {
         Ok(())
-    } else if !Path::new(HEMTT_FILE).exists() && !write {
+    } else if !crate::project::exists() && !write {
         Err(error!("A HEMTT Project does not exist in the current directory"))
     } else {
         Ok(())

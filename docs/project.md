@@ -1,7 +1,8 @@
-# HEMTT.json Project File
+# HEMTT Project File
 
-The `hemtt.json` file is used to configure your HEMTT Project.
+The `hemtt.json` or `hemtt.toml` file is used to configure your HEMTT Project. All examples are done using `JSON`, but both files support every feature of HEMTT. `hemtt.toml` will be used if both files are present.
 
+`JSON`
 ```json
 {
   "name": "Advanced Banana Environment",
@@ -11,6 +12,13 @@ The `hemtt.json` file is used to configure your HEMTT Project.
 }
 ```
 
+`TOML`
+```toml
+name = "Advanced Banana Environment"
+prefix = "ABE3"
+author = "ACE Mod Team"
+version = "1.0.0.0"
+```
 # Required Fields
 
 ## name
@@ -56,7 +64,7 @@ Author of the project.
 ## version
 **Type**: String
 
-HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not have that file you can add a version number here.
+HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not have that file you can add a version number in the HEMTT project file.
 
 ```json
 "version": "1.0.0.0"
@@ -137,7 +145,7 @@ HEMTT will skip building the specified addons.
 ## headerexts
 **Type**: Array \[String\]
 
-HEMTT will apply specified header extensions to each PBO.
+HEMTT will apply specified header extensions to each PBO. Supports [templating](/templating.md).
 
 ```json
 "headerexts": [
@@ -148,7 +156,7 @@ HEMTT will apply specified header extensions to each PBO.
 ## modname
 **Type**: String
 
-HEMTT will use the specified mod name (without `@`) to form `@mod` folder.
+HEMTT will use the specified mod name (without `@`) to form `@mod` folder. Supports [templating](/templating.md).
 
 ```json
 "modname": "my_mod"
@@ -157,14 +165,11 @@ HEMTT will use the specified mod name (without `@`) to form `@mod` folder.
 ## keyname
 **Type**: String
 
-HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names.
+HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names. Supports [templating](/templating.md).
 
 ```json
 "keyname": "my_key"
 ```
-### Replacements
-
-- `{{version}}`: Mod version in format `MAJOR.MINOR.PATCH.BUILD`
 
 ### Example
 
@@ -179,15 +184,11 @@ Above will result in key name of `my_key-1.0.0.0.bikey` and private key name of 
 ## signame
 **Type**: String
 
-HEMTT will use the specified signature name as part of the full signature (`.bisign`) name.
+HEMTT will use the specified signature name as part of the full signature (`.bisign`) name. Supports [templating](/templating.md).
 
 ```json
 "signame": "my_custom_name"
 ```
-
-### Replacements
-
-- `{{version}}`: Mod version in format `MAJOR.MINOR.PATCH.BUILD`
 
 ### Example
 
