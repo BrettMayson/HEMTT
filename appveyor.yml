@@ -39,6 +39,8 @@ install:
   - cargo -V
 
 test_script:
+  - ps: ci\version.ps1
+
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release

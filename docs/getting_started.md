@@ -70,3 +70,12 @@ HEMTT will look for `addons/main/script_version.hpp` and use it for the version 
   "version": "1.0.0.0"
 }
 ```
+
+## Notes
+
+It is recommended you add the following to your `.gitignore` if you are putting your mod on GitHub:
+```
+*.pbo
+*.biprivatekey
+releases/
+```
