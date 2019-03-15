@@ -206,11 +206,16 @@ pub fn run(p: &crate::project::Project, state: &State) -> Result<(), Error> {
 }
 
 fn execute(p: &crate::project::Project, command: &String, state: &State, output: bool, pb: Option<&mut ScriptStatus>) -> Result<(), Error> {
-    let mut name = command.clone();
+    let command_split: Vec<&str> = command.split(' ').collect();
+    let mut name = command_split[0].to_string();
+    let args = &command_split[1..];
+    println!("{:?} | name: {} | args: {:?}", command_split, name, args);
+
     let prefix = match &pb {
         Some(_) => "\r",
         None => ""
     };
+
     match name.remove(0) {
         '@' => {
             if output {println!("{}   {} {}", prefix, "Utility".green().bold(), &name)};
