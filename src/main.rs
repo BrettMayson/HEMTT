@@ -92,7 +92,6 @@ struct Args {
     flag_verbose: bool,
     flag_force: bool,
     flag_nowarn: bool,
-    flag_nozip: bool,
     flag_version: bool,
     flag_release: bool,
     flag_opts: String,
