@@ -3,12 +3,9 @@ use walkdir;
 
 use colored::*;
 
-use std::fs;
 use std::fs::File;
 use std::io::{Read, Write, Error};
-use std::path::{Path, PathBuf};
-
-use crate::error::*;
+use std::path::{Path};
 
 pub fn archive() -> Result<(), Error> {
     let p = crate::project::get_project()?;
