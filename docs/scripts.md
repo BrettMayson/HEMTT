@@ -4,7 +4,7 @@ Scripts are used to extend the build process of your project.
 # Defining a Script
 Scripts use a list of shell commands. This small snippet is all that is needed to define a basic script. This example would be ran with `hemtt run build`.
 ```json
-"script": {
+"scripts": {
     "build": {
         "steps": [
             "make all"
@@ -15,7 +15,7 @@ Scripts use a list of shell commands. This small snippet is all that is needed t
 ### steps_windows / steps_linux
 `steps_windows` and `steps_linux` can be used to run different steps on the respective platforms.
 ```json
-"script": {
+"scripts": {
     "build": {
         "steps_linux": [
             "make linux"
@@ -30,7 +30,7 @@ Scripts use a list of shell commands. This small snippet is all that is needed t
 ### show_output
 All output is hidden by default. Setting `show_output` will display the command being executed and its output.
 ```json
-"script": {
+"scripts": {
     "example": {
         "steps": ["echo 'this is an example'"],
         "show_output": true
@@ -45,7 +45,7 @@ There are 3 different build step definitions. `prebuild`, `postbuild` and `relea
 "releasebuild": [
     "!build",
 ],
-"script": {
+"scripts": {
     "build": {
         "steps_linux": [
             "make linux",
@@ -72,7 +72,7 @@ In addition to the standard [templating variables](templating.md), additional va
 | time     |                     | (build time in ms)  | (build time in ms)  |
 
 ```json
-"script": {
+"scripts": {
     "buildtime": {
         "steps": ["echo {{addon}} took {{time}} ms to build."],
         "show_output": true,

@@ -59,7 +59,7 @@ pub struct Project {
     pub releasebuild: Vec<String>,
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
-    pub script: HashMap<String, crate::build::script::BuildScript>,
+    pub scripts: HashMap<String, crate::build::script::BuildScript>,
 
     #[serde(skip_deserializing,skip_serializing)]
     pub template_data: BTreeMap<&'static str, String>,
@@ -120,8 +120,8 @@ impl Project {
     }
 
     pub fn script(&self, name: &String, state: &State) -> Result<(), Error> {
-        if self.script.contains_key(name) {
-            let script = self.script.get(name).unwrap();
+        if self.scripts.contains_key(name) {
+            let script = self.scripts.get(name).unwrap();
             if script.foreach && state.stage == crate::state::Stage::Script {
                 println!("Unable to run scripts with 'foreach' outside of build steps");
                 std::process::exit(1);
@@ -157,7 +157,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         prebuild: Vec::new(),
         postbuild: Vec::new(),
         releasebuild: Vec::new(),
-        script: HashMap::new(),
+        scripts: HashMap::new(),
 
         template_data: BTreeMap::new(),
     };
