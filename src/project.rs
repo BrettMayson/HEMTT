@@ -178,11 +178,11 @@ pub fn path() -> Result<&'static Path, Error> {
     Err(error!("No HEMTT project file was found"))
 }
 
-fn json_exists() -> bool {
+pub fn json_exists() -> bool {
     Path::new("hemtt.json").exists()
 }
 
-fn toml_exists() -> bool {
+pub fn toml_exists() -> bool {
     Path::new("hemtt.toml").exists()
 }
 
