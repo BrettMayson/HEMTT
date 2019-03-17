@@ -103,9 +103,18 @@ struct Args {
     arg_addons: String,
 }
 
-fn input(text: &str) -> String {
+fn input(text: &str, default: Option<String>) -> String {
     let mut s = String::new();
-    print!("{}: ",text);
+    let ret = match default {
+        Some(v) => {
+            print!("{} ({}): ", text, &v);
+            v
+        }
+        None => {
+            print!("{}: ", text);
+            String::new()
+        }
+    };
     stdout().flush().unwrap();
     stdin().read_line(&mut s).expect("Did not enter a valid string");
     if let Some('\n')=s.chars().next_back() {
@@ -113,6 +122,9 @@ fn input(text: &str) -> String {
     }
     if let Some('\r')=s.chars().next_back() {
         s.pop();
+    }
+    if s == "".to_owned() {
+        return ret;
     }
     s
 }
@@ -255,7 +267,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         let mut state = crate::state::State::new(&addons);
         p.run(&state).unwrap_or_print();
-        let result = build::many(&p, &addons).unwrap_or_print();
+        let result = build::addons(&p, &addons).unwrap_or_print();
         state.stage = crate::state::Stage::PostBuild;
         state.result = Some(&result);
         p.run(&state).unwrap_or_print();
@@ -360,9 +372,9 @@ fn check(write: bool, force: bool) -> Result<(), Error> {
 }
 
 fn init() -> Result<crate::project::Project, Error> {
-    let name = input("Project Name (My Cool Mod)");
-    let prefix = input("Prefix (MCM)");
-    let author = input("Author");
+    let name = input("Project Name", Some("My Cool Mod".to_owned()));
+    let prefix = input("Prefix", Some("MCM".to_owned()));
+    let author = input("Author", Some("Me".to_owned()));
     Ok(crate::project::init(name, prefix, author)?)
 }
 

@@ -59,7 +59,7 @@ pub struct Project {
     pub releasebuild: Vec<String>,
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
-    pub script: HashMap<String, crate::build::script::BuildScript>,
+    pub scripts: HashMap<String, crate::build::script::BuildScript>,
 
     #[serde(skip_deserializing,skip_serializing)]
     pub template_data: BTreeMap<&'static str, String>,
@@ -77,7 +77,7 @@ fn default_include() -> Vec<PathBuf> {
 
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
-        let file = path().unwrap_or_print();
+        let file = path(false).unwrap_or_print();
         let mut out = File::create(file)?;
         if toml_exists() {
             out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
@@ -120,13 +120,13 @@ impl Project {
     }
 
     pub fn script(&self, name: &String, state: &State) -> Result<(), Error> {
-        if self.script.contains_key(name) {
-            let script = self.script.get(name).unwrap();
-            if !script.foreach {
-                script.run(&self, &state).unwrap_or_print();
-            } else {
-                println!("Unble to run scripts with 'foreach' outside of build steps");
+        if self.scripts.contains_key(name) {
+            let script = self.scripts.get(name).unwrap();
+            if script.foreach && state.stage == crate::state::Stage::Script {
+                println!("Unable to run scripts with 'foreach' outside of build steps");
                 std::process::exit(1);
+            } else {
+                script.run(&self, &state).unwrap_or_print();
             }
         } else {
             return Err(error!("Undefined script: {}", &name));
@@ -157,7 +157,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         prebuild: Vec::new(),
         postbuild: Vec::new(),
         releasebuild: Vec::new(),
-        script: HashMap::new(),
+        scripts: HashMap::new(),
 
         template_data: BTreeMap::new(),
     };
@@ -169,25 +169,27 @@ pub fn exists() -> bool {
     toml_exists() || json_exists()
 }
 
-pub fn path() -> Result<&'static Path, Error> {
+pub fn path(fail: bool) -> Result<&'static Path, Error> {
     if exists() {
         return Ok(Path::new(
             if toml_exists() {"hemtt.toml"} else {"hemtt.json"}
         ));
+    } else if !fail {
+        return Ok(Path::new("hemtt.json"));
     }
     Err(error!("No HEMTT project file was found"))
 }
 
-fn json_exists() -> bool {
+pub fn json_exists() -> bool {
     Path::new("hemtt.json").exists()
 }
 
-fn toml_exists() -> bool {
+pub fn toml_exists() -> bool {
     Path::new("hemtt.toml").exists()
 }
 
 pub fn get_project() -> Result<Project, Error> {
-    let file = path()?;
+    let file = path(true)?;
     let mut f = File::open(file)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
