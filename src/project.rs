@@ -77,7 +77,7 @@ fn default_include() -> Vec<PathBuf> {
 
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
-        let file = path().unwrap_or_print();
+        let file = path(false).unwrap_or_print();
         let mut out = File::create(file)?;
         if toml_exists() {
             out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
@@ -169,11 +169,13 @@ pub fn exists() -> bool {
     toml_exists() || json_exists()
 }
 
-pub fn path() -> Result<&'static Path, Error> {
+pub fn path(fail: bool) -> Result<&'static Path, Error> {
     if exists() {
         return Ok(Path::new(
             if toml_exists() {"hemtt.toml"} else {"hemtt.json"}
         ));
+    } else if !fail {
+        return Ok(Path::new("hemtt.json"));
     }
     Err(error!("No HEMTT project file was found"))
 }
@@ -187,7 +189,7 @@ pub fn toml_exists() -> bool {
 }
 
 pub fn get_project() -> Result<Project, Error> {
-    let file = path()?;
+    let file = path(true)?;
     let mut f = File::open(file)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
