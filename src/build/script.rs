@@ -1,6 +1,7 @@
 use colored::*;
 use pbr::ProgressBar;
 use rayon::prelude::*;
+use regex::Regex;
 use serde::{Serialize, Deserialize};
 use subprocess::Exec;
 
@@ -206,10 +207,7 @@ pub fn run(p: &crate::project::Project, state: &State) -> Result<(), Error> {
 }
 
 fn execute(p: &crate::project::Project, command: &String, state: &State, output: bool, pb: Option<&mut ScriptStatus>) -> Result<(), Error> {
-    let command_split: Vec<&str> = command.split(' ').collect();
-    let mut name = command_split[0].to_string();
-    let args = &command_split[1..];
-    println!("{:?} | name: {} | args: {:?}", command_split, name, args);
+    let mut name = command.clone();
 
     let prefix = match &pb {
         Some(_) => "\r",
@@ -218,9 +216,14 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
 
     match name.remove(0) {
         '@' => {
+            let re = Regex::new(r##"([^=\s"]*)=(?:"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+))|"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+)"##).unwrap();
+            let mut args: Vec<String> = Vec::new();
+            for mat in re.find_iter(&name) {
+                args.push(mat.as_str().to_owned());
+            }
             if output {println!("{}   {} {}", prefix, "Utility".green().bold(), &name)};
-            match crate::utilities::find(&name) {
-                Some(v) => crate::utilities::run(&v)?,
+            match crate::utilities::find(&args[0]) {
+                Some(v) => crate::utilities::run(&v, &args)?,
                 None => return Err(error!("Unknown Utility: {}", &name))
             };
             if let Some(_) = &pb {

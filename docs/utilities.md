@@ -23,3 +23,11 @@ Spanish          2015  75%
 Hungarian        1558  58%
 Turkish             3   0%
 ```
+
+# zip
+
+The zip utility will zip the current release into a .zip file. The zip filename will be `{{name}}_{{version}}` unless a name is provided.
+
+`hemtt zip` => `ace3_1.2.3.zip`
+`hemtt zip release` => `release.zip`
+`hemtt zip {{version}}` => `1.2.3.zip`

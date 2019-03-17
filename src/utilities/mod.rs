@@ -19,13 +19,13 @@ pub fn find(utility: &str) -> Option<Utility> {
     }
 }
 
-pub fn run(utility: &Utility) -> Result<(), Error> {
+pub fn run(utility: &Utility, args: &Vec<String>) -> Result<(), Error> {
     match utility {
         Utility::Translation => {
             return translation::check();
         }
         Utility::Zip => {
-            return zip::archive();
+            return zip::archive(args);
         }
     }
     #[allow(unreachable_code)]

@@ -54,7 +54,7 @@ Usage:
     hemtt clean [--force]
     hemtt run <script>
     hemtt update
-    hemtt <utility>
+    hemtt <utility> [<args>]
     hemtt (-h | --help)
     hemtt --version
 
@@ -317,7 +317,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else {
         if let Some(utility) = &args.arg_utility {
-            crate::utilities::run(utility).unwrap_or_print();
+            let mut args = std::env::args().collect::<Vec<_>>();
+            args.remove(0);
+            crate::utilities::run(utility, &args).unwrap_or_print();
         }
         Ok(())
     }
