@@ -31,7 +31,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     Ok(recent)
 }
 
-pub fn many(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
+pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
     println!("  {} {}", "Building".green().bold(), addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
     pb.show_speed = false;
@@ -74,14 +74,6 @@ pub fn many(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildR
         println!("   {} {}", "Skipped".bold(), buildresult.skipped.len());
     }
     Ok(buildresult)
-}
-
-pub fn single(p: &crate::project::Project, source: &PathBuf) -> Result<(), Error> {
-    let name = source.file_name().unwrap().to_str().unwrap().to_owned();
-    let mut target = source.parent().unwrap().to_path_buf();
-    target.push(&format!("{}_{}.pbo", p.prefix, &name));
-    _build(&p, &source, &target, None).unwrap();
-    Ok(())
 }
 
 fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: Option<&Arc<Mutex<ProgressBar<std::io::Stdout>>>>) -> Result<u32, Error> {

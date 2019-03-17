@@ -255,7 +255,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         let mut state = crate::state::State::new(&addons);
         p.run(&state).unwrap_or_print();
-        let result = build::many(&p, &addons).unwrap_or_print();
+        let result = build::addons(&p, &addons).unwrap_or_print();
         state.stage = crate::state::Stage::PostBuild;
         state.result = Some(&result);
         p.run(&state).unwrap_or_print();
