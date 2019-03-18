@@ -46,7 +46,7 @@ test_script:
       cargo build --target %TARGET% --release
     )
   # revert below before merge
-  - "C:\Program Files (x86)\Inno Setup 5\issc.exe" ci\wininstaller.iss
+  - "C:\\Program Files (x86)\\Inno Setup 5\\issc.exe" ci\wininstaller.iss
 
 artifacts:
   - path: target\%TARGET%\debug\hemtt.exe
@@ -54,7 +54,7 @@ artifacts:
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin hemtt -- -C lto
-  - "C:\Program Files (x86)\Inno Setup 5\issc.exe" ci\wininstaller.iss
+  - "C:\\Program Files (x86)\\Inno Setup 5\\issc.exe" ci\wininstaller.iss
   - ps: ci\before_deploy.ps1
 
 deploy:
