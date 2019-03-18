@@ -45,8 +45,6 @@ test_script:
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release
     )
-  # revert below before merge
-  - call "C:\\Program Files (x86)\\Inno Setup 5\\iscc.exe" ci\wininstaller.iss
 
 artifacts:
   - path: target\%TARGET%\debug\hemtt.exe
