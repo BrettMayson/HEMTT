@@ -23,7 +23,7 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\target\release\{#target}\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
