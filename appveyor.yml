@@ -45,6 +45,8 @@ test_script:
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release
     )
+  # revert below before merge
+  - issc ci\wininstaller.iss
 
 artifacts:
   - path: target\%TARGET%\debug\hemtt.exe
