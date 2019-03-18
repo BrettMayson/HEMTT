@@ -14,7 +14,7 @@ AppUpdatesURL=https://github.com/SynixeBrett/HEMTT
 DefaultDirName={pf}\HEMTT
 DefaultGroupName=HEMTT
 DisableProgramGroupPage=yes
-LicenseFile=LICENSE
+LicenseFile=..\LICENSE
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
@@ -23,7 +23,7 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "target\release\{#target}\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\release\{#target}\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
