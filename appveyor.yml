@@ -52,6 +52,7 @@ artifacts:
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin hemtt -- -C lto
+  - issc ci\wininstaller.iss
   - ps: ci\before_deploy.ps1
 
 deploy:
