@@ -1,0 +1,6 @@
+target/
+docs/
+ci/
+.github/
+
+Dockerfile

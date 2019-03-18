@@ -1,14 +1,13 @@
-FROM rust:1.33
+FROM rust:1.33 as build
 
 WORKDIR /usr/src/hemtt
 COPY . .
-
-RUN apt-get update
-RUN apt-get install -y \
-	git \
-	python3 \
-	zip
-
-RUN rm -rf /var/lib/apt/lists/*
-
 RUN cargo install --path .
+
+FROM ubuntu:18.04
+
+RUN \
+	apt-get update && apt-get install -y git python3 zip --no-install-recommends && \
+	rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /usr/local/cargo/bin/hemtt /usr/local/bin/hemtt
