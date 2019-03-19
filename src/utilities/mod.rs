@@ -24,12 +24,11 @@ pub fn run(utility: &Utility) -> Result<(), std::io::Error> {
     #[allow(unreachable_patterns)]
     return match utility {
         Utility::ConvertProject => convert::run(),
-        Utility::Translation => {
-            return translation::check();
-        }
+        Utility::Translation => translation::check(),
         Utility::Dependencies => {
             // TODO: think about what we want to return here - can we pass args to utilities?
             return dependencies::show();
         }
+        _ => Err(error!("Utility not implemented"))
     }
 }
