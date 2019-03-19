@@ -2,6 +2,7 @@ use armake2::preprocess::*;
 use armake2::io::{Input,Output}; // I definitely shouldn't be using this
 // use pbr::ProgressBar;
 use petgraph::Graph;
+use petgraph::dot::{Dot,Config};
 use rayon::prelude::*;
 use rayon::iter::ParallelBridge;
 use regex::Regex;
@@ -42,12 +43,14 @@ pub fn show() -> Result<(), std::io::Error> {
         for line in processed_lines {
             if ((looking_for == "reqs") && gimmeReqs.is_match(line)) {
                 // Zeroth match corresponds to whole line - first match is first capture group
-                println!("{}",gimmeReqs.captures(line).unwrap().get(1).unwrap().as_str()); 
                 gimmeReqs.captures(line).unwrap().get(1).unwrap().as_str().split(',').map(|s| s.replace('"',"")).for_each(|req| {
                     if !name2node.lock().unwrap().contains_key(&req){
                         let nodenum = deps.lock().unwrap().add_node(req.to_string());
                         name2node.lock().unwrap().insert(req.to_string(),nodenum);
                     }
+                    let requirementind = name2node.lock().unwrap().get(&req).unwrap().clone();
+                    let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
+                    deps.lock().unwrap().add_edge(requirementind,dependentind,());
                     // TODO
                     // now make edges each dep to name
                     // deps.add_edge(hashmap.getval(dep),hashmap.getval(name))
@@ -59,7 +62,6 @@ pub fn show() -> Result<(), std::io::Error> {
             if ((looking_for == "class") && gimmeClass.is_match(line)) {
                 // Zeroth match corresponds to whole line - first match is first capture group
                 name = gimmeClass.captures(line).unwrap().get(1).unwrap().as_str() ;
-                println!("{}",name);
                 if !name2node.lock().unwrap().contains_key(name){
                     let nodenum = deps.lock().unwrap().add_node(name.to_string());
                     name2node.lock().unwrap().insert(name.to_string(),nodenum);
@@ -70,10 +72,6 @@ pub fn show() -> Result<(), std::io::Error> {
                 looking_for = "class";
             }
         }
-        // This seems to print stuff fine
-        for (key, value) in &*name2node.lock().unwrap() {
-            println!("{} -> {}", key, value.index());
-        }
         return processed;
 
 
@@ -82,15 +80,12 @@ pub fn show() -> Result<(), std::io::Error> {
         // i.e, we want to parse up to requiredAddons[] and no further
         // https://github.com/KoffeinFlummi/armake2/blob/40fabd915514ffda372ec012b35ed4190d0e0515/src/preprocess.rs#L369
         // but that's just perf so let's leave it for now
-    });
+    }).collect(); // The collect makes this blocking
     // This prints first? I guess we need to wait for the loop to finish or something weird?
-    println!("the last line");
-    // This doesn't print anything at all :/
-    for (key, value) in &*name2node.lock().unwrap() {
-        println!("{} -> {}", key, value.index());
-    }
+    let graph = deps.lock().unwrap();
+    println!("{:?}", Dot::with_config(&*graph, &[Config::EdgeNoLabel]));
     let mut file = File::create("test.txt")?;
-    let confs: Vec<String> = vecconf.collect();
+    let confs: Vec<String> = vecconf;
     file.write(confs.join("\n").as_bytes());
     Ok(())
 }
