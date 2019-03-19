@@ -27,7 +27,7 @@ pub fn show() -> Result<(), std::io::Error> {
     let gimmeReqs = Regex::new(r"(?i)requiredAddons.*\{(.*)\}").unwrap();
 
     // This is slow enough that we probably need a progress bar :(
-    let mut deps = Arc::new(Mutex::new(Graph::<std::string::String, std::string::String>::new()));
+    let mut deps = Arc::new(Mutex::new(Graph::<_, ()>::new()));
     let mut name2node = Arc::new(Mutex::new(HashMap::new()));
     let vecconf = configs.par_iter().map(|config| {
         // turn this into a .map eventually
@@ -46,7 +46,7 @@ pub fn show() -> Result<(), std::io::Error> {
                 gimmeReqs.captures(line).unwrap().get(1).unwrap().as_str().split(',').map(|s| s.replace('"',"")).for_each(|req| {
                     if !name2node.lock().unwrap().contains_key(&req){
                         let nodenum = deps.lock().unwrap().add_node(req.to_string());
-                        name2node.lock().unwrap().insert(req.to_string(),nodenum.index());
+                        name2node.lock().unwrap().insert(req.to_string(),nodenum);
                     }
                     // TODO
                     // now make edges each dep to name
@@ -62,7 +62,7 @@ pub fn show() -> Result<(), std::io::Error> {
                 println!("{}",name);
                 if !name2node.lock().unwrap().contains_key(name){
                     let nodenum = deps.lock().unwrap().add_node(name.to_string());
-                    name2node.lock().unwrap().insert(name.to_string(),nodenum.index());
+                    name2node.lock().unwrap().insert(name.to_string(),nodenum);
                 }
                 looking_for = "reqs"; // TODO - handle reqs not existing
             }
@@ -72,7 +72,7 @@ pub fn show() -> Result<(), std::io::Error> {
         }
         // This seems to print stuff fine
         for (key, value) in &*name2node.lock().unwrap() {
-            println!("{} -> {}", key, value);
+            println!("{} -> {}", key, value.index());
         }
         return processed;
 
@@ -87,7 +87,7 @@ pub fn show() -> Result<(), std::io::Error> {
     println!("the last line");
     // This doesn't print anything at all :/
     for (key, value) in &*name2node.lock().unwrap() {
-        println!("{} -> {}", key, value);
+        println!("{} -> {}", key, value.index());
     }
     let mut file = File::create("test.txt")?;
     let confs: Vec<String> = vecconf.collect();
