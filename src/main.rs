@@ -67,8 +67,8 @@ Commands:
     update              Update HEMTT
 
 Utilities:
-    convertproject      Convert project file between JSON and TOML
     translation         Displays the translation progress of all stringtable files
+    convertproject      Convert project file between JSON and TOML
 
 Options:
     -v --verbose        Enable verbose output
