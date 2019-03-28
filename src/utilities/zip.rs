@@ -61,6 +61,8 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
         pb.message(&format!("{} - ", path.file_name().unwrap().to_str().unwrap()));
         pb.tick();
 
+        // Write file or directory explicitly
+        // Some unzip tools unzip files with directory paths correctly, some do not!
         if path.is_file() {
             zip.start_file(name, options)?;
             let mut f = File::open(path)?;
@@ -68,7 +70,9 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
             f.read_to_end(&mut buffer)?;
             zip.write_all(&*buffer)?;
             buffer.clear();
-        } else {
+        } else if !name.is_empty() {
+            // Only if not root! Avoids path spec / warning
+            // and mapname conversion failed error on unzip
             zip.add_directory(name, options)?;
         }
 
