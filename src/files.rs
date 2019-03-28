@@ -49,7 +49,7 @@ pub fn clear_release(p: &project::Project, version: &String) -> Result<(), Error
     let pkeypath = &format!("releases/keys/{}.biprivatekey", keyname);
 
     if Path::new(keypath).exists() {
-        println!("  {} old key {}.bikey", "Cleaning".yellow().bold(), keyname);
+        println!("  {} old key {}", "Cleaning".yellow().bold(), keyname);
         fs::remove_file(keypath)?;
 
         // TODO Wrap in p.reuse_private_key in #51
