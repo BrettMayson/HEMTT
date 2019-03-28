@@ -37,20 +37,33 @@ pub fn clear_pbo(p: &project::Project, source: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn clear_release(version: &String) -> Result<(), Error> {
+pub fn clear_release(p: &project::Project, version: &String) -> Result<(), Error> {
     if Path::new(&format!("releases/{}", version)).exists() {
         println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
         fs::remove_dir_all(format!("releases/{}", version))?;
     }
-    if Path::new("releases/keys").exists() {
-        println!("  {} old keys", "Cleaning".yellow().bold());
-        fs::remove_dir_all("releases/keys")?;
+
+    // Keys
+    let keyname = p.get_keyname();
+    let keypath = &format!("releases/keys/{}.bikey", keyname);
+    let pkeypath = &format!("releases/keys/{}.biprivatekey", keyname);
+
+    if Path::new(keypath).exists() {
+        println!("  {} old key {}.bikey", "Cleaning".yellow().bold(), keyname);
+        fs::remove_file(keypath)?;
+
+        // TODO Wrap in p.reuse_private_key in #51
+        if Path::new(pkeypath).exists() {
+            fs::remove_file(pkeypath)?;
+        }
     }
+
     Ok(())
 }
 
 pub fn clear_releases() -> Result<(), Error> {
     println!("  {} all releases", "Cleaning".yellow().bold());
+    // TODO Conform to p.reuse_private_key in #51 to not remove private keys
     if Path::new("releases").exists() {
         fs::remove_dir_all("releases")?;
     }

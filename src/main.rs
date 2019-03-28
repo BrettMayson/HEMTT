@@ -180,7 +180,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         };
         if args.flag_release {
             if args.flag_force {
-                files::clear_release(&version).unwrap();
+                files::clear_release(&p, &version).unwrap();
                 let mut pbos: Vec<PathBuf> = fs::read_dir("addons").unwrap()
                     .map(|file| file.unwrap().path())
                     .filter(|file_or_dir| file_or_dir.is_dir())
