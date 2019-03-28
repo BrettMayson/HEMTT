@@ -10,7 +10,7 @@ pub fn copy_sign(folder: &String, entry: &DirEntry, p: &crate::project::Project,
     let cpath = path.clone();
     let cpath = cpath.to_str().unwrap().replace(r#"\"#,"/");
     let pbo = cpath.replace((folder.clone() + "/").as_str(), "");
-    if !path.ends_with(".pbo") && !pbo.contains(p.prefix.as_str()) {
+    if !path.ends_with(".pbo") && !pbo.starts_with(p.prefix.as_str()) {
         return Ok(false);
     }
 
