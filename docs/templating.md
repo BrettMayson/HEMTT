@@ -31,7 +31,7 @@ Date can be used to get information about the current date and time. HEMTT uses 
 Git helper can be used to get information about the git repository.
 
 Parameters:
-- `id <number>`: id (SHA-1) of HEAD revision _(number from 1 to 40, default: 8)_
+- `id <number>`: id (SHA-1) of HEAD revision truncated to `<number>` characters _(from 1 to 40, default: 8)_
 
 ```
 {{git \"id 8\"}}
