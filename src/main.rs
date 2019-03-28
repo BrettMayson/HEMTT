@@ -65,7 +65,7 @@ Commands:
     build               Build the project
     clean               Clean build files
     update              Update HEMTT
-    convertproject      Convert hemtt.json to hemtt.toml
+    convertproject      Convert project file between JSON and TOML
 
 Utilities:
     translation         Displays the translation progress of all stringtable files
