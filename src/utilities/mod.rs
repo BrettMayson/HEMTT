@@ -1,7 +1,5 @@
 use serde::Deserialize;
 
-use std::io::{Error};
-
 pub mod convert;
 pub mod translation;
 pub mod zip;

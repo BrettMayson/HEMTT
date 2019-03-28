@@ -68,6 +68,8 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
             f.read_to_end(&mut buffer)?;
             zip.write_all(&*buffer)?;
             buffer.clear();
+        } else {
+            zip.add_directory(name, options)?;
         }
 
         pb.inc();
