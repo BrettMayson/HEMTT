@@ -42,6 +42,10 @@ pub fn clear_release(version: &String) -> Result<(), Error> {
         println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
         fs::remove_dir_all(format!("releases/{}", version))?;
     }
+    if Path::new("releases/keys").exists() {
+        println!("  {} old keys", "Cleaning".yellow().bold());
+        fs::remove_dir_all("releases/keys")?;
+    }
     Ok(())
 }
 
