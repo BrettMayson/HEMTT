@@ -337,9 +337,6 @@ fn main() {
         ansi_support();
     }
 
-    yellow!("Testing", "This is a test");
-    blue!("test", "This is yet another test");
-
     let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
