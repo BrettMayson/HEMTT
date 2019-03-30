@@ -6,7 +6,6 @@ use subprocess::Exec;
 
 use std::path::PathBuf;
 use std::io::Error;
-use std::iter::repeat;
 use std::sync::{Arc, Mutex};
 
 use crate::error;

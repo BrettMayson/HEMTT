@@ -27,8 +27,29 @@ macro_rules! ieprint {
 }
 
 #[macro_export]
+macro_rules! iformat {
+    ($e:expr, $($p:ident),*) => {
+        format!($e, $($p = $p,)*);
+    };
+}
+
+#[macro_export]
 macro_rules! repeat {
     ($s: expr, $n: expr) => {{
-        &repeat($s).take($n).collect::<String>()
+        &std::iter::repeat($s).take($n).collect::<String>()
     }}
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_format() {
+        let name = "HEMTT";
+        assert_eq!("Hello HEMTT", iformat!("Hello {name}", name));
+    }
+
+    #[test]
+    fn test_repeat() {
+        assert_eq!("....", repeat!(".", 4));
+    }
 }
