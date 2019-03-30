@@ -20,16 +20,12 @@ mod project;
 mod state;
 mod template;
 mod utilities;
+#[macro_use]
+mod macros;
 
 use crate::error::*;
 use crate::utilities::Utility;
-
-#[macro_export]
-macro_rules! repeat {
-    ($s: expr, $n: expr) => {{
-        &repeat($s).take($n).collect::<String>()
-    }}
-}
+pub use crate::macros::*;
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
