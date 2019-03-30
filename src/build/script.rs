@@ -86,7 +86,7 @@ impl BuildScript {
                         });
                         //pbm.lock().unwrap().pb().finish_print(&nicefmt!(green, "Executed", format!("{}{}", state.addons.len(), crate::repeat!(" ", 60))));
                         //println!();
-                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
+                        crate::finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -95,7 +95,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", built.len());
+                        crate::finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -107,7 +107,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
+                        crate::finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -116,7 +116,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", built.len());
+                        crate::finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }

@@ -100,28 +100,29 @@ macro_rules! white {
 
 #[macro_export]
 macro_rules! nicefmt {
-    ($c:ident, $s:expr, $m:expr) => {
+    ($c:ident, $s:expr, $m:expr) => {{
         let status = $s.$c().bold();
         let spacer = crate::repeat!(" ", 10 - $s.len());
         let message = $m;
-        format!("{spacer}{status} {message}", spacer, status, message)
-    }
+        crate::iformat!("{spacer}{status} {message}", spacer, status, message)
+    }}
 }
 
 #[macro_export]
 macro_rules! niceout {
     ($c:ident, $s:expr, $m:expr) => {
-        crate::iprintln!($c, $s, $m);
+        let r = crate::nicefmt!($c, $s, $m);
+        println!("{}", r);
     }
 }
 
 #[macro_export]
 macro_rules! finishpb {
-    ($pb:ident, $c:ident, $s:expr, $m:expr) => {
-        let message =  format!("{}{}", $m, crate::repeat!(" ", 60);
-        $pb().finish_print(&crate::nicefmt!($c, $s, message)));
+    ($pb:expr, $c:ident, $s:expr, $m:expr) => {{
+        let message =  format!("{}{}", $m, crate::repeat!(" ", 60));
+        $pb.finish_print(&crate::nicefmt!($c, $s, message));
         println!();
-    }
+    }}
 }
 
 #[cfg(test)]
