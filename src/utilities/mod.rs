@@ -8,7 +8,7 @@ pub mod zip;
 pub enum Utility {
     ConvertProject,
     Translation,
-    Zip
+    Zip,
 }
 
 pub fn find(utility: &str) -> Option<Utility> {
