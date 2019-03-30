@@ -84,8 +84,9 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        //pbm.lock().unwrap().pb().finish_print(&nicefmt!(green, "Executed", format!("{}{}", state.addons.len(), crate::repeat!(" ", 60))));
+                        //println!();
+                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -94,8 +95,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -107,8 +107,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -117,8 +116,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        crate::finishpb(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -211,6 +209,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
         None => ""
     };
     match name.remove(0) {
+        // TODO replace println with color macros, need to deal with that prefix
         '@' => {
             if output {println!("{}   {} {}", prefix, "Utility".green().bold(), &name)};
             match crate::utilities::find(&name) {

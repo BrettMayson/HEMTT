@@ -16,16 +16,14 @@ mod build;
 mod error;
 mod files;
 mod helpers;
+mod macros;
 mod project;
 mod state;
 mod template;
 mod utilities;
-#[macro_use]
-mod macros;
 
 use crate::error::*;
 use crate::utilities::Utility;
-pub use crate::macros::*;
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
@@ -336,6 +334,9 @@ fn main() {
     if cfg!(windows) {
         ansi_support();
     }
+
+    yellow!("Testing", "This is a test");
+    blue!("test", "This is yet another test");
 
     let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())

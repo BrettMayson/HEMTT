@@ -31,7 +31,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 }
 
 pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
-    println!("  {} {}", "Building".green().bold(), addons.len());
+    crate::green!("Building", addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
     pb.show_speed = false;
     pb.show_time_left = false;
@@ -67,10 +67,10 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
     }, buildresult.built.len(), crate::repeat!(" ", 50)));
     println!();
     if buildresult.failed.len() != 0 {
-        println!("    {} {} {:?}", "Failed".red().bold(), buildresult.failed.len(), buildresult.failed);
+        crate::red!("Failed", format!("{} {:?}", buildresult.failed.len(), buildresult.failed));
     }
     if buildresult.skipped.len() != 0 {
-        println!("   {} {}", "Skipped".bold(), buildresult.skipped.len());
+        crate::white!("Skipped", buildresult.skipped.len());
     }
     Ok(buildresult)
 }

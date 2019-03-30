@@ -23,7 +23,7 @@ pub fn clear_pbos(p: &project::Project, addons: &Vec<PathBuf>) -> Result<(), Err
                 fs::remove_file(target).print();
             }
         });
-    println!("   {} {} PBOs", "Cleaned".yellow().bold(), *count.lock().unwrap());
+    crate::yellow!("Cleaned", format!("{} PBOs", *count.lock().unwrap()));
     Ok(())
 }
 
