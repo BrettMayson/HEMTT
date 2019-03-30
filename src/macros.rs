@@ -1,4 +1,4 @@
-#[macro_use]
+// String Interpolation
 
 #[macro_export]
 macro_rules! iprintln {
@@ -35,66 +35,61 @@ macro_rules! iformat {
     };
 }
 
-#[macro_export]
-macro_rules! repeat {
-    ($s:expr, $n:expr) => {{
-        &std::iter::repeat($s).take($n).collect::<String>()
-    }}
-}
+// Colored Output
 
 #[macro_export]
 macro_rules! yellow {
     ($s:expr, $m:expr) => {
-        crate::niceout!(yellow, $s, $m);
+        crate::niceprintln!(yellow, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! blue {
     ($s:expr, $m:expr) => {
-        crate::niceout!(blue, $s, $m);
+        crate::niceprintln!(blue, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! green {
     ($s:expr, $m:expr) => {
-        crate::niceout!(green, $s, $m);
+        crate::niceprintln!(green, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! cyan {
     ($s:expr, $m:expr) => {
-        crate::niceout!(cyan, $s, $m);
+        crate::niceprintln!(cyan, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! magenta {
     ($s:expr, $m:expr) => {
-        crate::niceout!(magenta, $s, $m);
+        crate::niceprintln!(magenta, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! red {
     ($s:expr, $m:expr) => {
-        crate::niceout!(red, $s, $m);
+        crate::niceprintln!(red, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! black {
     ($s:expr, $m:expr) => {
-        crate::niceout!(black, $s, $m);
+        crate::niceprintln!(black, $s, $m);
     }
 }
 
 #[macro_export]
 macro_rules! white {
     ($s:expr, $m:expr) => {
-        crate::niceout!(white, $s, $m);
+        crate::niceprintln!(white, $s, $m);
     }
 }
 
@@ -109,7 +104,7 @@ macro_rules! nicefmt {
 }
 
 #[macro_export]
-macro_rules! niceout {
+macro_rules! niceprintln {
     ($c:ident, $s:expr, $m:expr) => {
         let r = crate::nicefmt!($c, $s, $m);
         println!("{}", r);
@@ -122,6 +117,31 @@ macro_rules! finishpb {
         let message =  format!("{}{}", $m, crate::repeat!(" ", 60));
         $pb.finish_print(&crate::nicefmt!($c, $s, message));
         println!();
+    }}
+}
+
+// Errors and Warnings
+
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => (
+        std::io::Error::new(std::io::ErrorKind::Other, format!($($arg)*))
+    )
+}
+
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        eprintln!("{}: {}", "warning".yellow().bold(), format!($($arg)*))
+    }
+}
+
+// Generic
+
+#[macro_export]
+macro_rules! repeat {
+    ($s:expr, $n:expr) => {{
+        &std::iter::repeat($s).take($n).collect::<String>()
     }}
 }
 

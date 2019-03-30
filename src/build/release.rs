@@ -24,7 +24,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     }
     let keyname = p.get_keyname();
     if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
-        println!("    {} {}.bikey", "KeyGen".green().bold(), keyname);
+        green!("KeyGen", &keyname);
         armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
         fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
         fs::rename(format!("{}.biprivatekey", keyname), format!("releases/keys/{}.biprivatekey", keyname))?;
@@ -62,6 +62,6 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         });
     }
 
-    println!("    {} {}", "Signed".green().bold(), *count.lock().unwrap());
+    green!("Signed", *count.lock().unwrap());
     Ok(())
 }

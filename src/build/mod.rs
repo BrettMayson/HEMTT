@@ -31,7 +31,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
 }
 
 pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
-    crate::green!("Building", addons.len());
+    green!("Building", addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
     pb.show_speed = false;
     pb.show_time_left = false;
@@ -64,13 +64,13 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
     pbm.lock().unwrap().finish_print(&format!("\r     {} {} {}", match buildresult.failed.len() {
         0 => "Built".green().bold(),
         _ => "Built".yellow().bold()
-    }, buildresult.built.len(), crate::repeat!(" ", 50)));
+    }, buildresult.built.len(), repeat!(" ", 50)));
     println!();
     if buildresult.failed.len() != 0 {
-        crate::red!("Failed", format!("{} {:?}", buildresult.failed.len(), buildresult.failed));
+        red!("Failed", format!("{} {:?}", buildresult.failed.len(), buildresult.failed));
     }
     if buildresult.skipped.len() != 0 {
-        crate::white!("Skipped", buildresult.skipped.len());
+        white!("Skipped", buildresult.skipped.len());
     }
     Ok(buildresult)
 }
@@ -81,7 +81,7 @@ fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: 
         let metadata = fs::metadata(target).unwrap();
         if let Ok(time) = metadata.modified() {
             if time >= modified {
-                // println!("\r  {} {}{}", "Skipping".white().bold(), name, crate::repeat!(" ", 50 - name.len()));
+                // println!("\r  {} {}{}", "Skipping".white().bold(), name, repeat!(" ", 50 - name.len()));
                 if let Some(ref pb) = pbm {
                     let mut pbu = pb.lock().unwrap();
                     pbu.tick();
@@ -93,7 +93,7 @@ fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: 
         }
     }
 
-    // println!("\r  {} {}{}", "Building".green().bold(), name, crate::repeat!(" ", 50 - name.len()));
+    // println!("\r  {} {}{}", "Building".green().bold(), name, repeat!(" ", 50 - name.len()));
     if let Some(ref pb) = pbm {
         let mut pbu = pb.lock().unwrap();
         pbu.tick();
@@ -113,7 +113,7 @@ fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: 
         &include,               // Include folders
     ) {
         let name = source.to_str().unwrap().to_owned();
-        eprintln!("\r{}: {}{}\n{}", "error".red().bold(), name, crate::repeat!(" ", 53 - name.len()), error);
+        eprintln!("\r{}: {}{}\n{}", "error".red().bold(), name, repeat!(" ", 53 - name.len()), error);
         if target.exists() {
             fs::remove_file(target)?;
         }

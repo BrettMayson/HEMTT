@@ -4,6 +4,9 @@ use num_cpus;
 use self_update;
 use serde::Deserialize;
 
+#[macro_use]
+pub mod macros;
+
 #[cfg(windows)]
 use ansi_term;
 
@@ -16,7 +19,6 @@ mod build;
 mod error;
 mod files;
 mod helpers;
-mod macros;
 mod project;
 mod state;
 mod template;
