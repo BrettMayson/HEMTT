@@ -28,7 +28,7 @@ Turkish             3   0%
 
 The zip utility will zip the current release into a .zip file. The zip filename will be `{{name}}_{{version}}` unless a name is provided.
 
-`hemtt zip` => `ace3_1.2.3.zip`
+`hemtt zip` => `ace_1.2.3.zip`
 `hemtt zip release` => `release.zip`
 `hemtt zip {{version}}` => `1.2.3.zip`
 
