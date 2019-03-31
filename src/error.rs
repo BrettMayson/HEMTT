@@ -11,6 +11,13 @@ macro_rules! error {
     )
 }
 
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        eprintln!("{}: {}", "warning".yellow().bold(), format!($($arg)*))
+    }
+}
+
 pub trait ErrorExt<T, E> {
     fn print(self) -> Option<T>;
     fn unwrap_or_print(self) -> T;

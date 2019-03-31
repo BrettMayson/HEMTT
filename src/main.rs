@@ -68,6 +68,7 @@ Commands:
 
 Utilities:
     translation         Displays the translation progress of all stringtable files
+    convertproject      Convert project file between JSON and TOML
 
 Options:
     -v --verbose        Enable verbose output

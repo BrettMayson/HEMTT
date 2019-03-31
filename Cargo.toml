@@ -5,10 +5,11 @@ authors = ["Brett <brett@bmandesigns.com>"]
 edition = "2018"
 
 [dependencies]
-armake2 = { git = "https://github.com/KoffeinFlummi/armake2", branch="master" }
+armake2 = { git = "https://github.com/KoffeinFlummi/armake2", branch = "master" }
 chrono = "0.4"
 colored = "1.7"
 docopt = "1"
+git2 = "0.8"
 handlebars = "1.1"
 num_cpus = "1.10"
 pbr = "1.0"
@@ -20,7 +21,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-xml-rs = "0.3.1"
 subprocess = "0.1"
-toml = "0.4"
+toml = "0.5"
 walkdir = "2.2"
 zip = { version = "0.5", features = ["deflate"] }
 

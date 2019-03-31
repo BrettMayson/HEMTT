@@ -87,8 +87,12 @@ impl Project {
         Ok(())
     }
 
-    pub fn get_modname(&self) -> &String {
-        if self.modname.is_empty() { &self.prefix } else { &self.modname }
+    pub fn get_modname(&self) -> String {
+        if self.modname.is_empty() {
+            self.prefix.clone()
+        } else {
+            render(&self.modname, &self.template_data)
+        }
     }
 
     pub fn get_keyname(&self) -> String {
