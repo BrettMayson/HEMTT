@@ -8,8 +8,10 @@ use std::fs::File;
 use std::io::BufReader;
 
 use crate::error::*;
+use crate::project::use_project_dir;
 
 pub fn check() -> Result<(), std::io::Error> {
+    use_project_dir();
     let mut total = 0.0;
     let mut keys = HashMap::new();
     let mut stringtables = Vec::new();
