@@ -82,12 +82,13 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 ## files
 **Type**: Array \[String\]
 
-HEMTT will copy the files to the release directory after a successful release build.
+HEMTT will copy the files to the release directory after a successful release build. Supports [glob](http://man7.org/linux/man-pages/man7/glob.7.html) patterns.
 
 ```json
 "files": [
     "mod.cpp",
-    "logo.paa"
+    "logo.paa",
+    "*.dll"
 ]
 ```
 <hr/>

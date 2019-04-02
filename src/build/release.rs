@@ -1,10 +1,13 @@
 use colored::*;
+use glob::glob;
 use rayon::prelude::*;
 
 use std::fs;
 use std::io::{Error};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+
+use crate::error::*;
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     let modname = p.get_modname();
@@ -15,7 +18,12 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         fs::create_dir_all(format!("releases/{}/@{}/keys", version, modname))?;
     }
     for file in &p.files {
-        fs::copy(file, format!("releases/{}/@{}/{}", version, modname, file))?;
+        for entry in glob(file).unwrap_or_print() {
+            if let Ok(path) = entry {
+                let file_name = path.file_name().unwrap().to_str().unwrap().to_owned();
+                fs::copy(&path, format!("releases/{}/@{}/{}", version, modname, file_name))?;
+            }
+        }
     }
 
     // Generate key
