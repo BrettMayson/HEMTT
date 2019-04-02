@@ -20,7 +20,8 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     for file in &p.files {
         for entry in glob(file).unwrap_or_print() {
             if let Ok(path) = entry {
-                fs::copy(&path, format!("releases/{}/@{}/{}", version, modname, path.display()))?;
+                let file_name = path.file_name().unwrap();
+                fs::copy(&path, format!("releases/{}/@{}/{:?}", version, modname, file_name))?;
             }
         }
     }
