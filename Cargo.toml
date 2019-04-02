@@ -14,6 +14,7 @@ handlebars = "1.1"
 num_cpus = "1.10"
 pbr = "1.0"
 rayon = "1.0"
+regex = "*"
 reqwest = "0.9"
 self_update = "0.5"
 serde = { version = "1.0", features = ["derive"] }
@@ -22,6 +23,7 @@ serde-xml-rs = "0.3.1"
 subprocess = "0.1"
 toml = "0.5"
 walkdir = "2.2"
+zip = { version = "0.5", features = ["deflate"] }
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.11"
