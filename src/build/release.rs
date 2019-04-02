@@ -1,6 +1,6 @@
 use colored::*;
-use rayon::prelude::*;
 use glob::glob;
+use rayon::prelude::*;
 
 use std::fs;
 use std::io::{Error};
@@ -20,8 +20,8 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     for file in &p.files {
         for entry in glob(file).unwrap_or_print() {
             if let Ok(path) = entry {
-                let file_name = path.file_name().unwrap();
-                fs::copy(&path, format!("releases/{}/@{}/{:?}", version, modname, file_name))?;
+                let file_name = path.file_name().unwrap().to_str().unwrap().to_owned();
+                fs::copy(&path, format!("releases/{}/@{}/{}", version, modname, file_name))?;
             }
         }
     }
