@@ -78,11 +78,11 @@ fn default_include() -> Vec<PathBuf> {
 impl Project {
     pub fn save(&self) -> Result<(), Error> {
         let file = path(false).unwrap_or_print();
-        let mut out = File::create(file)?;
-        if toml_exists() {
-            out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?;
-        } else {
-            out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
+        let mut out = File::create(&file)?;
+        match file.extension().unwrap().to_str().unwrap() {
+            "toml" => out.write_fmt(format_args!("{}", toml::to_string(&self).unwrap()))?,
+            "json" => out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?,
+            _ => unreachable!()
         }
         Ok(())
     }
@@ -169,37 +169,58 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
     Ok(p)
 }
 
-pub fn exists() -> bool {
-    toml_exists() || json_exists()
+pub fn exists() -> Result<PathBuf, Error> {
+    let toml = toml_file();
+    if toml.is_ok() {
+        return toml;
+    }
+    json_file()
 }
 
-pub fn path(fail: bool) -> Result<&'static Path, Error> {
-    if exists() {
-        return Ok(Path::new(
-            if toml_exists() {"hemtt.toml"} else {"hemtt.json"}
-        ));
+pub fn path(fail: bool) -> Result<PathBuf, Error> {
+    let file = exists();
+    if file.is_ok() {
+        return Ok(file.unwrap());
     } else if !fail {
-        return Ok(Path::new("hemtt.json"));
+        return Ok(PathBuf::from("./hemtt.json"));
     }
     Err(error!("No HEMTT project file was found"))
 }
 
-pub fn json_exists() -> bool {
-    Path::new("hemtt.json").exists()
+pub fn json_file() -> Result<PathBuf, Error> {
+    search_for("hemtt.json")
 }
 
-pub fn toml_exists() -> bool {
-    Path::new("hemtt.toml").exists()
+pub fn toml_file() -> Result<PathBuf, Error> {
+    search_for("hemtt.toml")
+}
+
+pub fn search_for(s: &'static str) -> Result<PathBuf, Error> {
+    let mut dir = std::env::current_dir().unwrap_or_print();
+    loop {
+        let mut search = dir.clone();
+        search.push(s.clone());
+        if search.exists() {
+            return Ok(search);
+        }
+        dir.pop();
+        search.pop();
+        if dir == search {
+            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "No HEMTT Project File was found"));
+        }
+    }
 }
 
 pub fn get_project() -> Result<Project, Error> {
     let file = path(true)?;
-    let mut f = File::open(file)?;
+    std::env::set_current_dir(file.parent().unwrap()).unwrap_or_print();
+    let mut f = File::open(&file)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
-    let mut p: Project = match toml_exists() {
-        true => toml::from_str(contents.as_str()).unwrap_or_print(),
-        false => serde_json::from_str(contents.as_str())?
+    let mut p: Project = match file.extension().unwrap().to_str().unwrap() {
+        "toml" => toml::from_str(contents.as_str()).unwrap_or_print(),
+        "json" => serde_json::from_str(contents.as_str())?,
+        _ => unreachable!()
     };
     p.template_data = BTreeMap::new();
     p.template_data.insert("name", p.name.clone());
@@ -207,6 +228,11 @@ pub fn get_project() -> Result<Project, Error> {
     p.template_data.insert("author", p.author.clone());
     p.template_data.insert("version", p.version.clone().unwrap());
     Ok(p)
+}
+
+pub fn use_project_dir() {
+    let file = path(true).unwrap_or_print();
+    std::env::set_current_dir(file.parent().unwrap()).unwrap_or_print();
 }
 
 pub fn get_version() -> Result<String, Error> {

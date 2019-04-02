@@ -359,11 +359,12 @@ fn main() {
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {
-    if crate::project::exists() && write && !force {
+    let exists = crate::project::exists().is_ok();
+    if exists && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
-    } else if crate::project::exists() && write && force {
+    } else if exists && write && force {
         Ok(())
-    } else if !crate::project::exists() && !write {
+    } else if !exists && !write {
         Err(error!("A HEMTT Project does not exist in the current directory"))
     } else {
         Ok(())
