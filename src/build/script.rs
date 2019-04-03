@@ -7,7 +7,6 @@ use subprocess::Exec;
 
 use std::path::PathBuf;
 use std::io::Error;
-use std::iter::repeat;
 use std::sync::{Arc, Mutex};
 
 use crate::error;
@@ -86,8 +85,9 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        //pbm.lock().unwrap().pb().finish_print(&nicefmt!(green, "Executed", format!("{}{}", state.addons.len(), repeat!(" ", 60))));
+                        //println!();
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -96,8 +96,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -109,8 +108,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -119,8 +117,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -140,7 +137,7 @@ impl BuildScript {
         }
         let mut data = p.template_data.clone();
         let name = addon.file_name().unwrap().to_str().unwrap().to_owned();
-        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
+        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
         data.insert("addon", name.clone());
@@ -161,7 +158,7 @@ impl BuildScript {
         }
         let mut data = p.template_data.clone();
         let name = addon.source.file_name().unwrap().to_str().unwrap().to_owned();
-        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
+        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
         data.insert("addon", name.clone());
@@ -215,6 +212,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
     };
 
     match name.remove(0) {
+        // TODO replace println with color macros, need to deal with that prefix
         '@' => {
             let re = Regex::new(r##"([^=\s"]*)=(?:"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+))|"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+)"##).unwrap();
             let mut args: Vec<String> = Vec::new();
@@ -241,14 +239,14 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
         },
         _   => {
             let cmd = command.clone().replace("\\", "\\\\");
-            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), crate::repeat!(" ", 60 - &cmd.len()))};
+            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), repeat!(" ", 60 - &cmd.len()))};
             if let Some(_) = &pb {
                 &pb.unwrap().pb().tick();
             }
             let out = Exec::shell(&command).capture().unwrap_or_print().stdout_str();
             if output {
                 for line in out.lines() {
-                    println!("{}           {}{}", prefix, line, crate::repeat!(" ", 70 - line.len()));
+                    println!("{}           {}{}", prefix, line, repeat!(" ", 70 - line.len()));
                 }
             }
         }

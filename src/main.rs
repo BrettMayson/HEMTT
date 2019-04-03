@@ -4,6 +4,9 @@ use num_cpus;
 use self_update;
 use serde::Deserialize;
 
+#[macro_use]
+pub mod macros;
+
 #[cfg(windows)]
 use ansi_term;
 
@@ -23,13 +26,6 @@ mod utilities;
 
 use crate::error::*;
 use crate::utilities::Utility;
-
-#[macro_export]
-macro_rules! repeat {
-    ($s: expr, $n: expr) => {{
-        &repeat($s).take($n).collect::<String>()
-    }}
-}
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
