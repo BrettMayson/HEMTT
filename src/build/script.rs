@@ -1,4 +1,5 @@
 use colored::*;
+use handlebars::to_json;
 use pbr::ProgressBar;
 use rayon::prelude::*;
 use regex::Regex;
@@ -140,11 +141,11 @@ impl BuildScript {
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("addon", name.clone());
-        data.insert("source", addon.to_str().unwrap().to_owned());
+        data.insert("addon", to_json(name.clone()));
+        data.insert("source", to_json(addon.to_str().unwrap().to_owned()));
         let mut target = addon.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        data.insert("target", target.to_str().unwrap().to_owned());
+        data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         for command in steps {
             execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }
@@ -161,12 +162,12 @@ impl BuildScript {
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("addon", name.clone());
-        data.insert("source", addon.source.to_str().unwrap().to_owned());
+        data.insert("addon", to_json(name.clone()));
+        data.insert("source", to_json(addon.source.to_str().unwrap().to_owned()));
         let mut target = addon.source.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        data.insert("target", target.to_str().unwrap().to_owned());
-        data.insert("time", addon.time.to_string());
+        data.insert("target", to_json(target.to_str().unwrap().to_owned()));
+        data.insert("time", to_json(addon.time.to_string()));
         for command in steps {
             execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }

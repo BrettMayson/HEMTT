@@ -7,7 +7,6 @@ use zip;
 
 use std::fs::File;
 use std::io::{Read, Write, Error};
-use std::iter::repeat;
 use std::path::{Path};
 
 use crate::error::*;
