@@ -75,7 +75,6 @@ pub fn show() -> Result<(), std::io::Error> {
         let mut definition_map: HashMap<String, Definition> = HashMap::new();
 
         let lines = armake2::preprocess::preprocess_grammar::file(&input).unwrap();//format_error(&origin, &input).unwrap();
-        let mut output = String::from("");
 
         let mut original_lineno = 1;
         let mut level = 0;
@@ -93,47 +92,22 @@ pub fn show() -> Result<(), std::io::Error> {
             includefolders: includefolders
         };
 
-        for line in pp {
-            output += &line;
-        }
-
-        let processed_lines = output.split('\n');
-
         let mut looking_for = "patches";
         let mut looking_for_deps = false;
         let mut name = "";
-        for line in processed_lines {
-            if (looking_for == "reqs") {
-                if (gimmeReqs.is_match(line)) {
-                    // Zeroth match corresponds to whole line - first match is first capture group
-                    // Todo - move this out into a function
-                    gimmeDeps.captures_iter(line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
-                        if !name2node.lock().unwrap().contains_key(req){
-                            let nodenum = deps.lock().unwrap().add_node(req.to_string());
-                            name2node.lock().unwrap().insert(req.to_string(),nodenum);
-                        }
-                        let requirementind = name2node.lock().unwrap().get(req).unwrap().clone();
-                        let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
-                        deps.lock().unwrap().add_edge(requirementind,dependentind,());
-                    });
-                    looking_for = "patches";
-                    looking_for_deps = false;
-                    break;
-                } else if reqsStart.is_match(line) {
-                    gimmeDeps.captures_iter(line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
-                        if !name2node.lock().unwrap().contains_key(req){
-                            let nodenum = deps.lock().unwrap().add_node(req.to_string());
-                            name2node.lock().unwrap().insert(req.to_string(),nodenum);
-                        }
-                        let requirementind = name2node.lock().unwrap().get(req).unwrap().clone();
-                        let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
-                        deps.lock().unwrap().add_edge(requirementind,dependentind,());
-                    });
-                    looking_for_deps = true;
-                    continue;
-                } else if looking_for_deps {
-                    if reqsEnd.is_match(line) {
-                        gimmeDeps.captures_iter(line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
+
+        let mut blah; // Why did I have to do this? this seems bonkers
+
+        'mainloop: for output in pp {
+
+            let processed_lines: Vec<String> = output.split('\n').map(String::from).collect();
+
+            'reallines: for line in processed_lines {
+                if (looking_for == "reqs") {
+                    if (gimmeReqs.is_match(&line)) {
+                        // Zeroth match corresponds to whole line - first match is first capture group
+                        // Todo - move this out into a function
+                        gimmeDeps.captures_iter(&line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
                             if !name2node.lock().unwrap().contains_key(req){
                                 let nodenum = deps.lock().unwrap().add_node(req.to_string());
                                 name2node.lock().unwrap().insert(req.to_string(),nodenum);
@@ -144,9 +118,9 @@ pub fn show() -> Result<(), std::io::Error> {
                         });
                         looking_for = "patches";
                         looking_for_deps = false;
-                        break;
-                    } else { // hope no-one "makes a comment like this"
-                        gimmeDeps.captures_iter(line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
+                        break 'mainloop;
+                    } else if reqsStart.is_match(&line) {
+                        gimmeDeps.captures_iter(&line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
                             if !name2node.lock().unwrap().contains_key(req){
                                 let nodenum = deps.lock().unwrap().add_node(req.to_string());
                                 name2node.lock().unwrap().insert(req.to_string(),nodenum);
@@ -155,22 +129,51 @@ pub fn show() -> Result<(), std::io::Error> {
                             let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
                             deps.lock().unwrap().add_edge(requirementind,dependentind,());
                         });
-                        continue;
+                        looking_for_deps = true;
+                        continue 'reallines;
+                    } else if looking_for_deps {
+                        if reqsEnd.is_match(&line) {
+                            gimmeDeps.captures_iter(&line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
+                                if !name2node.lock().unwrap().contains_key(req){
+                                    let nodenum = deps.lock().unwrap().add_node(req.to_string());
+                                    name2node.lock().unwrap().insert(req.to_string(),nodenum);
+                                }
+                                let requirementind = name2node.lock().unwrap().get(req).unwrap().clone();
+                                let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
+                                deps.lock().unwrap().add_edge(requirementind,dependentind,());
+                            });
+                            looking_for = "patches";
+                            looking_for_deps = false;
+                            break 'mainloop;
+                        } else { // hope no-one "makes a comment like this"
+                            gimmeDeps.captures_iter(&line).map(|s| s.get(1).unwrap().as_str()).for_each(|req| {
+                                if !name2node.lock().unwrap().contains_key(req){
+                                    let nodenum = deps.lock().unwrap().add_node(req.to_string());
+                                    name2node.lock().unwrap().insert(req.to_string(),nodenum);
+                                }
+                                let requirementind = name2node.lock().unwrap().get(req).unwrap().clone();
+                                let dependentind = name2node.lock().unwrap().get(name).unwrap().clone();
+                                deps.lock().unwrap().add_edge(requirementind,dependentind,());
+                            });
+                            continue 'reallines;
+                        }
                     }
                 }
-            }
-            if ((looking_for == "class") && gimmeClass.is_match(line)) {
-                // Zeroth match corresponds to whole line - first match is first capture group
-                name = gimmeClass.captures(line).unwrap().get(1).unwrap().as_str().trim();
-                if !name2node.lock().unwrap().contains_key(name){
-                    let nodenum = deps.lock().unwrap().add_node(name.to_string());
-                    name2node.lock().unwrap().insert(name.to_string(),nodenum);
+                if ((looking_for == "class") && gimmeClass.is_match(&line)) {
+                    // Zeroth match corresponds to whole &line - first match is first capture group
+                    blah = line.clone();
+                    name = gimmeClass.captures(&blah).unwrap().get(1).unwrap().as_str().trim();
+                    if !name2node.lock().unwrap().contains_key(name){
+                        let nodenum = deps.lock().unwrap().add_node(name.to_string());
+                        name2node.lock().unwrap().insert(name.to_string(),nodenum);
+                    }
+                    looking_for = "reqs"; // TODO - handle reqs not existing
                 }
-                looking_for = "reqs"; // TODO - handle reqs not existing
+                if gimmeCfgPatch.is_match(&line) {
+                    looking_for = "class";
+                }
             }
-            if gimmeCfgPatch.is_match(line) {
-                looking_for = "class";
-            }
+
         }
         // return processed;
         return "".to_string();
