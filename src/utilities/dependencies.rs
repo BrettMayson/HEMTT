@@ -51,12 +51,54 @@ pub fn show() -> Result<(), std::io::Error> {
     let vecconf = configs.par_iter().map(|config| {
         // turn this into a .map eventually
         // this obviously shouldn't output to stdout
-        let mut buffer = String::new();
-        File::open(config).unwrap().read_to_string(&mut buffer).expect("Failed to read config"); // TODO: improve error
+        let mut input = String::new();
+        File::open(config).unwrap().read_to_string(&mut input).expect("Failed to read config"); // TODO: improve error
         // Magic number here accesses the actual string rather than "preprocess info"
         // Would be good to turn this into a lazily-evaluated iterator from which we can consume lines
-        let processed = armake2::preprocess::preprocess(buffer, Some(config.to_path_buf()),&p.include).unwrap().0;
-        let processed_lines = processed.split('\n');
+        // let processed = armake2::preprocess::preprocess(buffer, Some(config.to_path_buf()),&p.include).unwrap().0;
+        //
+        let origin = Some(config.to_path_buf());
+        let includefolders = &p.include;
+        if input[..3].as_bytes() == &[0xef,0xbb,0xbf] {
+            input = input[3..].to_string();
+        }
+
+        let mut info = PreprocessInfo {
+            line_origins: Vec::new(),
+            import_stack: Vec::new()
+        };
+
+        if let Some(ref path) = origin {
+            info.import_stack.push(path.clone());
+        }
+
+        let mut definition_map: HashMap<String, Definition> = HashMap::new();
+
+        let lines = armake2::preprocess::preprocess_grammar::file(&input).unwrap();//format_error(&origin, &input).unwrap();
+        let mut output = String::from("");
+
+        let mut original_lineno = 1;
+        let mut level = 0;
+        let mut level_true = 0;
+
+        let pp = armake2::preprocess::PreprocessHolder{
+            line: lines.iter(),
+            original_lineno: &mut original_lineno,
+            level: &mut level,
+            level_true: &mut level_true,
+            input: input.clone(),
+            origin: origin.clone(),
+            definition_map: &mut definition_map, // Surely this needs to be mutable?
+            info: &mut info,
+            includefolders: includefolders
+        };
+
+        for line in pp {
+            output += &line;
+        }
+
+        let processed_lines = output.split('\n');
+
         let mut looking_for = "patches";
         let mut looking_for_deps = false;
         let mut name = "";
@@ -130,7 +172,8 @@ pub fn show() -> Result<(), std::io::Error> {
                 looking_for = "class";
             }
         }
-        return processed;
+        // return processed;
+        return "".to_string();
 
 
         // really, we want to be able to tell preprocess to stop once it 
