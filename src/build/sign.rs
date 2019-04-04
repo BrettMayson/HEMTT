@@ -40,9 +40,10 @@ pub fn copy_sign(
     }
 
     let modname = p.get_modname();
+    let ver = p.version.clone().unwrap();
 
-    let addonsfolder = format!(
-        "releases/{ver}/@{mod}/{addons}", ver=p.version.clone().unwrap(), mod=modname, addons=folder
+    let addonsfolder = iformat!(
+        "releases/{ver}/@{modname}/{folder}", ver, modname, folder
     );
 
     copy(&path_posix, &addonsfolder, &pbo_filename)?;

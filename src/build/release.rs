@@ -94,8 +94,8 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
 
     folder = String::from("optionals");
     if Path::new(&folder).exists() {
-        let addonsfolder = format!(
-            "releases/{ver}/@{mod}/{addons}", ver=version, mod=modname, addons=folder
+        let addonsfolder = iformat!(
+            "releases/{version}/@{modname}/{folder}", version, modname, folder
         );
         if !Path::new(&addonsfolder).exists() {
             fs::create_dir_all(addonsfolder)?;
