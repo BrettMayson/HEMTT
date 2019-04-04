@@ -22,13 +22,14 @@ pub fn find(utility: &str) -> Option<Utility> {
     }
 }
 
-pub fn run(utility: &Utility, args: &Vec<String>) -> Result<(), std::io::Error> {
+pub fn run(utility: &Utility, args: &mut Vec<String>) -> Result<(), std::io::Error> {
     #[allow(unreachable_patterns)]
     return match utility {
         Utility::ConvertProject => convert::run(),
         Utility::Template => {
             let p = crate::project::get_project()?;
-            println!("{}", p.render(&"{{semver.minor}} {{version}}".to_owned()));
+            args.remove(0);
+            println!("{}", p.render(&args.join(" ").to_owned()));
             Ok(())
         },
         Utility::Translation => translation::check(),

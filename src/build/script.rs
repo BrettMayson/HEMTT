@@ -222,7 +222,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
             }
             if output {println!("{}   {} {}", prefix, "Utility".green().bold(), &name)};
             match crate::utilities::find(&args[0]) {
-                Some(v) => crate::utilities::run(&v, &args)?,
+                Some(v) => crate::utilities::run(&v, &mut args)?,
                 None => return Err(error!("Unknown Utility: {}", &name))
             };
             if let Some(_) = &pb {

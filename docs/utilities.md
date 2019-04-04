@@ -32,6 +32,11 @@ The zip utility will zip the current release into a .zip file. The zip filename 
 `hemtt zip release` => `release.zip`  
 `hemtt zip {{version}}` => `1.2.3.zip`  
 
+# template
+
+The template utility will render the arguments using the standard [templating variables](templating.md).
+
+`hemtt template {{name}} v{{version}}` => `ABE3 1.0.3.2`
 
 # convertproject
 The convert project utility will convert the HEMTT project file from `hemtt.json` => `hemtt.toml` or `hemtt.toml` => `hemtt.json`.

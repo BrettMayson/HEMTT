@@ -328,7 +328,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         if let Some(utility) = &args.arg_utility {
             let mut args = std::env::args().collect::<Vec<_>>();
             args.remove(0);
-            crate::utilities::run(utility, &args).unwrap_or_print();
+            crate::utilities::run(utility, &mut args).unwrap_or_print();
         }
         Ok(())
     }
