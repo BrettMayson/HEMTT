@@ -163,7 +163,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         Ok(())
     } else if args.cmd_build {
         check(false, args.flag_force).unwrap_or_print();
-        let p = project::get_project().unwrap_or_print();
+        let p = project::get_project().unwrap_or_print_with_context("Could not parse project configuration: ");
         if !args.flag_nowarn {
             unsafe {
                 armake2::error::WARNINGS_MUTED = Some(HashSet::new());
