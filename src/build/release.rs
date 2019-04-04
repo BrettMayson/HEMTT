@@ -9,8 +9,8 @@ use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use crate::error::*;
 use crate::build::sign;
+use crate::error::*;
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     let modname = p.get_modname();
@@ -37,17 +37,13 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     let keyname = p.get_keyname();
     // Generate and store key if required
     if p.reuse_private_key {
-
         // Make a new keypair if there isn't one already
         if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
             println!("    {} {}.bikey", "KeyGen".green().bold(), keyname);
 
             // Generate and write the keypair to disk in the current directory
             cmd_keygen(PathBuf::from(&keyname))?;
-            fs::rename(
-                format!("{}.bikey", keyname),
-                format!("releases/keys/{}.bikey", keyname),
-            )?;
+            fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
             fs::rename(
                 format!("{}.biprivatekey", keyname),
                 format!("releases/keys/{}.biprivatekey", keyname),
@@ -56,8 +52,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
 
         // Read the private key from disk
         key = BIPrivateKey::read(
-            &mut File::open(format!("releases/keys/{}.biprivatekey", keyname))
-                .expect("Failed to open private key"),
+            &mut File::open(format!("releases/keys/{}.biprivatekey", keyname)).expect("Failed to open private key"),
         )
         .expect("Failed to read private key");
     } else {
@@ -66,9 +61,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         let public_key = key.to_public_key();
 
         // Write the public key to disk
-        public_key.write(
-            &mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print(),
-        )?;
+        public_key.write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
     }
 
     // Copy public key to specific release dir
@@ -94,9 +87,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
 
     folder = String::from("optionals");
     if Path::new(&folder).exists() {
-        let addonsfolder = iformat!(
-            "releases/{version}/@{modname}/{folder}", version, modname, folder
-        );
+        let addonsfolder = iformat!("releases/{version}/@{modname}/{folder}", version, modname, folder);
         if !Path::new(&addonsfolder).exists() {
             fs::create_dir_all(addonsfolder)?;
         }
@@ -106,7 +97,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
             .collect();
         opts.par_iter().for_each(|entry| {
             // TODO split copy and sign
-            // for copying, we need to know source path, addons folder and pbo_filename 
+            // for copying, we need to know source path, addons folder and pbo_filename
             // (we could get this but that seems like extra faff)
             // for signing, we need to know addons folder, PBO file name and key
             if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
