@@ -33,10 +33,9 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         fs::create_dir("releases/keys")?;
     }
 
-    let mut key;
     let keyname = p.get_keyname();
     // Generate and store key if required
-    if p.reuse_private_key {
+    let key = if p.reuse_private_key {
         // Make a new keypair if there isn't one already
         if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
             println!("    {} {}.bikey", "KeyGen".green().bold(), keyname);
@@ -51,18 +50,16 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         }
 
         // Read the private key from disk
-        key = BIPrivateKey::read(
+        BIPrivateKey::read(
             &mut File::open(format!("releases/keys/{}.biprivatekey", keyname)).expect("Failed to open private key"),
-        )
-        .expect("Failed to read private key");
+        ).expect("Failed to read private key")
     } else {
         // Make the private key and leave it in memory
-        key = BIPrivateKey::generate(1024, keyname.clone());
-        let public_key = key.to_public_key();
-
-        // Write the public key to disk
-        public_key.write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
-    }
+        BIPrivateKey::generate(1024, keyname.clone())
+    };
+    
+    // Generate a public key to match the private key
+    key.to_public_key().write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
 
     // Copy public key to specific release dir
     fs::copy(
