@@ -63,6 +63,8 @@ pub struct Project {
 
     #[serde(skip_deserializing,skip_serializing)]
     pub template_data: BTreeMap<&'static str, String>,
+
+    pub reuse_private_key: Option<bool>,
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -97,7 +99,11 @@ impl Project {
 
     pub fn get_keyname(&self) -> String {
         if self.keyname.is_empty() {
-            self.prefix.clone()
+            if self.reuse_private_key.unwrap_or(false) {
+                self.prefix.clone()
+            } else {
+                format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
+            }
         } else {
             render(&self.keyname, &self.template_data)
         }
@@ -162,6 +168,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         postbuild: Vec::new(),
         releasebuild: Vec::new(),
         scripts: HashMap::new(),
+        reuse_private_key: Some(false),
 
         template_data: BTreeMap::new(),
     };
