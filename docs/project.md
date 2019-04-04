@@ -168,7 +168,12 @@ HEMTT will use the specified mod name (without `@`) to form `@mod` folder. Suppo
 
 HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names. Supports [templating](/templating.md).
 
-The default is `{{prefix}}_{{version}}`, unless `reuse_private_key` is `true`, in which case the default is set to `{{prefix}}`
+The default is set according to the following table:
+
+| `reuse_private_key` value | Default `keyname`         |
+| ------------------------- | ------------------------- |
+| `false`                   | `{{prefix}}_{{version}}`  |
+| `true`                    | `{{prefix}}`              |
 
 ```json
 "keyname": "my_key"
@@ -211,7 +216,9 @@ Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (wher
 
 If set to `true`, HEMTT will use (and re-use) `releases/keys/{keyname}.biprivatekey`. It will be generated if it doesn't exist.
 
-The default behaviour is to generate a new private key each time and discard it immediately; HEMTT strongly recommends that you only re-use the key if you are making a client-side mod where it will not matter if clients are running different versions of the mod.
+The default behaviour is to generate a new private key each time and discard it immediately.
+
+!> HEMTT strongly recommends that you only re-use the key if you are making a client-side mod where it will not matter if clients are running different versions of the mod.
 
 ```json
 "reuse_private_key": false
