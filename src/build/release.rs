@@ -67,7 +67,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
 
         // Write the public key to disk
         public_key.write(
-            &mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap(),
+            &mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print(),
         )?;
     }
 
@@ -82,13 +82,13 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     // Sign
     let mut folder = String::from("addons");
     let dirs: Vec<_> = fs::read_dir(&folder)
-        .unwrap()
-        .map(|file| file.unwrap())
+        .unwrap_or_print()
+        .map(|file| file.unwrap_or_print())
         .collect();
     dirs.par_iter().for_each(|entry| {
         // TODO split copy and sign
-        if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap() {
-            *count.lock().unwrap() += 1;
+        if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+            *count.lock().unwrap_or_print() += 1;
         }
     });
 
@@ -101,20 +101,20 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
             fs::create_dir_all(addonsfolder)?;
         }
         let opts: Vec<_> = fs::read_dir(&folder)
-            .unwrap()
-            .map(|file| file.unwrap())
+            .unwrap_or_print()
+            .map(|file| file.unwrap_or_print())
             .collect();
         opts.par_iter().for_each(|entry| {
             // TODO split copy and sign
             // for copying, we need to know source path, addons folder and pbo_filename (we could
             // get this but that seems like extra faff)
             // for signing, we need to know addons folder, PBO file name and key
-            if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap() {
-                *count.lock().unwrap() += 1;
+            if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+                *count.lock().unwrap_or_print() += 1;
             }
         });
     }
 
-    green!("Signed", *count.lock().unwrap());
+    green!("Signed", *count.lock().unwrap_or_print());
     Ok(())
 }
