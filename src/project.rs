@@ -1,5 +1,7 @@
-use serde::{Serialize, Deserialize};
+use handlebars::to_json;
 use serde_json;
+use serde_json::value::{Value as Json};
+use serde::{Serialize, Deserialize};
 use toml;
 
 use std::collections::{BTreeMap, HashMap};
@@ -66,8 +68,32 @@ pub struct Project {
     pub reuse_private_key: bool,
 
     #[serde(skip_deserializing,skip_serializing)]
-    pub template_data: BTreeMap<&'static str, String>,
+    pub template_data: BTreeMap<&'static str, Json>,
+}
 
+#[derive(Serialize, Deserialize)]
+pub struct SemVer {
+    pub major: u32,
+    pub minor: u32,
+    pub patch: u32,
+    pub build: String,
+}
+impl SemVer {
+    pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
+        SemVer {
+            major: major,
+            minor: minor,
+            patch: patch,
+            build: build,
+        }
+    }
+    pub fn to_string(&self) -> String {
+        return if self.build == "" {
+            format!("{}.{}.{}", self.major, self.minor, self.patch)
+        } else {
+            format!("{}.{}.{}.{}", self.major, self.minor, self.patch, self.build)
+        }
+    }
 }
 
 fn default_include() -> Vec<PathBuf> {
@@ -233,10 +259,11 @@ pub fn get_project() -> Result<Project, Error> {
         _ => unreachable!()
     };
     p.template_data = BTreeMap::new();
-    p.template_data.insert("name", p.name.clone());
-    p.template_data.insert("prefix", p.prefix.clone());
-    p.template_data.insert("author", p.author.clone());
-    p.template_data.insert("version", p.version.clone().unwrap());
+    p.template_data.insert("name", to_json(p.name.clone()));
+    p.template_data.insert("prefix", to_json(p.prefix.clone()));
+    p.template_data.insert("author", to_json(p.author.clone()));
+    p.template_data.insert("version", to_json(p.version.clone().unwrap()));
+    p.template_data.insert("semver", to_json(&get_version().unwrap_or_print()));
     Ok(p)
 }
 
@@ -245,14 +272,13 @@ pub fn use_project_dir() {
     std::env::set_current_dir(file.parent().unwrap()).unwrap_or_print();
 }
 
-pub fn get_version() -> Result<String, Error> {
-    let mut version = String::from("0.0.0.0");
+pub fn get_version() -> Result<SemVer, Error> {
+    let mut major: u32 = 0;
+    let mut minor: u32 = 0;
+    let mut patch: u32 = 0;
+    let mut build = String::new();
     if Path::new("addons/main/script_version.hpp").exists() {
         let f = BufReader::new(File::open("addons/main/script_version.hpp")?);
-        let mut major = String::new();
-        let mut minor = String::new();
-        let mut patch = String::new();
-        let mut build = String::new();
         for line in f.lines() {
             let line = line?;
             let mut split = line.split(" ");
@@ -262,13 +288,13 @@ pub fn get_version() -> Result<String, Error> {
             let value = split.next().unwrap().clone();
             match key {
                 "MAJOR" => {
-                    major = String::from(value);
+                    major = value.parse().unwrap_or_print();
                 },
                 "MINOR" => {
-                    minor = String::from(value);
+                    minor = value.parse().unwrap_or_print();
                 },
                 "PATCHLVL" | "PATCH" => {
-                    patch = String::from(value);
+                    patch = value.parse().unwrap_or_print();
                 },
                 "BUILD" => {
                     build = String::from(value);
@@ -276,14 +302,9 @@ pub fn get_version() -> Result<String, Error> {
                 _ => {}
             }
         }
-        if build == "" {
-            version = format!("{}.{}.{}", major, minor, patch);
-        } else {
-            version = format!("{}.{}.{}.{}", major, minor, patch, build);
-        }
     }
-    Ok(version)
+    Ok(SemVer::new(major, minor, patch, build))
 }
 fn get_version_unwrap() -> Option<String> {
-    Some(get_version().unwrap())
+    Some(get_version().unwrap().to_string())
 }

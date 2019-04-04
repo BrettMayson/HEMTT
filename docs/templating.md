@@ -19,6 +19,28 @@ The author of the HEMTT project.
 ## version
 The version of the HEMTT project. See [project#version](/project.md?id=version).
 
+## semver
+The version of the HEMTT project as an object.
+
+```
+#define MAJOR 1
+#define MINOR 5
+#define PATCH 3
+#define BUILD rc1
+```
+
+| major | minor | patch | build |
+|-------|-------|-------|-------|
+| 1     | 5     | 3     | rc1   |
+
+```
+The build is {{semver.build}}
+```
+Output:
+```
+The build is rc1
+```
+
 # Helpers
 ## date
 Date can be used to get information about the current date and time. HEMTT uses [chrono specifiers](https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html#specifiers) for formatting.
