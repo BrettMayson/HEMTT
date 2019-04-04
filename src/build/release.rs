@@ -106,8 +106,8 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
             .collect();
         opts.par_iter().for_each(|entry| {
             // TODO split copy and sign
-            // for copying, we need to know source path, addons folder and pbo_filename (we could
-            // get this but that seems like extra faff)
+            // for copying, we need to know source path, addons folder and pbo_filename 
+            // (we could get this but that seems like extra faff)
             // for signing, we need to know addons folder, PBO file name and key
             if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
                 *count.lock().unwrap_or_print() += 1;
