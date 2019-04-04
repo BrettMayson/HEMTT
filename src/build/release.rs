@@ -36,7 +36,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
     let mut key;
     let keyname = p.get_keyname();
     // Generate and store key if required
-    if p.reuse_private_key.unwrap_or(false) {
+    if p.reuse_private_key {
 
         // Make a new keypair if there isn't one already
         if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
