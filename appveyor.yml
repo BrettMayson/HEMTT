@@ -43,7 +43,7 @@ test_script:
 
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo build --target %TARGET% &&
-      cargo build --target %TARGET% --release
+      cargo build --target %TARGET% --release &&
       call "C:\\Program Files (x86)\\Inno Setup 5\\iscc.exe" ci\wininstaller.iss
     )
 
