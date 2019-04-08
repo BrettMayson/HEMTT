@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use crate::error::*;
 use crate::template::render;
 use crate::state::State;
+use crate::dft_false;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -62,6 +63,9 @@ pub struct Project {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
     pub scripts: HashMap<String, crate::build::script::BuildScript>,
+
+    #[serde(default = "dft_false")]
+    pub reuse_private_key: bool,
 
     #[serde(skip_deserializing,skip_serializing)]
     pub template_data: BTreeMap<&'static str, Json>,
@@ -124,7 +128,11 @@ impl Project {
 
     pub fn get_keyname(&self) -> String {
         if self.keyname.is_empty() {
-            self.prefix.clone()
+            if self.reuse_private_key {
+                self.prefix.clone()
+            } else {
+                format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
+            }
         } else {
             render(&self.keyname, &self.template_data)
         }
@@ -189,6 +197,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         postbuild: Vec::new(),
         releasebuild: Vec::new(),
         scripts: HashMap::new(),
+        reuse_private_key: false,
 
         template_data: BTreeMap::new(),
     };

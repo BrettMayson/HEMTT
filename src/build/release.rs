@@ -1,12 +1,15 @@
+use armake2::sign::{cmd_keygen, BIPrivateKey};
 use colored::*;
 use glob::glob;
 use rayon::prelude::*;
 
 use std::fs;
-use std::io::{Error};
+use std::fs::File;
+use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use crate::build::sign;
 use crate::error::*;
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
@@ -26,50 +29,80 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         }
     }
 
-    // Generate key
     if !Path::new("releases/keys").exists() {
         fs::create_dir("releases/keys")?;
     }
-    let keyname = p.get_keyname();
-    if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
-        green!("KeyGen", &keyname);
-        armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
-        fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
-        fs::rename(format!("{}.biprivatekey", keyname), format!("releases/keys/{}.biprivatekey", keyname))?;
-    }
 
-    // Sign
-    fs::copy(format!("releases/keys/{}.bikey", keyname), format!("releases/{}/@{}/keys/{}.bikey", version, modname, keyname))?;
+    let keyname = p.get_keyname();
+    // Generate and store key if required
+    let key = if p.reuse_private_key {
+        // Make a new keypair if there isn't one already
+        if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
+            println!("    {} {}.bikey", "KeyGen".green().bold(), keyname);
+
+            // Generate and write the keypair to disk in the current directory
+            cmd_keygen(PathBuf::from(&keyname))?;
+            fs::rename(format!("{}.bikey", keyname), format!("releases/keys/{}.bikey", keyname))?;
+            fs::rename(
+                format!("{}.biprivatekey", keyname),
+                format!("releases/keys/{}.biprivatekey", keyname),
+            )?;
+        }
+
+        // Read the private key from disk
+        BIPrivateKey::read(
+            &mut File::open(format!("releases/keys/{}.biprivatekey", keyname)).expect("Failed to open private key"),
+        ).expect("Failed to read private key")
+    } else {
+        // Make the private key and leave it in memory
+        BIPrivateKey::generate(1024, keyname.clone())
+    };
+    
+    // Generate a public key to match the private key
+    key.to_public_key().write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
+
+    // Copy public key to specific release dir
+    fs::copy(
+        format!("releases/keys/{}.bikey", keyname),
+        format!("releases/{}/@{}/keys/{}.bikey", version, modname, keyname),
+    )?;
 
     let count = Arc::new(Mutex::new(0));
 
+    // Sign
     let mut folder = String::from("addons");
-    let dirs: Vec<_> = fs::read_dir(&folder).unwrap()
-        .map(|file| file.unwrap())
+    let dirs: Vec<_> = fs::read_dir(&folder)
+        .unwrap_or_print()
+        .map(|file| file.unwrap_or_print())
         .collect();
     dirs.par_iter().for_each(|entry| {
         // TODO split copy and sign
-        if crate::build::sign::copy_sign(&folder, &entry, &p, &version).unwrap() {
-            *count.lock().unwrap() += 1;
+        if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+            *count.lock().unwrap_or_print() += 1;
         }
     });
 
     folder = String::from("optionals");
     if Path::new(&folder).exists() {
-        if !Path::new(&format!("releases/{}/@{}/{}", version, modname, folder)).exists() {
-            fs::create_dir_all(format!("releases/{}/@{}/{}", version, modname, folder))?;
+        let addonsfolder = iformat!("releases/{version}/@{modname}/{folder}", version, modname, folder);
+        if !Path::new(&addonsfolder).exists() {
+            fs::create_dir_all(addonsfolder)?;
         }
-        let opts: Vec<_> = fs::read_dir(&folder).unwrap()
-            .map(|file| file.unwrap())
+        let opts: Vec<_> = fs::read_dir(&folder)
+            .unwrap_or_print()
+            .map(|file| file.unwrap_or_print())
             .collect();
         opts.par_iter().for_each(|entry| {
             // TODO split copy and sign
-            if crate::build::sign::copy_sign(&folder, &entry, &p, &version).unwrap() {
-                *count.lock().unwrap() += 1;
+            // for copying, we need to know source path, addons folder and pbo_filename
+            // (we could get this but that seems like extra faff)
+            // for signing, we need to know addons folder, PBO file name and key
+            if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+                *count.lock().unwrap_or_print() += 1;
             }
         });
     }
 
-    green!("Signed", *count.lock().unwrap());
+    green!("Signed", *count.lock().unwrap_or_print());
     Ok(())
 }

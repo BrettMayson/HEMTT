@@ -9,7 +9,7 @@ use rayon::prelude::*;
 
 use std::fs;
 use std::fs::File;
-use std::io::{Error};
+use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, Instant};

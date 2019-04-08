@@ -391,3 +391,5 @@ fn ansi_support() {
 fn ansi_support() {
     unreachable!();
 }
+
+fn dft_false() -> bool { false }
