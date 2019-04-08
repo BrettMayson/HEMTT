@@ -16,7 +16,11 @@ pub fn clear_pbos(p: &project::Project, addons: &Vec<PathBuf>) -> Result<(), Err
     addons.par_iter()
         .for_each(|folder| {
             let mut target = folder.parent().unwrap().to_path_buf();
-            target.push(&format!("{}_{}.pbo", p.prefix, folder.file_name().unwrap().to_str().unwrap()));
+            if p.prefix.is_empty() {
+                target.push(&format!("{}.pbo", folder.file_name().unwrap().to_str().unwrap()));
+            } else {
+                target.push(&format!("{}_{}.pbo", p.prefix, folder.file_name().unwrap().to_str().unwrap()));
+            }
             if target.exists() {
                 let mut data = count.lock().unwrap();
                 *data += 1;

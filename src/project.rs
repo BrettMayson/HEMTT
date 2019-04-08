@@ -88,7 +88,7 @@ impl SemVer {
         }
     }
     pub fn to_string(&self) -> String {
-        return if self.build == "" {
+        return if self.build.is_empty() {
             format!("{}.{}.{}", self.major, self.minor, self.patch)
         } else {
             format!("{}.{}.{}.{}", self.major, self.minor, self.patch, self.build)
@@ -131,7 +131,11 @@ impl Project {
             if self.reuse_private_key {
                 self.prefix.clone()
             } else {
-                format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
+                if self.prefix.is_empty() {
+                    format!("{}", &self.version.clone().unwrap())
+                } else {
+                    format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
+                }
             }
         } else {
             render(&self.keyname, &self.template_data)

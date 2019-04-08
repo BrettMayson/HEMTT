@@ -120,7 +120,7 @@ fn input(text: &str, default: Option<String>) -> String {
     if let Some('\r')=s.chars().next_back() {
         s.pop();
     }
-    if s == "".to_owned() {
+    if s.is_empty() {
         return ret;
     }
     s
