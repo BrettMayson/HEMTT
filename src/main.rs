@@ -293,14 +293,16 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .map(|file| file.unwrap().path())
             .filter(|file_or_dir| file_or_dir.is_dir())
             .collect();
-        let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
-            .map(|file| file.unwrap().path())
-            .filter(|file_or_dir| file_or_dir.is_dir())
-            .collect();
-        pbos.append(&mut optionals.clone());
-        files::clear_pbos(&p, &pbos).unwrap();
+        if Path::new("optionals/").exists() {
+            let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                .map(|file| file.unwrap().path())
+                .filter(|file_or_dir| file_or_dir.is_dir())
+                .collect();
+            pbos.append(&mut optionals.clone());
+        }
+        files::clear_pbos(&p, &pbos).unwrap_or_print();
         if args.flag_force {
-            files::clear_releases().unwrap();
+            files::clear_releases().unwrap_or_print();
         }
         Ok(())
     } else if args.cmd_run {
