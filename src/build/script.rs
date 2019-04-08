@@ -244,11 +244,16 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
             if let Some(_) = &pb {
                 &pb.unwrap().pb().tick();
             }
-            let out = Exec::shell(&command).capture().unwrap_or_print().stdout_str();
+            let shell = Exec::shell(&command).capture().unwrap_or_print();
+            let out = &shell.stdout_str();
             if output {
                 for line in out.lines() {
                     println!("{}           {}{}", prefix, line, repeat!(" ", 70 - line.len()));
                 }
+            }
+            if !shell.success() {
+                red!("Failed", &cmd);
+                std::process::exit(2);
             }
         }
     }
