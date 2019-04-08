@@ -37,20 +37,20 @@ impl ScriptStatus {
 
 #[derive(Serialize, Deserialize)]
 pub struct BuildScript {
-    #[serde(skip_serializing_if = "is_true")]
-    #[serde(default = "dft_true")]
+    #[serde(skip_serializing_if = "crate::is_true")]
+    #[serde(default = "crate::dft_true")]
     pub debug: bool,
-    #[serde(skip_serializing_if = "is_true")]
-    #[serde(default = "dft_true")]
+    #[serde(skip_serializing_if = "crate::is_true")]
+    #[serde(default = "crate::dft_true")]
     pub release: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub foreach: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub parallel: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub show_output: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
@@ -254,8 +254,3 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
     }
     Ok(())
 }
-
-fn is_true(v: &bool) -> bool { v.clone() }
-fn is_false(v: &bool) -> bool { !v.clone() }
-fn dft_true() -> bool { true }
-fn dft_false() -> bool { false }

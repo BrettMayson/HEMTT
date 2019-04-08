@@ -392,4 +392,7 @@ fn ansi_support() {
     unreachable!();
 }
 
+fn is_true(v: &bool) -> bool { v.clone() }
+fn is_false(v: &bool) -> bool { !v.clone() }
+fn dft_true() -> bool { true }
 fn dft_false() -> bool { false }

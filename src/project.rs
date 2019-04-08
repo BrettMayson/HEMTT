@@ -15,7 +15,6 @@ use std::path::{Path, PathBuf};
 use crate::error::*;
 use crate::template::render;
 use crate::state::State;
-use crate::dft_false;
 
 #[derive(Serialize, Deserialize)]
 pub struct Project {
@@ -64,7 +63,8 @@ pub struct Project {
     #[serde(default = "HashMap::new")]
     pub scripts: HashMap<String, crate::build::script::BuildScript>,
 
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub reuse_private_key: bool,
 
     #[serde(skip_deserializing,skip_serializing)]
