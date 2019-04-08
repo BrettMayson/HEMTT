@@ -4,6 +4,9 @@ use num_cpus;
 use self_update;
 use serde::Deserialize;
 
+#[macro_use]
+pub mod macros;
+
 #[cfg(windows)]
 use ansi_term;
 
@@ -24,13 +27,6 @@ mod utilities;
 
 use crate::error::*;
 use crate::utilities::Utility;
-
-#[macro_export]
-macro_rules! repeat {
-    ($s: expr, $n: expr) => {{
-        &repeat($s).take($n).collect::<String>()
-    }}
-}
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
@@ -298,14 +294,16 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .map(|file| file.unwrap().path())
             .filter(|file_or_dir| file_or_dir.is_dir())
             .collect();
-        let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
-            .map(|file| file.unwrap().path())
-            .filter(|file_or_dir| file_or_dir.is_dir())
-            .collect();
-        pbos.append(&mut optionals.clone());
-        files::clear_pbos(&p, &pbos).unwrap();
+        if Path::new("optionals/").exists() {
+            let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                .map(|file| file.unwrap().path())
+                .filter(|file_or_dir| file_or_dir.is_dir())
+                .collect();
+            pbos.append(&mut optionals.clone());
+        }
+        files::clear_pbos(&p, &pbos).unwrap_or_print();
         if args.flag_force {
-            files::clear_releases().unwrap();
+            files::clear_releases().unwrap_or_print();
         }
         Ok(())
     } else if args.cmd_run {
@@ -366,11 +364,12 @@ fn main() {
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {
-    if crate::project::exists() && write && !force {
+    let exists = crate::project::exists().is_ok();
+    if exists && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
-    } else if crate::project::exists() && write && force {
+    } else if exists && write && force {
         Ok(())
-    } else if !crate::project::exists() && !write {
+    } else if !exists && !write {
         Err(error!("A HEMTT Project does not exist in the current directory"))
     } else {
         Ok(())
@@ -397,3 +396,8 @@ fn ansi_support() {
 fn ansi_support() {
     unreachable!();
 }
+
+fn is_true(v: &bool) -> bool { v.clone() }
+fn is_false(v: &bool) -> bool { !v.clone() }
+fn dft_true() -> bool { true }
+fn dft_false() -> bool { false }

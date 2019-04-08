@@ -1,4 +1,5 @@
 use colored::*;
+use handlebars::to_json;
 use pbr::ProgressBar;
 use rayon::prelude::*;
 use regex::Regex;
@@ -7,7 +8,6 @@ use subprocess::Exec;
 
 use std::path::PathBuf;
 use std::io::Error;
-use std::iter::repeat;
 use std::sync::{Arc, Mutex};
 
 use crate::error;
@@ -37,20 +37,20 @@ impl ScriptStatus {
 
 #[derive(Serialize, Deserialize)]
 pub struct BuildScript {
-    #[serde(skip_serializing_if = "is_true")]
-    #[serde(default = "dft_true")]
+    #[serde(skip_serializing_if = "crate::is_true")]
+    #[serde(default = "crate::dft_true")]
     pub debug: bool,
-    #[serde(skip_serializing_if = "is_true")]
-    #[serde(default = "dft_true")]
+    #[serde(skip_serializing_if = "crate::is_true")]
+    #[serde(default = "crate::dft_true")]
     pub release: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub foreach: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub parallel: bool,
-    #[serde(skip_serializing_if = "is_false")]
-    #[serde(default = "dft_false")]
+    #[serde(skip_serializing_if = "crate::is_false")]
+    #[serde(default = "crate::dft_false")]
     pub show_output: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
@@ -86,8 +86,9 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        //pbm.lock().unwrap().pb().finish_print(&nicefmt!(green, "Executed", format!("{}{}", state.addons.len(), repeat!(" ", 60))));
+                        //println!();
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -96,8 +97,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm).unwrap_or_print();
                             pbm.lock().unwrap().pb().inc();
                         });
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -109,8 +109,7 @@ impl BuildScript {
                             self.run_pathbuf(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), state.addons.len(), crate::repeat!(" ", 60)));
-                        println!();
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", state.addons.len());
                     },
                     Stage::PostBuild | Stage::ReleaseBuild => {
                         let built = &state.result.unwrap().built;
@@ -119,8 +118,7 @@ impl BuildScript {
                             self.run_pboresult(&p, &addon, &steps, &state, &pbm)?;
                             pbm.lock().unwrap().pb().inc();
                         }
-                        pbm.lock().unwrap().pb().finish_print(&format!("  {} {}{}", "Executed".green().bold(), built.len(), crate::repeat!(" ", 60)));
-                        println!()
+                        finishpb!(pbm.lock().unwrap().pb(), green, "Executed", built.len());
                     },
                     _ => {}
                 }
@@ -140,14 +138,14 @@ impl BuildScript {
         }
         let mut data = p.template_data.clone();
         let name = addon.file_name().unwrap().to_str().unwrap().to_owned();
-        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
+        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("addon", name.clone());
-        data.insert("source", addon.to_str().unwrap().to_owned());
+        data.insert("addon", to_json(name.clone()));
+        data.insert("source", to_json(addon.to_str().unwrap().to_owned()));
         let mut target = addon.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        data.insert("target", target.to_str().unwrap().to_owned());
+        data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         for command in steps {
             execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }
@@ -161,15 +159,15 @@ impl BuildScript {
         }
         let mut data = p.template_data.clone();
         let name = addon.source.file_name().unwrap().to_str().unwrap().to_owned();
-        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, crate::repeat!(" ",
+        pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
             if &name.len() > &20 {0} else {20 - &name.len()}
         )));
-        data.insert("addon", name.clone());
-        data.insert("source", addon.source.to_str().unwrap().to_owned());
+        data.insert("addon", to_json(name.clone()));
+        data.insert("source", to_json(addon.source.to_str().unwrap().to_owned()));
         let mut target = addon.source.parent().unwrap().to_path_buf();
         target.push(&format!("{}_{}.pbo", p.prefix, &name));
-        data.insert("target", target.to_str().unwrap().to_owned());
-        data.insert("time", addon.time.to_string());
+        data.insert("target", to_json(target.to_str().unwrap().to_owned()));
+        data.insert("time", to_json(addon.time.to_string()));
         for command in steps {
             execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }
@@ -215,6 +213,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
     };
 
     match name.remove(0) {
+        // TODO replace println with color macros, need to deal with that prefix
         '@' => {
             let re = Regex::new(r##"([^=\s"]*)=(?:"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+))|"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|([^"\s]+)"##).unwrap();
             let mut args: Vec<String> = Vec::new();
@@ -223,7 +222,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
             }
             if output {println!("{}   {} {}", prefix, "Utility".green().bold(), &name)};
             match crate::utilities::find(&args[0]) {
-                Some(v) => crate::utilities::run(&v, &args)?,
+                Some(v) => crate::utilities::run(&v, &mut args)?,
                 None => return Err(error!("Unknown Utility: {}", &name))
             };
             if let Some(_) = &pb {
@@ -241,22 +240,17 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
         },
         _   => {
             let cmd = command.clone().replace("\\", "\\\\");
-            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), crate::repeat!(" ", 60 - &cmd.len()))};
+            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), repeat!(" ", 60 - &cmd.len()))};
             if let Some(_) = &pb {
                 &pb.unwrap().pb().tick();
             }
             let out = Exec::shell(&command).capture().unwrap_or_print().stdout_str();
             if output {
                 for line in out.lines() {
-                    println!("{}           {}{}", prefix, line, crate::repeat!(" ", 70 - line.len()));
+                    println!("{}           {}{}", prefix, line, repeat!(" ", 70 - line.len()));
                 }
             }
         }
     }
     Ok(())
 }
-
-fn is_true(v: &bool) -> bool { v.clone() }
-fn is_false(v: &bool) -> bool { !v.clone() }
-fn dft_true() -> bool { true }
-fn dft_false() -> bool { false }

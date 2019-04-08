@@ -11,6 +11,7 @@ pub mod armake;
 pub enum Utility {
     Armake,
     ConvertProject,
+    Template,
     Translation,
     Zip,
 }
@@ -31,17 +32,24 @@ pub fn find(utility: &str) -> Option<Utility> {
     return match utility {
         "armake" => Some(Utility::Armake),
         "convertproject" => Some(Utility::ConvertProject),
+        "template" => Some(Utility::Template),
         "translation" => Some(Utility::Translation),
         "zip" => Some(Utility::Zip),
         _ => None
     }
 }
 
-pub fn run(utility: &Utility, args: &Vec<String>) -> Result<(), std::io::Error> {
+pub fn run(utility: &Utility, args: &mut Vec<String>) -> Result<(), std::io::Error> {
     #[allow(unreachable_patterns)]
     return match utility {
         Utility::Armake => armake::run(args),
         Utility::ConvertProject => convert::run(),
+        Utility::Template => {
+            let p = crate::project::get_project()?;
+            args.remove(0);
+            println!("{}", p.render(&args.join(" ").to_owned()));
+            Ok(())
+        },
         Utility::Translation => translation::check(),
         Utility::Zip => zip::archive(args),
         _ => Err(error!("Utility not implemented"))

@@ -7,7 +7,6 @@ use zip;
 
 use std::fs::File;
 use std::io::{Read, Write, Error};
-use std::iter::repeat;
 use std::path::{Path};
 
 use crate::error::*;
@@ -55,8 +54,7 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
     for entry in dir.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
 
-        let name = path.strip_prefix(Path::new(&release_dir))
-            .unwrap().to_str().unwrap();
+        let name = path.strip_prefix(Path::new(&release_dir)).unwrap();
 
         pb.message(&format!("{} - ", path.file_name().unwrap().to_str().unwrap()));
         pb.tick();
@@ -64,16 +62,16 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
         // Write file or directory explicitly
         // Some unzip tools unzip files with directory paths correctly, some do not!
         if path.is_file() {
-            zip.start_file(name, options)?;
+            zip.start_file_from_path(name, options)?;
             let mut f = File::open(path)?;
 
             f.read_to_end(&mut buffer)?;
             zip.write_all(&*buffer)?;
             buffer.clear();
-        } else if !name.is_empty() {
+        } else if name.as_os_str().len() != 0 {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
-            zip.add_directory(name, options)?;
+            zip.add_directory_from_path(name, options)?;
         }
 
         pb.inc();
