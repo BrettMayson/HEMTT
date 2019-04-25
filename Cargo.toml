@@ -28,4 +28,4 @@ zip = { version = "0.5.2", features = ["deflate"] }
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.11"
-winreg = "0.5"
+winreg = "0.6"
