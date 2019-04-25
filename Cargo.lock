@@ -580,7 +580,7 @@ dependencies = [
  "subprocess 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "winreg 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winreg 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "zip 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1913,14 +1913,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "winreg"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "winreg"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -2176,7 +2168,6 @@ dependencies = [
 "checksum winapi-i686-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 "checksum winapi-util 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7168bab6e1daee33b4557efd0e95d5ca70a03706d39fa5f3fe7a236f584b03c9"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-"checksum winreg 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a27a759395c1195c4cc5cda607ef6f8f6498f64e78f7900f5de0a127a424704a"
 "checksum winreg 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "daf67b95d0b1bf421c4f11048d63110ca3719977169eec86396b614c8942b6e0"
 "checksum ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 "checksum xattr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "244c3741f4240ef46274860397c7c74e50eb23624996930e484c16679633a54c"
