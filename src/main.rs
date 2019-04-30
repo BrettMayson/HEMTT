@@ -70,7 +70,7 @@ Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --opts=<addons>  Comma seperated list of addtional compontents to build
+       --opts=<addons>  Comma seperated list of addtional components to build
        --skip=<addons>  Comma seperated list of addons to skip building
     -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
     -h --help           Show usage information and exit
