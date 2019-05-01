@@ -248,7 +248,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
         },
         _   => {
             let cmd = command.clone().replace("\\", "\\\\");
-            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), repeat!(" ", 60 - &cmd.len()))};
+            if output {println!("{} {} {}", prefix, "Executing".green().bold(), &cmd.bold())};
             if let Some(_) = &pb {
                 &pb.unwrap().pb().tick();
             }
@@ -256,7 +256,7 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
             let out = &shell.stdout_str();
             if output {
                 for line in out.lines() {
-                    println!("{}           {}{}", prefix, line, repeat!(" ", 70 - line.len()));
+                    println!("{}           {}{}", prefix, line, repeat!(" ", std::cmp::min(0, 70 - line.len())));
                 }
             }
             if !shell.success() {
