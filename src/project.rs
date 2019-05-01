@@ -50,6 +50,8 @@ pub struct Project {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub signame: String,
+    #[serde(default = "dft_sig")]
+    pub sigversion: u8,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub prebuild: Vec<String>,
@@ -197,6 +199,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         modname: String::new(),
         keyname: String::new(),
         signame: String::new(),
+        sigversion: dft_sig(),
         prebuild: Vec::new(),
         postbuild: Vec::new(),
         releasebuild: Vec::new(),
@@ -311,4 +314,8 @@ pub fn get_version() -> Result<SemVer, Error> {
 }
 fn get_version_unwrap() -> Option<String> {
     Some(get_version().unwrap().to_string())
+}
+
+fn dft_sig() -> u8 {
+    2
 }
