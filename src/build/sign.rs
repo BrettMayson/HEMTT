@@ -1,4 +1,6 @@
 use armake2::{pbo::PBO, sign::BISignVersion};
+use colored::*;
+
 use std::fs;
 use std::fs::File;
 use std::io::Error;
@@ -19,7 +21,15 @@ pub fn sign(
         PBO::read(&mut File::open(PathBuf::from(format!("{}/{}", addonsfolder, pbo_filename))).expect("Failed to open PBO"))
             .expect("Failed to read PBO");
 
-    let sig = key.sign(&pbo, BISignVersion::V3);
+    let sig = match p.sigversion {
+        3 => key.sign(&pbo, BISignVersion::V3),
+        2 => key.sign(&pbo, BISignVersion::V2),
+        _ => {
+            yellow!("KeyWarn", format!("Invalid Version {}", p.sigversion));
+            yellow!("KeyWarn", "Using V2");
+            key.sign(&pbo, BISignVersion::V2)
+        }
+    };
     let signame = p.get_signame(&pbo_filename);
     sig.write(&mut File::create(PathBuf::from(format!("{}/{}", addonsfolder, signame))).unwrap())?;
 
