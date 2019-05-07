@@ -26,8 +26,8 @@ pub fn sign(
         2 => key.sign(&pbo, BISignVersion::V2),
         _ => {
             yellow!("KeyWarn", format!("Invalid Version {}", p.sigversion));
-            yellow!("KeyWarn", "Using V2");
-            key.sign(&pbo, BISignVersion::V2)
+            yellow!("KeyWarn", "Using V3");
+            key.sign(&pbo, BISignVersion::V3)
         }
     };
     let signame = p.get_signame(&pbo_filename);
