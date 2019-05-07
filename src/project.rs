@@ -317,5 +317,5 @@ fn get_version_unwrap() -> Option<String> {
 }
 
 fn dft_sig() -> u8 {
-    2
+    3
 }
