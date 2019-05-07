@@ -316,6 +316,4 @@ fn get_version_unwrap() -> Option<String> {
     Some(get_version().unwrap().to_string())
 }
 
-fn dft_sig() -> u8 {
-    3
-}
+pub fn dft_sig() -> u8 { 3 }
