@@ -11,6 +11,18 @@ pub fn copy(path_posix: &String, addonsfolder: &String, pbo_filename: &String) -
     Ok(true)
 }
 
+pub fn sign_version(v: u8) -> BISignVersion {
+    match v {
+        3 => BISignVersion::V3,
+        2 => BISignVersion::V2,
+        _ => {
+            yellow!("KeyWarn", format!("Invalid Version {}", v));
+            yellow!("KeyWarn", format!("Using V{}", crate::project::dft_sig()));
+            sign_version(crate::project::dft_sig())
+        }
+    }
+}
+
 pub fn sign(
     pbo_filename: &String,
     addonsfolder: &String,
@@ -21,15 +33,7 @@ pub fn sign(
         PBO::read(&mut File::open(PathBuf::from(format!("{}/{}", addonsfolder, pbo_filename))).expect("Failed to open PBO"))
             .expect("Failed to read PBO");
 
-    let sig = match p.sigversion {
-        3 => key.sign(&pbo, BISignVersion::V3),
-        2 => key.sign(&pbo, BISignVersion::V2),
-        _ => {
-            yellow!("KeyWarn", format!("Invalid Version {}", p.sigversion));
-            yellow!("KeyWarn", "Using V2");
-            key.sign(&pbo, BISignVersion::V2)
-        }
-    };
+    let sig = key.sign(&pbo, sign_version(p.sigversion));
     let signame = p.get_signame(&pbo_filename);
     sig.write(&mut File::create(PathBuf::from(format!("{}/{}", addonsfolder, signame))).unwrap())?;
 
