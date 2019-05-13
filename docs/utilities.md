@@ -4,7 +4,7 @@
 
 The translation utility will scan your project for `stringtable.xml` files and will tally up the keys. It will display a table with the key counts and the completion percentage. Supports all [Arma 3 Languages](https://community.bistudio.com/wiki/Stringtable.xml#Supported_languages).
 
-`./hemtt run translation`
+`hemtt translation`
 ```
 Total            2698
 English          2698 100%
@@ -23,3 +23,22 @@ Spanish          2015  75%
 Hungarian        1558  58%
 Turkish             3   0%
 ```
+
+# zip
+
+The zip utility will zip the current release into a .zip file. The zip filename will be `{{name}}_{{version}}` unless a name is provided.
+
+`hemtt zip` => `ace_1.2.3.zip`  
+`hemtt zip release` => `release.zip`  
+`hemtt zip {{version}}` => `1.2.3.zip`  
+
+# template
+
+The template utility will render the arguments using the standard [templating variables](templating.md).
+
+`hemtt template {{name}} v{{version}}` => `ABE3 1.0.3.2`
+
+# convertproject
+The convert project utility will convert the HEMTT project file from `hemtt.json` => `hemtt.toml` or `hemtt.toml` => `hemtt.json`.
+
+`hemtt convertproject`

@@ -1,14 +1,17 @@
-use serde::Deserialize;
-use serde_xml_rs;
-
-use walkdir::WalkDir;
 use pbr::ProgressBar;
+use serde_xml_rs;
+use serde::Deserialize;
+use walkdir::WalkDir;
 
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 
+use crate::error::*;
+use crate::project::use_project_dir;
+
 pub fn check() -> Result<(), std::io::Error> {
+    use_project_dir();
     let mut total = 0.0;
     let mut keys = HashMap::new();
     let mut stringtables = Vec::new();
@@ -17,12 +20,17 @@ pub fn check() -> Result<(), std::io::Error> {
         if !path.ends_with("stringtable.xml") { continue };
         stringtables.push(path);
     }
+    for entry in WalkDir::new("optionals").into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path().to_path_buf();
+        if !path.ends_with("stringtable.xml") { continue };
+        stringtables.push(path);
+    }
     let mut pb = ProgressBar::new(stringtables.len() as u64);
-    pb.format("╢▌▌░╟");
+    pb.show_speed = false;
     for stringtable in stringtables {
         pb.inc();
         let f = BufReader::new(File::open(stringtable)?);
-        let project: Project = serde_xml_rs::from_reader(f).unwrap();
+        let project: Project = serde_xml_rs::from_reader(f).unwrap_or_print();
         for mut package in project.packages {
             package = package.transfer();
             for container in package.containers {
@@ -61,6 +69,7 @@ pub fn check() -> Result<(), std::io::Error> {
         }
     }
     pb.finish_print(&format!("{:<15} {:>5}", "Total", total));
+    println!();
     let mut count_vec: Vec<(&&str, &f64)> = keys.iter().collect();
     count_vec.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
     for (lang, count) in count_vec {
