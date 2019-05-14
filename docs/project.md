@@ -77,6 +77,7 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 #define PATCH 0
 #define BUILD 0
 ```
+- `PATCH` can be substituted with `PATCHLVL`.
 <hr/>
 
 ## files
