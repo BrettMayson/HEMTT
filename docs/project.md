@@ -77,6 +77,7 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 #define PATCH 0
 #define BUILD 0
 ```
+- `PATCH` can be substituted with `PATCHLVL`.
 <hr/>
 
 ## files
@@ -209,6 +210,18 @@ HEMTT will use the specified signature name as part of the full signature (`.bis
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
 
+## sigversion
+**Type**: Integer
+
+HEMTT will use the specified signature version.  
+Currently Supported: V2, V3 (Experiemental).  
+Default: 2
+
+### Example
+
+```json
+"sigversion": 3
+```
 
 ## reuse_private_key
 

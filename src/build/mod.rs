@@ -42,7 +42,12 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
     addons.par_iter().for_each(|entry| {
         let name = entry.file_name().unwrap().to_str().unwrap().to_owned();
         let mut target = entry.parent().unwrap().to_path_buf();
-        target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        if p.prefix.is_empty() {
+            yellow!("No Prefix", format!("{}", &name));
+            target.push(&format!("{}.pbo", &name));
+        } else {
+            target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        }
         let now = Instant::now();
         let buildresult = _build(&p, &entry, &target, Some(&pbm)).unwrap_or_print();
         let elapsed = now.elapsed();

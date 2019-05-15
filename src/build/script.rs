@@ -144,7 +144,11 @@ impl BuildScript {
         data.insert("addon", to_json(name.clone()));
         data.insert("source", to_json(addon.to_str().unwrap().to_owned()));
         let mut target = addon.parent().unwrap().to_path_buf();
-        target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        if p.prefix.is_empty() {
+            target.push(&format!("{}.pbo", &name));
+        } else {
+            target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        }
         data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         for command in steps {
             execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
@@ -165,7 +169,11 @@ impl BuildScript {
         data.insert("addon", to_json(name.clone()));
         data.insert("source", to_json(addon.source.to_str().unwrap().to_owned()));
         let mut target = addon.source.parent().unwrap().to_path_buf();
-        target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        if p.prefix.is_empty() {
+            target.push(&format!("{}.pbo", &name));
+        } else {
+            target.push(&format!("{}_{}.pbo", p.prefix, &name));
+        }
         data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         data.insert("time", to_json(addon.time.to_string()));
         for command in steps {
@@ -240,15 +248,20 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
         },
         _   => {
             let cmd = command.clone().replace("\\", "\\\\");
-            if output {println!("{} {} {}{}", prefix, "Executing".green().bold(), &cmd.bold(), repeat!(" ", 60 - &cmd.len()))};
+            if output {println!("{} {} {}", prefix, "Executing".green().bold(), &cmd.bold())};
             if let Some(_) = &pb {
                 &pb.unwrap().pb().tick();
             }
-            let out = Exec::shell(&command).capture().unwrap_or_print().stdout_str();
+            let shell = Exec::shell(&command).capture().unwrap_or_print();
+            let out = &shell.stdout_str();
             if output {
                 for line in out.lines() {
-                    println!("{}           {}{}", prefix, line, repeat!(" ", 70 - line.len()));
+                    println!("{}           {}{}", prefix, line, repeat!(" ", std::cmp::min(0, 70 - line.len())));
                 }
+            }
+            if !shell.success() {
+                red!("Failed", &cmd);
+                std::process::exit(2);
             }
         }
     }
