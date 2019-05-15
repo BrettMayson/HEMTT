@@ -344,7 +344,7 @@ fn main() {
             args.remove(0);
             let utility = Utility::from_str(&args[0]);
             if utility.is_ok() {
-                utilities::run(&utility.unwrap(), &args).unwrap_or_print();
+                utilities::run(&utility.unwrap(), &mut args).unwrap_or_print();
                 std::process::exit(0);
             }
             e.exit();
