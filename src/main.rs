@@ -14,6 +14,7 @@ use std::collections::{HashSet};
 use std::fs;
 use std::io::{stdin, stdout, Write, Error};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 mod build;
 mod error;
@@ -50,7 +51,6 @@ Usage:
     hemtt clean [--force]
     hemtt run <script>
     hemtt update
-    hemtt <utility> [<args>]
     hemtt (-h | --help)
     hemtt --version
 
@@ -63,8 +63,10 @@ Commands:
     update              Update HEMTT
 
 Utilities:
-    translation         Displays the translation progress of all stringtable files
+    armake              Run armake2 commands
     convertproject      Convert project file between JSON and TOML
+    translation         Displays the translation progress of all stringtable files
+    zip                 Create a .zip of the latest release
 
 Options:
     -v --verbose        Enable verbose output
@@ -96,7 +98,6 @@ struct Args {
     flag_jobs: usize,
     arg_script: String,
     arg_name: String,
-    arg_utility: Option<Utility>,
     arg_addons: String,
 }
 
@@ -327,11 +328,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
         println!("Using Version: {}", status.version());
         Ok(())
     } else {
-        if let Some(utility) = &args.arg_utility {
-            let mut args = std::env::args().collect::<Vec<_>>();
-            args.remove(0);
-            crate::utilities::run(utility, &mut args).unwrap_or_print();
-        }
         Ok(())
     }
 }
@@ -343,7 +339,16 @@ fn main() {
 
     let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
-        .unwrap_or_else(|e| e.exit());
+        .unwrap_or_else(|e| {
+            let mut args = std::env::args().collect::<Vec<_>>();
+            args.remove(0);
+            let utility = Utility::from_str(&args[0]);
+            if utility.is_ok() {
+                utilities::run(&utility.unwrap(), &mut args).unwrap_or_print();
+                std::process::exit(0);
+            }
+            e.exit();
+        });
 
     if args.flag_version {
         println!("HEMTT Version {}", &VERSION());
