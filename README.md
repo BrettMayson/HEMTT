@@ -13,7 +13,7 @@ Read the [documentation](https://synixebrett.github.io/HEMTT) to learn more abou
 
 ## Using HEMTT
 
-HEMTT is a CLI tool that must be called from the root of your project. HEMTT needs to be placed in the project root and called with `./hemtt` on Linux or `hemtt.exe` on Windows. Global install is currently not possible.
+HEMTT is a CLI tool that must be called from the root of your project. HEMTT needs to be placed in the project root and called with `./hemtt` on Linux or `hemtt.exe` on Windows. You can install HEMTT system wide on Windows by using `setup.exe` in the download.
 
 Below is just a showcase, read the [documentation](https://synixebrett.github.io/HEMTT) to learn about more features and reasonings.
 
