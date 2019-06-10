@@ -303,7 +303,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
         files::clear_pbos(&p, &pbos).unwrap_or_print();
         if args.flag_force {
-            files::clear_releases().unwrap_or_print();
+            files::clear_releases(&p).unwrap_or_print();
         }
         Ok(())
     } else if args.cmd_run {

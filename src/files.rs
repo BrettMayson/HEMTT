@@ -1,4 +1,5 @@
 use colored::*;
+use glob::glob;
 use rayon::prelude::*;
 use reqwest;
 
@@ -56,20 +57,33 @@ pub fn clear_release(p: &project::Project, version: &String) -> Result<(), Error
         println!("  {} old key {}", "Cleaning".yellow().bold(), keyname);
         fs::remove_file(keypath)?;
 
-        // TODO Wrap in p.reuse_private_key in #51
-        if Path::new(pkeypath).exists() {
-            fs::remove_file(pkeypath)?;
+        if !p.reuse_private_key {
+            if Path::new(pkeypath).exists() {
+                fs::remove_file(pkeypath)?;
+            }
         }
     }
 
     Ok(())
 }
 
-pub fn clear_releases() -> Result<(), Error> {
+pub fn clear_releases(p: &project::Project) -> Result<(), Error> {
     println!("  {} all releases", "Cleaning".yellow().bold());
-    // TODO Conform to p.reuse_private_key in #51 to not remove private keys
     if Path::new("releases").exists() {
-        fs::remove_dir_all("releases")?;
+        if !p.reuse_private_key {
+            fs::remove_dir_all("releases")?;
+        } else {
+            for entry in glob("releases/*.*.*").unwrap_or_print() {
+                if let Ok(path) = entry {
+                    fs::remove_dir_all(path)?;
+                }
+            }
+            for entry in glob("releases/keys/*.bikey").unwrap_or_print() {
+                if let Ok(path) = entry {
+                    fs::remove_file(path)?;
+                }
+            }
+        }
     }
     Ok(())
 }
