@@ -4,6 +4,9 @@ use num_cpus;
 use self_update;
 use serde::Deserialize;
 
+#[macro_use]
+pub mod macros;
+
 #[cfg(windows)]
 use ansi_term;
 
@@ -11,6 +14,7 @@ use std::collections::{HashSet};
 use std::fs;
 use std::io::{stdin, stdout, Write, Error};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 mod build;
 mod error;
@@ -23,13 +27,6 @@ mod utilities;
 
 use crate::error::*;
 use crate::utilities::Utility;
-
-#[macro_export]
-macro_rules! repeat {
-    ($s: expr, $n: expr) => {{
-        &repeat($s).take($n).collect::<String>()
-    }}
-}
 
 #[allow(non_snake_case)]
 #[cfg(debug_assertions)]
@@ -54,7 +51,6 @@ Usage:
     hemtt clean [--force]
     hemtt run <script>
     hemtt update
-    hemtt <utility>
     hemtt (-h | --help)
     hemtt --version
 
@@ -67,13 +63,16 @@ Commands:
     update              Update HEMTT
 
 Utilities:
+    armake              Run armake2 commands
+    convertproject      Convert project file between JSON and TOML
     translation         Displays the translation progress of all stringtable files
+    zip                 Create a .zip of the latest release
 
 Options:
     -v --verbose        Enable verbose output
     -f --force          Overwrite target files
        --nowarn         Suppress armake2 warnings
-       --opts=<addons>  Comma seperated list of addtional compontents to build
+       --opts=<addons>  Comma seperated list of addtional components to build
        --skip=<addons>  Comma seperated list of addons to skip building
     -j --jobs=<n>       Number of parallel jobs, defaults to # of CPUs
     -h --help           Show usage information and exit
@@ -99,7 +98,6 @@ struct Args {
     flag_jobs: usize,
     arg_script: String,
     arg_name: String,
-    arg_utility: Option<Utility>,
     arg_addons: String,
 }
 
@@ -123,7 +121,7 @@ fn input(text: &str, default: Option<String>) -> String {
     if let Some('\r')=s.chars().next_back() {
         s.pop();
     }
-    if s == "".to_owned() {
+    if s.is_empty() {
         return ret;
     }
     s
@@ -296,14 +294,16 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .map(|file| file.unwrap().path())
             .filter(|file_or_dir| file_or_dir.is_dir())
             .collect();
-        let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
-            .map(|file| file.unwrap().path())
-            .filter(|file_or_dir| file_or_dir.is_dir())
-            .collect();
-        pbos.append(&mut optionals.clone());
-        files::clear_pbos(&p, &pbos).unwrap();
+        if Path::new("optionals/").exists() {
+            let optionals: Vec<PathBuf> = fs::read_dir("optionals").unwrap()
+                .map(|file| file.unwrap().path())
+                .filter(|file_or_dir| file_or_dir.is_dir())
+                .collect();
+            pbos.append(&mut optionals.clone());
+        }
+        files::clear_pbos(&p, &pbos).unwrap_or_print();
         if args.flag_force {
-            files::clear_releases().unwrap();
+            files::clear_releases().unwrap_or_print();
         }
         Ok(())
     } else if args.cmd_run {
@@ -328,9 +328,6 @@ fn run_command(args: &Args) -> Result<(), Error> {
         println!("Using Version: {}", status.version());
         Ok(())
     } else {
-        if let Some(utility) = &args.arg_utility {
-            crate::utilities::run(utility).unwrap_or_print();
-        }
         Ok(())
     }
 }
@@ -342,7 +339,16 @@ fn main() {
 
     let mut args: Args = Docopt::new(USAGE)
         .and_then(|d| d.deserialize())
-        .unwrap_or_else(|e| e.exit());
+        .unwrap_or_else(|e| {
+            let mut args = std::env::args().collect::<Vec<_>>();
+            args.remove(0);
+            let utility = Utility::from_str(&args[0]);
+            if utility.is_ok() {
+                utilities::run(&utility.unwrap(), &mut args).unwrap_or_print();
+                std::process::exit(0);
+            }
+            e.exit();
+        });
 
     if args.flag_version {
         println!("HEMTT Version {}", &VERSION());
@@ -358,11 +364,12 @@ fn main() {
 }
 
 fn check(write: bool, force: bool) -> Result<(), Error> {
-    if crate::project::exists() && write && !force {
+    let exists = crate::project::exists().is_ok();
+    if exists && write && !force {
         Err(error!("HEMTT Project already exists in the current directory"))
-    } else if crate::project::exists() && write && force {
+    } else if exists && write && force {
         Ok(())
-    } else if !crate::project::exists() && !write {
+    } else if !exists && !write {
         Err(error!("A HEMTT Project does not exist in the current directory"))
     } else {
         Ok(())
@@ -389,3 +396,8 @@ fn ansi_support() {
 fn ansi_support() {
     unreachable!();
 }
+
+fn is_true(v: &bool) -> bool { v.clone() }
+fn is_false(v: &bool) -> bool { !v.clone() }
+fn dft_true() -> bool { true }
+fn dft_false() -> bool { false }

@@ -77,17 +77,19 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 #define PATCH 0
 #define BUILD 0
 ```
+- `PATCH` can be substituted with `PATCHLVL`.
 <hr/>
 
 ## files
 **Type**: Array \[String\]
 
-HEMTT will copy the files to the release directory after a successful release build.
+HEMTT will copy the files to the release directory after a successful release build. Supports [glob](http://man7.org/linux/man-pages/man7/glob.7.html) patterns.
 
 ```json
 "files": [
     "mod.cpp",
-    "logo.paa"
+    "logo.paa",
+    "*.dll"
 ]
 ```
 <hr/>
@@ -167,6 +169,13 @@ HEMTT will use the specified mod name (without `@`) to form `@mod` folder. Suppo
 
 HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names. Supports [templating](/templating.md).
 
+The default is set according to the following table:
+
+| `reuse_private_key` value | Default `keyname`         |
+| ------------------------- | ------------------------- |
+| `false`                   | `{{prefix}}_{{version}}`  |
+| `true`                    | `{{prefix}}`              |
+
 ```json
 "keyname": "my_key"
 ```
@@ -176,10 +185,11 @@ HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names. Su
 ```json
 "project": "TST",
 "version": "1.0.0.0",
-"keyname": "my_key-{{version}}"
+"keyname": "my_key_{{version}}"
 ```
 
-Above will result in key name of `my_key-1.0.0.0.bikey` and private key name of `my_key-1.0.0.0.biprivatekey`.
+Above will result in key name of `my_key_1.0.0.0.bikey` and private key name of `my_key_1.0.0.0.biprivatekey`.
+
 
 ## signame
 **Type**: String
@@ -199,3 +209,30 @@ HEMTT will use the specified signature name as part of the full signature (`.bis
 ```
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
+
+## sigversion
+**Type**: Integer
+
+HEMTT will use the specified signature version.  
+Currently Supported: V2, V3 (Experiemental).  
+Default: 2
+
+### Example
+
+```json
+"sigversion": 3
+```
+
+## reuse_private_key
+
+**Type**: bool
+
+If set to `true`, HEMTT will use (and re-use) `releases/keys/{keyname}.biprivatekey`. It will be generated if it doesn't exist.
+
+The default behaviour is to generate a new private key each time and discard it immediately.
+
+!> HEMTT strongly recommends that you only re-use the key if you are making a client-side mod where it will not matter if clients are running different versions of the mod.
+
+```json
+"reuse_private_key": false
+```

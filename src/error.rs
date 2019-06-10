@@ -1,15 +1,6 @@
-#![macro_use]
-
 use colored::*;
 
 use std::fmt::{Debug, Display};
-
-#[macro_export]
-macro_rules! error {
-    ($($arg:tt)*) => (
-        std::io::Error::new(std::io::ErrorKind::Other, format!($($arg)*))
-    )
-}
 
 pub trait ErrorExt<T, E> {
     fn print(self) -> Option<T>;
