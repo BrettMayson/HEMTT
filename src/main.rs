@@ -163,11 +163,8 @@ fn run_command(args: &Args) -> Result<(), Error> {
         files::xeh(&args.arg_name, &p).unwrap();
         Ok(())
     } else if args.cmd_build {
-        check(false, args.flag_force).print_error(true);
-        let mut p = project::get_project().unwrap();
-        if args.flag_force {
-            files::clear_pbos(&p).unwrap();
-        }
+        check(false, args.flag_force).unwrap_or_print();
+        let p = project::get_project().unwrap();
 
         // Set non-API flags directly in armake2 (replicated main.rs behaviour from armake2)
         unsafe {
