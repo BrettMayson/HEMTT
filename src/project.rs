@@ -35,6 +35,9 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub optionals: Vec<String>,
+    #[serde(skip_serializing_if = "crate::is_true")]
+    #[serde(default = "crate::dft_true")]
+    pub folder_optionals: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub skip: Vec<String>,
@@ -194,6 +197,7 @@ pub fn init(name: String, prefix: String, author: String) -> Result<Project, Err
         include: Vec::new(),
         exclude: Vec::new(),
         optionals: Vec::new(),
+        folder_optionals: true,
         skip: Vec::new(),
         headerexts: Vec::new(),
         modname: String::new(),

@@ -14,17 +14,19 @@ use crate::error::*;
 
 pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
     let modname = p.get_modname();
-    if !Path::new(&format!("releases/{}/@{}/addons", version, modname)).exists() {
-        fs::create_dir_all(format!("releases/{}/@{}/addons", version, modname))?;
+    let releasefolder = iformat!("releases/{version}/@{modname}", version, modname);
+
+    if !Path::new(&format!("{}/addons", releasefolder)).exists() {
+        fs::create_dir_all(format!("{}/addons", releasefolder))?;
     }
-    if !Path::new(&format!("releases/{}/@{}/keys", version, modname)).exists() {
-        fs::create_dir_all(format!("releases/{}/@{}/keys", version, modname))?;
+    if !Path::new(&format!("{}/keys", releasefolder)).exists() {
+        fs::create_dir_all(format!("{}/keys", releasefolder))?;
     }
     for file in &p.files {
         for entry in glob(file).unwrap_or_print() {
             if let Ok(path) = entry {
                 let file_name = path.file_name().unwrap().to_str().unwrap().to_owned();
-                fs::copy(&path, format!("releases/{}/@{}/{}", version, modname, file_name))?;
+                fs::copy(&path, format!("{}/{}", releasefolder, file_name))?;
             }
         }
     }
@@ -57,47 +59,61 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         // Make the private key and leave it in memory
         BIPrivateKey::generate(1024, keyname.clone())
     };
-    
+
     // Generate a public key to match the private key
     key.to_public_key().write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
 
     // Copy public key to specific release dir
     fs::copy(
         format!("releases/keys/{}.bikey", keyname),
-        format!("releases/{}/@{}/keys/{}.bikey", version, modname, keyname),
+        format!("{}/keys/{}.bikey", releasefolder, keyname),
     )?;
 
     let count = Arc::new(Mutex::new(0));
 
     // Sign
     let mut folder = String::from("addons");
+    let mut addonsfolder = format!("{}/addons", releasefolder);
     let dirs: Vec<_> = fs::read_dir(&folder)
         .unwrap_or_print()
         .map(|file| file.unwrap_or_print())
+        .filter(|file| file.file_type().unwrap().is_file())
         .collect();
     dirs.par_iter().for_each(|entry| {
         // TODO split copy and sign
-        if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+        if sign::copy_sign(&addonsfolder, &entry.path(), &p, &key).unwrap_or_print() {
             *count.lock().unwrap_or_print() += 1;
         }
     });
 
     folder = String::from("optionals");
     if Path::new(&folder).exists() {
-        let addonsfolder = iformat!("releases/{version}/@{modname}/{folder}", version, modname, folder);
+        addonsfolder = iformat!("{}/{folder}", releasefolder, folder);
         if !Path::new(&addonsfolder).exists() {
-            fs::create_dir_all(addonsfolder)?;
+            fs::create_dir_all(&addonsfolder)?;
         }
         let opts: Vec<_> = fs::read_dir(&folder)
             .unwrap_or_print()
             .map(|file| file.unwrap_or_print())
+            .filter(|file| file.file_type().unwrap().is_file())
             .collect();
         opts.par_iter().for_each(|entry| {
+            let addonfolder = if p.folder_optionals {
+                let optname = entry.path().file_stem().unwrap().to_str().unwrap().to_owned();
+                let optfolder = iformat!("{addonsfolder}/@{optname}/addons", addonsfolder, optname);
+                if !Path::new(&optfolder).exists() {
+                    fs::create_dir_all(&optfolder).unwrap_or_print();
+                }
+                optfolder
+            } else {
+                addonsfolder.clone()
+            };
+
             // TODO split copy and sign
             // for copying, we need to know source path, addons folder and pbo_filename
             // (we could get this but that seems like extra faff)
             // for signing, we need to know addons folder, PBO file name and key
-            if sign::copy_sign(&folder, &entry.path(), &p, &key).unwrap_or_print() {
+            if sign::copy_sign(&addonfolder, &entry.path(), &p, &key).unwrap_or_print() {
                 *count.lock().unwrap_or_print() += 1;
             }
         });
