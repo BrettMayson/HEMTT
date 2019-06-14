@@ -10,14 +10,14 @@ environment:
 
   matrix:
     # MinGW
-    # - TARGET: i686-pc-windows-gnu
     # - TARGET: x86_64-pc-windows-gnu
+    # - TARGET: i686-pc-windows-gnu
 
     # MSVC
-    - TARGET: i686-pc-windows-msvc
-      OPENSSL_DIR: "C:\\OpenSSL-v111-Win32"
     - TARGET: x86_64-pc-windows-msvc
       OPENSSL_DIR: "C:\\OpenSSL-v111-Win64"
+    - TARGET: i686-pc-windows-msvc
+      OPENSSL_DIR: "C:\\OpenSSL-v111-Win32"
 
     # Testing other channels
     # - TARGET: x86_64-pc-windows-gnu
