@@ -555,7 +555,7 @@ dependencies = [
  "toml 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "winreg 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "zip 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "zip 0.5.2 (git+https://github.com/jonpas/zip-rs?branch=flate2)",
 ]
 
 [[package]]
@@ -1972,6 +1972,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "zip"
 version = "0.5.2"
+source = "git+https://github.com/jonpas/zip-rs?branch=flate2#b171b915f820c139ce369b5ae30f41eb8519cd38"
+dependencies = [
+ "bzip2 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "flate2 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "podio 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "zip"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bzip2 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2204,4 +2216,5 @@ dependencies = [
 "checksum ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 "checksum xattr 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "244c3741f4240ef46274860397c7c74e50eb23624996930e484c16679633a54c"
 "checksum xml-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "541b12c998c5b56aa2b4e6f18f03664eef9a4fd0a246a55594efae6cc2d964b5"
+"checksum zip 0.5.2 (git+https://github.com/jonpas/zip-rs?branch=flate2)" = "<none>"
 "checksum zip 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c18fc320faf909036e46ac785ea827f72e485304877faf1a3a39538d3714dbc3"
