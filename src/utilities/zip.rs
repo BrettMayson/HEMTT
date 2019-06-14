@@ -6,7 +6,7 @@ use walkdir;
 use zip;
 
 use std::fs::File;
-use std::io::{Read, Write, Error};
+use std::io::{Error, BufReader, BufWriter, copy};
 use std::path::{Path};
 
 use crate::error::*;
@@ -38,11 +38,11 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
 
     let zipsubpath = format!("releases/{}", zipname);
     let zippath = Path::new(&zipsubpath);
-    let file = File::create(&zippath).unwrap_or_print();
+    let file = BufWriter::new(File::create(&zippath).unwrap_or_print());
 
     let dir = walkdir::WalkDir::new(&release_dir);
     let mut zip = zip::ZipWriter::new(file);
-    let options = zip::write::FileOptions::default();
+    let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
     let mut pb = ProgressBar::new(walkdir::WalkDir::new(&release_dir).into_iter().count() as u64);
     pb.show_speed = false;
@@ -50,10 +50,8 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
     pb.set_width(Some(70));
 
     // Zip all files and folders in all subdirectories
-    let mut buffer = Vec::new();
     for entry in dir.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-
         let name = path.strip_prefix(Path::new(&release_dir)).unwrap();
 
         pb.message(&format!("{} - ", path.file_name().unwrap().to_str().unwrap()));
@@ -63,11 +61,11 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
         // Some unzip tools unzip files with directory paths correctly, some do not!
         if path.is_file() {
             zip.start_file_from_path(name, options)?;
-            let mut f = File::open(path)?;
 
-            f.read_to_end(&mut buffer)?;
-            zip.write_all(&*buffer)?;
-            buffer.clear();
+            let mut f = BufReader::new(File::open(path)?);
+
+            // Copy directly, without any buffer, as we have no use for the intermediate data
+            copy(&mut f, &mut zip)?;
         } else if name.as_os_str().len() != 0 {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
