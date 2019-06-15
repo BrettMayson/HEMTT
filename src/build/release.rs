@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use crate::build::sign;
 use crate::error::*;
 
-pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
+pub fn release(p: &crate::project::Project, version: &str) -> Result<(), Error> {
     let modname = p.get_modname();
     if !Path::new(&format!("releases/{}/@{}/addons", version, modname)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, modname))?;
@@ -57,7 +57,7 @@ pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Erro
         // Make the private key and leave it in memory
         BIPrivateKey::generate(1024, keyname.clone())
     };
-    
+
     // Generate a public key to match the private key
     key.to_public_key().write(&mut std::fs::File::create(format!("releases/keys/{}.bikey", keyname)).unwrap_or_print())?;
 

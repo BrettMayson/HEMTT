@@ -8,11 +8,11 @@ pub struct State<'a> {
     pub addons: Vec<PathBuf>,
 }
 impl<'a> State<'a> {
-    pub fn new(addons: &Vec<PathBuf>) -> State {
+    pub fn new(addons: &[PathBuf]) -> State {
         State {
             stage: Stage::PreBuild,
             result: None,
-            addons: addons.clone(),
+            addons: addons.to_vec(),
         }
     }
 }

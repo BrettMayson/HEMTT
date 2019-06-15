@@ -40,7 +40,7 @@ fn VERSION() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-const USAGE: &'static str = "
+const USAGE: &str = "
 HEMTT, a simple to use build manager for Arma 3 mods using the CBA project structure
 
 Usage:
@@ -199,7 +199,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
         }
 
         if args.flag_skip != "" {
-            let mut specified_skip: Vec<String> = args.flag_skip.split(",").map(|s| s.to_string()).collect();
+            let mut specified_skip: Vec<String> = args.flag_skip.split(',').map(|s| s.to_string()).collect();
             skip.append(&mut specified_skip);
             skip.sort();
             skip.dedup();
@@ -212,7 +212,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
                 addons.push(entry.path());
             }
         } else if args.flag_opts != "" {
-            let specified_optionals: Vec<String> = args.flag_opts.split(",").map(|s| s.to_string()).collect();
+            let specified_optionals: Vec<String> = args.flag_opts.split(',').map(|s| s.to_string()).collect();
             let optional_path = PathBuf::from("optionals");
             for optional in specified_optionals {
                 let mut opt = optional_path.clone();
@@ -239,7 +239,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             }
         }
         if args.arg_addons != "" {
-            let specified_addons: Vec<String> = args.arg_addons.split(",").map(|s| s.to_string()).collect();
+            let specified_addons: Vec<String> = args.arg_addons.split(',').map(|s| s.to_string()).collect();
             let addon_path = PathBuf::from("addons");
             for addon in specified_addons {
                 let mut adn = addon_path.clone();
@@ -387,7 +387,7 @@ fn init() -> Result<crate::project::Project, Error> {
 fn ansi_support() {
     // Attempt to enable ANSI support in terminal
     // Disable colored output if failed
-    if !ansi_term::enable_ansi_support().is_ok() {
+    if ansi_term::enable_ansi_support().is_err() {
         colored::control::set_override(false);
     }
 }

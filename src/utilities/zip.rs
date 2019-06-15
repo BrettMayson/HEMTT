@@ -11,7 +11,7 @@ use std::path::{Path};
 
 use crate::error::*;
 
-const USAGE: &'static str = "
+const USAGE: &str = "
 Usage: zip [<name>]
 ";
 
@@ -20,14 +20,14 @@ struct Args {
     arg_name: Option<String>,
 }
 
-pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
+pub fn archive(usage: &[String]) -> Result<(), Error> {
     let p = crate::project::get_project()?;
     let version = p.version.unwrap();
 
     let release_dir = format!("releases/{}", version);
 
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.argv(usage.into_iter()).deserialize())
+        .and_then(|d| d.argv(usage.iter()).deserialize())
         .unwrap_or_else(|e| e.exit());
 
     let zipname = format!("{}.zip", match args.arg_name {
@@ -66,7 +66,7 @@ pub fn archive(usage: &Vec<String>) -> Result<(), Error> {
 
             // Copy directly, without any buffer, as we have no use for the intermediate data
             copy(&mut f, &mut zip)?;
-        } else if name.as_os_str().len() != 0 {
+        } else if !name.as_os_str().is_empty() {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
             zip.add_directory_from_path(name, options)?;
