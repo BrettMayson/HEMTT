@@ -342,6 +342,12 @@ fn main() {
         .unwrap_or_else(|e| {
             let mut args = std::env::args().collect::<Vec<_>>();
             args.remove(0);
+
+            if args.len() == 0 {
+                // No arguments provided, show usage
+                e.exit();
+            }
+
             let utility = Utility::from_str(&args[0]);
             if utility.is_ok() {
                 utilities::run(&utility.unwrap(), &mut args).unwrap_or_print();
