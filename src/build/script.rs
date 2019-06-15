@@ -68,14 +68,10 @@ impl BuildScript {
         let mut steps = &self.steps;
         let mut pb = ScriptStatus::new();
         let pbm = Arc::new(Mutex::new(&mut pb));
-        if cfg!(windows) {
-            if !self.steps_windows.is_empty() {
-                steps = &self.steps_windows;
-            }
-        } else {
-            if !self.steps_linux.is_empty() {
-                steps = &self.steps_linux;
-            }
+        if cfg!(windows) && !self.steps_windows.is_empty() {
+            steps = &self.steps_windows;
+        } else if !self.steps_linux.is_empty() {
+            steps = &self.steps_linux;
         }
         if self.foreach {
             if self.parallel {
@@ -125,13 +121,13 @@ impl BuildScript {
             }
         } else {
             for command in steps {
-                execute(&p, &p.render(&command), &state, self.show_output, None)?;
+                execute(&p, p.render(command), &state, self.show_output, None)?;
             }
         }
         Ok(())
     }
 
-    fn run_pathbuf(&self, p: &crate::project::Project, addon: &PathBuf, steps: &Vec<String>, state: &State, pbm: &Arc<Mutex<&mut ScriptStatus>>) -> Result<(), Error> {
+    fn run_pathbuf(&self, p: &crate::project::Project, addon: &PathBuf, steps: &[String], state: &State, pbm: &Arc<Mutex<&mut ScriptStatus>>) -> Result<(), Error> {
         if !self.show_output {
             print!("\r");
             eprint!("\r");
@@ -139,7 +135,7 @@ impl BuildScript {
         let mut data = p.template_data.clone();
         let name = addon.file_name().unwrap().to_str().unwrap().to_owned();
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
-            if &name.len() > &20 {0} else {20 - &name.len()}
+            if name.len() > 20 {0} else {20 - &name.len()}
         )));
         data.insert("addon", to_json(name.clone()));
         data.insert("source", to_json(addon.to_str().unwrap().to_owned()));
@@ -151,12 +147,12 @@ impl BuildScript {
         }
         data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         for command in steps {
-            execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
+            execute(&p, crate::template::render(command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }
         Ok(())
     }
 
-    fn run_pboresult(&self, p: &crate::project::Project, addon: &PBOResult, steps: &Vec<String>, state: &State, pbm: &Arc<Mutex<&mut ScriptStatus>>) -> Result<(), Error> {
+    fn run_pboresult(&self, p: &crate::project::Project, addon: &PBOResult, steps: &[String], state: &State, pbm: &Arc<Mutex<&mut ScriptStatus>>) -> Result<(), Error> {
         if !self.show_output {
             print!("\r");
             eprint!("\r");
@@ -164,7 +160,7 @@ impl BuildScript {
         let mut data = p.template_data.clone();
         let name = addon.source.file_name().unwrap().to_str().unwrap().to_owned();
         pbm.lock().unwrap().pb().message(&format!("{}{} ", &name, repeat!(" ",
-            if &name.len() > &20 {0} else {20 - &name.len()}
+            if name.len() > 20 {0} else {20 - &name.len()}
         )));
         data.insert("addon", to_json(name.clone()));
         data.insert("source", to_json(addon.source.to_str().unwrap().to_owned()));
@@ -177,7 +173,7 @@ impl BuildScript {
         data.insert("target", to_json(target.to_str().unwrap().to_owned()));
         data.insert("time", to_json(addon.time.to_string()));
         for command in steps {
-            execute(&p, &crate::template::render(&command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
+            execute(&p, crate::template::render(command, &data), &state, self.show_output, Some(&mut pbm.lock().unwrap()))?;
         }
         Ok(())
     }
@@ -206,13 +202,13 @@ pub fn run(p: &crate::project::Project, state: &State) -> Result<(), Error> {
     if commands.is_empty() {return Ok(())};
     println!("  {} {}", "Starting".green().bold(), &name);
     for command in commands {
-        execute(&p, &p.render(&command), &state, true, None)?;
+        execute(&p, p.render(&command), &state, true, None)?;
     }
     println!("  {} {}", "Finished".green().bold(), &name);
     Ok(())
 }
 
-fn execute(p: &crate::project::Project, command: &String, state: &State, output: bool, pb: Option<&mut ScriptStatus>) -> Result<(), Error> {
+fn execute(p: &crate::project::Project, command: String, state: &State, output: bool, pb: Option<&mut ScriptStatus>) -> Result<(), Error> {
     let mut name = command.clone();
 
     let prefix = match &pb {
@@ -233,24 +229,24 @@ fn execute(p: &crate::project::Project, command: &String, state: &State, output:
                 Some(v) => crate::utilities::run(&v, &mut args)?,
                 None => return Err(error!("Unknown Utility: {}", &name))
             };
-            if let Some(_) = &pb {
-                &pb.unwrap().pb().tick();
+            if pb.is_some() {
+                pb.unwrap().pb().tick();
             }
             if output {println!("{}      {} {}", prefix, "Done".green().bold(), &name)};
         },
         '!' => {
             if output {println!("{}    {} {}", prefix, "Script".green().bold(), &name)};
             p.script(&name, &state)?;
-            if let Some(_) = &pb {
-                &pb.unwrap().pb().tick();
+            if pb.is_some() {
+                pb.unwrap().pb().tick();
             }
             if output {println!("{}      {} {}", prefix, "Done".green().bold(), &name)};
         },
         _   => {
             let cmd = command.clone().replace("\\", "\\\\");
             if output {println!("{} {} {}", prefix, "Executing".green().bold(), &cmd.bold())};
-            if let Some(_) = &pb {
-                &pb.unwrap().pb().tick();
+            if pb.is_some() {
+                pb.unwrap().pb().tick();
             }
             let shell = Exec::shell(&command).capture().unwrap_or_print();
             let out = &shell.stdout_str();

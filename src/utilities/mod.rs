@@ -29,7 +29,7 @@ impl FromStr for Utility {
 }
 
 pub fn find(utility: &str) -> Option<Utility> {
-    return match utility {
+    match utility {
         "armake" => Some(Utility::Armake),
         "convertproject" => Some(Utility::ConvertProject),
         "template" => Some(Utility::Template),
@@ -41,7 +41,7 @@ pub fn find(utility: &str) -> Option<Utility> {
 
 pub fn run(utility: &Utility, args: &mut Vec<String>) -> Result<(), std::io::Error> {
     #[allow(unreachable_patterns)]
-    return match utility {
+    match utility {
         Utility::Armake => armake::run(args),
         Utility::ConvertProject => convert::run(),
         Utility::Template => {
