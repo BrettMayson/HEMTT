@@ -68,8 +68,10 @@ impl BuildScript {
         let mut steps = &self.steps;
         let mut pb = ScriptStatus::new();
         let pbm = Arc::new(Mutex::new(&mut pb));
-        if cfg!(windows) && !self.steps_windows.is_empty() {
-            steps = &self.steps_windows;
+        if cfg!(windows) {
+            if !self.steps_windows.is_empty() {
+                steps = &self.steps_windows;
+            }
         } else if !self.steps_linux.is_empty() {
             steps = &self.steps_linux;
         }
