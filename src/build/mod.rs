@@ -30,7 +30,7 @@ pub fn modtime(addon: &Path) -> Result<SystemTime, Error> {
     Ok(recent)
 }
 
-pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<BuildResult, Error> {
+pub fn addons(p: &crate::project::Project, addons: &[PathBuf]) -> Result<BuildResult, Error> {
     green!("Building", addons.len());
     let mut pb = ProgressBar::new(addons.len() as u64);
     pb.show_speed = false;
@@ -43,7 +43,7 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
         let name = entry.file_name().unwrap().to_str().unwrap().to_owned();
         let mut target = entry.parent().unwrap().to_path_buf();
         if p.prefix.is_empty() {
-            yellow!("No Prefix", format!("{}", &name));
+            yellow!("No Prefix", &name.to_string());
             target.push(&format!("{}.pbo", &name));
         } else {
             target.push(&format!("{}_{}.pbo", p.prefix, &name));
@@ -54,7 +54,7 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
         let pboresult = PBOResult::new(
             entry.clone(),
             target.clone(),
-            ((elapsed.as_secs() as u128) * 1000) + (elapsed.subsec_millis() as u128),
+            (u128::from(elapsed.as_secs()) * 1000) + u128::from(elapsed.subsec_millis()),
         );
         match buildresult {
             0 => result.lock().unwrap().skipped.push(pboresult),
@@ -71,10 +71,10 @@ pub fn addons(p: &crate::project::Project, addons: &Vec<PathBuf>) -> Result<Buil
         _ => "Built".yellow().bold()
     }, buildresult.built.len(), repeat!(" ", 50)));
     println!();
-    if buildresult.failed.len() != 0 {
+    if !buildresult.failed.is_empty() {
         red!("Failed", format!("{} {:?}", buildresult.failed.len(), buildresult.failed));
     }
-    if buildresult.skipped.len() != 0 {
+    if !buildresult.skipped.is_empty() {
         white!("Skipped", buildresult.skipped.len());
     }
     Ok(buildresult)
@@ -108,7 +108,7 @@ fn _build(p: &crate::project::Project, source: &PathBuf, target: &PathBuf, pbm: 
     let mut outf = File::create(target)?;
 
     let mut include = p.include.to_owned();
-    include.push(PathBuf::from("."));
+    include.insert(0, PathBuf::from("."));
 
     if let Err(ref error) = armake2::pbo::cmd_build(
         source.to_path_buf(),   // Source

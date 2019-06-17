@@ -85,15 +85,10 @@ pub struct SemVer {
 }
 impl SemVer {
     pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
-        SemVer {
-            major: major,
-            minor: minor,
-            patch: patch,
-            build: build,
-        }
+        SemVer { major, minor, patch, build }
     }
     pub fn to_string(&self) -> String {
-        return if self.build.is_empty() {
+        if self.build.is_empty() {
             format!("{}.{}.{}", self.major, self.minor, self.patch)
         } else {
             format!("{}.{}.{}.{}", self.major, self.minor, self.patch, self.build)
@@ -135,19 +130,17 @@ impl Project {
         if self.keyname.is_empty() {
             if self.reuse_private_key {
                 self.prefix.clone()
+            } else if self.prefix.is_empty() {
+                self.version.clone().unwrap().to_string()
             } else {
-                if self.prefix.is_empty() {
-                    format!("{}", &self.version.clone().unwrap())
-                } else {
-                    format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
-                }
+                format!("{}_{}", &self.prefix, &self.version.clone().unwrap())
             }
         } else {
             render(&self.keyname, &self.template_data)
         }
     }
 
-    pub fn get_signame(&self, pbo: &String) -> String {
+    pub fn get_signame(&self, pbo: &str) -> String {
         if self.signame.is_empty() {
             format!("{}.{}.bisign", pbo, &self.version.clone().unwrap())
         } else {
@@ -167,7 +160,7 @@ impl Project {
         crate::build::script::run(&self, &state)
     }
 
-    pub fn script(&self, name: &String, state: &State) -> Result<(), Error> {
+    pub fn script(&self, name: &str, state: &State) -> Result<(), Error> {
         if self.scripts.contains_key(name) {
             let script = self.scripts.get(name).unwrap();
             if script.foreach && state.stage == crate::state::Stage::Script {
@@ -182,16 +175,16 @@ impl Project {
         Ok(())
     }
 
-    pub fn render(&self, text: &String) -> String {
+    pub fn render(&self, text: &str) -> String {
         crate::template::render(text, &self.template_data)
     }
 }
 
 pub fn init(name: String, prefix: String, author: String) -> Result<Project, Error> {
     let p = Project {
-        name: name,
-        prefix: prefix,
-        author: author,
+        name,
+        prefix,
+        author,
         version: None,
         files: vec!["mod.cpp".to_owned()],
         include: Vec::new(),
@@ -246,7 +239,7 @@ pub fn search_for(s: &'static str) -> Result<PathBuf, Error> {
     let mut dir = std::env::current_dir().unwrap_or_print();
     loop {
         let mut search = dir.clone();
-        search.push(s.clone());
+        search.push(s);
         if search.exists() {
             return Ok(search);
         }
@@ -292,11 +285,11 @@ pub fn get_version() -> Result<SemVer, Error> {
         let f = BufReader::new(File::open("addons/main/script_version.hpp")?);
         for line in f.lines() {
             let line = line?;
-            let mut split = line.split(" ");
+            let mut split = line.split(' ');
             let define = split.next().unwrap();
             if define != "#define" { continue; }
             let key = split.next().unwrap();
-            let value = split.next().unwrap().clone();
+            let value = split.next().unwrap();
             match key {
                 "MAJOR" => {
                     major = value.parse().unwrap_or_print();

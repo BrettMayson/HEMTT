@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use crate::project;
 use crate::error::*;
 
-pub fn clear_pbos(p: &project::Project, addons: &Vec<PathBuf>) -> Result<(), Error> {
+pub fn clear_pbos(p: &project::Project, addons: &[PathBuf]) -> Result<(), Error> {
     let count = Arc::new(Mutex::new(0));
     addons.par_iter()
         .for_each(|folder| {
@@ -41,7 +41,7 @@ pub fn clear_pbo(p: &project::Project, source: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn clear_release(version: &String) -> Result<(), Error> {
+pub fn clear_release(version: &str) -> Result<(), Error> {
     if Path::new(&format!("releases/{}", version)).exists() {
         println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
         fs::remove_dir_all(format!("releases/{}", version))?;
@@ -121,9 +121,9 @@ br#"#include "\x\cba\addons\main\script_macros_common.hpp"
     Ok(())
 }
 
-pub fn script_component(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
+pub fn script_component(addon: &str, p: &project::Project) -> Result<(), std::io::Error> {
     if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
-        create_addon(&addon, &p)?;
+        create_addon(addon, &p)?;
     }
     let mut out = File::create(format!("addons/{}/script_component.hpp", addon))?;
     out.write_fmt(format_args!(
@@ -147,7 +147,7 @@ r#"#define COMPONENT {0}
     Ok(())
 }
 
-pub fn pboprefix(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
+pub fn pboprefix(addon: &str, p: &project::Project) -> Result<(), std::io::Error> {
     if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
         create_addon(&addon, &p)?;
     }
@@ -158,7 +158,7 @@ pub fn pboprefix(addon: &String, p: &project::Project) -> Result<(), std::io::Er
     Ok(())
 }
 
-pub fn configcpp(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
+pub fn configcpp(addon: &str, p: &project::Project) -> Result<(), std::io::Error> {
     if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
         create_addon(&addon, &p)?;
     }
@@ -186,7 +186,7 @@ r#"#include "script_component.hpp"
     Ok(())
 }
 
-pub fn xeh(addon: &String, p: &project::Project) -> Result<(), std::io::Error> {
+pub fn xeh(addon: &str, p: &project::Project) -> Result<(), std::io::Error> {
     if !Path::new(format!("addons/{}", &addon).as_str()).exists() {
         create_addon(&addon, &p)?;
     }
@@ -247,7 +247,7 @@ pub fn create_include() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-pub fn create_addon(addon: &String, _p: &project::Project) -> Result<(), std::io::Error> {
+pub fn create_addon(addon: &str, _p: &project::Project) -> Result<(), std::io::Error> {
     if !Path::new("addons").exists() {
         fs::create_dir("addons")?;
     }
