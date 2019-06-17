@@ -130,7 +130,7 @@ struct Package {
 }
 impl Package {
     fn transfer(mut self) -> Package {
-        if self.keys.len() != 0 {
+        if !self.keys.is_empty() {
             let keys = &self.keys;
             self.containers.push(Container {
                 keys: keys.to_vec(),

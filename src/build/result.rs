@@ -24,9 +24,9 @@ pub struct PBOResult {
 impl PBOResult {
     pub fn new(source: PathBuf, target: PathBuf, time: u128) -> PBOResult {
         PBOResult{
-            source: source,
-            target: target,
-            time: time,
+            source,
+            target,
+            time,
         }
     }
 }

@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use crate::build::sign;
 use crate::error::*;
 
-pub fn release(p: &crate::project::Project, version: &String) -> Result<(), Error> {
+pub fn release(p: &crate::project::Project, version: &str) -> Result<(), Error> {
     let modname = p.get_modname();
     if !Path::new(&format!("releases/{}/@{}/addons", version, modname)).exists() {
         fs::create_dir_all(format!("releases/{}/@{}/addons", version, modname))?;

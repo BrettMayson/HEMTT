@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::Error;
 use std::path::PathBuf;
 
-pub fn copy(path_posix: &String, addonsfolder: &String, pbo_filename: &String) -> Result<bool, Error> {
+pub fn copy(path_posix: &str, addonsfolder: &str, pbo_filename: &str) -> Result<bool, Error> {
     fs::copy(path_posix, format!("{}/{}", addonsfolder, pbo_filename))?;
     Ok(true)
 }
@@ -24,8 +24,8 @@ pub fn sign_version(v: u8) -> BISignVersion {
 }
 
 pub fn sign(
-    pbo_filename: &String,
-    addonsfolder: &String,
+    pbo_filename: &str,
+    addonsfolder: &str,
     p: &crate::project::Project,
     key: &armake2::sign::BIPrivateKey,
 ) -> Result<bool, Error> {
@@ -34,14 +34,14 @@ pub fn sign(
             .expect("Failed to read PBO");
 
     let sig = key.sign(&pbo, sign_version(p.sigversion));
-    let signame = p.get_signame(&pbo_filename);
+    let signame = p.get_signame(pbo_filename);
     sig.write(&mut File::create(PathBuf::from(format!("{}/{}", addonsfolder, signame))).unwrap())?;
 
     Ok(true)
 }
 
 pub fn copy_sign(
-    folder: &String,
+    folder: &str,
     path: &PathBuf,
     p: &crate::project::Project,
     key: &armake2::sign::BIPrivateKey,
