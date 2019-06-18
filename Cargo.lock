@@ -1975,7 +1975,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "zip"
 version = "0.5.2"
-source = "git+https://github.com/jonpas/zip-rs?branch=flate2#b171b915f820c139ce369b5ae30f41eb8519cd38"
+source = "git+https://github.com/jonpas/zip-rs?branch=flate2#c30d7c3d10b39634125d637da24b4be5d32f465f"
 dependencies = [
  "bzip2 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
