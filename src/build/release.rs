@@ -99,7 +99,8 @@ pub fn release(p: &crate::project::Project, version: &str) -> Result<(), Error> 
             .collect();
         opts.par_iter().for_each(|entry| {
             let addonfolder = if p.folder_optionals {
-                let optname = entry.path().file_stem().unwrap().to_str().unwrap().to_owned();
+                let optname = entry.path().file_stem().unwrap().to_str().unwrap().to_owned()
+                    .replace(&format!("{}_", p.prefix), &format!("{}_", modname));
                 let optfolder = iformat!("{addonsfolder}/@{optname}/addons", addonsfolder, optname);
                 if !Path::new(&optfolder).exists() {
                     fs::create_dir_all(&optfolder).unwrap_or_print();
