@@ -111,32 +111,26 @@ macro_rules! niceprintln {
     }
 }
 
-#[macro_export]
-macro_rules! finishpb {
-    ($pb:expr, $c:ident, $s:expr, $m:expr) => {{
-        let message =  format!("{}{}", $m, crate::repeat!(" ", 60));
-        $pb.finish_print(&crate::nicefmt!($c, $s, message));
-        println!();
-    }}
-}
-
-// Errors and Warnings
-
-#[macro_export]
-macro_rules! error {
-    ($($arg:tt)*) => (
-        std::io::Error::new(std::io::ErrorKind::Other, format!($($arg)*))
-    )
-}
-
-#[macro_export]
-macro_rules! warn {
-    ($($arg:tt)*) => {
-        eprintln!("{}: {}", "warning".yellow().bold(), format!($($arg)*))
-    }
-}
-
 // Generic
+
+#[macro_export]
+macro_rules! ask {
+    ($q:expr) => {{
+        let mut x = String::new();
+        while x.is_empty() {
+            x = if let question::Answer::RESPONSE(n) = question::Question::new($q).ask().unwrap() { n } else { unreachable!() };
+        }
+        x
+    }};
+    ($q:expr, $d:expr) => {{
+        let mut x = String::new();
+        while x.is_empty() {
+            x = if let question::Answer::RESPONSE(n) = question::Question::new($q)
+                .default(question::Answer::RESPONSE($d.to_owned())).show_defaults().ask().unwrap() { n } else { unreachable!() };
+        }
+        x
+    }};
+}
 
 #[macro_export]
 macro_rules! repeat {
