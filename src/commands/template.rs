@@ -7,6 +7,8 @@ use regex::{Regex, Captures};
 use rlua::Lua;
 use walkdir::WalkDir;
 
+use crate::error::HEMTTError;
+
 pub struct Template {}
 
 impl Template {
@@ -43,7 +45,6 @@ impl Template {
         globals.set("read_file", lua_read_file).unwrap();
 
         let lua_copy = lua_ctx.create_function(|ctx, (src, dst): (String, String)| {
-            // TODO process placeholders on copy
             let src_path = Path::new(&src);
             if !src_path.exists() { return Ok(()); }
             if src_path.is_dir() {
@@ -122,16 +123,16 @@ impl crate::commands::Command for Template {
         )
     }
 
-    fn run(&self, a: &clap::ArgMatches, p: crate::project::Project) -> bool {
+    fn run(&self, a: &clap::ArgMatches, p: crate::project::Project) -> Result<(), HEMTTError> {
         if p.template == "none" {
-            return false;
+            return Ok(());
         }
         match a.subcommand() {
             ("addon", Some(args)) => {
                 let name = args.value_of("name").unwrap();
                 if Path::new(&format!("addons/{}", name)).exists() {
                     println!("addons/{} already exists", name);
-                    return false;
+                    return Ok(());
                 }
                 self.run_script("addon", |lua_ctx| {
                     let globals = lua_ctx.globals();
@@ -152,7 +153,7 @@ impl crate::commands::Command for Template {
             },
             _ => println!("Not implemented"),
         }
-        true
+        Ok(())
     }
 }
 

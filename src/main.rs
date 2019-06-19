@@ -5,8 +5,12 @@ use std::collections::HashMap;
 #[macro_use]
 pub mod macros;
 
+mod build;
 mod commands;
+mod error;
 mod project;
+
+use crate::error::PrintableError;
 
 fn main() {
     let mut app = App::new("HEMTT")
@@ -20,6 +24,7 @@ fn main() {
     // Add commands here
     commands.push(Box::new(commands::Init {}));
     commands.push(Box::new(commands::Template {}));
+    commands.push(Box::new(commands::Build {}));
 
     for command in commands.iter() {
         let (name, sub) = command.register();
@@ -33,9 +38,9 @@ fn main() {
             match hash_commands.get(v) {
                 Some(c) => {
                     if c.require_project() {
-                        c.run(matches.subcommand_matches(v).unwrap(), project::Project::read().unwrap());
+                        c.run(matches.subcommand_matches(v).unwrap(), project::Project::read().unwrap()).unwrap_or_print();
                     } else {
-                        c.run_no_project(matches.subcommand_matches(v).unwrap());
+                        c.run_no_project(matches.subcommand_matches(v).unwrap()).unwrap_or_print();
                     }
                 },
                 None => println!("No command"),

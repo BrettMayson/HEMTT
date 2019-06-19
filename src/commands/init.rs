@@ -3,11 +3,11 @@ use std::fs::File;
 use std::io::Write;
 
 use crate::project::Project;
+use crate::error::HEMTTError;
 
 pub struct Init {}
 
 impl crate::commands::Command for Init {
-
     fn register(&self) -> (&str, clap::App) {
         ("init",
             clap::SubCommand::with_name("init")
@@ -17,19 +17,19 @@ impl crate::commands::Command for Init {
 
     fn require_project(&self) -> bool { false }
 
-    fn run_no_project(&self, _: &clap::ArgMatches) -> bool {
+    fn run_no_project(&self, _: &clap::ArgMatches) -> Result<(), HEMTTError> {
         let name = ask!("Project Name >");
         let prefix = ask!("Prefix >");
         let author = ask!("Author >");
         let template = ask!("Template >", "cba");
 
         // Create settings file in TOML
-        fs::create_dir_all("./hemtt/");
+        fs::create_dir_all("./hemtt/")?;
         let project = Project {
             name, prefix, author, template: template.clone()
         };
-        let mut out = File::create("./hemtt/dev.toml").unwrap();
-        out.write_fmt(format_args!("{}", toml::to_string(&project).unwrap()));
+        let mut out = File::create("./hemtt/dev.toml")?;
+        out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
 
         // clone template
         match template.as_ref() {
@@ -46,6 +46,6 @@ impl crate::commands::Command for Init {
                 };
             }
         }
-        true
+        Ok(())
     }
 }
