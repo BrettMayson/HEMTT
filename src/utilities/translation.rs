@@ -121,11 +121,11 @@ struct Container {
 #[derive(Debug, Deserialize)]
 struct Package {
     #[serde(rename="Container")]
-    #[serde(default="empty_containers")]
+    #[serde(default="Vec::new")]
     pub containers: Vec<Container>,
 
     #[serde(rename="Key")]
-    #[serde(default="empty_keys")]
+    #[serde(default="Vec::new")]
     pub keys: Vec<Key>
 }
 impl Package {
@@ -144,12 +144,4 @@ impl Package {
 struct Project {
     #[serde(rename="Package")]
     pub packages: Vec<Package>
-}
-
-fn empty_containers() -> Vec<Container> {
-    vec![]
-}
-
-fn empty_keys() -> Vec<Key> {
-    vec![]
 }
