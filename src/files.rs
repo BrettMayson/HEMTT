@@ -1,4 +1,5 @@
 use colored::*;
+use glob::glob;
 use rayon::prelude::*;
 use reqwest;
 
@@ -41,18 +42,48 @@ pub fn clear_pbo(p: &project::Project, source: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn clear_release(version: &str) -> Result<(), Error> {
+pub fn clear_release(p: &project::Project, version: &str) -> Result<(), Error> {
     if Path::new(&format!("releases/{}", version)).exists() {
         println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
         fs::remove_dir_all(format!("releases/{}", version))?;
     }
+
+    // Keys
+    let keyname = p.get_keyname();
+    let keypath = &format!("releases/keys/{}.bikey", keyname);
+    let pkeypath = &format!("releases/keys/{}.biprivatekey", keyname);
+
+    if Path::new(keypath).exists() {
+        println!("  {} old key {}", "Cleaning".yellow().bold(), keyname);
+        fs::remove_file(keypath)?;
+
+        if !p.reuse_private_key {
+            if Path::new(pkeypath).exists() {
+                fs::remove_file(pkeypath)?;
+            }
+        }
+    }
+
     Ok(())
 }
 
-pub fn clear_releases() -> Result<(), Error> {
+pub fn clear_releases(p: &project::Project) -> Result<(), Error> {
     println!("  {} all releases", "Cleaning".yellow().bold());
     if Path::new("releases").exists() {
-        fs::remove_dir_all("releases")?;
+        if !p.reuse_private_key {
+            fs::remove_dir_all("releases")?;
+        } else {
+            for entry in glob("releases/*.*.*").unwrap_or_print() {
+                if let Ok(path) = entry {
+                    fs::remove_dir_all(path)?;
+                }
+            }
+            for entry in glob("releases/keys/*.bikey").unwrap_or_print() {
+                if let Ok(path) = entry {
+                    fs::remove_file(path)?;
+                }
+            }
+        }
     }
     Ok(())
 }

@@ -38,7 +38,7 @@ pub fn release(p: &crate::project::Project, version: &str) -> Result<(), Error> 
     let key = if p.reuse_private_key {
         // Make a new keypair if there isn't one already
         if !Path::new(&format!("releases/keys/{}.bikey", keyname)).exists() {
-            println!("    {} {}.bikey", "KeyGen".green().bold(), keyname);
+            println!("    {} {}", "KeyGen".green().bold(), keyname);
 
             // Generate and write the keypair to disk in the current directory
             cmd_keygen(PathBuf::from(&keyname))?;
