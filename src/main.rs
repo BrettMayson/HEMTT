@@ -6,11 +6,14 @@ use std::collections::HashMap;
 pub mod macros;
 
 mod build;
-mod checks;
 mod commands;
 mod error;
 mod flow;
 mod project;
+mod render;
+
+pub use build::prebuild::render::RenderedFiles;
+pub use error::HEMTTError;
 
 use crate::error::PrintableError;
 
@@ -50,4 +53,15 @@ fn main() {
         },
         None => println!("No command"),
     }
+}
+
+use std::path::Path;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
+pub fn get_line_at(path: &Path, line_num: usize) -> Result<String, HEMTTError> {
+    let file = File::open(path)?;
+    let content = BufReader::new(&file);
+    let mut lines = content.lines();
+    Ok(lines.nth(line_num - 1).unwrap()?)
 }

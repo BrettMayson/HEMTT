@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Write;
 
 use crate::project::Project;
-use crate::error::HEMTTError;
+use crate::HEMTTError;
 
 pub struct Init {}
 

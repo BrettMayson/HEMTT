@@ -182,8 +182,8 @@ The default is set according to the following table:
 
 | `reuse_private_key` value | Default `keyname`         |
 | ------------------------- | ------------------------- |
-| `false`                   | `{{prefix}}_{{version}}`  |
-| `true`                    | `{{prefix}}`              |
+| `false`                   | `{{prefix}}}_{{version}}`  |
+| `true`                    | `{{prefix}}}`              |
 
 ```json
 "keyname": "my_key"

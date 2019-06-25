@@ -144,9 +144,9 @@ macro_rules! fileerror {
         let sep = "|".blue().bold();
         let end = "=".blue().bold();
         let file = &$e.file;
-        let line = &$e.line.to_string().blue().bold();
+        let line = &$e.line.unwrap().to_string().blue().bold();
         let space = repeat!(" ", line.len() + 2);
-        crate::iprintln!("{style}: {status}\n  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n{space}{end}\n", style, status, arrow, file, sep, line, space, content, end);
+        crate::iprintln!("{style}: {status}\n  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n", style, status, arrow, file, sep, line, space, content);
     }
 }
 

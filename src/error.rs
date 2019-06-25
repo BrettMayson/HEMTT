@@ -16,7 +16,8 @@ pub struct FileErrorLineNumber {
     pub file: String,
     pub content: String,
     pub error: String,
-    pub line: usize,
+    pub line: Option<usize>,
+    pub col: Option<usize>,
     pub note: Option<String>,
 }
 
@@ -59,5 +60,41 @@ impl From<std::io::Error> for HEMTTError {
 impl From<toml::ser::Error> for HEMTTError {
     fn from(err: toml::ser::Error) -> HEMTTError {
         HEMTTError::TOML(err)
+    }
+}
+
+impl From<handlebars::TemplateRenderError> for HEMTTError {
+    fn from(err: handlebars::TemplateRenderError) -> HEMTTError {
+        match err {
+            handlebars::TemplateRenderError::RenderError(e) => {
+                if let Some(_) = e.line_no {
+                    HEMTTError::LINENO(FileErrorLineNumber {
+                        error: e.desc,
+                        line: e.line_no,
+                        col: e.column_no,
+                        note: None,
+                        file: "".to_string(),
+                        content: "".to_string(),
+                    })
+                } else {
+                    HEMTTError::GENERIC("Render error".to_string(), e.desc)
+                }
+            },
+            handlebars::TemplateRenderError::TemplateError(e) => {
+                if let Some(_) = e.line_no {
+                    HEMTTError::LINENO(FileErrorLineNumber {
+                        error: e.reason.to_string(),
+                        line: e.line_no,
+                        col: e.column_no,
+                        note: None,
+                        file: "".to_string(),
+                        content: "".to_string(),
+                    })
+                } else {
+                    HEMTTError::GENERIC("Render error".to_string(), e.reason.to_string())
+                }
+            },
+            _ => { unimplemented!() }
+        }
     }
 }

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::project::Project;
-use crate::error::HEMTTError;
+use crate::HEMTTError;
 use crate::build;
 use crate::flow::Flow;
 
@@ -19,7 +19,7 @@ impl crate::commands::Command for Build {
         )
     }
 
-    fn run(&self, _: &clap::ArgMatches, p: Project) -> Result<(), HEMTTError> {
+    fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = build::get_addons(build::AddonLocation::Addons)?;
         if Path::new(&build::folder_name(&build::AddonLocation::Optionals)).exists() {
             addons.extend(build::get_addons(build::AddonLocation::Optionals)?);
@@ -32,15 +32,17 @@ impl crate::commands::Command for Build {
         }
         let flow = Flow {
             checks: vec![
-                Box::new(crate::checks::names::NotEmpty {}),
-                Box::new(crate::checks::names::ValidName {}),
-                Box::new(crate::checks::preprocess::Preprocess {}),
+                Box::new(crate::build::prebuild::render::Render {}),
+                Box::new(crate::build::checks::names::NotEmpty {}),
+                Box::new(crate::build::checks::names::ValidName {}),
             ],
-            pre_build: vec![],
+            pre_build: vec![
+                Box::new(crate::build::prebuild::preprocess::Preprocess {}),
+            ],
             post_build: vec![],
             release: vec![],
         };
-        flow.execute(addons, &p)?;
+        flow.execute(addons, &mut p)?;
         Ok(())
     }
 }

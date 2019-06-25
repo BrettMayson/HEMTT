@@ -1,7 +1,7 @@
 use regex::Regex;
 
 use crate::flow::{Task, Report};
-use crate::error::HEMTTError;
+use crate::HEMTTError;
 use crate::project::Project;
 
 pub struct NotEmpty {}
@@ -9,8 +9,8 @@ impl Task for NotEmpty {
     fn chk_can_run(&self, _addon: &crate::build::Addon, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &crate::build::Addon, _p: &Project) -> Result<Report, HEMTTError> {
-        let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.collect::<Vec<_>>().len() == 0;
+    fn chk_run(&self, addon: &crate::build::Addon, _p: &mut Project) -> Result<Report, HEMTTError> {
+        let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         let mut report = Report::new();
         if empty {
             report.can_proceed = false;
@@ -24,7 +24,7 @@ impl Task for ValidName {
     fn chk_can_run(&self, _addon: &crate::build::Addon, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &crate::build::Addon, p: &Project) -> Result<Report, HEMTTError> {
+    fn chk_run(&self, addon: &crate::build::Addon, p: &mut Project) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let re = Regex::new(r"^([A-z\-]+)$").unwrap();
         if !re.is_match(&addon.name) {

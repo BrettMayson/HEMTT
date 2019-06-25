@@ -1,4 +1,13 @@
-use crate::error::HEMTTError;
+use std::collections::BTreeMap;
+
+use serde_json::value::{Value as Json};
+use handlebars::to_json;
+
+pub mod checks;
+pub mod prebuild;
+
+use crate::HEMTTError;
+use crate::project::Project;
 
 #[derive(Debug, Clone)]
 pub enum AddonLocation {
@@ -14,6 +23,13 @@ pub struct Addon {
 impl Addon {
     pub fn folder(&self) -> String {
         format!("{}/{}", folder_name(&self.location), self.name)
+    }
+
+    pub fn get_variables(&self, p: &Project) -> BTreeMap<&'static str, Json> {
+        let mut vars = p.get_variables();
+        vars.insert("folder", to_json(self.folder()));
+        vars.insert("addon", to_json(self.name.clone()));
+        vars
     }
 }
 

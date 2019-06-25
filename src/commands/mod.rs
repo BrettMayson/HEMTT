@@ -8,7 +8,7 @@ mod build;
 pub use build::Build;
 
 use crate::project::Project;
-use crate::error::HEMTTError;
+use crate::HEMTTError;
 
 pub trait Command {
     // (name, description)

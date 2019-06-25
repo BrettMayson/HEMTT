@@ -7,7 +7,7 @@ use regex::{Regex, Captures};
 use rlua::Lua;
 use walkdir::WalkDir;
 
-use crate::error::HEMTTError;
+use crate::HEMTTError;
 
 pub struct Template {}
 
@@ -65,17 +65,14 @@ impl Template {
                     let mut variables: HashMap<&str, String> = HashMap::new();
                     // TODO replace a with type ascription
                     let a: Result<String,_> = ctx.globals().get("new_addon");
-                    match a {
-                        Ok(v) => {
-                            variables.insert("addon", v.clone());
-                            variables.insert("ADDON", v.to_uppercase());
-                        },
-                        Err(_) => {},
-                    };
+                    if let Ok(v) = a {
+                        variables.insert("addon", v.clone());
+                        variables.insert("ADDON", v.to_uppercase());
+                    }
                     let contents = std::fs::read_to_string(path.path()).unwrap();
                     let result = re.replace_all(&contents, |caps: &Captures| {
                         let dft = String::from(&caps[1]);
-                        format!("{}", variables.get(&caps[1]).unwrap_or_else(|| &dft))
+                        variables.get(&caps[1]).unwrap_or_else(|| &dft).to_string()
                     });
                     let mut out = File::create(path.path()).unwrap();
                     out.write_all(result.into_owned().as_bytes()).unwrap();
