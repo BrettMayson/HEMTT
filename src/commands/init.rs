@@ -25,9 +25,9 @@ impl crate::commands::Command for Init {
 
         // Create settings file in TOML
         fs::create_dir_all("./hemtt/")?;
-        let project = Project {
-            name, prefix, author, template: template.clone()
-        };
+        let project = Project::new(
+            name, prefix, author, template.clone()
+        );
         let mut out = File::create("./hemtt/dev.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
 

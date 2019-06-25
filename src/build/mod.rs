@@ -1,6 +1,6 @@
 use crate::error::HEMTTError;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum AddonLocation {
     Addons,
     Optionals,
@@ -11,12 +11,17 @@ pub struct Addon {
     pub name: String,
     pub location: AddonLocation,
 }
+impl Addon {
+    pub fn folder(&self) -> String {
+        format!("{}/{}", folder_name(&self.location), self.name)
+    }
+}
 
 pub fn folder_name(location: &AddonLocation) -> String {
     String::from(match location {
-        Addons => "addons",
-        Optionals => "optionals",
-        Compats => "compats",
+        AddonLocation::Addons => "addons",
+        AddonLocation::Optionals => "optionals",
+        AddonLocation::Compats => "compats",
     })
 }
 

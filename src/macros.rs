@@ -111,6 +111,45 @@ macro_rules! niceprintln {
     }
 }
 
+#[macro_export]
+macro_rules! warn {
+    ($s:expr, $m:expr) => {
+        use colored::*;
+        let style = "warning".yellow().bold();
+        let status = $s.bold();
+        let message = $m;
+        crate::iprintln!("{style}: {status}\n    {message}\n", style, status, message);
+    }
+}
+
+#[macro_export]
+macro_rules! error {
+    ($s:expr, $m:expr) => {
+        use colored::*;
+        let style = "error".red().bold();
+        let status = $s.bold();
+        let message = $m;
+        crate::iprintln!("{style}: {status}\n    {message}\n", style, status, message);
+    }
+}
+
+#[macro_export]
+macro_rules! fileerror {
+    ($e:expr) => {
+        use colored::*;
+        let style = "error".red().bold();
+        let status = &$e.error.bold();
+        let content = &$e.content;
+        let arrow = "-->".blue().bold();
+        let sep = "|".blue().bold();
+        let end = "=".blue().bold();
+        let file = &$e.file;
+        let line = &$e.line.to_string().blue().bold();
+        let space = repeat!(" ", line.len() + 2);
+        crate::iprintln!("{style}: {status}\n  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n{space}{end}\n", style, status, arrow, file, sep, line, space, content, end);
+    }
+}
+
 // Generic
 
 #[macro_export]

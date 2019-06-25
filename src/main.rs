@@ -6,8 +6,10 @@ use std::collections::HashMap;
 pub mod macros;
 
 mod build;
+mod checks;
 mod commands;
 mod error;
+mod flow;
 mod project;
 
 use crate::error::PrintableError;

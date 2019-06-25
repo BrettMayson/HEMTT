@@ -10,6 +10,19 @@ pub struct Project {
     pub prefix: String,
     pub author: String,
     pub template: String,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "default_include")]
+    pub include: Vec<PathBuf>,
+}
+impl Project {
+    pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
+        Self {
+            name, prefix, author, template,
+
+            include: default_include(),
+        }
+    }
 }
 
 

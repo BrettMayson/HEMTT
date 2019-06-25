@@ -11,19 +11,30 @@ impl<T, E: std::fmt::Debug + std::fmt::Display> PrintableError<T, E> for Result<
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct FileErrorLineNumber {
+    pub file: String,
+    pub content: String,
+    pub error: String,
+    pub line: usize,
+    pub note: Option<String>,
+}
+
 #[derive(Debug)]
 pub enum HEMTTError {
     IO(std::io::Error),
     TOML(toml::ser::Error),
+    GENERIC(String, String),
+    LINENO(FileErrorLineNumber),
 }
 
 impl std::fmt::Display for HEMTTError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            // Both underlying errors already impl `Display`, so we defer to
-            // their implementations.
             HEMTTError::IO(ref err) => write!(f, "IO error: {}", err),
             HEMTTError::TOML(ref err) => write!(f, "TOML error: {}", err),
+            HEMTTError::GENERIC(ref s, ref _v) => write!(f, "{}", s),
+            HEMTTError::LINENO(ref err) => write!(f, "{}", err.error),
         }
     }
 }
@@ -31,12 +42,10 @@ impl std::fmt::Display for HEMTTError {
 impl std::error::Error for HEMTTError {
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
-            // N.B. Both of these implicitly cast `err` from their concrete
-            // types (either `&io::Error` or `&num::ParseIntError`)
-            // to a trait object `&Error`. This works because both error types
-            // implement `Error`.
             HEMTTError::IO(ref err) => Some(err),
             HEMTTError::TOML(ref err) => Some(err),
+            HEMTTError::GENERIC(ref _s, ref _v) => Some(self),
+            HEMTTError::LINENO(ref _e) => Some(self),
         }
     }
 }
