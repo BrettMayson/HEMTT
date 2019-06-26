@@ -320,7 +320,7 @@ fn run_command(args: &Args) -> Result<(), Error> {
             .repo_owner("SynixeBrett")
             .repo_name("HEMTT")
             .target(&target)
-            .bin_name("hemtt")
+            .bin_name(if cfg!(windows) {"hemtt.exe"} else {"hemtt"})
             .show_download_progress(true)
             .current_version(&VERSION())
             .build().unwrap()
