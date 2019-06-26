@@ -1,17 +1,17 @@
 use regex::Regex;
+use indicatif::ProgressBar;
 
-use crate::flow::{Task, Report};
-use crate::HEMTTError;
-use crate::project::Project;
+use crate::{HEMTTError, Project, Task, Addon, Report};
 
+#[derive(Clone)]
 pub struct NotEmpty {}
 impl Task for NotEmpty {
-    fn chk_can_run(&self, _addon: &crate::build::Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &crate::build::Addon, _p: &mut Project) -> Result<Report, HEMTTError> {
-        let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
+    fn chk_run(&self, addon: &Addon, _p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
+        let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         if empty {
             report.can_proceed = false;
         }
@@ -19,12 +19,13 @@ impl Task for NotEmpty {
     }
 }
 
+#[derive(Clone)]
 pub struct ValidName {}
 impl Task for ValidName {
-    fn chk_can_run(&self, _addon: &crate::build::Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &crate::build::Addon, p: &mut Project) -> Result<Report, HEMTTError> {
+    fn chk_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let re = Regex::new(r"^([A-z\-]+)$").unwrap();
         if !re.is_match(&addon.name) {

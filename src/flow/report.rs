@@ -1,5 +1,6 @@
 use crate::error::{HEMTTError};
 
+#[derive(Debug)]
 pub struct Report {
     pub warnings: Vec<HEMTTError>,
     pub errors: Vec<HEMTTError>,
@@ -15,11 +16,22 @@ impl Report {
         }
     }
 
+    pub fn absorb(&mut self, mut other: Self) {
+        self.warnings.append(&mut other.warnings);
+        self.can_proceed = self.can_proceed && other.can_proceed;
+        for error in other.errors {
+            self.unique_error(error);
+        }
+    }
+
     pub fn display(&self) {
         for warning in &self.warnings {
             match warning {
                 HEMTTError::GENERIC(s, v) => {
                     warn!(s, v);
+                },
+                HEMTTError::LINENO(error) => {
+                    filewarn!(error);
                 },
                 _ => {
 
@@ -29,7 +41,10 @@ impl Report {
         for error in &self.errors {
             match error {
                 HEMTTError::GENERIC(s, v) => {
-                    error!(s, v);
+                    errormessage!(s, v);
+                },
+                HEMTTError::SIMPLE(s) => {
+                    error!(s);
                 },
                 HEMTTError::LINENO(error) => {
                     fileerror!(error);

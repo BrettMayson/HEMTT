@@ -5,17 +5,22 @@ authors = ["Brett Mayson <brett@mayson.io>"]
 edition = "2018"
 
 [dependencies]
-armake2 = { git = "https://github.com/KoffeinFlummi/armake2", branch = "master" }
+armake2 = { path = "/home/brett/Documents/armake2" }
 chrono = "0.4"
 clap = "*"
 colored = "1.8"
-config = "*"
+config = "0.9"
+crossbeam = "*"
 docopt = "1"
 fs_extra = "*"
 git2 = "0.9"
 glob = "0.3"
-handlebars = "2.0"
+handlebars = "1.1"
+indicatif = "*"
+lazy_static = "*"
+linked-hash-map = "0.5"
 num_cpus = "1.10"
+objekt = "*"
 pbr = "1.0"
 question = "*"
 rayon = "1.1"

@@ -1,6 +1,7 @@
 use clap::{App};
 
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 #[macro_use]
 pub mod macros;
@@ -12,10 +13,19 @@ mod flow;
 mod project;
 mod render;
 
-pub use build::prebuild::render::RenderedFiles;
-pub use error::HEMTTError;
+pub use build::prebuild::RenderedFiles;
+pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
+pub use project::Project;
+pub use build::{Addon, AddonLocation};
+pub use flow::{Flow, Report, Task};
 
 use crate::error::PrintableError;
+
+lazy_static::lazy_static! {
+    static ref RENDERED: Mutex<RenderedFiles> = Mutex::new(RenderedFiles::new());
+    static ref CACHED: Mutex<RenderedFiles> = Mutex::new(RenderedFiles::new());
+    static ref REPORTS: Mutex<HashMap<String, Report>> = Mutex::new(HashMap::new());
+}
 
 fn main() {
     let mut app = App::new("HEMTT")
@@ -37,13 +47,15 @@ fn main() {
         hash_commands.insert(name, command);
     }
 
+    // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+
     let matches = app.get_matches();
     match matches.subcommand_name() {
         Some(v) => {
             match hash_commands.get(v) {
                 Some(c) => {
                     if c.require_project() {
-                        c.run(matches.subcommand_matches(v).unwrap(), project::Project::read().unwrap()).unwrap_or_print();
+                        c.run(matches.subcommand_matches(v).unwrap(), Project::read().unwrap_or_print()).unwrap_or_print();
                     } else {
                         c.run_no_project(matches.subcommand_matches(v).unwrap()).unwrap_or_print();
                     }
@@ -53,6 +65,7 @@ fn main() {
         },
         None => println!("No command"),
     }
+    crate::RENDERED.lock().unwrap().clean();
 }
 
 use std::path::Path;

@@ -1,27 +1,26 @@
-use std::collections::{HashMap};
 use std::fs::File;
 use std::path::{Path};
 use std::io::Write;
 
 use walkdir::WalkDir;
+use indicatif::ProgressBar;
 
-use crate::flow::{Task, Report};
-use crate::error::{HEMTTError};
-use crate::project::Project;
+use crate::{HEMTTError, Addon, Project, Task, Report};
 
 pub fn can_render(p: &Path) -> bool {
     let name = p.file_name().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();
     name.contains(".ht.") || name.ends_with(".ht")
 }
 
-pub fn render(path: &Path, report: &mut Report, addon: &crate::build::Addon, p: &mut Project) -> Result<(), HEMTTError> {
+pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTError> {
     let vars = &addon.get_variables(p);
+    let mut report = Report::new();
     match crate::render::run(&std::fs::read_to_string(path)?.replace("\\{", "\\\\{"), vars) {
         Ok(out) => {
             let dest = path.display().to_string().replace(".ht.", ".").trim_end_matches(".ht").to_string();
             let mut outfile = File::create(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
-            p.rendered_files.add(path.display().to_string(), dest)?;
+            crate::RENDERED.lock().unwrap().add(path.display().to_string(), dest)?;
         },
         Err(err) => {
             if let HEMTTError::LINENO(mut e) = err {
@@ -33,60 +32,24 @@ pub fn render(path: &Path, report: &mut Report, addon: &crate::build::Addon, p: 
             }
         },
     }
-    Ok(())
+    Ok(report)
 }
 
+#[derive(Clone)]
 pub struct Render {}
 impl Task for Render {
-    fn pre_can_run(&self, _addon: &crate::build::Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn pre_run(&self, addon: &crate::build::Addon, p: &mut Project) -> Result<Report, HEMTTError> {
+    fn chk_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();
             if can_render(&path.path()) {
-                render(path.path(), &mut report, addon, p)?;
+                pb.set_message(&format!("Render: {}", path.path().display().to_string()));
+                report.absorb(render(path.path(), addon, p)?);
             }
         }
         Ok(report)
-    }
-}
-
-pub struct RenderedFiles {
-    redirects: HashMap<String, String>,
-}
-
-impl RenderedFiles {
-    pub fn new() -> Self {
-        Self {
-            redirects: HashMap::new(),
-        }
-    }
-
-    pub fn add(&mut self, original: String, tmp: String) -> Result<(), HEMTTError> {
-        self.redirects.insert(original.clone(), tmp.clone());
-        Ok(())
-    }
-
-    pub fn get_path(&self, original: String) -> Option<&String> {
-        self.redirects.get(&original)
-    }
-
-    pub fn get_paths(&self, original: String) -> (String, String) {
-        let rendered = can_render(&Path::new(&original));
-        if rendered {
-            (original.replace(".ht.", ".").trim_end_matches(".ht").to_string(), self.redirects.get(&original).unwrap().to_string())
-        } else {
-            (original.clone(), original)
-        }
-    }
-}
-
-impl Drop for RenderedFiles {
-    fn drop(&mut self) {
-        for (_, tmp) in self.redirects.iter() {
-            std::fs::remove_file(tmp);
-        }
     }
 }

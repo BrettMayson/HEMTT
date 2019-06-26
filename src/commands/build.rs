@@ -27,9 +27,6 @@ impl crate::commands::Command for Build {
         if Path::new(&build::folder_name(&build::AddonLocation::Compats)).exists() {
             addons.extend(build::get_addons(build::AddonLocation::Compats)?);
         }
-        for addon in &addons {
-            println!("- {} {:?}", addon.name, addon.location);
-        }
         let flow = Flow {
             checks: vec![
                 Box::new(crate::build::prebuild::render::Render {}),
@@ -42,7 +39,7 @@ impl crate::commands::Command for Build {
             post_build: vec![],
             release: vec![],
         };
-        flow.execute(addons, &mut p)?;
+        flow.execute(&addons, &mut p)?;
         Ok(())
     }
 }

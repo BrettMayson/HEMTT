@@ -1,13 +1,16 @@
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use serde_json::value::{Value as Json};
 use handlebars::to_json;
 
+pub mod build;
 pub mod checks;
 pub mod prebuild;
 
-use crate::HEMTTError;
-use crate::project::Project;
+pub use build::dir;
+
+use crate::{HEMTTError, Project, Report};
 
 #[derive(Debug, Clone)]
 pub enum AddonLocation {
@@ -16,13 +19,14 @@ pub enum AddonLocation {
     Compats,
 }
 
+#[derive(Debug)]
 pub struct Addon {
     pub name: String,
     pub location: AddonLocation,
 }
 impl Addon {
-    pub fn folder(&self) -> String {
-        format!("{}/{}", folder_name(&self.location), self.name)
+    pub fn folder(&self) -> PathBuf {
+        PathBuf::from(format!("{}/{}", folder_name(&self.location), self.name))
     }
 
     pub fn get_variables(&self, p: &Project) -> BTreeMap<&'static str, Json> {
@@ -45,6 +49,9 @@ pub fn get_addons(location: AddonLocation) -> Result<Vec<Addon>, HEMTTError> {
     Ok(std::fs::read_dir(folder_name(&location))?
         .map(|file| file.unwrap().path())
         .filter(|file_or_dir| file_or_dir.is_dir())
-        .map(|file| Addon {name: file.file_name().unwrap().to_str().unwrap().to_owned(), location: location.clone()})
+        .map(|file| Addon {
+            name: file.file_name().unwrap().to_str().unwrap().to_owned(),
+            location: location.clone(),
+        })
         .collect())
 }

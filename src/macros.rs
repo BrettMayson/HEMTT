@@ -124,13 +124,32 @@ macro_rules! warn {
 
 #[macro_export]
 macro_rules! error {
-    ($s:expr, $m:expr) => {
+    ($s:expr) => {{
         use colored::*;
         let style = "error".red().bold();
-        let status = $s.bold();
+        let status = $s;
+        crate::iprintln!("{style}: {status}\n", style, status);
+    }}
+}
+
+#[macro_export]
+macro_rules! errormessage {
+    ($s:expr, $m:expr) => {
+        let status = $s;
         let message = $m;
-        crate::iprintln!("{style}: {status}\n    {message}\n", style, status, message);
+        crate::error!(crate::iformat!("{status}\n    {message}", status, message));
     }
+}
+
+#[macro_export]
+macro_rules! filewarn {
+    ($e:expr) => {{
+        use colored::*;
+        let style = "warning".yellow().bold();
+        let status = &$e.error.bold();
+        let point = filepointer!($e);
+        crate::iprintln!("{style}: {status}\n{point}", style, status, point)
+    }}
 }
 
 #[macro_export]
@@ -139,6 +158,14 @@ macro_rules! fileerror {
         use colored::*;
         let style = "error".red().bold();
         let status = &$e.error.bold();
+        let point = filepointer!($e);
+        crate::iprintln!("{style}: {status}\n{point}", style, status, point)
+    }
+}
+
+#[macro_export]
+macro_rules! filepointer {
+    ($e:expr) => {{
         let content = &$e.content;
         let arrow = "-->".blue().bold();
         let sep = "|".blue().bold();
@@ -146,9 +173,10 @@ macro_rules! fileerror {
         let file = &$e.file;
         let line = &$e.line.unwrap().to_string().blue().bold();
         let space = repeat!(" ", line.len() + 2);
-        crate::iprintln!("{style}: {status}\n  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n", style, status, arrow, file, sep, line, space, content);
-    }
+        crate::iformat!("{arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n", arrow, file, sep, line, space, content)
+    }}
 }
+
 
 // Generic
 
@@ -175,6 +203,16 @@ macro_rules! ask {
 macro_rules! repeat {
     ($s:expr, $n:expr) => {{
         &std::iter::repeat($s).take($n).collect::<String>()
+    }}
+}
+
+#[macro_export]
+macro_rules! fill_space {
+    ($c:expr, $s:expr, $n:expr) => {{
+        let s = ($s as i32) - ($n.len() as i32);
+        let n = (if s <= 0 {0} else {s}) as usize;
+        let t = if n == 0 { &$n[..$s] } else { $n };
+        format!("{}{}", t, repeat!($c, n))
     }}
 }
 

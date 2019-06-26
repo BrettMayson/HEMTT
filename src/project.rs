@@ -1,13 +1,16 @@
-use std::env;
-use std::path::PathBuf;
 use std::collections::BTreeMap;
+use std::env;
+use std::path::Path;
+use std::path::PathBuf;
 
-use config::{ConfigError, Config, File, Environment};
+use config::{Config, File, Environment};
 use handlebars::to_json;
 use serde_json::value::{Value as Json};
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+use crate::HEMTTError;
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Project {
     pub name: String,
     pub prefix: String,
@@ -20,10 +23,6 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "default_include")]
     pub include: Vec<PathBuf>,
-
-    #[serde(skip_deserializing, skip_serializing)]
-    #[serde(default = "default_rendered_files")]
-    pub rendered_files: crate::build::prebuild::render::RenderedFiles,
 }
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
@@ -32,18 +31,17 @@ impl Project {
 
             mainprefix: default_mainprefix(),
             include: default_include(),
-
-            rendered_files: default_rendered_files(),
         }
     }
 
-    pub fn read() -> Result<Self, ConfigError> {
+    pub fn read() -> Result<Self, HEMTTError> {
         let mut p = Config::new();
         let env = environment();
-        p.merge(File::with_name(&format!("hemtt/{}", env)).required(false));
-        p.merge(File::with_name("hemtt/local").required(false));
+        if !Path::new("hemtt/").exists() { return Err(HEMTTError::SIMPLE("No HEMTT project folder".to_string()))}
+        p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
+        p.merge(File::with_name("hemtt/local").required(false))?;
         p.merge(Environment::with_prefix("app"))?;
-        p.try_into()
+        p.try_into().map_err(From::from)
     }
 
     pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
@@ -93,8 +91,4 @@ fn default_include() -> Vec<PathBuf> {
 
 fn default_mainprefix() -> String {
     String::from("z")
-}
-
-fn default_rendered_files() -> crate::RenderedFiles {
-    crate::RenderedFiles::new()
 }
