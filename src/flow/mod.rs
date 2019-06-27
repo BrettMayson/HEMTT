@@ -29,7 +29,7 @@ pub struct Flow {
 impl Flow {
     pub fn execute(&self, addons: &[Addon], p: &mut Project) -> Result<(), HEMTTError> {
         let spinner_style = ProgressStyle::default_spinner()
-            .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
+            .tick_chars("\\|/| ")
             .template("{prefix:.bold.dim} [{pos}|{len}] {spinner} {wide_msg}");
 
         let m = MultiProgress::new();

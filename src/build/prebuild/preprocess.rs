@@ -9,6 +9,7 @@ use regex::Regex;
 use crate::{HEMTTError, FileErrorLineNumber, Task, Project, Addon, Report};
 
 pub static RAPABLE: &[&str] = &["cpp", "rvmat", "ext"];
+static CMD_GAP: usize = 18;
 
 pub fn can_preprocess(p: &Path) -> (bool, bool) {
     let ext = p.extension().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();
@@ -26,22 +27,35 @@ impl Task for Preprocess {
     fn pre_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
+            pb.set_message("Looking for files to preprocess");
             pb.tick();
             let path = entry.unwrap();
             let (can_rap, can_check) = can_preprocess(&path.path());
             if can_check {
-                let (original_path, rendered_path) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
+                let (original_path, rendered_path) = {
+                    pb.set_message("Waiting for render lock");
+                    let (original, rendered) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
+                    (original.clone(), rendered.clone())
+                };
+                pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
                 let raw = std::fs::read_to_string(Path::new(&rendered_path))?;
-                if raw.len() < 3 { continue; }
+                if raw.len() < 3 { 
+                    pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
+                    continue; 
+                }
                 let mut includes = p.include.clone();
                 includes.insert(0, PathBuf::from("."));
-                pb.set_message(&format!("Preprocess: {}", rendered_path));
+                pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                 match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes) {
                     Ok((output, info)) => {
+                        pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Rapify"), rendered_path));
                         if can_rap {
                             let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
                             armake2::config::config_grammar::config(&output, &mut warnings).unwrap();
-                            for w in warnings {
+                            let total = warnings.len();
+                            for (i, w) in warnings.into_iter().enumerate() {
+                                let text = format!("Report {}/{}", i, total);
+                                pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, &text), rendered_path));
                                 pb.tick();
                                 let mut line = output[..w.0].chars().filter(|c| c == &'\n').count();
                                 let file = info.line_origins[min(line, info.line_origins.len()) - 1].1.as_ref().map(|p| p.to_str().unwrap().to_string());
@@ -57,6 +71,7 @@ impl Task for Preprocess {
                                     note: None,
                                 }));
                             }
+                            pb.set_message("Waiting for cache lock");
                             crate::CACHED.lock().unwrap().add(rendered_path, output)?;
                         }
                     },

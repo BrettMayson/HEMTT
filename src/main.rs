@@ -1,7 +1,10 @@
 use clap::{App};
 
+#[cfg(windows)]
+use ansi_term;
+
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, Arc};
 
 #[macro_use]
 pub mod macros;
@@ -22,12 +25,17 @@ pub use flow::{Flow, Report, Task};
 use crate::error::PrintableError;
 
 lazy_static::lazy_static! {
-    static ref RENDERED: Mutex<RenderedFiles> = Mutex::new(RenderedFiles::new());
-    static ref CACHED: Mutex<RenderedFiles> = Mutex::new(RenderedFiles::new());
-    static ref REPORTS: Mutex<HashMap<String, Report>> = Mutex::new(HashMap::new());
+    static ref RENDERED: Arc<Mutex<RenderedFiles>> = Arc::new(Mutex::new(RenderedFiles::new()));
+    static ref CACHED: Arc<Mutex<RenderedFiles>> = Arc::new(Mutex::new(RenderedFiles::new()));
+    static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 fn main() {
+
+    if cfg!(windows) {
+        ansi_support();
+    }
+
     let mut app = App::new("HEMTT")
                 .version(env!("CARGO_PKG_VERSION"))
                 .author(env!("CARGO_PKG_AUTHORS"))
@@ -77,4 +85,18 @@ pub fn get_line_at(path: &Path, line_num: usize) -> Result<String, HEMTTError> {
     let content = BufReader::new(&file);
     let mut lines = content.lines();
     Ok(lines.nth(line_num - 1).unwrap()?)
+}
+
+#[cfg(windows)]
+fn ansi_support() {
+    // Attempt to enable ANSI support in terminal
+    // Disable colored output if failed
+    if ansi_term::enable_ansi_support().is_err() {
+        colored::control::set_override(false);
+    }
+}
+
+#[cfg(not(windows))]
+fn ansi_support() {
+    unreachable!();
 }
