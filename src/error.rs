@@ -71,6 +71,12 @@ impl From<std::io::Error> for HEMTTError {
     }
 }
 
+impl From<std::string::FromUtf8Error> for HEMTTError {
+    fn from(err: std::string::FromUtf8Error) -> HEMTTError {
+        HEMTTError::SIMPLE("Unable to convert UTF-8 to string".to_string())
+    }
+}
+
 impl From<toml::ser::Error> for HEMTTError {
     fn from(err: toml::ser::Error) -> HEMTTError {
         HEMTTError::TOML(err)

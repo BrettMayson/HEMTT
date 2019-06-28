@@ -6,10 +6,10 @@ use crate::{HEMTTError, Project, Task, Addon, Report};
 #[derive(Clone)]
 pub struct NotEmpty {}
 impl Task for NotEmpty {
-    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &Addon, _p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, _p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         if empty {
@@ -22,10 +22,10 @@ impl Task for NotEmpty {
 #[derive(Clone)]
 pub struct ValidName {}
 impl Task for ValidName {
-    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let re = Regex::new(r"^([A-z\-]+)$").unwrap();
         if !re.is_match(&addon.name) {

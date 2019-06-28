@@ -4,6 +4,7 @@ use crate::project::Project;
 use crate::HEMTTError;
 use crate::build;
 use crate::flow::Flow;
+use crate::Step;
 
 pub struct Build {}
 
@@ -28,18 +29,28 @@ impl crate::commands::Command for Build {
             addons.extend(build::get_addons(build::AddonLocation::Compats)?);
         }
         let flow = Flow {
-            checks: vec![
-                Box::new(crate::build::prebuild::render::Render {}),
-                Box::new(crate::build::checks::names::NotEmpty {}),
-                Box::new(crate::build::checks::names::ValidName {}),
+            steps: vec![
+                Step::new("🔍", "Checks",
+                    vec![
+                        Box::new(crate::build::prebuild::render::Render {}),
+                        Box::new(crate::build::checks::names::NotEmpty {}),
+                        Box::new(crate::build::checks::names::ValidName {}),
+                    ],
+                ),
+                Step::new("🚧", "Prebuild",
+                    vec![
+                        Box::new(crate::build::prebuild::modtime::ModTime {}),
+                        Box::new(crate::build::prebuild::preprocess::Preprocess {}),
+                    ],
+                ),
+                Step::new("📝", "Build",
+                    vec![
+                        Box::new(crate::build::build::Build {}),
+                    ],
+                ),
             ],
-            pre_build: vec![
-                Box::new(crate::build::prebuild::preprocess::Preprocess {}),
-            ],
-            post_build: vec![],
-            release: vec![],
         };
-        flow.execute(&addons, &mut p)?;
+        flow.execute(addons, &mut p)?;
         Ok(())
     }
 }

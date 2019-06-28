@@ -2,6 +2,7 @@ use clap::{App};
 
 #[cfg(windows)]
 use ansi_term;
+use winapi;
 
 use std::collections::HashMap;
 use std::sync::{Mutex, Arc};
@@ -12,28 +13,35 @@ pub mod macros;
 mod build;
 mod commands;
 mod error;
+mod files;
 mod flow;
 mod project;
 mod render;
 
-pub use build::prebuild::RenderedFiles;
-pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
-pub use project::Project;
 pub use build::{Addon, AddonLocation};
-pub use flow::{Flow, Report, Task};
+pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
+pub use files::{FileCache, RenderedFiles};
+pub use flow::{Flow, Report, Task, Step};
+pub use project::Project;
 
 use crate::error::PrintableError;
 
 lazy_static::lazy_static! {
     static ref RENDERED: Arc<Mutex<RenderedFiles>> = Arc::new(Mutex::new(RenderedFiles::new()));
-    static ref CACHED: Arc<Mutex<RenderedFiles>> = Arc::new(Mutex::new(RenderedFiles::new()));
+    static ref CACHED: Arc<Mutex<FileCache>> = Arc::new(Mutex::new(FileCache::new()));
     static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
 }
+
+static mut CODEPAGE: u32 = 0;
 
 fn main() {
 
     if cfg!(windows) {
         ansi_support();
+        unsafe {
+            CODEPAGE = winapi::um::consoleapi::GetConsoleOutputCP();
+            winapi::um::wincon::SetConsoleOutputCP(65001);
+        }
     }
 
     let mut app = App::new("HEMTT")
@@ -55,7 +63,7 @@ fn main() {
         hash_commands.insert(name, command);
     }
 
-    // rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
 
     let matches = app.get_matches();
     match matches.subcommand_name() {
@@ -73,18 +81,14 @@ fn main() {
         },
         None => println!("No command"),
     }
+    
     crate::RENDERED.lock().unwrap().clean();
-}
 
-use std::path::Path;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-
-pub fn get_line_at(path: &Path, line_num: usize) -> Result<String, HEMTTError> {
-    let file = File::open(path)?;
-    let content = BufReader::new(&file);
-    let mut lines = content.lines();
-    Ok(lines.nth(line_num - 1).unwrap()?)
+    if cfg!(windows) {
+        unsafe {
+            winapi::um::wincon::SetConsoleOutputCP(CODEPAGE);
+        }
+    }
 }
 
 #[cfg(windows)]

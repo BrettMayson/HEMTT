@@ -21,6 +21,7 @@ linked-hash-map = "0.5"
 num_cpus = "1.10"
 objekt = "0.1"
 pbr = "1.0"
+pf = "0.2"
 question = "0.2"
 rayon = "1.1"
 regex = "1.1"
@@ -38,3 +39,4 @@ zip = { git = "https://github.com/jonpas/zip-rs", branch = "flate2", features = 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
 winreg = "0.6"
+winapi = "0.3"

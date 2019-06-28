@@ -1,89 +1,95 @@
-use colored::*;
-use glob::glob;
-use rayon::prelude::*;
-use reqwest;
-
-use std::fs;
+use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Read, Write, Error};
+use std::io::{BufReader,Read};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 
-use crate::project;
-use crate::error::*;
+use crate::{HEMTTError, IOPathError};
 
-pub fn clear_pbos(p: &project::Project, addons: &[PathBuf]) -> Result<(), Error> {
-    let count = Arc::new(Mutex::new(0));
-    addons.par_iter()
-        .for_each(|folder| {
-            let mut target = folder.parent().unwrap().to_path_buf();
-            if p.prefix.is_empty() {
-                target.push(&format!("{}.pbo", folder.file_name().unwrap().to_str().unwrap()));
-            } else {
-                target.push(&format!("{}_{}.pbo", p.prefix, folder.file_name().unwrap().to_str().unwrap()));
-            }
-            if target.exists() {
-                let mut data = count.lock().unwrap();
-                *data += 1;
-                fs::remove_file(target).print();
-            }
-        });
-    yellow!("Cleaned", format!("{} PBOs", *count.lock().unwrap()));
-    Ok(())
+#[derive(Debug)]
+pub struct FileCache {
+    files: HashMap<String, Vec<u8>>,
 }
 
-pub fn clear_pbo(p: &project::Project, source: &PathBuf) -> Result<(), Error> {
-    let mut target = source.parent().unwrap().to_path_buf();
-    let name = source.file_name().unwrap().to_str().unwrap().to_owned();
-    target.push(&format!("{}_{}.pbo", p.prefix, name));
-    if target.exists() {
-        fs::remove_file(target)?;
-    }
-    Ok(())
-}
-
-pub fn clear_release(p: &project::Project, version: &str) -> Result<(), Error> {
-    if Path::new(&format!("releases/{}", version)).exists() {
-        println!("  {} old release v{}", "Cleaning".yellow().bold(), version);
-        fs::remove_dir_all(format!("releases/{}", version))?;
-    }
-
-    // Keys
-    let keyname = p.get_keyname();
-    let keypath = &format!("releases/keys/{}.bikey", keyname);
-    let pkeypath = &format!("releases/keys/{}.biprivatekey", keyname);
-
-    if Path::new(keypath).exists() {
-        println!("  {} old key {}", "Cleaning".yellow().bold(), keyname);
-        fs::remove_file(keypath)?;
-
-        if !p.reuse_private_key {
-            if Path::new(pkeypath).exists() {
-                fs::remove_file(pkeypath)?;
-            }
+impl FileCache {
+    pub fn new() -> Self {
+        Self {
+            files: HashMap::new(),
         }
     }
 
-    Ok(())
-}
-
-pub fn clear_releases(p: &project::Project) -> Result<(), Error> {
-    println!("  {} all releases", "Cleaning".yellow().bold());
-    if Path::new("releases").exists() {
-        if !p.reuse_private_key {
-            fs::remove_dir_all("releases")?;
+    pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
+        if self.files.contains_key(path) {
+            Ok(self.files.get(path).unwrap().to_vec())
         } else {
-            for entry in glob("releases/*.*.*").unwrap_or_print() {
-                if let Ok(path) = entry {
-                    fs::remove_dir_all(path)?;
-                }
-            }
-            for entry in glob("releases/keys/*.bikey").unwrap_or_print() {
-                if let Ok(path) = entry {
-                    fs::remove_file(path)?;
-                }
+            let f = File::open(path)?;
+            let mut reader = BufReader::new(f);
+            let mut buf = Vec::new();
+            reader.read_to_end(&mut buf).map_err(|e| HEMTTError::PATH(IOPathError {
+                source: e,
+                path: PathBuf::from(path),
+            }))?;
+            self.files.insert(path.to_string(), buf.clone());
+            Ok(buf)
+        }
+    }
+
+    pub fn as_string(&mut self, path: &str) -> Result<String, HEMTTError> {
+        String::from_utf8(self.read(path)?).map_err(From::from)
+    }
+
+    pub fn lines(&mut self, path: &str) -> Result<Vec<String>, HEMTTError> {
+        Ok(String::from_utf8(self.read(path)?)?.lines().map(|l| l.to_string()).collect())
+    }
+
+    pub fn insert(&mut self, path: &str, data: String) -> Result<(), HEMTTError> {
+        self.files.insert(path.to_string(), data.as_bytes().to_vec());
+        Ok(())
+    }
+
+    pub fn get_line(&mut self, path: &str, line: usize) -> Result<String, HEMTTError> {
+        Ok(self.lines(path)?[line].clone())
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct RenderedFiles {
+    redirects: HashMap<String, String>,
+    pub no_drop: bool,
+}
+
+impl RenderedFiles {
+    pub fn new() -> Self {
+        Self {
+            redirects: HashMap::new(),
+            no_drop: false,
+        }
+    }
+
+    pub fn add(&mut self, original: String, tmp: String) -> Result<(), HEMTTError> {
+        self.redirects.insert(original.clone(), tmp.clone());
+        Ok(())
+    }
+
+    pub fn get_path(&self, original: String) -> Option<&String> {
+        self.redirects.get(&original)
+    }
+
+    pub fn get_paths(&self, original: String) -> (String, String) {
+        let rendered = crate::build::prebuild::render::can_render(&Path::new(&original));
+        if rendered {
+            (original.replace(".ht.", ".").trim_end_matches(".ht").to_string(), self.redirects.get(&original).unwrap().to_string())
+        } else {
+            (original.clone(), original)
+        }
+    }
+}
+
+impl RenderedFiles {
+    pub fn clean(&mut self) {
+        for (_, tmp) in self.redirects.iter() {
+            if let Err(e) = std::fs::remove_file(tmp) {
+                error!(e.to_string());
             }
         }
     }
-    Ok(())
 }

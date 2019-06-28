@@ -173,7 +173,7 @@ macro_rules! filepointer {
         let file = &$e.file;
         let line = &$e.line.unwrap().to_string().blue().bold();
         let space = repeat!(" ", line.len() + 2);
-        crate::iformat!("{arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n", arrow, file, sep, line, space, content)
+        crate::iformat!("  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n", arrow, file, sep, line, space, content)
     }}
 }
 

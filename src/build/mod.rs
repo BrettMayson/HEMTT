@@ -8,9 +8,7 @@ pub mod build;
 pub mod checks;
 pub mod prebuild;
 
-pub use build::dir;
-
-use crate::{HEMTTError, Project, Report};
+use crate::{HEMTTError, Project};
 
 #[derive(Debug, Clone)]
 pub enum AddonLocation {
@@ -26,7 +24,13 @@ pub struct Addon {
 }
 impl Addon {
     pub fn folder(&self) -> PathBuf {
-        PathBuf::from(format!("{}/{}", folder_name(&self.location), self.name))
+        PathBuf::from(format!("{}{}{}", folder_name(&self.location), std::path::MAIN_SEPARATOR, self.name))
+    }
+
+    pub fn target(&self, p: &Project) -> PathBuf {
+        let mut target = PathBuf::from(crate::build::folder_name(&self.location));
+        target.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        target
     }
 
     pub fn get_variables(&self, p: &Project) -> BTreeMap<&'static str, Json> {

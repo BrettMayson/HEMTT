@@ -24,7 +24,7 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
         },
         Err(err) => {
             if let HEMTTError::LINENO(mut e) = err {
-                e.content = crate::get_line_at(&path, e.line.unwrap_or(1))?;
+                e.content = crate::CACHED.lock().unwrap().get_line(path.as_os_str().to_str().unwrap(), e.line.unwrap_or(1))?;
                 e.file = path.display().to_string();
                 report.unique_error(HEMTTError::LINENO(e));
             } else {
@@ -38,10 +38,10 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
 #[derive(Clone)]
 pub struct Render {}
 impl Task for Render {
-    fn chk_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn chk_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();

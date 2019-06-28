@@ -21,10 +21,10 @@ pub fn can_preprocess(p: &Path) -> (bool, bool) {
 #[derive(Clone)]
 pub struct Preprocess {}
 impl Task for Preprocess {
-    fn pre_can_run(&self, _addon: &Addon, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn pre_run(&self, addon: &Addon, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             pb.set_message("Looking for files to preprocess");
@@ -32,13 +32,10 @@ impl Task for Preprocess {
             let path = entry.unwrap();
             let (can_rap, can_check) = can_preprocess(&path.path());
             if can_check {
-                let (original_path, rendered_path) = {
-                    pb.set_message("Waiting for render lock");
-                    let (original, rendered) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
-                    (original.clone(), rendered.clone())
-                };
+                pb.set_message("Waiting for render lock");
+                let (original_path, rendered_path) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
-                let raw = std::fs::read_to_string(Path::new(&rendered_path))?;
+                let raw = crate::CACHED.lock().unwrap().as_string(&rendered_path)?;
                 if raw.len() < 3 { 
                     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
                     continue; 
@@ -56,23 +53,27 @@ impl Task for Preprocess {
                             for (i, w) in warnings.into_iter().enumerate() {
                                 let text = format!("Report {}/{}", i, total);
                                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, &text), rendered_path));
-                                pb.tick();
                                 let mut line = output[..w.0].chars().filter(|c| c == &'\n').count();
                                 let file = info.line_origins[min(line, info.line_origins.len()) - 1].1.as_ref().map(|p| p.to_str().unwrap().to_string());
                                 line = info.line_origins[min(line, info.line_origins.len()) - 1].0 as usize + 1;
 
-                                let filename = file.unwrap();
-                                report.warnings.push(HEMTTError::LINENO(FileErrorLineNumber {
-                                    content: crate::get_line_at(Path::new(&filename), line)?,
-                                    col: None,
-                                    line: Some(line),
-                                    file: filename,
-                                    error: w.1,
-                                    note: None,
-                                }));
+                                // let filename = file.unwrap();
+                                // report.warnings.push(HEMTTError::LINENO(FileErrorLineNumber {
+                                //     content: crate::CACHED.lock().unwrap().get_line(&filename, line)?,
+                                //     col: None,
+                                //     line: Some(line),
+                                //     file: filename,
+                                //     error: w.1,
+                                //     note: None,
+                                // }));
+
+                                report.warnings.push(HEMTTError::GENERIC(
+                                    w.1,
+                                    format!("{}:{}", file.unwrap(), line),
+                                ));
                             }
                             pb.set_message("Waiting for cache lock");
-                            crate::CACHED.lock().unwrap().add(rendered_path, output)?;
+                            crate::CACHED.lock().unwrap().insert(&rendered_path.replace("config.cpp", "config.bin"), output)?;
                         }
                     },
                     Err(e) => {
@@ -91,8 +92,8 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
     let unexpected_token = Regex::new(r#"(?ms)(?:.+?)In line (.+?):(\d+?):(.+?)Unexpected token "(.+?)", expected: (.+?)$"#).unwrap();
     if include_error.is_match(&error) {
         let cap = include_error.captures(&error).unwrap();
-        let contents = std::fs::read_to_string(&cap[2])?;
-        for (i, content) in contents.lines().enumerate() {
+        let contents = crate::CACHED.lock().unwrap().lines(&cap[2])?;
+        for (i, content) in contents.into_iter().enumerate() {
             if content.contains(&format!("#include \"{}\"", &cap[1])) {
                 return Ok(HEMTTError::LINENO(FileErrorLineNumber {
                     error: format!("Included file `{}` could not be found", &cap[1]),
@@ -113,7 +114,7 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
             line: Some(line),
             file: cap[1].to_string(),
             note: None,
-            content: crate::get_line_at(&Path::new(&cap[1]), line)?,
+            content: crate::CACHED.lock().unwrap().get_line(&cap[1], line)?,
         }))
     }
     eprintln!("unknown armake error `{}`", error);
