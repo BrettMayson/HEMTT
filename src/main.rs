@@ -2,7 +2,6 @@ use clap::{App};
 
 #[cfg(windows)]
 use ansi_term;
-use winapi;
 
 use std::collections::HashMap;
 use std::sync::{Mutex, Arc};
@@ -32,16 +31,9 @@ lazy_static::lazy_static! {
     static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
-static mut CODEPAGE: u32 = 0;
-
 fn main() {
-
     if cfg!(windows) {
         ansi_support();
-        unsafe {
-            CODEPAGE = winapi::um::consoleapi::GetConsoleOutputCP();
-            winapi::um::wincon::SetConsoleOutputCP(65001);
-        }
     }
 
     let mut app = App::new("HEMTT")
@@ -83,12 +75,6 @@ fn main() {
     }
     
     crate::RENDERED.lock().unwrap().clean();
-
-    if cfg!(windows) {
-        unsafe {
-            winapi::um::wincon::SetConsoleOutputCP(CODEPAGE);
-        }
-    }
 }
 
 #[cfg(windows)]

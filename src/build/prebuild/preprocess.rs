@@ -35,7 +35,7 @@ impl Task for Preprocess {
                 pb.set_message("Waiting for render lock");
                 let (original_path, rendered_path) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
-                let raw = crate::CACHED.lock().unwrap().as_string(&rendered_path)?;
+                let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?;
                 if raw.len() < 3 { 
                     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
                     continue; 
@@ -43,12 +43,15 @@ impl Task for Preprocess {
                 let mut includes = p.include.clone();
                 includes.insert(0, PathBuf::from("."));
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
-                match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes) {
+                match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes, |path| {
+                    pb.set_message(&format!("Cleaning: {}", path.to_str().unwrap()));
+                    crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap())
+                }) {
                     Ok((output, info)) => {
                         pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Rapify"), rendered_path));
                         if can_rap {
                             let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
-                            armake2::config::config_grammar::config(&output, &mut warnings).unwrap();
+                            armake2::config::config_grammar::config(&output, &mut warnings).map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
                             let total = warnings.len();
                             for (i, w) in warnings.into_iter().enumerate() {
                                 let text = format!("Report {}/{}", i, total);

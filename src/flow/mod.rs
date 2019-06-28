@@ -32,14 +32,14 @@ pub struct Flow {
 }
 
 impl Flow {
-    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> Result<(), HEMTTError> {
+    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
         let mut addons: Vec<Result<(Report, Addon), HEMTTError>> = addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
 
         for step in &self.steps {
             addons = self.step(&step.emoji, &step.name, &step.tasks, addons, p)?;
         }
 
-        for data in addons {
+        for data in &addons {
             match data {
                 Ok((report, _)) => {
                     report.display();
@@ -49,7 +49,7 @@ impl Flow {
                 }
             }
         }
-        Ok(())
+        Ok(addons)
     }
 
     pub fn step(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>{

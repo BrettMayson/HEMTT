@@ -38,4 +38,3 @@ zip = { git = "https://github.com/jonpas/zip-rs", branch = "flate2", features = 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
 winreg = "0.6"
-winapi = "0.3"

@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{BufReader,Read};
 use std::path::{Path, PathBuf};
 
+use regex::Regex;
+
 use crate::{HEMTTError, IOPathError};
 
 #[derive(Debug, Default)]
@@ -31,6 +33,35 @@ impl FileCache {
             self.files.insert(path.to_string(), buf.clone());
             Ok(buf)
         }
+    }
+
+    // This should be fixed in armake2, this is a slow workaround but it works for now
+    pub fn clean_comments(&mut self, path: &str) -> Result<String, std::io::Error> {
+        if !PathBuf::from(path).exists() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "can't find that file eh",
+            ));
+        }
+        let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"(.+)""#).unwrap();
+        let clean = Regex::new(r"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$").unwrap();
+        let content = self.as_string(path).unwrap().replace("\r\n", "\n").to_string();
+        let mut safe = HashMap::new();
+        for mat in keep.find_iter(&content) {
+            safe.insert(mat.start(), mat.end());
+        }
+        let mut output = String::new();
+        let mut cursor = 0;
+        for mat in clean.find_iter(&content) {
+            if mat.start() == 0 || safe.contains_key(&(mat.start() - 1)) {
+                output.push_str(&content[cursor..mat.end()]);
+            } else {
+                output.push_str(&content[cursor..(mat.start() - 1)]);
+            }
+            cursor = mat.end();
+        }
+        output.push_str(&content[cursor..(content.len())]);
+        Ok(output)
     }
 
     pub fn as_string(&mut self, path: &str) -> Result<String, HEMTTError> {
