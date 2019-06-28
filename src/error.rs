@@ -43,9 +43,6 @@ impl HEMTTError {
     pub fn from_armake_parse(err: armake2::config::config_grammar::ParseError, path: &str, content: Option<String>) -> HEMTTError {
         let c = match content {
             Some(v) => {
-                let mut out = std::fs::File::create("bad_file.cpp").unwrap();
-                use std::io::Write;
-                out.write_all(v.as_bytes());
                 v.lines().nth(err.line).unwrap().to_string()
             },
             None => {
