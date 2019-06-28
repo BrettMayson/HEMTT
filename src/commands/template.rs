@@ -12,6 +12,7 @@ use crate::HEMTTError;
 pub struct Template {}
 
 impl Template {
+    #[allow(dead_code)]
     fn eval_file<F: FnOnce(rlua::Context)>(&self, file: &str, setup: F) -> String {
         let lua = Lua::new();
         lua.context(|lua_ctx| {
@@ -93,6 +94,7 @@ impl Template {
         }
     }
 
+    #[allow(dead_code)]
     fn get_version(&self) {
         let version = self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {});
         println!("Version: {}", version);

@@ -1,5 +1,5 @@
-use regex::Regex;
 use indicatif::ProgressBar;
+use regex::Regex;
 
 use crate::{HEMTTError, Project, Task, Addon, Report};
 
@@ -9,7 +9,7 @@ impl Task for NotEmpty {
     fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn run(&self, addon: &Addon, _: &Report, _p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         if empty {
@@ -25,7 +25,7 @@ impl Task for ValidName {
     fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let re = Regex::new(r"^([A-z\-]+)$").unwrap();
         if !re.is_match(&addon.name) {

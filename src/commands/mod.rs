@@ -7,8 +7,7 @@ pub use template::Template;
 mod build;
 pub use build::Build;
 
-use crate::project::Project;
-use crate::HEMTTError;
+use crate::{HEMTTError, Project};
 
 pub trait Command {
     // (name, description)

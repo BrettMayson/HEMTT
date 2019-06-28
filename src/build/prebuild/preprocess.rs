@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
 use std::cmp::min;
+use std::path::{Path, PathBuf};
 
-use indicatif::ProgressBar;
 use armake2::preprocess::preprocess;
-use walkdir::WalkDir;
+use indicatif::ProgressBar;
 use regex::Regex;
+use walkdir::WalkDir;
 
 use crate::{HEMTTError, FileErrorLineNumber, Task, Project, Addon, Report};
 

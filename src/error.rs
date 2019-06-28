@@ -31,23 +31,23 @@ pub struct IOPathError {
 
 #[derive(Debug)]
 pub enum HEMTTError {
-    IO(std::io::Error),
-    PATH(IOPathError),
-    TOML(toml::ser::Error),
     GENERIC(String, String),
-    SIMPLE(String),
+    IO(std::io::Error),
     LINENO(FileErrorLineNumber),
+    PATH(IOPathError),
+    SIMPLE(String),
+    TOML(toml::ser::Error),
 }
 
 impl std::fmt::Display for HEMTTError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            HEMTTError::IO(ref err) => write!(f, "IO error: {}", err),
-            HEMTTError::PATH(ref err) => write!(f, "IO error {}: {}", err.path.display(), err.source),
-            HEMTTError::TOML(ref err) => write!(f, "TOML error: {}", err),
             HEMTTError::GENERIC(ref s, ref v) => write!(f, "{}\n    {}", s.bold(), v),
-            HEMTTError::SIMPLE(ref s) => write!(f, "{}", s),
+            HEMTTError::IO(ref err) => write!(f, "IO error: {}", err),
             HEMTTError::LINENO(ref err) => write!(f, "{}", err.error),
+            HEMTTError::PATH(ref err) => write!(f, "IO error {}: {}", err.path.display(), err.source),
+            HEMTTError::SIMPLE(ref s) => write!(f, "{}", s),
+            HEMTTError::TOML(ref err) => write!(f, "TOML error: {}", err),
         }
     }
 }
@@ -55,12 +55,12 @@ impl std::fmt::Display for HEMTTError {
 impl std::error::Error for HEMTTError {
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
-            HEMTTError::IO(ref err) => Some(err),
-            HEMTTError::PATH(ref _err) => Some(self),
-            HEMTTError::TOML(ref err) => Some(err),
             HEMTTError::GENERIC(ref _s, ref _v) => Some(self),
-            HEMTTError::SIMPLE(ref _s,) => Some(self),
+            HEMTTError::IO(ref err) => Some(err),
             HEMTTError::LINENO(ref _e) => Some(self),
+            HEMTTError::PATH(ref _err) => Some(self),
+            HEMTTError::SIMPLE(ref _s,) => Some(self),
+            HEMTTError::TOML(ref err) => Some(err),
         }
     }
 }
@@ -72,7 +72,7 @@ impl From<std::io::Error> for HEMTTError {
 }
 
 impl From<std::string::FromUtf8Error> for HEMTTError {
-    fn from(err: std::string::FromUtf8Error) -> HEMTTError {
+    fn from(_: std::string::FromUtf8Error) -> HEMTTError {
         HEMTTError::SIMPLE("Unable to convert UTF-8 to string".to_string())
     }
 }
@@ -99,7 +99,7 @@ impl From<config::ConfigError> for HEMTTError {
             config::ConfigError::Message(v) => {
                 HEMTTError::GENERIC(s, v)
             },
-            config::ConfigError::FileParse{ uri, cause} => {
+            config::ConfigError::FileParse{ .. } => {
                 HEMTTError::GENERIC(s, "The file could not be parsed".to_string())
             },
             _ => {
@@ -113,7 +113,7 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
     fn from(err: handlebars::TemplateRenderError) -> HEMTTError {
         match err {
             handlebars::TemplateRenderError::RenderError(e) => {
-                if let Some(_) = e.line_no {
+                if e.line_no.is_some() {
                     HEMTTError::LINENO(FileErrorLineNumber {
                         error: e.desc,
                         line: e.line_no,
@@ -127,7 +127,7 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
                 }
             },
             handlebars::TemplateRenderError::TemplateError(e) => {
-                if let Some(_) = e.line_no {
+                if e.line_no.is_some() {
                     HEMTTError::LINENO(FileErrorLineNumber {
                         error: e.reason.to_string(),
                         line: e.line_no,

@@ -169,7 +169,7 @@ macro_rules! filepointer {
         let content = &$e.content;
         let arrow = "-->".blue().bold();
         let sep = "|".blue().bold();
-        let end = "=".blue().bold();
+        //let end = "=".blue().bold();
         let file = &$e.file;
         let line = &$e.line.unwrap().to_string().blue().bold();
         let space = repeat!(" ", line.len() + 2);

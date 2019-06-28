@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use serde_json::value::{Value as Json};
 use handlebars::to_json;
+use serde_json::value::{Value as Json};
 
 pub mod build;
 pub mod checks;

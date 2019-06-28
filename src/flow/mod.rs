@@ -1,8 +1,8 @@
 use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
 mod report;
@@ -52,7 +52,7 @@ impl Flow {
         Ok(())
     }
 
-    pub fn step(&self, emoji: &str, name: &str, tasks: &Vec<Box<dyn Task>>, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>{
+    pub fn step(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>{
 
         let addon_style = ProgressStyle::default_spinner()
             .tick_chars("\\|/| ")
@@ -104,12 +104,12 @@ impl Flow {
         let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons.into_par_iter().map_with(
                 tx.clone(),
                 |tx, data: Result<(ProgressBar, Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
-            let (pb, mut report, mut addon) = data?;
+            let (pb, mut report, addon) = data?;
             pb.set_style(addon_style.clone());
             pb.set_prefix(&fill_space!(" ", 16, &addon.name));
             
             for task in tasks {
-                if report.can_proceed && task.can_run(&mut addon, &report, p)? {
+                if report.can_proceed && task.can_run(&addon, &report, p)? {
                     pb.tick();
                     report.absorb(match task.run(&addon, &report, p, &pb) {
                         Ok(v) => v,

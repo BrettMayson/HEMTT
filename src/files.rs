@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::{HEMTTError, IOPathError};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct FileCache {
     files: HashMap<String, Vec<u8>>,
 }

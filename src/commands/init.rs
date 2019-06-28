@@ -2,8 +2,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use crate::project::Project;
-use crate::HEMTTError;
+use crate::{Project, HEMTTError};
 
 pub struct Init {}
 

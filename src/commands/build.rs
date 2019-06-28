@@ -1,13 +1,8 @@
 use std::path::Path;
 
-use crate::project::Project;
-use crate::HEMTTError;
-use crate::build;
-use crate::flow::Flow;
-use crate::Step;
+use crate::{AddonLocation, Project, HEMTTError, Flow, Step};
 
 pub struct Build {}
-
 impl crate::commands::Command for Build {
     fn register(&self) -> (&str, clap::App) {
         ("build",
@@ -21,12 +16,12 @@ impl crate::commands::Command for Build {
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let mut addons = build::get_addons(build::AddonLocation::Addons)?;
-        if Path::new(&build::folder_name(&build::AddonLocation::Optionals)).exists() {
-            addons.extend(build::get_addons(build::AddonLocation::Optionals)?);
+        let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
+        if Path::new(&crate::build::folder_name(&AddonLocation::Optionals)).exists() {
+            addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
         }
-        if Path::new(&build::folder_name(&build::AddonLocation::Compats)).exists() {
-            addons.extend(build::get_addons(build::AddonLocation::Compats)?);
+        if Path::new(&crate::build::folder_name(&AddonLocation::Compats)).exists() {
+            addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {
             steps: vec![

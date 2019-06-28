@@ -1,12 +1,12 @@
-use std::fs::File;
-use std::path::PathBuf;
-use std::io::{Cursor};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{Cursor};
+use std::path::PathBuf;
 
-use walkdir::WalkDir;
+use indicatif::ProgressBar;
 use linked_hash_map::{LinkedHashMap};
 use regex::{Regex};
-use indicatif::ProgressBar;
+use walkdir::WalkDir;
 
 use crate::{Addon, HEMTTError, Project, Report, Task};
 
@@ -15,10 +15,10 @@ static BINARIZABLE: &[&str] = &["rtm", "p3d"];
 #[derive(Clone)]
 pub struct Build {}
 impl Task for Build {
-    fn can_run(&self, _addon: &Addon, r: &Report, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _r: &Report, _p: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    fn run(&self, addon: &Addon, r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn run(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let mut pbo = armake2::pbo::PBO {
             files: LinkedHashMap::new(),

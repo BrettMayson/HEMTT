@@ -46,10 +46,10 @@ impl Project {
 
     pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
         let mut vars = BTreeMap::new();
+        vars.insert("author", to_json(self.author.clone()));
+        vars.insert("mainprefix", to_json(self.mainprefix.clone()));
         vars.insert("name", to_json(self.name.clone()));
         vars.insert("prefix", to_json(self.prefix.clone()));
-        vars.insert("mainprefix", to_json(self.mainprefix.clone()));
-        vars.insert("author", to_json(self.author.clone()));
         vars.insert("env", to_json(environment()));
         vars
     }
@@ -59,7 +59,7 @@ pub fn environment() -> String {
     env::var("ENV").unwrap_or_else(|_| "dev".into())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct SemVer {
     pub major: u32,
     pub minor: u32,
@@ -67,9 +67,12 @@ pub struct SemVer {
     pub build: String,
 }
 impl SemVer {
+    #[allow(dead_code)]
     pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
         SemVer { major, minor, patch, build }
     }
+    
+    #[allow(dead_code)]
     pub fn to_string(&self) -> String {
         if self.build.is_empty() {
             format!("{}.{}.{}", self.major, self.minor, self.patch)
