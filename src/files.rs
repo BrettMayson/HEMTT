@@ -77,6 +77,11 @@ impl FileCache {
         Ok(())
     }
 
+    pub fn insert_bytes(&mut self, path: &str, data: Vec<u8>) -> Result<(), HEMTTError> {
+        self.files.insert(path.to_string(), data);
+        Ok(())
+    }
+
     pub fn get_line(&mut self, path: &str, line: usize) -> Result<String, HEMTTError> {
         Ok(self.lines(path)?[line].clone())
     }

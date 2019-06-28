@@ -1,5 +1,6 @@
 use std::cmp::min;
 use std::path::{Path, PathBuf};
+use std::io::{Cursor, Seek, SeekFrom, Read};
 
 use armake2::preprocess::preprocess;
 use indicatif::ProgressBar;
@@ -51,7 +52,7 @@ impl Task for Preprocess {
                         pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Rapify"), rendered_path));
                         if can_rap {
                             let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
-                            armake2::config::config_grammar::config(&output, &mut warnings).map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
+                            let rapped = armake2::config::config_grammar::config(&output, &mut warnings).map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
                             let total = warnings.len();
                             for (i, w) in warnings.into_iter().enumerate() {
                                 let text = format!("Report {}/{}", i, total);
@@ -75,8 +76,14 @@ impl Task for Preprocess {
                                     format!("{}:{}", file.unwrap(), line),
                                 ));
                             }
+                            pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Caching"), rendered_path));
+                            let mut c = Cursor::new(Vec::new());
+                            rapped.write_rapified(&mut c).unwrap();
+                            c.seek(SeekFrom::Start(0)).unwrap();
+                            let mut out = Vec::new();
+                            c.read_to_end(&mut out).unwrap();
                             pb.set_message("Waiting for cache lock");
-                            crate::CACHED.lock().unwrap().insert(&rendered_path.replace("config.cpp", "config.bin"), output)?;
+                            crate::CACHED.lock().unwrap().insert_bytes(&rendered_path.replace("config.cpp", "config.bin"), out)?;
                         }
                     },
                     Err(e) => {

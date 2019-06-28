@@ -65,7 +65,9 @@ impl Task for Build {
             } else {
                 let content = crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?;
                 if crate::build::prebuild::preprocess::RAPABLE.contains(&ext.as_ref()) {
-                    pbo.files.insert(name.replace("config.cpp", "config.bin"), Cursor::new(content.into_boxed_slice()));
+                    pbo.files.insert(name.replace("config.cpp", "config.bin"), Cursor::new(
+                        crate::CACHED.lock().unwrap().read(&entry.path().display().to_string().replace("config.cpp", "config.bin"))?.into_boxed_slice()
+                    ));
                 } else if cfg!(windows) && is_binarizable {
                     let cursor = armake2::binarize::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);
