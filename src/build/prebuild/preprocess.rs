@@ -44,7 +44,7 @@ impl Task for Preprocess {
                 includes.insert(0, PathBuf::from("."));
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                 match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes, |path| {
-                    pb.set_message(&format!("Cleaning: {}", path.to_str().unwrap()));
+                    pb.set_message(&format!("Preprocessing: {}", path.to_str().unwrap()));
                     crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap())
                 }) {
                     Ok((output, info)) => {
