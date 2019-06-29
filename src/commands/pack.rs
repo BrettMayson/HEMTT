@@ -2,14 +2,14 @@ use std::path::Path;
 
 use crate::{AddonLocation, Command, Project, HEMTTError, Flow, Step};
 
-pub struct Build {}
-impl Command for Build {
+pub struct Pack {}
+impl Command for Pack {
     fn register(&self) -> (&str, clap::App) {
-        ("build",
-            clap::SubCommand::with_name("build")
-                .about("Build the Project")
+        ("pack",
+            clap::SubCommand::with_name("pack")
+                .about("Pack the Project")
                 .arg(clap::Arg::with_name("release")
-                        .help("Build a release")
+                        .help("Pack a release")
                         .long("release")
                         .conflicts_with("dev"))
         )
@@ -32,15 +32,9 @@ impl Command for Build {
                         Box::new(crate::build::checks::names::ValidName {}),
                     ],
                 ),
-                Step::new("🚧", "Prebuild",
+                Step::new("📦", "Pack",
                     vec![
-                        Box::new(crate::build::prebuild::modtime::ModTime {}),
-                        Box::new(crate::build::prebuild::preprocess::Preprocess {}),
-                    ],
-                ),
-                Step::new("📝", "Build",
-                    vec![
-                        Box::new(crate::build::build::Build { use_bin: true }),
+                        Box::new(crate::build::build::Build { use_bin: false }),
                     ],
                 ),
             ],

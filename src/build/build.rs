@@ -13,11 +13,14 @@ use crate::{Addon, HEMTTError, Project, Report, Task};
 static BINARIZABLE: &[&str] = &["rtm", "p3d"];
 
 #[derive(Clone)]
-pub struct Build {}
+pub struct Build {
+    pub use_bin: bool,
+}
 impl Task for Build {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
+
     fn run(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let mut pbo = armake2::pbo::PBO {
@@ -28,7 +31,8 @@ impl Task for Build {
         };
         let directory = addon.folder();
         let binarize = 
-            cfg!(windows)
+            self.use_bin
+            && cfg!(windows)
             && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists())
             && if match armake2::binarize::find_binarize_exe() {
                 Ok(p) => p.exists(),
@@ -65,9 +69,21 @@ impl Task for Build {
             } else {
                 let content = crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?;
                 if crate::build::prebuild::preprocess::RAPABLE.contains(&ext.as_ref()) {
-                    pbo.files.insert(name.replace("config.cpp", "config.bin"), Cursor::new(
-                        crate::CACHED.lock().unwrap().read(&entry.path().display().to_string().replace("config.cpp", "config.bin"))?.into_boxed_slice()
-                    ));
+                    if self.use_bin {
+                        pbo.files.insert(
+                            name.replace("config.cpp", "config.bin"),
+                            Cursor::new(
+                                crate::CACHED.lock().unwrap().read(&entry.path().display().to_string().replace("config.cpp", "config.bin"))?.into_boxed_slice()
+                            )
+                        );
+                    } else {
+                        pbo.files.insert(
+                            name,
+                            Cursor::new(
+                                crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?.into_boxed_slice()
+                            )
+                        );
+                    }
                 } else if cfg!(windows) && is_binarizable {
                     let cursor = armake2::binarize::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);

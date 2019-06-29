@@ -53,7 +53,6 @@ impl Flow {
     }
 
     pub fn step(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>{
-
         let addon_style = ProgressStyle::default_spinner()
             .tick_chars("\\|/| ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -123,7 +122,9 @@ impl Flow {
 
             pb.finish_and_clear();
             //total_pb.inc(1);
-            tx.send(1).unwrap();
+            if report.can_proceed {
+                tx.send(1).unwrap();
+            }
             Ok((report, addon))
         }).collect();
         tx.send(0).unwrap();

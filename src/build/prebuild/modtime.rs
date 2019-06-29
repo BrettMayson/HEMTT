@@ -24,6 +24,7 @@ impl Task for ModTime {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
+    
     fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let modified = modtime(&addon.folder())?;

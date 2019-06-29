@@ -9,6 +9,7 @@ impl Task for NotEmpty {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
+
     fn run(&self, addon: &Addon, _: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
@@ -22,9 +23,10 @@ impl Task for NotEmpty {
 #[derive(Clone)]
 pub struct ValidName {}
 impl Task for ValidName {
-    fn can_run(&self, _addon: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
+    
     fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let re = Regex::new(r"^([A-z\-]+)$").unwrap();

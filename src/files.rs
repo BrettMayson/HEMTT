@@ -23,7 +23,10 @@ impl FileCache {
         if self.files.contains_key(path) {
             Ok(self.files.get(path).unwrap().to_vec())
         } else {
-            let f = File::open(path)?;
+            let f = File::open(path).map_err(|e| HEMTTError::PATH(IOPathError{
+                path: PathBuf::from(path),
+                source: e
+            }))?;
             let mut reader = BufReader::new(f);
             let mut buf = Vec::new();
             reader.read_to_end(&mut buf).map_err(|e| HEMTTError::PATH(IOPathError {

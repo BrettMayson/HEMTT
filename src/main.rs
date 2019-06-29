@@ -36,6 +36,7 @@ fn main() {
     commands.push(Box::new(commands::Init {}));
     commands.push(Box::new(commands::Template {}));
     commands.push(Box::new(commands::Build {}));
+    commands.push(Box::new(commands::Pack {}));
 
     for command in commands.iter() {
         let (name, sub) = command.register();
