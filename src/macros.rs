@@ -113,12 +113,20 @@ macro_rules! niceprintln {
 
 #[macro_export]
 macro_rules! warn {
-    ($s:expr, $m:expr) => {
+    ($s:expr) => {
         use colored::*;
         let style = "warning".yellow().bold();
-        let status = $s.bold();
+        let status = $s;
+        crate::iprintln!("{style}: {status}\n", style, status);
+    }
+}
+
+#[macro_export]
+macro_rules! warnmessage {
+    ($s:expr, $m:expr) => {
+        let status = $s;
         let message = $m;
-        crate::iprintln!("{style}: {status}\n    {message}\n", style, status, message);
+        crate::warn!(crate::iformat!("{status}\n    {message}\n", status, message));
     }
 }
 

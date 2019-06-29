@@ -30,6 +30,7 @@ impl Command for Pack {
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
                         Box::new(crate::build::checks::names::ValidName {}),
+                        Box::new(crate::build::prebuild::modtime::ModTime {}),
                     ],
                 ),
                 Step::new("📦", "Pack",

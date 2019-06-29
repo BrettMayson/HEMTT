@@ -25,19 +25,22 @@ impl Report {
     }
 
     pub fn display(&self) {
-        // for warning in &self.warnings {
-        //     match warning {
-        //         HEMTTError::GENERIC(s, v) => {
-        //             warn!(s, v);
-        //         },
-        //         HEMTTError::LINENO(error) => {
-        //             filewarn!(error);
-        //         },
-        //         _ => {
+        for warning in &self.warnings {
+            match warning {
+                HEMTTError::GENERIC(s, v) => {
+                    warnmessage!(s, v);
+                },
+                HEMTTError::LINENO(error) => {
+                    filewarn!(error);
+                },
+                HEMTTError::SIMPLE(s) => {
+                    warn!(s);
+                },
+                _ => {
 
-        //         }
-        //     }
-        // }
+                }
+            }
+        }
         for error in &self.errors {
             match error {
                 HEMTTError::GENERIC(s, v) => {

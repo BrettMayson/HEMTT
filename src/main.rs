@@ -4,7 +4,6 @@ use clap::{App};
 use ansi_term;
 
 use std::collections::HashMap;
-use std::sync::{Mutex, Arc};
 
 #[macro_use]
 pub mod macros;
@@ -12,12 +11,6 @@ pub mod macros;
 use hemtt::*;
 
 use crate::error::PrintableError;
-
-lazy_static::lazy_static! {
-    static ref RENDERED: Arc<Mutex<RenderedFiles>> = Arc::new(Mutex::new(RenderedFiles::new()));
-    static ref CACHED: Arc<Mutex<FileCache>> = Arc::new(Mutex::new(FileCache::new()));
-    static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
-}
 
 fn main() {
     if cfg!(windows) {

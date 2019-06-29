@@ -10,7 +10,7 @@ pub mod prebuild;
 
 use crate::{HEMTTError, Project};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AddonLocation {
     Addons,
     Optionals,

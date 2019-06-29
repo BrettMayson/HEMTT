@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use std::env;
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use config::{Config, File, Environment};
 use handlebars::to_json;

@@ -78,6 +78,7 @@ impl Flow {
             m.join().unwrap();
         });
         let (tx, rx) = mpsc::channel();
+        
         // tick the top bar every 100 ms to keep the multiprogress updated
         thread::spawn(move || 'outer: loop {
             thread::sleep(Duration::from_millis(100));
@@ -121,7 +122,6 @@ impl Flow {
             }
 
             pb.finish_and_clear();
-            //total_pb.inc(1);
             if report.can_proceed {
                 tx.send(1).unwrap();
             }
