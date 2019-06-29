@@ -2,11 +2,11 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-use crate::{Project, HEMTTError};
+use crate::{Command, Project, HEMTTError};
 
 pub struct Init {}
 
-impl crate::commands::Command for Init {
+impl Command for Init {
     fn register(&self) -> (&str, clap::App) {
         ("init",
             clap::SubCommand::with_name("init")

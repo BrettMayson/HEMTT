@@ -21,7 +21,7 @@ pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
 #[derive(Clone)]
 pub struct ModTime {}
 impl Task for ModTime {
-    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
     fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {

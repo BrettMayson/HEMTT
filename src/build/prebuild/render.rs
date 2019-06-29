@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::path::{Path};
+use std::path::Path;
 use std::io::Write;
 
 use walkdir::WalkDir;

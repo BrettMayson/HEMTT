@@ -9,19 +9,7 @@ use std::sync::{Mutex, Arc};
 #[macro_use]
 pub mod macros;
 
-mod build;
-mod commands;
-mod error;
-mod files;
-mod flow;
-mod project;
-mod render;
-
-pub use build::{Addon, AddonLocation};
-pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
-pub use files::{FileCache, RenderedFiles};
-pub use flow::{Flow, Report, Task, Step};
-pub use project::Project;
+use hemtt::*;
 
 use crate::error::PrintableError;
 
@@ -41,8 +29,8 @@ fn main() {
                 .author(env!("CARGO_PKG_AUTHORS"))
                 .about(env!("CARGO_PKG_DESCRIPTION"));
 
-    let mut commands: Vec<Box<dyn crate::commands::Command>> = Vec::new();
-    let mut hash_commands: HashMap<&str, &Box<dyn crate::commands::Command>> = HashMap::new();
+    let mut commands: Vec<Box<dyn Command>> = Vec::new();
+    let mut hash_commands: HashMap<&str, &Box<dyn Command>> = HashMap::new();
 
     // Add commands here
     commands.push(Box::new(commands::Init {}));

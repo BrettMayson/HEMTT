@@ -7,7 +7,7 @@ use regex::{Regex, Captures};
 use rlua::Lua;
 use walkdir::WalkDir;
 
-use crate::HEMTTError;
+use crate::{Command, HEMTTError};
 
 pub struct Template {}
 
@@ -101,7 +101,7 @@ impl Template {
     }
 }
 
-impl crate::commands::Command for Template {
+impl Command for Template {
     fn register(&self) -> (&str, clap::App) {
         ("template",
             clap::SubCommand::with_name("template")

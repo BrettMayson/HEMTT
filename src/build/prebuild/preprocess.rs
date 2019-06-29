@@ -22,7 +22,7 @@ pub fn can_preprocess(p: &Path) -> (bool, bool) {
 #[derive(Clone)]
 pub struct Preprocess {}
 impl Task for Preprocess {
-    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
     fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
@@ -61,20 +61,15 @@ impl Task for Preprocess {
                                 let file = info.line_origins[min(line, info.line_origins.len()) - 1].1.as_ref().map(|p| p.to_str().unwrap().to_string());
                                 line = info.line_origins[min(line, info.line_origins.len()) - 1].0 as usize + 1;
 
-                                // let filename = file.unwrap();
-                                // report.warnings.push(HEMTTError::LINENO(FileErrorLineNumber {
-                                //     content: crate::CACHED.lock().unwrap().get_line(&filename, line)?,
-                                //     col: None,
-                                //     line: Some(line),
-                                //     file: filename,
-                                //     error: w.1,
-                                //     note: None,
-                                // }));
-
-                                report.warnings.push(HEMTTError::GENERIC(
-                                    w.1,
-                                    format!("{}:{}", file.unwrap(), line),
-                                ));
+                                let filename = file.unwrap();
+                                report.warnings.push(HEMTTError::LINENO(FileErrorLineNumber {
+                                    content: crate::CACHED.lock().unwrap().get_line(&filename, line)?,
+                                    col: None,
+                                    line: Some(line),
+                                    file: filename,
+                                    error: w.1,
+                                    note: None,
+                                }));
                             }
                             pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Caching"), rendered_path));
                             let mut c = Cursor::new(Vec::new());

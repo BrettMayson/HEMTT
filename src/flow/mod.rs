@@ -129,16 +129,16 @@ impl Flow {
         tx.send(0).unwrap();
         draw_thread.join().unwrap();
 
-        // let addons = addons.into_iter().filter(|data| {
-        //     if let Ok((report, _)) = data {
-        //         if !report.can_proceed {
-        //             report.display();
-        //             false
-        //         } else {
-        //             true
-        //         }
-        //     } else { true }
-        // }).collect();
+        let addons = addons.into_iter().filter(|data| {
+            if let Ok((report, _)) = data {
+                if !report.can_proceed {
+                    report.display();
+                    false
+                } else {
+                    true
+                }
+            } else { true }
+        }).collect();
 
         Ok(addons)
     }

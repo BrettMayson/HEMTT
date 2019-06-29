@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Project, HEMTTError, Flow, Step};
+use crate::{AddonLocation, Command, Project, HEMTTError, Flow, Step};
 
 pub struct Build {}
-impl crate::commands::Command for Build {
+impl Command for Build {
     fn register(&self) -> (&str, clap::App) {
         ("build",
             clap::SubCommand::with_name("build")

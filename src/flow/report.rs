@@ -62,14 +62,11 @@ impl Report {
                 let lineerror = n.clone();
                 let mut add = true;
                 for error in &self.errors {
-                    match error {
-                        HEMTTError::LINENO(e) => {
-                            if n == *e {
+                    if let HEMTTError::LINENO(e) = error {
+                        if n == *e {
                                 add = false;
                                 break;
                             }
-                        },
-                        _ => {},
                     }
                 }
                 if add {
