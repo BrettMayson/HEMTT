@@ -10,6 +10,9 @@ pub use build::Build;
 mod pack;
 pub use pack::Pack;
 
+mod status;
+pub use status::Status;
+
 use crate::{HEMTTError, Project};
 
 pub trait Command {

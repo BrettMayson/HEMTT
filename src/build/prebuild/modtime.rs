@@ -24,7 +24,7 @@ impl Task for ModTime {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    
+
     fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let modified = modtime(&addon.folder())?;
@@ -32,7 +32,7 @@ impl Task for ModTime {
         if target.exists() {
             if let Ok(time) = std::fs::metadata(target).unwrap().modified() {
                 if time >= modified {
-                    report.can_proceed = false;
+                    report.stop = Some(HEMTTError::SIMPLE("The PBO already exists".to_string()));
                 }
             }
         }

@@ -25,7 +25,7 @@ impl Task for Preprocess {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
-    
+
     fn run(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
@@ -38,9 +38,9 @@ impl Task for Preprocess {
                 let (original_path, rendered_path) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
                 let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?;
-                if raw.len() < 3 { 
+                if raw.len() < 3 {
                     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
-                    continue; 
+                    continue;
                 }
                 let mut includes = p.include.clone();
                 includes.insert(0, PathBuf::from("."));
@@ -83,8 +83,9 @@ impl Task for Preprocess {
                         }
                     },
                     Err(e) => {
+                        // Unable to clone HEMTTError
                         report.unique_error(convert_preprocess_error(e.to_string())?);
-                        report.can_proceed = false;
+                        report.stop = Some(convert_preprocess_error(e.to_string())?);
                     }
                 }
             }

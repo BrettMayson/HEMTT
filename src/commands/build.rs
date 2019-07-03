@@ -12,10 +12,13 @@ impl Command for Build {
                         .help("Build a release")
                         .long("release")
                         .conflicts_with("dev"))
+                .arg(clap::Arg::with_name("force")
+                        .help("Clears existing built files")
+                        .long("clear"))
         )
     }
 
-    fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
+    fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
         if Path::new(&crate::build::folder_name(&AddonLocation::Optionals)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
@@ -25,6 +28,12 @@ impl Command for Build {
         }
         let flow = Flow {
             steps: vec![
+                if args.is_present("clear") {
+                    Step::new("🗑️", "Clear",
+                    vec![
+                        Box::new(crate::build::prebuild::clear::Clear {}),
+                    ])
+                } else { Step::none() },
                 Step::new("🔍", "Checks",
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),

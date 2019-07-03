@@ -4,7 +4,7 @@ use crate::error::{HEMTTError};
 pub struct Report {
     pub warnings: Vec<HEMTTError>,
     pub errors: Vec<HEMTTError>,
-    pub can_proceed: bool,
+    pub stop: Option<HEMTTError>,
 }
 
 impl Report {
@@ -12,13 +12,15 @@ impl Report {
         Self {
             warnings: Vec::new(),
             errors: Vec::new(),
-            can_proceed: true,
+            stop: None,
         }
     }
 
     pub fn absorb(&mut self, mut other: Self) {
         self.warnings.append(&mut other.warnings);
-        self.can_proceed = self.can_proceed && other.can_proceed;
+        if self.stop.is_none() && other.stop.is_some() {
+            self.stop = other.stop;
+        };
         for error in other.errors {
             self.unique_error(error);
         }

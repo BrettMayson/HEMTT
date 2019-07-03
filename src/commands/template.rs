@@ -9,9 +9,14 @@ use walkdir::WalkDir;
 
 use crate::{Command, HEMTTError};
 
+#[derive(Default)]
 pub struct Template {}
 
 impl Template {
+    pub fn new() -> Self {
+        Self {}
+    }
+
     #[allow(dead_code)]
     fn eval_file<F: FnOnce(rlua::Context)>(&self, file: &str, setup: F) -> String {
         let lua = Lua::new();
@@ -94,10 +99,12 @@ impl Template {
         }
     }
 
-    #[allow(dead_code)]
-    fn get_version(&self) {
-        let version = self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {});
-        println!("Version: {}", version);
+    pub fn get_version(&self) -> Result<String, HEMTTError> {
+        if PathBuf::from("./hemtt/template/scripts/get_version.lua").exists() {
+            Ok(self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {}))
+        } else {
+            Err(HEMTTError::SIMPLE("The version number could not be determined".to_string()))
+        }
     }
 }
 

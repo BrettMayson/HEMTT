@@ -2,23 +2,16 @@ use std::path::Path;
 
 use crate::{AddonLocation, Command, Project, HEMTTError, Flow, Step};
 
-pub struct Pack {}
-impl Command for Pack {
+pub struct Status {}
+impl Command for Status {
     fn register(&self) -> (&str, clap::App) {
-        ("pack",
-            clap::SubCommand::with_name("pack")
-                .about("Pack the Project")
-                .arg(clap::Arg::with_name("release")
-                        .help("Pack a release")
-                        .long("release")
-                        .conflicts_with("dev"))
-                .arg(clap::Arg::with_name("clear")
-                        .help("Clears existing built files")
-                        .long("clear"))
+        ("status",
+            clap::SubCommand::with_name("status")
+                .about("Get the status of your project")
         )
     }
 
-    fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
+    fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
         if Path::new(&crate::build::folder_name(&AddonLocation::Optionals)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
@@ -28,12 +21,6 @@ impl Command for Pack {
         }
         let flow = Flow {
             steps: vec![
-                if args.is_present("clear") {
-                    Step::new("🗑️", "Clear",
-                    vec![
-                        Box::new(crate::build::prebuild::clear::Clear {}),
-                    ])
-                } else { Step::none() },
                 Step::new("🔍", "Checks",
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
@@ -42,14 +29,17 @@ impl Command for Pack {
                         Box::new(crate::build::prebuild::modtime::ModTime {}),
                     ],
                 ),
-                Step::new("📦", "Pack",
-                    vec![
-                        Box::new(crate::build::build::Build { use_bin: false }),
-                    ],
-                ),
             ],
         };
-        flow.execute(addons, &mut p)?;
+        let addons = flow.execute(addons, &mut p)?;
+        let mut build = 0;
+        for addon in addons {
+            let (report, _) = addon?;
+            if report.stop.is_none() { build += 1 }
+        }
+        let template = crate::commands::Template::new();
+        println!("Version: {}", template.get_version().unwrap_or("Unable to determine".to_string()));
+        println!("Addons to be built: {}", build);
         Ok(())
     }
 }

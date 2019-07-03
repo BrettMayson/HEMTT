@@ -36,6 +36,8 @@ impl Project {
     pub fn read() -> Result<Self, HEMTTError> {
         let mut p = Config::new();
         let env = environment();
+        let root = find_root()?;
+        std::env::set_current_dir(root)?;
         if !Path::new("hemtt/").exists() { return Err(HEMTTError::SIMPLE("No HEMTT project folder".to_string()))}
         p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
         p.merge(File::with_name("hemtt/local").required(false))?;
@@ -58,6 +60,23 @@ pub fn environment() -> String {
     env::var("ENV").unwrap_or_else(|_| "dev".into())
 }
 
+pub fn find_root() -> Result<PathBuf, HEMTTError> {
+    let mut dir = std::env::current_dir().unwrap();
+    loop {
+        let mut search = dir.clone();
+        search.push("hemtt");
+        if search.exists() {
+            search.pop();
+            return Ok(search);
+        }
+        dir.pop();
+        search.pop();
+        if dir == search {
+            return Err(HEMTTError::SIMPLE("No HEMTT Project File was found".to_string()));
+        }
+    }
+}
+
 #[derive(Default, Serialize, Deserialize)]
 pub struct SemVer {
     pub major: u32,
@@ -70,7 +89,7 @@ impl SemVer {
     pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
         SemVer { major, minor, patch, build }
     }
-    
+
     #[allow(dead_code)]
     pub fn to_string(&self) -> String {
         if self.build.is_empty() {

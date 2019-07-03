@@ -14,7 +14,7 @@ impl Task for NotEmpty {
         let mut report = Report::new();
         let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         if empty {
-            report.can_proceed = false;
+            report.stop = Some(HEMTTError::SIMPLE("The addon directory is empty".to_string()));
         }
         Ok(report)
     }
