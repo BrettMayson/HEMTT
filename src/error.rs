@@ -13,7 +13,7 @@ impl<T, E: std::fmt::Debug + std::fmt::Display> PrintableError<T, E> for Result<
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FileErrorLineNumber {
     pub file: String,
     pub content: String,

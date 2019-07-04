@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 use regex::Regex;
 use strum::IntoEnumIterator;
 
-use crate::{AddonLocation, Task, Report, Addon, Project, HEMTTError};
+use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Task};
 
 #[derive(Clone)]
 pub struct Clear {}
@@ -29,7 +29,7 @@ impl Task for Clean {
         Ok(true)
     }
 
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
         for data in &addons {

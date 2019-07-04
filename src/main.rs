@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use clap::{App};
+use clap::App;
 use hashbrown::HashMap;
 
 #[cfg(windows)]

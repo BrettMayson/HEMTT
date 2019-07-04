@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 use std::env;
 use std::path::{Path, PathBuf};
 
-use config::{Config, File, Environment};
+use config::{Config, Environment, File};
 use handlebars::to_json;
 use serde_json::value::{Value as Json};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::HEMTTError;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Project {
     pub name: String,
     pub prefix: String,

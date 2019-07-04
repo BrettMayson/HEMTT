@@ -2,8 +2,8 @@ use crate::error::{HEMTTError};
 
 #[derive(Debug, Default)]
 pub struct Report {
-    pub warnings: Vec<HEMTTError>,
     pub errors: Vec<HEMTTError>,
+    pub warnings: Vec<HEMTTError>,
     pub stop: Option<(bool, HEMTTError)>,
 }
 

@@ -1,6 +1,6 @@
 use dialoguer::Confirmation;
 
-use crate::{Task, Addon, Report, Project, HEMTTError};
+use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
 
 #[derive(Clone)]
 pub struct Release {}
@@ -9,7 +9,7 @@ impl Task for Release {
         Ok(true)
     }
 
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
         let mut can_continue = true;
         /*for addon in &addons {
             if addon.is_err() { can_continue = false; break; }

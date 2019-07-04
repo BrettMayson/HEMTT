@@ -1,9 +1,9 @@
 use std::path::PathBuf;
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
 use indicatif::ProgressBar;
 
-use crate::{Task, Report, Addon, Project, HEMTTError};
+use crate::{Addon, HEMTTError, Project, Report, Task};
 
 pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);

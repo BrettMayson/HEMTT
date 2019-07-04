@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use git2::Repository;
-use handlebars::{Handlebars, RenderContext, Helper, Context, JsonRender, HelperResult, Output};
+use handlebars::{Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext};
 
 use crate::error::*;
 

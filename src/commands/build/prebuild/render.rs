@@ -5,7 +5,7 @@ use std::io::Write;
 use walkdir::WalkDir;
 use indicatif::ProgressBar;
 
-use crate::{HEMTTError, Addon, Project, Task, Report};
+use crate::{Addon, HEMTTError, Project, Report, Task};
 
 pub fn can_render(p: &Path) -> bool {
     let name = p.file_name().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();

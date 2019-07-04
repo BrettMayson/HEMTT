@@ -1,13 +1,13 @@
 use std::cmp::min;
 use std::path::{Path, PathBuf};
-use std::io::{Cursor, Seek, SeekFrom, Read};
+use std::io::{Cursor, Read, Seek, SeekFrom};
 
 use armake2::preprocess::preprocess;
 use indicatif::ProgressBar;
 use regex::Regex;
 use walkdir::WalkDir;
 
-use crate::{HEMTTError, FileErrorLineNumber, Task, Project, Addon, Report};
+use crate::{Addon, FileErrorLineNumber, HEMTTError, Project, Report, Task};
 
 pub static RAPABLE: &[&str] = &["cpp", "rvmat", "ext"];
 static CMD_GAP: usize = 18;

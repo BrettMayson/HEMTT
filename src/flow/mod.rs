@@ -7,51 +7,14 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
 mod report;
+mod step;
+mod task;
+
 pub use report::Report;
+pub use step::Step;
+pub use task::Task;
 
-use crate::{HEMTTError, Addon, Project};
-
-type AddonList = Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>;
-
-#[derive(Clone)]
-pub struct Step {
-    pub tasks: Vec<Box<dyn Task>>,
-    pub name: String,
-    pub emoji: String,
-    none: bool,
-    parallel: bool,
-}
-impl Step {
-    pub fn parallel(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
-        Self {
-            emoji: emoji.to_string(),
-            name: name.to_string(),
-            tasks,
-            none: false,
-            parallel: true,
-        }
-    }
-
-    pub fn single(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
-        Self {
-            emoji: emoji.to_string(),
-            name: name.to_string(),
-            tasks,
-            none: false,
-            parallel: false,
-        }
-    }
-
-    pub fn none() -> Self {
-        Self {
-            emoji: "".to_string(),
-            name: "".to_string(),
-            tasks: Vec::new(),
-            none: true,
-            parallel: false,
-        }
-    }
-}
+use crate::{Addon, AddonList, HEMTTError, Project};
 
 #[derive(Clone)]
 pub struct Flow {
@@ -215,11 +178,3 @@ impl Flow {
         Ok(addons)
     }
 }
-
-// A task is an independent item to be ran
-pub trait Task: objekt::Clone + std::marker::Send + std::marker::Sync {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> { Ok(false) }
-    fn parallel(&self, _: &Addon, _: &Report, _: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> { unimplemented!() }
-    fn single(&self, _: Vec<Result<(Report, Addon), HEMTTError>>, _: &Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> { unimplemented!() }
-}
-objekt::clone_trait_object!(Task);

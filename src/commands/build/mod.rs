@@ -1,12 +1,13 @@
 use std::path::Path;
 
 pub mod addon;
+#[allow(clippy::module_inception)]
 pub mod build;
 pub mod checks;
 pub mod postbuild;
 pub mod prebuild;
 
-use crate::{Addon, AddonLocation, Command, Project, HEMTTError, Flow, Step};
+use crate::{Addon, AddonLocation, Command, Flow, HEMTTError, Project, Step};
 
 pub struct Build {}
 impl Command for Build {

@@ -8,11 +8,11 @@ use strum_macros::EnumIter;
 
 use crate::Project;
 
-#[derive(Debug, Clone, PartialEq, EnumIter)]
+#[derive(Clone, Debug, EnumIter, PartialEq)]
 pub enum AddonLocation {
     Addons,
-    Optionals,
     Compats,
+    Optionals,
 }
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ impl Addon {
 pub fn folder_name(location: &AddonLocation) -> String {
     String::from(match location {
         AddonLocation::Addons => "addons",
-        AddonLocation::Optionals => "optionals",
         AddonLocation::Compats => "compats",
+        AddonLocation::Optionals => "optionals",
     })
 }

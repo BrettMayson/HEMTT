@@ -1,7 +1,7 @@
 use indicatif::ProgressBar;
 use regex::Regex;
 
-use crate::{HEMTTError, AddonLocation, Project, Task, Addon, Report};
+use crate::{Addon, AddonLocation, HEMTTError, Project, Report, Task};
 
 #[derive(Clone)]
 pub struct NotEmpty {}
