@@ -85,7 +85,7 @@ impl Task for Preprocess {
                     Err(e) => {
                         // Unable to clone HEMTTError
                         report.unique_error(convert_preprocess_error(e.to_string())?);
-                        report.stop = Some(convert_preprocess_error(e.to_string())?);
+                        report.stop = Some((true, convert_preprocess_error(e.to_string())?));
                     }
                 }
             }

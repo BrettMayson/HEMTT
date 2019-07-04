@@ -8,6 +8,7 @@ use strum_macros::EnumIter;
 
 pub mod build;
 pub mod checks;
+pub mod postbuild;
 pub mod prebuild;
 
 use crate::{HEMTTError, Project};

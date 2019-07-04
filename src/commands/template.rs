@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use hashbrown::HashMap;
 use regex::{Regex, Captures};
 use rlua::Lua;
 use walkdir::WalkDir;
@@ -103,7 +103,12 @@ impl Template {
         if PathBuf::from("./hemtt/template/scripts/get_version.lua").exists() {
             Ok(self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {}))
         } else {
-            Err(HEMTTError::SIMPLE("The version number could not be determined".to_string()))
+            Err(HEMTTError::generic("The version number could not be determined",
+                if cfg!(windows) {
+                    "Use `cmd /C \"set APP_VERSION={} && hemtt ...\"` to specify a version for this build"
+                } else {
+                    "Use `APP_VERSION={} hemtt ...` to specify a version for this build"
+            }))
         }
     }
 }

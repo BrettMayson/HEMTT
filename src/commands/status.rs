@@ -26,7 +26,7 @@ impl Command for Status {
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
                         Box::new(crate::build::checks::names::ValidName {}),
-                        Box::new(crate::build::prebuild::modtime::ModTime {}),
+                        Box::new(crate::build::checks::modtime::ModTime {}),
                     ],
                 ),
             ],
@@ -37,8 +37,8 @@ impl Command for Status {
             let (report, _) = addon?;
             if report.stop.is_none() { build += 1 }
         }
-        let template = crate::commands::Template::new();
-        println!("Version: {}", template.get_version().unwrap_or("Unable to determine".to_string()));
+        println!("CI Environment: {}", crate::is_ci());
+        println!("Version: {}", p.version().unwrap_or_else(|_| "Unable to determine".to_string()));
         println!("Addons to be built: {}", build);
         Ok(())
     }

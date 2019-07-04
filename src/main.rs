@@ -1,9 +1,10 @@
+use std::time::Instant;
+
 use clap::{App};
+use hashbrown::HashMap;
 
 #[cfg(windows)]
 use ansi_term;
-
-use std::collections::HashMap;
 
 #[macro_use]
 pub mod macros;
@@ -33,7 +34,12 @@ fn main() {
                     .global(true)
                     .help("Turn debugging information on")
                     .long("debug")
-                    .short("d"));
+                    .short("d"))
+                .arg(clap::Arg::with_name("time")
+                    .global(true)
+                    .help("Time the execution")
+                    .long("time"))
+            ;
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
     let mut hash_commands: HashMap<&str, &Box<dyn Command>> = HashMap::new();
@@ -53,6 +59,10 @@ fn main() {
 
     let matches = app.get_matches();
 
+    let start = if matches.is_present("time") {
+        Some(Instant::now())
+    } else { None };
+
     rayon::ThreadPoolBuilder::new().num_threads(
         if let Some(jobs) = matches.value_of("jobs") { usize::from_str_radix(jobs, 10).unwrap_or_print() } else { num_cpus::get() }
     ).build_global().unwrap();
@@ -61,10 +71,11 @@ fn main() {
         Some(v) => {
             match hash_commands.get(v) {
                 Some(c) => {
+                    let sub_matches = matches.subcommand_matches(v).unwrap();
                     if c.require_project() {
-                        c.run(matches.subcommand_matches(v).unwrap(), Project::read().unwrap_or_print()).unwrap_or_print();
+                        c.run(sub_matches, Project::read().unwrap_or_print()).unwrap_or_print();
                     } else {
-                        c.run_no_project(matches.subcommand_matches(v).unwrap()).unwrap_or_print();
+                        c.run_no_project(sub_matches).unwrap_or_print();
                     }
                 },
                 None => println!("No command"),
@@ -74,6 +85,11 @@ fn main() {
     }
 
     crate::RENDERED.lock().unwrap().clean();
+
+    if matches.is_present("time") {
+        let elapsed = start.unwrap().elapsed();
+        println!("Execution Took {}.{} Seconds", elapsed.as_secs(), elapsed.as_millis());
+    }
 }
 
 #[cfg(windows)]

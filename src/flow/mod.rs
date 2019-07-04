@@ -11,6 +11,8 @@ pub use report::Report;
 
 use crate::{HEMTTError, Addon, Project};
 
+type AddonList = Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>;
+
 #[derive(Clone)]
 pub struct Step {
     pub tasks: Vec<Box<dyn Task>>,
@@ -57,11 +59,12 @@ pub struct Flow {
 }
 
 impl Flow {
-    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> AddonList {
         let mut addons: Vec<Result<(Report, Addon), HEMTTError>> = addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
 
         for step in &self.steps {
             if step.none { continue; }
+            if addons.is_empty() { continue; }
             if step.parallel {
                 addons = self.parallel(&step.emoji, &step.name, &step.tasks, addons, p)?;
             } else {
@@ -82,7 +85,7 @@ impl Flow {
         Ok(addons)
     }
 
-    pub fn parallel(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+    pub fn parallel(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
         let addon_style = ProgressStyle::default_spinner()
             .tick_chars("\\|/| ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -93,17 +96,22 @@ impl Flow {
         // Create a multiprogress bar
         let m = MultiProgress::new();
         // Create the top bar
-        let total_pb = m.add(ProgressBar::new(addons.len() as u64));
+        let mut total = 0;
+        let total_pb = m.add(ProgressBar::new(0));
         total_pb.set_style(master_style.clone());
         if !cfg!(windows) {
             total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, name)));
         } else {
-            total_pb.set_prefix(&format!("{}", &fill_space!(" ", 12, name)));
+            total_pb.set_prefix(&fill_space!(" ", 12, name).to_string());
         }
 
         // Create a progress bar for each addon
         let addons: Vec<Result<(ProgressBar, Report, Addon), HEMTTError>> = addons.into_iter().map(|data| {
             let (report, addon) = data?;
+            if report.stop.is_none() {
+                total += 1;
+                total_pb.set_length(total);
+            }
             Ok((m.add(ProgressBar::new(0)), report, addon))
         }).collect();
 
@@ -142,6 +150,8 @@ impl Flow {
             pb.set_style(addon_style.clone());
             pb.set_prefix(&fill_space!(" ", 16, &addon.name));
 
+            let add = report.stop.is_none();
+
             for task in tasks {
                 if report.stop.is_none() && task.can_run(&addon, &report, p)? {
                     pb.tick();
@@ -156,7 +166,7 @@ impl Flow {
             }
 
             pb.finish_and_clear();
-            if report.stop.is_none() {
+            if add {
                 tx.send(1).unwrap();
             }
             Ok((report, addon))
@@ -164,40 +174,42 @@ impl Flow {
         tx.send(0).unwrap();
         draw_thread.join().unwrap();
 
-        let addons = addons.into_iter().filter(|data| {
-            if let Ok((report, _)) = data {
-                if !report.stop.is_none() {
+        let addons = addons.into_iter().map(|data| {
+            if let Ok((report, addon)) = data {
+                if report.stop.is_some() {
                     report.display();
-                    false
-                } else {
-                    true
                 }
-            } else { true }
+                Ok((report, addon))
+            } else {
+                data
+            }
         }).collect();
 
         Ok(addons)
     }
 
-    fn single(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+    fn single(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
         if !cfg!(windows) {
             println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
         } else {
             println!("{}", &fill_space!(" ", 12, name).bold().cyan());
         }
 
+        let mut addons = addons;
+
         for task in tasks {
-            task.single(&addons, p)?;
+            addons = task.single(addons, p)?;
         }
 
-        let addons = addons.into_iter().filter(|data| {
-            if let Ok((report, _)) = data {
-                if !report.stop.is_none() {
+        let addons = addons.into_iter().map(|data| {
+            if let Ok((report, addon)) = data {
+                if report.stop.is_some() {
                     report.display();
-                    false
-                } else {
-                    true
                 }
-            } else { true }
+                Ok((report, addon))
+            } else {
+                data
+            }
         }).collect();
 
         Ok(addons)
@@ -208,6 +220,6 @@ impl Flow {
 pub trait Task: objekt::Clone + std::marker::Send + std::marker::Sync {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> { Ok(false) }
     fn parallel(&self, _: &Addon, _: &Report, _: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> { unimplemented!() }
-    fn single(&self, _: &[Result<(Report, Addon), HEMTTError>], _: &Project) -> Result<Report, HEMTTError> { unimplemented!() }
+    fn single(&self, _: Vec<Result<(Report, Addon), HEMTTError>>, _: &Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> { unimplemented!() }
 }
 objekt::clone_trait_object!(Task);

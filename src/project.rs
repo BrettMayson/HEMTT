@@ -16,6 +16,13 @@ pub struct Project {
     pub author: String,
     pub template: String,
 
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
+    pub version: String,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
+    pub modname: String,
     #[serde(default = "default_mainprefix")]
     pub mainprefix: String,
 
@@ -28,6 +35,9 @@ impl Project {
         Self {
             name, prefix, author, template,
 
+            version: String::new(),
+
+            modname: String::new(),
             mainprefix: default_mainprefix(),
             include: default_include(),
         }
@@ -38,7 +48,7 @@ impl Project {
         let env = environment();
         let root = find_root()?;
         std::env::set_current_dir(root)?;
-        if !Path::new("hemtt/").exists() { return Err(HEMTTError::SIMPLE("No HEMTT project folder".to_string()))}
+        if !Path::new("hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
         p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
         p.merge(File::with_name("hemtt/local").required(false))?;
         p.merge(Environment::with_prefix("app"))?;
@@ -53,6 +63,33 @@ impl Project {
         vars.insert("prefix", to_json(self.prefix.clone()));
         vars.insert("env", to_json(environment()));
         vars
+    }
+
+    pub fn render(&self, text: &str) -> Result<String, HEMTTError> {
+        crate::render::run(text, &self.get_variables())
+    }
+
+    pub fn modname(&self) -> Result<String, HEMTTError> {
+        Ok(if self.modname.is_empty() {
+            self.prefix.clone()
+        } else {
+            self.render(&self.modname)?
+        })
+    }
+
+    pub fn version(&self) -> Result<String, HEMTTError> {
+        if self.version.is_empty() {
+            let template = crate::commands::Template::new();
+            template.get_version()
+        } else {
+            Ok(self.version.clone().trim().to_string())
+        }
+    }
+
+    pub fn release_dir(&self) -> Result<String, HEMTTError> {
+        let version = self.version()?;
+        let modname = self.modname()?;
+        Ok(iformat!("releases/{version}/@{modname}", version, modname))
     }
 }
 
@@ -72,30 +109,7 @@ pub fn find_root() -> Result<PathBuf, HEMTTError> {
         dir.pop();
         search.pop();
         if dir == search {
-            return Err(HEMTTError::SIMPLE("No HEMTT Project File was found".to_string()));
-        }
-    }
-}
-
-#[derive(Default, Serialize, Deserialize)]
-pub struct SemVer {
-    pub major: u32,
-    pub minor: u32,
-    pub patch: u32,
-    pub build: String,
-}
-impl SemVer {
-    #[allow(dead_code)]
-    pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
-        SemVer { major, minor, patch, build }
-    }
-
-    #[allow(dead_code)]
-    pub fn to_string(&self) -> String {
-        if self.build.is_empty() {
-            format!("{}.{}.{}", self.major, self.minor, self.patch)
-        } else {
-            format!("{}.{}.{}.{}", self.major, self.minor, self.patch, self.build)
+            return Err(HEMTTError::simple("No HEMTT Project File was found"));
         }
     }
 }

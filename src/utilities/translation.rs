@@ -1,9 +1,9 @@
+use hashbrown::HashMap;
 use pbr::ProgressBar;
 use serde_xml_rs;
 use serde::Deserialize;
 use walkdir::WalkDir;
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 

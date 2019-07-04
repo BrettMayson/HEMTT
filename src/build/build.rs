@@ -38,9 +38,9 @@ impl Task for Build {
                 Ok(p) => p.exists(),
                 Err(_) => false,
             } { true } else {
-                report.warnings.push(HEMTTError::GENERIC(
-                    "Unable to locate binarize.exe".to_string(),
-                    "Files will be packed as is".to_string(),
+                report.warnings.push(HEMTTError::generic(
+                    "Unable to locate binarize.exe",
+                    "Files will be packed as is",
                 ));
                 false
             };
@@ -89,9 +89,9 @@ impl Task for Build {
                     pbo.files.insert(name, cursor);
                 } else {
                     if is_binarizable && !cfg!(windows) {
-                        report.warnings.push(HEMTTError::GENERIC(
+                        report.warnings.push(HEMTTError::generic(
                             format!("Unable to binarize `{}`", entry.path().display().to_string()),
-                            "On non-windows systems binarize.exe cannot be used; file will packed as is".to_string()
+                            "On non-windows systems binarize.exe cannot be used; file will packed as is"
                         ));
                     }
 

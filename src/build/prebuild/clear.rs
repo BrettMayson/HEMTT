@@ -29,10 +29,10 @@ impl Task for Clean {
         Ok(true)
     }
 
-    fn single(&self, addons: &[Result<(Report, Addon), HEMTTError>], p: &Project) -> Result<Report, HEMTTError> {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
-        for data in addons {
+        for data in &addons {
             if let Ok(d) = data {
                 let (_, addon) = d;
                 targets.push(addon.target(p).display().to_string());
@@ -45,14 +45,12 @@ impl Task for Clean {
                 let entry = entry?;
                 let path = entry.path();
                 let loc = path.display().to_string();
-                if !path.is_dir() && re.is_match(&loc) {
-                    if !targets.contains(&loc) {
-                        std::fs::remove_file(&loc)?;
-                        println!("Removing {}", loc);
-                    }
+                if !path.is_dir() && re.is_match(&loc) && !targets.contains(&loc) {
+                    std::fs::remove_file(&loc)?;
+                    println!("Removing {}", loc);
                 }
             }
         }
-        Ok(Report::new())
+        Ok(addons)
     }
 }

@@ -58,6 +58,13 @@ impl HEMTTError {
             note: None,
         })
     }
+
+    pub fn generic<T: Into<String>, U: Into<String>>(msg: T, info: U) -> HEMTTError {
+        HEMTTError::GENERIC(msg.into(), info.into())
+    }
+    pub fn simple<T: Into<String>>(msg: T) -> HEMTTError {
+        HEMTTError::SIMPLE(msg.into())
+    }
 }
 
 impl std::fmt::Display for HEMTTError {

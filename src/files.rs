@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader,Read};
 use std::path::{Path, PathBuf};
 
+use hashbrown::HashMap;
 use regex::Regex;
 
 use crate::{HEMTTError, IOPathError};
@@ -47,7 +47,7 @@ impl FileCache {
             ));
         }
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"(.+)""#).unwrap();
-        let clean = Regex::new(r"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$").unwrap();
+        let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n").to_string();
         let mut safe = HashMap::new();
         for mat in keep.find_iter(&content) {

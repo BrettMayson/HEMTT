@@ -4,7 +4,7 @@ use crate::error::{HEMTTError};
 pub struct Report {
     pub warnings: Vec<HEMTTError>,
     pub errors: Vec<HEMTTError>,
-    pub stop: Option<HEMTTError>,
+    pub stop: Option<(bool, HEMTTError)>,
 }
 
 impl Report {

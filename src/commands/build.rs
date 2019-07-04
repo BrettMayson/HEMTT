@@ -45,7 +45,7 @@ impl Command for Build {
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
                         Box::new(crate::build::checks::names::ValidName {}),
-                        Box::new(crate::build::prebuild::modtime::ModTime {}),
+                        Box::new(crate::build::checks::modtime::ModTime {}),
                     ],
                 ),
                 Step::parallel("🚧", "Prebuild",
@@ -58,6 +58,12 @@ impl Command for Build {
                         Box::new(crate::build::build::Build { use_bin: true }),
                     ],
                 ),
+                if args.is_present("release") {
+                    Step::single("⭐", "Release",
+                    vec![
+                        Box::new(crate::build::postbuild::release::Release {}),
+                    ])
+                } else { Step::none() }
             ],
         };
         flow.execute(addons, &mut p)?;
