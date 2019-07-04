@@ -23,11 +23,11 @@ impl Command for Init {
         let template = ask!("Template >", "cba");
 
         // Create settings file in TOML
-        fs::create_dir_all("./hemtt/")?;
+        fs::create_dir_all("./.hemtt/")?;
         let project = Project::new(
             name, prefix, author, template.clone()
         );
-        let mut out = File::create("./hemtt/dev.toml")?;
+        let mut out = File::create("./.hemtt/base.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
 
         // clone template

@@ -10,9 +10,9 @@ impl Task for NotEmpty {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, _: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
-        let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
+        let empty = std::fs::read_dir(addon.folder())?.count() == 0;
         if empty {
             report.stop = Some((true, HEMTTError::simple("The addon directory is empty")));
         }
@@ -27,7 +27,7 @@ impl Task for ValidName {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         // WARN: addon name standards
         let re = Regex::new(r"^([A-z0-9\-]+)$").unwrap();

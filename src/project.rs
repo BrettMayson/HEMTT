@@ -48,9 +48,10 @@ impl Project {
         let env = environment();
         let root = find_root()?;
         std::env::set_current_dir(root)?;
-        if !Path::new("hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
+        if !Path::new(".hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
+        p.merge(File::with_name(".hemtt/base").required(true))?;
         p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
-        p.merge(File::with_name("hemtt/local").required(false))?;
+        p.merge(File::with_name(".hemtt/local").required(false))?;
         p.merge(Environment::with_prefix("app"))?;
         p.try_into().map_err(From::from)
     }
@@ -86,22 +87,22 @@ impl Project {
         }
     }
 
-    pub fn release_dir(&self) -> Result<String, HEMTTError> {
+    pub fn release_dir(&self) -> Result<PathBuf, HEMTTError> {
         let version = self.version()?;
         let modname = self.modname()?;
-        Ok(iformat!("releases/{version}/@{modname}", version, modname))
+        Ok(PathBuf::from(iformat!("releases/{version}/@{modname}", version, modname)))
     }
 }
 
 pub fn environment() -> String {
-    env::var("ENV").unwrap_or_else(|_| "dev".into())
+    env::var("ENV").unwrap_or_else(|_| if *crate::CI { "ci".into() } else { "dev".into() })
 }
 
 pub fn find_root() -> Result<PathBuf, HEMTTError> {
     let mut dir = std::env::current_dir().unwrap();
     loop {
         let mut search = dir.clone();
-        search.push("hemtt");
+        search.push(".hemtt");
         if search.exists() {
             search.pop();
             return Ok(search);

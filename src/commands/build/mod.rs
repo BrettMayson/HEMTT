@@ -1,6 +1,12 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Command, Project, HEMTTError, Flow, Step};
+pub mod addon;
+pub mod build;
+pub mod checks;
+pub mod postbuild;
+pub mod prebuild;
+
+use crate::{Addon, AddonLocation, Command, Project, HEMTTError, Flow, Step};
 
 pub struct Build {}
 impl Command for Build {
@@ -21,10 +27,10 @@ impl Command for Build {
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&crate::build::folder_name(&AddonLocation::Optionals)).exists() {
+        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Optionals)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
         }
-        if Path::new(&crate::build::folder_name(&AddonLocation::Compats)).exists() {
+        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Compats)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {
@@ -69,4 +75,15 @@ impl Command for Build {
         flow.execute(addons, &mut p)?;
         Ok(())
     }
+}
+
+pub fn get_addons(location: AddonLocation) -> Result<Vec<Addon>, HEMTTError> {
+    Ok(std::fs::read_dir(addon::folder_name(&location))?
+        .map(|file| file.unwrap().path())
+        .filter(|file_or_dir| file_or_dir.is_dir())
+        .map(|file| Addon {
+            name: file.file_name().unwrap().to_str().unwrap().to_owned(),
+            location: location.clone(),
+        })
+        .collect())
 }

@@ -4,7 +4,7 @@ pub use init::Init;
 mod template;
 pub use template::Template;
 
-mod build;
+pub mod build;
 pub use build::Build;
 
 mod pack;

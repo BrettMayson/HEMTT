@@ -1,3 +1,5 @@
+use dialoguer::Confirmation;
+
 use crate::{Task, Addon, Report, Project, HEMTTError};
 
 #[derive(Clone)]
@@ -20,18 +22,31 @@ impl Task for Release {
                 d
             } else {
                 let (report, addon) = d.unwrap();
-                if let Some((fatal, _)) = report.stop { if fatal { can_continue = false; } }
+                if let Some((fatal, _)) = report.stop { if fatal { can_continue = false; println!(); error!(&format!("Unable to build `{}`", addon.folder().display().to_string())) } }
                 Ok((report, addon))
             }
         }).collect();
 
-        if !can_continue {
+        if !can_continue && (*crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()?) {
             return Err(HEMTTError::generic("Unable to release", "One or more addons were not built successfully"));
         }
 
         // Prepare release directory
         let release_folder = p.release_dir()?;
-        println!("{}", release_folder);
+        if release_folder.exists() {
+            let error = HEMTTError::generic("Release already exists", "Use `--force-release` to overwrite");
+            if *crate::CI {
+                return Err(error)
+            } else {
+                println!();
+                warn!("Release already exists");
+                if Confirmation::new().with_text("Do you want to continue?").interact()? {
+                    std::fs::remove_dir_all(&release_folder)?;
+                } else {
+                    return Err(error)
+                }
+            }
+        }
         std::fs::create_dir_all(release_folder)?;
 
         Ok(addons)

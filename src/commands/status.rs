@@ -13,10 +13,10 @@ impl Command for Status {
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&crate::build::folder_name(&AddonLocation::Optionals)).exists() {
+        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Optionals)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
         }
-        if Path::new(&crate::build::folder_name(&AddonLocation::Compats)).exists() {
+        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Compats)).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {

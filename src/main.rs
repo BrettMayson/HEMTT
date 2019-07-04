@@ -18,10 +18,21 @@ fn main() {
         ansi_support();
     }
 
-    println!("Version {}", env!("CARGO_PKG_VERSION"));
+    let mut version = env!("CARGO_PKG_VERSION").to_string();
+    if let Some(v) = option_env!("GIT_HASH") {
+        version.push_str("-");
+        version.push_str(v);
+    }
+    if cfg!(debug_assertions) {
+        version.push_str("-debug");
+    }
+
+    println!("HEMTT {}", version);
+    println!("Environment: {}", project::environment());
+    println!();
 
     let mut app = App::new("HEMTT")
-                .version(env!("CARGO_PKG_VERSION"))
+                .version(version.as_ref())
                 .author(env!("CARGO_PKG_AUTHORS"))
                 .about(env!("CARGO_PKG_DESCRIPTION"))
                 .arg(clap::Arg::with_name("jobs")
@@ -39,6 +50,10 @@ fn main() {
                     .global(true)
                     .help("Time the execution")
                     .long("time"))
+                .arg(clap::Arg::with_name("ci") // This is not actually checked by clap, see lib.rs
+                    .global(true)
+                    .help("Run in CI mode")
+                    .long("ci"))
             ;
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();

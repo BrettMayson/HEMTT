@@ -6,12 +6,7 @@ use serde_json::value::{Value as Json};
 
 use strum_macros::EnumIter;
 
-pub mod build;
-pub mod checks;
-pub mod postbuild;
-pub mod prebuild;
-
-use crate::{HEMTTError, Project};
+use crate::Project;
 
 #[derive(Debug, Clone, PartialEq, EnumIter)]
 pub enum AddonLocation {
@@ -31,7 +26,7 @@ impl Addon {
     }
 
     pub fn target(&self, p: &Project) -> PathBuf {
-        let mut target = PathBuf::from(crate::build::folder_name(&self.location));
+        let mut target = PathBuf::from(crate::build::addon::folder_name(&self.location));
         target.push(&format!("{}_{}.pbo", p.prefix, self.name));
         target
     }
@@ -50,15 +45,4 @@ pub fn folder_name(location: &AddonLocation) -> String {
         AddonLocation::Optionals => "optionals",
         AddonLocation::Compats => "compats",
     })
-}
-
-pub fn get_addons(location: AddonLocation) -> Result<Vec<Addon>, HEMTTError> {
-    Ok(std::fs::read_dir(folder_name(&location))?
-        .map(|file| file.unwrap().path())
-        .filter(|file_or_dir| file_or_dir.is_dir())
-        .map(|file| Addon {
-            name: file.file_name().unwrap().to_str().unwrap().to_owned(),
-            location: location.clone(),
-        })
-        .collect())
 }

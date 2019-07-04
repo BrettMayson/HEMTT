@@ -39,7 +39,7 @@ impl Task for Clean {
             }
         }
         for dir in AddonLocation::iter() {
-            let dir = crate::build::folder_name(&dir);
+            let dir = crate::build::addon::folder_name(&dir);
             if !PathBuf::from(&dir).exists() { continue; }
             for entry in std::fs::read_dir(dir)? {
                 let entry = entry?;
