@@ -2,6 +2,7 @@ use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
 use std::time::Duration;
 
+use colored::*;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
@@ -15,15 +16,27 @@ pub struct Step {
     pub tasks: Vec<Box<dyn Task>>,
     pub name: String,
     pub emoji: String,
-    none: bool
+    none: bool,
+    parallel: bool,
 }
 impl Step {
-    pub fn new(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
+    pub fn parallel(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
         Self {
             emoji: emoji.to_string(),
             name: name.to_string(),
             tasks,
             none: false,
+            parallel: true,
+        }
+    }
+
+    pub fn single(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
+        Self {
+            emoji: emoji.to_string(),
+            name: name.to_string(),
+            tasks,
+            none: false,
+            parallel: false,
         }
     }
 
@@ -33,6 +46,7 @@ impl Step {
             name: "".to_string(),
             tasks: Vec::new(),
             none: true,
+            parallel: false,
         }
     }
 }
@@ -48,7 +62,11 @@ impl Flow {
 
         for step in &self.steps {
             if step.none { continue; }
-            addons = self.step(&step.emoji, &step.name, &step.tasks, addons, p)?;
+            if step.parallel {
+                addons = self.parallel(&step.emoji, &step.name, &step.tasks, addons, p)?;
+            } else {
+                addons = self.single(&step.emoji, &step.name, &step.tasks, addons, p)?;
+            }
         }
 
         for data in &addons {
@@ -64,7 +82,7 @@ impl Flow {
         Ok(addons)
     }
 
-    pub fn step(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>{
+    pub fn parallel(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
         let addon_style = ProgressStyle::default_spinner()
             .tick_chars("\\|/| ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -127,7 +145,7 @@ impl Flow {
             for task in tasks {
                 if report.stop.is_none() && task.can_run(&addon, &report, p)? {
                     pb.tick();
-                    report.absorb(match task.run(&addon, &report, p, &pb) {
+                    report.absorb(match task.parallel(&addon, &report, p, &pb) {
                         Ok(v) => v,
                         Err(e) => {
                             pb.finish_and_clear();
@@ -159,11 +177,37 @@ impl Flow {
 
         Ok(addons)
     }
+
+    fn single(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError> {
+        if !cfg!(windows) {
+            println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
+        } else {
+            println!("{}", &fill_space!(" ", 12, name).bold().cyan());
+        }
+
+        for task in tasks {
+            task.single(&addons, p)?;
+        }
+
+        let addons = addons.into_iter().filter(|data| {
+            if let Ok((report, _)) = data {
+                if !report.stop.is_none() {
+                    report.display();
+                    false
+                } else {
+                    true
+                }
+            } else { true }
+        }).collect();
+
+        Ok(addons)
+    }
 }
 
 // A task is an independent item to be ran
 pub trait Task: objekt::Clone + std::marker::Send + std::marker::Sync {
-    fn can_run(&self, _addon: &Addon, _r: &Report, _p: &Project) -> Result<bool, HEMTTError> { Ok(false) }
-    fn run(&self, _addon: &Addon, _r: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> { unimplemented!() }
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> { Ok(false) }
+    fn parallel(&self, _: &Addon, _: &Report, _: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> { unimplemented!() }
+    fn single(&self, _: &[Result<(Report, Addon), HEMTTError>], _: &Project) -> Result<Report, HEMTTError> { unimplemented!() }
 }
 objekt::clone_trait_object!(Task);

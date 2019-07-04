@@ -10,7 +10,7 @@ impl Task for NotEmpty {
         Ok(true)
     }
 
-    fn run(&self, addon: &Addon, _: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, _p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let empty = std::fs::read_dir(crate::build::folder_name(&addon.location))?.count() == 0;
         if empty {
@@ -27,7 +27,7 @@ impl Task for ValidName {
         Ok(true)
     }
 
-    fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         // WARN: addon name standards
         let re = Regex::new(r"^([A-z0-9\-]+)$").unwrap();

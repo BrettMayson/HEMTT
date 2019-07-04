@@ -21,7 +21,7 @@ impl Command for Status {
         }
         let flow = Flow {
             steps: vec![
-                Step::new("🔍", "Checks",
+                Step::parallel("🔍", "Checks",
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),

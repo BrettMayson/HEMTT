@@ -4,13 +4,15 @@ use std::path::PathBuf;
 use handlebars::to_json;
 use serde_json::value::{Value as Json};
 
+use strum_macros::EnumIter;
+
 pub mod build;
 pub mod checks;
 pub mod prebuild;
 
 use crate::{HEMTTError, Project};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, EnumIter)]
 pub enum AddonLocation {
     Addons,
     Optionals,

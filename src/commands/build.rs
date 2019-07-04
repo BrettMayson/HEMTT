@@ -12,9 +12,10 @@ impl Command for Build {
                         .help("Build a release")
                         .long("release")
                         .conflicts_with("dev"))
-                .arg(clap::Arg::with_name("force")
+                .arg(clap::Arg::with_name("clear")
                         .help("Clears existing built files")
-                        .long("clear"))
+                        .long("clear")
+                        .long("force"))
         )
     }
 
@@ -29,12 +30,17 @@ impl Command for Build {
         let flow = Flow {
             steps: vec![
                 if args.is_present("clear") {
-                    Step::new("🗑️", "Clear",
+                    Step::parallel("🗑️", "Clear",
                     vec![
                         Box::new(crate::build::prebuild::clear::Clear {}),
                     ])
-                } else { Step::none() },
-                Step::new("🔍", "Checks",
+                } else {
+                    Step::single("♻️", "Clean",
+                    vec![
+                        Box::new(crate::build::prebuild::clear::Clean {}),
+                    ])
+                },
+                Step::parallel("🔍", "Checks",
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
@@ -42,12 +48,12 @@ impl Command for Build {
                         Box::new(crate::build::prebuild::modtime::ModTime {}),
                     ],
                 ),
-                Step::new("🚧", "Prebuild",
+                Step::parallel("🚧", "Prebuild",
                     vec![
                         Box::new(crate::build::prebuild::preprocess::Preprocess {}),
                     ],
                 ),
-                Step::new("📝", "Build",
+                Step::parallel("📝", "Build",
                     vec![
                         Box::new(crate::build::build::Build { use_bin: true }),
                     ],

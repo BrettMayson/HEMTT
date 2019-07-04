@@ -14,7 +14,8 @@ impl Command for Pack {
                         .conflicts_with("dev"))
                 .arg(clap::Arg::with_name("clear")
                         .help("Clears existing built files")
-                        .long("clear"))
+                        .long("clear")
+                        .long("force"))
         )
     }
 
@@ -29,12 +30,17 @@ impl Command for Pack {
         let flow = Flow {
             steps: vec![
                 if args.is_present("clear") {
-                    Step::new("🗑️", "Clear",
+                    Step::parallel("🗑️", "Clear",
                     vec![
                         Box::new(crate::build::prebuild::clear::Clear {}),
                     ])
-                } else { Step::none() },
-                Step::new("🔍", "Checks",
+                } else {
+                    Step::single("♻️", "Clean",
+                    vec![
+                        Box::new(crate::build::prebuild::clear::Clean {}),
+                    ])
+                },
+                Step::parallel("🔍", "Checks",
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
@@ -42,7 +48,7 @@ impl Command for Pack {
                         Box::new(crate::build::prebuild::modtime::ModTime {}),
                     ],
                 ),
-                Step::new("📦", "Pack",
+                Step::parallel("📦", "Pack",
                     vec![
                         Box::new(crate::build::build::Build { use_bin: false }),
                     ],

@@ -17,10 +17,23 @@ fn main() {
         ansi_support();
     }
 
+    println!("Version {}", env!("CARGO_PKG_VERSION"));
+
     let mut app = App::new("HEMTT")
                 .version(env!("CARGO_PKG_VERSION"))
                 .author(env!("CARGO_PKG_AUTHORS"))
-                .about(env!("CARGO_PKG_DESCRIPTION"));
+                .about(env!("CARGO_PKG_DESCRIPTION"))
+                .arg(clap::Arg::with_name("jobs")
+                    .global(true)
+                    .help("Number of parallel jobs to perform")
+                    .takes_value(true)
+                    .long("jobs")
+                    .short("j"))
+                .arg(clap::Arg::with_name("debug")
+                    .global(true)
+                    .help("Turn debugging information on")
+                    .long("debug")
+                    .short("d"));
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
     let mut hash_commands: HashMap<&str, &Box<dyn Command>> = HashMap::new();
@@ -38,9 +51,12 @@ fn main() {
         hash_commands.insert(name, command);
     }
 
-    rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
-
     let matches = app.get_matches();
+
+    rayon::ThreadPoolBuilder::new().num_threads(
+        if let Some(jobs) = matches.value_of("jobs") { usize::from_str_radix(jobs, 10).unwrap_or_print() } else { num_cpus::get() }
+    ).build_global().unwrap();
+
     match matches.subcommand_name() {
         Some(v) => {
             match hash_commands.get(v) {

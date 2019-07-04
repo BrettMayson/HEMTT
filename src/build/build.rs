@@ -21,7 +21,7 @@ impl Task for Build {
         Ok(true)
     }
 
-    fn run(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let mut pbo = armake2::pbo::PBO {
             files: LinkedHashMap::new(),
@@ -30,7 +30,7 @@ impl Task for Build {
             checksum: None,
         };
         let directory = addon.folder();
-        let binarize = 
+        let binarize =
             self.use_bin
             && cfg!(windows)
             && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists())

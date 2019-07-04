@@ -25,7 +25,7 @@ impl Task for ModTime {
         Ok(true)
     }
 
-    fn run(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let modified = modtime(&addon.folder())?;
         let target = addon.target(p);
