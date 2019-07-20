@@ -46,7 +46,7 @@ impl Task for Preprocess {
                 includes.insert(0, PathBuf::from("."));
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                 match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes, |path| {
-                    pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), path.to_str().unwrap()));
+                    pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                     crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap())
                 }) {
                     Ok((output, info)) => {
@@ -74,10 +74,10 @@ impl Task for Preprocess {
                             }
                             pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Caching"), rendered_path));
                             let mut c = Cursor::new(Vec::new());
-                            rapped.write_rapified(&mut c).unwrap();
-                            c.seek(SeekFrom::Start(0)).unwrap();
+                            rapped.write_rapified(&mut c)?;
+                            c.seek(SeekFrom::Start(0))?;
                             let mut out = Vec::new();
-                            c.read_to_end(&mut out).unwrap();
+                            c.read_to_end(&mut out)?;
                             pb.set_message("Waiting for cache lock");
                             crate::CACHED.lock().unwrap().insert_bytes(&rendered_path.replace("config.cpp", "config.bin"), out)?;
                         }
@@ -125,5 +125,6 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
         }))
     }
     eprintln!("unknown armake error `{}`", error);
+    std::fs::write("armake2.error", error);
     unimplemented!()
 }

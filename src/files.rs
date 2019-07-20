@@ -46,7 +46,7 @@ impl FileCache {
                 "can't find that file eh",
             ));
         }
-        let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"(.+)""#).unwrap();
+        let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n").to_string();
         let mut safe = HashMap::new();
@@ -55,13 +55,22 @@ impl FileCache {
         }
         let mut output = String::new();
         let mut cursor = 0;
-        for mat in clean.find_iter(&content) {
-            if mat.start() == 0 || safe.contains_key(&(mat.start() - 1)) {
-                output.push_str(&content[cursor..mat.end()]);
-            } else {
-                output.push_str(&content[cursor..(mat.start() - 1)]);
+        'outer: for mat in clean.find_iter(&content) {
+            let mat_start = mat.start();
+            let mat_end = mat.end();
+            if mat_start == 0 {
+                output.push_str(&content[cursor..mat_end]);
+                break;
             }
-            cursor = mat.end();
+            for (start, end) in safe.iter() {
+                if start <= &(mat_start - 1) && end > &mat_start {
+                   output.push_str(&content[cursor..mat_end]);
+                   cursor = mat_end;
+                   continue 'outer;
+                }
+            }
+            output.push_str(&content[cursor..(mat_start - 1)]);
+            cursor = mat_end;
         }
         output.push_str(&content[cursor..(content.len())]);
         Ok(output)
