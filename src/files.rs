@@ -63,7 +63,7 @@ impl FileCache {
                 break;
             }
             for (start, end) in safe.iter() {
-                if start <= &(mat_start - 1) && end > &mat_start {
+                if *start <= (mat_start - 1) && *end > mat_start {
                    output.push_str(&content[cursor..mat_end]);
                    cursor = mat_end;
                    continue 'outer;

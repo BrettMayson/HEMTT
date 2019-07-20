@@ -125,6 +125,6 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
         }))
     }
     eprintln!("unknown armake error `{}`", error);
-    std::fs::write("armake2.error", error);
+    std::fs::write("armake2.error", error)?;
     unimplemented!()
 }
