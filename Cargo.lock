@@ -37,7 +37,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "armake2"
 version = "0.3.0"
-source = "git+https://github.com/KoffeinFlummi/armake2#b850bb01bc69a7d3d8573fa64df1198547312e1a"
+source = "git+https://github.com/KoffeinFlummi/armake2#12dd97bef9a111def31777b41d97d38e29a6ad1e"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
