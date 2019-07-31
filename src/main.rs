@@ -286,6 +286,9 @@ fn run_command(args: &Args) -> Result<(), Error> {
         if !args.flag_nowarn {
             armake2::error::print_warning_summary();
         }
+        if !result.failed.is_empty() {
+            return Err(error!("Building of at least one addon failed"));
+        }
         Ok(())
     } else if args.cmd_clean {
         check(false, args.flag_force).unwrap_or_print();
