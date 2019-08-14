@@ -14,6 +14,9 @@ pub struct Project {
     pub name: String,
     pub prefix: String,
     pub author: String,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
     pub template: String,
 
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -48,11 +51,19 @@ impl Project {
         let env = environment();
         let root = find_root()?;
         std::env::set_current_dir(root)?;
-        if !Path::new(".hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
-        p.merge(File::with_name(".hemtt/base").required(true))?;
-        p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
-        p.merge(File::with_name(".hemtt/local").required(false))?;
-        p.merge(Environment::with_prefix("app"))?;
+
+        if Path::new("hemtt.toml").exists() || Path::new("hemtt.json").exists() {
+            // Single file
+            p.merge(File::with_name("hemtt").required(true))?;
+        } else {
+            // Project folder
+            if !Path::new(".hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
+            p.merge(File::with_name(".hemtt/base").required(true))?;
+            p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
+            p.merge(File::with_name(".hemtt/local").required(false))?;
+            p.merge(Environment::with_prefix("app"))?;
+        }
+        
         p.try_into().map_err(From::from)
     }
 
@@ -106,6 +117,13 @@ pub fn find_root() -> Result<PathBuf, HEMTTError> {
         if search.exists() {
             search.pop();
             return Ok(search);
+        } else {
+            let mut search = dir.clone();
+            search.push("hemtt.toml");
+            if search.exists() {
+                search.pop();
+                return Ok(search);
+            }
         }
         dir.pop();
         search.pop();

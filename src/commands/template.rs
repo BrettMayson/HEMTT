@@ -135,7 +135,7 @@ impl Command for Template {
     }
 
     fn run(&self, a: &clap::ArgMatches, p: crate::project::Project) -> Result<(), HEMTTError> {
-        if p.template == "none" {
+        if p.template.is_empty() {
             return Ok(());
         }
         match a.subcommand() {

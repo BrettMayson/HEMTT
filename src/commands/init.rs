@@ -32,7 +32,7 @@ impl Command for Init {
 
         // clone template
         match template.as_ref() {
-            "none" => {},
+            "" => {},
             _ => {
                 let repo = if template.starts_with("http") {
                     template
