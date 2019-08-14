@@ -318,8 +318,8 @@ fn run_command(args: &Args) -> Result<(), Error> {
         p.script(&args.arg_script, &state).unwrap_or_print();
         Ok(())
     } else if args.cmd_update {
-        let target = self_update::get_target().unwrap();
-        let status = self_update::backends::github::Update::configure().unwrap()
+        let target = self_update::get_target();
+        let status = self_update::backends::github::Update::configure()
             .repo_owner("SynixeBrett")
             .repo_name("HEMTT")
             .target(&target)
