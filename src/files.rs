@@ -57,10 +57,8 @@ pub fn clear_release(p: &project::Project, version: &str) -> Result<(), Error> {
         println!("  {} old key {}", "Cleaning".yellow().bold(), keyname);
         fs::remove_file(keypath)?;
 
-        if !p.reuse_private_key {
-            if Path::new(pkeypath).exists() {
-                fs::remove_file(pkeypath)?;
-            }
+        if !p.reuse_private_key && Path::new(pkeypath).exists() {
+            fs::remove_file(pkeypath)?;
         }
     }
 

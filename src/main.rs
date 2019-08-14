@@ -346,7 +346,7 @@ fn main() {
             let mut args = std::env::args().collect::<Vec<_>>();
             args.remove(0);
 
-            if args.len() == 0 {
+            if args.is_empty() {
                 // No arguments provided, show usage
                 e.exit();
             }
@@ -406,7 +406,7 @@ fn ansi_support() {
     unreachable!();
 }
 
-fn is_true(v: &bool) -> bool { v.clone() }
-fn is_false(v: &bool) -> bool { !v.clone() }
+fn is_true(v: &bool) -> bool { *v }
+fn is_false(v: &bool) -> bool { *v }
 fn dft_true() -> bool { true }
 fn dft_false() -> bool { false }
