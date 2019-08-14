@@ -40,14 +40,14 @@ pub enum HEMTTError {
 }
 
 impl HEMTTError {
-    pub fn from_armake_parse(err: armake2::config::config_grammar::ParseError, path: &str, content: Option<String>) -> HEMTTError {
+    pub fn from_armake_parse(
+        err: armake2::config::config_grammar::ParseError,
+        path: &str,
+        content: Option<String>,
+    ) -> HEMTTError {
         let c = match content {
-            Some(v) => {
-                v.lines().nth(err.line - 1).unwrap().to_string()
-            },
-            None => {
-                crate::CACHED.lock().unwrap().get_line(path, err.line).unwrap()
-            }
+            Some(v) => v.lines().nth(err.line - 1).unwrap().to_string(),
+            None => crate::CACHED.lock().unwrap().get_line(path, err.line).unwrap(),
         };
         HEMTTError::LINENO(FileErrorLineNumber {
             line: Some(err.line),
@@ -87,7 +87,7 @@ impl std::error::Error for HEMTTError {
             HEMTTError::IO(ref err) => Some(err),
             HEMTTError::LINENO(ref _e) => Some(self),
             HEMTTError::PATH(ref _err) => Some(self),
-            HEMTTError::SIMPLE(ref _s,) => Some(self),
+            HEMTTError::SIMPLE(ref _s) => Some(self),
             HEMTTError::TOML(ref err) => Some(err),
         }
     }
@@ -117,22 +117,14 @@ impl From<config::ConfigError> for HEMTTError {
         match err {
             config::ConfigError::Frozen => {
                 HEMTTError::GENERIC(s, "Config is frozen and no further mutations can be made".to_string())
-            },
+            }
             config::ConfigError::NotFound(v) => {
                 HEMTTError::GENERIC(s, format!("The property `{}` is required but wasn't found", v))
-            },
-            config::ConfigError::PathParse(e) => {
-                HEMTTError::GENERIC(s, e.description().to_string())
-            },
-            config::ConfigError::Message(v) => {
-                HEMTTError::GENERIC(s, v)
-            },
-            config::ConfigError::FileParse{ .. } => {
-                HEMTTError::GENERIC(s, "The file could not be parsed".to_string())
-            },
-            _ => {
-                HEMTTError::GENERIC(s, err.to_string())
             }
+            config::ConfigError::PathParse(e) => HEMTTError::GENERIC(s, e.description().to_string()),
+            config::ConfigError::Message(v) => HEMTTError::GENERIC(s, v),
+            config::ConfigError::FileParse { .. } => HEMTTError::GENERIC(s, "The file could not be parsed".to_string()),
+            _ => HEMTTError::GENERIC(s, err.to_string()),
         }
     }
 }
@@ -153,7 +145,7 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
                 } else {
                     HEMTTError::GENERIC("Render error".to_string(), e.desc)
                 }
-            },
+            }
             handlebars::TemplateRenderError::TemplateError(e) => {
                 if e.line_no.is_some() {
                     HEMTTError::LINENO(FileErrorLineNumber {
@@ -167,8 +159,8 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
                 } else {
                     HEMTTError::GENERIC("Render error".to_string(), e.reason.to_string())
                 }
-            },
-            _ => { unimplemented!() }
+            }
+            _ => unimplemented!(),
         }
     }
 }

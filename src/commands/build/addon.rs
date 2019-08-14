@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use handlebars::to_json;
-use serde_json::value::{Value as Json};
+use serde_json::value::Value as Json;
 
 use strum_macros::EnumIter;
 
@@ -22,7 +22,12 @@ pub struct Addon {
 }
 impl Addon {
     pub fn folder(&self) -> PathBuf {
-        PathBuf::from(format!("{}{}{}", folder_name(&self.location), std::path::MAIN_SEPARATOR, self.name))
+        PathBuf::from(format!(
+            "{}{}{}",
+            folder_name(&self.location),
+            std::path::MAIN_SEPARATOR,
+            self.name
+        ))
     }
 
     pub fn target(&self, p: &Project) -> PathBuf {

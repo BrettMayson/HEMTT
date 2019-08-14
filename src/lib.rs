@@ -13,10 +13,10 @@ pub mod render;
 use hashbrown::HashMap;
 
 pub use build::addon::{Addon, AddonLocation};
-pub use commands::{Command, build};
-pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
+pub use commands::{build, Command};
+pub use error::{FileErrorLineNumber, HEMTTError, IOPathError};
 pub use files::{FileCache, RenderedFiles};
-pub use flow::{Flow, Report, Task, Step};
+pub use flow::{Flow, Report, Step, Task};
 pub use project::Project;
 
 pub type AddonList = Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>;

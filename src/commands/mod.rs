@@ -24,7 +24,9 @@ pub trait Command {
     fn run(&self, _args: &clap::ArgMatches, _project: Project) -> Result<(), HEMTTError> {
         unimplemented!();
     }
-    fn require_project(&self) -> bool { true }
+    fn require_project(&self) -> bool {
+        true
+    }
     fn run_no_project(&self, _args: &clap::ArgMatches) -> Result<(), HEMTTError> {
         unimplemented!();
     }

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use handlebars::*;
-use serde_json::value::{Value as Json};
+use serde_json::value::Value as Json;
 
 pub mod helpers;
 

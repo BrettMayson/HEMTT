@@ -14,25 +14,27 @@ pub struct FileCache {
 
 impl FileCache {
     pub fn new() -> Self {
-        Self {
-            files: HashMap::new(),
-        }
+        Self { files: HashMap::new() }
     }
 
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
         if self.files.contains_key(path) {
             Ok(self.files.get(path).unwrap().to_vec())
         } else {
-            let f = File::open(path).map_err(|e| HEMTTError::PATH(IOPathError{
-                path: PathBuf::from(path),
-                source: e
-            }))?;
+            let f = File::open(path).map_err(|e| {
+                HEMTTError::PATH(IOPathError {
+                    path: PathBuf::from(path),
+                    source: e,
+                })
+            })?;
             let mut reader = BufReader::new(f);
             let mut buf = Vec::new();
-            reader.read_to_end(&mut buf).map_err(|e| HEMTTError::PATH(IOPathError {
-                source: e,
-                path: PathBuf::from(path),
-            }))?;
+            reader.read_to_end(&mut buf).map_err(|e| {
+                HEMTTError::PATH(IOPathError {
+                    source: e,
+                    path: PathBuf::from(path),
+                })
+            })?;
             self.files.insert(path.to_string(), buf.clone());
             Ok(buf)
         }
@@ -41,10 +43,7 @@ impl FileCache {
     // This should be fixed in armake2, this is a slow workaround but it works for now
     pub fn clean_comments(&mut self, path: &str) -> Result<String, std::io::Error> {
         if !PathBuf::from(path).exists() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "can't find that file eh",
-            ));
+            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "can't find that file eh"));
         }
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
@@ -64,9 +63,9 @@ impl FileCache {
             }
             for (start, end) in safe.iter() {
                 if *start <= (mat_start - 1) && *end > mat_start {
-                   output.push_str(&content[cursor..mat_end]);
-                   cursor = mat_end;
-                   continue 'outer;
+                    output.push_str(&content[cursor..mat_end]);
+                    cursor = mat_end;
+                    continue 'outer;
                 }
             }
             output.push_str(&content[cursor..(mat_start - 1)]);
@@ -125,7 +124,10 @@ impl RenderedFiles {
     pub fn get_paths(&self, original: String) -> (String, String) {
         let rendered = crate::build::prebuild::render::can_render(&Path::new(&original));
         if rendered {
-            (original.replace(".ht.", ".").trim_end_matches(".ht").to_string(), self.redirects.get(&original).unwrap().to_string())
+            (
+                original.replace(".ht.", ".").trim_end_matches(".ht").to_string(),
+                self.redirects.get(&original).unwrap().to_string(),
+            )
         } else {
             (original.clone(), original)
         }

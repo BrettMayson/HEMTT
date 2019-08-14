@@ -1,12 +1,11 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Command, Flow, Step, HEMTTError, Project};
+use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
 
 pub struct Clean {}
 impl Command for Clean {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("clean")
-            .about("Clean built files")
+        clap::SubCommand::with_name("clean").about("Clean built files")
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
@@ -18,12 +17,11 @@ impl Command for Clean {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {
-            steps: vec![
-                Step::parallel("🗑️", "Clear",
-                vec![
-                    Box::new(crate::build::prebuild::clear::Clear {}),
-                ])
-            ],
+            steps: vec![Step::parallel(
+                "🗑️",
+                "Clear",
+                vec![Box::new(crate::build::prebuild::clear::Clear {})],
+            )],
         };
         flow.execute(addons, &mut p)?;
         Ok(())

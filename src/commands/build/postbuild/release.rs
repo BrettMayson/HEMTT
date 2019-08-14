@@ -16,19 +16,31 @@ impl Task for Release {
             let (report, addon) = addon.unwrap();
             if report.stop.is_some() { can_continue = false; break; }
         }*/
-        let addons = addons.into_iter().map(|d| {
-            if d.is_err() {
-                can_continue = false;
-                d
-            } else {
-                let (report, addon) = d.unwrap();
-                if let Some((fatal, _)) = report.stop { if fatal { can_continue = false; println!(); error!(&format!("Unable to build `{}`", addon.folder().display().to_string())) } }
-                Ok((report, addon))
-            }
-        }).collect();
+        let addons = addons
+            .into_iter()
+            .map(|d| {
+                if d.is_err() {
+                    can_continue = false;
+                    d
+                } else {
+                    let (report, addon) = d.unwrap();
+                    if let Some((fatal, _)) = report.stop {
+                        if fatal {
+                            can_continue = false;
+                            println!();
+                            error!(&format!("Unable to build `{}`", addon.folder().display().to_string()))
+                        }
+                    }
+                    Ok((report, addon))
+                }
+            })
+            .collect();
 
         if !can_continue && (*crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()?) {
-            return Err(HEMTTError::generic("Unable to release", "One or more addons were not built successfully"));
+            return Err(HEMTTError::generic(
+                "Unable to release",
+                "One or more addons were not built successfully",
+            ));
         }
 
         // Prepare release directory
@@ -36,14 +48,14 @@ impl Task for Release {
         if release_folder.exists() {
             let error = HEMTTError::generic("Release already exists", "Use `--force-release` to overwrite");
             if *crate::CI {
-                return Err(error)
+                return Err(error);
             } else {
                 println!();
                 warn!("Release already exists");
                 if Confirmation::new().with_text("Do you want to continue?").interact()? {
                     std::fs::remove_dir_all(&release_folder)?;
                 } else {
-                    return Err(error)
+                    return Err(error);
                 }
             }
         }

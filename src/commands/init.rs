@@ -8,11 +8,12 @@ pub struct Init {}
 
 impl Command for Init {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("init")
-            .about("Initialize a HEMTT Project")
+        clap::SubCommand::with_name("init").about("Initialize a HEMTT Project")
     }
 
-    fn require_project(&self) -> bool { false }
+    fn require_project(&self) -> bool {
+        false
+    }
 
     fn run_no_project(&self, _: &clap::ArgMatches) -> Result<(), HEMTTError> {
         let name = ask!("Project Name >");
@@ -22,15 +23,13 @@ impl Command for Init {
 
         // Create settings file in TOML
         fs::create_dir_all("./.hemtt/")?;
-        let project = Project::new(
-            name, prefix, author, template.clone()
-        );
+        let project = Project::new(name, prefix, author, template.clone());
         let mut out = File::create("./.hemtt/base.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
 
         // clone template
         match template.as_ref() {
-            "" => {},
+            "" => {}
             _ => {
                 let repo = if template.starts_with("http") {
                     template
@@ -39,7 +38,7 @@ impl Command for Init {
                 };
                 match git2::Repository::clone(&repo, "./hemtt/template") {
                     Ok(_) => println!("Template Cloned"),
-                    Err(e) => panic!("Failed to clone: {}", e)
+                    Err(e) => panic!("Failed to clone: {}", e),
                 };
             }
         }

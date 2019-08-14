@@ -32,29 +32,36 @@ fn main() {
     println!();
 
     let mut app = App::new("HEMTT")
-                .version(version.as_ref())
-                .author(env!("CARGO_PKG_AUTHORS"))
-                .about(env!("CARGO_PKG_DESCRIPTION"))
-                .arg(clap::Arg::with_name("jobs")
-                    .global(true)
-                    .help("Number of parallel jobs to perform")
-                    .takes_value(true)
-                    .long("jobs")
-                    .short("j"))
-                .arg(clap::Arg::with_name("debug")
-                    .global(true)
-                    .help("Turn debugging information on")
-                    .long("debug")
-                    .short("d"))
-                .arg(clap::Arg::with_name("time")
-                    .global(true)
-                    .help("Time the execution")
-                    .long("time"))
-                .arg(clap::Arg::with_name("ci") // This is not actually checked by clap, see lib.rs
-                    .global(true)
-                    .help("Run in CI mode")
-                    .long("ci"))
-            ;
+        .version(version.as_ref())
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .arg(
+            clap::Arg::with_name("jobs")
+                .global(true)
+                .help("Number of parallel jobs to perform")
+                .takes_value(true)
+                .long("jobs")
+                .short("j"),
+        )
+        .arg(
+            clap::Arg::with_name("debug")
+                .global(true)
+                .help("Turn debugging information on")
+                .long("debug")
+                .short("d"),
+        )
+        .arg(
+            clap::Arg::with_name("time")
+                .global(true)
+                .help("Time the execution")
+                .long("time"),
+        )
+        .arg(
+            clap::Arg::with_name("ci") // This is not actually checked by clap, see lib.rs
+                .global(true)
+                .help("Run in CI mode")
+                .long("ci"),
+        );
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
     let mut hash_commands: HashMap<String, &Box<dyn Command>> = HashMap::new();
@@ -77,25 +84,30 @@ fn main() {
 
     let start = if matches.is_present("time") {
         Some(Instant::now())
-    } else { None };
+    } else {
+        None
+    };
 
-    rayon::ThreadPoolBuilder::new().num_threads(
-        if let Some(jobs) = matches.value_of("jobs") { usize::from_str_radix(jobs, 10).unwrap_or_print() } else { num_cpus::get() }
-    ).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(if let Some(jobs) = matches.value_of("jobs") {
+            usize::from_str_radix(jobs, 10).unwrap_or_print()
+        } else {
+            num_cpus::get()
+        })
+        .build_global()
+        .unwrap();
 
     match matches.subcommand_name() {
-        Some(v) => {
-            match hash_commands.get(v) {
-                Some(c) => {
-                    let sub_matches = matches.subcommand_matches(v).unwrap();
-                    if c.require_project() {
-                        c.run(sub_matches, Project::read().unwrap_or_print()).unwrap_or_print();
-                    } else {
-                        c.run_no_project(sub_matches).unwrap_or_print();
-                    }
-                },
-                None => println!("No command"),
+        Some(v) => match hash_commands.get(v) {
+            Some(c) => {
+                let sub_matches = matches.subcommand_matches(v).unwrap();
+                if c.require_project() {
+                    c.run(sub_matches, Project::read().unwrap_or_print()).unwrap_or_print();
+                } else {
+                    c.run_no_project(sub_matches).unwrap_or_print();
+                }
             }
+            None => println!("No command"),
         },
         None => println!("No command"),
     }

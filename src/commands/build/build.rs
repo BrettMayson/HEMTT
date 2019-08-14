@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Cursor};
+use std::io::Cursor;
 use std::path::PathBuf;
 
 use indicatif::ProgressBar;
@@ -30,14 +30,15 @@ impl Task for Build {
             checksum: None,
         };
         let directory = addon.folder();
-        let binarize =
-            self.use_bin
+        let binarize = self.use_bin
             && cfg!(windows)
             && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists())
             && if match armake2::binarize::find_binarize_exe() {
                 Ok(p) => p.exists(),
                 Err(_) => false,
-            } { true } else {
+            } {
+                true
+            } else {
                 report.warnings.push(HEMTTError::generic(
                     "Unable to locate binarize.exe",
                     "Files will be packed as is",
@@ -47,17 +48,34 @@ impl Task for Build {
 
         for entry in WalkDir::new(&addon.folder()) {
             let entry = entry.unwrap();
-            if entry.path().is_dir() { continue; }
-            if crate::build::prebuild::render::can_render(entry.path()) { continue; }
+            if entry.path().is_dir() {
+                continue;
+            }
+            if crate::build::prebuild::render::can_render(entry.path()) {
+                continue;
+            }
             pb.set_message(&entry.path().display().to_string());
-            let name = entry.path().display().to_string().trim_start_matches(&format!("{}{}", addon.folder().to_str().unwrap(), std::path::MAIN_SEPARATOR)).to_string();
-            let ext = entry.path().extension().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap().to_string();
+            let name = entry
+                .path()
+                .display()
+                .to_string()
+                .trim_start_matches(&format!("{}{}", addon.folder().to_str().unwrap(), std::path::MAIN_SEPARATOR))
+                .to_string();
+            let ext = entry
+                .path()
+                .extension()
+                .unwrap_or_else(|| std::ffi::OsStr::new(""))
+                .to_str()
+                .unwrap()
+                .to_string();
             let is_binarizable = binarize && BINARIZABLE.contains(&ext.as_str());
 
             if name == "$PBOPREFIX$" {
                 let content = crate::CACHED.lock().unwrap().lines(&entry.path().display().to_string())?;
                 for line in content {
-                    if line.is_empty() { break; }
+                    if line.is_empty() {
+                        break;
+                    }
 
                     let eq: Vec<String> = line.split('=').map(|s| s.to_string()).collect();
                     if eq.len() == 1 {
@@ -73,15 +91,23 @@ impl Task for Build {
                         pbo.files.insert(
                             name.replace("config.cpp", "config.bin"),
                             Cursor::new(
-                                crate::CACHED.lock().unwrap().read(&entry.path().display().to_string().replace("config.cpp", "config.bin"))?.into_boxed_slice()
-                            )
+                                crate::CACHED
+                                    .lock()
+                                    .unwrap()
+                                    .read(&entry.path().display().to_string().replace("config.cpp", "config.bin"))?
+                                    .into_boxed_slice(),
+                            ),
                         );
                     } else {
                         pbo.files.insert(
                             name,
                             Cursor::new(
-                                crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?.into_boxed_slice()
-                            )
+                                crate::CACHED
+                                    .lock()
+                                    .unwrap()
+                                    .read(&entry.path().display().to_string())?
+                                    .into_boxed_slice(),
+                            ),
                         );
                     }
                 } else if cfg!(windows) && is_binarizable {
@@ -91,7 +117,7 @@ impl Task for Build {
                     if is_binarizable && !cfg!(windows) {
                         report.warnings.push(HEMTTError::generic(
                             format!("Unable to binarize `{}`", entry.path().display().to_string()),
-                            "On non-windows systems binarize.exe cannot be used; file will packed as is"
+                            "On non-windows systems binarize.exe cannot be used; file will packed as is",
                         ));
                     }
 

@@ -1,4 +1,4 @@
-use crate::error::{HEMTTError};
+use crate::error::HEMTTError;
 
 #[derive(Debug, Default)]
 pub struct Report {
@@ -31,32 +31,28 @@ impl Report {
             match warning {
                 HEMTTError::GENERIC(s, v) => {
                     warnmessage!(s, v);
-                },
+                }
                 HEMTTError::LINENO(error) => {
                     filewarn!(error);
-                },
+                }
                 HEMTTError::SIMPLE(s) => {
                     warn!(s);
-                },
-                _ => {
-
                 }
+                _ => {}
             }
         }
         for error in &self.errors {
             match error {
                 HEMTTError::GENERIC(s, v) => {
                     errormessage!(s, v);
-                },
+                }
                 HEMTTError::SIMPLE(s) => {
                     error!(s);
-                },
+                }
                 HEMTTError::LINENO(error) => {
                     fileerror!(error);
-                },
-                _ => {
-
                 }
+                _ => {}
             }
         }
     }
@@ -69,15 +65,15 @@ impl Report {
                 for error in &self.errors {
                     if let HEMTTError::LINENO(e) = error {
                         if n == *e {
-                                add = false;
-                                break;
-                            }
+                            add = false;
+                            break;
+                        }
                     }
                 }
                 if add {
                     self.errors.push(HEMTTError::LINENO(lineerror));
                 }
-            },
+            }
             _ => {
                 self.errors.push(error);
             }

@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use hashbrown::HashMap;
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 use rlua::Lua;
 use walkdir::WalkDir;
 
@@ -23,7 +23,10 @@ impl Template {
         lua.context(|lua_ctx| {
             self.setup_lua(lua_ctx);
             setup(lua_ctx);
-            lua_ctx.load(&std::fs::read_to_string(file).unwrap()).eval::<String>().unwrap()
+            lua_ctx
+                .load(&std::fs::read_to_string(file).unwrap())
+                .eval::<String>()
+                .unwrap()
         })
     }
 
@@ -39,55 +42,63 @@ impl Template {
     fn setup_lua(&self, lua_ctx: rlua::Context) {
         let globals = lua_ctx.globals();
 
-        let lua_print = lua_ctx.create_function(|_, text: (String)| {
-            println!("{}", text);
-            Ok(())
-        }).unwrap();
+        let lua_print = lua_ctx
+            .create_function(|_, text: (String)| {
+                println!("{}", text);
+                Ok(())
+            })
+            .unwrap();
         globals.set("print", lua_print).unwrap();
 
-        let lua_read_file = lua_ctx.create_function(|_, file: (String)| {
-            Ok(std::fs::read_to_string(file).unwrap())
-        }).unwrap();
+        let lua_read_file = lua_ctx
+            .create_function(|_, file: (String)| Ok(std::fs::read_to_string(file).unwrap()))
+            .unwrap();
         globals.set("read_file", lua_read_file).unwrap();
 
-        let lua_copy = lua_ctx.create_function(|ctx, (src, dst): (String, String)| {
-            let src_path = Path::new(&src);
-            if !src_path.exists() { return Ok(()); }
-            if src_path.is_dir() {
-                let dst_path = PathBuf::from(&dst);
-                let mut ancestors = dst_path.ancestors();
-                ancestors.next();
-                if let Some(ancestor) = ancestors.next() {
-                    std::fs::create_dir_all(ancestor).unwrap();
+        let lua_copy = lua_ctx
+            .create_function(|ctx, (src, dst): (String, String)| {
+                let src_path = Path::new(&src);
+                if !src_path.exists() {
+                    return Ok(());
                 }
-                let mut options = fs_extra::dir::CopyOptions::new();
-                options.copy_inside = true;
-                options.overwrite = true;
-                fs_extra::dir::copy(src, &dst, &options).unwrap();
-                let re = Regex::new(r"(?m)%%([A-Za-z]+)%%").unwrap();
-                for entry in WalkDir::new(dst) {
-                    let path = entry.unwrap();
-                    if !path.path().is_file() { continue; }
-                    let mut variables: HashMap<&str, String> = HashMap::new();
-                    // TODO replace a with type ascription
-                    let a: Result<String,_> = ctx.globals().get("new_addon");
-                    if let Ok(v) = a {
-                        variables.insert("addon", v.clone());
-                        variables.insert("ADDON", v.to_uppercase());
+                if src_path.is_dir() {
+                    let dst_path = PathBuf::from(&dst);
+                    let mut ancestors = dst_path.ancestors();
+                    ancestors.next();
+                    if let Some(ancestor) = ancestors.next() {
+                        std::fs::create_dir_all(ancestor).unwrap();
                     }
-                    let contents = std::fs::read_to_string(path.path()).unwrap();
-                    let result = re.replace_all(&contents, |caps: &Captures| {
-                        let dft = String::from(&caps[1]);
-                        variables.get(&caps[1]).unwrap_or_else(|| &dft).to_string()
-                    });
-                    let mut out = File::create(path.path()).unwrap();
-                    out.write_all(result.into_owned().as_bytes()).unwrap();
+                    let mut options = fs_extra::dir::CopyOptions::new();
+                    options.copy_inside = true;
+                    options.overwrite = true;
+                    fs_extra::dir::copy(src, &dst, &options).unwrap();
+                    let re = Regex::new(r"(?m)%%([A-Za-z]+)%%").unwrap();
+                    for entry in WalkDir::new(dst) {
+                        let path = entry.unwrap();
+                        if !path.path().is_file() {
+                            continue;
+                        }
+                        let mut variables: HashMap<&str, String> = HashMap::new();
+                        // TODO replace a with type ascription
+                        let a: Result<String, _> = ctx.globals().get("new_addon");
+                        if let Ok(v) = a {
+                            variables.insert("addon", v.clone());
+                            variables.insert("ADDON", v.to_uppercase());
+                        }
+                        let contents = std::fs::read_to_string(path.path()).unwrap();
+                        let result = re.replace_all(&contents, |caps: &Captures| {
+                            let dft = String::from(&caps[1]);
+                            variables.get(&caps[1]).unwrap_or_else(|| &dft).to_string()
+                        });
+                        let mut out = File::create(path.path()).unwrap();
+                        out.write_all(result.into_owned().as_bytes()).unwrap();
+                    }
+                } else {
+                    std::fs::copy(src, dst).unwrap();
                 }
-            } else {
-                std::fs::copy(src, dst).unwrap();
-            }
-            Ok(())
-        }).unwrap();
+                Ok(())
+            })
+            .unwrap();
         globals.set("fs_copy", lua_copy).unwrap();
     }
 
@@ -95,7 +106,10 @@ impl Template {
         if Path::new(&script(file)).exists() {
             self.eval_file_empty(&script(file), setup);
         } else {
-            println!("No {} script exists for this template, report this to the template creator.", file);
+            println!(
+                "No {} script exists for this template, report this to the template creator.",
+                file
+            );
         }
     }
 
@@ -103,12 +117,14 @@ impl Template {
         if PathBuf::from("./hemtt/template/scripts/get_version.lua").exists() {
             Ok(self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {}))
         } else {
-            Err(HEMTTError::generic("The version number could not be determined",
+            Err(HEMTTError::generic(
+                "The version number could not be determined",
                 if cfg!(windows) {
                     "Use `cmd /C \"set APP_VERSION={} && hemtt ...\"` to specify a version for this build"
                 } else {
                     "Use `APP_VERSION={} hemtt ...` to specify a version for this build"
-            }))
+                },
+            ))
         }
     }
 }
@@ -119,17 +135,18 @@ impl Command for Template {
             .version("0.1")
             .about("Manage the project's tempalte")
             .subcommand(clap::SubCommand::with_name("init").about("Initialize the template"))
-            .subcommand(clap::SubCommand::with_name("addon").about("Create a new addon")
-                            .arg(clap::Arg::with_name("name")
-                                    .help("Name of the addon to create")
-                                    .required(true)))
-            .subcommand(clap::SubCommand::with_name("function")
-                            .arg(clap::Arg::with_name("addon")
-                                    .help("Addon to add function to")
-                                    .required(true))
-                            .arg(clap::Arg::with_name("name")
-                                    .help("Name of the function")
-                                    .required(true)))
+            .subcommand(
+                clap::SubCommand::with_name("addon").about("Create a new addon").arg(
+                    clap::Arg::with_name("name")
+                        .help("Name of the addon to create")
+                        .required(true),
+                ),
+            )
+            .subcommand(
+                clap::SubCommand::with_name("function")
+                    .arg(clap::Arg::with_name("addon").help("Addon to add function to").required(true))
+                    .arg(clap::Arg::with_name("name").help("Name of the function").required(true)),
+            )
     }
 
     fn run(&self, a: &clap::ArgMatches, p: crate::project::Project) -> Result<(), HEMTTError> {
@@ -147,7 +164,7 @@ impl Command for Template {
                     let globals = lua_ctx.globals();
                     globals.set("new_addon", name).unwrap();
                 });
-            },
+            }
             ("function", Some(args)) => {
                 let addon = args.value_of("addon").unwrap();
                 let name = args.value_of("name").unwrap();
@@ -156,10 +173,10 @@ impl Command for Template {
                     globals.set("addon", addon).unwrap();
                     globals.set("name", name).unwrap();
                 });
-            },
+            }
             ("init", _) => {
                 self.run_script("init", |_| {});
-            },
+            }
             _ => println!("Not implemented"),
         }
         Ok(())

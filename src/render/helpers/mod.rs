@@ -24,7 +24,7 @@ pub fn git(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: 
         // Default to has length of 8 characters
         let length: usize = match params.get(1) {
             Some(len) => len.parse().unwrap_or(8),
-            None => 8
+            None => 8,
         };
 
         let id_sliced = &id[0..length];

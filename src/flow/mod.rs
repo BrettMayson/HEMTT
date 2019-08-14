@@ -23,11 +23,16 @@ pub struct Flow {
 
 impl Flow {
     pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> AddonList {
-        let mut addons: Vec<Result<(Report, Addon), HEMTTError>> = addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
+        let mut addons: Vec<Result<(Report, Addon), HEMTTError>> =
+            addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
 
         for step in &self.steps {
-            if step.none { continue; }
-            if addons.is_empty() { continue; }
+            if step.none {
+                continue;
+            }
+            if addons.is_empty() {
+                continue;
+            }
             if step.parallel {
                 addons = self.parallel(&step.emoji, &step.name, &step.tasks, addons, p)?;
             } else {
@@ -39,7 +44,7 @@ impl Flow {
             match data {
                 Ok((report, _)) => {
                     report.display();
-                },
+                }
                 Err(e) => {
                     error!(format!("{}", e));
                 }
@@ -48,7 +53,14 @@ impl Flow {
         Ok(addons)
     }
 
-    pub fn parallel(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
+    pub fn parallel(
+        &self,
+        emoji: &str,
+        name: &str,
+        tasks: &[Box<dyn Task>],
+        addons: Vec<Result<(Report, Addon), HEMTTError>>,
+        p: &mut Project,
+    ) -> AddonList {
         let addon_style = ProgressStyle::default_spinner()
             .tick_chars("\\|/| ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -69,14 +81,17 @@ impl Flow {
         }
 
         // Create a progress bar for each addon
-        let addons: Vec<Result<(ProgressBar, Report, Addon), HEMTTError>> = addons.into_iter().map(|data| {
-            let (report, addon) = data?;
-            if report.stop.is_none() {
-                total += 1;
-                total_pb.set_length(total);
-            }
-            Ok((m.add(ProgressBar::new(0)), report, addon))
-        }).collect();
+        let addons: Vec<Result<(ProgressBar, Report, Addon), HEMTTError>> = addons
+            .into_iter()
+            .map(|data| {
+                let (report, addon) = data?;
+                if report.stop.is_none() {
+                    total += 1;
+                    total_pb.set_length(total);
+                }
+                Ok((m.add(ProgressBar::new(0)), report, addon))
+            })
+            .collect();
 
         // Draw the multiprogress in another thread
         let draw_thread = thread::spawn(move || {
@@ -96,9 +111,13 @@ impl Flow {
                         } else {
                             total_pb.inc(v);
                         }
-                    },
-                    Err(TryRecvError::Disconnected) => { break 'outer; }
-                    Err(TryRecvError::Empty) => { break; }
+                    }
+                    Err(TryRecvError::Disconnected) => {
+                        break 'outer;
+                    }
+                    Err(TryRecvError::Empty) => {
+                        break;
+                    }
                 }
                 total_pb.tick();
             }
@@ -106,52 +125,66 @@ impl Flow {
         });
 
         // Task loop
-        let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons.into_par_iter().map_with(
+        let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
+            .into_par_iter()
+            .map_with(
                 tx.clone(),
                 |tx, data: Result<(ProgressBar, Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
-            let (pb, mut report, addon) = data?;
-            pb.set_style(addon_style.clone());
-            pb.set_prefix(&fill_space!(" ", 16, &addon.name));
+                    let (pb, mut report, addon) = data?;
+                    pb.set_style(addon_style.clone());
+                    pb.set_prefix(&fill_space!(" ", 16, &addon.name));
 
-            let add = report.stop.is_none();
+                    let add = report.stop.is_none();
 
-            for task in tasks {
-                if report.stop.is_none() && task.can_run(&addon, &report, p)? {
-                    pb.tick();
-                    report.absorb(match task.parallel(&addon, &report, p, &pb) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            pb.finish_and_clear();
-                            return Err(e);
+                    for task in tasks {
+                        if report.stop.is_none() && task.can_run(&addon, &report, p)? {
+                            pb.tick();
+                            report.absorb(match task.parallel(&addon, &report, p, &pb) {
+                                Ok(v) => v,
+                                Err(e) => {
+                                    pb.finish_and_clear();
+                                    return Err(e);
+                                }
+                            });
                         }
-                    });
-                }
-            }
+                    }
 
-            pb.finish_and_clear();
-            if add {
-                tx.send(1).unwrap();
-            }
-            Ok((report, addon))
-        }).collect();
+                    pb.finish_and_clear();
+                    if add {
+                        tx.send(1).unwrap();
+                    }
+                    Ok((report, addon))
+                },
+            )
+            .collect();
         tx.send(0).unwrap();
         draw_thread.join().unwrap();
 
-        let addons = addons.into_iter().map(|data| {
-            if let Ok((report, addon)) = data {
-                if report.stop.is_some() {
-                    report.display();
+        let addons = addons
+            .into_iter()
+            .map(|data| {
+                if let Ok((report, addon)) = data {
+                    if report.stop.is_some() {
+                        report.display();
+                    }
+                    Ok((report, addon))
+                } else {
+                    data
                 }
-                Ok((report, addon))
-            } else {
-                data
-            }
-        }).collect();
+            })
+            .collect();
 
         Ok(addons)
     }
 
-    fn single(&self, emoji: &str, name: &str, tasks: &[Box<dyn Task>], addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
+    fn single(
+        &self,
+        emoji: &str,
+        name: &str,
+        tasks: &[Box<dyn Task>],
+        addons: Vec<Result<(Report, Addon), HEMTTError>>,
+        p: &mut Project,
+    ) -> AddonList {
         if !cfg!(windows) {
             println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
         } else {
@@ -164,16 +197,19 @@ impl Flow {
             addons = task.single(addons, p)?;
         }
 
-        let addons = addons.into_iter().map(|data| {
-            if let Ok((report, addon)) = data {
-                if report.stop.is_some() {
-                    report.display();
+        let addons = addons
+            .into_iter()
+            .map(|data| {
+                if let Ok((report, addon)) = data {
+                    if report.stop.is_some() {
+                        report.display();
+                    }
+                    Ok((report, addon))
+                } else {
+                    data
                 }
-                Ok((report, addon))
-            } else {
-                data
-            }
-        }).collect();
+            })
+            .collect();
 
         Ok(addons)
     }

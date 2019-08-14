@@ -1,6 +1,6 @@
 use std::cmp::min;
-use std::path::{Path, PathBuf};
 use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::path::{Path, PathBuf};
 
 use armake2::preprocess::preprocess;
 use indicatif::ProgressBar;
@@ -14,7 +14,9 @@ static CMD_GAP: usize = 18;
 
 pub fn can_preprocess(p: &Path) -> (bool, bool) {
     let ext = p.extension().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();
-    if RAPABLE.contains(&ext) { return (true, true); }
+    if RAPABLE.contains(&ext) {
+        return (true, true);
+    }
     //(false, ext == "sqf")
     (false, false)
 }
@@ -35,7 +37,8 @@ impl Task for Preprocess {
             let (can_rap, can_check) = can_preprocess(&path.path());
             if can_check {
                 pb.set_message("Waiting for render lock");
-                let (original_path, rendered_path) = crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
+                let (original_path, rendered_path) =
+                    crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
                 let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?;
                 if raw.len() < 3 {
@@ -53,13 +56,17 @@ impl Task for Preprocess {
                         pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Rapify"), rendered_path));
                         if can_rap {
                             let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
-                            let rapped = armake2::config::config_grammar::config(&output, &mut warnings).map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
+                            let rapped = armake2::config::config_grammar::config(&output, &mut warnings)
+                                .map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
                             let total = warnings.len();
                             for (i, w) in warnings.into_iter().enumerate() {
                                 let text = format!("Report {}/{}", i, total);
                                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, &text), rendered_path));
                                 let mut line = output[..w.0].chars().filter(|c| c == &'\n').count();
-                                let file = info.line_origins[min(line, info.line_origins.len()) - 1].1.as_ref().map(|p| p.to_str().unwrap().to_string());
+                                let file = info.line_origins[min(line, info.line_origins.len()) - 1]
+                                    .1
+                                    .as_ref()
+                                    .map(|p| p.to_str().unwrap().to_string());
                                 line = info.line_origins[min(line, info.line_origins.len()) - 1].0 as usize + 1;
 
                                 let filename = file.unwrap();
@@ -79,9 +86,12 @@ impl Task for Preprocess {
                             let mut out = Vec::new();
                             c.read_to_end(&mut out)?;
                             pb.set_message("Waiting for cache lock");
-                            crate::CACHED.lock().unwrap().insert_bytes(&rendered_path.replace("config.cpp", "config.bin"), out)?;
+                            crate::CACHED
+                                .lock()
+                                .unwrap()
+                                .insert_bytes(&rendered_path.replace("config.cpp", "config.bin"), out)?;
                         }
-                    },
+                    }
                     Err(e) => {
                         // Unable to clone HEMTTError
                         report.unique_error(convert_preprocess_error(e.to_string())?);
@@ -96,7 +106,8 @@ impl Task for Preprocess {
 
 pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError> {
     let include_error = Regex::new(r#"(?m)File "(.+?)" included from "(.+?)" not found."#).unwrap();
-    let unexpected_token = Regex::new(r#"(?ms)(?:.+?)In line (.+?):(\d+?):(.+?)Unexpected token "(.+?)", expected: (.+?)$"#).unwrap();
+    let unexpected_token =
+        Regex::new(r#"(?ms)(?:.+?)In line (.+?):(\d+?):(.+?)Unexpected token "(.+?)", expected: (.+?)$"#).unwrap();
     if include_error.is_match(&error) {
         let cap = include_error.captures(&error).unwrap();
         let contents = crate::CACHED.lock().unwrap().lines(&cap[2])?;
@@ -122,7 +133,7 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
             file: cap[1].to_string(),
             note: None,
             content: crate::CACHED.lock().unwrap().get_line(&cap[1], line)?,
-        }))
+        }));
     }
     eprintln!("unknown armake error `{}`", error);
     std::fs::write("armake2.error", error)?;

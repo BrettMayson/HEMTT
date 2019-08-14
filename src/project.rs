@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use config::{Config, Environment, File};
 use handlebars::to_json;
-use serde_json::value::{Value as Json};
 use serde::{Deserialize, Serialize};
+use serde_json::value::Value as Json;
 
 use crate::HEMTTError;
 
@@ -36,7 +36,10 @@ pub struct Project {
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
         Self {
-            name, prefix, author, template,
+            name,
+            prefix,
+            author,
+            template,
 
             version: String::new(),
 
@@ -57,13 +60,15 @@ impl Project {
             p.merge(File::with_name("hemtt").required(true))?;
         } else {
             // Project folder
-            if !Path::new(".hemtt/").exists() { return Err(HEMTTError::simple("No HEMTT project folder"))}
+            if !Path::new(".hemtt/").exists() {
+                return Err(HEMTTError::simple("No HEMTT project folder"));
+            }
             p.merge(File::with_name(".hemtt/base").required(true))?;
             p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
             p.merge(File::with_name(".hemtt/local").required(false))?;
             p.merge(Environment::with_prefix("app"))?;
         }
-        
+
         p.try_into().map_err(From::from)
     }
 

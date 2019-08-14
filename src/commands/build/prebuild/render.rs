@@ -1,9 +1,9 @@
 use std::fs::File;
-use std::path::Path;
 use std::io::Write;
+use std::path::Path;
 
-use walkdir::WalkDir;
 use indicatif::ProgressBar;
+use walkdir::WalkDir;
 
 use crate::{Addon, HEMTTError, Project, Report, Task};
 
@@ -17,20 +17,28 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
     let mut report = Report::new();
     match crate::render::run(&std::fs::read_to_string(path)?.replace("\\{", "\\\\{"), vars) {
         Ok(out) => {
-            let dest = path.display().to_string().replace(".ht.", ".").trim_end_matches(".ht").to_string();
+            let dest = path
+                .display()
+                .to_string()
+                .replace(".ht.", ".")
+                .trim_end_matches(".ht")
+                .to_string();
             let mut outfile = File::create(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
             crate::RENDERED.lock().unwrap().add(path.display().to_string(), dest)?;
-        },
+        }
         Err(err) => {
             if let HEMTTError::LINENO(mut e) = err {
-                e.content = crate::CACHED.lock().unwrap().get_line(path.as_os_str().to_str().unwrap(), e.line.unwrap_or(1))?;
+                e.content = crate::CACHED
+                    .lock()
+                    .unwrap()
+                    .get_line(path.as_os_str().to_str().unwrap(), e.line.unwrap_or(1))?;
                 e.file = path.display().to_string();
                 report.unique_error(HEMTTError::LINENO(e));
             } else {
                 report.errors.push(err);
             }
-        },
+        }
     }
     Ok(report)
 }
