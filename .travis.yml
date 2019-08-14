@@ -3,7 +3,6 @@
 
 dist: trusty
 language: rust
-services: docker
 sudo: required
 
 env:
@@ -49,8 +48,8 @@ matrix:
     # - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
 
     # OSX
-    # - env: TARGET=x86_64-apple-darwin
-    #   os: osx
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
     # - env: TARGET=i686-apple-darwin
     #   os: osx
 
