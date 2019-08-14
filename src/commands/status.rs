@@ -4,11 +4,9 @@ use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
 
 pub struct Status {}
 impl Command for Status {
-    fn register(&self) -> (&str, clap::App) {
-        ("status",
-            clap::SubCommand::with_name("status")
-                .about("Get the status of your project")
-        )
+    fn register(&self) -> clap::App {
+        clap::SubCommand::with_name("status")
+            .about("Get the status of your project")
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {

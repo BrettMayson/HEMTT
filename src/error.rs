@@ -43,7 +43,7 @@ impl HEMTTError {
     pub fn from_armake_parse(err: armake2::config::config_grammar::ParseError, path: &str, content: Option<String>) -> HEMTTError {
         let c = match content {
             Some(v) => {
-                v.lines().nth(err.line).unwrap().to_string()
+                v.lines().nth(err.line - 1).unwrap().to_string()
             },
             None => {
                 crate::CACHED.lock().unwrap().get_line(path, err.line).unwrap()

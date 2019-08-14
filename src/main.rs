@@ -57,7 +57,7 @@ fn main() {
             ;
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
-    let mut hash_commands: HashMap<&str, &Box<dyn Command>> = HashMap::new();
+    let mut hash_commands: HashMap<String, &Box<dyn Command>> = HashMap::new();
 
     // Add commands here
     commands.push(Box::new(commands::Init {}));
@@ -67,9 +67,9 @@ fn main() {
     commands.push(Box::new(commands::Status {}));
 
     for command in commands.iter() {
-        let (name, sub) = command.register();
+        let sub = command.register();
+        hash_commands.insert(sub.get_name().to_owned(), command);
         app = app.subcommand(sub);
-        hash_commands.insert(name, command);
     }
 
     let matches = app.get_matches();

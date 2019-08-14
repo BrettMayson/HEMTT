@@ -11,19 +11,17 @@ use crate::{Addon, AddonLocation, Command, Flow, HEMTTError, Project, Step};
 
 pub struct Build {}
 impl Command for Build {
-    fn register(&self) -> (&str, clap::App) {
-        ("build",
-            clap::SubCommand::with_name("build")
-                .about("Build the Project")
-                .arg(clap::Arg::with_name("release")
-                        .help("Build a release")
-                        .long("release")
-                        .conflicts_with("dev"))
-                .arg(clap::Arg::with_name("clear")
-                        .help("Clears existing built files")
-                        .long("clear")
-                        .long("force"))
-        )
+    fn register(&self) -> clap::App {
+        clap::SubCommand::with_name("build")
+            .about("Build the Project")
+            .arg(clap::Arg::with_name("release")
+                    .help("Build a release")
+                    .long("release")
+                    .conflicts_with("dev"))
+            .arg(clap::Arg::with_name("clear")
+                    .help("Clears existing built files")
+                    .long("clear")
+                    .long("force"))
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {

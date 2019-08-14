@@ -95,7 +95,7 @@ impl FileCache {
     }
 
     pub fn get_line(&mut self, path: &str, line: usize) -> Result<String, HEMTTError> {
-        Ok(self.lines(path)?[line].clone())
+        Ok(self.lines(path)?[line - 1].clone())
     }
 }
 

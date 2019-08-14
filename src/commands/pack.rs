@@ -4,19 +4,17 @@ use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
 
 pub struct Pack {}
 impl Command for Pack {
-    fn register(&self) -> (&str, clap::App) {
-        ("pack",
-            clap::SubCommand::with_name("pack")
-                .about("Pack the Project")
-                .arg(clap::Arg::with_name("release")
-                        .help("Pack a release")
-                        .long("release")
-                        .conflicts_with("dev"))
-                .arg(clap::Arg::with_name("clear")
-                        .help("Clears existing built files")
-                        .long("clear")
-                        .long("force"))
-        )
+    fn register(&self) -> clap::App {
+        clap::SubCommand::with_name("pack")
+            .about("Pack the Project")
+            .arg(clap::Arg::with_name("release")
+                    .help("Pack a release")
+                    .long("release")
+                    .conflicts_with("dev"))
+            .arg(clap::Arg::with_name("clear")
+                    .help("Clears existing built files")
+                    .long("clear")
+                    .long("force"))
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {

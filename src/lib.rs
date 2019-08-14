@@ -12,9 +12,8 @@ pub mod render;
 
 use hashbrown::HashMap;
 
-pub use commands::Command;
-pub use commands::build;
 pub use build::addon::{Addon, AddonLocation};
+pub use commands::{Command, build};
 pub use error::{HEMTTError, FileErrorLineNumber, IOPathError};
 pub use files::{FileCache, RenderedFiles};
 pub use flow::{Flow, Report, Task, Step};

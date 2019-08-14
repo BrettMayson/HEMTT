@@ -7,11 +7,9 @@ use crate::{Command, HEMTTError, Project};
 pub struct Init {}
 
 impl Command for Init {
-    fn register(&self) -> (&str, clap::App) {
-        ("init",
-            clap::SubCommand::with_name("init")
-                .about("Initialize a HEMTT Project")
-        )
+    fn register(&self) -> clap::App {
+        clap::SubCommand::with_name("init")
+            .about("Initialize a HEMTT Project")
     }
 
     fn require_project(&self) -> bool { false }

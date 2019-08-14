@@ -17,7 +17,7 @@ use crate::{HEMTTError, Project};
 
 pub trait Command {
     // (name, description)
-    fn register(&self) -> (&str, clap::App);
+    fn register(&self) -> clap::App;
     fn run(&self, _args: &clap::ArgMatches, _project: Project) -> Result<(), HEMTTError> {
         unimplemented!();
     }
