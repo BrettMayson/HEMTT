@@ -10,6 +10,9 @@ pub use build::Build;
 mod pack;
 pub use pack::Pack;
 
+mod clean;
+pub use clean::Clean;
+
 mod status;
 pub use status::Status;
 

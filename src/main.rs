@@ -64,6 +64,7 @@ fn main() {
     commands.push(Box::new(commands::Template {}));
     commands.push(Box::new(commands::Build {}));
     commands.push(Box::new(commands::Pack {}));
+    commands.push(Box::new(commands::Clean {}));
     commands.push(Box::new(commands::Status {}));
 
     for command in commands.iter() {
