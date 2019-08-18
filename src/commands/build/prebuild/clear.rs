@@ -6,6 +6,7 @@ use strum::IntoEnumIterator;
 
 use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Task};
 
+// Clears existing files that will be rebuilt only
 #[derive(Clone)]
 pub struct Clear {}
 impl Task for Clear {
@@ -22,6 +23,7 @@ impl Task for Clear {
     }
 }
 
+// Cleans all pbo files
 #[derive(Clone)]
 pub struct Clean {}
 impl Task for Clean {
@@ -49,7 +51,6 @@ impl Task for Clean {
                 let loc = path.display().to_string();
                 if !path.is_dir() && re.is_match(&loc) && !targets.contains(&loc) {
                     std::fs::remove_file(&loc)?;
-                    println!("Removing {}", loc);
                 }
             }
         }

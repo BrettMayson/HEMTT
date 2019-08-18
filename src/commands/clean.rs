@@ -19,8 +19,8 @@ impl Command for Clean {
         let flow = Flow {
             steps: vec![Step::parallel(
                 "🗑️",
-                "Clear",
-                vec![Box::new(crate::build::prebuild::clear::Clear {})],
+                "Clean",
+                vec![Box::new(crate::build::prebuild::clear::Clean {})],
             )],
         };
         flow.execute(addons, &mut p)?;

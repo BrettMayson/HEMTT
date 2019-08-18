@@ -64,10 +64,11 @@ impl Project {
                 return Err(HEMTTError::simple("No HEMTT project folder"));
             }
             p.merge(File::with_name(".hemtt/base").required(true))?;
-            p.merge(File::with_name(&format!("hemtt/{}", env)).required(false))?;
+            p.merge(File::with_name(&format!(".hemtt/{}", env)).required(false))?;
             p.merge(File::with_name(".hemtt/local").required(false))?;
-            p.merge(Environment::with_prefix("app"))?;
         }
+        
+        p.merge(Environment::with_prefix("app"))?;
 
         p.try_into().map_err(From::from)
     }

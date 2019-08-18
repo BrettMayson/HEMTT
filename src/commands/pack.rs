@@ -47,6 +47,11 @@ impl Command for Pack {
                     ],
                 ),
                 Step::parallel("📦", "Pack", vec![Box::new(crate::build::build::Build { use_bin: false })]),
+                if args.is_present("release") {
+                    Step::single("⭐", "Release", vec![Box::new(crate::build::postbuild::release::Release {})])
+                } else {
+                    Step::none()
+                },
             ],
         };
         flow.execute(addons, &mut p)?;

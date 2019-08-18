@@ -21,9 +21,9 @@ impl Command for Build {
                     .conflicts_with("dev"),
             )
             .arg(
-                clap::Arg::with_name("clear")
-                    .help("Clears existing built files")
-                    .long("clear")
+                clap::Arg::with_name("rebuild")
+                    .help("Rebuild existing files")
+                    .long("rebuild")
                     .long("force"),
             )
     }
@@ -38,7 +38,7 @@ impl Command for Build {
         }
         let flow = Flow {
             steps: vec![
-                if args.is_present("clear") {
+                if args.is_present("rebuild") {
                     Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})])
                 } else {
                     Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})])
