@@ -52,7 +52,11 @@ impl HEMTTError {
         HEMTTError::LINENO(FileErrorLineNumber {
             line: Some(err.line),
             col: Some(err.column),
-            error: "Unable to parse".to_string(),
+            error: format!("Expected one of `{}`", {
+                let mut v = err.expected.into_iter().collect::<Vec<&str>>();
+                v.sort();
+                v.join("` `")
+            }),
             content: c,
             file: path.to_string(),
             note: None,
@@ -72,7 +76,7 @@ impl std::fmt::Display for HEMTTError {
         match *self {
             HEMTTError::GENERIC(ref s, ref v) => write!(f, "{}\n    {}", s.bold(), v),
             HEMTTError::IO(ref err) => write!(f, "IO error: {}", err),
-            HEMTTError::LINENO(ref err) => write!(f, "{}", filepointer!(err)),
+            HEMTTError::LINENO(ref err) => write!(f, "{}\n{}", err.error, filepointer!(err)),
             HEMTTError::PATH(ref err) => write!(f, "IO error {}: {}", err.path.display(), err.source),
             HEMTTError::SIMPLE(ref s) => write!(f, "{}", s),
             HEMTTError::TOML(ref err) => write!(f, "TOML error: {}", err),
@@ -167,10 +171,11 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
 
 impl From<armake2::config::config_grammar::ParseError> for HEMTTError {
     fn from(err: armake2::config::config_grammar::ParseError) -> HEMTTError {
+        println!("\n\n\n\nconfig error: {:?}\n\n\n\n\n", err);
         HEMTTError::LINENO(FileErrorLineNumber {
             line: Some(err.line),
             col: Some(err.column),
-            error: "Unable to parse".to_string(),
+            error: format!("Expected one of {}", err.expected.into_iter().collect::<Vec<&str>>().join(", ")),
             content: "Unknown content".to_string(),
             file: "Unknown file".to_string(),
             note: None,
