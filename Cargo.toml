@@ -38,7 +38,7 @@ strum_macros = "0.15"
 subprocess = "0.1"
 toml = "0.5"
 walkdir = "2.2"
-zip = { git = "https://github.com/jonpas/zip-rs", branch = "flate2", features = ["deflate"] }
+zip = "0.5"
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"

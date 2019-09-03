@@ -85,7 +85,7 @@ impl std::fmt::Display for HEMTTError {
 }
 
 impl std::error::Error for HEMTTError {
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         match *self {
             HEMTTError::GENERIC(ref _s, ref _v) => Some(self),
             HEMTTError::IO(ref err) => Some(err),

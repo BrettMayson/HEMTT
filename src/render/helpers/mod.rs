@@ -4,13 +4,13 @@ use handlebars::{Context, Handlebars, Helper, HelperResult, JsonRender, Output, 
 
 use crate::error::*;
 
-pub fn date(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut Output) -> HelperResult {
+pub fn date(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut dyn Output) -> HelperResult {
     let param = h.param(0).unwrap().value().render();
     out.write(&Local::now().format(param.as_ref()).to_string()).unwrap_or_print();
     Ok(())
 }
 
-pub fn git(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut Output) -> HelperResult {
+pub fn git(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut dyn Output) -> HelperResult {
     let param = h.param(0).unwrap().value().render();
     let params: Vec<&str> = param.split_whitespace().collect();
 
