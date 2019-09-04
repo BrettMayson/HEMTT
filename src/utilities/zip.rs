@@ -62,7 +62,7 @@ pub fn archive(usage: &[String]) -> Result<(), Error> {
         if path.is_file() {
             zip.start_file_from_path(name, options)?;
 
-            let mut f = BufReader::new(File::open(path)?);
+            let mut f = BufReader::new(open_file!(path)?);
 
             // Copy directly, without any buffer, as we have no use for the intermediate data
             copy(&mut f, &mut zip)?;

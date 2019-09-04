@@ -29,7 +29,7 @@ pub fn check() -> Result<(), std::io::Error> {
     pb.show_speed = false;
     for stringtable in stringtables {
         pb.inc();
-        let f = BufReader::new(File::open(stringtable)?);
+        let f = BufReader::new(open_file!(stringtable)?);
         let project: Project = serde_xml_rs::from_reader(f).unwrap_or_print();
         for mut package in project.packages {
             package = package.transfer();

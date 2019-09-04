@@ -1,3 +1,6 @@
+#[macro_use]
+mod fs;
+
 // String Interpolation
 
 #[macro_export]

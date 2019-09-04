@@ -68,7 +68,7 @@ impl Template {
                     let mut ancestors = dst_path.ancestors();
                     ancestors.next();
                     if let Some(ancestor) = ancestors.next() {
-                        std::fs::create_dir_all(ancestor).unwrap();
+                        create_dir!(ancestor).unwrap();
                     }
                     let mut options = fs_extra::dir::CopyOptions::new();
                     options.copy_inside = true;

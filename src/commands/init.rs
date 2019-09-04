@@ -1,4 +1,3 @@
-use std::fs;
 use std::fs::File;
 use std::io::Write;
 
@@ -22,7 +21,7 @@ impl Command for Init {
         let template = ask!("Template >", "cba");
 
         // Create settings file in TOML
-        fs::create_dir_all("./.hemtt/")?;
+        create_dir!("./.hemtt/")?;
         let project = Project::new(name, prefix, author, template.clone());
         let mut out = File::create("./.hemtt/base.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;

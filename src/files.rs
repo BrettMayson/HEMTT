@@ -21,12 +21,7 @@ impl FileCache {
         if self.files.contains_key(path) {
             Ok(self.files.get(path).unwrap().to_vec())
         } else {
-            let f = File::open(path).map_err(|e| {
-                HEMTTError::PATH(IOPathError {
-                    path: PathBuf::from(path),
-                    source: e,
-                })
-            })?;
+            let f = open_file!(path)?;
             let mut reader = BufReader::new(f);
             let mut buf = Vec::new();
             reader.read_to_end(&mut buf).map_err(|e| {
@@ -68,7 +63,11 @@ impl FileCache {
                     continue 'outer;
                 }
             }
-            output.push_str(&content[cursor..(mat_start - 1)]);
+            if &content[(mat_start - 1)..mat_start] == "/" {
+                output.push_str(&content[cursor..(mat_start - 1)]);
+            } else {
+                output.push_str(&content[cursor..(mat_start)]);
+            }
             cursor = mat_end;
         }
         output.push_str(&content[cursor..(content.len())]);

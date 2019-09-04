@@ -12,9 +12,9 @@ impl Task for Release {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
         let mut can_continue = true;
         /*for addon in &addons {
-            if addon.is_err() { can_continue = false; break; }
-            let (report, addon) = addon.unwrap();
-            if report.stop.is_some() { can_continue = false; break; }
+            if addon.is_err() { can_continue = false; error!(addon.as_ref().err().unwrap()); break; }
+            let (report, _) = addon.as_ref().unwrap();
+            if report.stop.as_ref().unwrap().0 { can_continue = false; error!(format!("Problem2 building {:?}", addon)); break; }
         }*/
         let addons = addons
             .into_iter()
@@ -59,7 +59,20 @@ impl Task for Release {
                 }
             }
         }
-        std::fs::create_dir_all(release_folder)?;
+
+        create_dir!(release_folder)?;
+
+        for dir in &["addons", "keys"] {
+            create_dir!(
+                {
+                    let mut d = release_folder.clone();
+                    d.push(format!("{}", dir));
+                    println!("DIR {:#?}", d);
+                    d
+                }
+            )?;
+            
+        }
 
         Ok(addons)
     }
