@@ -71,7 +71,7 @@ impl Task for Build {
             let is_binarizable = binarize && BINARIZABLE.contains(&ext.as_str());
 
             if name == "$PBOPREFIX$" {
-                let content = crate::CACHED.lock().unwrap().lines(&entry.path().display().to_string())?;
+                let content = crate::CACHED.lock().unwrap().lines(&entry.path().display().to_string())?.clone();
                 for line in content {
                     if line.is_empty() {
                         break;
@@ -85,7 +85,7 @@ impl Task for Build {
                     }
                 }
             } else {
-                let content = crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?;
+                let content = crate::CACHED.lock().unwrap().read(&entry.path().display().to_string())?.clone();
                 if crate::build::prebuild::preprocess::RAPABLE.contains(&ext.as_ref()) {
                     if self.use_bin {
                         pbo.files.insert(

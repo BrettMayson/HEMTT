@@ -40,7 +40,7 @@ impl Task for Preprocess {
                 let (original_path, rendered_path) =
                     crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
                 pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
-                let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?;
+                let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?.clone();
                 if raw.len() < 3 {
                     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
                     continue;

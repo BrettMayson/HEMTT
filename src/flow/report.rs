@@ -4,6 +4,7 @@ use crate::error::HEMTTError;
 pub struct Report {
     pub errors: Vec<HEMTTError>,
     pub warnings: Vec<HEMTTError>,
+    pub old: Vec<HEMTTError>,
     pub stop: Option<(bool, HEMTTError)>,
 }
 
@@ -11,6 +12,7 @@ impl Report {
     pub fn new() -> Self {
         Self {
             warnings: Vec::new(),
+            old: Vec::new(),
             errors: Vec::new(),
             stop: None,
         }
@@ -18,6 +20,7 @@ impl Report {
 
     pub fn absorb(&mut self, mut other: Self) {
         self.warnings.append(&mut other.warnings);
+        self.old.append(&mut other.old);
         if self.stop.is_none() && other.stop.is_some() {
             self.stop = other.stop;
         };
@@ -26,7 +29,7 @@ impl Report {
         }
     }
 
-    pub fn display(&self) {
+    pub fn display(&mut self) {
         for warning in &self.warnings {
             match warning {
                 HEMTTError::GENERIC(s, v) => {
@@ -38,9 +41,19 @@ impl Report {
                 HEMTTError::SIMPLE(s) => {
                     warn!(s);
                 }
-                _ => {}
+                HEMTTError::IO(s) => {
+                    warn!(s);
+                }
+                HEMTTError::PATH(s) => {
+                    warnmessage!(&s.source, format!("{:#?}", s.path));
+                }
+                HEMTTError::TOML(s) => {
+                    warn!(s);
+                }
             }
         }
+        self.old.append(&mut self.warnings);
+        self.warnings = Vec::new();
         for error in &self.errors {
             match error {
                 HEMTTError::GENERIC(s, v) => {
@@ -52,7 +65,15 @@ impl Report {
                 HEMTTError::LINENO(error) => {
                     fileerror!(error);
                 }
-                _ => {}
+                HEMTTError::IO(s) => {
+                    error!(s);
+                }
+                HEMTTError::PATH(s) => {
+                    errormessage!(&s.source, format!("{:#?}", s.path));
+                }
+                HEMTTError::TOML(s) => {
+                    error!(s);
+                }
             }
         }
     }

@@ -40,7 +40,7 @@ impl Flow {
             }
         }
 
-        for data in &addons {
+        for data in &mut addons {
             match data {
                 Ok((report, _)) => {
                     report.display();
@@ -163,7 +163,7 @@ impl Flow {
         let addons = addons
             .into_iter()
             .map(|data| {
-                if let Ok((report, addon)) = data {
+                if let Ok((mut report, addon)) = data {
                     if report.stop.is_some() {
                         report.display();
                     }
@@ -200,7 +200,7 @@ impl Flow {
         let addons = addons
             .into_iter()
             .map(|data| {
-                if let Ok((report, addon)) = data {
+                if let Ok((mut report, addon)) = data {
                     if report.stop.is_some() {
                         report.display();
                     }

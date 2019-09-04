@@ -9,6 +9,8 @@ use walkdir::WalkDir;
 
 use crate::{Command, HEMTTError};
 
+mod version;
+
 #[derive(Default)]
 pub struct Template {}
 
@@ -110,21 +112,6 @@ impl Template {
                 "No {} script exists for this template, report this to the template creator.",
                 file
             );
-        }
-    }
-
-    pub fn get_version(&self) -> Result<String, HEMTTError> {
-        if PathBuf::from("./hemtt/template/scripts/get_version.lua").exists() {
-            Ok(self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {}))
-        } else {
-            Err(HEMTTError::generic(
-                "The version number could not be determined",
-                if cfg!(windows) {
-                    "Use `cmd /C \"set APP_VERSION={} && hemtt ...\"` to specify a version for this build"
-                } else {
-                    "Use `APP_VERSION={} hemtt ...` to specify a version for this build"
-                },
-            ))
         }
     }
 }
