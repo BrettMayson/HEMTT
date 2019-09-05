@@ -31,7 +31,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         include:
           - os: windows-latest
-            ssl_dir: C:\Program Files\OpenSSL
+            openssl_dir: C:\Program Files\OpenSSL
     steps:
       - name: Checkout the source code
         uses: actions/checkout@master
@@ -43,7 +43,7 @@ jobs:
           
       - name: Build
         env:
-          OPEN_SSL_DIR: ${{ ssl_dir }}
+          OPENSSL_DIR: ${{ openssl_dir }}
         run: cargo build --all
 
       - name: Test
