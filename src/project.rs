@@ -32,6 +32,10 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "default_include")]
     pub include: Vec<PathBuf>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub files: Vec<String>,
 }
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
@@ -46,6 +50,7 @@ impl Project {
             modname: String::new(),
             mainprefix: default_mainprefix(),
             include: default_include(),
+            files: if std::path::Path::new("mod.cpp").exists() { vec!("mod.cpp".to_owned()) } else { Vec::new() },
         }
     }
 

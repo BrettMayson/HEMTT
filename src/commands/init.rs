@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::io::Write;
 
 use crate::{Command, HEMTTError, Project};
@@ -23,7 +22,7 @@ impl Command for Init {
         // Create settings file in TOML
         create_dir!("./.hemtt/")?;
         let project = Project::new(name, prefix, author, template.clone());
-        let mut out = File::create("./.hemtt/base.toml")?;
+        let mut out = create_file!("./.hemtt/base.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
 
         // clone template

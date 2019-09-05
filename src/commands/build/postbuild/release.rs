@@ -1,4 +1,5 @@
 use dialoguer::Confirmation;
+use glob::glob;
 
 use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
 
@@ -11,12 +12,7 @@ impl Task for Release {
 
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
         let mut can_continue = true;
-        /*for addon in &addons {
-            if addon.is_err() { can_continue = false; error!(addon.as_ref().err().unwrap()); break; }
-            let (report, _) = addon.as_ref().unwrap();
-            if report.stop.as_ref().unwrap().0 { can_continue = false; error!(format!("Problem2 building {:?}", addon)); break; }
-        }*/
-        let addons = addons
+        let addons: Vec<_> = addons
             .into_iter()
             .map(|d| {
                 if d.is_err() {
@@ -62,17 +58,32 @@ impl Task for Release {
 
         create_dir!(release_folder)?;
 
-        for dir in &["addons", "keys"] {
+        for dir in &["keys"] {
             create_dir!(
                 {
                     let mut d = release_folder.clone();
                     d.push(format!("{}", dir));
-                    println!("DIR {:#?}", d);
                     d
                 }
             )?;
-            
         }
+
+        for file in &p.files {
+            for entry in glob(file)? {
+                if let Ok(path) = entry {
+                    copy_file!(path, {
+                        let mut d = release_folder.clone();
+                        d.push(path.file_name().unwrap().to_str().unwrap().to_owned());
+                        d
+                    })?;
+                }
+            }
+        }
+
+        for data in &addons {
+            let (_, addon) = data.as_ref().unwrap();
+            addon.release(&release_folder, &p)?;
+        };
 
         Ok(addons)
     }

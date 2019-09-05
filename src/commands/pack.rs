@@ -31,10 +31,11 @@ impl Command for Pack {
         }
         let flow = Flow {
             steps: vec![
+                Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})]),
                 if args.is_present("clear") {
                     Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})])
                 } else {
-                    Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})])
+                    Step::none()
                 },
                 Step::parallel(
                     "🔍",

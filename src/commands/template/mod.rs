@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -92,11 +91,11 @@ impl Template {
                             let dft = String::from(&caps[1]);
                             variables.get(&caps[1]).unwrap_or_else(|| &dft).to_string()
                         });
-                        let mut out = File::create(path.path()).unwrap();
+                        let mut out = create_file!(path.path()).unwrap();
                         out.write_all(result.into_owned().as_bytes()).unwrap();
                     }
                 } else {
-                    std::fs::copy(src, dst).unwrap();
+                    copy_file!(src, dst).unwrap();
                 }
                 Ok(())
             })

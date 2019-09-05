@@ -38,7 +38,7 @@ pub fn archive(usage: &[String]) -> Result<(), Error> {
 
     let zipsubpath = format!("releases/{}", zipname);
     let zippath = Path::new(&zipsubpath);
-    let file = BufWriter::new(File::create(&zippath).unwrap_or_print());
+    let file = BufWriter::new(create_file!(&zippath).unwrap_or_print());
 
     let dir = walkdir::WalkDir::new(&release_dir);
     let mut zip = zip::ZipWriter::new(file);

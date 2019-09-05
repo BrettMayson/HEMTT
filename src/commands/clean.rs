@@ -17,11 +17,10 @@ impl Command for Clean {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {
-            steps: vec![Step::parallel(
-                "🗑️",
-                "Clean",
-                vec![Box::new(crate::build::prebuild::clear::Clean {})],
-            )],
+            steps: vec![
+                Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})]),
+                Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})]),
+            ],
         };
         flow.execute(addons, &mut p)?;
         Ok(())

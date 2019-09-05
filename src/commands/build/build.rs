@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::Cursor;
 use std::path::PathBuf;
 
@@ -128,7 +127,7 @@ impl Task for Build {
                 }
             }
         }
-        let mut outf = File::create(addon.target(p))?;
+        let mut outf = create_file!(addon.target(p))?;
         pbo.write(&mut outf)?;
         Ok(report)
     }

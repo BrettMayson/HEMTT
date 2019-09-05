@@ -182,3 +182,9 @@ impl From<armake2::config::config_grammar::ParseError> for HEMTTError {
         })
     }
 }
+
+impl From<glob::PatternError> for HEMTTError {
+    fn from(err: glob::PatternError) -> HEMTTError {
+        HEMTTError::GENERIC("GLOB Pattern Error".to_owned(), err.msg.to_owned())
+    }
+}

@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use handlebars::to_json;
 use serde_json::value::Value as Json;
 
 use strum_macros::EnumIter;
 
-use crate::Project;
+use crate::{HEMTTError, Project};
 
 #[derive(Clone, Debug, EnumIter, PartialEq)]
 pub enum AddonLocation {
@@ -41,6 +41,17 @@ impl Addon {
         vars.insert("folder", to_json(self.folder()));
         vars.insert("addon", to_json(self.name.clone()));
         vars
+    }
+
+    pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
+        let mut r = release_folder.clone();
+        r.push(folder_name(&self.location));
+        if !Path::new(&r).exists() {
+            create_dir!(r)?;
+        }
+        r.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        copy_file!(self.target(&p), r)?;
+        Ok(())
     }
 }
 

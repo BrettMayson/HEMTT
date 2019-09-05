@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
@@ -23,7 +22,7 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
                 .replace(".ht.", ".")
                 .trim_end_matches(".ht")
                 .to_string();
-            let mut outfile = File::create(Path::new(&dest))?;
+            let mut outfile = create_file!(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
             crate::RENDERED.lock().unwrap().add(path.display().to_string(), dest)?;
         }
