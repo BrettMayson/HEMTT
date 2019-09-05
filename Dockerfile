@@ -1,4 +1,4 @@
-FROM rust:1.33 as build
+FROM rust:1.37 as build
 
 WORKDIR /usr/src/hemtt
 COPY . .
