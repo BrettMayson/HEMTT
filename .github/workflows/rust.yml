@@ -46,7 +46,7 @@ jobs:
         run: cargo test --all
 
       - name: Build (Release)
-        run: cargo build --all
+        run: cargo build --all --release
 
       - uses: actions/upload-artifact@master
         with:
@@ -83,7 +83,7 @@ jobs:
       - name: Build (Release)
         env:
           OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
-        run: cargo build --all
+        run: cargo build --all --release
 
       - uses: actions/upload-artifact@master
         with:
