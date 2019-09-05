@@ -16,9 +16,8 @@ docopt = "1"
 fs_extra = "1.1"
 git2 = "0.9"
 glob = "0.3"
-hashbrown = "0.5"
 handlebars = "2.0"
-indicatif = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
+hashbrown = "0.5"
 lazy_static = "1.3"
 linked-hash-map = "0.5"
 num_cpus = "1.10"
@@ -43,3 +42,7 @@ zip = "0.5"
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
 winreg = "0.6"
+indicatif-windows = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
+
+[target.'cfg(not(windows))'.dependencies]
+indicatif = "0.11"

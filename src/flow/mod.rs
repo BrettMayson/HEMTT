@@ -3,8 +3,12 @@ use std::thread;
 use std::time::Duration;
 
 use colored::*;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
+
+#[cfg(windows)]
+use indicatif_windows::{MultiProgress, ProgressBar, ProgressStyle};
+#[cfg(not(windows))]
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 mod report;
 mod step;

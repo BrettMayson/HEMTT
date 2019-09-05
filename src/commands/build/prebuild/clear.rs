@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 
+#[cfg(windows)]
+use indicatif_windows::ProgressBar;
+#[cfg(not(windows))]
 use indicatif::ProgressBar;
+
 use regex::Regex;
 use strum::IntoEnumIterator;
 

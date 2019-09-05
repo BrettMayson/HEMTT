@@ -2,8 +2,12 @@ use std::cmp::min;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
-use armake2::preprocess::preprocess;
+#[cfg(windows)]
+use indicatif_windows::ProgressBar;
+#[cfg(not(windows))]
 use indicatif::ProgressBar;
+
+use armake2::preprocess::preprocess;
 use regex::Regex;
 use walkdir::WalkDir;
 
