@@ -50,7 +50,11 @@ impl Project {
             modname: String::new(),
             mainprefix: default_mainprefix(),
             include: default_include(),
-            files: if std::path::Path::new("mod.cpp").exists() { vec!("mod.cpp".to_owned()) } else { Vec::new() },
+            files: if std::path::Path::new("mod.cpp").exists() {
+                vec!["mod.cpp".to_owned()]
+            } else {
+                Vec::new()
+            },
         }
     }
 
@@ -72,7 +76,7 @@ impl Project {
             p.merge(File::with_name(&format!(".hemtt/{}", env)).required(false))?;
             p.merge(File::with_name(".hemtt/local").required(false))?;
         }
-        
+
         p.merge(Environment::with_prefix("app"))?;
 
         p.try_into().map_err(From::from)

@@ -27,10 +27,6 @@ fn main() {
         version.push_str("-debug");
     }
 
-    println!("HEMTT {}", version);
-    println!("Environment: {}", project::environment());
-    println!();
-
     let mut app = App::new("HEMTT")
         .version(version.as_ref())
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -100,6 +96,9 @@ fn main() {
     match matches.subcommand_name() {
         Some(v) => match hash_commands.get(v) {
             Some(c) => {
+                println!("HEMTT {}", version);
+                println!("Environment: {}", project::environment());
+                println!();
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     c.run(sub_matches, Project::read().unwrap_or_print()).unwrap_or_print();

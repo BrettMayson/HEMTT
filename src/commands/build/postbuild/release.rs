@@ -59,13 +59,11 @@ impl Task for Release {
         create_dir!(release_folder)?;
 
         for dir in &["keys"] {
-            create_dir!(
-                {
-                    let mut d = release_folder.clone();
-                    d.push(format!("{}", dir));
-                    d
-                }
-            )?;
+            create_dir!({
+                let mut d = release_folder.clone();
+                d.push(format!("{}", dir));
+                d
+            })?;
         }
 
         for file in &p.files {
@@ -83,7 +81,7 @@ impl Task for Release {
         for data in &addons {
             let (_, addon) = data.as_ref().unwrap();
             addon.release(&release_folder, &p)?;
-        };
+        }
 
         Ok(addons)
     }

@@ -1,8 +1,8 @@
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
-use crate::{HEMTTError};
 use super::Template;
+use crate::HEMTTError;
 
 impl Template {
     pub fn get_version(&self) -> Result<String, HEMTTError> {
@@ -15,41 +15,38 @@ impl Template {
                 let line = line?;
                 let mut split = line.split(' ');
                 let define = split.next().unwrap();
-                if define != "#define" { continue; }
+                if define != "#define" {
+                    continue;
+                }
                 let key = split.next().unwrap();
                 let value = split.next().unwrap();
                 match key {
                     "MAJOR" => {
-                        major = value.parse().map_err(|_| HEMTTError::GENERIC(
-                            "Unable to interpret version number part".to_owned(),
-                            value.to_owned()
-                        ))?;
-                    },
+                        major = value.parse().map_err(|_| {
+                            HEMTTError::GENERIC("Unable to interpret version number part".to_owned(), value.to_owned())
+                        })?;
+                    }
                     "MINOR" => {
-                        minor = value.parse().map_err(|_| HEMTTError::GENERIC(
-                            "Unable to interpret version number part".to_owned(),
-                            value.to_owned()
-                        ))?;
-                    },
+                        minor = value.parse().map_err(|_| {
+                            HEMTTError::GENERIC("Unable to interpret version number part".to_owned(), value.to_owned())
+                        })?;
+                    }
                     "PATCHLVL" | "PATCH" => {
-                        patch = value.parse().map_err(|_| HEMTTError::GENERIC(
-                            "Unable to interpret version number part".to_owned(),
-                            value.to_owned()
-                        ))?;
-                    },
+                        patch = value.parse().map_err(|_| {
+                            HEMTTError::GENERIC("Unable to interpret version number part".to_owned(), value.to_owned())
+                        })?;
+                    }
                     "BUILD" => {
                         build = String::from(value);
-                    },
+                    }
                     _ => {}
                 }
             }
-            Ok(
-                if build.is_empty() {
-                    format!("{}.{}.{}", major, minor, patch)
-                } else {
-                    format!("{}.{}.{}.{}", major, minor, patch, build)
-                }
-            )
+            Ok(if build.is_empty() {
+                format!("{}.{}.{}", major, minor, patch)
+            } else {
+                format!("{}.{}.{}.{}", major, minor, patch, build)
+            })
         } else {
             Err(HEMTTError::generic(
                 "No way to determine the version number was detected",

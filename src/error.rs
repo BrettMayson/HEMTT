@@ -175,7 +175,10 @@ impl From<armake2::config::config_grammar::ParseError> for HEMTTError {
         HEMTTError::LINENO(FileErrorLineNumber {
             line: Some(err.line),
             col: Some(err.column),
-            error: format!("Expected one of {}", err.expected.into_iter().collect::<Vec<&str>>().join(", ")),
+            error: format!(
+                "Expected one of {}",
+                err.expected.into_iter().collect::<Vec<&str>>().join(", ")
+            ),
             content: "Unknown content".to_string(),
             file: "Unknown file".to_string(),
             note: None,

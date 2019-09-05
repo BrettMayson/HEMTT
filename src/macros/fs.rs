@@ -1,10 +1,12 @@
 #[macro_export]
 macro_rules! create_dir {
     ($e:expr) => {
-        std::fs::create_dir_all(&$e).map_err(|source| crate::HEMTTError::PATH(crate::IOPathError {
-            source,
-            path: std::path::Path::new(&$e.clone()).to_path_buf(),
-        }))
+        std::fs::create_dir_all(&$e).map_err(|source| {
+            crate::HEMTTError::PATH(crate::IOPathError {
+                source,
+                path: std::path::Path::new(&$e.clone()).to_path_buf(),
+            })
+        })
     };
 }
 
@@ -38,7 +40,7 @@ macro_rules! copy_file {
         std::fs::copy(&$s, &$d).map_err(|source| {
             crate::HEMTTError::GENERIC(
                 format!("Unable to copy: {}", source),
-                format!("`{:#?}` => `{:#?}`", $s, $d)
+                format!("`{:#?}` => `{:#?}`", $s, $d),
             )
         })
     };

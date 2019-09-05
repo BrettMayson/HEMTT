@@ -42,7 +42,7 @@ impl Command for Build {
                 if args.is_present("rebuild") {
                     Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})])
                 } else {
-                    Step::none()  
+                    Step::none()
                 },
                 Step::parallel(
                     "🔍",
