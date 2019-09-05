@@ -1,6 +1,10 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    branches:
+      - master
 
 jobs:
 
@@ -65,7 +69,7 @@ jobs:
 
       - name: Build
         env:
-          OPENSSL_DIR: C:\OpenSSL-v111-Win64
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
         run: cargo build --all && cargo build --release
 
       - name: Test
