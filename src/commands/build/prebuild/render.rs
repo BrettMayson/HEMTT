@@ -1,10 +1,10 @@
 use std::io::Write;
 use std::path::Path;
 
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
 #[cfg(not(windows))]
 use indicatif::ProgressBar;
+#[cfg(windows)]
+use indicatif_windows::ProgressBar;
 
 use walkdir::WalkDir;
 

@@ -2,10 +2,10 @@ use std::cmp::min;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
 #[cfg(not(windows))]
 use indicatif::ProgressBar;
+#[cfg(windows)]
+use indicatif_windows::ProgressBar;
 
 use armake2::preprocess::preprocess;
 use regex::Regex;
