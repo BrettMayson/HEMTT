@@ -12,6 +12,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    
+    - name: Install Rust stable
+      run: |
+        rustup toolchain update stable
+        rustup default stable
+    
     - name: Build
       run: cargo build --verbose
     - name: Run tests
