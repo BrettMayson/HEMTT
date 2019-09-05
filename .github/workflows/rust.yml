@@ -43,7 +43,7 @@ jobs:
           
       - name: Build
         env:
-          OPENSSL_DIR: ${{ openssl_dir }}
+          OPENSSL_DIR: ${{ matrix.openssl_dir }}
         run: cargo build --all
 
       - name: Test
