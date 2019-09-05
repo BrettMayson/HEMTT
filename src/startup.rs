@@ -1,8 +1,8 @@
-use std::path::Path;
 use std::io::Read;
+use std::path::Path;
 
-use crate::HEMTTError;
 use crate::error::PrintableError;
+use crate::HEMTTError;
 
 macro_rules! exec {
     ($c:expr) => {
@@ -23,7 +23,7 @@ fn check_git_ignore() -> Result<(), HEMTTError> {
     if Path::new(".gitignore").exists() {
         let mut data = String::new();
         open_file!(".gitignore")?.read_to_string(&mut data)?;
-        let mut ignore = vec!("releases/*", "*.biprivatekey");
+        let mut ignore = vec!["releases/*", "*.biprivatekey"];
         for l in data.lines() {
             if let Some(index) = ignore.iter().position(|&d| d == l) {
                 ignore.remove(index);

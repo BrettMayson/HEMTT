@@ -1,14 +1,12 @@
 use std::path::{Path, PathBuf};
 
-use rayon::prelude::*;
-
-use armake2::{pbo::PBO, sign::BISignVersion, sign::BIPrivateKey};
-use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
+use armake2::{pbo::PBO, sign::BIPrivateKey};
 
 #[derive(Clone)]
 pub struct Sign {}
 impl Task for Sign {
-    fn can_run(&self, _: &Addon, _: &Report, p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
@@ -20,19 +18,15 @@ impl Task for Sign {
                 // Generate and write the keypair to disk in the current directory
                 armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
                 rename_file!(format!("{}.bikey", keyname), format!("keys/{}.bikey", keyname))?;
-                rename_file!(
-                    format!("{}.biprivatekey", keyname),
-                    format!("keys/{}.biprivatekey", keyname)
-                )?;
+                rename_file!(format!("{}.biprivatekey", keyname), format!("keys/{}.biprivatekey", keyname))?;
             }
 
-            BIPrivateKey::read(
-                &mut open_file!(format!("keys/{}.biprivatekey", keyname))?
-            ).expect("Failed to read private key")
+            BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", keyname))?)
+                .expect("Failed to read private key")
         } else {
             BIPrivateKey::generate(1024, keyname)
         };
-        
+
         let release_folder = p.release_dir()?;
 
         for d in &addons {
@@ -41,10 +35,13 @@ impl Task for Sign {
             let pbo = PBO::read(&mut open_file!(release_target)?)?;
             let sig = key.sign(&pbo, p.get_sig_version());
             let signame = p.get_sig_name(&addon.name)?;
-            sig.write(&mut create_file!(
-                format!("{}{}{}", addon.location.to_string(), std::path::MAIN_SEPARATOR, signame)
-            )?)?;
-        };
+            sig.write(&mut create_file!(format!(
+                "{}{}{}",
+                addon.location.to_string(),
+                std::path::MAIN_SEPARATOR,
+                signame
+            ))?)?;
+        }
         Ok(addons)
     }
 }

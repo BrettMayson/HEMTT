@@ -40,7 +40,6 @@ pub struct Project {
     pub files: Vec<String>,
 
     // Signing
-
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "default_reuse_private_key")]
     pub reuse_private_key: Option<bool>,
@@ -194,6 +193,10 @@ fn default_mainprefix() -> String {
     String::from("z")
 }
 
-fn default_reuse_private_key() -> Option<bool> { None }
+fn default_reuse_private_key() -> Option<bool> {
+    None
+}
 
-pub fn default_sig_version() -> u8 { 3 }
+pub fn default_sig_version() -> u8 {
+    3
+}
