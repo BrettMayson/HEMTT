@@ -40,10 +40,13 @@ jobs:
           rustup default stable
         
       - name: Build
-        run: cargo build --all && cargo build --release
+        run: cargo build --all
 
       - name: Test
         run: cargo test --all
+
+      - name: Build (Release)
+        run: cargo build --all
 
       - uses: actions/upload-artifact@master
         with:
@@ -70,10 +73,17 @@ jobs:
       - name: Build
         env:
           OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
-        run: cargo build --all && cargo build --release
+        run: cargo build --all
 
       - name: Test
+        env:
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
         run: cargo test --all
+
+      - name: Build (Release)
+        env:
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
+        run: cargo build --all
 
       - uses: actions/upload-artifact@master
         with:
