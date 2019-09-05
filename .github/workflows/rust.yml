@@ -36,7 +36,7 @@ jobs:
           rustup default stable
         
       - name: Build
-        run: cargo build --all
+        run: cargo build --all && cargo build --release
 
       - name: Test
         run: cargo test --all
@@ -66,7 +66,7 @@ jobs:
       - name: Build
         env:
           OPENSSL_DIR: C:\OpenSSL-v111-Win64
-        run: cargo build --all
+        run: cargo build --all && cargo build --release
 
       - name: Test
         run: cargo test --all
