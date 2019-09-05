@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use handlebars::to_json;
 use serde_json::value::Value as Json;
@@ -14,6 +14,15 @@ pub enum AddonLocation {
     Compats,
     Optionals,
 }
+impl ToString for AddonLocation {
+    fn to_string(&self) -> String {
+        String::from(match self {
+            AddonLocation::Addons => "addons",
+            AddonLocation::Compats => "compats",
+            AddonLocation::Optionals => "optionals",
+        })
+    }
+}
 
 #[derive(Debug)]
 pub struct Addon {
@@ -24,14 +33,14 @@ impl Addon {
     pub fn folder(&self) -> PathBuf {
         PathBuf::from(format!(
             "{}{}{}",
-            folder_name(&self.location),
+            self.location.to_string(),
             std::path::MAIN_SEPARATOR,
             self.name
         ))
     }
 
     pub fn target(&self, p: &Project) -> PathBuf {
-        let mut target = PathBuf::from(crate::build::addon::folder_name(&self.location));
+        let mut target = PathBuf::from(self.location.to_string());
         target.push(&format!("{}_{}.pbo", p.prefix, self.name));
         target
     }
@@ -43,22 +52,17 @@ impl Addon {
         vars
     }
 
-    pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
+    pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
         let mut r = release_folder.clone();
-        r.push(folder_name(&self.location));
-        if !Path::new(&r).exists() {
-            create_dir!(r)?;
-        }
+        r.push(self.location.to_string());
         r.push(&format!("{}_{}.pbo", p.prefix, self.name));
-        copy_file!(self.target(&p), r)?;
+        r
+    }
+
+    pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
+        let target = self.release_target(release_folder, p);
+        create_dir!(target)?;
+        copy_file!(self.target(&p), target)?;
         Ok(())
     }
-}
-
-pub fn folder_name(location: &AddonLocation) -> String {
-    String::from(match location {
-        AddonLocation::Addons => "addons",
-        AddonLocation::Compats => "compats",
-        AddonLocation::Optionals => "optionals",
-    })
 }

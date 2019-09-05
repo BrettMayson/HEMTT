@@ -10,10 +10,10 @@ impl Command for Clean {
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Optionals)).exists() {
+        if Path::new(&AddonLocation::Optionals.to_string()).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
         }
-        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Compats)).exists() {
+        if Path::new(&AddonLocation::Compats.to_string()).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {

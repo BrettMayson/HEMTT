@@ -30,10 +30,10 @@ impl Command for Build {
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
         let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Optionals)).exists() {
+        if Path::new(&AddonLocation::Optionals.to_string()).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
         }
-        if Path::new(&crate::build::addon::folder_name(&AddonLocation::Compats)).exists() {
+        if Path::new(&AddonLocation::Compats.to_string()).exists() {
             addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
         }
         let flow = Flow {
@@ -73,7 +73,7 @@ impl Command for Build {
 }
 
 pub fn get_addons(location: AddonLocation) -> Result<Vec<Addon>, HEMTTError> {
-    Ok(std::fs::read_dir(addon::folder_name(&location))?
+    Ok(std::fs::read_dir(&location.to_string())?
         .map(|file| file.unwrap().path())
         .filter(|file_or_dir| file_or_dir.is_dir())
         .map(|file| Addon {

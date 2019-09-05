@@ -41,7 +41,7 @@ impl Task for Clean {
             }
         }
         for dir in AddonLocation::iter() {
-            let dir = crate::build::addon::folder_name(&dir);
+            let dir = dir.to_string();
             if !PathBuf::from(&dir).exists() {
                 continue;
             }

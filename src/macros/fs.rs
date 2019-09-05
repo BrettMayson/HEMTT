@@ -45,3 +45,15 @@ macro_rules! copy_file {
         })
     };
 }
+
+#[macro_export]
+macro_rules! rename_file {
+    ($s:expr, $d:expr) => {
+        std::fs::rename(&$s, &$d).map_err(|source| {
+            crate::HEMTTError::GENERIC(
+                format!("Unable to rename: {}", source),
+                format!("`{:#?}` => `{:#?}`", $s, $d),
+            )
+        })
+    };
+}

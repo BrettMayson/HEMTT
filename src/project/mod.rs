@@ -9,6 +9,8 @@ use serde_json::value::Value as Json;
 
 use crate::HEMTTError;
 
+mod signing;
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Project {
     pub name: String,
@@ -36,6 +38,25 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub files: Vec<String>,
+
+    // Signing
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default = "default_reuse_private_key")]
+    pub reuse_private_key: Option<bool>,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
+    keyname: String,
+
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
+    #[serde(rename(deserialize = "signame"))] // DEPRECATED
+    pub sig_name: String,
+
+    #[serde(default = "default_sig_version")]
+    #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
+    pub sig_version: u8,
 }
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
@@ -55,6 +76,11 @@ impl Project {
             } else {
                 Vec::new()
             },
+
+            reuse_private_key: default_reuse_private_key(),
+            keyname: String::new(),
+            sig_name: String::new(),
+            sig_version: default_sig_version(),
         }
     }
 
@@ -82,6 +108,7 @@ impl Project {
         p.try_into().map_err(From::from)
     }
 
+    /// Values used for rendering
     pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
         let mut vars = BTreeMap::new();
         vars.insert("author", to_json(self.author.clone()));
@@ -92,10 +119,12 @@ impl Project {
         vars
     }
 
+    /// Render a handlebars string
     pub fn render(&self, text: &str) -> Result<String, HEMTTError> {
         crate::render::run(text, &self.get_variables())
     }
 
+    /// `@modname` without `@`, uses prefix if undefined by project file
     pub fn modname(&self) -> Result<String, HEMTTError> {
         Ok(if self.modname.is_empty() {
             self.prefix.clone()
@@ -104,6 +133,7 @@ impl Project {
         })
     }
 
+    /// Version number as defined or detected by the templating engine
     pub fn version(&self) -> Result<String, HEMTTError> {
         if self.version.is_empty() {
             let template = crate::commands::Template::new();
@@ -113,6 +143,7 @@ impl Project {
         }
     }
 
+    /// Release directory `releases/{version}/@{modname}`
     pub fn release_dir(&self) -> Result<PathBuf, HEMTTError> {
         let version = self.version()?;
         let modname = self.modname()?;
@@ -124,6 +155,7 @@ pub fn environment() -> String {
     env::var("ENV").unwrap_or_else(|_| if *crate::CI { "ci".into() } else { "dev".into() })
 }
 
+/// Finds the root of the project
 pub fn find_root() -> Result<PathBuf, HEMTTError> {
     let mut dir = std::env::current_dir().unwrap();
     loop {
@@ -161,3 +193,7 @@ fn default_include() -> Vec<PathBuf> {
 fn default_mainprefix() -> String {
     String::from("z")
 }
+
+fn default_reuse_private_key() -> Option<bool> { None }
+
+pub fn default_sig_version() -> u8 { 3 }

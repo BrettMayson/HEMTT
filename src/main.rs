@@ -9,6 +9,8 @@ use ansi_term;
 #[macro_use]
 pub mod macros;
 
+mod startup;
+
 use hemtt::*;
 
 use crate::error::PrintableError;
@@ -99,6 +101,7 @@ fn main() {
                 println!("HEMTT {}", version);
                 println!("Environment: {}", project::environment());
                 println!();
+                startup::startup();
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     c.run(sub_matches, Project::read().unwrap_or_print()).unwrap_or_print();
