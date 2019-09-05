@@ -6,17 +6,16 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        include:
-          - os: ubuntu-latest
-            components: 'rustfmt, clippy'
-            
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the source code
         uses: actions/checkout@master
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain update stable
+          rustup default stable
+          rustup component add clippy rustfmt
 
       - name: Run rustfmt
         run: cargo fmt -- --check
@@ -24,15 +23,32 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all -- -Dwarnings
 
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        include:
-          - os: windows-latest
-            openssl_dir: C:\Program Files\OpenSSL
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@master
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain update stable
+          rustup default stable
+        
+      - name: Build
+        run: cargo build --all
+
+      - name: Test
+        run: cargo test --all
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: hemtt
+          path: target/release/hemtt
+
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
     steps:
       - name: Checkout the source code
         uses: actions/checkout@master
@@ -42,15 +58,20 @@ jobs:
           rustup toolchain update stable
           rustup default stable
           
+      - name: Install OpenSSL
+        run: |
+          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1c.msi' -OutFile openssl.msi"
+          msiexec.exe /qn /i openssl.msi
+
       - name: Build
-        if: matrix.os == 'windows-latest'
         env:
-          OPENSSL_DIR: ${{ matrix.openssl_dir }}
-        run: cargo build --all
-        
-      - name: Build
-        if: matrix.os != 'windows-latest'
+          OPENSSL_DIR: C:\Program Files\OpenSSL
         run: cargo build --all
 
       - name: Test
         run: cargo test --all
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: hemtt.exe
+          path: target/release/hemtt.exe
