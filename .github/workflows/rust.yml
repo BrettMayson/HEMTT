@@ -65,7 +65,7 @@ jobs:
 
       - name: Build
         env:
-          OPENSSL_DIR: C:\Program Files\OpenSSL
+          OPENSSL_DIR: C:\OpenSSL-v111-Win64
         run: cargo build --all
 
       - name: Test
