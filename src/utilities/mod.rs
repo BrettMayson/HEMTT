@@ -21,6 +21,7 @@ impl FromStr for Utility {
         match s.to_lowercase().as_str() {
             "armake" => Ok(Utility::Armake),
             "convertproject" => Ok(Utility::ConvertProject),
+            "template" => Some(Utility::Template),
             "translation" => Ok(Utility::Translation),
             "zip" => Ok(Utility::Zip),
             _ => Err(()),
@@ -29,13 +30,11 @@ impl FromStr for Utility {
 }
 
 pub fn find(utility: &str) -> Option<Utility> {
-    match utility {
-        "armake" => Some(Utility::Armake),
-        "convertproject" => Some(Utility::ConvertProject),
-        "template" => Some(Utility::Template),
-        "translation" => Some(Utility::Translation),
-        "zip" => Some(Utility::Zip),
-        _ => None
+    let name = Utility::from_str(utility);
+    if name.is_ok() {
+        Some(name.unwrap())
+    } else {
+        None   
     }
 }
 
