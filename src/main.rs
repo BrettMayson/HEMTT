@@ -65,6 +65,7 @@ Commands:
 Utilities:
     armake              Run armake2 commands
     convertproject      Convert project file between JSON and TOML
+    template            Render the arguments
     translation         Displays the translation progress of all stringtable files
     zip                 Create a .zip of the latest release
 
