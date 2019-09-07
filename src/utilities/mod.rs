@@ -21,7 +21,7 @@ impl FromStr for Utility {
         match s.to_lowercase().as_str() {
             "armake" => Ok(Utility::Armake),
             "convertproject" => Ok(Utility::ConvertProject),
-            "template" => Some(Utility::Template),
+            "template" => Ok(Utility::Template),
             "translation" => Ok(Utility::Translation),
             "zip" => Ok(Utility::Zip),
             _ => Err(()),
