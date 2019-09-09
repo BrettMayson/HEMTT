@@ -18,6 +18,7 @@ impl Report {
         }
     }
 
+    /// Absorbs another report
     pub fn absorb(&mut self, mut other: Self) {
         self.warnings.append(&mut other.warnings);
         self.old.append(&mut other.old);
@@ -78,6 +79,7 @@ impl Report {
         }
     }
 
+    /// Adds an error if it does not exist in the report
     pub fn unique_error(&mut self, error: HEMTTError) {
         match error {
             HEMTTError::LINENO(n) => {

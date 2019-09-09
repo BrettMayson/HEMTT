@@ -119,6 +119,7 @@ impl RenderedFiles {
         self.redirects.get(&original)
     }
 
+    /// Gets the rendered path from the original
     pub fn get_paths(&self, original: String) -> (String, String) {
         let rendered = crate::build::prebuild::render::can_render(&Path::new(&original));
         if rendered {

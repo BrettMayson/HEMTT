@@ -34,13 +34,7 @@ impl Task for Sign {
             let release_target = addon.release_target(&release_folder, p);
             let pbo = PBO::read(&mut open_file!(release_target)?)?;
             let sig = key.sign(&pbo, p.get_sig_version());
-            let signame = p.get_sig_name(&addon.name)?;
-            sig.write(&mut create_file!(format!(
-                "{}{}{}",
-                addon.location.to_string(),
-                std::path::MAIN_SEPARATOR,
-                signame
-            ))?)?;
+            sig.write(&mut create_file!(format!("{}.bisign", release_target.to_str().unwrap()))?)?;
         }
         Ok(addons)
     }

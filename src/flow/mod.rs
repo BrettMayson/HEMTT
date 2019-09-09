@@ -97,36 +97,48 @@ impl Flow {
             })
             .collect();
 
-        // Draw the multiprogress in another thread
-        let draw_thread = thread::spawn(move || {
-            m.join().unwrap();
-        });
+        let draw_thread = if !*crate::CI {
+            thread::spawn(move || {
+                m.join().unwrap();
+            })
+        } else {
+            thread::spawn(|| {})
+        };
+
         let (tx, rx) = mpsc::channel();
 
-        // tick the top bar every 100 ms to keep the multiprogress updated
-        thread::spawn(move || 'outer: loop {
-            thread::sleep(Duration::from_millis(100));
-            loop {
-                match rx.try_recv() {
-                    Ok(v) => {
-                        if v == 0 {
-                            total_pb.finish();
+        if !*crate::CI {
+            // tick the top bar every 100 ms to keep the multiprogress updated
+            thread::spawn(move || 'outer: loop {
+                thread::sleep(Duration::from_millis(100));
+                loop {
+                    match rx.try_recv() {
+                        Ok(v) => {
+                            if v == 0 {
+                                total_pb.finish();
+                                break 'outer;
+                            } else {
+                                total_pb.inc(v);
+                            }
+                        }
+                        Err(TryRecvError::Disconnected) => {
                             break 'outer;
-                        } else {
-                            total_pb.inc(v);
+                        }
+                        Err(TryRecvError::Empty) => {
+                            break;
                         }
                     }
-                    Err(TryRecvError::Disconnected) => {
-                        break 'outer;
-                    }
-                    Err(TryRecvError::Empty) => {
-                        break;
-                    }
+                    total_pb.tick();
                 }
                 total_pb.tick();
+            });
+        } else {
+            if !cfg!(windows) {
+                println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
+            } else {
+                println!("{}", &fill_space!(" ", 12, name).bold().cyan());
             }
-            total_pb.tick();
-        });
+        }
 
         // Task loop
         let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
@@ -135,8 +147,11 @@ impl Flow {
                 tx.clone(),
                 |tx, data: Result<(ProgressBar, Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
                     let (pb, mut report, addon) = data?;
-                    pb.set_style(addon_style.clone());
-                    pb.set_prefix(&fill_space!(" ", 16, &addon.name));
+
+                    if !*crate::CI {
+                        pb.set_style(addon_style.clone());
+                        pb.set_prefix(&fill_space!(" ", 16, &addon.name));
+                    }
 
                     let add = report.stop.is_none();
 
@@ -161,6 +176,7 @@ impl Flow {
                 },
             )
             .collect();
+
         tx.send(0).unwrap();
         draw_thread.join().unwrap();
 

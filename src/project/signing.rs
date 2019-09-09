@@ -8,6 +8,7 @@ impl Project {
         self.reuse_private_key.is_some() && self.reuse_private_key.unwrap()
     }
 
+    /// Get the name for .bikey files
     pub fn get_key_name(&self) -> Result<String, HEMTTError> {
         Ok(if self.keyname.is_empty() {
             if self.reuse_private_key() {
@@ -22,6 +23,7 @@ impl Project {
         })
     }
 
+    /// Get the name for .bisign files
     pub fn get_sig_name(&self, pbo: &str) -> Result<String, HEMTTError> {
         Ok(if self.sig_name.is_empty() {
             format!("{}.{}.bisign", pbo, self.version()?)

@@ -65,6 +65,11 @@ impl Command for Build {
                 } else {
                     Step::none()
                 },
+                if args.is_present("release") {
+                    Step::single("⭐", "Sign", vec![Box::new(crate::build::postbuild::sign::Sign {})])
+                } else {
+                    Step::none()
+                },
             ],
         };
         flow.execute(addons, &mut p)?;

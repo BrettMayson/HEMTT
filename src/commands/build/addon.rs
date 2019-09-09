@@ -61,7 +61,7 @@ impl Addon {
 
     pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
         let target = self.release_target(release_folder, p);
-        create_dir!(target)?;
+        create_dir!(target.parent().unwrap())?;
         copy_file!(self.target(&p), target)?;
         Ok(())
     }
