@@ -11,6 +11,7 @@ impl Task for Sign {
     }
 
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
+        create_dir!("keys/")?;
         let keyname = p.get_key_name()?;
         let key = if p.reuse_private_key() {
             warn!("`Reuse Private Key` is enabled. This should be disabled unless you know what you are doing.");
@@ -24,17 +25,33 @@ impl Task for Sign {
             BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", keyname))?)
                 .expect("Failed to read private key")
         } else {
-            BIPrivateKey::generate(1024, keyname)
+            BIPrivateKey::generate(1024, keyname.clone())
         };
 
         let release_folder = p.release_dir()?;
 
+        // Generate a public key to match the private key
+        key.to_public_key().write(&mut create_file!(format!("keys/{}.bikey", &keyname))?)?;
+
+        // Copy public key to specific release dir
+        copy_file!(
+            format!("keys/{}.bikey", keyname),
+            {
+                let mut bikey = release_folder.clone();
+                bikey.push("keys");
+                bikey.push(format!("{}.bikey", &keyname));
+                bikey
+            }
+        )?;
+
         for d in &addons {
             let (_, addon) = d.as_ref().unwrap();
-            let release_target = addon.release_target(&release_folder, p);
-            let pbo = PBO::read(&mut open_file!(release_target)?)?;
+            let pbo = PBO::read(&mut open_file!(addon.release_target(&release_folder, p))?)?;
             let sig = key.sign(&pbo, p.get_sig_version());
-            sig.write(&mut create_file!(format!("{}.bisign", release_target.to_str().unwrap()))?)?;
+            let sig_name = p.get_sig_name(&addon.name)?;
+            let mut location = addon.release_location(&release_folder);
+            location.push(sig_name);
+            sig.write(&mut create_file!(location)?)?;
         }
         Ok(addons)
     }

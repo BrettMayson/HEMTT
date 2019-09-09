@@ -132,12 +132,10 @@ impl Flow {
                 }
                 total_pb.tick();
             });
+        } else if !cfg!(windows) {
+            println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
         } else {
-            if !cfg!(windows) {
-                println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
-            } else {
-                println!("{}", &fill_space!(" ", 12, name).bold().cyan());
-            }
+            println!("{}", &fill_space!(" ", 12, name).bold().cyan());
         }
 
         // Task loop

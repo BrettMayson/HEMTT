@@ -52,13 +52,22 @@ impl Addon {
         vars
     }
 
-    pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
+    /// Folder containing the released addon
+    pub fn release_location(&self, release_folder: &PathBuf) -> PathBuf {
         let mut r = release_folder.clone();
         r.push(self.location.to_string());
+        r
+    }
+
+
+    /// File path of the released addon
+    pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
+        let mut r = self.release_location(release_folder);
         r.push(&format!("{}_{}.pbo", p.prefix, self.name));
         r
     }
 
+    /// Moves the released pbo to the `release_target`
     pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
         let target = self.release_target(release_folder, p);
         create_dir!(target.parent().unwrap())?;
