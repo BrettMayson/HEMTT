@@ -59,7 +59,6 @@ impl Addon {
         r
     }
 
-
     /// File path of the released addon
     pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
         let mut r = self.release_location(release_folder);

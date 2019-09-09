@@ -31,18 +31,16 @@ impl Task for Sign {
         let release_folder = p.release_dir()?;
 
         // Generate a public key to match the private key
-        key.to_public_key().write(&mut create_file!(format!("keys/{}.bikey", &keyname))?)?;
+        key.to_public_key()
+            .write(&mut create_file!(format!("keys/{}.bikey", &keyname))?)?;
 
         // Copy public key to specific release dir
-        copy_file!(
-            format!("keys/{}.bikey", keyname),
-            {
-                let mut bikey = release_folder.clone();
-                bikey.push("keys");
-                bikey.push(format!("{}.bikey", &keyname));
-                bikey
-            }
-        )?;
+        copy_file!(format!("keys/{}.bikey", keyname), {
+            let mut bikey = release_folder.clone();
+            bikey.push("keys");
+            bikey.push(format!("{}.bikey", &keyname));
+            bikey
+        })?;
 
         for d in &addons {
             let (_, addon) = d.as_ref().unwrap();
