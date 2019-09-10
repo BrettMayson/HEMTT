@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+use std::fs::File;
 use std::io::BufReader;
-use std::path::PathBuf;
 
-use hashbrown::HashMap;
+use pbr::ProgressBar;
+use serde_xml_rs;
 use serde::Deserialize;
 use serde_xml_rs;
 use strum::IntoEnumIterator;

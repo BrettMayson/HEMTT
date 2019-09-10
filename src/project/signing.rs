@@ -32,10 +32,10 @@ impl Project {
         })
     }
 
-    fn match_ver(&self, v: u8) -> armake2::sign::BISignVersion {
+    fn match_ver(&self, v: u8) -> armake2::BISignVersion {
         match v {
-            3 => armake2::sign::BISignVersion::V3,
-            2 => armake2::sign::BISignVersion::V2,
+            3 => armake2::BISignVersion::V3,
+            2 => armake2::BISignVersion::V2,
             _ => {
                 warn!(format!("Invalid Sig Version `{}`", v));
                 self.match_ver(crate::project::default_sig_version())
@@ -44,7 +44,7 @@ impl Project {
     }
 
     /// BISignVersion to use for signing
-    pub fn get_sig_version(&self) -> armake2::sign::BISignVersion {
+    pub fn get_sig_version(&self) -> armake2::BISignVersion {
         self.match_ver(self.sig_version)
     }
 }

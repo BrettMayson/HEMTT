@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 use std::time::Instant;
 
 use clap::App;
-use hashbrown::HashMap;
 
 #[cfg(windows)]
 use ansi_term;
