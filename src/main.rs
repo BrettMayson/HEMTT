@@ -72,6 +72,10 @@ fn main() {
     commands.push(Box::new(commands::Clean {}));
     commands.push(Box::new(commands::Status {}));
 
+    // Add utilities here
+    commands.push(Box::new(utilities::Translation {}));
+    commands.push(Box::new(utilities::MissionGenerate {}));
+
     for command in commands.iter() {
         let sub = command.register();
         hash_commands.insert(sub.get_name().to_owned(), command);

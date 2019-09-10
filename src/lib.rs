@@ -9,6 +9,7 @@ pub mod files;
 pub mod flow;
 pub mod project;
 pub mod render;
+pub mod utilities;
 
 use hashbrown::HashMap;
 

@@ -23,6 +23,11 @@ impl ToString for AddonLocation {
         })
     }
 }
+impl AddonLocation {
+    pub fn to_path_buf(&self) -> PathBuf {
+        PathBuf::from(self.to_string())
+    }
+}
 
 #[derive(Debug)]
 pub struct Addon {
