@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use hashbrown::HashMap;
 use regex::{Captures, Regex};
 use rlua::Lua;
 use walkdir::WalkDir;

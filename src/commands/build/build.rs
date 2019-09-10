@@ -26,7 +26,7 @@ impl Task for Build {
 
     fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
-        let mut pbo = armake2::pbo::PBO {
+        let mut pbo = armake2::PBO {
             files: LinkedHashMap::new(),
             header_extensions: HashMap::new(),
             headers: Vec::new(),
@@ -36,7 +36,7 @@ impl Task for Build {
         let binarize = self.use_bin
             && cfg!(windows)
             && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists())
-            && if match armake2::binarize::find_binarize_exe() {
+            && if match armake2::find_binarize_exe() {
                 Ok(p) => p.exists(),
                 Err(_) => false,
             } {
@@ -122,7 +122,7 @@ impl Task for Build {
                         );
                     }
                 } else if cfg!(windows) && is_binarizable {
-                    let cursor = armake2::binarize::binarize(&PathBuf::from(entry.path()))?;
+                    let cursor = armake2::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);
                 } else {
                     if is_binarizable && !cfg!(windows) {

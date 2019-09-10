@@ -1,3 +1,4 @@
+use armake2::ArmakeError;
 use colored::*;
 
 pub trait PrintableError<T, E> {
@@ -40,28 +41,28 @@ pub enum HEMTTError {
 }
 
 impl HEMTTError {
-    pub fn from_armake_parse(
-        err: armake2::config::config_grammar::ParseError,
-        path: &str,
-        content: Option<String>,
-    ) -> HEMTTError {
-        let c = match content {
-            Some(v) => v.lines().nth(err.line - 1).unwrap().to_string(),
-            None => crate::CACHED.lock().unwrap().get_line(path, err.line).unwrap(),
-        };
-        HEMTTError::LINENO(FileErrorLineNumber {
-            line: Some(err.line),
-            col: Some(err.column),
-            error: format!("Expected one of `{}`", {
-                let mut v = err.expected.into_iter().collect::<Vec<&str>>();
-                v.sort();
-                v.join("` `")
-            }),
-            content: c,
-            file: path.to_string(),
-            note: None,
-        })
-    }
+    // pub fn from_armake_parse(
+    //     err: armake2::config::config_grammar::ParseError,
+    //     path: &str,
+    //     content: Option<String>,
+    // ) -> HEMTTError {
+    //     let c = match content {
+    //         Some(v) => v.lines().nth(err.line - 1).unwrap().to_string(),
+    //         None => crate::CACHED.lock().unwrap().get_line(path, err.line).unwrap(),
+    //     };
+    //     HEMTTError::LINENO(FileErrorLineNumber {
+    //         line: Some(err.line),
+    //         col: Some(err.column),
+    //         error: format!("Expected one of `{}`", {
+    //             let mut v = err.expected.into_iter().collect::<Vec<&str>>();
+    //             v.sort();
+    //             v.join("` `")
+    //         }),
+    //         content: c,
+    //         file: path.to_string(),
+    //         note: None,
+    //     })
+    // }
 
     pub fn generic<T: Into<String>, U: Into<String>>(msg: T, info: U) -> HEMTTError {
         HEMTTError::GENERIC(msg.into(), info.into())
@@ -169,20 +170,52 @@ impl From<handlebars::TemplateRenderError> for HEMTTError {
     }
 }
 
-impl From<armake2::config::config_grammar::ParseError> for HEMTTError {
-    fn from(err: armake2::config::config_grammar::ParseError) -> HEMTTError {
-        println!("\n\n\n\nconfig error: {:?}\n\n\n\n\n", err);
-        HEMTTError::LINENO(FileErrorLineNumber {
-            line: Some(err.line),
-            col: Some(err.column),
-            error: format!(
-                "Expected one of {}",
-                err.expected.into_iter().collect::<Vec<&str>>().join(", ")
+impl From<armake2::ArmakeError> for HEMTTError {
+    fn from(err: armake2::ArmakeError) -> HEMTTError {
+        // println!("\n\n\n\nconfig error: {:?}\n\n\n\n\n", err);
+        // HEMTTError::LINENO(FileErrorLineNumber {
+        //     line: Some(err.line),
+        //     col: Some(err.column),
+        //     error: format!(
+        //         "Expected one of {}",
+        //         err.expected.into_iter().collect::<Vec<&str>>().join(", ")
+        //     ),
+        //     content: "Unknown content".to_string(),
+        //     file: "Unknown file".to_string(),
+        //     note: None,
+        // })
+        match err {
+            ArmakeError::GENERIC(s) => HEMTTError::SIMPLE(s),
+            ArmakeError::CONFIG(c) => HEMTTError::GENERIC(
+                if let Some(p) = c.path {
+                    format!("Failed to parse config `{}`", p)
+                } else {
+                    "Failed to parse config".to_owned()
+                },
+                c.message,
             ),
-            content: "Unknown content".to_string(),
-            file: "Unknown file".to_string(),
-            note: None,
-        })
+            ArmakeError::PARSE(c) => HEMTTError::GENERIC(
+                if let Some(p) = c.path {
+                    format!("Unable to parse `{}`", p)
+                } else {
+                    "Unable to parse".to_owned()
+                },
+                c.message,
+            ),
+            ArmakeError::PREPROCESS(c) => HEMTTError::GENERIC(
+                if let Some(p) = c.path {
+                    format!("Unable to preprocess `{}`", p)
+                } else {
+                    "Unable to preprocess".to_owned()
+                },
+                c.message,
+            ),
+            ArmakeError::IO(e) => HEMTTError::IO(e),
+            ArmakeError::IOPath(e) => HEMTTError::PATH(IOPathError {
+                source: e.source,
+                path: e.path,
+            }),
+        }
     }
 }
 

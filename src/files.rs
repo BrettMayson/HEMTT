@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 
-use hashbrown::HashMap;
 use regex::Regex;
 
 use crate::{HEMTTError, IOPathError};

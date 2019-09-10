@@ -1,11 +1,11 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufReader;
+
 use pbr::ProgressBar;
 use serde_xml_rs;
 use serde::Deserialize;
 use walkdir::WalkDir;
-
-use std::fs::File;
-use std::io::BufReader;
 
 use crate::error::*;
 use crate::project::use_project_dir;

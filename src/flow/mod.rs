@@ -26,6 +26,7 @@ pub struct Flow {
 }
 
 impl Flow {
+    /// Execute the flow against a vector of addons
     pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> AddonList {
         let mut addons: Vec<Result<(Report, Addon), HEMTTError>> =
             addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
@@ -41,6 +42,27 @@ impl Flow {
                 addons = self.parallel(&step.emoji, &step.name, &step.tasks, addons, p)?;
             } else {
                 addons = self.single(&step.emoji, &step.name, &step.tasks, addons, p)?;
+            }
+
+            // Check for stopped reports
+            let mut can_continue = true;
+            addons.iter().for_each(|d| {
+                if d.is_err() {
+                    can_continue = false;
+                } else {
+                    let (report, addon) = d.as_ref().unwrap();
+                    if let Some((fatal, _)) = report.stop {
+                        if fatal {
+                            can_continue = false;
+                            println!();
+                            error!(&format!("Unable to build `{}`", addon.folder().display().to_string()))
+                        }
+                    }
+                }
+            });
+
+            if !can_continue {
+                std::process::exit(1);
             }
         }
 

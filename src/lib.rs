@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 #[macro_use]
@@ -9,8 +10,6 @@ pub mod files;
 pub mod flow;
 pub mod project;
 pub mod render;
-
-use hashbrown::HashMap;
 
 pub use build::addon::{Addon, AddonLocation};
 pub use commands::{build, Command};

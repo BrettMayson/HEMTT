@@ -1,7 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
-use armake2::{pbo::PBO, sign::BIPrivateKey};
+use armake2::{BIPrivateKey, PBO};
 
 #[derive(Clone)]
 pub struct Sign {}
@@ -15,15 +15,15 @@ impl Task for Sign {
         let keyname = p.get_key_name()?;
         let key = if p.reuse_private_key() {
             warn!("`Reuse Private Key` is enabled. This should be disabled unless you know what you are doing.");
-            if !Path::new(&format!("keys/{}.bikey", keyname)).exists() {
+            if Path::new(&format!("keys/{}.biprivatekey", keyname)).exists() {
+                BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", keyname))?)
+                    .expect("Failed to read private key")
+            } else {
                 // Generate and write the keypair to disk in the current directory
-                armake2::sign::cmd_keygen(PathBuf::from(&keyname))?;
-                rename_file!(format!("{}.bikey", keyname), format!("keys/{}.bikey", keyname))?;
-                rename_file!(format!("{}.biprivatekey", keyname), format!("keys/{}.biprivatekey", keyname))?;
+                let privatekey = BIPrivateKey::generate(1024, keyname.clone());
+                privatekey.write(&mut create_file!(format!("keys/{}.biprivatekey", keyname))?)?;
+                privatekey
             }
-
-            BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", keyname))?)
-                .expect("Failed to read private key")
         } else {
             BIPrivateKey::generate(1024, keyname.clone())
         };

@@ -77,6 +77,28 @@ impl Report {
                 }
             }
         }
+        if self.stop.is_some() {
+            match &self.stop.as_ref().unwrap().1 {
+                HEMTTError::GENERIC(s, v) => {
+                    errormessage!(s, v);
+                }
+                HEMTTError::SIMPLE(s) => {
+                    error!(s);
+                }
+                HEMTTError::LINENO(error) => {
+                    fileerror!(error);
+                }
+                HEMTTError::IO(s) => {
+                    error!(s);
+                }
+                HEMTTError::PATH(s) => {
+                    errormessage!(&s.source, format!("{:#?}", s.path));
+                }
+                HEMTTError::TOML(s) => {
+                    error!(s);
+                }
+            }
+        }
     }
 
     /// Adds an error if it does not exist in the report
