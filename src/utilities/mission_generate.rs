@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::collections::HashMap;
 
 use armake2::pbo::PBO;
 use regex::Regex;
@@ -61,7 +61,7 @@ impl Command for MissionGenerate {
         create_dir!("missions")?;
 
         let mut out = create_file!(&mission_file)?;
-        let mut pbo = PBO::from_directory(PathBuf::from(&mission_source), false, &vec!(), &vec!()).unwrap();
+        let mut pbo = PBO::from_directory(PathBuf::from(&mission_source), false, &vec![], &vec![]).unwrap();
         pbo.header_extensions = HashMap::new();
         pbo.write(&mut out).unwrap();
 
