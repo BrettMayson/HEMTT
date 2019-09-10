@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-=======
-use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
-use std::collections::HashMap;
->>>>>>> mission_generate, translation
 
 use armake2::pbo::PBO;
 use regex::Regex;
