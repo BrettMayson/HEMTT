@@ -10,6 +10,7 @@ pub mod files;
 pub mod flow;
 pub mod project;
 pub mod render;
+pub mod utilities;
 
 pub use build::addon::{Addon, AddonLocation};
 pub use commands::{build, Command};
