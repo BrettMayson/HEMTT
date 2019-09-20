@@ -35,7 +35,10 @@ impl Task for ModTime {
         if target.exists() {
             if let Ok(time) = std::fs::metadata(&target).unwrap().modified() {
                 if time >= modified {
-                    report.stop = Some((false, HEMTTError::GENERIC("The PBO already exists".to_owned(), target.display().to_string())));
+                    report.stop = Some((
+                        false,
+                        HEMTTError::GENERIC("The PBO already exists".to_owned(), target.display().to_string()),
+                    ));
                 }
             }
         }
