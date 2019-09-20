@@ -101,10 +101,6 @@ impl Script {
     pub fn get_scripts(s: &Stage, p: &Project) -> Result<Vec<String>, HEMTTError> {
         Ok(match s {
             Stage::Check => &p.check,
-            Stage::Build => {
-                println!("Build scripts do not exist yet");
-                unimplemented!()
-            }
             Stage::PreBuild => &p.prebuild,
             Stage::PostBuild => &p.postbuild,
             Stage::ReleaseBuild => &p.releasebuild,
