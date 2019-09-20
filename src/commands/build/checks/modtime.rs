@@ -33,9 +33,9 @@ impl Task for ModTime {
         let modified = modtime(&addon.folder())?;
         let target = addon.target(p);
         if target.exists() {
-            if let Ok(time) = std::fs::metadata(target).unwrap().modified() {
+            if let Ok(time) = std::fs::metadata(&target).unwrap().modified() {
                 if time >= modified {
-                    report.stop = Some((false, HEMTTError::simple("The PBO already exists")));
+                    report.stop = Some((false, HEMTTError::GENERIC("The PBO already exists".to_owned(), target.display().to_string())));
                 }
             }
         }

@@ -192,7 +192,7 @@ impl From<armake2::ArmakeError> for HEMTTError {
                 } else {
                     "Failed to parse config".to_owned()
                 },
-                c.message,
+                c.source.to_string(),
             ),
             ArmakeError::PARSE(c) => HEMTTError::GENERIC(
                 if let Some(p) = c.path {
@@ -200,7 +200,7 @@ impl From<armake2::ArmakeError> for HEMTTError {
                 } else {
                     "Unable to parse".to_owned()
                 },
-                c.message,
+                c.source.to_string(),
             ),
             ArmakeError::PREPROCESS(c) => HEMTTError::GENERIC(
                 if let Some(p) = c.path {
@@ -208,7 +208,7 @@ impl From<armake2::ArmakeError> for HEMTTError {
                 } else {
                     "Unable to preprocess".to_owned()
                 },
-                c.message,
+                c.source.to_string(),
             ),
             ArmakeError::IO(e) => HEMTTError::IO(e),
             ArmakeError::IOPath(e) => HEMTTError::PATH(IOPathError {
