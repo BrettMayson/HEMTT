@@ -146,8 +146,8 @@ impl Project {
     }
 
     /// Render a handlebars string
-    pub fn render(&self, text: &str) -> Result<String, HEMTTError> {
-        crate::render::run(text, &self.get_variables())
+    pub fn render(&self, text: &str, filename: Option<&str>) -> Result<String, HEMTTError> {
+        crate::render::run(text, filename, &self.get_variables())
     }
 
     /// `@modname` without `@`, uses prefix if undefined by project file
@@ -155,7 +155,7 @@ impl Project {
         Ok(if self.modname.is_empty() {
             self.prefix.clone()
         } else {
-            self.render(&self.modname)?
+            self.render(&self.modname, Some("project:modname"))?
         })
     }
 

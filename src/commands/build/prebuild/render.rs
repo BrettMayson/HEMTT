@@ -18,7 +18,11 @@ pub fn can_render(p: &Path) -> bool {
 pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTError> {
     let vars = &addon.get_variables(p);
     let mut report = Report::new();
-    match crate::render::run(&std::fs::read_to_string(path)?.replace("\\{", "\\\\{"), vars) {
+    match crate::render::run(
+        &std::fs::read_to_string(path)?.replace("\\{", "\\\\{"),
+        Some(path.to_str().unwrap()),
+        vars,
+    ) {
         Ok(out) => {
             let dest = path
                 .display()

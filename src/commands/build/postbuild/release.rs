@@ -28,11 +28,14 @@ impl Task for Release {
             })
             .collect();
 
-        if !can_continue && (*crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()?) {
-            return Err(HEMTTError::generic(
-                "Unable to release",
-                "One or more addons were not built successfully",
-            ));
+        if !can_continue {
+            if *crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()? {
+                return Err(HEMTTError::generic(
+                    "Unable to release",
+                    "One or more addons were not built successfully",
+                ));
+            }
+            println!();
         }
 
         // Prepare release directory
@@ -49,6 +52,7 @@ impl Task for Release {
                 } else {
                     return Err(error);
                 }
+                println!();
             }
         }
 

@@ -158,10 +158,12 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     match matches.subcommand_name() {
         Some(v) => match hash_commands.get(v) {
             Some(c) => {
-                println!("HEMTT {}", version);
-                println!("Environment: {}", project::environment());
-                println!();
-                startup::startup();
+                if root {
+                    println!("HEMTT {}", version);
+                    println!("Environment: {}", project::environment());
+                    println!();
+                    startup::startup();
+                }
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     c.run(sub_matches, Project::read()?)?;

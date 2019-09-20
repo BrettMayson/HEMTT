@@ -54,6 +54,7 @@ impl Addon {
         let mut vars = p.get_variables();
         vars.insert("folder", to_json(self.folder()));
         vars.insert("addon", to_json(self.name.clone()));
+        vars.insert("target", to_json(self.target(p).to_str().to_owned()));
         vars
     }
 
