@@ -8,7 +8,7 @@ use indicatif_windows::ProgressBar;
 
 use walkdir::WalkDir;
 
-use crate::{Addon, HEMTTError, Project, Report, Task};
+use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 
 pub fn can_render(p: &Path) -> bool {
     let name = p.file_name().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();
@@ -49,11 +49,11 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
 #[derive(Clone)]
 pub struct Render {}
 impl Task for Render {
-    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();

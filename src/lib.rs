@@ -16,7 +16,7 @@ pub use build::addon::{Addon, AddonLocation};
 pub use commands::{build, Command};
 pub use error::{FileErrorLineNumber, HEMTTError, IOPathError};
 pub use files::{FileCache, RenderedFiles};
-pub use flow::{Flow, Report, Step, Task};
+pub use flow::{BuildScript, Flow, Report, Stage, Step, Task};
 pub use project::Project;
 
 pub type AddonList = Result<Vec<Result<(Report, Addon), HEMTTError>>, HEMTTError>;

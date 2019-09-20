@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
+use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Pack {}
 impl Command for Pack {
@@ -31,15 +31,26 @@ impl Command for Pack {
         }
         let flow = Flow {
             steps: vec![
-                Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})]),
+                Step::single(
+                    "♻️",
+                    "Clean",
+                    Stage::Check,
+                    vec![Box::new(crate::build::prebuild::clear::Clean {})],
+                ),
                 if args.is_present("clear") {
-                    Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})])
+                    Step::parallel(
+                        "🗑️",
+                        "Clear",
+                        Stage::Check,
+                        vec![Box::new(crate::build::prebuild::clear::Clear {})],
+                    )
                 } else {
                     Step::none()
                 },
                 Step::parallel(
                     "🔍",
                     "Checks",
+                    Stage::Check,
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
@@ -47,9 +58,19 @@ impl Command for Pack {
                         Box::new(crate::build::checks::modtime::ModTime {}),
                     ],
                 ),
-                Step::parallel("📦", "Pack", vec![Box::new(crate::build::build::Build { use_bin: false })]),
+                Step::parallel(
+                    "📦",
+                    "Pack",
+                    Stage::Build,
+                    vec![Box::new(crate::build::build::Build { use_bin: false })],
+                ),
                 if args.is_present("release") {
-                    Step::single("⭐", "Release", vec![Box::new(crate::build::postbuild::release::Release {})])
+                    Step::single(
+                        "⭐",
+                        "Release",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::build::postbuild::release::Release {})],
+                    )
                 } else {
                     Step::none()
                 },

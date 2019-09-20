@@ -7,7 +7,7 @@ pub mod checks;
 pub mod postbuild;
 pub mod prebuild;
 
-use crate::{Addon, AddonLocation, Command, Flow, HEMTTError, Project, Step};
+use crate::{Addon, AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Build {}
 impl Command for Build {
@@ -38,15 +38,26 @@ impl Command for Build {
         }
         let flow = Flow {
             steps: vec![
-                Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})]),
+                Step::single(
+                    "♻️",
+                    "Clean",
+                    Stage::Check,
+                    vec![Box::new(crate::build::prebuild::clear::Clean {})],
+                ),
                 if args.is_present("rebuild") {
-                    Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})])
+                    Step::parallel(
+                        "🗑️",
+                        "Clear",
+                        Stage::Check,
+                        vec![Box::new(crate::build::prebuild::clear::Clear {})],
+                    )
                 } else {
                     Step::none()
                 },
                 Step::parallel(
                     "🔍",
                     "Checks",
+                    Stage::Check,
                     vec![
                         Box::new(crate::build::prebuild::render::Render {}),
                         Box::new(crate::build::checks::names::NotEmpty {}),
@@ -57,16 +68,32 @@ impl Command for Build {
                 Step::parallel(
                     "🚧",
                     "Prebuild",
+                    Stage::PreBuild,
                     vec![Box::new(crate::build::prebuild::preprocess::Preprocess {})],
                 ),
-                Step::parallel("📝", "Build", vec![Box::new(crate::build::build::Build { use_bin: true })]),
+                Step::parallel(
+                    "📝",
+                    "Build",
+                    Stage::Build,
+                    vec![Box::new(crate::build::build::Build { use_bin: true })],
+                ),
                 if args.is_present("release") {
-                    Step::single("⭐", "Release", vec![Box::new(crate::build::postbuild::release::Release {})])
+                    Step::single(
+                        "⭐",
+                        "Release",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::build::postbuild::release::Release {})],
+                    )
                 } else {
                     Step::none()
                 },
                 if args.is_present("release") {
-                    Step::single("⭐", "Sign", vec![Box::new(crate::build::postbuild::sign::Sign {})])
+                    Step::single(
+                        "⭐",
+                        "Sign",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::build::postbuild::sign::Sign {})],
+                    )
                 } else {
                     Step::none()
                 },

@@ -9,7 +9,7 @@ use indicatif_windows::ProgressBar;
 use regex::Regex;
 use walkdir::WalkDir;
 
-use crate::{Addon, FileErrorLineNumber, HEMTTError, Project, Report, Task};
+use crate::{Addon, FileErrorLineNumber, HEMTTError, Project, Report, Stage, Task};
 
 pub static RAPABLE: &[&str] = &["cpp", "rvmat", "ext"];
 static CMD_GAP: usize = 18;
@@ -21,11 +21,11 @@ pub fn can_preprocess(p: &Path) -> bool {
 #[derive(Clone)]
 pub struct Preprocess {}
 impl Task for Preprocess {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             pb.set_message("Looking for files to preprocess");

@@ -1,16 +1,16 @@
 use std::path::Path;
 
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
 use armake2::{BIPrivateKey, PBO};
 
 #[derive(Clone)]
 pub struct Sign {}
 impl Task for Sign {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         create_dir!("keys/")?;
         let keyname = p.get_key_name()?;
         let key = if p.reuse_private_key() {

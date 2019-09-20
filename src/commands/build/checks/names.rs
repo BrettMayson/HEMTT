@@ -5,16 +5,16 @@ use indicatif_windows::ProgressBar;
 
 use regex::Regex;
 
-use crate::{Addon, AddonLocation, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonLocation, HEMTTError, Project, Report, Stage, Task};
 
 #[derive(Clone)]
 pub struct NotEmpty {}
 impl Task for NotEmpty {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, _: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, _: &Project, _: &Stage, _: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let empty = std::fs::read_dir(addon.folder())?.count() == 0;
         if empty {
@@ -27,11 +27,11 @@ impl Task for NotEmpty {
 #[derive(Clone)]
 pub struct ValidName {}
 impl Task for ValidName {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, _: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         // WARN: addon name standards
         let re = Regex::new(r"^([A-z0-9\-]+)$").unwrap();

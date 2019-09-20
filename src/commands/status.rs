@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
+use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Status {}
 impl Command for Status {
@@ -20,6 +20,7 @@ impl Command for Status {
             steps: vec![Step::parallel(
                 "🔍",
                 "Checks",
+                Stage::Check,
                 vec![
                     Box::new(crate::build::prebuild::render::Render {}),
                     Box::new(crate::build::checks::names::NotEmpty {}),

@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -56,6 +56,23 @@ pub struct Project {
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
     pub sig_version: u8,
+
+    // Scripts
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub prebuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub postbuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub releasebuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default = "HashMap::new")]
+    pub scripts: HashMap<String, crate::BuildScript>,
 }
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
@@ -80,6 +97,11 @@ impl Project {
             keyname: String::new(),
             sig_name: String::new(),
             sig_version: default_sig_version(),
+
+            postbuild: Vec::new(),
+            prebuild: Vec::new(),
+            releasebuild: Vec::new(),
+            scripts: HashMap::new(),
         }
     }
 

@@ -1,16 +1,16 @@
 use dialoguer::Confirmation;
 use glob::glob;
 
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
 
 #[derive(Clone)]
 pub struct Release {}
 impl Task for Release {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let mut can_continue = true;
         let addons: Vec<_> = addons
             .into_iter()
