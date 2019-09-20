@@ -224,3 +224,22 @@ impl From<glob::PatternError> for HEMTTError {
         HEMTTError::GENERIC("GLOB Pattern Error".to_owned(), err.msg.to_owned())
     }
 }
+
+impl From<zip::result::ZipError> for HEMTTError {
+    fn from(err: zip::result::ZipError) -> HEMTTError {
+        match err {
+            zip::result::ZipError::FileNotFound => {
+                HEMTTError::SIMPLE("Unable to add file to zip, it does not exist".to_owned())
+            },
+            zip::result::ZipError::Io(e) => {
+                HEMTTError::IO(e)
+            },
+            zip::result::ZipError::UnsupportedArchive(e) => {
+                HEMTTError::GENERIC("Unsupported archive".to_owned(), e.to_owned())
+            },
+            zip::result::ZipError::InvalidArchive(e) => {
+                HEMTTError::GENERIC("Invalid archive".to_owned(), e.to_owned())
+            }
+        }
+    }
+}
