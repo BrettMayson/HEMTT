@@ -17,7 +17,7 @@ jobs:
 
       - name: Install Rust stable
         run: |
-          rustup toolchain update stable
+          rustup toolchain update stable --no-self-update
           rustup default stable
           rustup component add clippy rustfmt
 
@@ -36,9 +36,9 @@ jobs:
 
       - name: Install Rust stable
         run: |
-          rustup toolchain update stable
+          rustup toolchain update stable --no-self-update
           rustup default stable
-        
+
       - name: Build
         run: cargo build --all
 
@@ -62,9 +62,9 @@ jobs:
 
       - name: Install Rust stable
         run: |
-          rustup toolchain update stable
+          rustup toolchain update stable --no-self-update
           rustup default stable
-          
+
       - name: Install OpenSSL
         run: |
           powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1c.msi' -OutFile openssl.msi"

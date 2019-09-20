@@ -9,36 +9,34 @@ use std::fs::File;
 use std::io::{Error, BufReader, BufWriter, copy};
 use std::path::{Path};
 
-use crate::error::*;
+use crate::{HEMTTError, Command, Project};
 
-const USAGE: &str = "
-Usage: zip [<name>]
-";
+pub struct Zip {}
+impl Command for Zip {
+    fn register(&self) -> clap::App {
+        clap::SubCommand::with_name("zip").about("Get translation info from `stringtable.xml` files")
+            .arg(clap::Arg::with_name("name").help("Name of the archive").default_value(""))
+    }
 
-#[derive(Debug, Deserialize)]
-struct Args {
-    arg_name: Option<String>,
+    fn run_project(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
+        archive(args.value_of("name").unwrap(), p)?
+    }
 }
 
-pub fn archive(usage: &[String]) -> Result<(), Error> {
-    let p = crate::project::get_project()?;
-    let version = p.version.unwrap();
+pub fn archive(name: &str, mut p: Project) -> Result<(), HEMTTError> {
+    let version = p.version()?;
 
     let release_dir = format!("releases/{}", version);
 
-    let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.argv(usage.iter()).deserialize())
-        .unwrap_or_else(|e| e.exit());
-
-    let zipname = format!("{}.zip", match args.arg_name {
-        Some(v) => v,
-        None => format!("{}_{}", p.name.replace(" ", "_"), version)
+    let zipname = format!("{}.zip", match name {
+        "" => format!("{}_{}", p.name.replace(" ", "_"), version)
+        _ => v,
     });
     println!(" {} {}", "Archiving".white().bold(), zipname);
 
     let zipsubpath = format!("releases/{}", zipname);
     let zippath = Path::new(&zipsubpath);
-    let file = BufWriter::new(create_file!(&zippath).unwrap_or_print());
+    let file = BufWriter::new(create_file!(&zippath)?);
 
     let dir = walkdir::WalkDir::new(&release_dir);
     let mut zip = zip::ZipWriter::new(file);
