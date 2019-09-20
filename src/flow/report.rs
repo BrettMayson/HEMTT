@@ -6,6 +6,7 @@ pub struct Report {
     pub warnings: Vec<HEMTTError>,
     pub old: Vec<HEMTTError>,
     pub stop: Option<(bool, HEMTTError)>,
+    displayed_stop: bool,
 }
 
 impl Report {
@@ -15,6 +16,7 @@ impl Report {
             old: Vec::new(),
             errors: Vec::new(),
             stop: None,
+            displayed_stop: false,
         }
     }
 
@@ -24,6 +26,7 @@ impl Report {
         self.old.append(&mut other.old);
         if self.stop.is_none() && other.stop.is_some() {
             self.stop = other.stop;
+            self.displayed_stop = other.displayed_stop;
         };
         for error in other.errors {
             self.unique_error(error);
@@ -77,7 +80,8 @@ impl Report {
                 }
             }
         }
-        if self.stop.is_some() {
+        if !self.displayed_stop && self.stop.is_some() {
+            self.displayed_stop = true;
             match &self.stop.as_ref().unwrap().1 {
                 HEMTTError::GENERIC(s, v) => {
                     errormessage!(s, v);
