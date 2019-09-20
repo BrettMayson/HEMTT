@@ -1,4 +1,4 @@
-use crate::Task;
+use crate::{Stage, Task};
 
 #[derive(Clone)]
 pub struct Step {
@@ -7,22 +7,25 @@ pub struct Step {
     pub emoji: String,
     pub none: bool,
     pub parallel: bool,
+    pub stage: Stage,
 }
 impl Step {
-    pub fn parallel(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
+    pub fn parallel(emoji: &str, name: &str, stage: Stage, tasks: Vec<Box<dyn Task>>) -> Self {
         Self {
             emoji: emoji.to_string(),
             name: name.to_string(),
+            stage,
             tasks,
             none: false,
             parallel: true,
         }
     }
 
-    pub fn single(emoji: &str, name: &str, tasks: Vec<Box<dyn Task>>) -> Self {
+    pub fn single(emoji: &str, name: &str, stage: Stage, tasks: Vec<Box<dyn Task>>) -> Self {
         Self {
             emoji: emoji.to_string(),
             name: name.to_string(),
+            stage,
             tasks,
             none: false,
             parallel: false,
@@ -33,6 +36,7 @@ impl Step {
         Self {
             emoji: "".to_string(),
             name: "".to_string(),
+            stage: Stage::None,
             tasks: Vec::new(),
             none: true,
             parallel: false,

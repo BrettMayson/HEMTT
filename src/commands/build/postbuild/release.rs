@@ -1,16 +1,12 @@
 use dialoguer::Confirmation;
 use glob::glob;
 
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
 
 #[derive(Clone)]
 pub struct Release {}
 impl Task for Release {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
-        Ok(true)
-    }
-
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let mut can_continue = true;
         let addons: Vec<_> = addons
             .into_iter()
@@ -32,11 +28,14 @@ impl Task for Release {
             })
             .collect();
 
-        if !can_continue && (*crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()?) {
-            return Err(HEMTTError::generic(
-                "Unable to release",
-                "One or more addons were not built successfully",
-            ));
+        if !can_continue {
+            if *crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()? {
+                return Err(HEMTTError::generic(
+                    "Unable to release",
+                    "One or more addons were not built successfully",
+                ));
+            }
+            println!();
         }
 
         // Prepare release directory
@@ -53,6 +52,7 @@ impl Task for Release {
                 } else {
                     return Err(error);
                 }
+                println!();
             }
         }
 

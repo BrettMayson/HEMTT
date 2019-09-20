@@ -8,17 +8,17 @@ use indicatif_windows::ProgressBar;
 use regex::Regex;
 use strum::IntoEnumIterator;
 
-use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Task};
+use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Stage, Task};
 
 // Clears existing files that will be rebuilt only
 #[derive(Clone)]
 pub struct Clear {}
 impl Task for Clear {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let target = addon.target(p);
         if target.exists() {
             std::fs::remove_file(target)?;
@@ -31,11 +31,7 @@ impl Task for Clear {
 #[derive(Clone)]
 pub struct Clean {}
 impl Task for Clean {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
-        Ok(true)
-    }
-
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project) -> AddonList {
+    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
         for data in &addons {

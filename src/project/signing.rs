@@ -19,7 +19,7 @@ impl Project {
                 format!("{}_{}", &self.prefix, &self.version()?)
             }
         } else {
-            self.render(&self.keyname)?
+            self.render(&self.keyname, Some("project:keyname"))?
         })
     }
 
@@ -28,7 +28,12 @@ impl Project {
         Ok(if self.sig_name.is_empty() {
             format!("{}_{}.{}.bisign", &self.prefix, pbo, self.version()?)
         } else {
-            format!("{}_{}.{}.bisign", &self.prefix, pbo, self.render(&self.sig_name)?)
+            format!(
+                "{}_{}.{}.bisign",
+                &self.prefix,
+                pbo,
+                self.render(&self.sig_name, Some("project:signame"))?
+            )
         })
     }
 

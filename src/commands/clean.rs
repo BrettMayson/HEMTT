@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Step};
+use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Clean {}
 impl Command for Clean {
@@ -18,8 +18,18 @@ impl Command for Clean {
         }
         let flow = Flow {
             steps: vec![
-                Step::single("♻️", "Clean", vec![Box::new(crate::build::prebuild::clear::Clean {})]),
-                Step::parallel("🗑️", "Clear", vec![Box::new(crate::build::prebuild::clear::Clear {})]),
+                Step::single(
+                    "♻️",
+                    "Clean",
+                    Stage::Check,
+                    vec![Box::new(crate::build::prebuild::clear::Clean {})],
+                ),
+                Step::parallel(
+                    "🗑️",
+                    "Clear",
+                    Stage::Check,
+                    vec![Box::new(crate::build::prebuild::clear::Clear {})],
+                ),
             ],
         };
         flow.execute(addons, &mut p)?;

@@ -38,82 +38,6 @@ macro_rules! iformat {
     };
 }
 
-// Colored Output
-
-#[macro_export]
-macro_rules! yellow {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(yellow, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! blue {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(blue, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! green {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(green, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! cyan {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(cyan, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! magenta {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(magenta, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! red {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(red, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! black {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(black, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! white {
-    ($s:expr, $m:expr) => {
-        crate::niceprintln!(white, $s, $m);
-    };
-}
-
-#[macro_export]
-macro_rules! nicefmt {
-    ($c:ident, $s:expr, $m:expr) => {{
-        let status = $s.$c().bold();
-        let spacer = crate::repeat!(" ", 10 - $s.len());
-        let message = $m;
-        crate::iformat!("{spacer}{status} {message}", spacer, status, message)
-    }};
-}
-
-#[macro_export]
-macro_rules! niceprintln {
-    ($c:ident, $s:expr, $m:expr) => {
-        let r = crate::nicefmt!($c, $s, $m);
-        println!("{}", r);
-    };
-}
-
 #[macro_export]
 macro_rules! warn {
     ($s:expr) => {{
@@ -139,6 +63,12 @@ macro_rules! error {
         use colored::*;
         let style = "error".red().bold();
         let status = $s;
+        crate::iprintln!("{style}: {status}\n", style, status);
+    }};
+    ($s:expr, $f:expr) => {{
+        use colored::*;
+        let style = "error".red().bold();
+        let status = format!($s, $f);
         crate::iprintln!("{style}: {status}\n", style, status);
     }};
 }

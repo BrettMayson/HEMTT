@@ -11,10 +11,15 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use indicatif_windows::{MultiProgress, ProgressBar, ProgressStyle};
 
 mod report;
+mod script;
+mod stage;
 mod step;
 mod task;
 
 pub use report::Report;
+pub use script::BuildScript;
+pub use script::Script;
+pub use stage::Stage;
 pub use step::Step;
 pub use task::Task;
 
@@ -39,9 +44,9 @@ impl Flow {
                 continue;
             }
             if step.parallel {
-                addons = self.parallel(&step.emoji, &step.name, &step.tasks, addons, p)?;
+                addons = self.parallel(&step.emoji, &step, addons, p)?;
             } else {
-                addons = self.single(&step.emoji, &step.name, &step.tasks, addons, p)?;
+                addons = self.single(&step.emoji, &step, addons, p)?;
             }
 
             // Check for stopped reports
@@ -82,8 +87,7 @@ impl Flow {
     pub fn parallel(
         &self,
         emoji: &str,
-        name: &str,
-        tasks: &[Box<dyn Task>],
+        step: &Step,
         addons: Vec<Result<(Report, Addon), HEMTTError>>,
         p: &mut Project,
     ) -> AddonList {
@@ -100,10 +104,13 @@ impl Flow {
         let mut total = 0;
         let total_pb = m.add(ProgressBar::new(0));
         total_pb.set_style(master_style.clone());
-        if !cfg!(windows) {
-            total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, name)));
-        } else {
-            total_pb.set_prefix(&fill_space!(" ", 12, name).to_string());
+
+        if !step.name.is_empty() {
+            if !cfg!(windows) {
+                total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
+            } else {
+                total_pb.set_prefix(&fill_space!(" ", 12, &step.name).to_string());
+            }
         }
 
         // Create a progress bar for each addon
@@ -155,9 +162,9 @@ impl Flow {
                 total_pb.tick();
             });
         } else if !cfg!(windows) {
-            println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
+            println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
         } else {
-            println!("{}", &fill_space!(" ", 12, name).bold().cyan());
+            println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
         }
 
         // Task loop
@@ -175,10 +182,10 @@ impl Flow {
 
                     let add = report.stop.is_none();
 
-                    for task in tasks {
-                        if report.stop.is_none() && task.can_run(&addon, &report, p)? {
+                    for task in &step.tasks {
+                        if report.stop.is_none() && task.can_run(&addon, &report, p, &step.stage)? {
                             pb.tick();
-                            report.absorb(match task.parallel(&addon, &report, p, &pb) {
+                            report.absorb(match task.parallel(&addon, &report, p, &step.stage, &pb) {
                                 Ok(v) => v,
                                 Err(e) => {
                                     pb.finish_and_clear();
@@ -220,21 +227,22 @@ impl Flow {
     fn single(
         &self,
         emoji: &str,
-        name: &str,
-        tasks: &[Box<dyn Task>],
+        step: &Step,
         addons: Vec<Result<(Report, Addon), HEMTTError>>,
         p: &mut Project,
     ) -> AddonList {
-        if !cfg!(windows) {
-            println!("{} {}", emoji, &fill_space!(" ", 12, name).bold().cyan());
-        } else {
-            println!("{}", &fill_space!(" ", 12, name).bold().cyan());
+        if !step.name.is_empty() {
+            if !cfg!(windows) {
+                println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
+            } else {
+                println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
+            }
         }
 
         let mut addons = addons;
 
-        for task in tasks {
-            addons = task.single(addons, p)?;
+        for task in &step.tasks {
+            addons = task.single(addons, p, &step.stage)?;
         }
 
         let addons = addons

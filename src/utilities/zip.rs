@@ -29,7 +29,7 @@ pub fn archive(name: &str, p: Project) -> Result<(), HEMTTError> {
         "{}.zip",
         match name {
             "" => format!("{}_{}", p.name.replace(" ", "_"), version),
-            _ => name.to_owned(),
+            _ => p.render(name, None)?,
         }
     );
     println!("{} {}", "Archiving".white().bold(), zipname);

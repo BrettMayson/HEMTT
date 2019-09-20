@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -56,6 +56,27 @@ pub struct Project {
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
     pub sig_version: u8,
+
+    // Scripts
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub check: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub prebuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub postbuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
+    pub releasebuild: Vec<String>,
+
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default = "HashMap::new")]
+    pub scripts: HashMap<String, crate::BuildScript>,
 }
 impl Project {
     pub fn new(name: String, prefix: String, author: String, template: String) -> Self {
@@ -80,6 +101,12 @@ impl Project {
             keyname: String::new(),
             sig_name: String::new(),
             sig_version: default_sig_version(),
+
+            check: Vec::new(),
+            postbuild: Vec::new(),
+            prebuild: Vec::new(),
+            releasebuild: Vec::new(),
+            scripts: HashMap::new(),
         }
     }
 
@@ -119,8 +146,8 @@ impl Project {
     }
 
     /// Render a handlebars string
-    pub fn render(&self, text: &str) -> Result<String, HEMTTError> {
-        crate::render::run(text, &self.get_variables())
+    pub fn render(&self, text: &str, filename: Option<&str>) -> Result<String, HEMTTError> {
+        crate::render::run(text, filename, &self.get_variables())
     }
 
     /// `@modname` without `@`, uses prefix if undefined by project file
@@ -128,7 +155,7 @@ impl Project {
         Ok(if self.modname.is_empty() {
             self.prefix.clone()
         } else {
-            self.render(&self.modname)?
+            self.render(&self.modname, Some("project:modname"))?
         })
     }
 

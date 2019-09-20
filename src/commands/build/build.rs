@@ -11,7 +11,7 @@ use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;
 
-use crate::{Addon, HEMTTError, Project, Report, Task};
+use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 
 static BINARIZABLE: &[&str] = &["rtm", "p3d"];
 
@@ -20,11 +20,11 @@ pub struct Build {
     pub use_bin: bool,
 }
 impl Task for Build {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let mut pbo = armake2::PBO {
             files: LinkedHashMap::new(),
