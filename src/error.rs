@@ -110,6 +110,12 @@ impl From<std::string::FromUtf8Error> for HEMTTError {
     }
 }
 
+impl From<std::num::ParseIntError> for HEMTTError {
+    fn from(err: std::num::ParseIntError) -> HEMTTError {
+        HEMTTError::GENERIC("Unable to parse integer".to_owned(), err.to_string())
+    }
+}
+
 impl From<toml::ser::Error> for HEMTTError {
     fn from(err: toml::ser::Error) -> HEMTTError {
         HEMTTError::TOML(err)

@@ -6,10 +6,6 @@ use armake2::{BIPrivateKey, PBO};
 #[derive(Clone)]
 pub struct Sign {}
 impl Task for Sign {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
-        Ok(true)
-    }
-
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         create_dir!("keys/")?;
         let keyname = p.get_key_name()?;

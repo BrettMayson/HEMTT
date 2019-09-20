@@ -18,6 +18,7 @@ mod task;
 
 pub use report::Report;
 pub use script::BuildScript;
+pub use script::Script;
 pub use stage::Stage;
 pub use step::Step;
 pub use task::Task;
@@ -103,10 +104,13 @@ impl Flow {
         let mut total = 0;
         let total_pb = m.add(ProgressBar::new(0));
         total_pb.set_style(master_style.clone());
-        if !cfg!(windows) {
-            total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
-        } else {
-            total_pb.set_prefix(&fill_space!(" ", 12, &step.name).to_string());
+
+        if !step.name.is_empty() {
+            if !cfg!(windows) {
+                total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
+            } else {
+                total_pb.set_prefix(&fill_space!(" ", 12, &step.name).to_string());
+            }
         }
 
         // Create a progress bar for each addon
@@ -227,10 +231,12 @@ impl Flow {
         addons: Vec<Result<(Report, Addon), HEMTTError>>,
         p: &mut Project,
     ) -> AddonList {
-        if !cfg!(windows) {
-            println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
-        } else {
-            println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
+        if !step.name.is_empty() {
+            if !cfg!(windows) {
+                println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
+            } else {
+                println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
+            }
         }
 
         let mut addons = addons;

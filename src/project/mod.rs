@@ -60,6 +60,10 @@ pub struct Project {
     // Scripts
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
+    pub check: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
     pub prebuild: Vec<String>,
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -98,6 +102,7 @@ impl Project {
             sig_name: String::new(),
             sig_version: default_sig_version(),
 
+            check: Vec::new(),
             postbuild: Vec::new(),
             prebuild: Vec::new(),
             releasebuild: Vec::new(),

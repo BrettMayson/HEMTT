@@ -31,10 +31,6 @@ impl Task for Clear {
 #[derive(Clone)]
 pub struct Clean {}
 impl Task for Clean {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
-        Ok(true)
-    }
-
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();

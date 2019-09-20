@@ -65,18 +65,21 @@ impl Command for Build {
                         Box::new(crate::build::checks::modtime::ModTime {}),
                     ],
                 ),
+                Step::single("📜", "", Stage::Check, vec![Box::new(crate::flow::Script {})]),
                 Step::parallel(
                     "🚧",
                     "Prebuild",
                     Stage::PreBuild,
                     vec![Box::new(crate::build::prebuild::preprocess::Preprocess {})],
                 ),
+                Step::single("📜", "", Stage::PreBuild, vec![Box::new(crate::flow::Script {})]),
                 Step::parallel(
                     "📝",
                     "Build",
                     Stage::Build,
                     vec![Box::new(crate::build::build::Build { use_bin: true })],
                 ),
+                Step::single("📜", "", Stage::PostBuild, vec![Box::new(crate::flow::Script {})]),
                 if args.is_present("release") {
                     Step::single(
                         "⭐",
@@ -97,6 +100,7 @@ impl Command for Build {
                 } else {
                     Step::none()
                 },
+                Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})]),
             ],
         };
         flow.execute(addons, &mut p)?;
