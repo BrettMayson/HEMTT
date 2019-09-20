@@ -44,6 +44,8 @@ impl Script {
             '!' => {
                 let script = p.scripts.get(&cmd);
                 if let Some(script) = script {
+                    // false positive, remove in the future
+                    #[allow(clippy::ifs_same_cond)]
                     let steps = if cfg!(windows) && !script.steps_windows.is_empty() {
                         &script.steps_windows
                     } else if cfg!(linux) && !script.steps_linux.is_empty() {
