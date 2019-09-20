@@ -2,15 +2,16 @@ use colored::*;
 use walkdir;
 use zip;
 
-use std::io::{BufReader, BufWriter, copy};
-use std::path::{Path};
+use std::io::{copy, BufReader, BufWriter};
+use std::path::Path;
 
-use crate::{HEMTTError, Command, Project};
+use crate::{Command, HEMTTError, Project};
 
 pub struct Zip {}
 impl Command for Zip {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("zip").about("Get translation info from `stringtable.xml` files")
+        clap::SubCommand::with_name("zip")
+            .about("Get translation info from `stringtable.xml` files")
             .arg(clap::Arg::with_name("name").help("Name of the archive").default_value(""))
     }
 
@@ -24,10 +25,13 @@ pub fn archive(name: &str, p: Project) -> Result<(), HEMTTError> {
 
     let release_dir = format!("releases/{}", version);
 
-    let zipname = format!("{}.zip", match name {
-        "" => format!("{}_{}", p.name.replace(" ", "_"), version),
-        _ => name.to_owned(),
-    });
+    let zipname = format!(
+        "{}.zip",
+        match name {
+            "" => format!("{}_{}", p.name.replace(" ", "_"), version),
+            _ => name.to_owned(),
+        }
+    );
     println!("{} {}", "Archiving".white().bold(), zipname);
 
     let zipsubpath = format!("releases/{}", zipname);
