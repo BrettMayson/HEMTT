@@ -12,7 +12,7 @@ impl Command for MissionGenerate {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("mission_generate")
             .about("Generate `pbos` for multiple maps from a single mission")
-            .arg(clap::Arg::with_name("mission"))
+            .arg(clap::Arg::with_name("mission").required(true))
             .arg(
                 clap::Arg::with_name("maps")
                     .multiple(true)
