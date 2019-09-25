@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/upload-artifact@master
         with:
-          name: hemtt
+          name: linux
           path: target/release/hemtt
 
   build-windows:
@@ -83,5 +83,5 @@ jobs:
 
       - uses: actions/upload-artifact@master
         with:
-          name: hemtt.exe
+          name: windows
           path: target/release/hemtt.exe
