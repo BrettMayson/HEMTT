@@ -100,7 +100,11 @@ impl Command for Build {
                 } else {
                     Step::none()
                 },
-                Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})]),
+                if args.is_present("release") {
+                    Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})])
+                } else {
+                    Step::none()
+                },
             ],
         };
         flow.execute(addons, &mut p)?;

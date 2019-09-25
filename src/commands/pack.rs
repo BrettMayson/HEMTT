@@ -74,6 +74,11 @@ impl Command for Pack {
                 } else {
                     Step::none()
                 },
+                if args.is_present("release") {
+                    Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})])
+                } else {
+                    Step::none()
+                },
             ],
         };
         flow.execute(addons, &mut p)?;
