@@ -49,6 +49,32 @@ jobs:
           name: hemtt
           path: target/release/hemtt
 
+  build-macos:
+    name: Build (MacOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@master
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain update stable --no-self-update
+          rustup default stable
+
+      - name: Build
+        run: cargo build --all
+
+      - name: Test
+        run: cargo test --all
+
+      - name: Build (Release)
+        run: cargo build --all --release
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: hemtt-macos
+          path: target/release/hemtt
+
   build-windows:
     name: Build (Windows)
     runs-on: windows-latest
