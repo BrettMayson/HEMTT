@@ -82,24 +82,27 @@ impl Report {
         }
         if !self.displayed_stop && self.stop.is_some() {
             self.displayed_stop = true;
-            match &self.stop.as_ref().unwrap().1 {
-                HEMTTError::GENERIC(s, v) => {
-                    errormessage!(s, v);
-                }
-                HEMTTError::SIMPLE(s) => {
-                    error!(s);
-                }
-                HEMTTError::LINENO(error) => {
-                    fileerror!(error);
-                }
-                HEMTTError::IO(s) => {
-                    error!(s);
-                }
-                HEMTTError::PATH(s) => {
-                    errormessage!(&s.source, format!("{:#?}", s.path));
-                }
-                HEMTTError::TOML(s) => {
-                    error!(s);
+            let (fatal, error) = self.stop.as_ref().unwrap();
+            if *fatal {
+                match error {
+                    HEMTTError::GENERIC(s, v) => {
+                        errormessage!(s, v);
+                    }
+                    HEMTTError::SIMPLE(s) => {
+                        error!(s);
+                    }
+                    HEMTTError::LINENO(error) => {
+                        fileerror!(error);
+                    }
+                    HEMTTError::IO(s) => {
+                        error!(s);
+                    }
+                    HEMTTError::PATH(s) => {
+                        errormessage!(&s.source, format!("{:#?}", s.path));
+                    }
+                    HEMTTError::TOML(s) => {
+                        error!(s);
+                    }
                 }
             }
         }

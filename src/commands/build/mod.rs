@@ -42,14 +42,14 @@ impl Command for Build {
                     "♻️",
                     "Clean",
                     Stage::Check,
-                    vec![Box::new(crate::build::prebuild::clear::Clean {})],
+                    vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
                 if args.is_present("rebuild") {
                     Step::parallel(
                         "🗑️",
                         "Clear",
                         Stage::Check,
-                        vec![Box::new(crate::build::prebuild::clear::Clear {})],
+                        vec![Box::new(crate::build::checks::clear::Clear {})],
                     )
                 } else {
                     Step::none()
