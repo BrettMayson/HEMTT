@@ -10,7 +10,7 @@ impl Project {
 
     /// Get the name for .bikey & .biprivatekey files
     pub fn get_key_name(&self) -> Result<String, HEMTTError> {
-        Ok(if self.keyname.is_empty() {
+        Ok(if self.key_name.is_empty() {
             if self.reuse_private_key() {
                 self.prefix.clone()
             } else if self.prefix.is_empty() {
@@ -19,7 +19,7 @@ impl Project {
                 format!("{}_{}", &self.prefix, &self.version()?)
             }
         } else {
-            self.render(&self.keyname, Some("project:keyname"))?
+            self.render(&self.key_name, Some("project:key_name"))?
         })
     }
 
@@ -32,7 +32,7 @@ impl Project {
                 "{}_{}.{}.bisign",
                 &self.prefix,
                 pbo,
-                self.render(&self.sig_name, Some("project:signame"))?
+                self.render(&self.sig_name, Some("project:sig_name"))?
             )
         })
     }

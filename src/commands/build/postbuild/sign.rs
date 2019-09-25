@@ -8,33 +8,33 @@ pub struct Sign {}
 impl Task for Sign {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         create_dir!("keys/")?;
-        let keyname = p.get_key_name()?;
+        let key_name = p.get_key_name()?;
         let key = if p.reuse_private_key() {
             warn!("`Reuse Private Key` is enabled. This should be disabled unless you know what you are doing.");
-            if Path::new(&format!("keys/{}.biprivatekey", keyname)).exists() {
-                BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", keyname))?)
+            if Path::new(&format!("keys/{}.biprivatekey", key_name)).exists() {
+                BIPrivateKey::read(&mut open_file!(format!("keys/{}.biprivatekey", key_name))?)
                     .expect("Failed to read private key")
             } else {
                 // Generate and write the keypair to disk in the current directory
-                let privatekey = BIPrivateKey::generate(1024, keyname.clone());
-                privatekey.write(&mut create_file!(format!("keys/{}.biprivatekey", keyname))?)?;
+                let privatekey = BIPrivateKey::generate(1024, key_name.clone());
+                privatekey.write(&mut create_file!(format!("keys/{}.biprivatekey", key_name))?)?;
                 privatekey
             }
         } else {
-            BIPrivateKey::generate(1024, keyname.clone())
+            BIPrivateKey::generate(1024, key_name.clone())
         };
 
         let release_folder = p.release_dir()?;
 
         // Generate a public key to match the private key
         key.to_public_key()
-            .write(&mut create_file!(format!("keys/{}.bikey", &keyname))?)?;
+            .write(&mut create_file!(format!("keys/{}.bikey", &key_name))?)?;
 
         // Copy public key to specific release dir
-        copy_file!(format!("keys/{}.bikey", keyname), {
+        copy_file!(format!("keys/{}.bikey", key_name), {
             let mut bikey = release_folder.clone();
             bikey.push("keys");
-            bikey.push(format!("{}.bikey", &keyname));
+            bikey.push(format!("{}.bikey", &key_name));
             bikey
         })?;
 

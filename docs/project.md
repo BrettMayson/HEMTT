@@ -162,9 +162,8 @@ skip = [
 HEMTT will apply specified header extensions to each PBO. Supports [templating](/templating.md).
 
 ```toml
-headerexts = [
-    "author=me"
-]
+[headerexts]
+    author = "me"
 ```
 
 ## modname
@@ -176,20 +175,20 @@ HEMTT will use the specified mod name (without `@`) to form `@mod` folder. Suppo
 modname = "my_mod"
 ```
 
-## keyname
+## key_name
 **Type**: String
 
 HEMTT will use the specified key name for `.bikey` and `.biprivatekey` names. Supports [templating](/templating.md).
 
 The default is set according to the following table:
 
-| `reuse_private_key` value | Default `keyname`         |
+| `reuse_private_key` value | Default `key_name`         |
 | ------------------------- | ------------------------- |
 | `false`                   | `{{prefix}}_{{version}}`  |
 | `true`                    | `{{prefix}}`              |
 
 ```toml
-keyname = "my_key"
+key_name = "my_key"
 ```
 
 ### Example
@@ -197,19 +196,19 @@ keyname = "my_key"
 ```toml
 project = "TST"
 version = "1.0.0.0"
-keyname = "my_key_{{version}}"
+key_name = "my_key_{{version}}"
 ```
 
 Above will result in key name of `my_key_1.0.0.0.bikey` and private key name of `my_key_1.0.0.0.biprivatekey`.
 
 
-## signame
+## sig_name
 **Type**: String
 
 HEMTT will use the specified signature name as part of the full signature (`.bisign`) name. Supports [templating](/templating.md).
 
 ```toml
-signame = "my_custom_name"
+sig_name = "my_custom_name"
 ```
 
 ### Example
@@ -217,7 +216,7 @@ signame = "my_custom_name"
 ```toml
 project = "TST"
 version = "1.0.0.0"
-signame = "my-{{version}}"
+sig_name = "my-{{version}}"
 ```
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
@@ -239,7 +238,7 @@ sigversion = 3
 
 **Type**: bool
 
-If set to `true`, HEMTT will use (and re-use) `releases/keys/{keyname}.biprivatekey`. It will be generated if it doesn't exist.
+If set to `true`, HEMTT will use (and re-use) `releases/keys/{key_name}.biprivatekey`. It will be generated if it doesn't exist.
 
 The default behaviour is to generate a new private key each time and discard it immediately.
 

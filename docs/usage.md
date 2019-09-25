@@ -1,7 +1,5 @@
 # HEMTT Usage
 
-!> This documentation is intended for use with 0.6.1, not the current master build
-
 <pre>
 Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>

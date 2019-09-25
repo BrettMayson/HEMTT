@@ -7,10 +7,10 @@ use indicatif::ProgressBar;
 #[cfg(windows)]
 use indicatif_windows::ProgressBar;
 
+use glob::Pattern;
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;
-use glob::Pattern;
 
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 
@@ -145,6 +145,19 @@ impl Task for Build {
                 }
             }
         }
+
+        // Add projects header extensions
+        for header_ext in &p.header_exts {
+            pbo.header_extensions.insert(
+                header_ext.0.to_string(),
+                crate::render::run(
+                    header_ext.1,
+                    Some(&format!("project:header_ext:{}", header_ext.0)),
+                    &addon.get_variables(p),
+                )?,
+            );
+        }
+
         let mut outf = create_file!(addon.target(p))?;
         pbo.write(&mut outf)?;
         Ok(report)

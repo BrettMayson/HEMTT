@@ -31,6 +31,12 @@ pub struct Project {
     #[serde(default = "default_mainprefix")]
     pub mainprefix: String,
 
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default = "HashMap::new")]
+    #[serde(rename(deserialize = "headerexts"))] // DEPRECATED
+    pub header_exts: HashMap<String, String>,
+
+    // Files
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "default_include")]
     pub include: Vec<PathBuf>,
@@ -50,7 +56,8 @@ pub struct Project {
 
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
-    keyname: String,
+    #[serde(rename(deserialize = "keyname"))] // DEPRECATED
+    key_name: String,
 
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
@@ -94,6 +101,9 @@ impl Project {
 
             modname: String::new(),
             mainprefix: default_mainprefix(),
+
+            header_exts: HashMap::new(),
+
             include: default_include(),
             exclude: Vec::new(),
             files: if std::path::Path::new("mod.cpp").exists() {
@@ -103,7 +113,7 @@ impl Project {
             },
 
             reuse_private_key: default_reuse_private_key(),
-            keyname: String::new(),
+            key_name: String::new(),
             sig_name: String::new(),
             sig_version: default_sig_version(),
 
