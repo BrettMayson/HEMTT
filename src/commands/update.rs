@@ -14,7 +14,7 @@ impl Command for Update {
     fn run_no_project(&self, _: &clap::ArgMatches) -> Result<(), HEMTTError> {
         if cfg!(debug_assertions) {
             println!("You are running a debug version, which can not be updated");
-            return Ok(())
+            return Ok(());
         }
 
         let target = self_update::get_target();
