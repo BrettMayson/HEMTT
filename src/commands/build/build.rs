@@ -10,6 +10,7 @@ use indicatif_windows::ProgressBar;
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;
+use glob::Pattern;
 
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 
@@ -49,12 +50,17 @@ impl Task for Build {
                 false
             };
 
+        let exclude_patterns: Vec<Pattern> = p.exclude.iter().map(|i| Pattern::new(i)).map(|e| e.unwrap()).collect();
+
         for entry in WalkDir::new(&addon.folder()) {
             let entry = entry.unwrap();
             if entry.path().is_dir() {
                 continue;
             }
             if crate::build::prebuild::render::can_render(entry.path()) {
+                continue;
+            }
+            if exclude_patterns.iter().any(|x| x.matches(entry.path().to_str().unwrap())) {
                 continue;
             }
             pb.set_message(&entry.path().display().to_string());

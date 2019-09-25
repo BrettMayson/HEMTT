@@ -1,8 +1,16 @@
 # HEMTT Project File
 
-The `hemtt.json` or `hemtt.toml` file is used to configure your HEMTT Project. All examples are done using `JSON`, but both files support every feature of HEMTT. `hemtt.toml` will be used if both files are present.
+The `hemtt.toml` file is used to configure your HEMTT Project. `hemtt.json` is currently supported, but deprecated. `hemtt.toml` will be used if both files are present.
 
-`JSON`
+`TOML`
+```toml
+name = "Advanced Banana Environment"
+prefix = "ABE3"
+author = "ACE Mod Team"
+version = "1.0.0.0"
+```
+
+`JSON` (Deprecated)
 ```json
 {
   "name": "Advanced Banana Environment",
@@ -12,21 +20,16 @@ The `hemtt.json` or `hemtt.toml` file is used to configure your HEMTT Project. A
 }
 ```
 
-`TOML`
-```toml
-name = "Advanced Banana Environment"
-prefix = "ABE3"
-author = "ACE Mod Team"
-version = "1.0.0.0"
-```
+!> JSON is deprecated
+
 # Required Fields
 
 ## name
 **Type**: String
 
 Long name of your project.
-```json
-"name": "Advanced Banana Environment"
+```toml
+name = "Advanced Banana Environment"
 ```
 <hr/>
 
@@ -35,15 +38,15 @@ Long name of your project.
 
 Prefix used for CBA macros and the release directory name.
 
-```json
-"prefix": "ABE3"
+```toml
+prefix = "ABE3"
 ```
 
 **Example**
 
-```json
-"prefix": "ABE3",
-"version": "1.0.0.0"
+```toml
+prefix = "ABE3"
+version = "1.0.0.0"
 ```
 
 `hemtt build --release` would create a release in the directory `releases/1.0.0.0/@ABE3/`.
@@ -54,8 +57,8 @@ Prefix used for CBA macros and the release directory name.
 
 Author of the project.
 
-```json
-"author": "ACE Mod Team"
+```toml
+author = "ACE Mod Team"
 ```
 <hr/>
 
@@ -66,8 +69,8 @@ Author of the project.
 
 HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not have that file you can add a version number in the HEMTT project file.
 
-```json
-"version": "1.0.0.0"
+```toml
+version = "1.0.0.0"
 ```
 
 If you are using `addons/main/script_version.hpp` the file must be formatted as:
@@ -85,8 +88,8 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 
 HEMTT will copy the files to the release directory after a successful release build. Supports [glob](http://man7.org/linux/man-pages/man7/glob.7.html) patterns.
 
-```json
-"files": [
+```toml
+files = [
     "mod.cpp",
     "logo.paa",
     "*.dll"
@@ -99,8 +102,8 @@ HEMTT will copy the files to the release directory after a successful release bu
 
 HEMTT will include matching relative or absolute paths when building.
 
-```json
-"include": [
+```toml
+include = [
     "./include"
 ]
 ```
@@ -112,7 +115,7 @@ HEMTT will include matching relative or absolute paths when building.
 
 HEMTT will exclude matching files when building.
 
-```json
+```toml
 "exclude": [
     "*.psd",
     "*.png",
@@ -137,8 +140,8 @@ HEMTT will build the specified addons from the `./optionals` folder.
 
 HEMTT will by default build optionals into their own mod folders, which can be directly launched by the user. This can be turned off to build optional PBOs directly into `optionals` folder.
 
-```json
-"folder_optionals": false
+```toml
+folder_optionals =  false
 ```
 
 ## skip
@@ -146,8 +149,8 @@ HEMTT will by default build optionals into their own mod folders, which can be d
 
 HEMTT will skip building the specified addons.
 
-```json
-"skip": [
+```toml
+skip = [
     "hearing",
     "zeus"
 ]
@@ -158,8 +161,8 @@ HEMTT will skip building the specified addons.
 
 HEMTT will apply specified header extensions to each PBO. Supports [templating](/templating.md).
 
-```json
-"headerexts": [
+```toml
+headerexts = [
     "author=me"
 ]
 ```
@@ -169,8 +172,8 @@ HEMTT will apply specified header extensions to each PBO. Supports [templating](
 
 HEMTT will use the specified mod name (without `@`) to form `@mod` folder. Supports [templating](/templating.md).
 
-```json
-"modname": "my_mod"
+```toml
+modname = "my_mod"
 ```
 
 ## keyname
@@ -185,16 +188,16 @@ The default is set according to the following table:
 | `false`                   | `{{prefix}}_{{version}}`  |
 | `true`                    | `{{prefix}}`              |
 
-```json
-"keyname": "my_key"
+```toml
+keyname = "my_key"
 ```
 
 ### Example
 
-```json
-"project": "TST",
-"version": "1.0.0.0",
-"keyname": "my_key_{{version}}"
+```toml
+project = "TST"
+version = "1.0.0.0"
+keyname = "my_key_{{version}}"
 ```
 
 Above will result in key name of `my_key_1.0.0.0.bikey` and private key name of `my_key_1.0.0.0.biprivatekey`.
@@ -205,16 +208,16 @@ Above will result in key name of `my_key_1.0.0.0.bikey` and private key name of 
 
 HEMTT will use the specified signature name as part of the full signature (`.bisign`) name. Supports [templating](/templating.md).
 
-```json
-"signame": "my_custom_name"
+```toml
+signame = "my_custom_name"
 ```
 
 ### Example
 
-```json
-"project": "TST",
-"version": "1.0.0.0",
-"signame": "my-{{version}}"
+```toml
+project = "TST"
+version = "1.0.0.0"
+signame = "my-{{version}}"
 ```
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
@@ -224,12 +227,12 @@ Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (wher
 
 HEMTT will use the specified signature version.  
 Currently Supported: V2, V3 (Experiemental).  
-Default: 2
+Default: 3
 
 ### Example
 
-```json
-"sigversion": 3
+```toml
+sigversion = 3
 ```
 
 ## reuse_private_key
@@ -242,6 +245,6 @@ The default behaviour is to generate a new private key each time and discard it 
 
 !> HEMTT strongly recommends that you only re-use the key if you are making a client-side mod where it will not matter if clients are running different versions of the mod.
 
-```json
-"reuse_private_key": false
+```toml
+reuse_private_key = false
 ```

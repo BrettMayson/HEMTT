@@ -78,4 +78,5 @@ It is recommended you add the following to your `.gitignore` if you are putting 
 *.pbo
 *.biprivatekey
 releases/
+keys/
 ```

@@ -3,60 +3,51 @@ Scripts are used to extend the build process of your project.
 
 # Defining a Script
 Scripts use a list of shell commands. This small snippet is all that is needed to define a basic script. This example would be ran with `hemtt run build`.
-```json
-"scripts": {
-    "build": {
-        "steps": [
-            "make all"
-        ]
-    }
-}
+```toml
+[scripts.build]
+steps = [
+    "make all"
+]
 ```
 ### steps_windows / steps_linux
 `steps_windows` and `steps_linux` can be used to run different steps on the respective platforms.
-```json
-"scripts": {
-    "build": {
-        "steps_linux": [
-            "make linux"
-        ],
-        "steps_windows": [
-            "make windows"
-        ]
-    }
-}
+```toml
+[scripts.build]
+steps_linux = [
+    "make linux"
+]
+steps_windows = [
+    "make windows"
+]
 ```
 
 ### show_output
 All output is hidden by default. Setting `show_output` will display the command being executed and its output.
-```json
-"scripts": {
-    "example": {
-        "steps": ["echo 'this is an example'"],
-        "show_output": true
-    }
-}
+```toml
+[scripts.example]
+steps = [
+    "echo 'this is an example'"
+]
+show_output = true
 ```
 
 
 # Build Steps
 There are 3 different build step definitions. `prebuild`, `postbuild` and `releasebuild`. These are added to the root of the HEMTT project file. Scripts can be ran using `![script]` and utilities are ran using `@[utility]`. The following example runs the `build` script, the uses `cp` to copy files.
-```json
-"releasebuild": [
-    "!build",
-],
-"scripts": {
-    "build": {
-        "steps_linux": [
-            "make linux",
-            "cp bin/ release/{{version}}/ -r"
-        ],
-        "steps_windows": [
-            "make windows"
-            "copy bin/ release/{{version}}/",
-        ]
-    }
-}
+```toml
+releasebuild = [
+  "!build"
+]
+
+[scripts.build]
+steps_linux = [
+    "make linux",
+    "cp bin/ release/{{version}}/ -r"
+]
+steps_windows = [
+    "make windows",
+    "copy bin/ release/{{version}}/"
+]
 ```
 
 ### foreach
@@ -71,15 +62,17 @@ In addition to the standard [templating variables](templating.md), additional va
 | target   | addons/ABE_main.pbo | addons/ABE_main.pbo | addons/ABE_main.pbo |
 | time     |                     | (build time in ms)  | (build time in ms)  |
 
-```json
-"scripts": {
-    "buildtime": {
-        "steps": ["echo {{addon}} took {{time}} ms to build."],
-        "show_output": true,
-        "foreach": true
-    }
-},
-"postbuild": ["!buildtime"]
+```toml
+postbuild = [
+    "!buildtime"
+]
+
+[scripts.buildtime]
+steps = [
+    "echo {{addon}} took {{time}} ms to build."
+]
+show_output = true
+foreach = true
 ```
 
 #### parallel

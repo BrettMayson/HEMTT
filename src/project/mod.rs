@@ -37,6 +37,10 @@ pub struct Project {
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
+    pub exclude: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
     pub files: Vec<String>,
 
     // Signing
@@ -91,6 +95,7 @@ impl Project {
             modname: String::new(),
             mainprefix: default_mainprefix(),
             include: default_include(),
+            exclude: Vec::new(),
             files: if std::path::Path::new("mod.cpp").exists() {
                 vec!["mod.cpp".to_owned()]
             } else {
