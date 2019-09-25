@@ -7,36 +7,13 @@ use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
 pub struct Release {}
 impl Task for Release {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
-        let mut can_continue = true;
         let addons: Vec<_> = addons
             .into_iter()
             .map(|d| {
-                if d.is_err() {
-                    can_continue = false;
-                    d
-                } else {
-                    let (report, addon) = d.unwrap();
-                    if let Some((fatal, _)) = report.stop {
-                        if fatal {
-                            can_continue = false;
-                            println!();
-                            error!(&format!("Unable to build `{}`", addon.folder().display().to_string()))
-                        }
-                    }
-                    Ok((report, addon))
-                }
+                let (report, addon) = d.unwrap();
+                Ok((report, addon))
             })
             .collect();
-
-        if !can_continue {
-            if *crate::CI || !Confirmation::new().with_text("Do you want to continue?").interact()? {
-                return Err(HEMTTError::generic(
-                    "Unable to release",
-                    "One or more addons were not built successfully",
-                ));
-            }
-            println!();
-        }
 
         // Prepare release directory
         let release_folder = p.release_dir()?;

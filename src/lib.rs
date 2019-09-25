@@ -161,13 +161,13 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
             Some(c) => {
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
-                    c.run(sub_matches, Project::read()?)?;
                     if root {
                         println!("HEMTT {}", version);
                         println!("Environment: {}", project::environment());
                         println!();
                         startup::startup();
                     }
+                    c.run(sub_matches, Project::read()?)?;
                 } else {
                     c.run_no_project(sub_matches)?;
                 }
