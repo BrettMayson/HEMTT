@@ -124,6 +124,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     commands.push(Box::new(commands::Pack {}));
     commands.push(Box::new(commands::Clean {}));
     commands.push(Box::new(commands::Status {}));
+    commands.push(Box::new(commands::Update {}));
 
     // Add utilities here
     commands.push(Box::new(utilities::Translation {}));
@@ -158,15 +159,15 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     match matches.subcommand_name() {
         Some(v) => match hash_commands.get(v) {
             Some(c) => {
-                if root {
-                    println!("HEMTT {}", version);
-                    println!("Environment: {}", project::environment());
-                    println!();
-                    startup::startup();
-                }
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     c.run(sub_matches, Project::read()?)?;
+                    if root {
+                        println!("HEMTT {}", version);
+                        println!("Environment: {}", project::environment());
+                        println!();
+                        startup::startup();
+                    }
                 } else {
                     c.run_no_project(sub_matches)?;
                 }

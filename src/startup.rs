@@ -6,9 +6,7 @@ use crate::HEMTTError;
 
 macro_rules! exec {
     ($c:expr) => {
-        std::thread::spawn(|| {
-            $c().unwrap_or_print();
-        })
+        $c().unwrap_or_print();
     };
 }
 

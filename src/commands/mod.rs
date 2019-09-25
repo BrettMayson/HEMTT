@@ -16,6 +16,9 @@ pub use clean::Clean;
 mod status;
 pub use status::Status;
 
+mod update;
+pub use update::Update;
+
 use crate::{HEMTTError, Project};
 
 pub trait Command {
