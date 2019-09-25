@@ -18,7 +18,10 @@ impl Task for NotEmpty {
         let mut report = Report::new();
         let empty = std::fs::read_dir(addon.folder())?.count() == 0;
         if empty {
-            report.stop = Some((true, HEMTTError::simple(format!("The addon directory `{}` is empty", addon.folder().display()))));
+            report.stop = Some((
+                true,
+                HEMTTError::simple(format!("The addon directory `{}` is empty", addon.folder().display())),
+            ));
         }
         Ok(report)
     }
