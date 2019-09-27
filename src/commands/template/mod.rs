@@ -118,8 +118,8 @@ impl Template {
 impl Command for Template {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("template")
-            .version("0.1")
-            .about("Manage the project's tempalte")
+            .version(*crate::VERSION)
+            .about("Manage the project's template")
             .subcommand(clap::SubCommand::with_name("init").about("Initialize the template"))
             .subcommand(
                 clap::SubCommand::with_name("addon").about("Create a new addon").arg(

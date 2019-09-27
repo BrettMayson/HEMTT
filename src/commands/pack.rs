@@ -6,6 +6,7 @@ pub struct Pack {}
 impl Command for Pack {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("pack")
+            .version(*crate::VERSION)
             .about("Pack the Project")
             .arg(
                 clap::Arg::with_name("release")
@@ -17,7 +18,8 @@ impl Command for Pack {
                 clap::Arg::with_name("clear")
                     .help("Clears existing built files")
                     .long("clear")
-                    .long("force"),
+                    .long("force")
+                    .short("f"),
             )
     }
 

@@ -44,7 +44,7 @@ macro_rules! warn {
         use colored::*;
         let style = "warning".yellow().bold();
         let status = $s;
-        crate::iprintln!("{style}: {status}\n", style, status);
+        crate::iprintln!("{style}: {status}", style, status);
     }};
 }
 
@@ -53,7 +53,7 @@ macro_rules! warnmessage {
     ($s:expr, $m:expr) => {
         let status = $s;
         let message = $m;
-        crate::warn!(crate::iformat!("{status}\n    {message}\n", status, message));
+        crate::warn!(crate::iformat!("{status}\n    {message}", status, message));
     };
 }
 
@@ -63,13 +63,13 @@ macro_rules! error {
         use colored::*;
         let style = "error".red().bold();
         let status = $s;
-        crate::iprintln!("{style}: {status}\n", style, status);
+        crate::iprintln!("{style}: {status}", style, status);
     }};
     ($s:expr, $f:expr) => {{
         use colored::*;
         let style = "error".red().bold();
         let status = format!($s, $f);
-        crate::iprintln!("{style}: {status}\n", style, status);
+        crate::iprintln!("{style}: {status}", style, status);
     }};
 }
 
