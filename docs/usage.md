@@ -33,7 +33,7 @@ Initialize a project file in the current directory. `init` is used when you have
 Create a new project using the CBA project structure. `create` should only be used inside an empty directory. The following structure will be generated.
 <pre>
 .
-├── hemtt.json
+├── hemtt.toml
 └── <a href="https://github.com/synixebrett/HEMTT-Example/tree/master/addons">addons/</a>
     └── <a href="https://github.com/synixebrett/HEMTT-Example/tree/master/addons/main">main/</a>
         ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/%24PBOPREFIX%24">$PBOPREFIX$</a>
@@ -93,16 +93,14 @@ Remove existing built files before starting the next build.
 ## --release
 Create and sign a release build of the project.
 
-A `hemtt.json` file of 
-```json
-{
-  "name": "Test Mod",
-  "prefix": "TST",
-  "author": "SynixeBrett",
-  "files": [
+A `hemtt.toml` file of 
+```toml
+name = "Test Mod"
+prefix = "TST"
+author = "SynixeBrett"
+files = [
     "mod.cpp"
-  ]
-}
+]
 ```
 would produce
 <pre>

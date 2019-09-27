@@ -10,11 +10,11 @@ pub fn run() -> Result<(), std::io::Error> {
     match file.extension().unwrap().to_str().unwrap() {
         "toml" => {
             fs::remove_file("hemtt.toml")?;
-            File::create("hemtt.json")?;
+            create_file!("hemtt.json")?;
         },
         "json" => {
             fs::remove_file("hemtt.json")?;
-            File::create("hemtt.toml")?;
+            create_file!("hemtt.toml")?;
         },
         _ => unreachable!()
     }

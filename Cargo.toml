@@ -1,31 +1,46 @@
 [package]
 name = "hemtt"
-version = "0.6.2"
-authors = ["Brett <brett@bmandesigns.com>"]
+version = "0.7.0"
+authors = ["Brett Mayson <brett@mayson.io>"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
-armake2 = { git = "https://github.com/KoffeinFlummi/armake2", branch = "master" }
+armake2 = {git = "https://github.com/SynixeBrett/armake2", branch = "restructure"}
 chrono = "0.4"
+clap = "2.33"
 colored = "1.8"
+config = "0.9"
+dialoguer = "0.4"
 docopt = "1"
+fs_extra = "1.1"
 git2 = "0.9"
 glob = "0.3"
 handlebars = "2.0"
+lazy_static = "1.3"
+linked-hash-map = "0.5"
 num_cpus = "1.10"
-pbr = "1.0"
+objekt = "0.1"
+question = "0.2"
 rayon = "1.1"
 regex = "1.2"
 reqwest = "0.9"
+rlua = "0.16"
 self_update = "0.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-xml-rs = "0.3"
+strum = "0.15"
+strum_macros = "0.15"
 subprocess = "0.1"
 toml = "0.5"
 walkdir = "2.2"
-zip = { git = "https://github.com/jonpas/zip-rs", branch = "flate2", features = ["deflate"] }
+zip = "0.5"
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
 winreg = "0.6"
+indicatif-windows = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
+
+[target.'cfg(not(windows))'.dependencies]
+indicatif = "0.11"

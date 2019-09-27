@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: push
 
 jobs:
 
@@ -13,7 +13,7 @@ jobs:
 
       - name: Install Rust stable
         run: |
-          rustup toolchain update stable
+          rustup toolchain update stable --no-self-update
           rustup default stable
           rustup component add clippy rustfmt
 
@@ -23,22 +23,65 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all -- -Dwarnings
 
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the source code
         uses: actions/checkout@master
 
       - name: Install Rust stable
         run: |
-          rustup toolchain update stable
+          rustup toolchain update stable --no-self-update
           rustup default stable
+
       - name: Build
         run: cargo build --all
 
       - name: Test
         run: cargo test --all
+
+      - name: Build (Release)
+        run: cargo build --all --release
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: linux
+          path: target/release/hemtt
+
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@master
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain update stable --no-self-update
+          rustup default stable
+
+      - name: Install OpenSSL
+        run: |
+          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1d.msi' -OutFile openssl.msi"
+          msiexec.exe /qn /i openssl.msi
+
+      - name: Build
+        env:
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
+        run: cargo build --all
+
+      - name: Test
+        env:
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
+        run: cargo test --all
+
+      - name: Build (Release)
+        env:
+          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
+        run: cargo build --all --release
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: windows
+          path: target/release/hemtt.exe
