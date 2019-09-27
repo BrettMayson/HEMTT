@@ -4,7 +4,9 @@ use glob::glob;
 use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
 
 #[derive(Clone)]
-pub struct Release {}
+pub struct Release {
+    pub force_release: bool,
+}
 impl Task for Release {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let addons: Vec<_> = addons
@@ -18,18 +20,22 @@ impl Task for Release {
         // Prepare release directory
         let release_folder = p.release_dir()?;
         if release_folder.exists() {
-            let error = HEMTTError::generic("Release already exists", "Use `--force-release` to overwrite");
-            if *crate::CI {
-                return Err(error);
+            if self.force_release {
+                std::fs::remove_dir_all(&release_folder)?;
             } else {
-                println!();
-                warn!("Release already exists");
-                if Confirmation::new().with_text("Do you want to continue?").interact()? {
-                    std::fs::remove_dir_all(&release_folder)?;
-                } else {
+                let error = HEMTTError::generic("Release already exists", "Use `--force-release` to overwrite");
+                if *crate::CI {
                     return Err(error);
+                } else {
+                    println!();
+                    warn!("Release already exists");
+                    if Confirmation::new().with_text("Do you want to continue?").interact()? {
+                        std::fs::remove_dir_all(&release_folder)?;
+                    } else {
+                        return Err(error);
+                    }
+                    println!();
                 }
-                println!();
             }
         }
 

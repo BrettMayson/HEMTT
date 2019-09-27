@@ -4,7 +4,9 @@ use crate::{Command, HEMTTError};
 pub struct Update {}
 impl Command for Update {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("update").about("Update HEMTT to the latest stable release")
+        clap::SubCommand::with_name("update")
+            .version(*crate::VERSION)
+            .about("Update HEMTT to the latest stable release")
     }
 
     fn require_project(&self) -> bool {

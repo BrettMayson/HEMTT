@@ -31,6 +31,18 @@ lazy_static::lazy_static! {
     pub static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
 
     pub static ref CI: bool = std::env::args().any(|x| x == "--ci") || is_ci();
+
+    pub static ref VERSION: &'static str = {
+        let mut version = env!("CARGO_PKG_VERSION").to_string();
+        if let Some(v) = option_env!("GIT_HASH") {
+            version.push_str("-");
+            version.push_str(v);
+        }
+        if cfg!(debug_assertions) {
+            version.push_str("-debug");
+        }
+        Box::leak(Box::new(version))
+    };
 }
 
 pub fn is_ci() -> bool {
@@ -73,23 +85,13 @@ pub fn is_ci() -> bool {
 }
 
 pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
-    let mut version = env!("CARGO_PKG_VERSION").to_string();
-    if let Some(v) = option_env!("GIT_HASH") {
-        version.push_str("-");
-        version.push_str(v);
-    }
-    if cfg!(debug_assertions) {
-        version.push_str("-debug");
-    }
-
     let mut app = App::new("HEMTT")
-        .version(version.as_ref())
-        .author(env!("CARGO_PKG_AUTHORS"))
+        .version(*crate::VERSION)
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(
             clap::Arg::with_name("jobs")
                 .global(true)
-                .help("Number of parallel jobs to perform")
+                .help("Number of parallel jobs, defaults to # of CPUs")
                 .takes_value(true)
                 .long("jobs")
                 .short("j"),
@@ -168,7 +170,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 if c.require_project() {
                     let project = Project::read()?;
                     if root {
-                        println!("HEMTT {}", version);
+                        println!("HEMTT {}", *crate::VERSION);
                         println!("Environment: {}", project::environment());
                         println!();
                         startup::startup();

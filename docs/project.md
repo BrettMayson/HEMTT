@@ -221,7 +221,7 @@ sig_name = "my-{{version}}"
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
 
-## sigversion
+## sig_version
 **Type**: Integer
 
 HEMTT will use the specified signature version.  
@@ -231,7 +231,7 @@ Default: 3
 ### Example
 
 ```toml
-sigversion = 3
+sig_version = 3
 ```
 
 ## reuse_private_key

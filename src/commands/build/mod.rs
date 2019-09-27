@@ -13,6 +13,7 @@ pub struct Build {}
 impl Command for Build {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("build")
+            .version(*crate::VERSION)
             .about("Build the Project")
             .arg(
                 clap::Arg::with_name("release")
@@ -24,7 +25,13 @@ impl Command for Build {
                 clap::Arg::with_name("rebuild")
                     .help("Rebuild existing files")
                     .long("rebuild")
-                    .long("force"),
+                    .long("force")
+                    .short("f"),
+            )
+            .arg(
+                clap::Arg::with_name("force-release")
+                    .help("Remove an existing release")
+                    .long("force-release"),
             )
     }
 
@@ -85,7 +92,9 @@ impl Command for Build {
                         "⭐",
                         "Release",
                         Stage::ReleaseBuild,
-                        vec![Box::new(crate::build::postbuild::release::Release {})],
+                        vec![Box::new(crate::build::postbuild::release::Release {
+                            force_release: args.is_present("force-release"),
+                        })],
                     )
                 } else {
                     Step::none()

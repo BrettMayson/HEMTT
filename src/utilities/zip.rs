@@ -11,7 +11,7 @@ pub struct Zip {}
 impl Command for Zip {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("zip")
-            .about("Get translation info from `stringtable.xml` files")
+            .about("Create a .zip of the latest release")
             .arg(clap::Arg::with_name("name").help("Name of the archive").default_value(""))
     }
 

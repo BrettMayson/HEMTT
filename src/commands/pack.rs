@@ -6,6 +6,7 @@ pub struct Pack {}
 impl Command for Pack {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("pack")
+            .version(*crate::VERSION)
             .about("Pack the Project")
             .arg(
                 clap::Arg::with_name("release")
@@ -17,7 +18,13 @@ impl Command for Pack {
                 clap::Arg::with_name("clear")
                     .help("Clears existing built files")
                     .long("clear")
-                    .long("force"),
+                    .long("force")
+                    .short("f"),
+            )
+            .arg(
+                clap::Arg::with_name("force-release")
+                    .help("Remove an existing release")
+                    .long("force-release"),
             )
     }
 
@@ -69,7 +76,9 @@ impl Command for Pack {
                         "⭐",
                         "Release",
                         Stage::ReleaseBuild,
-                        vec![Box::new(crate::build::postbuild::release::Release {})],
+                        vec![Box::new(crate::build::postbuild::release::Release {
+                            force_release: args.is_present("force-release"),
+                        })],
                     )
                 } else {
                     Step::none()
