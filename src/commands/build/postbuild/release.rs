@@ -55,6 +55,7 @@ impl Task for Release {
                     copy_file!(path, {
                         let mut d = release_folder.clone();
                         d.push(path.file_name().unwrap().to_str().unwrap().to_owned());
+                        debug!("Copying {:#?} to {:#?}", path, d);
                         d
                     })?;
                 }

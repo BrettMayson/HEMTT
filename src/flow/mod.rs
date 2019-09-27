@@ -126,7 +126,7 @@ impl Flow {
             })
             .collect();
 
-        let draw_thread = if !*crate::CI {
+        let draw_thread = if !*crate::NOPB {
             thread::spawn(move || {
                 m.join().unwrap();
             })
@@ -136,7 +136,7 @@ impl Flow {
 
         let (tx, rx) = mpsc::channel();
 
-        if !*crate::CI {
+        if !*crate::NOPB {
             // tick the top bar every 100 ms to keep the multiprogress updated
             thread::spawn(move || 'outer: loop {
                 thread::sleep(Duration::from_millis(100));
@@ -175,7 +175,7 @@ impl Flow {
                 |tx, data: Result<(ProgressBar, Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
                     let (pb, mut report, addon) = data?;
 
-                    if !*crate::CI {
+                    if !*crate::NOPB {
                         pb.set_style(addon_style.clone());
                         pb.set_prefix(&fill_space!(" ", 16, &addon.name));
                     }

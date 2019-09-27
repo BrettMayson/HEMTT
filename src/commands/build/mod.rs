@@ -84,7 +84,7 @@ impl Command for Build {
                     "📝",
                     "Build",
                     Stage::Build,
-                    vec![Box::new(crate::build::build::Build { use_bin: true })],
+                    vec![Box::new(crate::build::build::Build::new(true))],
                 ),
                 Step::single("📜", "", Stage::PostBuild, vec![Box::new(crate::flow::Script {})]),
                 if args.is_present("release") {

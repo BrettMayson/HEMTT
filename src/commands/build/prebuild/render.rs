@@ -32,7 +32,12 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
                 .to_string();
             let mut outfile = create_file!(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
-            crate::RENDERED.lock().unwrap().add(path.display().to_string(), dest)?;
+            debug!("Rendered `{}` to `{}`", path.display(), dest);
+            crate::RENDERED
+                .lock()
+                .unwrap()
+                .add(path.display().to_string(), dest.clone())?;
+            crate::CACHED.lock().unwrap().insert(&dest, out)?;
         }
         Err(err) => {
             if let HEMTTError::LINENO(mut e) = err {

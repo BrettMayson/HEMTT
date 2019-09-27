@@ -42,7 +42,7 @@ impl Project {
             3 => armake2::BISignVersion::V3,
             2 => armake2::BISignVersion::V2,
             _ => {
-                warn!(format!("Invalid Sig Version `{}`", v));
+                warn!("Invalid Sig Version `{}`", v);
                 self.match_ver(crate::project::default_sig_version())
             }
         }

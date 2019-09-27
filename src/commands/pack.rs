@@ -69,7 +69,7 @@ impl Command for Pack {
                     "📦",
                     "Pack",
                     Stage::Build,
-                    vec![Box::new(crate::build::build::Build { use_bin: false })],
+                    vec![Box::new(crate::build::build::Build::new(false))],
                 ),
                 if args.is_present("release") {
                     Step::single(
