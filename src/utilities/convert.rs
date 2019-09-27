@@ -9,11 +9,11 @@ pub fn run() -> Result<(), std::io::Error> {
     let file = crate::project::path(false).unwrap_or_print();
     match file.extension().unwrap().to_str().unwrap() {
         "toml" => {
-            fs::remove_file("hemtt.toml")?;
+            remove_file!("hemtt.toml")?;
             create_file!("hemtt.json")?;
         },
         "json" => {
-            fs::remove_file("hemtt.json")?;
+            remove_file!("hemtt.json")?;
             create_file!("hemtt.toml")?;
         },
         _ => unreachable!()
