@@ -5,7 +5,9 @@ use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
 pub struct Clean {}
 impl Command for Clean {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("clean").about("Clean built files")
+        clap::SubCommand::with_name("clean")
+            .version(*crate::VERSION)
+            .about("Clean built files")
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {

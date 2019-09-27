@@ -6,7 +6,9 @@ pub struct Init {}
 
 impl Command for Init {
     fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("init").about("Initialize a HEMTT Project")
+        clap::SubCommand::with_name("init")
+            .version(*crate::VERSION)
+            .about("Initialize a HEMTT Project")
     }
 
     fn require_project(&self) -> bool {

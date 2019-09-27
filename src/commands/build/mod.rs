@@ -13,6 +13,7 @@ pub struct Build {}
 impl Command for Build {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("build")
+            .version(*crate::VERSION)
             .about("Build the Project")
             .arg(
                 clap::Arg::with_name("release")
@@ -24,7 +25,8 @@ impl Command for Build {
                 clap::Arg::with_name("rebuild")
                     .help("Rebuild existing files")
                     .long("rebuild")
-                    .long("force"),
+                    .long("force")
+                    .short("f"),
             )
     }
 
