@@ -28,6 +28,11 @@ impl Command for Build {
                     .long("force")
                     .short("f"),
             )
+            .arg(
+                clap::Arg::with_name("force-release")
+                    .help("Remove an existing release")
+                    .long("force-release"),
+            )
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
@@ -87,7 +92,9 @@ impl Command for Build {
                         "⭐",
                         "Release",
                         Stage::ReleaseBuild,
-                        vec![Box::new(crate::build::postbuild::release::Release {})],
+                        vec![Box::new(crate::build::postbuild::release::Release {
+                            force_release: args.is_present("force-release"),
+                        })],
                     )
                 } else {
                     Step::none()

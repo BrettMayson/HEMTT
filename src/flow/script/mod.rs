@@ -5,9 +5,6 @@ pub use task::Script;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct BuildScript {
-    #[serde(default = "default_debug")]
-    pub debug: bool,
-
     #[serde(default = "default_release")]
     pub release: bool,
 
@@ -31,10 +28,6 @@ pub struct BuildScript {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub steps_linux: Vec<String>,
-}
-
-fn default_debug() -> bool {
-    true
 }
 
 fn default_release() -> bool {
