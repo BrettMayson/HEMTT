@@ -57,3 +57,15 @@ macro_rules! rename_file {
         })
     };
 }
+
+#[macro_export]
+macro_rules! remove_file {
+    ($s:expr) => {
+        std::fs::remove_file(&$s).map_err(|source| {
+            crate::HEMTTError::PATH(crate::IOPathError {
+                path: std::path::PathBuf::from(&$s),
+                source,
+            })
+        })
+    };
+}

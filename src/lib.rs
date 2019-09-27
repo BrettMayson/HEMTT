@@ -132,6 +132,11 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::MissionGenerate {}));
     commands.push(Box::new(utilities::Zip {}));
+    // Windows only utilities
+    #[cfg(windows)]
+    {
+        commands.push(Box::new(utilities::FilePatching {}));
+    }
 
     for command in commands.iter() {
         let sub = command.register();
