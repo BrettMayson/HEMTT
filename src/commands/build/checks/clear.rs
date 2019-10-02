@@ -21,7 +21,7 @@ impl Task for Clear {
     fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
         let target = addon.target(p);
         if target.exists() {
-            std::fs::remove_file(target)?;
+            remove_file!(target)?;
         }
         Ok(Report::new())
     }
@@ -50,7 +50,7 @@ impl Task for Clean {
                 let path = entry.path();
                 let loc = path.display().to_string();
                 if !path.is_dir() && re.is_match(&loc) && !targets.contains(&loc) {
-                    std::fs::remove_file(&loc)?;
+                    remove_file!(&loc)?;
                 }
             }
         }

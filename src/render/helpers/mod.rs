@@ -5,13 +5,21 @@ use handlebars::{Context, Handlebars, Helper, HelperResult, JsonRender, Output, 
 use crate::error::*;
 
 pub fn date(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut dyn Output) -> HelperResult {
-    let param = h.param(0).unwrap().value().render();
+    let param = if let Some(p) = h.param(0) {
+        p.value().render()
+    } else {
+        "%s".to_string()
+    };
     out.write(&Local::now().format(param.as_ref()).to_string()).unwrap_or_print();
     Ok(())
 }
 
 pub fn git(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut dyn Output) -> HelperResult {
-    let param = h.param(0).unwrap().value().render();
+    let param = if let Some(p) = h.param(0) {
+        p.value().render()
+    } else {
+        "id".to_string()
+    };
     let params: Vec<&str> = param.split_whitespace().collect();
 
     let repo = Repository::open(".").unwrap_or_print();

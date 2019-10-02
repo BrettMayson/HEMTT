@@ -6,3 +6,8 @@ pub use mission_generate::MissionGenerate;
 
 pub mod zip;
 pub use self::zip::Zip;
+
+#[cfg(windows)]
+pub mod filepatching;
+#[cfg(windows)]
+pub use filepatching::FilePatching;

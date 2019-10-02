@@ -151,7 +151,7 @@ impl RenderedFiles {
 impl RenderedFiles {
     pub fn clean(&mut self) {
         for (_, tmp) in self.redirects.iter() {
-            if let Err(e) = std::fs::remove_file(tmp) {
+            if let Err(e) = remove_file!(tmp) {
                 error!(e.to_string());
             }
         }
