@@ -9,6 +9,7 @@ use serde_json::value::Value as Json;
 
 use crate::error::PrintableError;
 use crate::HEMTTError;
+use crate::error::PrintableError;
 
 mod signing;
 
