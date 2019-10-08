@@ -7,8 +7,8 @@ use handlebars::to_json;
 use serde::{Deserialize, Serialize};
 use serde_json::value::Value as Json;
 
-use crate::HEMTTError;
 use crate::error::PrintableError;
+use crate::HEMTTError;
 
 mod signing;
 
