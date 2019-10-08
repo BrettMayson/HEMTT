@@ -170,5 +170,5 @@ impl Command for Template {
 }
 
 pub fn script(name: &str) -> String {
-    format!("./hemtt/template/scripts/{}.lua", name)
+    format!("./.hemtt/template/scripts/{}.lua", name)
 }

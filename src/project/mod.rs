@@ -7,6 +7,7 @@ use handlebars::to_json;
 use serde::{Deserialize, Serialize};
 use serde_json::value::Value as Json;
 
+use crate::error::PrintableError;
 use crate::HEMTTError;
 
 mod signing;
@@ -153,10 +154,11 @@ impl Project {
     pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
         let mut vars = BTreeMap::new();
         vars.insert("author", to_json(self.author.clone()));
+        vars.insert("env", to_json(environment()));
         vars.insert("mainprefix", to_json(self.mainprefix.clone()));
         vars.insert("name", to_json(self.name.clone()));
         vars.insert("prefix", to_json(self.prefix.clone()));
-        vars.insert("env", to_json(environment()));
+        vars.insert("version", to_json(self.version().unwrap_or_print()));
         vars
     }
 
