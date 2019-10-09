@@ -48,6 +48,16 @@ jobs:
         with:
           name: linux
           path: target/release/hemtt
+          
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/hemtt
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_DOCKER_TOKEN }}
 
   build-windows:
     name: Build (Windows)
@@ -85,3 +95,13 @@ jobs:
         with:
           name: windows
           path: target/release/hemtt.exe
+          
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/hemtt
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_DOCKER_TOKEN }}

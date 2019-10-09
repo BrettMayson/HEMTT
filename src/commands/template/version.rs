@@ -6,8 +6,8 @@ use crate::HEMTTError;
 
 impl Template {
     pub fn get_version(&self) -> Result<String, HEMTTError> {
-        if PathBuf::from("./hemtt/template/scripts/get_version.lua").exists() {
-            Ok(self.eval_file("./hemtt/template/scripts/get_version.lua", |_| {}))
+        if PathBuf::from("./.hemtt/template/scripts/get_version.lua").exists() {
+            Ok(self.eval_file("./.hemtt/template/scripts/get_version.lua", |_| {}))
         } else if Path::new("addons/main/script_version.hpp").exists() {
             let f = BufReader::new(open_file!("addons/main/script_version.hpp")?);
             let (mut major, mut minor, mut patch, mut build) = (0, 0, 0, String::new());

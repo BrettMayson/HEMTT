@@ -45,7 +45,7 @@ impl Task for ValidName {
             ));
         }
         // WARN: addons shouldn't start with the mod prefix
-        if addon.name.starts_with(&p.prefix) {
+        if !p.prefix.is_empty() && addon.name.starts_with(&p.prefix) {
             report.warnings.push(HEMTTError::generic(
                 format!("Redundant prefix in addon name `{}`", &addon.name),
                 format!(
