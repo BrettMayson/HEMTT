@@ -19,6 +19,26 @@ static BINARIZABLE: &[&str] = &["rtm", "p3d"];
 #[derive(Clone)]
 pub struct Build {
     pub use_bin: bool,
+    can_binarize: bool,
+}
+impl Build {
+    pub fn new(use_bin: bool) -> Self {
+        let can_binarize = use_bin
+            && cfg!(windows)
+            && if match armake2::find_binarize_exe() {
+                Ok(p) => {
+                    debug!("binarize found at {:?}", p);
+                    p.exists()
+                }
+                Err(_) => false,
+            } {
+                true
+            } else {
+                warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
+                false
+            };
+        Self { use_bin, can_binarize }
+    }
 }
 impl Task for Build {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
@@ -34,21 +54,8 @@ impl Task for Build {
             checksum: None,
         };
         let directory = addon.folder();
-        let binarize = self.use_bin
-            && cfg!(windows)
-            && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists())
-            && if match armake2::find_binarize_exe() {
-                Ok(p) => p.exists(),
-                Err(_) => false,
-            } {
-                true
-            } else {
-                report.warnings.push(HEMTTError::generic(
-                    "Unable to locate binarize.exe",
-                    "Files will be packed as is",
-                ));
-                false
-            };
+        let binarize =
+            self.can_binarize && !(directory.join("$NOBIN$").exists() || directory.join("$NOBIN-NOTEST$").exists());
 
         let exclude_patterns: Vec<Pattern> = p.exclude.iter().map(|i| Pattern::new(i)).map(|e| e.unwrap()).collect();
 

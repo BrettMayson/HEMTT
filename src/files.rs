@@ -9,16 +9,29 @@ use crate::{HEMTTError, IOPathError};
 #[derive(Debug, Default)]
 pub struct FileCache {
     files: HashMap<String, Vec<u8>>,
+    root: String,
 }
 
 impl FileCache {
     pub fn new() -> Self {
-        Self { files: HashMap::new() }
+        Self {
+            files: HashMap::new(),
+            root: {
+                let mut current = std::env::current_dir().unwrap().to_str().unwrap().replace("\\\\", "\\");
+                current.push('\\');
+                current
+            },
+        }
+    }
+
+    fn clean_path(&self, path: &str) -> String {
+        path.replace("\\\\?\\", "").replace(&self.root, "")
     }
 
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
-        if self.files.contains_key(path) {
-            Ok(self.files.get(path).unwrap().to_vec())
+        let path = self.clean_path(path);
+        if self.files.contains_key(&path) {
+            Ok(self.files.get(&path).unwrap().to_vec())
         } else {
             let f = open_file!(path)?;
             let mut reader = BufReader::new(f);
@@ -26,7 +39,7 @@ impl FileCache {
             reader.read_to_end(&mut buf).map_err(|e| {
                 HEMTTError::PATH(IOPathError {
                     source: e,
-                    path: PathBuf::from(path),
+                    path: PathBuf::from(&path),
                 })
             })?;
             self.files.insert(path.to_string(), buf.clone());
@@ -36,9 +49,9 @@ impl FileCache {
 
     // This should be fixed in armake2, this is a slow workaround but it works for now
     pub fn clean_comments(&mut self, path: &str) -> Result<String, std::io::Error> {
-        if !PathBuf::from(path).exists() {
-            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "can't find that file eh"));
-        }
+        // if !PathBuf::from(path).exists() {
+        //     return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "can't find that file eh"));
+        // }
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n").to_string();
@@ -82,11 +95,13 @@ impl FileCache {
     }
 
     pub fn insert(&mut self, path: &str, data: String) -> Result<(), HEMTTError> {
+        debug!("Cache insert: `{}`", path);
         self.files.insert(path.to_string(), data.as_bytes().to_vec());
         Ok(())
     }
 
     pub fn insert_bytes(&mut self, path: &str, data: Vec<u8>) -> Result<(), HEMTTError> {
+        debug!("Cache insert bytes: `{}`", path);
         self.files.insert(path.to_string(), data);
         Ok(())
     }

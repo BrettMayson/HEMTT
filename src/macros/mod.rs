@@ -39,12 +39,30 @@ macro_rules! iformat {
 }
 
 #[macro_export]
+macro_rules! debug {
+    ($s:expr) => {{
+        if *crate::DEBUG {
+            use colored::*;
+            let style = "debug".magenta().bold();
+            let status = $s;
+            crate::iprintln!("{style}: {status}", style, status);
+        }
+    }};
+    ($s:expr, $($p:expr),*) => {{
+        debug!(format!($s, $($p,)*));
+    }};
+}
+
+#[macro_export]
 macro_rules! warn {
     ($s:expr) => {{
         use colored::*;
         let style = "warning".yellow().bold();
         let status = $s;
         crate::iprintln!("{style}: {status}", style, status);
+    }};
+    ($s:expr, $($p:expr),*) => {{
+        warn!(format!($s, $($p,)*));
     }};
 }
 
@@ -65,11 +83,8 @@ macro_rules! error {
         let status = $s;
         crate::iprintln!("{style}: {status}", style, status);
     }};
-    ($s:expr, $f:expr) => {{
-        use colored::*;
-        let style = "error".red().bold();
-        let status = format!($s, $f);
-        crate::iprintln!("{style}: {status}", style, status);
+    ($s:expr, $($p:expr),*) => {{
+        error!(format!($s, $($p,)*));
     }};
 }
 

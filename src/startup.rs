@@ -28,7 +28,7 @@ fn check_git_ignore() -> Result<(), HEMTTError> {
             }
         }
         for i in ignore {
-            warn!(format!(".gitignore is missing recommended value `{}`", i))
+            warn!(".gitignore is missing recommended value `{}`", i)
         }
     }
     Ok(())

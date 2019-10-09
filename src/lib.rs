@@ -31,6 +31,8 @@ lazy_static::lazy_static! {
     pub static ref REPORTS: Arc<Mutex<HashMap<String, Report>>> = Arc::new(Mutex::new(HashMap::new()));
 
     pub static ref CI: bool = std::env::args().any(|x| x == "--ci") || is_ci();
+    pub static ref DEBUG: bool = std::env::args().any(|x| x == "--debug");
+    pub static ref NOPB: bool = *CI || *DEBUG || std::env::args().any(|x| x == "--no-progress");
 
     pub static ref VERSION: &'static str = {
         let mut version = env!("CARGO_PKG_VERSION").to_string();
@@ -100,8 +102,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
             clap::Arg::with_name("debug")
                 .global(true)
                 .help("Turn debugging information on")
-                .long("debug")
-                .short("d"),
+                .long("debug"),
         )
         .arg(
             clap::Arg::with_name("time")
@@ -114,6 +115,12 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 .global(true)
                 .help("Run in CI mode")
                 .long("ci"),
+        )
+        .arg(
+            clap::Arg::with_name("no-progress")
+                .global(true)
+                .help("No progress bars")
+                .long("no-progress"),
         );
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();

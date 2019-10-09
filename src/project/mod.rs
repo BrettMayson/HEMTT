@@ -130,6 +130,7 @@ impl Project {
         let mut p = Config::new();
         let env = environment();
         let root = find_root()?;
+        debug!("Root Directory: {:?}", root);
         std::env::set_current_dir(root)?;
 
         if Path::new("hemtt.toml").exists() || Path::new("hemtt.json").exists() {
