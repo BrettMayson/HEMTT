@@ -46,7 +46,11 @@ impl Addon {
 
     pub fn target(&self, p: &Project) -> PathBuf {
         let mut target = PathBuf::from(self.location.to_string());
-        target.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        if !p.prefix.is_empty() {
+            target.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        } else {
+            target.push(&format!("{}.pbo", self.name));
+        }
         target
     }
 
@@ -68,7 +72,11 @@ impl Addon {
     /// File path of the released addon
     pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
         let mut r = self.release_location(release_folder);
-        r.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        if !p.prefix.is_empty() {
+            r.push(&format!("{}_{}.pbo", p.prefix, self.name));
+        } else {
+            r.push(&format!("{}.pbo", self.name));
+        }
         r
     }
 
