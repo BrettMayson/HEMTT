@@ -43,4 +43,4 @@ winreg = "0.6"
 indicatif-windows = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
 
 [target.'cfg(not(windows))'.dependencies]
-indicatif = "0.11"
+indicatif = "0.12"
