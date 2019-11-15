@@ -9,7 +9,7 @@ build = "build.rs"
 armake2 = {git = "https://github.com/SynixeBrett/armake2", branch = "restructure"}
 chrono = "0.4"
 clap = "2.33"
-colored = "1.8"
+colored = "1.9"
 config = "0.9"
 dialoguer = "0.4"
 docopt = "1"
