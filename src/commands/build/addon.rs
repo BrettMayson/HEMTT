@@ -63,15 +63,23 @@ impl Addon {
     }
 
     /// Folder containing the released addon
-    pub fn release_location(&self, release_folder: &PathBuf) -> PathBuf {
+    pub fn release_location(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
         let mut r = release_folder.clone();
         r.push(self.location.to_string());
+
+        // Folder / Launchable Optionals
+        if p.folder_optionals() && (self.location == AddonLocation::Compats || self.location == AddonLocation::Optionals) {
+            r.push(&format!("@{}_{}", p.modname().unwrap(), self.name));
+            r.push("addons");
+        }
+
         r
     }
 
     /// File path of the released addon
     pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
-        let mut r = self.release_location(release_folder);
+        let mut r = self.release_location(release_folder, p);
+
         if !p.prefix.is_empty() {
             r.push(&format!("{}_{}.pbo", p.prefix, self.name));
         } else {

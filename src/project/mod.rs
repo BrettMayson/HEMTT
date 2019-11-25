@@ -50,6 +50,10 @@ pub struct Project {
     #[serde(default = "Vec::new")]
     pub files: Vec<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default = "default_folder_optionals")]
+    pub folder_optionals: Option<bool>,
+
     // Signing
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default = "default_reuse_private_key")]
@@ -112,6 +116,7 @@ impl Project {
             } else {
                 Vec::new()
             },
+            folder_optionals: default_folder_optionals(),
 
             reuse_private_key: default_reuse_private_key(),
             key_name: String::new(),
@@ -187,6 +192,11 @@ impl Project {
         }
     }
 
+    /// Should optionals and compats be built in a launchable folder format
+    pub fn folder_optionals(&self) -> bool {
+        self.folder_optionals.is_some() && self.folder_optionals.unwrap()
+    }
+
     /// Release directory `releases/{version}/@{modname}`
     pub fn release_dir(&self) -> Result<PathBuf, HEMTTError> {
         let version = self.version()?;
@@ -240,6 +250,10 @@ fn default_mainprefix() -> String {
 
 fn default_reuse_private_key() -> Option<bool> {
     None
+}
+
+fn default_folder_optionals() -> Option<bool> {
+    Some(true)
 }
 
 pub fn default_sig_version() -> u8 {

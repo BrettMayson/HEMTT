@@ -43,7 +43,7 @@ impl Task for Sign {
             let pbo = PBO::read(&mut open_file!(addon.release_target(&release_folder, p))?)?;
             let sig = key.sign(&pbo, p.get_sig_version());
             let sig_name = p.get_sig_name(&addon.name)?;
-            let mut location = addon.release_location(&release_folder);
+            let mut location = addon.release_location(&release_folder, p);
             location.push(sig_name);
             sig.write(&mut create_file!(location)?)?;
         }
