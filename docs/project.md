@@ -138,7 +138,7 @@ HEMTT will build the specified addons from the `./optionals` folder.
 ## folder_optionals
 **Type**: Bool
 
-HEMTT will by default build optionals into their own mod folders, which can be directly launched by the user. This can be turned off to build optional PBOs directly into `optionals` folder.
+HEMTT will by default build optionals into their own mod folders, which can be directly launched by the user. This can be turned off to build optional PBOs directly into `optionals` or `compats` folders respectively.
 
 ```toml
 folder_optionals =  false
