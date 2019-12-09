@@ -10,8 +10,8 @@ use serde_json::value::Value as Json;
 use crate::error::PrintableError;
 use crate::HEMTTError;
 
-mod signing;
 pub mod semver;
+mod signing;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Project {

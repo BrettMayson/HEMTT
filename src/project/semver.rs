@@ -10,7 +10,12 @@ pub struct SemVer {
 
 impl SemVer {
     pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
-        SemVer { major, minor, patch, build }
+        SemVer {
+            major,
+            minor,
+            patch,
+            build,
+        }
     }
 
     pub fn from(version: &str) -> Self {
@@ -19,7 +24,11 @@ impl SemVer {
             major: parts.next().unwrap().parse::<u32>().unwrap(),
             minor: parts.next().unwrap().parse::<u32>().unwrap(),
             patch: parts.next().unwrap().parse::<u32>().unwrap(),
-            build: if let Some(p) = parts.next() {p.to_string()} else {"".to_string()},
+            build: if let Some(p) = parts.next() {
+                p.to_string()
+            } else {
+                "".to_string()
+            },
         }
     }
 }
