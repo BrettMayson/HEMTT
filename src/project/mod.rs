@@ -11,6 +11,7 @@ use crate::error::PrintableError;
 use crate::HEMTTError;
 
 mod signing;
+pub mod semver;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Project {
@@ -164,7 +165,9 @@ impl Project {
         vars.insert("mainprefix", to_json(self.mainprefix.clone()));
         vars.insert("name", to_json(self.name.clone()));
         vars.insert("prefix", to_json(self.prefix.clone()));
-        vars.insert("version", to_json(self.version().unwrap_or_print()));
+        let version = self.version().unwrap_or_print();
+        vars.insert("version", to_json(version.clone()));
+        vars.insert("semver", to_json(semver::SemVer::from(&version)));
         vars
     }
 
