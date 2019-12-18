@@ -1,12 +1,13 @@
 [package]
 name = "hemtt"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Brett Mayson <brett@mayson.io>"]
 edition = "2018"
 build = "build.rs"
 
 [dependencies]
-armake2 = {git = "https://github.com/SynixeBrett/armake2", branch = "restructure"}
+armake2 = {git = "https://github.com/synixebrett/armake2", branch = "restructure", default_features = false}
+bisign = {git = "https://github.com/synixebrett/bisign"}
 chrono = "0.4"
 clap = "2.33"
 colored = "1.8"
@@ -14,7 +15,7 @@ config = "0.9"
 dialoguer = "0.4"
 docopt = "1"
 fs_extra = "1.1"
-git2 = "0.9"
+git2 = "0.11"
 glob = "0.3"
 handlebars = "2.0"
 lazy_static = "1.3"

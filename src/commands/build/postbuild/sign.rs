@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
-use armake2::{BIPrivateKey, PBO};
+use bisign::BIPrivateKey;
 
 #[derive(Clone)]
 pub struct Sign {}
@@ -16,12 +16,13 @@ impl Task for Sign {
                     .expect("Failed to read private key")
             } else {
                 // Generate and write the keypair to disk in the current directory
-                let privatekey = BIPrivateKey::generate(1024, key_name.clone());
+                warn!("Generating a new private key to disk");
+                let privatekey = BIPrivateKey::generate(1024, p.get_authority()?);
                 privatekey.write(&mut create_file!(format!("keys/{}.biprivatekey", key_name))?)?;
                 privatekey
             }
         } else {
-            BIPrivateKey::generate(1024, key_name.clone())
+            BIPrivateKey::generate(1024, p.get_authority()?)
         };
 
         let release_folder = p.release_dir()?;
@@ -40,8 +41,8 @@ impl Task for Sign {
 
         for d in &addons {
             let (_, addon) = d.as_ref().unwrap();
-            let pbo = PBO::read(&mut open_file!(addon.release_target(&release_folder, p))?)?;
-            let sig = key.sign(&pbo, p.get_sig_version());
+            // TODO deal with Result properly
+            let sig = bisign::sign(addon.release_target(&release_folder, p), &key, p.get_sig_version()).unwrap();
             let sig_name = p.get_sig_name(&addon.name)?;
             let mut location = addon.release_location(&release_folder, p);
             location.push(sig_name);
