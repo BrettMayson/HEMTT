@@ -37,7 +37,7 @@ pub struct Project {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
     #[serde(rename(deserialize = "headerexts"))] // DEPRECATED
-    #[serde(rename(deserialize = "header_exts"))] 
+    #[serde(rename(deserialize = "header_exts"))]
     pub header_exts: HashMap<String, String>,
 
     // Files
