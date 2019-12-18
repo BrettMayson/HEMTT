@@ -30,12 +30,14 @@ pub struct Project {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     pub modname: String,
+
     #[serde(default = "default_mainprefix")]
     pub mainprefix: String,
 
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
     #[serde(rename(deserialize = "headerexts"))] // DEPRECATED
+    #[serde(rename(deserialize = "header_exts"))] 
     pub header_exts: HashMap<String, String>,
 
     // Files
@@ -63,15 +65,12 @@ pub struct Project {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     #[serde(rename(deserialize = "keyname"))] // DEPRECATED
+    #[serde(rename(deserialize = "key_name"))]
     key_name: String,
-
-    #[serde(skip_serializing_if = "String::is_empty")]
-    #[serde(default = "String::new")]
-    #[serde(rename(deserialize = "signame"))] // DEPRECATED
-    pub sig_name: String,
 
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
+    #[serde(rename(deserialize = "sig_version"))]
     pub sig_version: u8,
 
     // Scripts
@@ -121,7 +120,6 @@ impl Project {
 
             reuse_private_key: default_reuse_private_key(),
             key_name: String::new(),
-            sig_name: String::new(),
             sig_version: default_sig_version(),
 
             check: Vec::new(),
