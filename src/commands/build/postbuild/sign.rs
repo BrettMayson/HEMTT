@@ -17,12 +17,12 @@ impl Task for Sign {
             } else {
                 // Generate and write the keypair to disk in the current directory
                 warn!("Generating a new private key to disk");
-                let privatekey = BIPrivateKey::generate(1024, key_name.clone());
+                let privatekey = BIPrivateKey::generate(1024, p.get_authority()?);
                 privatekey.write(&mut create_file!(format!("keys/{}.biprivatekey", key_name))?)?;
                 privatekey
             }
         } else {
-            BIPrivateKey::generate(1024, key_name.clone())
+            BIPrivateKey::generate(1024, p.get_authority()?)
         };
 
         let release_folder = p.release_dir()?;

@@ -68,6 +68,12 @@ pub struct Project {
     #[serde(rename(deserialize = "key_name"))]
     key_name: String,
 
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default = "String::new")]
+    #[serde(rename(deserialize = "signame"))] // DEPRECATED
+    #[serde(rename(deserialize = "sig_name"))]
+    pub sig_name: String,
+
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
     #[serde(rename(deserialize = "sig_version"))]
@@ -120,6 +126,7 @@ impl Project {
 
             reuse_private_key: default_reuse_private_key(),
             key_name: String::new(),
+            sig_name: String::new(),
             sig_version: default_sig_version(),
 
             check: Vec::new(),
