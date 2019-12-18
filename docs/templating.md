@@ -2,7 +2,7 @@
 Templating is used to insert data from your project into various config options. [Handlebars](https://github.com/sunng87/handlebars-rust) is used as the templating engine.
 
 ```toml
-sig_name = "{{version}}-{{date \"%y%m%d\"}}"
+key_name = "{{version}}-{{date \"%y%m%d\"}}"
 ```
 This would result in something like `ACE_zeus.pbo.3.12.5.40-190227.bisign`
 

@@ -202,21 +202,12 @@ key_name = "my_key_{{version}}"
 Above will result in key name of `my_key_1.0.0.0.bikey` and private key name of `my_key_1.0.0.0.biprivatekey`.
 
 
-## sig_name
-**Type**: String
-
-HEMTT will use the specified signature name as part of the full signature (`.bisign`) name. Supports [templating](/templating.md).
-
-```toml
-sig_name = "my_custom_name"
-```
-
 ### Example
 
 ```toml
 project = "TST"
 version = "1.0.0.0"
-sig_name = "my-{{version}}"
+key_name = "my-{{version}}"
 ```
 
 Above will result in signature name of `TST_<addon>.pbo.my-1.0.0.0.bisign` (where `<addon>` is the name of the addon folder), located next to the matching addon PBO.
