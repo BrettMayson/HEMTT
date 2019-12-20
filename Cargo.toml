@@ -11,7 +11,7 @@ bisign = {git = "https://github.com/synixebrett/bisign"}
 chrono = "0.4"
 clap = "2.33"
 colored = "1.8"
-config = "0.9"
+config = "0.10"
 dialoguer = "0.4"
 docopt = "1"
 fs_extra = "1.1"
