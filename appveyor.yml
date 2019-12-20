@@ -42,13 +42,11 @@ test_script:
   - ps: ci\version.ps1
 
   - if [%APPVEYOR_REPO_TAG%]==[false] (
-      cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release &&
       call "C:\\Program Files (x86)\\Inno Setup 5\\iscc.exe" ci\wininstaller.iss
     )
 
 artifacts:
-  - path: target\%TARGET%\debug\hemtt.exe
   - path: target\%TARGET%\release\hemtt.exe
   - path: ci\Output\setup.exe
     name: setup.exe
