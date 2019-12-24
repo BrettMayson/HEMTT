@@ -114,7 +114,7 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
             if content.contains(&format!("#include \"{}\"", &cap[1])) {
                 return Ok(HEMTTError::LINENO(FileErrorLineNumber {
                     error: format!("Included file `{}` could not be found", &cap[1]),
-                    content: content.to_string(),
+                    content,
                     line: Some(i + 1),
                     col: None,
                     file: cap[2].to_string(),

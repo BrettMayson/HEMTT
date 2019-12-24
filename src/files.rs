@@ -28,6 +28,7 @@ impl FileCache {
         path.replace("\\\\?\\", "").replace(&self.root, "")
     }
 
+    #[allow(clippy::map_entry)]
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
         let path = self.clean_path(path);
         if self.files.contains_key(&path) {
@@ -42,7 +43,7 @@ impl FileCache {
                     path: PathBuf::from(&path),
                 })
             })?;
-            self.files.insert(path.to_string(), buf.clone());
+            self.files.insert(path, buf.clone());
             Ok(buf)
         }
     }
@@ -54,7 +55,7 @@ impl FileCache {
         // }
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
-        let content = self.as_string(path).unwrap().replace("\r\n", "\n").to_string();
+        let content = self.as_string(path).unwrap().replace("\r\n", "\n");
         let mut safe = HashMap::new();
         for mat in keep.find_iter(&content) {
             safe.insert(mat.start(), mat.end());
@@ -126,7 +127,7 @@ impl RenderedFiles {
     }
 
     pub fn add(&mut self, original: String, tmp: String) -> Result<(), HEMTTError> {
-        self.redirects.insert(original.clone(), tmp.clone());
+        self.redirects.insert(original, tmp);
         Ok(())
     }
 

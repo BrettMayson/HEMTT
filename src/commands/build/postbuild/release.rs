@@ -44,7 +44,7 @@ impl Task for Release {
         for dir in &["keys"] {
             create_dir!({
                 let mut d = release_folder.clone();
-                d.push(dir.to_string());
+                d.push((*dir).to_string());
                 d
             })?;
         }

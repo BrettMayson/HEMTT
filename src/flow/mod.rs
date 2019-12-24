@@ -103,13 +103,13 @@ impl Flow {
         // Create the top bar
         let mut total = 0;
         let total_pb = m.add(ProgressBar::new(0));
-        total_pb.set_style(master_style.clone());
+        total_pb.set_style(master_style);
 
         if !step.name.is_empty() {
             if !cfg!(windows) {
                 total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
             } else {
-                total_pb.set_prefix(&fill_space!(" ", 12, &step.name).to_string());
+                total_pb.set_prefix(&fill_space!(" ", 12, &step.name));
             }
         }
 

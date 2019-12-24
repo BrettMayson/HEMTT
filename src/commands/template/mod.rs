@@ -44,7 +44,7 @@ impl Template {
         let globals = lua_ctx.globals();
 
         let lua_print = lua_ctx
-            .create_function(|_, text: (String)| {
+            .create_function(|_, text: String| {
                 println!("{}", text);
                 Ok(())
             })
@@ -52,7 +52,7 @@ impl Template {
         globals.set("print", lua_print).unwrap();
 
         let lua_read_file = lua_ctx
-            .create_function(|_, file: (String)| Ok(std::fs::read_to_string(file).unwrap()))
+            .create_function(|_, file: String| Ok(std::fs::read_to_string(file).unwrap()))
             .unwrap();
         globals.set("read_file", lua_read_file).unwrap();
 

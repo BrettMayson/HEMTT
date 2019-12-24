@@ -10,7 +10,7 @@ use crate::{Command, HEMTTError, Project};
 pub struct FilePatching {}
 impl FilePatching {
     pub fn create_link(dir: PathBuf, p: &Project) -> Result<(), HEMTTError> {
-        let mut dir = dir.clone();
+        let mut dir = dir;
         dir.push(&p.mainprefix);
         let mut target = dir.clone();
         target.push(&p.modname()?);
@@ -58,7 +58,7 @@ impl Command for FilePatching {
             FilePatching::create_link(root, &p)?;
             Ok(())
         } else {
-            let mut library_folders = steam_path.clone();
+            let mut library_folders = steam_path;
             library_folders.push("steamapps");
             library_folders.push("libraryfolders.vdf");
             if !library_folders.exists() {
