@@ -10,7 +10,7 @@ armake2 = {git = "https://github.com/synixebrett/armake2", branch = "restructure
 bisign = {git = "https://github.com/synixebrett/bisign"}
 chrono = "0.4"
 clap = "2.33"
-colored = "1.8"
+colored = "1.9"
 config = "0.10"
 dialoguer = "0.5"
 docopt = "1"
