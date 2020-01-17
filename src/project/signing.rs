@@ -39,7 +39,7 @@ impl Project {
 
     pub fn get_authority(&self) -> Result<String, HEMTTError> {
         Ok(if self.sig_name.is_empty() {
-            format!("{}_{}", &self.prefix, &self.version()?)
+            self.version()?
         } else {
             self.render(&self.sig_name, Some("project:sig_name"))?
         })

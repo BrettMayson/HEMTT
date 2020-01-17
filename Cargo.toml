@@ -25,7 +25,7 @@ objekt = "0.1"
 question = "0.2"
 rayon = "1.1"
 regex = "1.2"
-reqwest = "0.9"
+reqwest = "0.10"
 rlua = "0.17"
 self_update = "0.8"
 serde = { version = "1.0", features = ["derive"] }
