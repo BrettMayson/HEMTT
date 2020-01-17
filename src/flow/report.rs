@@ -54,6 +54,9 @@ impl Report {
                 HEMTTError::TOML(s) => {
                     warn!(s);
                 }
+                _ => {
+                    warn!("Unexpected warning: {}", warning)
+                }
             }
         }
         self.old.append(&mut self.warnings);
@@ -77,6 +80,9 @@ impl Report {
                 }
                 HEMTTError::TOML(s) => {
                     error!(s);
+                }
+                _ => {
+                    error!("Unexpected error: {}", error)
                 }
             }
         }
@@ -102,6 +108,9 @@ impl Report {
                     }
                     HEMTTError::TOML(s) => {
                         error!(s);
+                    }
+                    _ => {
+                        error!("Unexpected error: {}", error)
                     }
                 }
             }
