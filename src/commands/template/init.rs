@@ -8,7 +8,9 @@ pub fn run(p: Project) -> Result<(), HEMTTError> {
         select.items(&items);
         select.interact_opt()?
     };
-    if selection.is_none() { unimplemented!() }
+    if selection.is_none() {
+        unimplemented!()
+    }
     let selection = items[selection.unwrap()];
     println!("Template: {}", selection);
     // clone template
@@ -26,5 +28,5 @@ pub fn run(p: Project) -> Result<(), HEMTTError> {
             };
         }
     }
-    return Ok(())
+    Ok(())
 }

@@ -9,10 +9,7 @@ impl Command for Init {
         clap::SubCommand::with_name("init")
             .version(*crate::VERSION)
             .about("Initialize a HEMTT Project")
-            .arg(clap::Arg::with_name("single_file")
-                .long("single-file")
-                .takes_value(false)
-            )
+            .arg(clap::Arg::with_name("single_file").long("single-file").takes_value(false))
     }
 
     fn require_project(&self) -> bool {
