@@ -19,29 +19,21 @@ impl Project {
                 format!("{}_{}", &self.prefix, &self.version()?)
             }
         } else {
-            self.render(&self.key_name, Some("project:key_name"))?
+            self.render_safe(&self.key_name, Some("project:key_name"))?
         })
     }
 
     /// Get the name for .bisign files
     pub fn get_sig_name(&self, pbo: &str) -> Result<String, HEMTTError> {
-        Ok(if self.sig_name.is_empty() {
-            format!("{}_{}.pbo.{}.bisign", &self.prefix, pbo, self.version()?)
-        } else {
-            format!(
-                "{}_{}.pbo.{}.bisign",
-                &self.prefix,
-                pbo,
-                self.render(&self.sig_name, Some("project:sig_name"))?
-            )
-        })
+        Ok(format!("{}_{}.pbo.{}.bisign", &self.prefix, pbo, self.get_authority()?))
     }
 
+    /// Get the signing authority
     pub fn get_authority(&self) -> Result<String, HEMTTError> {
-        Ok(if self.sig_name.is_empty() {
+        Ok(if self.authority.is_empty() {
             self.version()?
         } else {
-            self.render(&self.sig_name, Some("project:sig_name"))?
+            self.render_safe(&self.authority, Some("project:authority"))?
         })
     }
 

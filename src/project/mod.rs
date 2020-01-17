@@ -71,8 +71,9 @@ pub struct Project {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
     #[serde(rename(deserialize = "signame"))] // DEPRECATED
-    #[serde(rename(deserialize = "sig_name"))]
-    pub sig_name: String,
+    #[serde(rename(deserialize = "sig_name"))] // DEPRECATED
+    #[serde(rename(deserialize = "authority"))]
+    pub authority: String,
 
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
@@ -126,7 +127,7 @@ impl Project {
 
             reuse_private_key: default_reuse_private_key(),
             key_name: String::new(),
-            sig_name: String::new(),
+            authority: String::new(),
             sig_version: default_sig_version(),
 
             check: Vec::new(),
@@ -163,7 +164,7 @@ impl Project {
     }
 
     /// Values used for rendering
-    pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
+    pub fn get_variables_safe(&self) -> BTreeMap<&'static str, Json> {
         let mut vars = BTreeMap::new();
         vars.insert("author", to_json(self.author.clone()));
         vars.insert("env", to_json(environment()));
@@ -176,9 +177,25 @@ impl Project {
         vars
     }
 
+    pub fn get_variables(&self) -> BTreeMap<&'static str, Json> {
+        let mut vars = self.get_variables_safe();
+        if let Ok(key_name) = self.get_key_name() {
+            vars.insert("key_name", to_json(key_name));
+        }
+        if let Ok(authority) = self.get_authority() {
+            vars.insert("authority", to_json(authority));
+        }
+        vars
+    }
+
     /// Render a handlebars string
     pub fn render(&self, text: &str, filename: Option<&str>) -> Result<String, HEMTTError> {
         crate::render::run(text, filename, &self.get_variables())
+    }
+
+    /// Render a handlebars string
+    pub fn render_safe(&self, text: &str, filename: Option<&str>) -> Result<String, HEMTTError> {
+        crate::render::run(text, filename, &self.get_variables_safe())
     }
 
     /// `@modname` without `@`, uses prefix if undefined by project file
