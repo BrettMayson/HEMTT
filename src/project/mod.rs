@@ -193,8 +193,8 @@ impl Project {
     /// Version number as defined or detected by the templating engine
     pub fn version(&self) -> Result<String, HEMTTError> {
         if self.version.is_empty() {
-            //let template = crate::commands::Template::new();
-            //template.get_version()
+            // let template = crate::commands::Template::new();
+            // template.get_version()
             unimplemented!()
         } else {
             Ok(self.version.clone().trim().to_string())
