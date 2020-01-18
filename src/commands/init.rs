@@ -17,9 +17,9 @@ impl Command for Init {
     }
 
     fn run_no_project(&self, args: &clap::ArgMatches) -> Result<(), HEMTTError> {
-        let name = ask!("Project Name >");
-        let prefix = ask!("Prefix >");
-        let author = ask!("Author >");
+        let name = ask!("Project Name")?;
+        let prefix = ask!("Prefix")?;
+        let author = ask!("Author")?;
 
         // Create settings file in TOML
         let mut out = if args.is_present("single_file") {

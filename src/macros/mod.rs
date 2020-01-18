@@ -146,31 +146,10 @@ macro_rules! filepointer {
 #[macro_export]
 macro_rules! ask {
     ($q:expr) => {{
-        let mut x = String::new();
-        while x.is_empty() {
-            x = if let question::Answer::RESPONSE(n) = question::Question::new($q).ask().unwrap() {
-                n
-            } else {
-                unreachable!()
-            };
-        }
-        x
+        dialoguer::Input::<String>::new().with_prompt($q).interact()
     }};
     ($q:expr, $d:expr) => {{
-        let mut x = String::new();
-        while x.is_empty() {
-            x = if let question::Answer::RESPONSE(n) = question::Question::new($q)
-                .default(question::Answer::RESPONSE($d.to_owned()))
-                .show_defaults()
-                .ask()
-                .unwrap()
-            {
-                n
-            } else {
-                unreachable!()
-            };
-        }
-        x
+        dialoguer::Input::<String>::new().with_prompt($q).default($d.to_string()).interact()
     }};
 }
 
