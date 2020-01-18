@@ -55,7 +55,7 @@ fn deprecated_values() -> Result<(), HEMTTError> {
             ("signame", "authority"),
             ("keyname", "key_name"),
             ("sigversion", "sig_version"),
-            ("headerexts", "header_exts")
+            ("headerexts", "header_exts"),
         ];
         let mut data = String::new();
         open_file!(file)?.read_to_string(&mut data)?;
