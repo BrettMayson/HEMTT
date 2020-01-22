@@ -32,7 +32,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-xml-rs = "0.3"
 strum = "0.17"
-strum_macros = "0.16"
+strum_macros = "0.17"
 subprocess = "0.1"
 toml = "0.5"
 walkdir = "2.2"
