@@ -12,13 +12,13 @@ impl Command for Clean {
         let mut addons = crate::project::addons::get_all()?;
         let flow = Flow {
             steps: vec![
-                Step::single(
+                Step::parallel(
                     "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
-                Step::parallel(
+                Step::single(
                     "🗑️",
                     "Clear",
                     Stage::Check,
