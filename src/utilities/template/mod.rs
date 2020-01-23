@@ -1,5 +1,4 @@
-use super::Command;
-use crate::HEMTTError;
+use crate::{Command, HEMTTError};
 
 mod init;
 

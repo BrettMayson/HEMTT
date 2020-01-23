@@ -1,9 +1,6 @@
 mod init;
 pub use init::Init;
 
-mod template;
-pub use template::Template;
-
 pub mod build;
 pub use build::Build;
 

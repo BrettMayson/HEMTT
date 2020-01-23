@@ -149,7 +149,10 @@ macro_rules! ask {
         dialoguer::Input::<String>::new().with_prompt($q).interact()
     }};
     ($q:expr, $d:expr) => {{
-        dialoguer::Input::<String>::new().with_prompt($q).default($d.to_string()).interact()
+        dialoguer::Input::<String>::new()
+            .with_prompt($q)
+            .default($d.to_string())
+            .interact()
     }};
 }
 

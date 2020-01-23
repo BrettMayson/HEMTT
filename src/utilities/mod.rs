@@ -1,3 +1,6 @@
+mod template;
+pub use template::Template;
+
 pub mod translation;
 pub use translation::Translation;
 
