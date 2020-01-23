@@ -8,8 +8,8 @@ impl Command for Status {
             .about("Get the status of your project")
     }
 
-    fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let mut addons = crate::project::addons::get_all()?;
+    fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
+        let addons = crate::project::addons::get_all()?;
         let flow = Flow {
             steps: vec![Step::parallel(
                 "🔍",

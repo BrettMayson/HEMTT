@@ -36,7 +36,7 @@ pub trait Command {
 }
 
 pub fn building_args<'a, 'b>() -> Vec<clap::Arg<'a, 'b>> {
-    vec!(
+    vec![
         clap::Arg::with_name("addons")
             .help("Addons to build")
             .takes_value(true)
@@ -69,5 +69,5 @@ pub fn building_args<'a, 'b>() -> Vec<clap::Arg<'a, 'b>> {
             .short("c")
             .takes_value(true)
             .multiple(true),
-    )
+    ]
 }

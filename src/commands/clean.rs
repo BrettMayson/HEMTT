@@ -9,7 +9,7 @@ impl Command for Clean {
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let mut addons = crate::project::addons::get_all()?;
+        let addons = crate::project::addons::get_all()?;
         let flow = Flow {
             steps: vec![
                 Step::parallel(
