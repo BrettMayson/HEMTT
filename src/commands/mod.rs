@@ -34,3 +34,40 @@ pub trait Command {
         unimplemented!();
     }
 }
+
+pub fn building_args<'a, 'b>() -> Vec<clap::Arg<'a, 'b>> {
+    vec!(
+        clap::Arg::with_name("addons")
+            .help("Addons to build")
+            .takes_value(true)
+            .multiple(true)
+            .required(false),
+        clap::Arg::with_name("release")
+            .help("Build a release")
+            .long("release")
+            .conflicts_with("dev"),
+        clap::Arg::with_name("force")
+            .help("Rebuild existing files")
+            .long("force")
+            .short("f"),
+        clap::Arg::with_name("force-release")
+            .help("Remove an existing release")
+            .long("force-release"),
+        clap::Arg::with_name("skip")
+            .help("Skip addons")
+            .long("skip")
+            .takes_value(true),
+        clap::Arg::with_name("opts")
+            .help("Only build listed optional addons")
+            .long("opts")
+            .short("o")
+            .takes_value(true)
+            .multiple(true),
+        clap::Arg::with_name("compats")
+            .help("Only build listed compat addons")
+            .long("compats")
+            .short("c")
+            .takes_value(true)
+            .multiple(true),
+    )
+}

@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use crate::{AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
+use crate::{Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Pack {}
 impl Command for Pack {
@@ -8,34 +6,11 @@ impl Command for Pack {
         clap::SubCommand::with_name("pack")
             .version(*crate::VERSION)
             .about("Pack the Project")
-            .arg(
-                clap::Arg::with_name("release")
-                    .help("Pack a release")
-                    .long("release")
-                    .conflicts_with("dev"),
-            )
-            .arg(
-                clap::Arg::with_name("clear")
-                    .help("Clears existing built files")
-                    .long("clear")
-                    .long("force")
-                    .short("f"),
-            )
-            .arg(
-                clap::Arg::with_name("force-release")
-                    .help("Remove an existing release")
-                    .long("force-release"),
-            )
+            .args(&super::building_args())
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&AddonLocation::Optionals.to_string()).exists() {
-            addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
-        }
-        if Path::new(&AddonLocation::Compats.to_string()).exists() {
-            addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
-        }
+        let mut addons = crate::project::addons::get_from_args(&args)?;
         let flow = Flow {
             steps: vec![
                 Step::single(
@@ -44,7 +19,7 @@ impl Command for Pack {
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
-                if args.is_present("clear") {
+                if args.is_present("force") {
                     Step::parallel(
                         "🗑️",
                         "Clear",

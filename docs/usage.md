@@ -5,7 +5,7 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
     hemtt <a href="/HEMTT/#/usage?id=create">create</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
-    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a>=&lt;addons&gt;] [<a href="/HEMTT/#/usage?id=-skip">--skip</a>=&lt;addons&gt;]
+    hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a>=&lt;addons&gt;] [<a href="/HEMTT/#/usage?id=-compats">--compats</a>=&lt;addons&gt;]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
     hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;script&gt;
     hemtt <a href="/HEMTT/#/usage?id=utility">&lt;utility&gt;</a>
@@ -14,12 +14,15 @@ Usage:
     hemtt --version
 
 Options:
-    -f --force          Overwrite target files
-       --nowarn         Suppress armake2 warnings
-       --opts=&lt;addons&gt;  Comma seperated list of addtional compontents to build
-       --skip=&lt;addons&gt;  Comma seperated list of addons to skip building
-    -h --help           Show usage information and exit
-       --version        Show version number and exit
+        --ci               Run in CI mode
+        --debug            Turn debugging information on
+    -f, --force            Rebuild existing files
+        --force-release    Remove an existing release
+    -h, --help             Prints help information
+        --no-progress      No progress bars
+        --release          Build a release
+        --time             Time the execution
+    -V, --version          Prints version information
 </pre>
 <hr/>
 
@@ -73,7 +76,7 @@ Create a new addon folder. Requires a name to be used for the addon.
 Build the project into PBO files. HEMTT will only build the files that have changed.
 
 ## addons
-A comma seperated list of addon to build. HEMTT will build all addons in the `./addons` folder if no addons are specified. HEMTT will always build all addons when using `--release`.
+A list of addon to build. HEMTT will build all addons in the `./addons` folder if no addons are specified. HEMTT will always build all addons when using `--release`.
 
 **Build all**  
 `hemtt build`
@@ -117,17 +120,17 @@ would produce
 This example is from the [HEMTT Example Project](https://github.com/synixebrett/HEMTT-Example)
 
 ## --opts
-A comma seperated list of addtional addons to build. HEMTT will look for these in the `./optionals` folder. Using `--opts all` will build all addons in the `./optionals` folder.
+A list of addtional addons to build. HEMTT will look for these in the `./optionals` folder. Using `--opts all` will build all addons in the `./optionals` folder. All optionals are built when no filtering is specified (`hemtt build`).
 
 `hemtt build --opts all`  
 `hemtt build --opts tracers`  
-`hemtt build --opts tracers,patrticles`
+`hemtt build --opts tracers patrticles`
 
-## --skip
-A comma seperated list of additonal addons to skip building.
+## --compat
+A list of compat addons to build. HEMTT will look for these in the `./comapts` folder. Using `--compats all` will build all compats in the `./compats` folder. All compats are built when no filtering is specified (`hemtt build`).
 
-`hemtt build --skip hearing`  
-`hemtt build --skip hearing,zeus`
+`hemtt build --compats hearing`  
+`hemtt build --compats hearing zeus`
 
 <hr/>
 

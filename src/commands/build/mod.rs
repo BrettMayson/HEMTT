@@ -1,13 +1,10 @@
-use std::path::Path;
-
-pub mod addon;
 #[allow(clippy::module_inception)]
 pub mod build;
 pub mod checks;
 pub mod postbuild;
 pub mod prebuild;
 
-use crate::{Addon, AddonLocation, Command, Flow, HEMTTError, Project, Stage, Step};
+use crate::{Command, Flow, HEMTTError, Project, Stage, Step};
 
 pub struct Build {}
 impl Command for Build {
@@ -15,44 +12,21 @@ impl Command for Build {
         clap::SubCommand::with_name("build")
             .version(*crate::VERSION)
             .about("Build the Project")
-            .arg(
-                clap::Arg::with_name("release")
-                    .help("Build a release")
-                    .long("release")
-                    .conflicts_with("dev"),
-            )
-            .arg(
-                clap::Arg::with_name("rebuild")
-                    .help("Rebuild existing files")
-                    .long("rebuild")
-                    .long("force")
-                    .short("f"),
-            )
-            .arg(
-                clap::Arg::with_name("force-release")
-                    .help("Remove an existing release")
-                    .long("force-release"),
-            )
+            .args(&super::building_args())
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let mut addons = crate::build::get_addons(AddonLocation::Addons)?;
-        if Path::new(&AddonLocation::Optionals.to_string()).exists() {
-            addons.extend(crate::build::get_addons(AddonLocation::Optionals)?);
-        }
-        if Path::new(&AddonLocation::Compats.to_string()).exists() {
-            addons.extend(crate::build::get_addons(AddonLocation::Compats)?);
-        }
+        let mut addons = crate::project::addons::get_from_args(&args)?;
         let flow = Flow {
             steps: vec![
-                Step::single(
+                Step::parallel(
                     "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
-                if args.is_present("rebuild") {
-                    Step::parallel(
+                if args.is_present("force") {
+                    Step::single(
                         "🗑️",
                         "Clear",
                         Stage::Check,
@@ -119,15 +93,4 @@ impl Command for Build {
         flow.execute(addons, &mut p)?;
         Ok(())
     }
-}
-
-pub fn get_addons(location: AddonLocation) -> Result<Vec<Addon>, HEMTTError> {
-    Ok(std::fs::read_dir(&location.to_string())?
-        .map(|file| file.unwrap().path())
-        .filter(|file_or_dir| file_or_dir.is_dir())
-        .map(|file| Addon {
-            name: file.file_name().unwrap().to_str().unwrap().to_owned(),
-            location: location.clone(),
-        })
-        .collect())
 }
