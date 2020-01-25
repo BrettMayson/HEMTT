@@ -25,7 +25,11 @@ impl Project {
 
     /// Get the name for .bisign files
     pub fn get_sig_name(&self, pbo: &str) -> Result<String, HEMTTError> {
-        Ok(format!("{}_{}.pbo.{}.bisign", &self.prefix, pbo, self.get_authority()?))
+        Ok(if self.prefix == pbo {
+            format!("{}.pbo.{}.bisign", pbo, self.get_authority()?)
+        } else {
+            format!("{}_{}.pbo.{}.bisign", &self.prefix, pbo, self.get_authority()?)
+        })
     }
 
     /// Get the signing authority

@@ -44,8 +44,8 @@ impl Task for ValidName {
                 format!("try using `{}`", &addon.name.replace(" ", "_")),
             ));
         }
-        // WARN: addons shouldn't start with the mod prefix
-        if !p.prefix.is_empty() && addon.name.starts_with(&p.prefix) {
+        // WARN: addons shouldn't start with the mod prefix, except the PBO name is only the prefix
+        if !p.prefix.is_empty() && addon.name.starts_with(&p.prefix) && addon.name != p.prefix {
             report.warnings.push(HEMTTError::generic(
                 format!("Redundant prefix in addon name `{}`", &addon.name),
                 format!(
