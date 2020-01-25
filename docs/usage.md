@@ -127,7 +127,7 @@ A list of addtional addons to build. HEMTT will look for these in the `./optiona
 `hemtt build --opts tracers patrticles`
 
 ## --compats
-A list of compat addons to build. HEMTT will look for these in the `./comapts` folder. Using `--compats all` will build all compats in the `./compats` folder. All compats are built when no filtering is specified (`hemtt build`).
+A list of compat addons to build. HEMTT will look for these in the `./compats` folder. Using `--compats all` will build all compats in the `./compats` folder. All compats are built when no filtering is specified (`hemtt build`).
 
 `hemtt build --compats hearing`  
 `hemtt build --compats hearing zeus`
