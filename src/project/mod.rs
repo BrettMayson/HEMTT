@@ -201,7 +201,15 @@ impl Project {
     /// `@modname` without `@`, uses prefix if undefined by project file
     pub fn modname(&self) -> Result<String, HEMTTError> {
         Ok(if self.modname.is_empty() {
-            self.prefix.clone()
+            if self.prefix.is_empty() {
+                if self.name.is_empty() {
+                    env::current_dir()?.file_stem().unwrap().to_str().unwrap().to_string()
+                } else {
+                    self.name.clone()
+                }
+            } else {
+                self.prefix.clone()
+            }
         } else {
             self.render(&self.modname, Some("project:modname"))?
         })

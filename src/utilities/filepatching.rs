@@ -13,7 +13,8 @@ impl FilePatching {
         let mut dir = dir;
         dir.push(&p.mainprefix);
         let mut target = dir.clone();
-        target.push(&p.modname()?);
+        let modname = &p.modname()?;
+        target.push(modname);
         if target.exists() {
             return Err(HEMTTError::simple(format!("The link already exists at {:?}", dir)));
         } else {
@@ -21,13 +22,13 @@ impl FilePatching {
             let project_root = crate::project::find_root()?.to_str().unwrap().to_string();
             std::env::set_current_dir(dir)?;
             std::process::Command::new("cmd")
-                .args(&["/C", "mklink", "/J", &p.modname()?, &project_root])
+                .args(&["/C", "mklink", "/J", modname, &project_root])
                 .output()?;
             println!("Linked at {:?}", target);
             println!(
                 "You can now use `-mod=\"\\{}\\{}\" -filePatching`",
                 p.mainprefix,
-                p.modname()?
+                modname
             );
         }
         Ok(())
