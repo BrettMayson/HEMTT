@@ -1,11 +1,23 @@
 use crate::{Addon, AddonLocation, HEMTTError};
 
+fn addon_matches(name: &str, pattern: &str) -> bool {
+    let name = name.to_lowercase();
+    let pattern = pattern.to_lowercase();
+    if name == pattern {
+        return true;
+    }
+    if let Ok(pat) = glob::Pattern::new(&pattern) {
+        return pat.matches(&name);
+    }
+    false
+}
+
 pub fn get_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTTError> {
     let all = args.value_of("addons").unwrap_or("") == "all";
     let mut addons: Vec<Addon> = if args.is_present("addons") && !all {
         get_from_location(&AddonLocation::Addons)?
             .into_iter()
-            .filter(|a| args.values_of("addons").unwrap().any(|x| x == a.name.as_str()))
+            .filter(|a| args.values_of("addons").unwrap().any(|x| addon_matches(a.name.as_str(), x)))
             .collect()
     } else if all || (!args.is_present("opts") && !args.is_present("compats")) {
         get_from_location(&AddonLocation::Addons)?
@@ -13,13 +25,12 @@ pub fn get_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTTError> 
         Vec::new()
     };
     if args.is_present("opts") {
-        println!("Opts: {:?}", args.values_of("opts"));
         addons.extend(if args.value_of("opts").unwrap_or("") == "all" {
             get_from_location(&AddonLocation::Optionals)?
         } else {
             get_from_location(&AddonLocation::Optionals)?
                 .into_iter()
-                .filter(|a| args.values_of("opts").unwrap().any(|x| x == a.name.as_str()))
+                .filter(|a| args.values_of("opts").unwrap().any(|x| addon_matches(a.name.as_str(), x)))
                 .collect()
         });
     }
@@ -29,7 +40,7 @@ pub fn get_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTTError> 
         } else {
             get_from_location(&AddonLocation::Compats)?
                 .into_iter()
-                .filter(|a| args.values_of("compats").unwrap().any(|x| x == a.name.as_str()))
+                .filter(|a| args.values_of("compats").unwrap().any(|x| addon_matches(a.name.as_str(), x)))
                 .collect()
         });
     }
