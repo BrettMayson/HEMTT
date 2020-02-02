@@ -4,30 +4,10 @@ use std::path::PathBuf;
 use handlebars::to_json;
 use serde_json::value::Value as Json;
 
-use strum_macros::EnumIter;
-
 use crate::{HEMTTError, Project};
 
-#[derive(Clone, Debug, EnumIter, PartialEq)]
-pub enum AddonLocation {
-    Addons,
-    Compats,
-    Optionals,
-}
-impl ToString for AddonLocation {
-    fn to_string(&self) -> String {
-        String::from(match self {
-            AddonLocation::Addons => "addons",
-            AddonLocation::Compats => "compats",
-            AddonLocation::Optionals => "optionals",
-        })
-    }
-}
-impl AddonLocation {
-    pub fn to_path_buf(&self) -> PathBuf {
-        PathBuf::from(self.to_string())
-    }
-}
+mod location;
+pub use location::AddonLocation;
 
 #[derive(Debug)]
 pub struct Addon {

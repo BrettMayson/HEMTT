@@ -7,6 +7,7 @@ use clap::App;
 #[macro_use]
 pub mod macros;
 
+pub mod addons;
 pub mod commands;
 pub mod error;
 pub mod files;
@@ -16,7 +17,7 @@ pub mod render;
 mod startup;
 pub mod utilities;
 
-pub use build::addon::{Addon, AddonLocation};
+pub use addons::{Addon, AddonLocation};
 pub use commands::{build, Command};
 pub use error::{FileErrorLineNumber, HEMTTError, IOPathError};
 pub use files::{FileCache, RenderedFiles};
