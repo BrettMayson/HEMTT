@@ -23,14 +23,14 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\HEMTT"; Filename: "{app}\hemtt.exe"
+Name: "{group}\HEMTT"; Filename: "{app}\bin\hemtt.exe"
 
 [Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{pf}\HEMTT"; Check: NeedsAddPath('{pf}\HEMTT')
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{pf}\HEMTT\bin"; Check: NeedsAddPath('{pf}\HEMTT\bin')
 
 [Code]
 
