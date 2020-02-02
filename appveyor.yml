@@ -53,7 +53,7 @@ artifacts:
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin hemtt -- -C lto
-  - call "C:\\Program Files (x86)\\Inno Setup 6\\iscc.exe" ci\wininstaller.iss
+  - call "C:\\Program Files (x86)\\Inno Setup 5\\iscc.exe" ci\wininstaller.iss
   - ps: ci\before_deploy.ps1
 
 deploy:

@@ -11,7 +11,7 @@ AppVersion=stable
 AppPublisherURL=https://github.com/SynixeBrett/HEMTT
 AppSupportURL=https://github.com/SynixeBrett/HEMTT
 AppUpdatesURL=https://github.com/SynixeBrett/HEMTT
-DefaultDirName={commonpf}\HEMTT
+DefaultDirName={pf}\HEMTT
 DefaultGroupName=HEMTT
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
@@ -30,7 +30,7 @@ Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}\bin"; Flags: ig
 Name: "{group}\HEMTT"; Filename: "{app}\bin\hemtt.exe"
 
 [Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{commonpf}\HEMTT\bin"; Check: NeedsAddPath('{commonpf}\HEMTT\bin')
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{pf}\HEMTT\bin"; Check: NeedsAddPath('{pf}\HEMTT\bin')
 
 [Code]
 
