@@ -48,6 +48,8 @@ lazy_static::lazy_static! {
     };
 }
 
+static GIT_IGNORE: [&str; 4] = ["releases/*", "*.biprivatekey", "keys/*", ".hemtt/local"];
+
 pub fn is_ci() -> bool {
     // TODO: replace with crate if a decent one comes along
     let checks = vec![
