@@ -11,7 +11,7 @@ AppVersion=stable
 AppPublisherURL=https://github.com/SynixeBrett/HEMTT
 AppSupportURL=https://github.com/SynixeBrett/HEMTT
 AppUpdatesURL=https://github.com/SynixeBrett/HEMTT
-DefaultDirName={pf}\HEMTT
+DefaultDirName={commonpf}\HEMTT
 DefaultGroupName=HEMTT
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
@@ -23,14 +23,14 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\{#target}\release\hemtt.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\HEMTT"; Filename: "{app}\hemtt.exe"
+Name: "{group}\HEMTT"; Filename: "{app}\bin\hemtt.exe"
 
 [Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{pf}\HEMTT"; Check: NeedsAddPath('{pf}\HEMTT')
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{commonpf}\HEMTT\bin"; Check: NeedsAddPath('{commonpf}\HEMTT\bin')
 
 [Code]
 
