@@ -185,6 +185,9 @@ impl Project {
         if let Ok(authority) = self.get_authority() {
             vars.insert("authority", to_json(authority));
         }
+        if let Ok(modname) = self.modname() {
+            vars.insert("modname", to_json(modname));
+        }
         vars
     }
 
@@ -203,7 +206,7 @@ impl Project {
         Ok(if self.modname.is_empty() {
             self.prefix.clone()
         } else {
-            self.render(&self.modname, Some("project:modname"))?
+            self.render_safe(&self.modname, Some("project:modname"))?
         })
     }
 

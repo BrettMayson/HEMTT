@@ -13,7 +13,7 @@ impl Task for Script {
         let steps = Script::get_scripts(s, p)?;
 
         for step in steps {
-            println!("{} `{}`", s.to_string().blue().bold(), step);
+            println!("{} `{}`", s.to_string().blue().bold(), p.render(&step, None)?);
             Script::execute(&step, false, &addons, p, s)?;
         }
 

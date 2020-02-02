@@ -25,7 +25,7 @@ fn check_git_ignore() -> Result<(), HEMTTError> {
     if Path::new(".gitignore").exists() {
         let mut data = String::new();
         open_file!(".gitignore")?.read_to_string(&mut data)?;
-        let mut ignore = vec!["releases/*", "*.biprivatekey", "keys/*"];
+        let mut ignore = vec!["releases/*", "*.biprivatekey", "keys/*", ".hemtt"];
         for l in data.lines() {
             if let Some(index) = ignore.iter().position(|&d| d == l) {
                 ignore.remove(index);
