@@ -130,12 +130,13 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     let mut hash_commands: HashMap<String, &Box<dyn Command>> = HashMap::new();
 
     // Add commands here
-    commands.push(Box::new(commands::Init {}));
-    commands.push(Box::new(commands::Template {}));
+    commands.push(Box::new(commands::Bug {}));
     commands.push(Box::new(commands::Build {}));
-    commands.push(Box::new(commands::Pack {}));
     commands.push(Box::new(commands::Clean {}));
+    commands.push(Box::new(commands::Init {}));
+    commands.push(Box::new(commands::Pack {}));
     commands.push(Box::new(commands::Status {}));
+    commands.push(Box::new(commands::Template {}));
     commands.push(Box::new(commands::Update {}));
 
     // Add utilities here
