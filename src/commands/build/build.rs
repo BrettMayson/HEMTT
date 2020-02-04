@@ -23,21 +23,23 @@ pub struct Build {
 }
 impl Build {
     pub fn new(use_bin: bool) -> Self {
-        let can_binarize = use_bin
-            && cfg!(windows)
-            && if match armake2::find_binarize_exe() {
-                Ok(p) => {
-                    debug!("binarize found at {:?}", p);
-                    p.exists()
-                }
-                Err(_) => false,
-            } {
-                true
-            } else {
-                warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
-                false
-            };
+        let can_binarize = use_bin && cfg!(windows) && Build::find_binarize();
+
+        if !can_binarize {
+            warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
+        };
+
         Self { use_bin, can_binarize }
+    }
+
+    fn find_binarize() -> bool {
+        match armake2::find_binarize_exe() {
+            Ok(p) => {
+                debug!("binarize found at {:?}", p);
+                p.exists()
+            }
+            Err(_) => false,
+        }
     }
 }
 impl Task for Build {
