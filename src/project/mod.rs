@@ -149,9 +149,6 @@ impl Project {
         if Path::new("hemtt.toml").exists() {
             // Single file (toml)
             p.merge(File::with_name("hemtt.toml").required(true))?;
-        } else if Path::new("hemtt.json").exists() {
-            // Single file (json)
-            p.merge(File::with_name("hemtt.json").required(true))?;
         } else {
             // Project folder
             if !Path::new(".hemtt/").exists() {
