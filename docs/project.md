@@ -128,11 +128,8 @@ HEMTT will exclude matching files when building.
 
 HEMTT will build the specified addons from the `./optionals` folder.
 
-```json
-"optionals": [
-    "tracers",
-    "particles"
-]
+```toml
+optionals = ["tracers", "particles"]
 ```
 
 ## folder_optionals

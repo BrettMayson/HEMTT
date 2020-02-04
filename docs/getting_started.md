@@ -35,10 +35,10 @@ Author: ACE Mod Team
 HEMTT will look for `addons/main/script_version.hpp` and use it for the version number. If you are not using the CBA project structure or do not that file, you can add a version number to the [HEMTT.json Project File](json.md).
 
 ```toml
-name: "Advanced Banana Environment"
-prefix: "ABE3"
-author: "ACE Mod Team"
-version: "1.0.0.0"
+name = "Advanced Banana Environment"
+prefix = "ABE3"
+author = "ACE Mod Team"
+version = "1.0.0.0"
 ```
 
 ## Notes
