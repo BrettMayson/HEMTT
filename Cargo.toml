@@ -1,6 +1,6 @@
 [package]
 name = "hemtt"
-version = "0.7.3"
+version = "0.8.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
 edition = "2018"
 build = "build.rs"
