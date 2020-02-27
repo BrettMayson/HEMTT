@@ -41,7 +41,7 @@ zip = "0.5"
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
-winreg = "0.6"
+winreg = "0.7"
 indicatif-windows = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
 
 [target.'cfg(not(windows))'.dependencies]
