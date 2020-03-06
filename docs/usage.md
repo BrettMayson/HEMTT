@@ -7,8 +7,6 @@ Usage:
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
     hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a>=&lt;addons&gt;] [<a href="/HEMTT/#/usage?id=-compats">--compats</a>=&lt;addons&gt;]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
-    hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;script&gt;
-    hemtt <a href="/HEMTT/#/usage?id=utility">&lt;utility&gt;</a>
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
     hemtt (-h | --help)
     hemtt --version

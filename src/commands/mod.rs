@@ -36,6 +36,9 @@ pub trait Command {
     fn run_no_project(&self, _args: &clap::ArgMatches) -> Result<(), HEMTTError> {
         unimplemented!();
     }
+    fn can_announce(&self) -> bool {
+        true
+    }
 }
 
 pub fn building_args<'a, 'b>() -> Vec<clap::Arg<'a, 'b>> {

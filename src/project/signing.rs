@@ -35,7 +35,7 @@ impl Project {
     /// Get the signing authority
     pub fn get_authority(&self) -> Result<String, HEMTTError> {
         Ok(if self.authority.is_empty() {
-            self.version()?
+            format!("{}-{}", self.modname()?, self.version()?)
         } else {
             self.render_safe(&self.authority, Some("project:authority"))?
         })

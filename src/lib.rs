@@ -140,8 +140,9 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     commands.push(Box::new(commands::Update {}));
 
     // Add utilities here
-    commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::MissionGenerate {}));
+    commands.push(Box::new(utilities::RenderVar {}));
+    commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::Zip {}));
     // Windows only utilities
     #[cfg(windows)]
@@ -180,7 +181,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     let project = Project::read()?;
-                    if root {
+                    if root && c.can_announce() {
                         println!("HEMTT {}", *crate::VERSION);
                         println!("Environment: {}", project::environment());
                         println!();

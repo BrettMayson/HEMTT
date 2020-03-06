@@ -74,7 +74,7 @@ version = "1.0.0.0"
 ```
 
 If you are using `addons/main/script_version.hpp` the file must be formatted as:
-```
+```cpp
 #define MAJOR 1
 #define MINOR 0
 #define PATCH 0
