@@ -22,6 +22,7 @@ lazy_static = "1.4"
 linked-hash-map = "0.5"
 num_cpus = "1.12"
 objekt = "0.1"
+openssl = { version = "0.10", features = ["vendored"] }
 question = "0.2"
 rayon = "1.3"
 regex = "1.3"
