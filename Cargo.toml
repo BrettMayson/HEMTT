@@ -30,7 +30,7 @@ rlua = "0.17"
 self_update = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde-xml-rs = "0.3"
+serde-xml-rs = "0.4"
 strum = "0.18"
 strum_macros = "0.18"
 subprocess = "0.2"
