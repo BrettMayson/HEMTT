@@ -57,6 +57,11 @@ impl Task for Release {
                     let mut d = release_folder.clone();
 
                     if fs::metadata(&path).unwrap().is_dir() {
+                        if file.ends_with("/") {
+                            // Mirror directory structure if path ends in slash
+                            d.push(path.parent().unwrap());
+                            create_dir!(d)?;
+                        }
                         debug!("Copying dir {:#?} to {:#?}", path, d);
                         copy_dir!(path, d)?;
                     } else {
