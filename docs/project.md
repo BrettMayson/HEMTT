@@ -98,7 +98,7 @@ files = [
 ]
 ```
 - Can specify a file or a directory.
-- Directory can end with `/` to mirror the while structure. Otherwise it will be placed in root of release folder.
+- Directory can end with `/` to mirror the whole structure. Otherwise it will be placed in root of release folder.
 <hr/>
 
 ## include
