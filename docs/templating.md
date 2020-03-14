@@ -22,7 +22,7 @@ The version of the HEMTT project. See [project#version](/project.md?id=version).
 ## semver
 The version of the HEMTT project as an object.
 
-```
+```cpp
 #define MAJOR 1
 #define MINOR 5
 #define PATCH 3
@@ -45,7 +45,7 @@ The build is rc1
 ## date
 Date can be used to get information about the current date and time. HEMTT uses [chrono specifiers](https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html#specifiers) for formatting.
 
-```
+```handlebars
 {{date \"%y%m%d\"}}
 ```
 
@@ -55,6 +55,6 @@ Git helper can be used to get information about the git repository.
 Parameters:
 - `id <number>`: id (SHA-1) of HEAD revision truncated to `<number>` characters _(from 1 to 40, default: 8)_
 
-```
+```handlebars
 {{git \"id 8\"}}
 ```

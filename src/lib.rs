@@ -48,6 +48,8 @@ lazy_static::lazy_static! {
     };
 }
 
+static GIT_IGNORE: [&str; 4] = ["releases/*", "*.biprivatekey", "keys/*", ".hemtt/local"];
+
 pub fn is_ci() -> bool {
     // TODO: replace with crate if a decent one comes along
     let checks = vec![
@@ -128,17 +130,19 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     let mut hash_commands: HashMap<String, &Box<dyn Command>> = HashMap::new();
 
     // Add commands here
-    commands.push(Box::new(commands::Init {}));
-    commands.push(Box::new(commands::Template {}));
+    commands.push(Box::new(commands::Bug {}));
     commands.push(Box::new(commands::Build {}));
-    commands.push(Box::new(commands::Pack {}));
     commands.push(Box::new(commands::Clean {}));
+    commands.push(Box::new(commands::Init {}));
+    commands.push(Box::new(commands::Pack {}));
     commands.push(Box::new(commands::Status {}));
+    commands.push(Box::new(commands::Template {}));
     commands.push(Box::new(commands::Update {}));
 
     // Add utilities here
-    commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::MissionGenerate {}));
+    commands.push(Box::new(utilities::RenderVar {}));
+    commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::Zip {}));
     // Windows only utilities
     #[cfg(windows)]
@@ -177,7 +181,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if c.require_project() {
                     let project = Project::read()?;
-                    if root {
+                    if root && c.can_announce() {
                         println!("HEMTT {}", *crate::VERSION);
                         println!("Environment: {}", project::environment());
                         println!();

@@ -7,6 +7,9 @@ pub use template::Template;
 pub mod build;
 pub use build::Build;
 
+pub mod bug;
+pub use bug::Bug;
+
 mod pack;
 pub use pack::Pack;
 
@@ -32,6 +35,9 @@ pub trait Command {
     }
     fn run_no_project(&self, _args: &clap::ArgMatches) -> Result<(), HEMTTError> {
         unimplemented!();
+    }
+    fn can_announce(&self) -> bool {
+        true
     }
 }
 

@@ -146,9 +146,9 @@ impl Project {
         debug!("Root Directory: {:?}", root);
         std::env::set_current_dir(root)?;
 
-        if Path::new("hemtt.toml").exists() || Path::new("hemtt.json").exists() {
-            // Single file
-            p.merge(File::with_name("hemtt").required(true))?;
+        if Path::new("hemtt.toml").exists() {
+            // Single file (toml)
+            p.merge(File::with_name("hemtt.toml").required(true))?;
         } else {
             // Project folder
             if !Path::new(".hemtt/").exists() {

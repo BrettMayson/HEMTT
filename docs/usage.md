@@ -3,12 +3,10 @@
 <pre>
 Usage:
     hemtt <a href="/HEMTT/#/usage?id=init">init</a>
-    hemtt <a href="/HEMTT/#/usage?id=create">create</a>
+    hemtt <a href="/HEMTT/#/usage?id=bug">bug</a>
     hemtt <a href="/HEMTT/#/usage?id=addon">addon</a> &lt;name&gt;
     hemtt <a href="/HEMTT/#/usage?id=build">build</a> [<a href="/HEMTT/#/usage?id=addons">&lt;addons&gt;</a>] [<a href="/HEMTT/#/usage?id=-release">--release</a>] [<a href="/HEMTT/#/usage?id=-force">-f</a>] [<a href="/HEMTT/#/usage?id=-nowarn">--nowarn</a>] [<a href="/HEMTT/#/usage?id=-opts">--opts</a>=&lt;addons&gt;] [<a href="/HEMTT/#/usage?id=-compats">--compats</a>=&lt;addons&gt;]
     hemtt <a href="/HEMTT/#/usage?id=clean">clean</a> [--force]
-    hemtt <a href="/HEMTT/#/usage?id=run">run</a> &lt;script&gt;
-    hemtt <a href="/HEMTT/#/usage?id=utility">&lt;utility&gt;</a>
     hemtt <a href="/HEMTT/#/usage?id=update">update</a>
     hemtt (-h | --help)
     hemtt --version
@@ -31,21 +29,9 @@ Options:
 Initialize a project file in the current directory. `init` is used when you have existing files or do not want to use the CBA structure.
 <hr/>
 
-# create
+# bug
 
-Create a new project using the CBA project structure. `create` should only be used inside an empty directory. The following structure will be generated.
-<pre>
-.
-├── hemtt.toml
-└── <a href="https://github.com/synixebrett/HEMTT-Example/tree/master/addons">addons/</a>
-    └── <a href="https://github.com/synixebrett/HEMTT-Example/tree/master/addons/main">main/</a>
-        ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/%24PBOPREFIX%24">$PBOPREFIX$</a>
-        ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/config.cpp">config.cpp</a>
-        ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/script_component.hpp">script_component.hpp</a>
-        ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/script_macros.hpp">script_macros.hpp</a>
-        ├── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/script_mod.hpp">script_mod.hpp</a>
-        └── <a href="https://github.com/synixebrett/HEMTT-Example/blob/master/addons/main/script_version.hpp">script_version.hpp</a>
-</pre>
+Opens a new issue page on GitHub with some info already filled out.
 <hr/>
 
 # addon

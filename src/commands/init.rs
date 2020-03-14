@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write};
 
 use crate::{Command, HEMTTError, Project};
 
@@ -26,6 +26,28 @@ impl Command for Init {
         let project = Project::new(name, prefix, author, template.clone());
         let mut out = create_file!("./.hemtt/base.toml")?;
         out.write_fmt(format_args!("{}", toml::to_string(&project)?))?;
+
+        // Git Ignore
+        let git_ignore = std::path::Path::new(".gitignore");
+        let mut ignore = crate::GIT_IGNORE.to_vec();
+        let mut file = if git_ignore.exists() {
+            let mut data = String::new();
+            open_file!(git_ignore)?.read_to_string(&mut data)?;
+            for l in data.lines() {
+                if let Some(index) = ignore.iter().position(|&d| d == l) {
+                    ignore.remove(index);
+                }
+            }
+            warn!("Adding recommended paths to `.gitignore`");
+            std::fs::OpenOptions::new().append(true).open(git_ignore)?
+        } else {
+            create_file!(git_ignore)?
+        };
+        file.write_all(String::from("\n## Added by HEMTT\n").as_bytes())?;
+        for i in ignore {
+            file.write_all(format!("{}\n", i).as_bytes())?;
+        }
+        file.write_all(String::from("####\n").as_bytes())?;
 
         // clone template
         match template.as_ref() {

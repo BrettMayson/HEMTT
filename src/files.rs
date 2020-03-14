@@ -54,7 +54,7 @@ impl FileCache {
         //     return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "can't find that file eh"));
         // }
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
-        let clean = Regex::new(r#"(?m)(?:(?://[^/]+?)|(?:/\*(?:.+?)\*/))$"#).unwrap();
+        let clean = Regex::new(r#"(?m)(?:(?://.+?)$)|(?:/\*(?:.+?)\*/)"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n");
         let mut safe = HashMap::new();
         for mat in keep.find_iter(&content) {

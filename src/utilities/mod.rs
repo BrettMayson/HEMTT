@@ -1,3 +1,6 @@
+pub mod render_var;
+pub use render_var::RenderVar;
+
 pub mod translation;
 pub use translation::Translation;
 
