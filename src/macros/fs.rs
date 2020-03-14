@@ -39,7 +39,7 @@ macro_rules! copy_file {
     ($s:expr, $d:expr) => {
         std::fs::copy(&$s, &$d).map_err(|source| {
             crate::HEMTTError::GENERIC(
-                format!("Unable to copy: {}", source),
+                format!("Unable to copy file: {}", source),
                 format!("`{:#?}` => `{:#?}`", $s, $d),
             )
         })
@@ -47,11 +47,24 @@ macro_rules! copy_file {
 }
 
 #[macro_export]
+macro_rules! copy_dir {
+    ($s:expr, $d:expr) => {
+        fs_extra::dir::copy(&$s, &$d, &fs_extra::dir::CopyOptions::new()).map_err(|source| {
+            crate::HEMTTError::GENERIC(
+                format!("Unable to copy directory: {}", source),
+                format!("`{:#?}` => `{:#?}`", $s, $d),
+            )
+        })
+    };
+}
+
+
+#[macro_export]
 macro_rules! rename_file {
     ($s:expr, $d:expr) => {
         std::fs::rename(&$s, &$d).map_err(|source| {
             crate::HEMTTError::GENERIC(
-                format!("Unable to rename: {}", source),
+                format!("Unable to rename file: {}", source),
                 format!("`{:#?}` => `{:#?}`", $s, $d),
             )
         })
