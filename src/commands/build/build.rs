@@ -29,7 +29,10 @@ impl Build {
             if cfg!(windows) {
                 warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
             } else {
-                warnmessage!("Unable to use binarize.exe on non-windows systems", "Files will be packed as is");
+                warnmessage!(
+                    "Unable to use binarize.exe on non-windows systems",
+                    "Files will be packed as is"
+                );
             }
         };
 
@@ -52,7 +55,6 @@ impl Task for Build {
     }
 
     fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
-        let mut report = Report::new();
         let mut pbo = armake2::PBO {
             files: LinkedHashMap::new(),
             header_extensions: HashMap::new(),
@@ -166,6 +168,6 @@ impl Task for Build {
 
         let mut outf = create_file!(addon.target(p))?;
         pbo.write(&mut outf)?;
-        Ok(report)
+        Ok(Report::new())
     }
 }
