@@ -59,7 +59,14 @@ impl Command for Pack {
                     Step::none()
                 },
                 if args.is_present("release") {
-                    Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})])
+                    Step::single(
+                        "📜",
+                        "",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::flow::Script {
+                            release: args.is_present("release"),
+                        })],
+                    )
                 } else {
                     Step::none()
                 },
