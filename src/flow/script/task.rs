@@ -61,9 +61,12 @@ impl Script {
                             for step in steps {
                                 let exec = |data: &Result<(Report, Addon), HEMTTError>| {
                                     if let Ok((_, addon)) = data {
-                                        let step =
-                                            crate::render::run(step, Some(&format!("script:{}", &cmd)), &addon.get_variables(p))
-                                                .unwrap_or_print();
+                                        let step = crate::render::run(
+                                            step,
+                                            Some(&format!("script:{}", &cmd)),
+                                            &addon.get_variables(p),
+                                        )
+                                        .unwrap_or_print();
                                         Script::execute(&step, script.show_output, addons, p, s, release).unwrap_or_print();
                                     }
                                 };
