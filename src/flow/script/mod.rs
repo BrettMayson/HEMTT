@@ -34,9 +34,9 @@ pub struct BuildScript {
 }
 impl BuildScript {
     pub fn should_run(&self, release: bool) -> bool {
-        (!self.only_development && !self.only_release) ||
-            (self.only_development && !release) ||
-            (self.only_release && release)
+        (!self.only_development && !self.only_release)
+            || (self.only_development && !release)
+            || (self.only_release && release)
     }
 }
 

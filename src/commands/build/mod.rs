@@ -105,7 +105,8 @@ impl Command for Build {
                     Step::none()
                 },
                 if args.is_present("release") {
-                    Step::single("📜",
+                    Step::single(
+                        "📜",
                         "",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::flow::Script {
