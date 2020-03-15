@@ -24,13 +24,9 @@ impl FileCache {
         }
     }
 
-    fn clean_path(&self, path: &str) -> String {
-        path.replace("\\\\?\\", "").replace(&self.root, "")
-    }
-
     #[allow(clippy::map_entry)]
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
-        let path = self.clean_path(path);
+        let path = path.to_string();
         if self.files.contains_key(&path) {
             Ok(self.files.get(&path).unwrap().to_vec())
         } else {
@@ -56,7 +52,6 @@ impl FileCache {
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://.+?)$)|(?:/\*(?:.+?)\*/)"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n");
-        println!("content: {} | path: {}", content, path);
         let mut safe = HashMap::new();
         for mat in keep.find_iter(&content) {
             safe.insert(mat.start(), mat.end());
