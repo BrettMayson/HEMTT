@@ -1,3 +1,5 @@
+use std::fs;
+
 use dialoguer::Confirmation;
 use glob::glob;
 
@@ -52,12 +54,21 @@ impl Task for Release {
         for file in &p.files {
             for entry in glob(file)? {
                 if let Ok(path) = entry {
-                    copy_file!(path, {
-                        let mut d = release_folder.clone();
+                    let mut d = release_folder.clone();
+
+                    if fs::metadata(&path).unwrap().is_dir() {
+                        if file.ends_with('/') {
+                            // Mirror directory structure if path ends in slash
+                            d.push(path.parent().unwrap());
+                            create_dir!(d)?;
+                        }
+                        debug!("Copying dir {:#?} to {:#?}", path, d);
+                        copy_dir!(path, d)?;
+                    } else {
                         d.push(path.file_name().unwrap().to_str().unwrap().to_owned());
-                        debug!("Copying {:#?} to {:#?}", path, d);
-                        d
-                    })?;
+                        debug!("Copying file {:#?} to {:#?}", path, d);
+                        copy_file!(path, d)?;
+                    }
                 }
             }
         }

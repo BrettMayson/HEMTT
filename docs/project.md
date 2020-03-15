@@ -86,15 +86,19 @@ If you are using `addons/main/script_version.hpp` the file must be formatted as:
 ## files
 **Type**: Array \[String\]
 
-HEMTT will copy the files to the release directory after a successful release build. Supports [glob](http://man7.org/linux/man-pages/man7/glob.7.html) patterns.
+HEMTT will copy the files and directories to the release directory after a successful release build. Supports [glob](http://man7.org/linux/man-pages/man7/glob.7.html) patterns.
 
 ```toml
 files = [
     "mod.cpp",
     "logo.paa",
-    "*.dll"
+    "*.dll",
+    "extras/plugin",  # directory copied as '@mod/plugin'
+    "template/userconfig/"  # directory copied as '@mod/template/userconfig'
 ]
 ```
+- Can specify a file or a directory.
+- Directory can end with `/` to mirror the whole structure. Otherwise it will be placed in root of release folder.
 <hr/>
 
 ## include
