@@ -26,7 +26,11 @@ impl Build {
         let can_binarize = use_bin && cfg!(windows) && Build::find_binarize();
 
         if !can_binarize {
-            warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
+            if cfg!(windows) {
+                warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
+            } else {
+                warnmessage!("Unable to use binarize.exe on non-windows systems", "Files will be packed as is");
+            }
         };
 
         Self { use_bin, can_binarize }
@@ -140,13 +144,6 @@ impl Task for Build {
                     let cursor = armake2::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);
                 } else {
-                    if is_binarizable && !cfg!(windows) {
-                        report.warnings.push(HEMTTError::generic(
-                            format!("Unable to binarize `{}`", entry.path().display().to_string()),
-                            "On non-windows systems binarize.exe cannot be used; file will packed as is",
-                        ));
-                    }
-
                     pbo.files.insert(
                         Regex::new(".p3do$").unwrap().replace_all(&name, ".p3d").to_string(),
                         Cursor::new(content.into_boxed_slice()),
