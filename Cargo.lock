@@ -1173,9 +1173,9 @@ checksum = "17b02fc0ff9a9e4b35b3342880f48e896ebf69f2967921fe8646bf5b7125956a"
 
 [[package]]
 name = "objekt"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2069a3ae3dad97a4ae47754e8f47e5d2f1fd32ab7ad8a84bb31d051faa59cc3c"
+checksum = "911a11a2c0341e668e07618471d5aa144308807d93310f3a5f35df61708b90a6"
 
 [[package]]
 name = "opaque-debug"
