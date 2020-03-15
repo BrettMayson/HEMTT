@@ -56,6 +56,7 @@ impl FileCache {
         let keep = Regex::new(r#"(?m)QUOTE\((.+?)\)|"([^"]+)"|"(.+)$"#).unwrap();
         let clean = Regex::new(r#"(?m)(?:(?://.+?)$)|(?:/\*(?:.+?)\*/)"#).unwrap();
         let content = self.as_string(path).unwrap().replace("\r\n", "\n");
+        println!("content: {} | path: {}", content, path);
         let mut safe = HashMap::new();
         for mat in keep.find_iter(&content) {
             safe.insert(mat.start(), mat.end());
