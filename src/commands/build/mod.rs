@@ -46,21 +46,42 @@ impl Command for Build {
                         Box::new(crate::build::checks::modtime::ModTime {}),
                     ],
                 ),
-                Step::single("📜", "", Stage::Check, vec![Box::new(crate::flow::Script {})]),
+                Step::single(
+                    "📜",
+                    "",
+                    Stage::Check,
+                    vec![Box::new(crate::flow::Script {
+                        release: args.is_present("release"),
+                    })],
+                ),
                 Step::parallel(
                     "🚧",
                     "Prebuild",
                     Stage::PreBuild,
                     vec![Box::new(crate::build::prebuild::preprocess::Preprocess {})],
                 ),
-                Step::single("📜", "", Stage::PreBuild, vec![Box::new(crate::flow::Script {})]),
+                Step::single(
+                    "📜",
+                    "",
+                    Stage::PreBuild,
+                    vec![Box::new(crate::flow::Script {
+                        release: args.is_present("release"),
+                    })],
+                ),
                 Step::parallel(
                     "📝",
                     "Build",
                     Stage::Build,
                     vec![Box::new(crate::build::build::Build::new(true))],
                 ),
-                Step::single("📜", "", Stage::PostBuild, vec![Box::new(crate::flow::Script {})]),
+                Step::single(
+                    "📜",
+                    "",
+                    Stage::PostBuild,
+                    vec![Box::new(crate::flow::Script {
+                        release: args.is_present("release"),
+                    })],
+                ),
                 if args.is_present("release") {
                     Step::single(
                         "⭐",
@@ -84,7 +105,13 @@ impl Command for Build {
                     Step::none()
                 },
                 if args.is_present("release") {
-                    Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})])
+                    Step::single("📜",
+                        "",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::flow::Script {
+                            release: args.is_present("release"),
+                        })],
+                    )
                 } else {
                     Step::none()
                 },
