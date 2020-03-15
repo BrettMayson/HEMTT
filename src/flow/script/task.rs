@@ -48,7 +48,7 @@ impl Script {
                     #[allow(clippy::ifs_same_cond)]
                     let steps = if cfg!(windows) && !script.steps_windows.is_empty() {
                         &script.steps_windows
-                    } else if cfg!(linux) && !script.steps_linux.is_empty() {
+                    } else if cfg!(unix) && !script.steps_linux.is_empty() {
                         &script.steps_linux
                     } else {
                         &script.steps
