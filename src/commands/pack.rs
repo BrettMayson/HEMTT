@@ -13,14 +13,14 @@ impl Command for Pack {
         let addons = crate::project::addons::get_from_args(&args)?;
         let flow = Flow {
             steps: vec![
-                Step::parallel(
+                Step::single(
                     "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
                 if args.is_present("force") {
-                    Step::single(
+                    Step::parallel(
                         "🗑️",
                         "Clear",
                         Stage::Check,
@@ -59,7 +59,14 @@ impl Command for Pack {
                     Step::none()
                 },
                 if args.is_present("release") {
-                    Step::single("📜", "", Stage::ReleaseBuild, vec![Box::new(crate::flow::Script {})])
+                    Step::single(
+                        "📜",
+                        "",
+                        Stage::ReleaseBuild,
+                        vec![Box::new(crate::flow::Script {
+                            release: args.is_present("release"),
+                        })],
+                    )
                 } else {
                     Step::none()
                 },

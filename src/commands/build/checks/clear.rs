@@ -10,10 +10,10 @@ use strum::IntoEnumIterator;
 
 use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Stage, Task};
 
-// Cleans existing files that will be rebuilt only
+// Clears existing files that are part of the hemtt project
 #[derive(Clone)]
-pub struct Clean {}
-impl Task for Clean {
+pub struct Clear {}
+impl Task for Clear {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
@@ -27,10 +27,10 @@ impl Task for Clean {
     }
 }
 
-// Clears all pbo files
+// Cleans all pbo files that are not part of the hemtt project
 #[derive(Clone)]
-pub struct Clear {}
-impl Task for Clear {
+pub struct Clean {}
+impl Task for Clean {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();

@@ -31,9 +31,19 @@ steps = [
 show_output = true
 ```
 
+### only_development / only_release
+Scripts run during normal and release builds. Setting `only_release` will run the script only in release build and setting `only_development` will run the script only in development build.
+```toml
+[scripts.example]
+steps = [
+    "echo 'this is an example'"
+]
+only_release = true
+```
+
 
 # Build Steps
-There are 3 different build step definitions. `prebuild`, `postbuild` and `releasebuild`. These are added to the root of the HEMTT project file. Scripts can be ran using `![script]` and utilities are ran using `@[utility]`. The following example runs the `build` script, the uses `cp` to copy files.
+There are 4 different build step definitions. `check`, `prebuild`, `postbuild` and `releasebuild`. These are added to the root of the HEMTT project file. Scripts can be ran using `![script]` and utilities are ran using `@[utility]`. The following example runs the `build` script, the uses `cp` to copy files.
 ```toml
 releasebuild = [
   "!build"
@@ -51,16 +61,16 @@ steps_windows = [
 ```
 
 ### foreach
-Scripts can be ran for each addons. Inside `prebuild` the script will be ran for each addon that HEMTT will build, including addons that will be skipped if they are already built. Inside `postbuild` and `releasebuild` only addons that were successfully built with be used, excluding addons that were skipped for being up to date.
+Scripts can be ran for each addons. Inside `check` and `prebuild` the script will be ran for each addon that HEMTT will build, including addons that will be skipped if they are already built. Inside `postbuild` and `releasebuild` only addons that were successfully built with be used, excluding addons that were skipped for being up to date.
 
 In addition to the standard [templating variables](templating.md), additional variables are added when using foreach.
 
-| Variable | prebuild            | postbuild           | releasebuild        |
-|----------|---------------------|---------------------|---------------------|
-| addon    | main                | main                | main                |
-| source   | addons/main         | addons/main         | addons/main         |
-| target   | addons/ABE_main.pbo | addons/ABE_main.pbo | addons/ABE_main.pbo |
-| time     |                     | (build time in ms)  | (build time in ms)  |
+| Variable | check & prebuild    | postbuild & releasebuild |
+|----------|---------------------|--------------------------|
+| addon    | main                | main                     |
+| source   | addons/main         | addons/main              |
+| target   | addons/ABE_main.pbo | addons/ABE_main.pbo      |
+| time     |                     | (build time in ms)       |
 
 ```toml
 postbuild = [

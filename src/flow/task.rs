@@ -6,7 +6,7 @@ use indicatif_windows::ProgressBar;
 use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage};
 
 // A task is an independent item to be ran
-pub trait Task: objekt::Clone + std::marker::Send + std::marker::Sync {
+pub trait Task: dyn_clone::DynClone + std::marker::Send + std::marker::Sync {
     fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(false)
     }
@@ -17,4 +17,4 @@ pub trait Task: objekt::Clone + std::marker::Send + std::marker::Sync {
         unimplemented!()
     }
 }
-objekt::clone_trait_object!(Task);
+dyn_clone::clone_trait_object!(Task);
