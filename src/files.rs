@@ -24,13 +24,9 @@ impl FileCache {
         }
     }
 
-    fn clean_path(&self, path: &str) -> String {
-        path.replace("\\\\?\\", "").replace(&self.root, "")
-    }
-
     #[allow(clippy::map_entry)]
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
-        let path = self.clean_path(path);
+        let path = path.to_string();
         if self.files.contains_key(&path) {
             Ok(self.files.get(&path).unwrap().to_vec())
         } else {
