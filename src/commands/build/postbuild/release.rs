@@ -51,17 +51,22 @@ impl Task for Release {
             })?;
         }
 
-        for file in &p.files {
-            for entry in glob(file)? {
+        for mut file in p.files.to_owned() {
+            let mut mirror_structure = false;
+            if file.ends_with('/') {
+                file.pop();
+                mirror_structure = true; // Mirror directory structure if path ends in slash
+            }
+
+            for entry in glob(&file)? {
                 if let Ok(path) = entry {
                     let mut d = release_folder.clone();
+                    if mirror_structure {
+                        d.push(path.parent().unwrap());
+                        create_dir!(d)?;
+                    }
 
                     if fs::metadata(&path).unwrap().is_dir() {
-                        if file.ends_with('/') {
-                            // Mirror directory structure if path ends in slash
-                            d.push(path.parent().unwrap());
-                            create_dir!(d)?;
-                        }
                         debug!("Copying dir {:#?} to {:#?}", path, d);
                         copy_dir!(path, d)?;
                     } else {
