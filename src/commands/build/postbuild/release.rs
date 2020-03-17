@@ -52,11 +52,13 @@ impl Task for Release {
         }
 
         for mut file in p.files.to_owned() {
-            let mut mirror_structure = false;
-            if file.ends_with('/') {
+            // Mirror directory structure if path ends in slash
+            let mirror_structure = if file.ends_with('/') {
                 file.pop();
-                mirror_structure = true; // Mirror directory structure if path ends in slash
-            }
+                true
+            } else {
+                false
+            };
 
             for entry in glob(&file)? {
                 if let Ok(path) = entry {
