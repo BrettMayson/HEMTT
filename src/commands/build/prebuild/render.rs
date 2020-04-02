@@ -1,11 +1,7 @@
 use std::io::Write;
 use std::path::Path;
 
-#[cfg(not(windows))]
 use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
-
 use walkdir::WalkDir;
 
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};

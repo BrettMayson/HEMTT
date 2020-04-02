@@ -1,10 +1,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-#[cfg(not(windows))]
 use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
 
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 

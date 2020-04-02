@@ -3,12 +3,8 @@ use std::thread;
 use std::time::Duration;
 
 use colored::*;
-use rayon::prelude::*;
-
-#[cfg(not(windows))]
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-#[cfg(windows)]
-use indicatif_windows::{MultiProgress, ProgressBar, ProgressStyle};
+use rayon::prelude::*;
 
 mod report;
 mod script;
@@ -100,6 +96,7 @@ impl Flow {
 
         // Create a multiprogress bar
         let m = MultiProgress::new();
+        //m.set_move_cursor(true);
         // Create the top bar
         let mut total = 0;
         let total_pb = m.add(ProgressBar::new(0));

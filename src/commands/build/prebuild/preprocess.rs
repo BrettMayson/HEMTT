@@ -1,11 +1,7 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
-#[cfg(not(windows))]
 use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
-
 use regex::Regex;
 use walkdir::WalkDir;
 

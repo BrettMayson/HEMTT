@@ -38,11 +38,8 @@ toml = "0.5"
 walkdir = "2.3"
 webbrowser = "0.5"
 zip = "0.5"
+indicatif = "0.14"
 
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.12"
 winreg = "0.7"
-indicatif-windows = { git = "https://github.com/synixebrett/indicatif", branch = "master" }
-
-[target.'cfg(not(windows))'.dependencies]
-indicatif = "0.11"

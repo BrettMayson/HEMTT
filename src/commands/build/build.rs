@@ -2,12 +2,8 @@ use std::collections::HashMap;
 use std::io::Cursor;
 use std::path::PathBuf;
 
-#[cfg(not(windows))]
-use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
-
 use glob::Pattern;
+use indicatif::ProgressBar;
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;

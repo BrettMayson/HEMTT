@@ -2,15 +2,11 @@ use std::collections::HashMap;
 use std::io::BufReader;
 use std::path::PathBuf;
 
+use indicatif::ProgressBar;
 use serde::Deserialize;
 use serde_xml_rs;
 use strum::IntoEnumIterator;
 use walkdir::WalkDir;
-
-#[cfg(not(windows))]
-use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
 
 use crate::{AddonLocation, Command, HEMTTError};
 

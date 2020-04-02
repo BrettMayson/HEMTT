@@ -1,8 +1,4 @@
-#[cfg(not(windows))]
 use indicatif::ProgressBar;
-#[cfg(windows)]
-use indicatif_windows::ProgressBar;
-
 use regex::Regex;
 
 use crate::{Addon, AddonLocation, HEMTTError, Project, Report, Stage, Task};
