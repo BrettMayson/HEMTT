@@ -3,7 +3,6 @@ name = "hemtt"
 version = "0.7.5"
 authors = ["Brett Mayson <brett@mayson.io>"]
 edition = "2018"
-build = "build.rs"
 
 [dependencies]
 armake2 = {git = "https://github.com/synixebrett/armake2", branch = "restructure", default_features = false}
