@@ -659,7 +659,7 @@ dependencies = [
  "git2",
  "glob",
  "handlebars",
- "indicatif 0.11.0",
+ "indicatif",
  "indicatif-windows",
  "lazy_static",
  "linked-hash-map 0.5.2",
@@ -795,26 +795,13 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c60da1c9abea75996b70a931bba6c750730399005b61ccd853cee50ef3d0d0c"
-dependencies = [
- "console",
- "lazy_static",
- "number_prefix 0.2.8",
- "parking_lot 0.10.0",
- "regex",
-]
-
-[[package]]
-name = "indicatif"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8572bccfb0665e70b7faf44ee28841b8e0823450cd4ad562a76b5a3c4bf48487"
 dependencies = [
  "console",
  "lazy_static",
- "number_prefix 0.3.0",
+ "number_prefix",
  "regex",
 ]
 
@@ -825,8 +812,8 @@ source = "git+https://github.com/synixebrett/indicatif#250b5825e5ba5b91c8501adf9
 dependencies = [
  "console",
  "lazy_static",
- "number_prefix 0.3.0",
- "parking_lot 0.8.0",
+ "number_prefix",
+ "parking_lot",
  "regex",
  "winapi 0.3.8",
 ]
@@ -967,15 +954,6 @@ name = "lock_api"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed946d4529956a20f2d63ebe1b69996d5a2137c91913fe3ebbeff957f5bca7ff"
-dependencies = [
- "scopeguard",
-]
-
-[[package]]
-name = "lock_api"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79b2de95ecb4691949fea4716ca53cdbcfccb2c612e19644a8bad05edcf9f47b"
 dependencies = [
  "scopeguard",
 ]
@@ -1164,15 +1142,6 @@ dependencies = [
 
 [[package]]
 name = "number_prefix"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbf9993e59c894e3c08aa1c2712914e9e6bf1fcbfc6bef283e2183df345a4fee"
-dependencies = [
- "num-traits 0.2.11",
-]
-
-[[package]]
-name = "number_prefix"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17b02fc0ff9a9e4b35b3342880f48e896ebf69f2967921fe8646bf5b7125956a"
@@ -1222,19 +1191,9 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa7767817701cce701d5585b9c4db3cdd02086398322c1d7e8bf5094a96a2ce7"
 dependencies = [
- "lock_api 0.2.0",
- "parking_lot_core 0.5.0",
+ "lock_api",
+ "parking_lot_core",
  "rustc_version",
-]
-
-[[package]]
-name = "parking_lot"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92e98c49ab0b7ce5b222f2cc9193fc4efe11c6d0bd4f648e374684a6857b1cfc"
-dependencies = [
- "lock_api 0.3.3",
- "parking_lot_core 0.7.0",
 ]
 
 [[package]]
@@ -1250,20 +1209,6 @@ dependencies = [
  "redox_syscall",
  "rustc_version",
  "smallvec 0.6.13",
- "winapi 0.3.8",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7582838484df45743c8434fbff785e8edf260c28748353d44bc0da32e0ceabf1"
-dependencies = [
- "cfg-if",
- "cloudabi",
- "libc",
- "redox_syscall",
- "smallvec 1.2.0",
  "winapi 0.3.8",
 ]
 
@@ -1792,7 +1737,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0881a950f4b11e5f6d0aa916884842f9ddd1d5ebcf6ff960a14cc9e151c011a"
 dependencies = [
  "hyper-old-types",
- "indicatif 0.13.0",
+ "indicatif",
  "quick-xml",
  "regex",
  "reqwest",
