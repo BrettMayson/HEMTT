@@ -643,7 +643,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt"
-version = "0.8.0"
+version = "0.7.5"
 dependencies = [
  "ansi_term 0.12.1",
  "armake2",

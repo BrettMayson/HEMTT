@@ -48,7 +48,7 @@ jobs:
         with:
           name: linux
           path: target/release/hemtt
-          
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -73,7 +73,7 @@ jobs:
 
       - name: Install OpenSSL
         run: |
-          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1e.msi' -OutFile openssl.msi"
+          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1f.msi' -OutFile openssl.msi"
           msiexec.exe /qn /i openssl.msi
 
       - name: Build
@@ -95,7 +95,7 @@ jobs:
         with:
           name: windows
           path: target/release/hemtt.exe
-          
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
