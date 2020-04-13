@@ -25,7 +25,7 @@ impl FilePatching {
                 .output()?;
             println!("Linked at {:?}", target);
             println!(
-                "You can now use `-mod=\"\\{}\\{}\" -filePatching`",
+                "You can now use `-mod=\"{}\\{}\" -filePatching`",
                 p.mainprefix,
                 p.modname()?
             );
