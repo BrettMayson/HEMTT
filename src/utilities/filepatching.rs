@@ -24,11 +24,7 @@ impl FilePatching {
                 .args(&["/C", "mklink", "/J", &p.modname()?, &project_root])
                 .output()?;
             println!("Linked at {:?}", target);
-            println!(
-                "You can now use `-mod=\"{}\\{}\" -filePatching`",
-                p.mainprefix,
-                p.modname()?
-            );
+            println!("You can now use `-mod=\"{}\\{}\" -filePatching`", p.mainprefix, p.modname()?);
         }
         Ok(())
     }
