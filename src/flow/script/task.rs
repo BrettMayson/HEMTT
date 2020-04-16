@@ -12,11 +12,11 @@ pub struct Script {
 }
 impl Task for Script {
     fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, s: &Stage) -> AddonList {
-        let steps = Script::get_scripts(s, p)?;
+        let steps = Self::get_scripts(s, p)?;
 
         for step in steps {
             println!("{} `{}`", s.to_string().blue().bold(), p.render(&step, None)?);
-            Script::execute(&step, false, &addons, p, s, self.release)?;
+            Self::execute(&step, false, &addons, p, s, self.release)?;
         }
 
         Ok(addons)
@@ -67,7 +67,7 @@ impl Script {
                                             &addon.get_variables(p),
                                         )
                                         .unwrap_or_print();
-                                        Script::execute(&step, script.show_output, addons, p, s, release).unwrap_or_print();
+                                        Self::execute(&step, script.show_output, addons, p, s, release).unwrap_or_print();
                                     }
                                 };
                                 if script.parallel {
@@ -79,7 +79,7 @@ impl Script {
                         } else {
                             for step in steps {
                                 let step = crate::render::run(step, Some(&format!("script:{}", &cmd)), &p.get_variables())?;
-                                Script::execute(&step, script.show_output, addons, p, s, release)?;
+                                Self::execute(&step, script.show_output, addons, p, s, release)?;
                             }
                         }
                     } else {
@@ -92,7 +92,7 @@ impl Script {
             }
             _ => {
                 let cmd = command.to_string().replace("\\", "\\\\");
-                let shell = Exec::shell(crate::render::run(&command, Some(&s.to_string()), &p.get_variables())?)
+                let shell = Exec::shell(crate::render::run(command, Some(&s.to_string()), &p.get_variables())?)
                     .capture()
                     .unwrap_or_print();
                 let out = &shell.stdout_str();

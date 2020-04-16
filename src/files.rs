@@ -133,7 +133,7 @@ impl RenderedFiles {
 
     /// Gets the rendered path from the original
     pub fn get_paths(&self, original: String) -> (String, String) {
-        let rendered = crate::build::prebuild::render::can_render(&Path::new(&original));
+        let rendered = crate::build::prebuild::render::can_render(Path::new(&original));
         if rendered {
             (
                 original.replace(".ht.", ".").trim_end_matches(".ht").to_string(),

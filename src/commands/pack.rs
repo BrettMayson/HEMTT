@@ -10,7 +10,7 @@ impl Command for Pack {
     }
 
     fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let addons = crate::project::addons::get_from_args(&args)?;
+        let addons = crate::project::addons::get_from_args(args)?;
         let flow = Flow {
             steps: vec![
                 Step::single(

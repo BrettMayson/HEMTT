@@ -80,7 +80,7 @@ impl Task for Release {
 
         for data in &addons {
             let (_, addon) = data.as_ref().unwrap();
-            addon.release(&release_folder, &p)?;
+            addon.release(&release_folder, p)?;
         }
 
         Ok(addons)

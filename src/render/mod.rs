@@ -12,7 +12,7 @@ pub fn run(source: &str, filename: Option<&str>, data: &BTreeMap<&'static str, J
     handlebars.register_helper("date", Box::new(helpers::date));
     handlebars.register_helper("git", Box::new(helpers::git));
     handlebars.set_strict_mode(true);
-    handlebars.render_template(&source, data).map_err(|err| match err {
+    handlebars.render_template(source, data).map_err(|err| match err {
         handlebars::TemplateRenderError::RenderError(e) => {
             if e.line_no.is_some() {
                 HEMTTError::LINENO(FileErrorLineNumber {

@@ -40,9 +40,9 @@ impl Flow {
                 continue;
             }
             if step.parallel {
-                addons = self.parallel(&step.emoji, &step, addons, p)?;
+                addons = self.parallel(&step.emoji, step, addons, p)?;
             } else {
-                addons = self.single(&step.emoji, &step, addons, p)?;
+                addons = self.single(&step.emoji, step, addons, p)?;
             }
 
             // Check for stopped reports
@@ -103,10 +103,10 @@ impl Flow {
         total_pb.set_style(master_style);
 
         if !step.name.is_empty() {
-            if !cfg!(windows) {
-                total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
-            } else {
+            if cfg!(windows) {
                 total_pb.set_prefix(&fill_space!(" ", 12, &step.name));
+            } else {
+                total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
             }
         }
 
@@ -123,12 +123,12 @@ impl Flow {
             })
             .collect();
 
-        let draw_thread = if !*crate::NOPB {
+        let draw_thread = if *crate::NOPB {
+            thread::spawn(|| {})
+        } else {
             thread::spawn(move || {
                 m.join().unwrap();
             })
-        } else {
-            thread::spawn(|| {})
         };
 
         let (tx, rx) = mpsc::channel();
@@ -158,10 +158,10 @@ impl Flow {
                 }
                 total_pb.tick();
             });
-        } else if !cfg!(windows) {
-            println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
-        } else {
+        } else if cfg!(windows) {
             println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
+        } else {
+            println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
         }
 
         // Task loop
@@ -229,10 +229,10 @@ impl Flow {
         p: &mut Project,
     ) -> AddonList {
         if !step.name.is_empty() {
-            if !cfg!(windows) {
-                println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
-            } else {
+            if cfg!(windows) {
                 println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
+            } else {
+                println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
             }
         }
 

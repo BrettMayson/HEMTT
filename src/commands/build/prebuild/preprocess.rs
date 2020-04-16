@@ -27,7 +27,7 @@ impl Task for Preprocess {
             pb.set_message("Looking for files to preprocess");
             pb.tick();
             let path = entry.unwrap();
-            let can_rap = can_preprocess(&path.path());
+            let can_rap = can_preprocess(path.path());
             if can_rap {
                 pb.set_message("Waiting for render lock");
                 let (original_path, rendered_path) =

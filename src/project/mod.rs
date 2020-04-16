@@ -277,14 +277,14 @@ fn default_mainprefix() -> String {
     String::from("z")
 }
 
-fn default_reuse_private_key() -> Option<bool> {
+const fn default_reuse_private_key() -> Option<bool> {
     None
 }
 
-fn default_folder_optionals() -> Option<bool> {
+const fn default_folder_optionals() -> Option<bool> {
     Some(true)
 }
 
-pub fn default_sig_version() -> u8 {
+pub const fn default_sig_version() -> u8 {
     3
 }

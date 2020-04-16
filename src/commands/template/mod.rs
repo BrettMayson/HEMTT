@@ -14,7 +14,7 @@ mod version;
 pub struct Template {}
 
 impl Template {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 

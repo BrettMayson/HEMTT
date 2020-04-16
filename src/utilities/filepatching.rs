@@ -51,7 +51,7 @@ impl Command for FilePatching {
         let mut root = steam_path.clone();
         root.push(ARMA3);
         if root.exists() {
-            FilePatching::create_link(root, &p)?;
+            Self::create_link(root, &p)?;
             Ok(())
         } else {
             let mut library_folders = steam_path;
@@ -68,7 +68,7 @@ impl Command for FilePatching {
                 let mut folder = PathBuf::from(cap.get(2).unwrap().as_str());
                 folder.push(ARMA3);
                 if folder.exists() {
-                    FilePatching::create_link(folder, &p)?;
+                    Self::create_link(folder, &p)?;
                     return Ok(());
                 }
             }

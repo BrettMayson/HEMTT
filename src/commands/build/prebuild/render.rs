@@ -62,7 +62,7 @@ impl Task for Render {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();
-            if can_render(&path.path()) {
+            if can_render(path.path()) {
                 pb.set_message(&format!("Render: {}", path.path().display().to_string()));
                 report.absorb(render(path.path(), addon, p)?);
             }

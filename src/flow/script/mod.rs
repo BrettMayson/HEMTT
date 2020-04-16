@@ -40,22 +40,22 @@ impl BuildScript {
     }
 }
 
-fn default_only_development() -> bool {
+const fn default_only_development() -> bool {
     false
 }
 
-fn default_only_release() -> bool {
+const fn default_only_release() -> bool {
     false
 }
 
-fn default_foreach() -> bool {
+const fn default_foreach() -> bool {
     false
 }
 
-fn default_parallel() -> bool {
+const fn default_parallel() -> bool {
     false
 }
 
-fn default_show_output() -> bool {
+const fn default_show_output() -> bool {
     false
 }

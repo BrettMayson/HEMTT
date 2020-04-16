@@ -23,7 +23,7 @@ impl Command for Update {
         let status = self_update::backends::github::Update::configure()
             .repo_owner("SynixeBrett")
             .repo_name("HEMTT")
-            .target(&target)
+            .target(target)
             .bin_name(if cfg!(windows) { "hemtt.exe" } else { "hemtt" })
             .show_download_progress(true)
             .current_version(env!("CARGO_PKG_VERSION"))

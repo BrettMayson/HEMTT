@@ -10,7 +10,7 @@ pub struct Report {
 }
 
 impl Report {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             warnings: Vec::new(),
             old: Vec::new(),

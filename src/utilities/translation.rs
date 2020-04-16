@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use indicatif::ProgressBar;
 use serde::Deserialize;
-use serde_xml_rs;
 use strum::IntoEnumIterator;
 use walkdir::WalkDir;
 
@@ -23,9 +22,9 @@ impl Command for Translation {
     fn run_no_project(&self, _args: &clap::ArgMatches) -> Result<(), HEMTTError> {
         let mut stringtables = Vec::new();
         for location in AddonLocation::iter() {
-            stringtables.append(&mut Translation::get_stringtables(&location.to_path_buf()));
+            stringtables.append(&mut Self::get_stringtables(&location.to_path_buf()));
         }
-        let (total, keys) = Translation::analyze(stringtables)?;
+        let (total, keys) = Self::analyze(stringtables)?;
         println!("{:<15} {:>5}", "Total", total);
         let mut count_vec: Vec<(&String, &f64)> = keys.iter().collect();
         count_vec.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
@@ -152,7 +151,7 @@ struct Package {
     pub keys: Vec<Key>,
 }
 impl Package {
-    fn transfer(mut self) -> Package {
+    fn transfer(mut self) -> Self {
         if !self.keys.is_empty() {
             let keys = &self.keys;
             self.containers.push(Container { keys: keys.to_vec() });

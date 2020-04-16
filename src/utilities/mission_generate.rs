@@ -32,8 +32,8 @@ impl Command for MissionGenerate {
 
         let mission_source = args.value_of("mission").unwrap();
         let mission_file = format!("{}.pbo", mission_source);
-        let mission_map = if m_re.is_match(&mission_source) {
-            let cap = m_re.captures(&mission_source).unwrap();
+        let mission_map = if m_re.is_match(mission_source) {
+            let cap = m_re.captures(mission_source).unwrap();
             cap.get(2).unwrap().as_str()
         } else {
             error!("Mission folder must have a map defined");

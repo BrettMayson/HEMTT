@@ -1,5 +1,3 @@
-use webbrowser;
-
 use crate::{Command, HEMTTError};
 
 pub struct Bug {}

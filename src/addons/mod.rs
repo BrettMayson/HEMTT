@@ -26,10 +26,10 @@ impl Addon {
 
     pub fn target(&self, p: &Project) -> PathBuf {
         let mut target = PathBuf::from(self.location.to_string());
-        if !p.prefix.is_empty() {
-            target.push(&format!("{}_{}.pbo", p.prefix, self.name));
-        } else {
+        if p.prefix.is_empty() {
             target.push(&format!("{}.pbo", self.name));
+        } else {
+            target.push(&format!("{}_{}.pbo", p.prefix, self.name));
         }
         target
     }
@@ -60,10 +60,10 @@ impl Addon {
     pub fn release_target(&self, release_folder: &PathBuf, p: &Project) -> PathBuf {
         let mut r = self.release_location(release_folder, p);
 
-        if !p.prefix.is_empty() {
-            r.push(&format!("{}_{}.pbo", p.prefix, self.name));
-        } else {
+        if p.prefix.is_empty() {
             r.push(&format!("{}.pbo", self.name));
+        } else {
+            r.push(&format!("{}_{}.pbo", p.prefix, self.name));
         }
         r
     }
@@ -72,7 +72,7 @@ impl Addon {
     pub fn release(&self, release_folder: &PathBuf, p: &Project) -> Result<(), HEMTTError> {
         let target = self.release_target(release_folder, p);
         create_dir!(target.parent().unwrap())?;
-        copy_file!(self.target(&p), target)?;
+        copy_file!(self.target(p), target)?;
         Ok(())
     }
 }

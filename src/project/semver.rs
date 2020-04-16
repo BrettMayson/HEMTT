@@ -9,8 +9,8 @@ pub struct SemVer {
 }
 
 impl SemVer {
-    pub fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
-        SemVer {
+    pub const fn new(major: u32, minor: u32, patch: u32, build: String) -> Self {
+        Self {
             major,
             minor,
             patch,
@@ -20,7 +20,7 @@ impl SemVer {
 
     pub fn from(version: &str) -> Self {
         let mut parts = version.split('.');
-        SemVer {
+        Self {
             major: parts.next().unwrap().parse::<u32>().unwrap(),
             minor: parts.next().unwrap().parse::<u32>().unwrap(),
             patch: parts.next().unwrap().parse::<u32>().unwrap(),

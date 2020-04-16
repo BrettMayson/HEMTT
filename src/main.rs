@@ -1,6 +1,3 @@
-#[cfg(windows)]
-use ansi_term;
-
 #[macro_use]
 pub mod macros;
 

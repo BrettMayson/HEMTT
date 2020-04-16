@@ -12,9 +12,9 @@ pub enum AddonLocation {
 impl ToString for AddonLocation {
     fn to_string(&self) -> String {
         String::from(match self {
-            AddonLocation::Addons => "addons",
-            AddonLocation::Compats => "compats",
-            AddonLocation::Optionals => "optionals",
+            Self::Addons => "addons",
+            Self::Compats => "compats",
+            Self::Optionals => "optionals",
         })
     }
 }
@@ -27,7 +27,7 @@ impl AddonLocation {
         self.to_path_buf().exists()
     }
 
-    pub fn all() -> Vec<AddonLocation> {
-        AddonLocation::iter().collect()
+    pub fn all() -> Vec<Self> {
+        Self::iter().collect()
     }
 }

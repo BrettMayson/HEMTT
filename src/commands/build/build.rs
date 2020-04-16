@@ -19,7 +19,7 @@ pub struct Build {
 }
 impl Build {
     pub fn new(use_bin: bool) -> Self {
-        let can_binarize = use_bin && cfg!(windows) && Build::find_binarize();
+        let can_binarize = use_bin && cfg!(windows) && Self::find_binarize();
 
         if !can_binarize {
             if cfg!(windows) {

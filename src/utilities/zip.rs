@@ -1,9 +1,7 @@
-use colored::*;
-use walkdir;
-use zip;
-
 use std::io::{copy, BufReader, BufWriter};
 use std::path::Path;
+
+use colored::*;
 
 use crate::{Command, HEMTTError, Project};
 
