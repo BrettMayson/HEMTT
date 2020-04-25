@@ -109,7 +109,7 @@ jobs:
 
       - name: Install OpenSSL
         run: |
-          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1f.msi' -OutFile openssl.msi"
+          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1g.msi' -OutFile openssl.msi"
           msiexec.exe /qn /i openssl.msi
 
       - name: Build
