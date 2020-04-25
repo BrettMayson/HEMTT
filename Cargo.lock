@@ -36,7 +36,7 @@ dependencies = [
 [[package]]
 name = "armake2"
 version = "0.3.0"
-source = "git+https://github.com/synixebrett/armake2?branch=restructure#a39d08e15a77f2f7093422343ab604624106700c"
+source = "git+https://github.com/synixebrett/armake2?branch=restructure#c36551345e7b49db1aaa21e7c058aedd035f1b46"
 dependencies = [
  "ansi_term 0.12.1",
  "byteorder",
