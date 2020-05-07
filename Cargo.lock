@@ -43,7 +43,7 @@ dependencies = [
  "clap",
  "colored",
  "docopt",
- "linked-hash-map 0.5.2",
+ "linked-hash-map 0.5.3",
  "peg",
  "regex",
  "serde 1.0.106",
@@ -646,7 +646,7 @@ dependencies = [
  "handlebars",
  "indicatif 0.14.0",
  "lazy_static",
- "linked-hash-map 0.5.2",
+ "linked-hash-map 0.5.3",
  "num_cpus",
  "question",
  "rayon",
@@ -928,9 +928,9 @@ dependencies = [
 
 [[package]]
 name = "linked-hash-map"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae91b68aebc4ddb91978b11a1b02ddd8602a05ec19002801c5666000e05e0f83"
+checksum = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
 
 [[package]]
 name = "log"
@@ -2216,7 +2216,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65923dd1784f44da1d2c3dbbc5e822045628c590ba72123e1c73d3c230c4434d"
 dependencies = [
- "linked-hash-map 0.5.2",
+ "linked-hash-map 0.3.0",
 ]
 
 [[package]]
