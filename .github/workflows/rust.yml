@@ -21,11 +21,14 @@ jobs:
           rustup default stable
           rustup component add clippy rustfmt
 
-      - name: Run rustfmt
-        run: cargo fmt -- --check
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
 
-      - name: Run clippy
-        run: cargo clippy --all -- -Dwarnings
+      - name: rustfmt
+        run: cargo fmt -- --check
 
   build-linux:
     name: Build (Linux)
