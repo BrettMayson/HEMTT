@@ -144,6 +144,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     commands.push(Box::new(utilities::RenderVar {}));
     commands.push(Box::new(utilities::Translation {}));
     commands.push(Box::new(utilities::Zip {}));
+
     // Windows only utilities
     #[cfg(windows)]
     {
