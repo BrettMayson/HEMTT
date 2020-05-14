@@ -96,8 +96,8 @@ checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
 name = "bisign"
-version = "0.1.3"
-source = "git+https://github.com/synixebrett/bisign#17b59fcbc1e29f39c75d3791b74550fdf0b0cf8c"
+version = "0.2.0"
+source = "git+https://github.com/synixebrett/bisign#a441fb69f5f2cec2502f6b9246de7b3676d428b6"
 dependencies = [
  "byteorder",
  "clap",
@@ -1190,7 +1190,7 @@ dependencies = [
 [[package]]
 name = "pbo"
 version = "0.2.1"
-source = "git+https://github.com/synixebrett/pbo-rs#156840903b63f17d4a93d54ef57f07cff5682358"
+source = "git+https://github.com/synixebrett/pbo-rs#46ffef0beb8931fca0aab0b433c655016a4f1b48"
 dependencies = [
  "byteorder",
  "openssl",
