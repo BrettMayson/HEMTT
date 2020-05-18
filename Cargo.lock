@@ -1616,12 +1616,13 @@ dependencies = [
 
 [[package]]
 name = "self_update"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0881a950f4b11e5f6d0aa916884842f9ddd1d5ebcf6ff960a14cc9e151c011a"
+checksum = "932cde1f76c44915f4725a42357f29ac3584c058a00a6e6c07ddede3db7baf17"
 dependencies = [
  "hyper-old-types",
  "indicatif 0.13.0",
+ "log",
  "quick-xml",
  "regex",
  "reqwest",
