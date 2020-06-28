@@ -3,7 +3,6 @@ use std::io::Cursor;
 use std::path::PathBuf;
 
 use glob::Pattern;
-use indicatif::ProgressBar;
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;
@@ -23,12 +22,9 @@ impl Build {
 
         if !can_binarize {
             if cfg!(windows) {
-                warnmessage!("Unable to locate binarize.exe", "Files will be packed as is");
+                warn!("Unable to locate binarize.exe; Files will be packed as is");
             } else {
-                warnmessage!(
-                    "Unable to use binarize.exe on non-windows systems",
-                    "Files will be packed as is"
-                );
+                warn!("Unable to use binarize.exe on non-windows systems; Files will be packed as is");
             }
         };
 
@@ -50,7 +46,8 @@ impl Task for Build {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
+        debug!("[{}] starting build", addon.name);
         let mut pbo = armake2::PBO {
             files: LinkedHashMap::new(),
             header_extensions: HashMap::new(),
@@ -72,9 +69,10 @@ impl Task for Build {
                 continue;
             }
             if exclude_patterns.iter().any(|x| x.matches(entry.path().to_str().unwrap())) {
+                debug!("[{}] excluding {}", addon.name, entry.path().display());
                 continue;
             }
-            pb.set_message(&entry.path().display().to_string());
+            debug!("[{}] process file: {}", addon.name, entry.path().display());
             let name = entry
                 .path()
                 .display()
@@ -139,6 +137,7 @@ impl Task for Build {
                         );
                     }
                 } else if cfg!(windows) && is_binarizable {
+                    debug!("binarize: {}", entry.path().display());
                     let cursor = armake2::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);
                 } else {

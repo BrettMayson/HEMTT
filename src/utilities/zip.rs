@@ -1,8 +1,6 @@
 use std::io::{copy, BufReader, BufWriter};
 use std::path::Path;
 
-use colored::*;
-
 use crate::{Command, HEMTTError, Project};
 
 pub struct Zip {}
@@ -30,7 +28,7 @@ pub fn archive(name: &str, p: Project) -> Result<(), HEMTTError> {
             _ => p.render(name, None)?,
         }
     );
-    println!("{} {}", "Archiving".white().bold(), zipname);
+    debug!("Archiving: {}", zipname);
 
     let zipsubpath = format!("releases/{}", zipname);
     let zippath = Path::new(&zipsubpath);
@@ -53,10 +51,12 @@ pub fn archive(name: &str, p: Project) -> Result<(), HEMTTError> {
             let mut f = BufReader::new(open_file!(path)?);
 
             // Copy directly, without any buffer, as we have no use for the intermediate data
+            trace!("Adding file: {}", name.display());
             copy(&mut f, &mut zip)?;
         } else if !name.as_os_str().is_empty() {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
+            trace!("Adding directory: {}", name.display());
             zip.add_directory_from_path(name, options)?;
         }
     }

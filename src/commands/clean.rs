@@ -13,13 +13,11 @@ impl Command for Clean {
         let flow = Flow {
             steps: vec![
                 Step::single(
-                    "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
                 Step::parallel(
-                    "🗑️",
                     "Clear",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clear {})],

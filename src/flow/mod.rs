@@ -1,9 +1,3 @@
-use std::sync::mpsc::{self, TryRecvError};
-use std::thread;
-use std::time::Duration;
-
-use colored::*;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 
 mod report;
@@ -40,9 +34,9 @@ impl Flow {
                 continue;
             }
             if step.parallel {
-                addons = self.parallel(&step.emoji, step, addons, p)?;
+                addons = self.parallel(step, addons, p)?;
             } else {
-                addons = self.single(&step.emoji, step, addons, p)?;
+                addons = self.single(step, addons, p)?;
             }
 
             // Check for stopped reports
@@ -55,8 +49,7 @@ impl Flow {
                     if let Some((fatal, _)) = report.stop {
                         if fatal {
                             can_continue = false;
-                            println!();
-                            error!(&format!("Unable to build `{}`", addon.folder().display().to_string()))
+                            error!("Unable to build `{}`", addon.folder().display().to_string())
                         }
                     }
                 }
@@ -73,7 +66,7 @@ impl Flow {
                     report.display();
                 }
                 Err(e) => {
-                    error!(format!("{}", e));
+                    error!("{}", e);
                 }
             }
         }
@@ -82,127 +75,42 @@ impl Flow {
 
     pub fn parallel(
         &self,
-        emoji: &str,
         step: &Step,
         addons: Vec<Result<(Report, Addon), HEMTTError>>,
         p: &mut Project,
     ) -> AddonList {
-        let addon_style = ProgressStyle::default_spinner()
-            .tick_chars("\\|/| ")
-            .template("{prefix:.bold.dim} {spinner} {wide_msg}");
-        let master_style = ProgressStyle::default_bar()
-            .template("{prefix:.bold.cyan/blue} {spinner:.yellow} [{elapsed_precise}] [{bar:30.cyan/blue}] [{pos}|{len}]")
-            .progress_chars("#>-");
-
-        // Create a multiprogress bar
-        let m = MultiProgress::new();
-        //m.set_move_cursor(true);
-        // Create the top bar
-        let mut total = 0;
-        let total_pb = m.add(ProgressBar::new(0));
-        total_pb.set_style(master_style);
-
-        if !step.name.is_empty() {
-            if cfg!(windows) {
-                total_pb.set_prefix(&fill_space!(" ", 12, &step.name));
-            } else {
-                total_pb.set_prefix(&format!("{} {}", emoji, &fill_space!(" ", 12, &step.name)));
-            }
-        }
-
         // Create a progress bar for each addon
-        let addons: Vec<Result<(ProgressBar, Report, Addon), HEMTTError>> = addons
+        let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
             .into_iter()
             .map(|data| {
                 let (report, addon) = data?;
-                if report.stop.is_none() {
-                    total += 1;
-                    total_pb.set_length(total);
-                }
-                Ok((m.add(ProgressBar::new(0)), report, addon))
+                Ok((report, addon))
             })
             .collect();
 
-        let draw_thread = if *crate::NOPB {
-            thread::spawn(|| {})
-        } else {
-            thread::spawn(move || {
-                m.join().unwrap();
-            })
-        };
-
-        let (tx, rx) = mpsc::channel();
-
-        if !*crate::NOPB {
-            // tick the top bar every 100 ms to keep the multiprogress updated
-            thread::spawn(move || 'outer: loop {
-                thread::sleep(Duration::from_millis(100));
-                loop {
-                    match rx.try_recv() {
-                        Ok(v) => {
-                            if v == 0 {
-                                total_pb.finish();
-                                break 'outer;
-                            } else {
-                                total_pb.inc(v);
-                            }
-                        }
-                        Err(TryRecvError::Disconnected) => {
-                            break 'outer;
-                        }
-                        Err(TryRecvError::Empty) => {
-                            break;
-                        }
-                    }
-                    total_pb.tick();
-                }
-                total_pb.tick();
-            });
-        } else if cfg!(windows) {
-            println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
-        } else {
-            println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
-        }
+        info!("Starting Parallel Step: {}", step.name);
 
         // Task loop
         let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
             .into_par_iter()
-            .map_with(
-                tx.clone(),
-                |tx, data: Result<(ProgressBar, Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
-                    let (pb, mut report, addon) = data?;
-
-                    if !*crate::NOPB {
-                        pb.set_style(addon_style.clone());
-                        pb.set_prefix(&fill_space!(" ", 16, &addon.name));
-                    }
-
-                    let add = report.stop.is_none();
+            .map(
+                |data: Result<( Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
+                    let (mut report, addon) = data?;
 
                     for task in &step.tasks {
                         if report.stop.is_none() && task.can_run(&addon, &report, p, &step.stage)? {
-                            pb.tick();
-                            report.absorb(match task.parallel(&addon, &report, p, &step.stage, &pb) {
+                            report.absorb(match task.parallel(&addon, &report, p, &step.stage) {
                                 Ok(v) => v,
                                 Err(e) => {
-                                    pb.finish_and_clear();
                                     return Err(e);
                                 }
                             });
                         }
                     }
-
-                    pb.finish_and_clear();
-                    if add {
-                        tx.send(1).unwrap();
-                    }
                     Ok((report, addon))
                 },
             )
             .collect();
-
-        tx.send(0).unwrap();
-        draw_thread.join().unwrap();
 
         let addons = addons
             .into_iter()
@@ -223,17 +131,12 @@ impl Flow {
 
     fn single(
         &self,
-        emoji: &str,
         step: &Step,
         addons: Vec<Result<(Report, Addon), HEMTTError>>,
         p: &mut Project,
     ) -> AddonList {
         if !step.name.is_empty() {
-            if cfg!(windows) {
-                println!("{}", &fill_space!(" ", 12, &step.name).bold().cyan());
-            } else {
-                println!("{} {}", emoji, &fill_space!(" ", 12, &step.name).bold().cyan());
-            }
+            info!("Starting Step: {}", step.name);
         }
 
         let mut addons = addons;

@@ -29,14 +29,12 @@ impl Task for Release {
                 if *crate::CI {
                     return Err(error);
                 } else {
-                    println!();
                     warn!("Release already exists");
                     if Confirmation::new().with_text("Do you want to continue?").interact()? {
                         std::fs::remove_dir_all(&release_folder)?;
                     } else {
                         return Err(error);
                     }
-                    println!();
                 }
             }
         }

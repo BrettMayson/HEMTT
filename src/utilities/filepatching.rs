@@ -23,8 +23,8 @@ impl FilePatching {
             std::process::Command::new("cmd")
                 .args(&["/C", "mklink", "/J", &p.modname()?, &project_root])
                 .output()?;
-            println!("Linked at {:?}", target);
-            println!("You can now use `-mod=\"{}\\{}\" -filePatching`", p.mainprefix, p.modname()?);
+            info!("Linked at {:?}", target);
+            info!("You can now use `-mod=\"{}\\{}\" -filePatching`", p.mainprefix, p.modname()?);
         }
         Ok(())
     }

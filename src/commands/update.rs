@@ -15,7 +15,7 @@ impl Command for Update {
 
     fn run_no_project(&self, _: &clap::ArgMatches) -> Result<(), HEMTTError> {
         if cfg!(debug_assertions) {
-            println!("You are running a debug version, which can not be updated");
+            error!("You are running a debug version, which can not be updated");
             return Ok(());
         }
 
@@ -31,7 +31,7 @@ impl Command for Update {
             .unwrap_or_print()
             .update()
             .unwrap_or_print();
-        println!("\nUsing Version: {}", status.version());
+        info!("\nUsing Version: {}", status.version());
         Ok(())
     }
 }

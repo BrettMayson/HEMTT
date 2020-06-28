@@ -59,7 +59,7 @@ impl Command for Init {
                     format!("https://github.com/hemtt/{}", template)
                 };
                 match git2::Repository::clone(&repo, "./.hemtt/template") {
-                    Ok(_) => println!("Template Cloned"),
+                    Ok(_) => info!("Template Cloned"),
                     Err(e) => panic!("Failed to clone: {}", e),
                 };
             }

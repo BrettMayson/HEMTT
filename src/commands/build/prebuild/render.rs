@@ -1,7 +1,6 @@
 use std::io::Write;
 use std::path::Path;
 
-use indicatif::ProgressBar;
 use walkdir::WalkDir;
 
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
@@ -12,6 +11,7 @@ pub fn can_render(p: &Path) -> bool {
 }
 
 pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTError> {
+    debug!("render file: {:?}", path);
     let vars = &addon.get_variables(p);
     let mut report = Report::new();
     match crate::render::run(
@@ -28,7 +28,7 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
                 .to_string();
             let mut outfile = create_file!(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
-            debug!("Rendered `{}` to `{}`", path.display(), dest);
+            debug!("rendered `{}` to `{}`", path.display(), dest);
             crate::RENDERED
                 .lock()
                 .unwrap()
@@ -58,12 +58,11 @@ impl Task for Render {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();
             if can_render(path.path()) {
-                pb.set_message(&format!("Render: {}", path.path().display().to_string()));
                 report.absorb(render(path.path(), addon, p)?);
             }
         }

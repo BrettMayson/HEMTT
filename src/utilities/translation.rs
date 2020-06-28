@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-use indicatif::ProgressBar;
 use serde::Deserialize;
 use strum::IntoEnumIterator;
 use walkdir::WalkDir;
@@ -52,7 +51,6 @@ impl Translation {
     pub fn analyze(stringtables: Vec<PathBuf>) -> Result<(f64, HashMap<String, f64>), HEMTTError> {
         let mut total = 0.0;
         let mut keys = HashMap::new();
-        let pb = ProgressBar::new(stringtables.len() as u64);
         for stringtable in stringtables {
             let f = BufReader::new(open_file!(stringtable)?);
             let project: Project = serde_xml_rs::from_reader(f)
@@ -93,9 +91,7 @@ impl Translation {
                     }
                 }
             }
-            pb.inc(1);
         }
-        pb.finish_and_clear();
         Ok((total, keys))
     }
 }

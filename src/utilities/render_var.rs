@@ -4,7 +4,7 @@ pub struct RenderVar {}
 impl Command for RenderVar {
     fn register(&self) -> clap::App {
         clap::SubCommand::with_name("var")
-            .about("Renders a varible, or a handlebars string")
+            .about("Renders a variable, or a handlebars string")
             .arg(clap::Arg::with_name("variable").required(true))
     }
 

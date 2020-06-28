@@ -20,14 +20,12 @@ impl Command for Build {
         let flow = Flow {
             steps: vec![
                 Step::single(
-                    "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
                 if args.is_present("force") {
                     Step::parallel(
-                        "🗑️",
                         "Clear",
                         Stage::Check,
                         vec![Box::new(crate::build::checks::clear::Clear {})],
@@ -36,7 +34,6 @@ impl Command for Build {
                     Step::none()
                 },
                 Step::parallel(
-                    "🔍",
                     "Checks",
                     Stage::Check,
                     vec![
@@ -47,7 +44,6 @@ impl Command for Build {
                     ],
                 ),
                 Step::single(
-                    "📜",
                     "",
                     Stage::Check,
                     vec![Box::new(crate::flow::Script {
@@ -55,13 +51,11 @@ impl Command for Build {
                     })],
                 ),
                 Step::parallel(
-                    "🚧",
                     "Prebuild",
                     Stage::PreBuild,
                     vec![Box::new(crate::build::prebuild::preprocess::Preprocess {})],
                 ),
                 Step::single(
-                    "📜",
                     "",
                     Stage::PreBuild,
                     vec![Box::new(crate::flow::Script {
@@ -69,13 +63,11 @@ impl Command for Build {
                     })],
                 ),
                 Step::parallel(
-                    "📝",
                     "Build",
                     Stage::Build,
                     vec![Box::new(crate::build::build::Build::new(true))],
                 ),
                 Step::single(
-                    "📜",
                     "",
                     Stage::PostBuild,
                     vec![Box::new(crate::flow::Script {
@@ -84,7 +76,6 @@ impl Command for Build {
                 ),
                 if args.is_present("release") {
                     Step::single(
-                        "⭐",
                         "Release",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::build::postbuild::release::Release {
@@ -96,7 +87,6 @@ impl Command for Build {
                 },
                 if args.is_present("release") {
                     Step::single(
-                        "⭐",
                         "Sign",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::build::postbuild::sign::Sign {})],
@@ -106,7 +96,6 @@ impl Command for Build {
                 },
                 if args.is_present("release") {
                     Step::single(
-                        "📜",
                         "",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::flow::Script {

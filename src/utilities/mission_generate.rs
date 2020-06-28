@@ -68,7 +68,7 @@ impl Command for MissionGenerate {
         for map in maps {
             let m = mission_source.replace(mission_map, &map);
             copy_file!(mission_file, format!("missions{}{}.pbo", std::path::MAIN_SEPARATOR, m))?;
-            println!("{}", m);
+            info!("{}", m);
         }
 
         Ok(())

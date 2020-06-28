@@ -37,22 +37,22 @@ impl Report {
         for warning in &self.warnings {
             match warning {
                 HEMTTError::GENERIC(s, v) => {
-                    warnmessage!(s, v);
+                    warn!("{}: {}", s, v);
                 }
                 HEMTTError::LINENO(error) => {
-                    filewarn!(error);
+                    warn!("{:?}", error);
                 }
                 HEMTTError::SIMPLE(s) => {
-                    warn!(s);
+                    warn!("{}", s);
                 }
                 HEMTTError::IO(s) => {
-                    warn!(s);
+                    warn!("{}", s);
                 }
                 HEMTTError::PATH(s) => {
-                    warnmessage!(&s.source, format!("{:#?}", s.path));
+                    warn!("{}: {:#?}", &s.source, s.path);
                 }
                 HEMTTError::TOML(s) => {
-                    warn!(s);
+                    warn!("{}", s);
                 }
             }
         }
@@ -61,22 +61,22 @@ impl Report {
         for error in &self.errors {
             match error {
                 HEMTTError::GENERIC(s, v) => {
-                    errormessage!(s, v);
+                    error!("{}: {}", s, v);
                 }
                 HEMTTError::SIMPLE(s) => {
-                    error!(s);
+                    error!("{}", s);
                 }
                 HEMTTError::LINENO(error) => {
-                    fileerror!(error);
+                    error!("{:?}", error);
                 }
                 HEMTTError::IO(s) => {
-                    error!(s);
+                    error!("{}", s);
                 }
                 HEMTTError::PATH(s) => {
-                    errormessage!(&s.source, format!("{:#?}", s.path));
+                    error!("{}: {:#?}", &s.source, s.path);
                 }
                 HEMTTError::TOML(s) => {
-                    error!(s);
+                    error!("{}", s);
                 }
             }
         }
@@ -86,22 +86,22 @@ impl Report {
             if *fatal {
                 match error {
                     HEMTTError::GENERIC(s, v) => {
-                        errormessage!(s, v);
+                        error!("{}: {}", s, v);
                     }
                     HEMTTError::SIMPLE(s) => {
-                        error!(s);
+                        error!("{}", s);
                     }
                     HEMTTError::LINENO(error) => {
-                        fileerror!(error);
+                        error!("{:?}", error);
                     }
                     HEMTTError::IO(s) => {
-                        error!(s);
+                        error!("{}", s);
                     }
                     HEMTTError::PATH(s) => {
-                        errormessage!(&s.source, format!("{:#?}", s.path));
+                        error!("{}: {:#?}", &s.source, s.path);
                     }
                     HEMTTError::TOML(s) => {
-                        error!(s);
+                        error!("{}", s);
                     }
                 }
             }
