@@ -18,7 +18,8 @@ fn main() {
         },
         Config::default(),
         TerminalMode::Mixed,
-    ).unwrap();
+    )
+    .unwrap();
 
     crate::execute(&args, true).unwrap_or_print();
 }

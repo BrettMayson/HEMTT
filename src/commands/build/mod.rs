@@ -19,17 +19,9 @@ impl Command for Build {
         let addons = crate::project::addons::get_from_args(args)?;
         let flow = Flow {
             steps: vec![
-                Step::single(
-                    "Clean",
-                    Stage::Check,
-                    vec![Box::new(crate::build::checks::clear::Clean {})],
-                ),
+                Step::single("Clean", Stage::Check, vec![Box::new(crate::build::checks::clear::Clean {})]),
                 if args.is_present("force") {
-                    Step::parallel(
-                        "Clear",
-                        Stage::Check,
-                        vec![Box::new(crate::build::checks::clear::Clear {})],
-                    )
+                    Step::parallel("Clear", Stage::Check, vec![Box::new(crate::build::checks::clear::Clear {})])
                 } else {
                     Step::none()
                 },
@@ -62,11 +54,7 @@ impl Command for Build {
                         release: args.is_present("release"),
                     })],
                 ),
-                Step::parallel(
-                    "Build",
-                    Stage::Build,
-                    vec![Box::new(crate::build::build::Build::new(true))],
-                ),
+                Step::parallel("Build", Stage::Build, vec![Box::new(crate::build::build::Build::new(true))]),
                 Step::single(
                     "",
                     Stage::PostBuild,
