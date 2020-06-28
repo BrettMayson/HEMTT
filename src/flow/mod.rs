@@ -73,12 +73,7 @@ impl Flow {
         Ok(addons)
     }
 
-    pub fn parallel(
-        &self,
-        step: &Step,
-        addons: Vec<Result<(Report, Addon), HEMTTError>>,
-        p: &mut Project,
-    ) -> AddonList {
+    pub fn parallel(&self, step: &Step, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
         // Create a progress bar for each addon
         let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
             .into_iter()
@@ -94,7 +89,7 @@ impl Flow {
         let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
             .into_par_iter()
             .map(
-                |data: Result<( Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
+                |data: Result<(Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
                     let (mut report, addon) = data?;
 
                     for task in &step.tasks {
@@ -129,12 +124,7 @@ impl Flow {
         Ok(addons)
     }
 
-    fn single(
-        &self,
-        step: &Step,
-        addons: Vec<Result<(Report, Addon), HEMTTError>>,
-        p: &mut Project,
-    ) -> AddonList {
+    fn single(&self, step: &Step, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
         if !step.name.is_empty() {
             info!("Starting Step: {}", step.name);
         }
