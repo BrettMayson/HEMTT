@@ -28,8 +28,10 @@ impl FileCache {
     pub fn read(&mut self, path: &str) -> Result<Vec<u8>, HEMTTError> {
         let path = path.to_string();
         if self.files.contains_key(&path) {
+            trace!("reading file from memory: {}", path);
             Ok(self.files.get(&path).unwrap().to_vec())
         } else {
+            trace!("reading file from disk: {}", path);
             let f = open_file!(path)?;
             let mut reader = BufReader::new(f);
             let mut buf = Vec::new();
@@ -92,13 +94,13 @@ impl FileCache {
     }
 
     pub fn insert(&mut self, path: &str, data: String) -> Result<(), HEMTTError> {
-        debug!("Cache insert: `{}`", path);
+        debug!("insert: `{}`", path);
         self.files.insert(path.to_string(), data.as_bytes().to_vec());
         Ok(())
     }
 
     pub fn insert_bytes(&mut self, path: &str, data: Vec<u8>) -> Result<(), HEMTTError> {
-        debug!("Cache insert bytes: `{}`", path);
+        debug!("insert bytes: `{}`", path);
         self.files.insert(path.to_string(), data);
         Ok(())
     }
@@ -149,7 +151,7 @@ impl RenderedFiles {
     pub fn clean(&mut self) {
         for (_, tmp) in self.redirects.iter() {
             if let Err(e) = remove_file!(tmp) {
-                error!(e.to_string());
+                error!("{}", e);
             }
         }
     }

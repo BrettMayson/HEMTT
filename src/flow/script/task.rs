@@ -1,4 +1,3 @@
-use colored::*;
 use rayon::prelude::*;
 use regex::Regex;
 use subprocess::Exec;
@@ -15,7 +14,7 @@ impl Task for Script {
         let steps = Self::get_scripts(s, p)?;
 
         for step in steps {
-            println!("{} `{}`", s.to_string().blue().bold(), p.render(&step, None)?);
+            info!("Starting Script ({}): {}", s.to_string(), p.render(&step, None)?);
             Self::execute(&step, false, &addons, p, s, self.release)?;
         }
 
@@ -83,7 +82,7 @@ impl Script {
                             }
                         }
                     } else {
-                        println!("Script `{}` skipped", &cmd);
+                        info!("Script `{}` skipped", &cmd);
                     }
                 } else {
                     error!("Script `{}` does not exist", &cmd);
@@ -102,7 +101,7 @@ impl Script {
                     }
                 }
                 if !shell.success() {
-                    errormessage!("Failed to execute shell command", cmd);
+                    error!("Failed to execute shell command: {}", cmd);
                     std::process::exit(2);
                 }
             }
@@ -118,7 +117,7 @@ impl Script {
             Stage::ReleaseBuild => &p.releasebuild,
             _ => {
                 // Invalid, we should never be here
-                println!("Scripts tried to run during an invalid stage, please report this");
+                error!("Scripts tried to run during an invalid stage, please report this");
                 unimplemented!()
             }
         }

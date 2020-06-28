@@ -1,14 +1,13 @@
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
-use indicatif::ProgressBar;
 use regex::Regex;
 use walkdir::WalkDir;
 
 use crate::{Addon, FileErrorLineNumber, HEMTTError, Project, Report, Stage, Task};
 
 pub static RAPABLE: &[&str] = &["cpp", "rvmat", "ext"];
-static CMD_GAP: usize = 18;
+// static CMD_GAP: usize = 18;
 
 pub fn can_preprocess(p: &Path) -> bool {
     RAPABLE.contains(&p.extension().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap())
@@ -21,36 +20,28 @@ impl Task for Preprocess {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         for entry in WalkDir::new(&addon.folder()) {
-            pb.set_message("Looking for files to preprocess");
-            pb.tick();
             let path = entry.unwrap();
             let can_rap = can_preprocess(path.path());
             if can_rap {
-                pb.set_message("Waiting for render lock");
                 let (original_path, rendered_path) =
                     crate::RENDERED.lock().unwrap().get_paths(path.path().display().to_string());
-                pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Reading"), rendered_path));
                 let raw = crate::CACHED.lock().unwrap().clean_comments(&rendered_path)?.clone();
                 if raw.len() < 3 {
-                    pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Skipping"), rendered_path));
                     continue;
                 }
                 let mut includes = p.include.clone();
                 includes.insert(0, PathBuf::from("."));
-                pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                 // match preprocess(raw.clone(), Some(PathBuf::from(&original_path)), &includes, |path| {
                 //     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                 //     crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap())
                 // }) {
                 match armake2::Config::from_string(raw.clone(), Some(PathBuf::from(&original_path)), &includes, |path| {
-                    pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Preprocess"), rendered_path));
                     crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap()).unwrap()
                 }) {
                     Ok(rapped) => {
-                        pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Rapify"), rendered_path));
                         // let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
                         // let rapped = armake2::Config::from_string(&output, Some(PathBuf::from(&original_path)))
                         //     .map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
@@ -75,13 +66,11 @@ impl Task for Preprocess {
                         //         note: None,
                         //     }));
                         // }
-                        pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, "Caching"), rendered_path));
                         let mut c = Cursor::new(Vec::new());
                         rapped.write_rapified(&mut c)?;
                         c.seek(SeekFrom::Start(0))?;
                         let mut out = Vec::new();
                         c.read_to_end(&mut out)?;
-                        pb.set_message("Waiting for cache lock");
                         crate::CACHED
                             .lock()
                             .unwrap()
@@ -131,6 +120,6 @@ pub fn convert_preprocess_error(error: String) -> Result<HEMTTError, HEMTTError>
         }));
     }
     std::fs::write("armake2.error", &error)?;
-    eprintln!("unknown armake error `{}`", error);
+    error!("unknown armake error `{}`", error);
     unimplemented!()
 }

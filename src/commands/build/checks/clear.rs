@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use indicatif::ProgressBar;
 use regex::Regex;
 use strum::IntoEnumIterator;
 
@@ -14,7 +13,7 @@ impl Task for Clear {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
         let target = addon.target(p);
         if target.exists() {
             remove_file!(target)?;

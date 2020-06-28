@@ -40,10 +40,7 @@ fn check_git_ignore() -> Result<(), HEMTTError> {
 
 fn deprecated_json() -> Result<(), HEMTTError> {
     if Path::new("hemtt.json").exists() {
-        warnmessage!(
-            "Use of `hemtt.json` is deprecated and may be removed in a future version",
-            "Use `hemtt.toml` or a `.hemtt` project folder"
-        );
+        warn!("Use of `hemtt.json` is deprecated and may be removed in a future version, use `hemtt.toml`");
     }
     Ok(())
 }
@@ -78,7 +75,7 @@ fn deprecated_values() -> Result<(), HEMTTError> {
         for entry in glob("./.hemtt/*.toml").expect("Failed to read glob pattern") {
             match entry {
                 Ok(path) => _check(path)?,
-                Err(e) => println!("{:?}", e),
+                Err(e) => error!("{:?}", e),
             }
         }
     }

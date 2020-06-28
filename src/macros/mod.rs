@@ -38,108 +38,45 @@ macro_rules! iformat {
     };
 }
 
-#[macro_export]
-macro_rules! debug {
-    ($s:expr) => {{
-        if *crate::DEBUG {
-            use colored::*;
-            let style = "debug".magenta().bold();
-            let status = $s;
-            crate::iprintln!("{style}: {status}", style, status);
-        }
-    }};
-    ($s:expr, $($p:expr),*) => {{
-        debug!(format!($s, $($p,)*));
-    }};
-}
+// #[macro_export]
+// macro_rules! filewarn {
+//     ($e:expr) => {{
+//         let status = &$e.error;
+//         let point = filepointer!($e);
+//         warn!("{}: {}", status, point)
+//     }};
+// }
 
-#[macro_export]
-macro_rules! warn {
-    ($s:expr) => {{
-        use colored::*;
-        let style = "warning".yellow().bold();
-        let status = $s;
-        crate::iprintln!("{style}: {status}", style, status);
-    }};
-    ($s:expr, $($p:expr),*) => {{
-        warn!(format!($s, $($p,)*));
-    }};
-}
+// #[macro_export]
+// macro_rules! fileerror {
+//     ($e:expr) => {
+//         let status = &$e.error;
+//         let point = filepointer!($e);
+//         error!("{}: {}", status, point)
+//     };
+// }
 
-#[macro_export]
-macro_rules! warnmessage {
-    ($s:expr, $m:expr) => {
-        let status = $s;
-        let message = $m;
-        crate::warn!(crate::iformat!("{status}\n    {message}", status, message));
-    };
-}
-
-#[macro_export]
-macro_rules! error {
-    ($s:expr) => {{
-        use colored::*;
-        let style = "error".red().bold();
-        let status = $s;
-        crate::iprintln!("{style}: {status}", style, status);
-    }};
-    ($s:expr, $($p:expr),*) => {{
-        error!(format!($s, $($p,)*));
-    }};
-}
-
-#[macro_export]
-macro_rules! errormessage {
-    ($s:expr, $m:expr) => {
-        let status = $s;
-        let message = $m;
-        crate::error!(crate::iformat!("{status}\n    {message}", status, message));
-    };
-}
-
-#[macro_export]
-macro_rules! filewarn {
-    ($e:expr) => {{
-        use colored::*;
-        let style = "warning".yellow().bold();
-        let status = &$e.error.bold();
-        let point = filepointer!($e);
-        crate::iprintln!("{style}: {status}\n{point}", style, status, point)
-    }};
-}
-
-#[macro_export]
-macro_rules! fileerror {
-    ($e:expr) => {
-        use colored::*;
-        let style = "error".red().bold();
-        let status = &$e.error.bold();
-        let point = filepointer!($e);
-        crate::iprintln!("{style}: {status}\n{point}", style, status, point)
-    };
-}
-
-#[macro_export]
-macro_rules! filepointer {
-    ($e:expr) => {{
-        let content = &$e.content;
-        let arrow = "-->".blue().bold();
-        let sep = "|".blue().bold();
-        //let end = "=".blue().bold();
-        let file = &$e.file;
-        let line = &$e.line.unwrap().to_string().blue().bold();
-        let space = repeat!(" ", line.len() + 2);
-        crate::iformat!(
-            "  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n",
-            arrow,
-            file,
-            sep,
-            line,
-            space,
-            content
-        )
-    }};
-}
+// #[macro_export]
+// macro_rules! filepointer {
+//     ($e:expr) => {{
+//         let content = &$e.content;
+//         let arrow = "-->".blue().bold();
+//         let sep = "|".blue().bold();
+//         //let end = "=".blue().bold();
+//         let file = &$e.file;
+//         let line = &$e.line.unwrap().to_string().blue().bold();
+//         let space = repeat!(" ", line.len() + 2);
+//         crate::iformat!(
+//             "  {arrow} {file}\n{space}{sep}\n {line} {sep} {content}\n{space}{sep}\n",
+//             arrow,
+//             file,
+//             sep,
+//             line,
+//             space,
+//             content
+//         )
+//     }};
+// }
 
 // Generic
 

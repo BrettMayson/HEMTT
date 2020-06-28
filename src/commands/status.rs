@@ -12,7 +12,6 @@ impl Command for Status {
         let addons = crate::project::addons::get_all()?;
         let flow = Flow {
             steps: vec![Step::parallel(
-                "🔍",
                 "Checks",
                 Stage::Check,
                 vec![

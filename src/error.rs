@@ -1,5 +1,4 @@
 use armake2::ArmakeError;
-use colored::*;
 
 pub trait PrintableError<T, E> {
     fn unwrap_or_print(self) -> T;
@@ -7,7 +6,7 @@ pub trait PrintableError<T, E> {
 impl<T, E: std::fmt::Debug + std::fmt::Display> PrintableError<T, E> for Result<T, E> {
     fn unwrap_or_print(self) -> T {
         if let Err(error) = &self {
-            error!(format!("{}", error));
+            error!("{}", error);
             std::process::exit(1);
         }
         self.unwrap()
@@ -75,9 +74,10 @@ impl HEMTTError {
 impl std::fmt::Display for HEMTTError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Self::GENERIC(ref s, ref v) => write!(f, "{}\n    {}", s.bold(), v),
+            Self::GENERIC(ref s, ref v) => write!(f, "{}: {}", s, v),
             Self::IO(ref err) => write!(f, "IO error: {}", err),
-            Self::LINENO(ref err) => write!(f, "{}\n{}", err.error, filepointer!(err)),
+            // Self::LINENO(ref err) => write!(f, "{}\n{}", err.error, filepointer!(err)),
+            Self::LINENO(ref err) => write!(f, "{}", err.error),
             Self::PATH(ref err) => write!(f, "IO error {}: {}", err.path.display(), err.source),
             Self::SIMPLE(ref s) => write!(f, "{}", s),
             Self::TOML(ref err) => write!(f, "TOML error: {}", err),

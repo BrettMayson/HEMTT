@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-use indicatif::ProgressBar;
-
 use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
 
 pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
@@ -25,7 +23,7 @@ impl Task for ModTime {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage, _pb: &ProgressBar) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
         let mut report = Report::new();
         let modified = modtime(&addon.folder())?;
         let target = addon.target(p);

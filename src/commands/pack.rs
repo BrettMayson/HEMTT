@@ -14,14 +14,12 @@ impl Command for Pack {
         let flow = Flow {
             steps: vec![
                 Step::single(
-                    "♻️",
                     "Clean",
                     Stage::Check,
                     vec![Box::new(crate::build::checks::clear::Clean {})],
                 ),
                 if args.is_present("force") {
                     Step::parallel(
-                        "🗑️",
                         "Clear",
                         Stage::Check,
                         vec![Box::new(crate::build::checks::clear::Clear {})],
@@ -30,7 +28,6 @@ impl Command for Pack {
                     Step::none()
                 },
                 Step::parallel(
-                    "🔍",
                     "Checks",
                     Stage::Check,
                     vec![
@@ -41,14 +38,12 @@ impl Command for Pack {
                     ],
                 ),
                 Step::parallel(
-                    "📦",
                     "Pack",
                     Stage::Build,
                     vec![Box::new(crate::build::build::Build::new(false))],
                 ),
                 if args.is_present("release") {
                     Step::single(
-                        "⭐",
                         "Release",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::build::postbuild::release::Release {
@@ -60,7 +55,6 @@ impl Command for Pack {
                 },
                 if args.is_present("release") {
                     Step::single(
-                        "📜",
                         "",
                         Stage::ReleaseBuild,
                         vec![Box::new(crate::flow::Script {

@@ -5,6 +5,9 @@ use std::time::Instant;
 use clap::App;
 
 #[macro_use]
+extern crate log;
+
+#[macro_use]
 pub mod macros;
 
 pub mod addons;
@@ -33,7 +36,7 @@ lazy_static::lazy_static! {
 
     pub static ref CI: bool = std::env::args().any(|x| x == "--ci") || is_ci();
     pub static ref DEBUG: bool = std::env::args().any(|x| x == "--debug");
-    pub static ref NOPB: bool = *CI || *DEBUG || std::env::args().any(|x| x == "--no-progress");
+    pub static ref TRACE: bool = std::env::args().any(|x| x == "--trace");
 
     pub static ref VERSION: &'static str = {
         let mut version = env!("CARGO_PKG_VERSION").to_string();
@@ -120,10 +123,10 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 .long("ci"),
         )
         .arg(
-            clap::Arg::with_name("no-progress")
+            clap::Arg::with_name("trace")
                 .global(true)
-                .help("No progress bars")
-                .long("no-progress"),
+                .help("Turn trace information on")
+                .long("trace"),
         );
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
@@ -183,9 +186,8 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 if c.require_project() {
                     let project = Project::read()?;
                     if root && c.can_announce() {
-                        println!("HEMTT {}", *crate::VERSION);
-                        println!("Environment: {}", project::environment());
-                        println!();
+                        info!("HEMTT {}", *crate::VERSION);
+                        info!("Environment: {}", project::environment());
                         startup::startup();
                     }
                     c.run(sub_matches, project)?;
@@ -193,16 +195,16 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                     c.run_no_project(sub_matches)?;
                 }
             }
-            None => println!("No command"),
+            None => error!("No command"),
         },
-        None => println!("No command"),
+        None => error!("No command"),
     }
 
     crate::RENDERED.lock().unwrap().clean();
 
     if matches.is_present("time") {
         let elapsed = start.unwrap().elapsed();
-        println!("Execution Took {}.{} Seconds", elapsed.as_secs(), elapsed.as_millis());
+        info!("Execution Took {}.{} Seconds", elapsed.as_secs(), elapsed.as_millis());
     }
 
     Ok(())
