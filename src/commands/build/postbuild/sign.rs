@@ -1,12 +1,12 @@
 use std::path::Path;
 
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
+use crate::{AddonList, HEMTTError, Project, Stage, Task};
 use bisign::BIPrivateKey;
 
 #[derive(Clone)]
 pub struct Sign {}
 impl Task for Sign {
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
+    fn single(&self, addons: AddonList, p: &Project, _: &Stage) -> Result<AddonList, HEMTTError> {
         create_dir!("keys/")?;
         let key_name = p.get_key_name()?;
         let key = if p.reuse_private_key() {
@@ -40,7 +40,7 @@ impl Task for Sign {
         })?;
 
         for d in &addons {
-            let (_, addon) = d.as_ref().unwrap();
+            let (_, _, addon) = d.as_ref().unwrap();
             // TODO deal with Result properly
             let sig = bisign::sign(addon.release_target(&release_folder, p), &key, p.get_sig_version()).unwrap();
             let sig_name = p.get_sig_name(&addon.name)?;

@@ -94,13 +94,13 @@ impl FileCache {
     }
 
     pub fn insert(&mut self, path: &str, data: String) -> Result<(), HEMTTError> {
-        debug!("insert: `{}`", path);
+        trace!("insert: `{}`", path);
         self.files.insert(path.to_string(), data.as_bytes().to_vec());
         Ok(())
     }
 
     pub fn insert_bytes(&mut self, path: &str, data: Vec<u8>) -> Result<(), HEMTTError> {
-        debug!("insert bytes: `{}`", path);
+        trace!("insert bytes: `{}`", path);
         self.files.insert(path.to_string(), data);
         Ok(())
     }

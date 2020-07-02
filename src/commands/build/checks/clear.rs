@@ -3,22 +3,22 @@ use std::path::PathBuf;
 use regex::Regex;
 use strum::IntoEnumIterator;
 
-use crate::{Addon, AddonList, AddonLocation, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, AddonList, AddonLocation, HEMTTError, OkSkip, Project, Stage, Task};
 
 // Clears existing files that are part of the hemtt project
 #[derive(Clone)]
 pub struct Clear {}
 impl Task for Clear {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
+    fn parallel(&self, addon: &Addon, p: &Project, _: &Stage) -> Result<OkSkip, HEMTTError> {
         let target = addon.target(p);
         if target.exists() {
             remove_file!(target)?;
         }
-        Ok(Report::new())
+        Ok((true, false))
     }
 }
 
@@ -26,12 +26,12 @@ impl Task for Clear {
 #[derive(Clone)]
 pub struct Clean {}
 impl Task for Clean {
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
+    fn single(&self, addons: AddonList, p: &Project, _: &Stage) -> Result<AddonList, HEMTTError> {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
         for data in &addons {
             if let Ok(d) = data {
-                let (_, addon) = d;
+                let (_, _, addon) = d;
                 targets.push(addon.target(p).display().to_string());
             }
         }

@@ -70,7 +70,6 @@ In addition to the standard [templating variables](templating.md), additional va
 | addon    | main                | main                     |
 | source   | addons/main         | addons/main              |
 | target   | addons/ABE_main.pbo | addons/ABE_main.pbo      |
-| time     |                     | (build time in ms)       |
 
 ```toml
 postbuild = [

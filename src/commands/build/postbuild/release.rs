@@ -3,22 +3,14 @@ use std::fs;
 use dialoguer::Confirmation;
 use glob::glob;
 
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
+use crate::{AddonList, HEMTTError, Project, Stage, Task};
 
 #[derive(Clone)]
 pub struct Release {
     pub force_release: bool,
 }
 impl Task for Release {
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, _: &Stage) -> AddonList {
-        let addons: Vec<_> = addons
-            .into_iter()
-            .map(|d| {
-                let (report, addon) = d.unwrap();
-                Ok((report, addon))
-            })
-            .collect();
-
+    fn single(&self, addons: AddonList, p: &Project, _: &Stage) -> Result<AddonList, HEMTTError> {
         // Prepare release directory
         let release_folder = p.release_dir()?;
         if release_folder.exists() {
@@ -77,7 +69,7 @@ impl Task for Release {
         }
 
         for data in &addons {
-            let (_, addon) = data.as_ref().unwrap();
+            let (_, _, addon) = data.as_ref().unwrap();
             addon.release(&release_folder, p)?;
         }
 

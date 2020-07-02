@@ -3,17 +3,16 @@ use std::path::Path;
 
 use walkdir::WalkDir;
 
-use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, HEMTTError, OkSkip, Project, Stage, Task};
 
 pub fn can_render(p: &Path) -> bool {
     let name = p.file_name().unwrap_or_else(|| std::ffi::OsStr::new("")).to_str().unwrap();
     name.contains(".ht.") || name.ends_with(".ht")
 }
 
-pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTError> {
+pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<(), HEMTTError> {
     debug!("render file: {:?}", path);
     let vars = &addon.get_variables(p);
-    let mut report = Report::new();
     match crate::render::run(
         &std::fs::read_to_string(path)?.replace("\\{", "\\\\{"),
         Some(path.to_str().unwrap()),
@@ -34,6 +33,7 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
                 .unwrap()
                 .add(path.display().to_string(), dest.clone())?;
             crate::CACHED.lock().unwrap().insert(&dest, out)?;
+            Ok(())
         }
         Err(err) => {
             if let HEMTTError::LINENO(mut e) = err {
@@ -42,30 +42,31 @@ pub fn render(path: &Path, addon: &Addon, p: &Project) -> Result<Report, HEMTTEr
                     .unwrap()
                     .get_line(path.as_os_str().to_str().unwrap(), e.line.unwrap_or(1))?;
                 e.file = path.display().to_string();
-                report.unique_error(HEMTTError::LINENO(e));
+                error!("Render error: {:?}", e);
+                Err(HEMTTError::LINENO(e))
             } else {
-                report.errors.push(err);
+                error!("Render error: {}", err);
+                Err(err)
             }
         }
     }
-    Ok(report)
 }
 
 #[derive(Clone)]
 pub struct Render {}
 impl Task for Render {
-    fn can_run(&self, _addon: &Addon, _: &Report, _p: &Project, _: &Stage) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _addon: &Addon, _p: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
-        let mut report = Report::new();
+    fn parallel(&self, addon: &Addon, p: &Project, _: &Stage) -> Result<OkSkip, HEMTTError> {
+        let mut ok = true;
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();
             if can_render(path.path()) {
-                report.absorb(render(path.path(), addon, p)?);
+                ok = ok && render(path.path(), addon, p).is_ok();
             }
         }
-        Ok(report)
+        Ok((ok, false))
     }
 }

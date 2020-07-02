@@ -3,14 +3,14 @@ use regex::Regex;
 use subprocess::Exec;
 
 use crate::error::*;
-use crate::{Addon, AddonList, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, AddonList, HEMTTError, Project, Stage, Task};
 
 #[derive(Clone)]
 pub struct Script {
     pub release: bool,
 }
 impl Task for Script {
-    fn single(&self, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &Project, s: &Stage) -> AddonList {
+    fn single(&self, addons: AddonList, p: &Project, s: &Stage) -> Result<AddonList, HEMTTError> {
         let steps = Self::get_scripts(s, p)?;
 
         for step in steps {
@@ -26,7 +26,7 @@ impl Script {
     pub fn execute(
         command: &str,
         output: bool,
-        addons: &[Result<(Report, Addon), HEMTTError>],
+        addons: &[Result<(bool, bool, Addon), HEMTTError>],
         p: &Project,
         s: &Stage,
         release: bool,
@@ -58,8 +58,8 @@ impl Script {
                     if script.should_run(release) {
                         if script.foreach {
                             for step in steps {
-                                let exec = |data: &Result<(Report, Addon), HEMTTError>| {
-                                    if let Ok((_, addon)) = data {
+                                let exec = |data: &Result<(bool, bool, Addon), HEMTTError>| {
+                                    if let Ok((_, _, addon)) = data {
                                         let step = crate::render::run(
                                             step,
                                             Some(&format!("script:{}", &cmd)),

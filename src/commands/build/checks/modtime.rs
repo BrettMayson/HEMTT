@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, HEMTTError, OkSkip, Project, Stage, Task};
 
 pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -19,24 +19,22 @@ pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
 #[derive(Clone)]
 pub struct ModTime {}
 impl Task for ModTime {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
-        let mut report = Report::new();
+    fn parallel(&self, addon: &Addon, p: &Project, _: &Stage) -> Result<OkSkip, HEMTTError> {
         let modified = modtime(&addon.folder())?;
         let target = addon.target(p);
+        let mut skip = false;
         if target.exists() {
             if let Ok(time) = std::fs::metadata(&target).unwrap().modified() {
                 if time >= modified {
-                    report.stop = Some((
-                        false,
-                        HEMTTError::GENERIC("The PBO already exists".to_owned(), target.display().to_string()),
-                    ));
+                    skip = true;
+                    info!("The PBO already exists: {}", target.display());
                 }
             }
         }
-        Ok(report)
+        Ok((true, skip))
     }
 }

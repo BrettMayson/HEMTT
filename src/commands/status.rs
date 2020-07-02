@@ -25,8 +25,8 @@ impl Command for Status {
         let addons = flow.execute(addons, &mut p)?;
         let mut build = 0;
         for addon in addons {
-            let (report, _) = addon?;
-            if report.stop.is_none() {
+            let (ok, _, _) = addon?;
+            if !ok {
                 build += 1
             }
         }

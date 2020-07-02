@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use regex::Regex;
 use walkdir::WalkDir;
 
-use crate::{Addon, FileErrorLineNumber, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, FileErrorLineNumber, HEMTTError, OkSkip, Project, Stage, Task};
 
 pub static RAPABLE: &[&str] = &["cpp", "rvmat", "ext"];
 // static CMD_GAP: usize = 18;
@@ -16,12 +16,12 @@ pub fn can_preprocess(p: &Path) -> bool {
 #[derive(Clone)]
 pub struct Preprocess {}
 impl Task for Preprocess {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
-        let mut report = Report::new();
+    fn parallel(&self, addon: &Addon, p: &Project, _: &Stage) -> Result<OkSkip, HEMTTError> {
+        let mut ok = true;
         for entry in WalkDir::new(&addon.folder()) {
             let path = entry.unwrap();
             let can_rap = can_preprocess(path.path());
@@ -42,30 +42,6 @@ impl Task for Preprocess {
                     crate::CACHED.lock().unwrap().clean_comments(path.to_str().unwrap()).unwrap()
                 }) {
                     Ok(rapped) => {
-                        // let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
-                        // let rapped = armake2::Config::from_string(&output, Some(PathBuf::from(&original_path)))
-                        //     .map_err(|e| HEMTTError::from_armake_parse(e, &rendered_path, Some(output.clone())))?;
-                        // let total = warnings.len();
-                        // for (i, w) in warnings.into_iter().enumerate() {
-                        //     let text = format!("Report {}/{}", i, total);
-                        //     pb.set_message(&format!("{} - {}", &fill_space!(" ", CMD_GAP, &text), rendered_path));
-                        //     let mut line = output[..w.0].chars().filter(|c| c == &'\n').count();
-                        //     let file = info.line_origins[min(line, info.line_origins.len()) - 1]
-                        //         .1
-                        //         .as_ref()
-                        //         .map(|p| p.to_str().unwrap().to_string());
-                        //     line = info.line_origins[min(line, info.line_origins.len()) - 1].0 as usize + 1;
-
-                        //     let filename = file.unwrap();
-                        //     report.warnings.push(HEMTTError::LINENO(FileErrorLineNumber {
-                        //         content: crate::CACHED.lock().unwrap().get_line(&filename, line)?,
-                        //         col: None,
-                        //         line: Some(line),
-                        //         file: filename,
-                        //         error: w.1,
-                        //         note: None,
-                        //     }));
-                        // }
                         let mut c = Cursor::new(Vec::new());
                         rapped.write_rapified(&mut c)?;
                         c.seek(SeekFrom::Start(0))?;
@@ -79,12 +55,14 @@ impl Task for Preprocess {
                     Err(e) => {
                         // Unable to clone HEMTTError
                         //report.unique_error(HEMTTError::from(e));
-                        report.stop = Some((true, HEMTTError::from(e)));
+                        // report.stop = Some((true, HEMTTError::from(e)));
+                        error!("PreProcess error: {}", e);
+                        ok = false;
                     }
                 }
             }
         }
-        Ok(report)
+        Ok((ok, false))
     }
 }
 

@@ -7,7 +7,7 @@ use linked_hash_map::LinkedHashMap;
 use regex::Regex;
 use walkdir::WalkDir;
 
-use crate::{Addon, HEMTTError, Project, Report, Stage, Task};
+use crate::{Addon, HEMTTError, OkSkip, Project, Stage, Task};
 
 static BINARIZABLE: &[&str] = &["rtm", "p3d"];
 
@@ -42,13 +42,15 @@ impl Build {
     }
 }
 impl Task for Build {
-    fn can_run(&self, _: &Addon, _: &Report, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
+    fn can_run(&self, _: &Addon, _: &Project, _: &Stage) -> Result<bool, HEMTTError> {
         Ok(true)
     }
 
-    fn parallel(&self, addon: &Addon, _r: &Report, p: &Project, _: &Stage) -> Result<Report, HEMTTError> {
-        debug!("[{}] starting build", addon.name);
+    fn parallel(&self, addon: &Addon, p: &Project, _: &Stage) -> Result<OkSkip, HEMTTError> {
+        info!("[{}] starting build", addon.name);
+        let start_time = std::time::Instant::now();
         let mut pbo = armake2::PBO {
+            extension_order: Vec::new(),
             files: LinkedHashMap::new(),
             header_extensions: HashMap::new(),
             headers: Vec::new(),
@@ -69,10 +71,10 @@ impl Task for Build {
                 continue;
             }
             if exclude_patterns.iter().any(|x| x.matches(entry.path().to_str().unwrap())) {
-                debug!("[{}] excluding {}", addon.name, entry.path().display());
+                trace!("[{}] excluding {}", addon.name, entry.path().display());
                 continue;
             }
-            debug!("[{}] process file: {}", addon.name, entry.path().display());
+            trace!("[{}] process file: {}", addon.name, entry.path().display());
             let name = entry
                 .path()
                 .display()
@@ -137,7 +139,7 @@ impl Task for Build {
                         );
                     }
                 } else if cfg!(windows) && is_binarizable {
-                    debug!("binarize: {}", entry.path().display());
+                    debug!("[{}] binarize: {}", addon.name, entry.path().display());
                     let cursor = armake2::binarize(&PathBuf::from(entry.path()))?;
                     pbo.files.insert(name, cursor);
                 } else {
@@ -163,6 +165,11 @@ impl Task for Build {
 
         let mut outf = create_file!(addon.target(p))?;
         pbo.write(&mut outf)?;
-        Ok(Report::new())
+        info!(
+            "[{}] built in {:?}",
+            addon.name,
+            std::time::Instant::now().duration_since(start_time)
+        );
+        Ok((true, false))
     }
 }

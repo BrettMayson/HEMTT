@@ -1,12 +1,10 @@
 use rayon::prelude::*;
 
-mod report;
 mod script;
 mod stage;
 mod step;
 mod task;
 
-pub use report::Report;
 pub use script::BuildScript;
 pub use script::Script;
 pub use stage::Stage;
@@ -22,9 +20,8 @@ pub struct Flow {
 
 impl Flow {
     /// Execute the flow against a vector of addons
-    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> AddonList {
-        let mut addons: Vec<Result<(Report, Addon), HEMTTError>> =
-            addons.into_iter().map(|addon| Ok((Report::new(), addon))).collect();
+    pub fn execute(&self, addons: Vec<Addon>, p: &mut Project) -> Result<AddonList, HEMTTError> {
+        let mut addons: AddonList = addons.into_iter().map(|addon| Ok((true, false, addon))).collect();
 
         for step in &self.steps {
             if step.none {
@@ -33,10 +30,12 @@ impl Flow {
             if addons.is_empty() {
                 continue;
             }
-            if step.parallel {
-                addons = self.parallel(step, addons, p)?;
-            } else {
-                addons = self.single(step, addons, p)?;
+            if addons.iter().any(|ra| if let Ok(a) = ra { !a.1 } else { false }) {
+                if step.parallel {
+                    addons = self.parallel(step, addons, p)?;
+                } else {
+                    addons = self.single(step, addons, p)?;
+                }
             }
 
             // Check for stopped reports
@@ -45,12 +44,10 @@ impl Flow {
                 if d.is_err() {
                     can_continue = false;
                 } else {
-                    let (report, addon) = d.as_ref().unwrap();
-                    if let Some((fatal, _)) = report.stop {
-                        if fatal {
-                            can_continue = false;
-                            error!("Unable to build `{}`", addon.folder().display().to_string())
-                        }
+                    let (ok, _, addon) = d.as_ref().unwrap();
+                    if !ok {
+                        can_continue = false;
+                        error!("Unable to build `{}`", addon.folder().display().to_string())
                     }
                 }
             });
@@ -61,70 +58,46 @@ impl Flow {
         }
 
         for data in &mut addons {
-            match data {
-                Ok((report, _)) => {
-                    report.display();
-                }
-                Err(e) => {
-                    error!("{}", e);
-                }
+            if let Err(e) = data {
+                error!("{}", e);
             }
         }
         Ok(addons)
     }
 
-    pub fn parallel(&self, step: &Step, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
-        // Create a progress bar for each addon
-        let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
-            .into_iter()
-            .map(|data| {
-                let (report, addon) = data?;
-                Ok((report, addon))
-            })
-            .collect();
-
+    pub fn parallel(&self, step: &Step, addons: AddonList, p: &mut Project) -> Result<AddonList, HEMTTError> {
         info!("Starting Parallel Step: {}", step.name);
 
         // Task loop
-        let addons: Vec<Result<(Report, Addon), HEMTTError>> = addons
+        let addons: AddonList = addons
             .into_par_iter()
             .map(
-                |data: Result<(Report, Addon), HEMTTError>| -> Result<(Report, Addon), HEMTTError> {
-                    let (mut report, addon) = data?;
-
+                |data: Result<(bool, bool, Addon), HEMTTError>| -> Result<(bool, bool, Addon), HEMTTError> {
+                    let (mut ok, mut skip, addon) = data?;
                     for task in &step.tasks {
-                        if report.stop.is_none() && task.can_run(&addon, &report, p, &step.stage)? {
-                            report.absorb(match task.parallel(&addon, &report, p, &step.stage) {
-                                Ok(v) => v,
+                        if ok && !skip && task.can_run(&addon, p, &step.stage)? {
+                            trace!("[{}] running task: {}", addon.name, step.stage);
+                            match task.parallel(&addon, p, &step.stage) {
+                                Ok(v) => {
+                                    ok = ok && v.0;
+                                    skip = skip || v.1;
+                                    trace!("[{}] skipping future tasks", addon.name);
+                                }
                                 Err(e) => {
                                     return Err(e);
                                 }
-                            });
+                            };
                         }
                     }
-                    Ok((report, addon))
+                    Ok((ok, skip, addon))
                 },
             )
-            .collect();
-
-        let addons = addons
-            .into_iter()
-            .map(|data| {
-                if let Ok((mut report, addon)) = data {
-                    if report.stop.is_some() {
-                        report.display();
-                    }
-                    Ok((report, addon))
-                } else {
-                    data
-                }
-            })
             .collect();
 
         Ok(addons)
     }
 
-    fn single(&self, step: &Step, addons: Vec<Result<(Report, Addon), HEMTTError>>, p: &mut Project) -> AddonList {
+    fn single(&self, step: &Step, addons: AddonList, p: &mut Project) -> Result<AddonList, HEMTTError> {
         if !step.name.is_empty() {
             info!("Starting Step: {}", step.name);
         }
@@ -134,20 +107,6 @@ impl Flow {
         for task in &step.tasks {
             addons = task.single(addons, p, &step.stage)?;
         }
-
-        let addons = addons
-            .into_iter()
-            .map(|data| {
-                if let Ok((mut report, addon)) = data {
-                    if report.stop.is_some() {
-                        report.display();
-                    }
-                    Ok((report, addon))
-                } else {
-                    data
-                }
-            })
-            .collect();
 
         Ok(addons)
     }

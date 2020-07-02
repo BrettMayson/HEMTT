@@ -31,7 +31,7 @@ impl Command for Update {
             .unwrap_or_print()
             .update()
             .unwrap_or_print();
-        info!("\nUsing Version: {}", status.version());
+        info!("Using Version: {}", status.version());
         Ok(())
     }
 }
