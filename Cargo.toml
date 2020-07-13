@@ -10,7 +10,7 @@ bisign = {git = "https://github.com/synixebrett/bisign"}
 chrono = "0.4"
 clap = "2.33"
 config = "0.10"
-dialoguer = "0.5"
+dialoguer = "0.6"
 docopt = "1"
 dyn-clone = "1.0"
 fs_extra = "1.1"
