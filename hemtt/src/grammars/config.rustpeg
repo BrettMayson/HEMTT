@@ -1,0 +1,141 @@
+use std::str;
+use crate::config::{Config, ConfigClass, ConfigEntry, ConfigArray, ConfigArrayElement};
+
+#![arguments(warnings: &mut Vec<(usize, String, Option<&'static str>)>)]
+
+whitespace = #quiet<[ \r\n\t]+>
+
+float -> f32 = f:$([-+]? [0-9]* "." [0-9]+) {
+    if f.chars().filter(|c| c == &'.').count() == 0 {
+        println!("{}", f);
+    }
+    f.parse().unwrap()
+}
+
+integer -> i32 = i:$([-+]? (("0x" [0-9a-fA-F]+) / [0-9]+)) {
+    if i.contains("0x") {
+        i32::from_str_radix(&i.replace("0x", ""), 16).unwrap()
+    } else {
+        i32::from_str_radix(i, 10).unwrap()
+    }
+}
+
+doublequoted_string -> String = "\""s:$(("\"\"" / [^\"])*)"\"" {
+    s.to_string().replace("\"\"", "\"")
+}
+
+singlequoted_string -> String = "'"s:$(("''" / [^'])*)"'" {
+    s.to_string().replace("\'\'", "\'")
+}
+
+unquoted_string -> String = pos:#position s:$([^;}]*) {
+    let result = s.to_string().trim().to_string();
+    warnings.push((pos, format!("String value \"{}\" is not quoted properly.", result), Some("unquoted-string")));
+    result
+}
+
+unquoted_string_array -> String = pos:#position s:$([^,} \t][^,}]*) {
+    let result = s.to_string().trim().to_string();
+    warnings.push((pos, format!("String array element \"{}\" is not quoted properly.", result), Some("unquoted-string")));
+    result
+}
+
+string -> String = doublequoted_string / singlequoted_string
+
+array_element -> ConfigArrayElement =
+    f:float   &(whitespace? [,}]) { ConfigArrayElement::FloatElement(f) } /
+    i:integer &(whitespace? [,}]) { ConfigArrayElement::IntElement(i) } /
+    a:array   &(whitespace? [,}]) { ConfigArrayElement::ArrayElement(a) } /
+    s:string  &(whitespace? [,}]) { ConfigArrayElement::StringElement(s) } /
+    s:unquoted_string_array &(whitespace? [,}]) { ConfigArrayElement::StringElement(s) }
+
+array_elements -> Vec<ConfigArrayElement> = array_element ** (whitespace? "," whitespace?)
+
+array -> ConfigArray = "{" whitespace? elems:array_elements whitespace? ","? whitespace? "}" {
+    ConfigArray {
+        is_expansion: false,
+        elements: elems
+    }
+}
+
+var -> ConfigEntry =
+    f:float   { ConfigEntry::FloatEntry(f) } /
+    i:integer { ConfigEntry::IntEntry(i) } /
+    s:string  { ConfigEntry::StringEntry(s) }
+
+var_entry -> (String, ConfigEntry) = n:name whitespace? "=" whitespace? ce:var {
+    (n, ce)
+}
+
+unquoted_string_entry -> (String, ConfigEntry) = n:name whitespace? "=" whitespace? s:unquoted_string {
+    (n, ConfigEntry::StringEntry(s))
+}
+
+array_entry -> (String, ConfigEntry) = n:name whitespace? "[" whitespace? "]" whitespace? "=" whitespace? a:array {
+    (n, ConfigEntry::ArrayEntry(a))
+}
+
+array_expansion_entry -> (String, ConfigEntry) = n:name whitespace? "[" whitespace? "]" whitespace? "+=" whitespace? a:array {
+    (n, ConfigEntry::ArrayEntry(ConfigArray {
+        is_expansion: true,
+        ..a
+    }))
+}
+
+entry -> (String, ConfigEntry) =
+    e:(class / array_entry / array_expansion_entry / var_entry) whitespace? (";" / &"}") { e } /
+    e:unquoted_string_entry whitespace? (";" / &"}") { e }
+
+entries -> Vec<(String, ConfigEntry)> = entry ** (whitespace?)
+
+name -> String = n:$([a-zA-Z0-9_]+) {
+    n.to_string()
+}
+
+parent -> String = whitespace? ":" whitespace? n:name {
+    n
+}
+
+regular_class -> (String, ConfigEntry) = "class" whitespace+ n:name p:parent? whitespace? "{" whitespace? e:entries whitespace? "}" {
+    let parent = match p {
+        Some(p) => p,
+        None => String::from("")
+    };
+    (n, ConfigEntry::ClassEntry(ConfigClass {
+        parent: parent,
+        is_external: false,
+        is_deletion: false,
+        entries: Some(e)
+    }))
+}
+
+external_class -> (String, ConfigEntry) = "class" whitespace+ n:name {
+    (n, ConfigEntry::ClassEntry(ConfigClass {
+        parent: String::from(""),
+        is_external: true,
+        is_deletion: false,
+        entries: None
+    }))
+}
+
+deleted_class -> (String, ConfigEntry) = "delete" whitespace+ n:name {
+    (n, ConfigEntry::ClassEntry(ConfigClass {
+        parent: String::from(""),
+        is_external: false,
+        is_deletion: true,
+        entries: None
+    }))
+}
+
+class -> (String, ConfigEntry) = regular_class / external_class / deleted_class
+
+pub config -> Config = whitespace? e:entries whitespace? !. {
+    Config {
+        root_body: ConfigClass {
+            parent: String::from(""),
+            is_external: false,
+            is_deletion: false,
+            entries: Some(e)
+        }
+    }
+}

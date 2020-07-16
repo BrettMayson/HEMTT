@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "hemtt",
+    "hemtt-app",
+    "hemtt-cache",
+    "hemtt-project",
+    # "hemtt-preprocessor", WIP
+]

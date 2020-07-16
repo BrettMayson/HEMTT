@@ -1,0 +1,109 @@
+use std::str;
+use crate::preprocess::*;
+
+newline = "\r\n" / "\n"
+
+name -> String = n:$([a-zA-Z0-9_]+) {
+    n.to_string()
+}
+
+include_path -> String =
+    "\"" path:$([^\"]*) "\"" { path.to_string() } /
+    "<" path:$([^>]*) ">"   { path.to_string() }
+
+parameters -> Vec<String> = "(" [ \t]* p:(name ** ([ \t]* "," [ \t]*)) [ \t]* ")" {
+    p
+}
+
+definition_value -> Vec<Token> = ([ \t]+ / &("\\" newline)) v:(token *) {
+    v
+}
+
+definition -> Definition = n:name p:parameters? v:definition_value? {
+    Definition {
+        name: n,
+        parameters: p,
+        value: v.unwrap_or(Vec::new()),
+        local: false
+    }
+}
+
+directive -> Directive =
+    "#" [ \t]* "include" [ \t]+ path:include_path { Directive::IncludeDirective(path) } /
+    "#" [ \t]* "define" [ \t]+ d:definition { Directive::DefineDirective(d) } /
+    "#" [ \t]* "undef" [ \t]+ n:name { Directive::UndefDirective(n) } /
+    "#" [ \t]* "ifdef" [ \t]+ n:name { Directive::IfDefDirective(n) } /
+    "#" [ \t]* "ifndef" [ \t]+ n:name { Directive::IfNDefDirective(n) } /
+    "#" [ \t]* "else" { Directive::ElseDirective } /
+    "#" [ \t]* "endif" { Directive::EndIfDirective }
+
+arg_rec = "(" (arg_rec / "\\\\" / ("\\" newline) / [^\r\n)])* ")"
+
+argument -> String = a:$((arg_rec / "\\\\" / ("\\" newline) / [^\r\n,)])*) {
+    a.to_string()
+}
+
+pub arguments -> Vec<String> = [ \t]* "(" [ \t]* a:(argument ** ([ \t]* "," [ \t]*)) [ \t]* ")" {
+    a
+}
+
+nonmacro_token -> String = s:$((!macro_proper !comment_token !concat_token ("\\\\" / ("\\" newline) / [^\"\r\n]))+) {
+    s.to_string()
+}
+
+string_token -> (String, u32) =
+        s:$("\"" ("\\\\" / ("\\" newline) / "\"\"" / [^\r\n\"])* "\"") {
+    let newlines = s.chars().filter(|c| c == &'\n').count() as u32;
+    (String::from(s).replace("\r\n", "\n").replace("\\\n", ""), newlines)
+}
+
+pub macro_proper -> Macro = quoted:"#"? n:name args:arguments? {
+    Macro {
+        name: n,
+        arguments: args,
+        original: String::new(),
+        quoted: quoted.is_some()
+    }
+}
+
+macro_token -> Macro = original:$(macro_proper) {
+    //println!("parsing macro: {}", original.to_string());
+    let parsed = parse_macro(original);
+    //println!("done");
+    parsed
+    //Macro { name: original.to_string(), arguments: None, original: original.to_string(), quoted: false }
+}
+
+concat_token = "##"
+
+sl_comment -> u32 = "//" (!newline .)* &newline {
+    0
+}
+
+ml_comment -> u32 = [ \t]* "/*" content:$((!"*/" (newline / .))*) "*/" {
+    content.chars().filter(|c| c == &'\n').count() as u32
+}
+
+comment_token -> u32 = sl_comment / ml_comment
+
+token -> Token =
+    c:comment_token { Token::CommentToken(c) } /
+    sn:string_token { Token::NewlineToken(sn.0, sn.1) } /
+    concat_token { Token::ConcatToken } /
+    m:macro_token { Token::MacroToken(m) } /
+    nm:nonmacro_token { Token::RegularToken(nm) }
+
+pub tokens -> Vec<Token> = t:(token*) {
+    t
+}
+
+// @todo: comments after directives (same line)
+line -> Line =
+    [ \t]* d:directive cmts:(comment_token)* [ \t]* {
+        Line::DirectiveLine(d, cmts.iter().sum())
+    } /
+    [ \t]* t:tokens { Line::TokenLine(t) }
+
+pub file -> Vec<Line> = lines:(line ** (newline)) !. {
+    lines
+}

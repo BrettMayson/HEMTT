@@ -1,0 +1,18 @@
+[package]
+name = "hemtt"
+version = "0.1.0"
+authors = ["Brett <brett@bmandesigns.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+byteorder = "1"
+log = "0.4"
+semver = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.7"
+
+[build-dependencies]
+peg = "0.5"
