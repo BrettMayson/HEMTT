@@ -3,6 +3,7 @@ members = [
     "hemtt",
     "hemtt-app",
     "hemtt-cache",
-    "hemtt-project",
+    "hemtt-handlebars",
     # "hemtt-preprocessor", WIP
+    "hemtt-project",
 ]
