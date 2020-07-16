@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::io::{Seek, SeekFrom};
+use std::path::PathBuf;
 
 use crate::tmp::Temporary;
 
@@ -44,13 +44,13 @@ impl FileCache {
     pub fn read(&mut self, path: &PathBuf) -> Result<&mut Temporary, std::io::Error> {
         Ok({
             let tmp = if self.0.contains_key(path) {
-                    self.0.get_mut(path).unwrap()
-                } else {
-                    trace!("Not in cache, retrieving from disk: `{:?}`", path);
-                    self.0
-                        .insert(path.to_owned(), Temporary::from_path(path.to_owned())?);
-                    self.0.get_mut(path).unwrap()
-                };
+                self.0.get_mut(path).unwrap()
+            } else {
+                trace!("Not in cache, retrieving from disk: `{:?}`", path);
+                self.0
+                    .insert(path.to_owned(), Temporary::from_path(path.to_owned())?);
+                self.0.get_mut(path).unwrap()
+            };
             tmp.seek(SeekFrom::Start(0))?;
             tmp
         })

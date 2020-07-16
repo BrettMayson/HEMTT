@@ -1,7 +1,15 @@
 use git2::Repository;
-use handlebars::{Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext, RenderError};
+use handlebars::{
+    Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext, RenderError,
+};
 
-pub fn helper(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, out: &mut dyn Output) -> HelperResult {
+pub fn helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _: &mut RenderContext,
+    out: &mut dyn Output,
+) -> HelperResult {
     let param = if let Some(p) = h.param(0) {
         p.value().render()
     } else {
@@ -14,7 +22,9 @@ pub fn helper(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, ou
     match params[0] {
         "id" => {
             // SHA-1 Commit Hash
-            let rev = repo.revparse_single("HEAD").map_err(|e| RenderError::new(e.to_string()))?;
+            let rev = repo
+                .revparse_single("HEAD")
+                .map_err(|e| RenderError::new(e.to_string()))?;
             let id = rev.id().to_string();
 
             // Default to has length of 8 characters
@@ -28,8 +38,12 @@ pub fn helper(h: &Helper, _: &Handlebars, _: &Context, _: &mut RenderContext, ou
         }
         "commitCount" => {
             // git rev-list --count HEAD
-            let mut revwalk = repo.revwalk().map_err(|e| RenderError::new(e.to_string()))?;
-            revwalk.push_head().map_err(|e| RenderError::new(e.to_string()))?;
+            let mut revwalk = repo
+                .revwalk()
+                .map_err(|e| RenderError::new(e.to_string()))?;
+            revwalk
+                .push_head()
+                .map_err(|e| RenderError::new(e.to_string()))?;
             out.write(&format!("{}", revwalk.count()))?;
         }
         &_ => {}

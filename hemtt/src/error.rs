@@ -98,5 +98,4 @@ impl From<semver::SemVerError> for HEMTTError {
     fn from(err: semver::SemVerError) -> Self {
         HEMTTError::SemVer(err)
     }
-    
 }

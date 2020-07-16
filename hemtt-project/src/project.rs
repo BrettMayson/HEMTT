@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use serde::{Deserialize, Serialize};
 use semver::Version;
+use serde::{Deserialize, Serialize};
 
 use crate::defaults::*;
 
@@ -88,7 +88,6 @@ pub struct Project {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub releasebuild: Vec<String>,
-
     // #[serde(skip_serializing_if = "HashMap::is_empty")]
     // #[serde(default = "HashMap::new")]
     // pub scripts: HashMap<String, crate::BuildScript>,

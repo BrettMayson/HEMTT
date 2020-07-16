@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use hemtt::{Addon, HEMTTError};
 
 mod replace;
-pub use replace::{Vars, replace};
+pub use replace::{replace, Vars};
 
 pub trait Template {
     /// Guess if the files in the provided path are this template

@@ -152,8 +152,7 @@ impl Definition {
 
             // @todo: handle these errors properly
             for (param, arg) in params.iter().zip(args.iter()) {
-                let mut tokens =
-                    grammar::tokens(&arg).expect("Failed to parse macro argument");
+                let mut tokens = grammar::tokens(&arg).expect("Failed to parse macro argument");
                 let stack: Vec<Definition> = Vec::new();
                 tokens = Macro::resolve_all(&tokens, &def_map, &stack)
                     .expect("Failed to resolve macro arguments");
@@ -350,15 +349,13 @@ where
                             includefolders,
                             fileread,
                         )
-                        .map_err(|e| {
-                            match e {
-                                HEMTTError::PREPROCESS(p) => HEMTTError::PREPROCESS(p),
-                                _ => HEMTTError::PREPROCESS(PreprocessError {
-                                    message: "Failed to process include".to_string(),
-                                    path: Some(path),
-                                    source: Box::new(e),
-                                })
-                            }
+                        .map_err(|e| match e {
+                            HEMTTError::PREPROCESS(p) => HEMTTError::PREPROCESS(p),
+                            _ => HEMTTError::PREPROCESS(PreprocessError {
+                                message: "Failed to process include".to_string(),
+                                path: Some(path),
+                                source: Box::new(e),
+                            }),
                         })?;
 
                         info.import_stack.pop();
