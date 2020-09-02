@@ -301,7 +301,7 @@ where
     F: Copy,
 {
     let lines = grammar::file(&input).map_err(|source| {
-        HEMTTError::PARSE(PreprocessParseError {
+        HEMTTError::Parse(PreprocessParseError {
             path: Some(
                 origin
                     .clone()
@@ -350,8 +350,8 @@ where
                             fileread,
                         )
                         .map_err(|e| match e {
-                            HEMTTError::PREPROCESS(p) => HEMTTError::PREPROCESS(p),
-                            _ => HEMTTError::PREPROCESS(PreprocessError {
+                            HEMTTError::Preprocess(p) => HEMTTError::Preprocess(p),
+                            _ => HEMTTError::Preprocess(PreprocessError {
                                 message: "Failed to process include".to_string(),
                                 path: Some(path),
                                 source: Box::new(e),
@@ -423,7 +423,7 @@ where
                 let stack: Vec<Definition> = Vec::new();
                 let resolved =
                     Macro::resolve_all(&tokens, &definition_map, &stack).map_err(|e| {
-                        HEMTTError::PREPROCESS(PreprocessError {
+                        HEMTTError::Preprocess(PreprocessError {
                             message: "Failed to process macros".to_string(),
                             path: None,
                             source: Box::new(e),

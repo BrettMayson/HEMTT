@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use crate::tmp::Temporary;
 
+#[derive(Debug, Default)]
 pub struct FileCache(HashMap<PathBuf, Temporary>);
 
 impl FileCache {

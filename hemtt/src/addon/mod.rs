@@ -3,17 +3,33 @@ use std::path::PathBuf;
 mod location;
 pub use location::AddonLocation;
 
+use crate::HEMTTError;
+
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Addon {
     pub name: String,
     pub location: AddonLocation,
 }
 impl Addon {
-    pub fn new<S: Into<String>>(name: S, location: AddonLocation) -> Self {
-        Self {
-            name: name.into(),
-            location: location,
+    pub fn new<S: Into<String>>(name: S, location: AddonLocation) -> Result<Self, HEMTTError> {
+        Ok(Self {
+            name: validate_name(name.into())?,
+            location,
+        })
+    }
+
+    pub fn locate<S: Into<String>>(name: S) -> Option<Self> {
+        let name = name.into();
+        for location in AddonLocation::first_class() {
+            if location.exists() {
+                let mut path = PathBuf::from(location.clone());
+                path.push(name.clone());
+                if path.exists() {
+                    return Some(Self { name, location });
+                }
+            }
         }
+        None
     }
 
     /// Path to the addon folder
@@ -92,6 +108,27 @@ impl Addon {
         r.push(self.pbo(prefix));
         r
     }
+}
+
+fn validate_name(name: String) -> Result<String, HEMTTError> {
+    const STANDARD_CHARACTERS: [char; 27] = [
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_',
+    ];
+    const ALLOWED_CHARACTERS: [char; 27] = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-',
+    ];
+
+    for c in name.chars() {
+        if !STANDARD_CHARACTERS.contains(&c) && !ALLOWED_CHARACTERS.contains(&c) {
+            return Err(HEMTTError::AddonInvalidName(name));
+        }
+        if ALLOWED_CHARACTERS.contains(&c) {
+            warn!("Invalid character `{}` in addon `{}`", c, name);
+        }
+    }
+    Ok(name)
 }
 
 #[cfg(test)]

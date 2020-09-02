@@ -4,7 +4,7 @@ use std::path::PathBuf;
 /// Provides a temporary write + read that is deleted from the disk when it is dropped
 /// The data will only hit the disk if it is over 1Mb in size
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Temporary {
     data: Vec<u8>,
     disk: Option<(PathBuf, File)>,
@@ -14,6 +14,7 @@ pub struct Temporary {
 }
 
 impl Temporary {
+    /// Create a new temporary file with default options
     pub fn new() -> Self {
         Self {
             data: Vec::new(),
@@ -23,17 +24,28 @@ impl Temporary {
             cleanup: true,
         }
     }
+
+    /// Create a new temporary file with a max size in memory
+    ///
+    /// Arguments:
+    /// * `max`: number of bytes to use in memory before dumping to disk
     pub fn new_with_max(max: usize) -> Self {
         let mut s = Self::new();
         s.max_size = max;
         s
     }
+
+    /// Create a temporary file object from an existing file
+    ///
+    /// Arguments:
+    /// * `f`: Path to existing file
     pub fn from_path(f: PathBuf) -> std::io::Result<Self> {
         let mut s = Self::new_with_max(0);
         s.disk = Some((f.clone(), Self::open_read_write(f)?));
         s.cleanup = false;
         Ok(s)
     }
+
     fn open_read_write(path: PathBuf) -> std::io::Result<File> {
         Ok(std::fs::OpenOptions::new()
             .read(true)
@@ -52,28 +64,30 @@ impl std::io::Write for Temporary {
             self.pointer += buf.len();
             Ok(buf.len())
         } else {
-            println!("Writing to disk");
             if self.disk.is_none() {
-                println!("Creating disk");
                 let mut root = std::env::temp_dir();
                 root.push("hemtt_cache");
                 if !root.exists() {
-                    std::fs::create_dir(&root)?;
+                    // Avoid race condition of multiple threads ending up here at the exact same time
+                    if let Err(e) = std::fs::create_dir(&root) {
+                        if !root.exists() {
+                            return Err(e)
+                        }
+                    }
                 }
                 #[allow(unused_assignments)]
                 let mut path = root.clone();
                 while {
                     path = root.clone();
                     path.push(uuid::Uuid::new_v4().to_string().replace("-", ""));
-                    println!("Trying path {:?}", path);
                     path.exists()
                 } {}
                 trace!("Creating file at {:?}", path);
-                println!("Creating file at {:?}", path);
                 self.disk = Some((path.clone(), Self::open_read_write(path)?));
                 if let Some((_, file)) = &mut self.disk {
-                    file.write(&self.data)?;
+                    file.write_all(&self.data)?;
                 }
+                self.data = Vec::new();
             }
             if let Some((_, file)) = &mut self.disk {
                 match file.write(buf) {
@@ -135,7 +149,6 @@ impl std::io::Seek for Temporary {
                 file.seek(pos)?;
             }
             self.pointer = new as usize;
-            println!("Pointer: {}", self.pointer);
             Ok(new as u64)
         }
     }

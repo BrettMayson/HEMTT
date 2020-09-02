@@ -12,3 +12,4 @@ handlebars = "3.2"
 git2 = "0.13"
 serde_json = "1.0"
 shell-words = "1"
+semver = { version = "0.10", features = ["serde"] }

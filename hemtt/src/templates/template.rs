@@ -1,17 +1,8 @@
 use std::path::PathBuf;
 
-use hemtt::{Addon, HEMTTError};
-
-mod replace;
-pub use replace::{replace, Vars};
+use crate::{Addon, HEMTTError};
 
 pub trait Template {
-    /// Guess if the files in the provided path are this template
-    ///
-    /// Arguments:
-    /// * `path`: Location to check
-    fn detect(path: PathBuf) -> Result<bool, HEMTTError>;
-
     /// Initialize the project in the provided path
     ///
     /// Arguments:
@@ -32,4 +23,10 @@ pub trait Template {
     /// * `addon`: Location of the addon
     /// * `name`: function name
     fn new_function(&self, addon: &Addon, name: &str) -> Result<PathBuf, HEMTTError>;
+}
+
+impl dyn Template {
+    pub fn options() -> String {
+        String::from("options are: cba")
+    }
 }

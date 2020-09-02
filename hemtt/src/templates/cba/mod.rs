@@ -2,9 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-use hemtt::{Addon, HEMTTError};
-
-use crate::template::Template;
+use crate::{Addon, HEMTTError, Template};
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct CBA {
@@ -24,9 +22,6 @@ impl CBA {
 }
 
 impl Template for CBA {
-    fn detect(_path: PathBuf) -> Result<bool, HEMTTError> {
-        todo!()
-    }
     fn init(&self) -> Result<(), HEMTTError> {
         if !self.path.exists() {
             std::fs::create_dir_all(&self.path)?;
@@ -39,7 +34,7 @@ impl Template for CBA {
                 std::fs::create_dir_all(path.parent().unwrap())?;
                 path
             })?;
-            f.write(&InitAssets::get(file.as_ref()).unwrap())?;
+            f.write_all(&InitAssets::get(file.as_ref()).unwrap())?;
         }
         Ok(())
     }
@@ -58,9 +53,9 @@ impl Template for CBA {
                 path
             })?;
             let content = AddonAssets::get(file.as_ref()).unwrap();
-            f.write(
-                crate::template::replace(
-                    &crate::template::Vars { addon: &addon.name },
+            f.write_all(
+                super::replace(
+                    &super::Vars { addon: &addon.name },
                     String::from_utf8(content.to_vec()).unwrap(),
                 )
                 .as_bytes(),
@@ -76,23 +71,18 @@ impl Template for CBA {
             path
         };
         if function_file.exists() {
-            return Err(HEMTTError::GENERIC(
-                "The function already exists".to_string(),
-            ));
+            return Err(HEMTTError::User("The function already exists".to_string()));
         }
-        println!("Writing function file: {:?}", function_file);
+        trace!("function file: {:?}", function_file);
         let mut f = File::create(&function_file)?;
-        f.write(
-            br#"#include "script_component.hpp
-"#,
-        )?;
+        f.write_all(b"#include \"script_component.hpp\"\n")?;
         f.flush()?;
         let mut f = std::fs::OpenOptions::new().write(true).append(true).open({
             let mut path = self.path(addon.source());
             path.push("XEH_prep.hpp");
             path
         })?;
-        f.write(format!("PREP({});\n", name).as_bytes())?;
+        f.write_all(format!("PREP({});\n", name).as_bytes())?;
         f.flush()?;
         Ok(function_file)
     }
@@ -109,7 +99,7 @@ struct AddonAssets;
 #[cfg(test)]
 mod test {
     use super::Template;
-    use hemtt::{Addon, AddonLocation};
+    use crate::{Addon, AddonLocation};
     #[test]
     fn init() {
         let folder = {
@@ -132,7 +122,7 @@ mod test {
         let template = super::CBA::new(folder.clone());
         template.init().unwrap();
         template
-            .new_addon(&Addon::new("test", AddonLocation::Addons))
+            .new_addon(&Addon::new("test", AddonLocation::Addons).unwrap())
             .unwrap();
         std::fs::remove_dir_all(folder).unwrap();
     }
@@ -147,10 +137,10 @@ mod test {
         let template = super::CBA::new(folder.clone());
         template.init().unwrap();
         template
-            .new_addon(&Addon::new("test", AddonLocation::Addons))
+            .new_addon(&Addon::new("test", AddonLocation::Addons).unwrap())
             .unwrap();
         template
-            .new_function(&Addon::new("test", AddonLocation::Addons), "test")
+            .new_function(&Addon::new("test", AddonLocation::Addons).unwrap(), "test")
             .unwrap();
         std::fs::remove_dir_all(folder).unwrap();
     }

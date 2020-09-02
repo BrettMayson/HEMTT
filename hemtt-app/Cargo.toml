@@ -1,13 +1,20 @@
 [package]
 name = "hemtt-app"
-version = "0.1.0"
-authors = ["Brett <brett@bmandesigns.com>"]
+version = "0.8.0"
+authors = ["Brett <brett@mayson.io>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hemtt-project = { path = "../hemtt-project" }
+hemtt = { path = "../hemtt" }
 
 clap = "2"
+lazy_static = "1.4"
 log = "0.4"
+git2 = "0.13"
+simplelog = "0.8"
+percent-encoding = "2.1"
+webbrowser = "0.5"
+toml = "0.5"
+glob = "0.3"

@@ -26,6 +26,7 @@ mod tests {
             super::replace(&vars, "path/to/%%addon%%"),
         )
     }
+
     #[test]
     fn basic_replace_cases() {
         let vars = super::Vars { addon: "text" };

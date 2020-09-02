@@ -575,7 +575,7 @@ impl Config {
         let mut warnings: Vec<(usize, String, Option<&'static str>)> = Vec::new();
 
         let result = grammar::config(&preprocessed, &mut warnings).map_err(|source| {
-            HEMTTError::CONFIG(ConfigParseError {
+            HEMTTError::Config(ConfigParseError {
                 path: Some(
                     path.unwrap_or_else(PathBuf::new)
                         .to_string_lossy()
