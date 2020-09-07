@@ -110,6 +110,32 @@ impl Addon {
     }
 }
 
+impl From<&Addon> for hemtt_handlebars::Variables {
+    fn from(addon: &Addon) -> Self {
+        use serde_json::{Map, Value};
+        use std::collections::BTreeMap;
+        Self({
+            let mut map = BTreeMap::new();
+            map.insert(
+                String::from("addon"),
+                Value::Object({
+                    let mut map = Map::new();
+                    map.insert(
+                        String::from("name"),
+                        Value::String(String::from(addon.name.clone())),
+                    );
+                    map.insert(
+                        String::from("source"),
+                        Value::String(addon.source().display().to_string()),
+                    );
+                    map
+                }),
+            );
+            map
+        })
+    }
+}
+
 fn validate_name(name: String) -> Result<String, HEMTTError> {
     const STANDARD_CHARACTERS: [char; 27] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -152,16 +178,16 @@ mod tests {
             location: super::AddonLocation::Compats,
         }
     }
-    fn get_custom() -> super::Addon {
-        super::Addon {
-            name: "my_addon".to_string(),
-            location: super::AddonLocation::Custom("custom".to_string()),
-        }
-    }
+    // fn get_custom() -> super::Addon {
+    //     super::Addon {
+    //         name: "my_addon".to_string(),
+    //         location: super::AddonLocation::Custom("custom".to_string()),
+    //     }
+    // }
 
     #[test]
     fn source() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let addons: Vec<PathBuf> = addons.iter().map(|a| a.source()).collect();
         assert_eq!(
             addons,
@@ -169,14 +195,14 @@ mod tests {
                 PathBuf::from("addons/my_addon"),
                 PathBuf::from("optionals/my_addon"),
                 PathBuf::from("compats/my_addon"),
-                PathBuf::from("custom/my_addon"),
+                // PathBuf::from("custom/my_addon"),
             ]
         );
     }
 
     #[test]
     fn pbo_no_prefix() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let addons: Vec<String> = addons.iter().map(|a| a.pbo(None)).collect();
         assert_eq!(
             addons,
@@ -184,14 +210,14 @@ mod tests {
                 String::from("my_addon.pbo"),
                 String::from("my_addon.pbo"),
                 String::from("my_addon.pbo"),
-                String::from("my_addon.pbo"),
+                // String::from("my_addon.pbo"),
             ]
         );
     }
 
     #[test]
     fn pbo_with_prefix() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let addons: Vec<String> = addons.iter().map(|a| a.pbo(Some("prefix"))).collect();
         assert_eq!(
             addons,
@@ -199,14 +225,14 @@ mod tests {
                 String::from("prefix_my_addon.pbo"),
                 String::from("prefix_my_addon.pbo"),
                 String::from("prefix_my_addon.pbo"),
-                String::from("prefix_my_addon.pbo"),
+                // String::from("prefix_my_addon.pbo"),
             ]
         );
     }
 
     #[test]
     fn destination_parent_no_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -218,14 +244,14 @@ mod tests {
                 PathBuf::from("root/addons"),
                 PathBuf::from("root/optionals"),
                 PathBuf::from("root/compats"),
-                PathBuf::from("root/custom"),
+                // PathBuf::from("root/custom"),
             ]
         );
     }
 
     #[test]
     fn destination_parent_with_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -237,14 +263,14 @@ mod tests {
                 PathBuf::from("root/addons/@standalone_my_addon/addons"),
                 PathBuf::from("root/optionals/@standalone_my_addon/addons"),
                 PathBuf::from("root/compats/@standalone_my_addon/addons"),
-                PathBuf::from("root/custom/@standalone_my_addon/addons"),
+                // PathBuf::from("root/custom/@standalone_my_addon/addons"),
             ]
         );
     }
 
     #[test]
     fn destination_no_prefix_no_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -256,14 +282,14 @@ mod tests {
                 PathBuf::from("root/addons/my_addon.pbo"),
                 PathBuf::from("root/optionals/my_addon.pbo"),
                 PathBuf::from("root/compats/my_addon.pbo"),
-                PathBuf::from("root/custom/my_addon.pbo"),
+                // PathBuf::from("root/custom/my_addon.pbo"),
             ]
         );
     }
 
     #[test]
     fn destination_no_prefix_with_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -275,14 +301,14 @@ mod tests {
                 PathBuf::from("root/addons/@standalone_my_addon/addons/my_addon.pbo"),
                 PathBuf::from("root/optionals/@standalone_my_addon/addons/my_addon.pbo"),
                 PathBuf::from("root/compats/@standalone_my_addon/addons/my_addon.pbo"),
-                PathBuf::from("root/custom/@standalone_my_addon/addons/my_addon.pbo"),
+                // PathBuf::from("root/custom/@standalone_my_addon/addons/my_addon.pbo"),
             ]
         );
     }
 
     #[test]
     fn destination_with_prefix_no_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -294,14 +320,14 @@ mod tests {
                 PathBuf::from("root/addons/prefix_my_addon.pbo"),
                 PathBuf::from("root/optionals/prefix_my_addon.pbo"),
                 PathBuf::from("root/compats/prefix_my_addon.pbo"),
-                PathBuf::from("root/custom/prefix_my_addon.pbo"),
+                // PathBuf::from("root/custom/prefix_my_addon.pbo"),
             ]
         );
     }
 
     #[test]
     fn destination_with_prefix_with_standalone() {
-        let addons = vec![get_addon(), get_optional(), get_compat(), get_custom()];
+        let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
         let root = PathBuf::from("root");
         let addons: Vec<PathBuf> = addons
             .iter()
@@ -313,7 +339,7 @@ mod tests {
                 PathBuf::from("root/addons/@standalone_my_addon/addons/prefix_my_addon.pbo"),
                 PathBuf::from("root/optionals/@standalone_my_addon/addons/prefix_my_addon.pbo"),
                 PathBuf::from("root/compats/@standalone_my_addon/addons/prefix_my_addon.pbo"),
-                PathBuf::from("root/custom/@standalone_my_addon/addons/prefix_my_addon.pbo"),
+                // PathBuf::from("root/custom/@standalone_my_addon/addons/prefix_my_addon.pbo"),
             ]
         );
     }

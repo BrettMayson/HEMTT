@@ -1,26 +1,23 @@
-use std::fs::{read_dir, File};
+use std::fs::read_dir;
 use std::io::Read;
 use std::path::{Component, Path, PathBuf, MAIN_SEPARATOR};
 
+use crate as hemtt;
 use crate::HEMTTError;
 
 use crate::aerror;
 
-pub fn read_prefix(prefix_path: &Path) -> String {
+pub fn read_prefix(prefix_path: &Path) -> Result<String, HEMTTError> {
     let mut content = String::new();
-    File::open(prefix_path)
-        .unwrap()
-        .read_to_string(&mut content)
-        .unwrap();
-
-    content.lines().nth(0).unwrap().to_string()
+    open_file!(prefix_path)?.read_to_string(&mut content)?;
+    Ok(content.lines().nth(0).unwrap().to_string())
 }
 
-pub fn matches_include_path(path: &PathBuf, include_path: &str) -> bool {
+pub fn matches_include_path(path: &PathBuf, include_path: &str) -> Result<bool, HEMTTError> {
     let include_pathbuf = PathBuf::from(&include_path.replace("\\", &MAIN_SEPARATOR.to_string()));
 
     if path.file_name() != include_pathbuf.file_name() {
-        return false;
+        return Ok(false);
     }
 
     for parent in path.ancestors() {
@@ -33,7 +30,7 @@ pub fn matches_include_path(path: &PathBuf, include_path: &str) -> bool {
             continue;
         }
 
-        let mut prefix = read_prefix(&prefixpath);
+        let mut prefix = read_prefix(&prefixpath)?;
 
         prefix = if !prefix.is_empty() && prefix.chars().nth(0).unwrap() != '\\' {
             format!("\\{}", prefix)
@@ -46,14 +43,17 @@ pub fn matches_include_path(path: &PathBuf, include_path: &str) -> bool {
         let test_path = prefix_pathbuf.join(relative);
 
         if test_path == include_pathbuf {
-            return true;
+            return Ok(true);
         }
     }
 
-    false
+    Ok(false)
 }
 
-pub fn search_directory(include_path: &str, directory: PathBuf) -> Option<PathBuf> {
+pub fn search_directory(
+    include_path: &str,
+    directory: PathBuf,
+) -> Result<Option<PathBuf>, HEMTTError> {
     for entry in read_dir(&directory).unwrap() {
         let path = entry.unwrap().path();
         if path.is_dir() {
@@ -61,11 +61,11 @@ pub fn search_directory(include_path: &str, directory: PathBuf) -> Option<PathBu
                 continue;
             }
 
-            if let Some(path) = search_directory(include_path, path) {
-                return Some(path);
+            if let Some(path) = search_directory(include_path, path)? {
+                return Ok(Some(path));
             }
-        } else if matches_include_path(&path, include_path) {
-            return Some(path);
+        } else if matches_include_path(&path, include_path)? {
+            return Ok(Some(path));
         }
     }
 
@@ -74,10 +74,10 @@ pub fn search_directory(include_path: &str, directory: PathBuf) -> Option<PathBu
     let direct_pathbuf = PathBuf::from(direct_path);
 
     if direct_pathbuf.is_file() {
-        return Some(direct_pathbuf);
+        return Ok(Some(direct_pathbuf));
     }
 
-    None
+    Ok(None)
 }
 
 pub fn canonicalize(path: PathBuf) -> PathBuf {
@@ -127,7 +127,7 @@ pub fn find_include_file(
         }
     } else {
         for search_path in search_paths {
-            if let Some(file_path) = search_directory(include_path, search_path.canonicalize()?) {
+            if let Some(file_path) = search_directory(include_path, search_path.canonicalize()?)? {
                 return Ok(file_path);
             }
         }

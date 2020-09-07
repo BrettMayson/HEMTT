@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -26,7 +25,7 @@ pub fn startup() {
 fn check_git_ignore() -> Result<(), HEMTTError> {
     if Path::new(".gitignore").exists() {
         let mut data = String::new();
-        File::open(".gitignore")?.read_to_string(&mut data)?;
+        open_file!(".gitignore")?.read_to_string(&mut data)?;
         let mut ignore = crate::GIT_IGNORE.to_vec();
         for l in data.lines() {
             if let Some(index) = ignore
@@ -61,7 +60,7 @@ fn deprecated_values() -> Result<(), HEMTTError> {
             ("headerexts", "header_exts"),
         ];
         let mut data = String::new();
-        File::open(&file)?.read_to_string(&mut data)?;
+        open_file!(&file)?.read_to_string(&mut data)?;
         for line in data.lines() {
             let value = line.parse::<toml::Value>();
             if let Ok(val) = value {

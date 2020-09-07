@@ -7,6 +7,13 @@ impl<'a> Vars<'a> {
     }
 }
 
+/// Replace variables
+///
+/// ```
+/// let vars = hemtt::templates::Vars { addon: "text" };
+/// assert_eq!("path/to/text", hemtt::templates::replace(&vars, "path/to/%%addon%%"));
+/// assert_eq!("path/to/TEXT", hemtt::templates::replace(&vars, "path/to/%%ADDON%%"));
+/// ```
 pub fn replace<S: Into<String>>(vars: &Vars, content: S) -> String {
     let mut ret = content.into();
     for (k, v) in vars.vec().iter() {
@@ -30,7 +37,7 @@ mod tests {
     #[test]
     fn basic_replace_cases() {
         let vars = super::Vars { addon: "text" };
-        assert_eq!("path/to/text", super::replace(&vars, "path/to/%%addon%%"),);
-        assert_eq!("path/to/TEXT", super::replace(&vars, "path/to/%%ADDON%%"),)
+        assert_eq!("path/to/text", super::replace(&vars, "path/to/%%addon%%"));
+        assert_eq!("path/to/TEXT", super::replace(&vars, "path/to/%%ADDON%%"));
     }
 }

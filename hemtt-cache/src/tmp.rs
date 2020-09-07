@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::Write;
 use std::path::PathBuf;
 
 /// Provides a temporary write + read that is deleted from the disk when it is dropped
@@ -38,12 +39,23 @@ impl Temporary {
     /// Create a temporary file object from an existing file
     ///
     /// Arguments:
-    /// * `f`: Path to existing file
-    pub fn from_path(f: PathBuf) -> std::io::Result<Self> {
+    /// * `path`: Path to existing file
+    pub fn from_path<P: Into<PathBuf>>(path: P) -> std::io::Result<Self> {
+        let path = path.into();
         let mut s = Self::new_with_max(0);
-        s.disk = Some((f.clone(), Self::open_read_write(f)?));
+        s.disk = Some((path.clone(), Self::open_read_write(path)?));
         s.cleanup = false;
         Ok(s)
+    }
+
+    /// Create a temporary file object from a string
+    ///
+    /// Arguments:
+    /// * `content`: Content to place in temporary value
+    pub fn from_string(content: &str) -> std::io::Result<Self> {
+        let mut tmp = Self::new();
+        tmp.write(content.as_bytes())?;
+        Ok(tmp)
     }
 
     fn open_read_write(path: PathBuf) -> std::io::Result<File> {
@@ -71,7 +83,7 @@ impl std::io::Write for Temporary {
                     // Avoid race condition of multiple threads ending up here at the exact same time
                     if let Err(e) = std::fs::create_dir(&root) {
                         if !root.exists() {
-                            return Err(e)
+                            return Err(e);
                         }
                     }
                 }

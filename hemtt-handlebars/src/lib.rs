@@ -5,13 +5,13 @@ use serde_json::value::Value as Json;
 
 mod helpers;
 
-pub struct Variables(BTreeMap<String, Json>);
+pub struct Variables(pub BTreeMap<String, Json>);
 impl Variables {
     pub fn inner(&self) -> &BTreeMap<String, Json> {
         &self.0
     }
-    pub fn append(&mut self, mut other: BTreeMap<String, Json>) {
-        self.0.append(&mut other);
+    pub fn append(&mut self, mut other: Variables) {
+        self.0.append(&mut other.0);
     }
     pub fn insert<S: Into<String>>(&mut self, key: S, value: Json) {
         self.0.insert(key.into(), value);

@@ -1,4 +1,3 @@
-use std::fs::File;
 use std::io::Write;
 
 use hemtt::{HEMTTError, Project};
@@ -16,7 +15,7 @@ pub fn run(p: &mut Project, a: &clap::ArgMatches) -> Result<(), HEMTTError> {
                     )))
                 }
             }
-            let mut out = File::create("./.hemtt/base.toml")?;
+            let mut out = create_file!("./.hemtt/base.toml")?;
             out.write_fmt(format_args!(
                 "{}",
                 toml::to_string(&p).map_err(|e| HEMTTError::Generic(e.to_string()))?

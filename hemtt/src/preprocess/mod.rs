@@ -10,6 +10,29 @@ use crate::HEMTTError;
 
 mod fs;
 
+/// Can an extension be preprocessed
+///
+/// Arguments
+/// * `ext`: the file extension ("cpp")
+pub fn can_preprocess_ext(ext: &str) -> bool {
+    ["cpp", "rvmat", "ext"].contains(&ext)
+}
+
+/// Can a file be preprocessed
+///
+/// Arguments
+/// * `path`: path to the file
+pub fn can_preprocess_file<P: Into<PathBuf>>(path: P) -> bool {
+    can_preprocess_ext(
+        &path
+            .into()
+            .extension()
+            .unwrap_or_else(|| std::ffi::OsStr::new(""))
+            .to_str()
+            .unwrap(),
+    )
+}
+
 pub mod grammar {
     #![allow(deprecated)]
     #![allow(missing_docs)]

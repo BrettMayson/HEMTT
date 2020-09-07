@@ -8,8 +8,8 @@ use crate::HEMTTError;
 /// Arguments:
 /// * `tool`: Name of the BI tool
 ///
-/// ```rs
-/// let bin_exe = find_exe("binarize")?;
+/// ```
+/// let bin_exe = hemtt::tools::find_exe("binarize");
 /// ```
 pub fn find_exe(tool: &str) -> Result<PathBuf, HEMTTError> {
     let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);

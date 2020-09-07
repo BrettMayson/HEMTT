@@ -1,7 +1,7 @@
-use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
+use crate as hemtt;
 use crate::{Addon, HEMTTError, Template};
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -27,7 +27,7 @@ impl Template for CBA {
             std::fs::create_dir_all(&self.path)?;
         }
         for file in InitAssets::iter() {
-            let mut f = File::create({
+            let mut f = create_file!({
                 let mut path = self.path.clone();
                 path.push(file.as_ref());
                 trace!("Writing init file: {:?}", path);
@@ -44,7 +44,7 @@ impl Template for CBA {
             std::fs::create_dir_all(&source)?;
         }
         for file in AddonAssets::iter() {
-            let mut f = File::create({
+            let mut f = create_file!({
                 let mut path = self.path.clone();
                 path.push(source.clone());
                 path.push(file.as_ref());
@@ -74,7 +74,7 @@ impl Template for CBA {
             return Err(HEMTTError::User("The function already exists".to_string()));
         }
         trace!("function file: {:?}", function_file);
-        let mut f = File::create(&function_file)?;
+        let mut f = create_file!(&function_file)?;
         f.write_all(b"#include \"script_component.hpp\"\n")?;
         f.flush()?;
         let mut f = std::fs::OpenOptions::new().write(true).append(true).open({

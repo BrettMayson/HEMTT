@@ -1,4 +1,4 @@
-use crate::{Command, Flow, HEMTTError, Project, Stage, Step};
+use crate::{Command, Flow, HEMTTError, Project};
 
 pub struct Clean {}
 impl Command for Clean {
@@ -9,19 +9,11 @@ impl Command for Clean {
     }
 
     fn run(&self, _: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
-        let addons = crate::project::addons::get_all()?;
+        let addons = hemtt::get_all_addons()?;
         let flow = Flow {
-            steps: vec![
-                Step::single(
-                    "Clear",
-                    Stage::Check,
-                    vec![Box::new(crate::tasks::Clear {})],
-                ),
-                Step::parallel(
-                    "Clean",
-                    Stage::Check,
-                    vec![Box::new(crate::tasks::Clean {})],
-                ),
+            tasks: vec![
+                Box::new(crate::tasks::Clear {}),
+                Box::new(crate::tasks::Clean {}),
             ],
         };
         flow.execute(addons, &mut p)?;

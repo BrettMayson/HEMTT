@@ -1,17 +1,21 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate hemtt_macros;
+
 mod addon;
-// mod config;
+mod config;
 mod error;
+pub use error::*;
 mod io;
 pub mod preprocess;
-mod project;
+pub mod project;
 pub mod templates;
 pub mod tools;
 
+pub use ::config::Config;
 pub use addon::{Addon, AddonLocation};
-// pub use config::Config;
 pub use error::HEMTTError;
-pub use project::Project;
+pub use project::*;
 pub use templates::Template;

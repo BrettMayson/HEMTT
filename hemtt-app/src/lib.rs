@@ -4,16 +4,25 @@ use std::time::Instant;
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate hemtt_macros;
+
 use clap::App;
-use hemtt::{HEMTTError, Project};
+use hemtt::{Addon, HEMTTError, Project};
 
 mod ci;
 mod command;
 mod commands;
+mod context;
+mod flow;
 mod startup;
 mod tasks;
 
 use command::Command;
+use flow::{Flow, Stage, Task};
+
+pub type AddonList = Vec<Result<(bool, bool, Addon), HEMTTError>>;
+pub type OkSkip = (bool, bool);
 
 lazy_static::lazy_static! {
     pub static ref CI: bool = std::env::args().any(|x| x == "--ci") || ci::is_ci();
@@ -62,6 +71,8 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     let mut hash_commands: HashMap<String, &Box<dyn Command>> = HashMap::new();
 
     commands.push(Box::new(commands::Bug {}));
+    commands.push(Box::new(commands::Build {}));
+    commands.push(Box::new(commands::Clean {}));
     commands.push(Box::new(commands::Project {}));
     commands.push(Box::new(commands::Template {}));
 
@@ -128,4 +139,59 @@ pub fn log_path(new: bool) -> std::path::PathBuf {
         path.push("hemtt.previous.log")
     }
     path
+}
+
+pub fn get_addons_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTTError> {
+    use hemtt::project::{addon_matches, get_addon_from_location, get_addon_from_locations};
+    use hemtt::AddonLocation;
+    let all = args.value_of("addons").unwrap_or("") == "all";
+    let mut addons: Vec<Addon> = if args.is_present("addons") && !all {
+        get_addon_from_location(&AddonLocation::Addons)?
+            .into_iter()
+            .filter(|a| {
+                args.values_of("addons")
+                    .unwrap()
+                    .any(|x| addon_matches(a.name.as_str(), x))
+            })
+            .collect()
+    } else if all || (!args.is_present("opts") && !args.is_present("compats")) {
+        get_addon_from_location(&AddonLocation::Addons)?
+    } else {
+        Vec::new()
+    };
+    if args.is_present("opts") {
+        addons.extend(if args.value_of("opts").unwrap_or("") == "all" {
+            get_addon_from_location(&AddonLocation::Optionals)?
+        } else {
+            get_addon_from_location(&AddonLocation::Optionals)?
+                .into_iter()
+                .filter(|a| {
+                    args.values_of("opts")
+                        .unwrap()
+                        .any(|x| addon_matches(a.name.as_str(), x))
+                })
+                .collect()
+        });
+    }
+    if args.is_present("compats") {
+        addons.extend(if args.value_of("compats").unwrap_or("") == "all" {
+            get_addon_from_location(&AddonLocation::Compats)?
+        } else {
+            get_addon_from_location(&AddonLocation::Compats)?
+                .into_iter()
+                .filter(|a| {
+                    args.values_of("compats")
+                        .unwrap()
+                        .any(|x| addon_matches(a.name.as_str(), x))
+                })
+                .collect()
+        });
+    }
+    if !args.is_present("addons") && !args.is_present("opts") && !args.is_present("compats") {
+        addons.extend(get_addon_from_locations(&[
+            AddonLocation::Optionals,
+            AddonLocation::Compats,
+        ])?);
+    }
+    Ok(addons)
 }

@@ -1,14 +1,30 @@
+use std::path::PathBuf;
+
+use regex::Regex;
+use strum::IntoEnumIterator;
+
+use crate::{context::AddonListContext, HEMTTError, Stage, Task};
+use hemtt::AddonLocation;
+
 // Clears all pbo files that are not part of the hemtt project
 #[derive(Clone)]
 pub struct Clear {}
 impl Task for Clear {
-    fn single(&self, addons: AddonList, p: &Project, _: &Stage) -> Result<AddonList, HEMTTError> {
+    fn name(&self) -> String {
+        String::from("clear")
+    }
+
+    fn hooks(&self) -> &[Stage] {
+        &[Stage::Check]
+    }
+
+    fn check_single(&self, context: &mut AddonListContext) -> Result<(), HEMTTError> {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
-        for data in &addons {
+        for data in &*context.addons {
             if let Ok(d) = data {
                 let (_, _, addon) = d;
-                targets.push(addon.target(p).display().to_string());
+                targets.push(addon.pbo(Some(&context.global.project.prefix)));
             }
         }
         for dir in AddonLocation::iter() {
@@ -25,6 +41,6 @@ impl Task for Clear {
                 }
             }
         }
-        Ok(addons)
+        Ok(())
     }
 }

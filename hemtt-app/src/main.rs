@@ -1,10 +1,11 @@
-use std::fs::File;
-
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate hemtt_macros;
+
 use simplelog::{
-    CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger,
+    CombinedLogger, ConfigBuilder, LevelFilter, LevelPadding, TermLogger, TerminalMode, WriteLogger,
 };
 
 use hemtt_app::*;
@@ -14,9 +15,10 @@ fn main() {
 
     let config = ConfigBuilder::new()
         .set_location_level(LevelFilter::Trace)
-        .set_target_level(LevelFilter::Debug)
+        .set_target_level(LevelFilter::Trace)
         .set_thread_level(LevelFilter::Trace)
         .set_time_level(LevelFilter::Off)
+        .set_level_padding(LevelPadding::Left)
         .build();
 
     let level = match (*DEBUG, *TRACE) {
@@ -29,7 +31,7 @@ fn main() {
         WriteLogger::new(
             LevelFilter::Trace,
             config,
-            File::create(log_path(true)).unwrap(),
+            create_file!(log_path(true)).unwrap(),
         ),
     ])
     .unwrap();

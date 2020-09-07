@@ -2,7 +2,7 @@
 pub struct IOPathError {
     pub source: std::io::Error,
     pub path: std::path::PathBuf,
-    pub message: Option<String>,
+    // pub message: Option<String>,
 }
 
 #[derive(Debug)]
@@ -19,19 +19,19 @@ pub struct PreprocessError {
     pub source: Box<HEMTTError>,
 }
 
-// #[derive(Debug)]
-// pub struct ConfigParseError {
-//     pub path: Option<String>,
-//     pub message: String,
-//     pub source: crate::config::grammar::ParseError,
-// }
+#[derive(Debug)]
+pub struct ConfigParseError {
+    pub path: Option<String>,
+    pub message: String,
+    pub source: crate::config::grammar::ParseError,
+}
 
 #[derive(Debug)]
 pub enum HEMTTError {
     User(String),
     UserHint(String, String),
     Generic(String),
-    // Config(ConfigParseError),
+    Config(ConfigParseError),
     Parse(PreprocessParseError),
     Preprocess(PreprocessError),
     IO(std::io::Error),
@@ -88,7 +88,7 @@ impl std::fmt::Display for HEMTTError {
             Self::User(ref s) => write!(f, "{}", s),
             Self::UserHint(ref s, ref h) => write!(f, "{}\ntry: {}", s, h),
             Self::Generic(ref s) => write!(f, "{}", s),
-            // Self::Config(ref e) => write!(f, "Config: {}", e.message),
+            Self::Config(ref e) => write!(f, "Config: {}", e.message),
             Self::Parse(ref e) => write!(f, "Preprocessor Parse: {}", e.message),
             Self::Preprocess(ref e) => write!(f, "Preprocessor: {}", e.message),
             Self::IO(ref e) => write!(f, "IO error: {}", e),
@@ -131,7 +131,7 @@ impl std::error::Error for HEMTTError {
             Self::User(_) => Some(self),
             Self::UserHint(_, ref _h) => Some(self),
             Self::Generic(_) => Some(self),
-            // Self::Config(ref e) => Some(&e.source),
+            Self::Config(ref e) => Some(&e.source),
             Self::Parse(ref e) => Some(&e.source),
             Self::Preprocess(ref e) => Some(&e.source),
             Self::IO(ref e) => Some(e),
