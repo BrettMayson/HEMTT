@@ -51,6 +51,7 @@ impl Command for FilePatching {
         let mut root = steam_path.clone();
         root.push(ARMA3);
         if root.exists() {
+            root.pop();
             Self::create_link(root, &p)?;
             Ok(())
         } else {
