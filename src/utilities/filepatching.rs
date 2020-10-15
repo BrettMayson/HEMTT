@@ -37,7 +37,7 @@ impl Command for FilePatching {
 
     fn run(&self, _: &clap::ArgMatches, p: Project) -> Result<(), HEMTTError> {
         // Find Steam directory
-        const ARMA3: &str = "steamapps\\common\\Arma 3";
+        const ARMA3: &str = "steamapps\\common\\Arma 3\\arma3.exe";
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
         let binarize = hkcu.open_subkey("Software\\Valve\\Steam")?;
         let steam_path: String = binarize.get_value("SteamPath")?;
