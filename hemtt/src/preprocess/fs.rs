@@ -10,7 +10,7 @@ use crate::aerror;
 pub fn read_prefix(prefix_path: &Path) -> Result<String, HEMTTError> {
     let mut content = String::new();
     open_file!(prefix_path)?.read_to_string(&mut content)?;
-    Ok(content.lines().nth(0).unwrap().to_string())
+    Ok(content.lines().next().unwrap().to_string())
 }
 
 pub fn matches_include_path(path: &PathBuf, include_path: &str) -> Result<bool, HEMTTError> {
@@ -32,7 +32,7 @@ pub fn matches_include_path(path: &PathBuf, include_path: &str) -> Result<bool, 
 
         let mut prefix = read_prefix(&prefixpath)?;
 
-        prefix = if !prefix.is_empty() && prefix.chars().nth(0).unwrap() != '\\' {
+        prefix = if !prefix.is_empty() && !prefix.starts_with('\\') {
             format!("\\{}", prefix)
         } else {
             prefix
@@ -100,7 +100,7 @@ pub fn find_include_file(
     origin: Option<&PathBuf>,
     search_paths: &[PathBuf],
 ) -> Result<PathBuf, HEMTTError> {
-    if include_path.chars().nth(0).unwrap() != '\\' {
+    if !include_path.starts_with('\\') {
         let mut path = PathBuf::from(include_path.replace("\\", &MAIN_SEPARATOR.to_string()));
 
         if let Some(origin_path) = origin {

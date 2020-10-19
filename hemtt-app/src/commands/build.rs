@@ -9,7 +9,7 @@ impl Command for Build {
         // .args(&super::building_args())
     }
 
-    fn run(&self, args: &clap::ArgMatches, mut p: Project) -> Result<(), HEMTTError> {
+    fn run(&self, args: &clap::ArgMatches, p: Project) -> Result<(), HEMTTError> {
         let addons = crate::get_addons_from_args(args)?;
         let flow = Flow {
             tasks: {
@@ -83,7 +83,7 @@ impl Command for Build {
                 tasks
             },
         };
-        flow.execute(addons, &mut p)?;
+        flow.execute(addons, &p)?;
         Ok(())
     }
 }

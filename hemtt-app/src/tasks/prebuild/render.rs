@@ -63,9 +63,7 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
             //     .lock()
             //     .unwrap()
             //     .add(path.display().to_string(), dest.clone())?;
-            ctx.global
-                .cache
-                .insert(dest, Temporary::from_string(&out)?);
+            ctx.global.cache.insert(dest, Temporary::from_string(&out)?);
             Ok(())
         }
         Err(err) => {

@@ -54,7 +54,7 @@ impl Temporary {
     /// * `content`: Content to place in temporary value
     pub fn from_string(content: &str) -> std::io::Result<Self> {
         let mut tmp = Self::new();
-        tmp.write(content.as_bytes())?;
+        tmp.write_all(content.as_bytes())?;
         Ok(tmp)
     }
 
@@ -186,52 +186,52 @@ mod test {
     #[test]
     fn memory_single_write_single_read() {
         let mut tmp = super::Temporary::new();
-        tmp.write(b"some text").unwrap();
+        tmp.write_all(b"some text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 9];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some text", &buffer);
     }
 
     #[test]
     fn memory_multi_write_single_read() {
         let mut tmp = super::Temporary::new();
-        tmp.write(b"some").unwrap();
-        tmp.write(b" text").unwrap();
+        tmp.write_all(b"some").unwrap();
+        tmp.write_all(b" text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 9];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some text", &buffer);
     }
 
     #[test]
     fn memory_single_write_multi_read() {
         let mut tmp = super::Temporary::new();
-        tmp.write(b"some text").unwrap();
+        tmp.write_all(b"some text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 4];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some", &buffer);
         let mut buffer = [0; 5];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b" text", &buffer);
     }
 
     #[test]
     fn memory_multi_write_multi_read() {
         let mut tmp = super::Temporary::new();
-        tmp.write(b"some").unwrap();
-        tmp.write(b" text").unwrap();
+        tmp.write_all(b"some").unwrap();
+        tmp.write_all(b" text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 4];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some", &buffer);
         let mut buffer = [0; 5];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b" text", &buffer);
     }
 
@@ -239,52 +239,52 @@ mod test {
     #[test]
     fn disk_single_write_single_read() {
         let mut tmp = super::Temporary::new_with_max(2);
-        tmp.write(b"some text").unwrap();
+        tmp.write_all(b"some text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 9];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some text", &buffer);
     }
 
     #[test]
     fn disk_multi_write_single_read() {
         let mut tmp = super::Temporary::new_with_max(2);
-        tmp.write(b"some").unwrap();
-        tmp.write(b" text").unwrap();
+        tmp.write_all(b"some").unwrap();
+        tmp.write_all(b" text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 9];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some text", &buffer);
     }
 
     #[test]
     fn disk_single_write_multi_read() {
         let mut tmp = super::Temporary::new_with_max(2);
-        tmp.write(b"some text").unwrap();
+        tmp.write_all(b"some text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 4];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some", &buffer);
         let mut buffer = [0; 5];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b" text", &buffer);
     }
 
     #[test]
     fn disk_multi_write_multi_read() {
         let mut tmp = super::Temporary::new_with_max(2);
-        tmp.write(b"some").unwrap();
-        tmp.write(b" text").unwrap();
+        tmp.write_all(b"some").unwrap();
+        tmp.write_all(b" text").unwrap();
         tmp.flush().unwrap();
         tmp.seek(std::io::SeekFrom::Start(0)).unwrap();
         let mut buffer = [0; 4];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b"some", &buffer);
         let mut buffer = [0; 5];
-        tmp.read(&mut buffer).unwrap();
+        tmp.read_exact(&mut buffer).unwrap();
         assert_eq!(b" text", &buffer);
     }
 }

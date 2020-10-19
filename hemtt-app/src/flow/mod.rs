@@ -39,26 +39,25 @@ impl Flow {
                 if addons
                     .iter()
                     .any(|ra| if let Ok(a) = ra { !a.1 } else { false })
+                    && task.hooks().contains(&stage)
                 {
-                    if task.hooks().contains(&stage) {
-                        info!(
-                            "[{}] [{:^width$}] Starting",
-                            stage,
-                            task.name(),
-                            width = ctx.task_pad
-                        );
-                        let start = Instant::now();
-                        addons = self.call(&stage, task, addons, &mut ctx)?;
-                        let elapsed = start.elapsed();
-                        info!(
-                            "[{}] [{:^width$}] Completed in {} ms",
-                            stage,
-                            task.name(),
-                            elapsed.as_secs_f32() * 1000f32
-                                + elapsed.subsec_nanos() as f32 / 1_000_000f32,
-                            width = ctx.task_pad
-                        );
-                    }
+                    info!(
+                        "[{}] [{:^width$}] Starting",
+                        stage,
+                        task.name(),
+                        width = ctx.task_pad
+                    );
+                    let start = Instant::now();
+                    addons = self.call(&stage, &**task, addons, &mut ctx)?;
+                    let elapsed = start.elapsed();
+                    info!(
+                        "[{}] [{:^width$}] Completed in {} ms",
+                        stage,
+                        task.name(),
+                        elapsed.as_secs_f32() * 1000f32
+                            + elapsed.subsec_nanos() as f32 / 1_000_000f32,
+                        width = ctx.task_pad
+                    );
                 }
             }
         }
@@ -74,7 +73,7 @@ impl Flow {
     fn call(
         &self,
         stage: &Stage,
-        task: &Box<dyn Task>,
+        task: &dyn Task,
         addons: AddonList,
         ctx: &mut Context,
     ) -> Result<AddonList, HEMTTError> {

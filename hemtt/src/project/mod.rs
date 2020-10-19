@@ -37,7 +37,7 @@ pub fn get_addon_from_location(location: &AddonLocation) -> Result<Vec<Addon>, H
         .filter(|file_or_dir| file_or_dir.is_dir())
         .map(|file| Addon {
             name: file.file_name().unwrap().to_str().unwrap().to_owned(),
-            location: location.clone(),
+            location: *location,
         })
         .collect())
 }

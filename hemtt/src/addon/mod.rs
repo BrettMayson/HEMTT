@@ -22,7 +22,7 @@ impl Addon {
         let name = name.into();
         for location in AddonLocation::first_class() {
             if location.exists() {
-                let mut path = PathBuf::from(location.clone());
+                let mut path = PathBuf::from(location);
                 path.push(name.clone());
                 if path.exists() {
                     return Some(Self { name, location });
@@ -120,10 +120,7 @@ impl From<&Addon> for hemtt_handlebars::Variables {
                 String::from("addon"),
                 Value::Object({
                     let mut map = Map::new();
-                    map.insert(
-                        String::from("name"),
-                        Value::String(String::from(addon.name.clone())),
-                    );
+                    map.insert(String::from("name"), Value::String(addon.name.clone()));
                     map.insert(
                         String::from("source"),
                         Value::String(addon.source().display().to_string()),

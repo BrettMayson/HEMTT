@@ -32,7 +32,7 @@ impl<'a, 'b> Context<'a> {
     pub fn get_list(&'a self, addons: &'b mut AddonList) -> AddonListContext<'a, 'b> {
         AddonListContext {
             global: &self,
-            addons: addons,
+            addons,
         }
     }
 }

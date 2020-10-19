@@ -55,26 +55,23 @@ impl FileCache {
         let path = path.into();
         loop {
             let state = if let Some(lock) = self.locks.read().unwrap().get(&path) {
-                lock.clone()
+                *lock
             } else {
                 Lock::DNE
             };
-            match state {
-                Lock::Unlocked => {
-                    let mut locks = self.locks.write().unwrap();
-                    let lock = locks.get_mut(&path).unwrap();
-                    match lock {
-                        Lock::Locked => return None,
-                        Lock::Unlocked => *lock = Lock::Locked,
-                        Lock::DNE => return None,
-                    }
-                    return Some(FileCacheGuard {
-                        inner: &self,
-                        data: unsafe { (*self.data.get()).get_mut(&path).unwrap() },
-                        path: path.to_owned(),
-                    });
+            if let Lock::Unlocked = state {
+                let mut locks = self.locks.write().unwrap();
+                let lock = locks.get_mut(&path).unwrap();
+                match lock {
+                    Lock::Locked => return None,
+                    Lock::Unlocked => *lock = Lock::Locked,
+                    Lock::DNE => return None,
                 }
-                _ => {}
+                return Some(FileCacheGuard {
+                    inner: &self,
+                    data: unsafe { (*self.data.get()).get_mut(&path).unwrap() },
+                    path: path.to_owned(),
+                });
             }
         }
     }
@@ -87,26 +84,23 @@ impl FileCache {
         let path = path.into();
         loop {
             let state = if let Some(lock) = self.locks.read().unwrap().get(&path) {
-                lock.clone()
+                *lock
             } else {
                 Lock::DNE
             };
-            match state {
-                Lock::Unlocked => {
-                    let mut locks = self.locks.write().unwrap();
-                    let lock = locks.get_mut(&path).unwrap();
-                    match lock {
-                        Lock::Locked => return None,
-                        Lock::Unlocked => *lock = Lock::Locked,
-                        Lock::DNE => return None,
-                    }
-                    return Some(FileCacheGuard {
-                        inner: &self,
-                        data: unsafe { (*self.data.get()).get_mut(&path).unwrap() },
-                        path: path.to_owned(),
-                    });
+            if let Lock::Unlocked = state {
+                let mut locks = self.locks.write().unwrap();
+                let lock = locks.get_mut(&path).unwrap();
+                match lock {
+                    Lock::Locked => return None,
+                    Lock::Unlocked => *lock = Lock::Locked,
+                    Lock::DNE => return None,
                 }
-                _ => {}
+                return Some(FileCacheGuard {
+                    inner: &self,
+                    data: unsafe { (*self.data.get()).get_mut(&path).unwrap() },
+                    path: path.to_owned(),
+                });
             }
         }
     }
@@ -117,7 +111,10 @@ impl FileCache {
     /// * `path`: PathBuf to the file, does not need to exist
     pub fn exists<P: Into<PathBuf>>(&self, path: P) -> (bool, bool) {
         let path = path.into();
-        (self.locks.read().unwrap().contains_key(&path), path.exists())
+        (
+            self.locks.read().unwrap().contains_key(&path),
+            path.exists(),
+        )
     }
 
     /// Get a mutable borrow of a temporary
@@ -125,10 +122,7 @@ impl FileCache {
     ///
     /// Arguments:
     /// * `path`: PathBuf to the file, does not need to exist
-    pub fn read<P: Into<PathBuf>>(
-        &self,
-        path: P,
-    ) -> Result<FileCacheGuard, std::io::Error> {
+    pub fn read<P: Into<PathBuf>>(&self, path: P) -> Result<FileCacheGuard, std::io::Error> {
         let path = path.into();
         if !self.exists(&path).0 {
             trace!("Not in cache, retrieving from disk: `{:?}`", &path);
@@ -148,15 +142,11 @@ impl FileCache {
     /// Arguments:
     /// * `path`: PathBuf to the file, does not need to exist
     /// * `tmp`: Temporary file object
-    pub fn insert<P: Into<PathBuf>>(
-        &self,
-        path: P,
-        tmp: Temporary,
-    ) -> Option<Temporary> {
+    pub fn insert<P: Into<PathBuf>>(&self, path: P, tmp: Temporary) -> Option<Temporary> {
         let path = path.into();
         loop {
             let state = if let Some(lock) = self.locks.read().unwrap().get(&path) {
-                lock.clone()
+                *lock
             } else {
                 Lock::DNE
             };
@@ -189,13 +179,13 @@ mod test {
         let path = PathBuf::from("./test.txt");
         cache.insert(path.clone(), {
             let mut tmp = super::Temporary::new();
-            tmp.write(b"some text").unwrap();
+            tmp.write_all(b"some text").unwrap();
             tmp.flush().unwrap();
             tmp
         });
         let mut tmp = cache.read(&path).unwrap();
         let mut buf = [0; 4];
-        tmp.read(&mut buf).unwrap();
+        tmp.read_exact(&mut buf).unwrap();
         assert_eq!(b"some", &buf);
     }
 
@@ -204,7 +194,7 @@ mod test {
         let cache = super::FileCache::new();
         let mut tmp = cache.read(&PathBuf::from("./tests/text.txt")).unwrap();
         let mut buf = [0; 4];
-        tmp.read(&mut buf).unwrap();
+        tmp.read_exact(&mut buf).unwrap();
         assert_eq!(b"This", &buf);
     }
 
@@ -213,11 +203,11 @@ mod test {
         let cache = super::FileCache::new();
         let mut tmp = cache.read(&PathBuf::from("./tests/text.txt")).unwrap();
         let mut buf = [0; 4];
-        tmp.read(&mut buf).unwrap();
+        tmp.read_exact(&mut buf).unwrap();
         assert_eq!(b"This", &buf);
         let mut tmp = cache.read(&PathBuf::from("./tests/text2.txt")).unwrap();
         let mut buf = [0; 12];
-        tmp.read(&mut buf).unwrap();
+        tmp.read_exact(&mut buf).unwrap();
         assert_eq!(b"This is also", &buf);
     }
 
@@ -227,13 +217,13 @@ mod test {
         {
             let mut tmp = cache.read(&PathBuf::from("./tests/text2.txt")).unwrap();
             let mut buf = [0; 12];
-            tmp.read(&mut buf).unwrap();
+            tmp.read_exact(&mut buf).unwrap();
             assert_eq!(b"This is also", &buf);
         }
         {
             let mut tmp = cache.read(&PathBuf::from("./tests/text2.txt")).unwrap();
             let mut buf = [0; 12];
-            tmp.read(&mut buf).unwrap();
+            tmp.read_exact(&mut buf).unwrap();
             assert_eq!(b"This is also", &buf);
         }
     }

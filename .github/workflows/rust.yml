@@ -1,0 +1,28 @@
+name: Rust Checks
+
+on:
+  push:
+    branches: [ experiment ]
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: rustfmt
+      run: cargo fmt -- --check
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: clippy
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-features -- -D warnings
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: build
+      run: cargo build --all
