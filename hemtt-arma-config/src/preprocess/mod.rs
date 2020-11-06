@@ -98,7 +98,6 @@ macro_rules! read_line {
             match next {
                 Some(Token::Newline) => break,
                 Some(Token::Escape) => {
-                    println!("Found escape, {:?}", $i.peek());
                     if $i.peek() == Some(&Token::Newline) {
                         $i.next();
                     }
@@ -140,7 +139,6 @@ pub fn _resolve(
     define: &Define,
     defines: &HashMap<String, Define>,
 ) -> Option<Vec<Token>> {
-    println!("Resolving: {:?}", ident);
     if let Some(d) = defines.get(ident) {
         let mut ret = Vec::new();
         let mut context = defines.to_owned();
@@ -150,7 +148,6 @@ pub fn _resolve(
                     panic!("Invalid arg lengths");
                 }
                 for i in 0..dargs.len() {
-                    println!("{:?} = {:?}", dargs[i], args[i]);
                     if let Token::Word(key) = &dargs[i][0] {
                         if args[i].len() == 1 {
                             if let Token::Word(value) = &args[i][0] {
@@ -219,7 +216,6 @@ pub fn _resolve(
         while let Some(token) = iter.next() {
             match &token {
                 Token::Directive => {
-                    println!("Quote?");
                     match iter.peek() {
                         Some(Token::Word(_)) => {
                             if let Token::Word(w) = iter.next().unwrap() {
@@ -259,16 +255,13 @@ pub fn _preprocess(
     let mut iter = source.into_iter().peekable();
     let mut if_state = IfStates::new();
     while let Some(token) = iter.next() {
-        println!("-- {:?}", token);
         match (&token, if_state.reading()) {
             (Token::Directive, r) => {
                 if let Token::Word(directive) = iter.next().unwrap() {
-                    println!("Found directive: {:?}", directive);
                     match (directive.as_str(), r) {
                         ("define", true) => {
                             skip_whitespace!(iter);
                             if let Some(Token::Word(name)) = iter.next() {
-                                println!("Name: {:?}", name);
                                 // skip_whitespace!(iter);
                                 let args = if iter.peek() == Some(&Token::LeftParenthesis) {
                                     let args = read_args!(iter)
@@ -276,13 +269,11 @@ pub fn _preprocess(
                                         .map(|arg| _preprocess(arg, &mut defines))
                                         .collect::<Result<Vec<Vec<Token>>, String>>()
                                         .unwrap();
-                                    println!("Args: {:?}", args);
                                     Some(args)
                                 } else {
                                     None
                                 };
                                 let body = read_line!(iter);
-                                println!("Body: {:?}", body);
                                 defines.insert(
                                     name,
                                     Define {
@@ -306,7 +297,6 @@ pub fn _preprocess(
                         ("ifdef", true) => {
                             skip_whitespace!(iter);
                             if let Some(Token::Word(name)) = iter.next() {
-                                println!("Found if, checking: {:?}", name);
                                 if defines.contains_key(&name) {
                                     if_state.push(IfState::ReadingIf);
                                 } else {
@@ -317,7 +307,6 @@ pub fn _preprocess(
                         ("ifndef", true) => {
                             skip_whitespace!(iter);
                             if let Some(Token::Word(name)) = iter.next() {
-                                println!("Found if, checking: {:?}", name);
                                 if defines.contains_key(&name) {
                                     if_state.push(IfState::PassingIf);
                                 } else {
@@ -335,14 +324,12 @@ pub fn _preprocess(
                         ("endif", _) => {
                             if_state.pop();
                         }
-                        _ => println!("Unknown directive: {:?}", directive),
+                        _ => {} //println!("Unknown directive: {:?}", directive),
                     }
                 }
             }
             (Token::Word(text), true) => {
-                println!("Found word: {:?}", text);
                 if defines.contains_key(text) {
-                    println!("Found define: {:?}", defines.get(text).unwrap());
                     ret.append(
                         &mut _resolve(
                             &text,

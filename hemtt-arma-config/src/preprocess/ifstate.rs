@@ -31,7 +31,6 @@ impl IfStates {
     }
 
     pub fn push(&mut self, s: IfState) {
-        println!("Pushing if state: {:?}", s);
         self.0.push(s)
     }
 
@@ -41,7 +40,6 @@ impl IfStates {
 
     pub fn flip(&mut self) {
         if self.0.iter().take(self.0.len() - 1).all(|f| f.reading()) {
-            println!("Flipping");
             if let Some(new) = match self.pop() {
                 Some(IfState::PassingChild) => Some(IfState::PassingChild),
                 Some(IfState::PassingIf) => Some(IfState::ReadingElse),
