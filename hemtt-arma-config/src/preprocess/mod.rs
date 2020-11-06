@@ -331,9 +331,7 @@ pub fn _preprocess(
                         ("ifndef", false) => {
                             if_state.push(IfState::PassingChild);
                         }
-                        ("else", _) => {
-                            if_state.flip()
-                        }
+                        ("else", _) => if_state.flip(),
                         ("endif", _) => {
                             if_state.pop();
                         }
