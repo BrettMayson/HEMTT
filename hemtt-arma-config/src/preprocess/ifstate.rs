@@ -4,6 +4,7 @@ pub enum IfState {
     PassingIf,
     ReadingElse,
     PassingElse,
+    PassingChild,
 }
 
 impl IfState {
@@ -13,6 +14,7 @@ impl IfState {
             IfState::PassingIf => false,
             IfState::ReadingElse => true,
             IfState::PassingElse => false,
+            IfState::PassingChild => false,
         }
     }
 }
@@ -25,11 +27,7 @@ impl IfStates {
     }
 
     pub fn reading(&self) -> bool {
-        if let Some(l) = self.0.last() {
-            l.reading()
-        } else {
-            true
-        }
+        self.0.iter().all(|f| f.reading())
     }
 
     pub fn push(&mut self, s: IfState) {
@@ -39,5 +37,21 @@ impl IfStates {
 
     pub fn pop(&mut self) -> Option<IfState> {
         self.0.pop()
+    }
+
+    pub fn flip(&mut self) {
+        if self.0.iter().take(self.0.len() - 1).all(|f| f.reading()) {
+            println!("Flipping");
+            if let Some(new) = match self.pop() {
+                Some(IfState::PassingChild) => Some(IfState::PassingChild),
+                Some(IfState::PassingIf) => Some(IfState::ReadingElse),
+                Some(IfState::ReadingIf) => Some(IfState::PassingElse),
+                Some(IfState::PassingElse) => None,
+                Some(IfState::ReadingElse) => None,
+                None => None,
+            } {
+                self.push(new);
+            }
+        }
     }
 }

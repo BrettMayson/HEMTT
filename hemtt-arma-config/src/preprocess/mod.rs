@@ -303,7 +303,7 @@ pub fn _preprocess(
                                 return Err("undef without name".to_string());
                             }
                         }
-                        ("ifdef", _) => {
+                        ("ifdef", true) => {
                             skip_whitespace!(iter);
                             if let Some(Token::Word(name)) = iter.next() {
                                 println!("Found if, checking: {:?}", name);
@@ -314,7 +314,7 @@ pub fn _preprocess(
                                 }
                             }
                         }
-                        ("ifndef", _) => {
+                        ("ifndef", true) => {
                             skip_whitespace!(iter);
                             if let Some(Token::Word(name)) = iter.next() {
                                 println!("Found if, checking: {:?}", name);
@@ -325,13 +325,14 @@ pub fn _preprocess(
                                 }
                             }
                         }
-                        ("else", true) => {
-                            if_state.pop();
-                            if_state.push(IfState::PassingElse);
+                        ("ifdef", false) => {
+                            if_state.push(IfState::PassingChild);
                         }
-                        ("else", false) => {
-                            if_state.pop();
-                            if_state.push(IfState::ReadingElse);
+                        ("ifndef", false) => {
+                            if_state.push(IfState::PassingChild);
+                        }
+                        ("else", _) => {
+                            if_state.flip()
                         }
                         ("endif", _) => {
                             if_state.pop();
