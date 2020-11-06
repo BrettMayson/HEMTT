@@ -215,21 +215,19 @@ pub fn _resolve(
         }
         while let Some(token) = iter.next() {
             match &token {
-                Token::Directive => {
-                    match iter.peek() {
-                        Some(Token::Word(_)) => {
-                            if let Token::Word(w) = iter.next().unwrap() {
-                                ret.push(Token::DoubleQuote);
-                                ret.append(&mut resolve_word(&mut iter, &w, &token, &mut context));
-                                ret.push(Token::DoubleQuote);
-                            }
+                Token::Directive => match iter.peek() {
+                    Some(Token::Word(_)) => {
+                        if let Token::Word(w) = iter.next().unwrap() {
+                            ret.push(Token::DoubleQuote);
+                            ret.append(&mut resolve_word(&mut iter, &w, &token, &mut context));
+                            ret.push(Token::DoubleQuote);
                         }
-                        Some(Token::Directive) => {
-                            iter.next();
-                        }
-                        _ => {}
                     }
-                }
+                    Some(Token::Directive) => {
+                        iter.next();
+                    }
+                    _ => {}
+                },
                 Token::Word(w) => {
                     ret.append(&mut resolve_word(&mut iter, w, &token, &mut context));
                 }
