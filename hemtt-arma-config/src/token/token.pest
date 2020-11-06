@@ -1,0 +1,33 @@
+file = _{ SOI ~ (
+    word | alpha | digit | underscore | dash | assignment | left_brace | right_brace | left_bracket | right_bracket |
+    left_parentheses | right_parentheses | colon | semicolon | directive | escape | comma | decimal |
+    double_quote | single_quote | newline | char 
+)* ~ EOI }
+word = ${ alpha ~ ( alpha | digit | underscore )* }
+alpha = { ASCII_ALPHANUMERIC }
+digit = { ASCII_DIGIT }
+underscore = { "_" }
+dash = { "-" }
+assignment = { "=" }
+left_brace = { "{" }
+right_brace = { "}" }
+left_bracket = { "[" }
+right_bracket = { "]" }
+left_parentheses = { "(" }
+right_parentheses = { ")" }
+colon = { ":" }
+semicolon = { ";" }
+directive = { "#" }
+escape = { "\\"}
+comma = { "," }
+decimal = { "." }
+double_quote = { "\"" }
+single_quote = { "'" }
+newline = { NEWLINE }
+char = { !(alpha | digit) ~ ANY }
+
+
+space = { " " }
+tab = { "\t" }
+WHITESPACE = ${ space | tab }
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!"\n" ~ ANY)* ~ "\n") }

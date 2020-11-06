@@ -3,6 +3,8 @@ name: Rust Checks
 on:
   push:
     branches: [ experiment ]
+  pull_request:
+    branches: [ experiment ]
 
 jobs:
   fmt:

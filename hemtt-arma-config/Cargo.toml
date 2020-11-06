@@ -1,0 +1,9 @@
+[package]
+name = "hemtt-arma-config"
+version = "0.1.0"
+authors = ["Brett <brett@mayson.io>"]
+edition = "2018"
+
+[dependencies]
+pest = "2.1"
+pest_derive = "2.1"
