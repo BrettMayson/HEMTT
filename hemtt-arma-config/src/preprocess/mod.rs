@@ -2,14 +2,32 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
+use pest::error::Error;
+use pest::Parser;
+
+mod token;
 #[cfg(test)]
-use super::token::Whitespace;
-use super::Token;
+use token::Whitespace;
+use token::{PreProcessParser, Rule, Token};
+
+mod render;
+pub use render::render;
 
 mod define;
 use define::Define;
 mod ifstate;
 use ifstate::{IfState, IfStates};
+
+pub fn tokenize(source: &str) -> Result<Vec<Token>, Error<Rule>> {
+    let mut tokens = Vec::new();
+
+    let pairs = PreProcessParser::parse(Rule::file, source)?;
+    for pair in pairs {
+        tokens.push(Token::from(pair))
+    }
+
+    Ok(tokens)
+}
 
 macro_rules! skip_whitespace {
     ($i: ident) => {{
@@ -23,9 +41,9 @@ macro_rules! skip_whitespace {
 
 macro_rules! read_args {
     ($i: ident) => {{
-        let mut ret: Vec<Vec<crate::Token>> = Vec::new();
+        let mut ret: Vec<Vec<Token>> = Vec::new();
         let mut next = $i.next();
-        let mut arg: Vec<crate::Token> = Vec::new();
+        let mut arg: Vec<Token> = Vec::new();
         let mut level = 0;
         if let Some(Token::LeftParenthesis) = next {
             next = $i.next();
@@ -68,7 +86,7 @@ macro_rules! read_args {
 
 #[test]
 fn test_read_args() {
-    let tokens = super::tokenize("(B(C); call f);").unwrap();
+    let tokens = tokenize("(B(C); call f);").unwrap();
     let mut a = tokens.into_iter().peekable();
     assert_eq!(
         vec![vec![
@@ -88,7 +106,7 @@ fn test_read_args() {
 
 macro_rules! read_line {
     ($i: ident) => {{
-        let mut ret: Vec<crate::Token> = Vec::new();
+        let mut ret: Vec<Token> = Vec::new();
         let mut next = $i.next();
         // Skip initial whitespace
         while let Some(Token::Whitespace(_)) = next {
@@ -119,7 +137,7 @@ macro_rules! read_line {
 
 #[test]
 fn test_read_line() {
-    let tokens = super::tokenize("test = false;\ntest = true;\n").unwrap();
+    let tokens = tokenize("test = false;\ntest = true;\n").unwrap();
     let mut a = tokens.into_iter().peekable();
     assert_eq!(
         vec![

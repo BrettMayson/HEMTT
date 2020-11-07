@@ -6,9 +6,9 @@ use std::path::PathBuf;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use crate::io::*;
 use crate::preprocess::*;
 use crate::*;
+use hemtt_io::*;
 
 use crate::error::ConfigParseError;
 use crate::HEMTTError;

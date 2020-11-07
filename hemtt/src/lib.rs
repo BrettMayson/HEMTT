@@ -8,7 +8,6 @@ mod addon;
 mod config;
 mod error;
 pub use error::*;
-mod io;
 pub mod preprocess;
 pub mod project;
 pub mod templates;

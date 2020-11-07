@@ -1,25 +1,16 @@
-use pest::error::Error;
-use pest::Parser;
-
 #[macro_use]
 extern crate pest_derive;
 
+#[macro_use]
+extern crate log;
+
+mod error;
 mod linter;
-pub use linter::{InheritanceStyle, LinterOptions};
-mod token;
-use token::{PreProcessParser, Rule, Token};
+mod parser;
 mod preprocess;
-pub use preprocess::preprocess;
-mod render;
-pub use render::render;
+mod rapify;
+mod simplify;
 
-pub fn tokenize(source: &str) -> Result<Vec<Token>, Error<Rule>> {
-    let mut tokens = Vec::new();
-
-    let pairs = PreProcessParser::parse(Rule::file, source)?;
-    for pair in pairs {
-        tokens.push(Token::from(pair))
-    }
-
-    Ok(tokens)
-}
+pub use error::ArmaConfigError;
+pub use linter::{InheritanceStyle, LinterOptions};
+pub use preprocess::{preprocess, tokenize, render};

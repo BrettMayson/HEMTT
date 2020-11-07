@@ -2,8 +2,9 @@
 members = [
     "hemtt",
     "hemtt-app",
+    "hemtt-arma-config", #WIP
     "hemtt-cache",
     "hemtt-handlebars",
+    "hemtt-io",
     "hemtt-macros",
-    "hemtt-arma-config", #WIP
 ]

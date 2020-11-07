@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 hemtt-handlebars = { path = "../hemtt-handlebars" }
 hemtt-macros = { path = "../hemtt-macros" }
+hemtt-io = { path = "../hemtt-io" }
 
 byteorder = "1"
 config = "0.10"

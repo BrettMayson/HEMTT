@@ -313,6 +313,7 @@ dependencies = [
  "config",
  "glob",
  "hemtt-handlebars",
+ "hemtt-io",
  "hemtt-macros",
  "log",
  "peg",
@@ -354,6 +355,9 @@ dependencies = [
 name = "hemtt-arma-config"
 version = "0.1.0"
 dependencies = [
+ "byteorder",
+ "hemtt-io",
+ "log",
  "pest",
  "pest_derive",
 ]
@@ -377,6 +381,10 @@ dependencies = [
  "serde_json",
  "shell-words",
 ]
+
+[[package]]
+name = "hemtt-io"
+version = "0.1.0"
 
 [[package]]
 name = "hemtt-macros"

@@ -1,5 +1,5 @@
 #[derive(Parser)]
-#[grammar = "token/token.pest"]
+#[grammar = "preprocess/token/token.pest"]
 pub struct PreProcessParser;
 
 mod keyword;

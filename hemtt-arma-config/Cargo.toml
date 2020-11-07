@@ -5,5 +5,8 @@ authors = ["Brett <brett@mayson.io>"]
 edition = "2018"
 
 [dependencies]
+hemtt-io = { path = "../hemtt-io" }
+byteorder = "1.3"
+log = "0.4"
 pest = "2.1"
 pest_derive = "2.1"
