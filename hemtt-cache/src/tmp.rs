@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 /// Provides a temporary write + read that is deleted from the disk when it is dropped
-/// The data will only hit the disk if it is over 1Mb in size
+/// The data will only hit the disk if it is over 20Mb in size
 
 #[derive(Debug, Default)]
 pub struct Temporary {
@@ -21,7 +21,7 @@ impl Temporary {
             data: Vec::new(),
             disk: None,
             pointer: 0,
-            max_size: 1_000_000,
+            max_size: 20_000_000,
             cleanup: true,
         }
     }
