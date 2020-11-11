@@ -91,33 +91,27 @@ jobs:
   build-windows:
     name: Build (Windows)
     runs-on: windows-latest
+    env:
+      OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
     steps:
       - name: Checkout the source code
         uses: actions/checkout@master
+
+      - name: Install OpenSSL
+        run: choco install --no-progress openssl
 
       - name: Install Rust stable
         run: |
           rustup toolchain update stable --no-self-update
           rustup default stable
 
-      - name: Install OpenSSL
-        run: |
-          powershell -command "Invoke-WebRequest -Uri 'http://slproweb.com/download/Win64OpenSSL-1_1_1g.msi' -OutFile openssl.msi"
-          msiexec.exe /qn /i openssl.msi
-
       - name: Build
-        env:
-          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
         run: cargo build --all
 
       - name: Test
-        env:
-          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
         run: cargo test --all
 
       - name: Build (Release)
-        env:
-          OPENSSL_DIR: C:\Program Files\OpenSSL-Win64
         run: |
           cargo build --all --release
           move target/release/hemtt.exe target/release/hemtt-windows-x64.exe
