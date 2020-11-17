@@ -103,9 +103,17 @@ impl Task for Build {
 
                     let eq: Vec<String> = line.split('=').map(|s| s.to_string()).collect();
                     if eq.len() == 1 {
-                        pbo.header_extensions.insert("prefix".to_string(), line.to_string());
+                        let prefix = line.trim_start_matches("\\").trim_end_matches("\\");
+                        pbo.header_extensions.insert("prefix".to_string(), prefix.to_string());
                     } else {
-                        pbo.header_extensions.insert(eq[0].clone(), eq[1].clone());
+                        let header = eq[0].clone();
+                        let mut value = eq[1].clone();
+
+                        if header == "prefix" {
+                            value = line.trim_start_matches("\\").trim_end_matches("\\").to_string();
+                        }
+
+                        pbo.header_extensions.insert(header, value);
                     }
                 }
             } else {
