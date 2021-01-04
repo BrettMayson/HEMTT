@@ -41,7 +41,7 @@ lazy_static::lazy_static! {
     pub static ref VERSION: &'static str = {
         let mut version = env!("CARGO_PKG_VERSION").to_string();
         if let Some(v) = option_env!("GIT_HASH") {
-            version.push_str("-");
+            version.push('-');
             version.push_str(v);
         }
         if cfg!(debug_assertions) {
