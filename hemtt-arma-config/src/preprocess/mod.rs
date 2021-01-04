@@ -361,11 +361,11 @@ pub fn _preprocess(
                         }
                         ("include", true) => {
                             let file = render(read_line!(iter)).trim_matches('"').to_owned();
-                            _preprocess(
+                            ret.append(&mut _preprocess(
                                 super::tokenize(&read_to_string(resolver(&file)).unwrap()).unwrap(),
                                 resolver,
                                 defines,
-                            )?;
+                            )?);
                         }
                         ("include", _) => {
                             read_line!(iter);

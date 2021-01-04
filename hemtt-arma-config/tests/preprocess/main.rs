@@ -189,6 +189,8 @@ fn include() {
     println!("======");
     assert_eq!(
         r#"
+class included {};
+
 class test {
     value = 100;
 };
