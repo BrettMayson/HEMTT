@@ -48,7 +48,7 @@ impl Command for MissionGenerate {
                 let line = line.unwrap();
                 let m = l_re.captures(&line).unwrap();
                 let line = m.get(1).unwrap().as_str();
-                if line == "" {
+                if line.is_empty() {
                     continue;
                 }
                 new_maps.push(line.to_owned());

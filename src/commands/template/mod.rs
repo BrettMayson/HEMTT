@@ -89,7 +89,7 @@ impl Template {
                         let contents = std::fs::read_to_string(path.path()).unwrap();
                         let result = re.replace_all(&contents, |caps: &Captures| {
                             let dft = String::from(&caps[1]);
-                            variables.get(&caps[1]).unwrap_or_else(|| &dft).to_string()
+                            variables.get(&caps[1]).unwrap_or(&dft).to_string()
                         });
                         let mut out = create_file!(path.path()).unwrap();
                         out.write_all(result.into_owned().as_bytes()).unwrap();

@@ -103,14 +103,14 @@ impl Task for Build {
 
                     let eq: Vec<String> = line.split('=').map(|s| s.to_string()).collect();
                     if eq.len() == 1 {
-                        let prefix = line.trim_start_matches("\\").trim_end_matches("\\");
+                        let prefix = line.trim_matches('\\');
                         pbo.header_extensions.insert("prefix".to_string(), prefix.to_string());
                     } else {
                         let header = eq[0].clone();
                         let mut value = eq[1].clone();
 
                         if header == "prefix" {
-                            value = line.trim_start_matches("\\").trim_end_matches("\\").to_string();
+                            value = line.trim_matches('\\').to_string();
                         }
 
                         pbo.header_extensions.insert(header, value);
