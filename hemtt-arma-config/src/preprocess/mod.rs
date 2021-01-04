@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
+use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
 use pest::error::Error;
 use pest::Parser;
@@ -155,6 +155,7 @@ fn test_read_line() {
 pub fn _resolve(
     ident: &str,
     define: &Define,
+    resolver: &dyn Fn(&str) -> PathBuf,
     defines: &HashMap<String, Define>,
 ) -> Option<Vec<Token>> {
     if let Some(d) = defines.get(ident) {
@@ -197,47 +198,19 @@ pub fn _resolve(
             }
         }
         let mut iter = d.statement.clone().into_iter().peekable();
-        // for token in &d.statement {
-        fn resolve_word(
-            iter: &mut Peekable<IntoIter<Token>>,
-            ident: &str,
-            token: &Token,
-            mut defines: &mut HashMap<String, Define>,
-        ) -> Vec<Token> {
-            if let Some(d2) = defines.get(ident) {
-                if d2.call {
-                    if let Some(r) = _resolve(
-                        ident,
-                        &Define {
-                            call: false,
-                            args: Some(
-                                read_args!(iter)
-                                    .into_iter()
-                                    .map(|arg| _preprocess(arg, &mut defines))
-                                    .collect::<Result<Vec<Vec<Token>>, String>>()
-                                    .unwrap(),
-                            ),
-                            statement: Vec::new(),
-                        },
-                        &defines,
-                    ) {
-                        return r;
-                    }
-                } else if let Some(r) = _resolve(ident, d2, &defines) {
-                    return r;
-                } else {
-                    return vec![token.to_owned()];
-                }
-            }
-            vec![token.to_owned()]
-        }
         while let Some(token) = iter.next() {
             match &token {
                 Token::Directive => match iter.peek() {
                     Some(Token::Word(_)) => {
                         if let Token::Word(w) = iter.next().unwrap() {
                             ret.push(Token::DoubleQuote);
-                            ret.append(&mut resolve_word(&mut iter, &w, &token, &mut context));
+                            ret.append(&mut _resolve_word(
+                                &mut iter,
+                                &w,
+                                &token,
+                                resolver,
+                                &mut context,
+                            ));
                             ret.push(Token::DoubleQuote);
                         }
                     }
@@ -247,7 +220,13 @@ pub fn _resolve(
                     _ => {}
                 },
                 Token::Word(w) => {
-                    ret.append(&mut resolve_word(&mut iter, w, &token, &mut context));
+                    ret.append(&mut _resolve_word(
+                        &mut iter,
+                        w,
+                        &token,
+                        resolver,
+                        &mut context,
+                    ));
                 }
                 _ => ret.push(token.to_owned()),
             }
@@ -258,13 +237,53 @@ pub fn _resolve(
     }
 }
 
-pub fn preprocess(source: Vec<Token>) -> Result<Vec<Token>, String> {
+fn _resolve_word(
+    iter: &mut Peekable<IntoIter<Token>>,
+    ident: &str,
+    token: &Token,
+    resolver: &dyn Fn(&str) -> PathBuf,
+    mut defines: &mut HashMap<String, Define>,
+) -> Vec<Token> {
+    if let Some(d2) = defines.get(ident) {
+        if d2.call {
+            if let Some(r) = _resolve(
+                ident,
+                &Define {
+                    call: false,
+                    args: Some(
+                        read_args!(iter)
+                            .into_iter()
+                            .map(|arg| _preprocess(arg, resolver, &mut defines))
+                            .collect::<Result<Vec<Vec<Token>>, String>>()
+                            .unwrap(),
+                    ),
+                    statement: Vec::new(),
+                },
+                resolver,
+                &defines,
+            ) {
+                return r;
+            }
+        } else if let Some(r) = _resolve(ident, d2, resolver, &defines) {
+            return r;
+        } else {
+            return vec![token.to_owned()];
+        }
+    }
+    vec![token.to_owned()]
+}
+
+pub fn preprocess(
+    source: Vec<Token>,
+    resolver: &dyn Fn(&str) -> PathBuf,
+) -> Result<Vec<Token>, String> {
     let mut defines: HashMap<String, Define> = HashMap::new();
-    _preprocess(source, &mut defines)
+    _preprocess(source, resolver, &mut defines)
 }
 
 pub fn _preprocess(
     source: Vec<Token>,
+    resolver: &dyn Fn(&str) -> PathBuf,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
 ) -> Result<Vec<Token>, String> {
     let mut ret = Vec::new();
@@ -282,7 +301,7 @@ pub fn _preprocess(
                                 let args = if iter.peek() == Some(&Token::LeftParenthesis) {
                                     let args = read_args!(iter)
                                         .into_iter()
-                                        .map(|arg| _preprocess(arg, &mut defines))
+                                        .map(|arg| _preprocess(arg, resolver, &mut defines))
                                         .collect::<Result<Vec<Vec<Token>>, String>>()
                                         .unwrap();
                                     Some(args)
@@ -340,7 +359,21 @@ pub fn _preprocess(
                         ("endif", _) => {
                             if_state.pop();
                         }
-                        _ => {} //println!("Unknown directive: {:?}", directive),
+                        ("include", true) => {
+                            let file = render(read_line!(iter)).trim_matches('"').to_owned();
+                            _preprocess(
+                                super::tokenize(&read_to_string(resolver(&file)).unwrap()).unwrap(),
+                                resolver,
+                                defines,
+                            )?;
+                        }
+                        ("include", _) => {
+                            read_line!(iter);
+                        }
+                        _ => {
+                            error!("Unknown directive: {:?}", directive);
+                            read_line!(iter);
+                        }
                     }
                 }
             }
@@ -355,7 +388,7 @@ pub fn _preprocess(
                                     Some(
                                         read_args!(iter)
                                             .into_iter()
-                                            .map(|arg| _preprocess(arg, &mut defines))
+                                            .map(|arg| _preprocess(arg, resolver, &mut defines))
                                             .collect::<Result<Vec<Vec<Token>>, String>>()
                                             .unwrap(),
                                     )
@@ -364,6 +397,7 @@ pub fn _preprocess(
                                 },
                                 statement: Vec::new(),
                             },
+                            resolver,
                             &defines,
                         )
                         .unwrap(),

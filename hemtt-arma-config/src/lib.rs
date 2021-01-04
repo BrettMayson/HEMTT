@@ -13,4 +13,4 @@ mod simplify;
 
 pub use error::ArmaConfigError;
 pub use linter::{InheritanceStyle, LinterOptions};
-pub use preprocess::{preprocess, tokenize, render};
+pub use preprocess::{preprocess, render, tokenize};

@@ -1,6 +1,6 @@
 use super::parser::{Node, Statement, AST};
-use crate::ArmaConfigError;
 use crate::parser::get_ident;
+use crate::ArmaConfigError;
 
 #[derive(Debug)]
 pub struct Config {

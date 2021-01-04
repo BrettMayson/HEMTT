@@ -1,3 +1,9 @@
+use std::path::PathBuf;
+
+fn resolver(name: &str) -> PathBuf {
+    PathBuf::from(format!("tests/preprocess/{}", name))
+}
+
 #[test]
 fn basic_if() {
     let config = hemtt_arma_config::preprocess(
@@ -5,6 +11,7 @@ fn basic_if() {
             &std::fs::read_to_string("tests/if/files/basic_if.in.hpp").unwrap(),
         )
         .unwrap(),
+        &resolver,
     );
     let config = hemtt_arma_config::render(config.unwrap());
     assert_eq!(
@@ -22,6 +29,7 @@ fn nested_if() {
             &std::fs::read_to_string("tests/if/files/nested_if.in.hpp").unwrap(),
         )
         .unwrap(),
+        &resolver,
     );
     let config = hemtt_arma_config::render(config.unwrap());
     assert_eq!(

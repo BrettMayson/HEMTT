@@ -1,10 +1,17 @@
+use std::{fs::read_to_string, path::PathBuf};
+
+fn resolver(name: &str) -> PathBuf {
+    PathBuf::from(format!("tests/preprocess/{}", name))
+}
+
 #[test]
 fn define() {
     let content = r#"
 #define affirmative true
 value = affirmative;
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -20,7 +27,8 @@ fn nested_define() {
 
 value = SOMETHING;
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -35,7 +43,8 @@ fn define_call() {
 
 value = "SAY_HI(Brett)";
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -52,7 +61,8 @@ fn recursive() {
 
 value = "SAY_HI(Brett)";
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -69,7 +79,8 @@ fn recursive2() {
 
 value = "SAY_HI(Brett)";
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -91,7 +102,8 @@ value = GVAR(myVar);
 value = QGVAR(myVar);
 value = QUOTE(My variable is QQGVAR(myVar));
 "#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -110,7 +122,8 @@ class CfgPatches {
         t = QUOTE(B(C); call f);
     };
 };"#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -146,7 +159,8 @@ class CfgPatches {
         expression = QUOTE(if (_value != DEFAULT_FUELCARGO) then {[ARR_2(_this,_value)] call DFUNC(makeSource)});
     };
 };"#;
-    let config = hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap());
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
     println!("======");
     println!("{}", config);
@@ -161,4 +175,39 @@ class CfgPatches {
 };"#,
         config
     );
+}
+
+#[test]
+fn include() {
+    let config = hemtt_arma_config::preprocess(
+        hemtt_arma_config::tokenize(&read_to_string("tests/preprocess/base.hpp").unwrap()).unwrap(),
+        &resolver,
+    );
+    let config = hemtt_arma_config::render(config.unwrap());
+    println!("======");
+    println!("{}", config);
+    println!("======");
+    assert_eq!(
+        r#"
+class test {
+    value = 100;
+};
+"#,
+        config
+    );
+}
+
+#[test]
+fn unknown() {
+    let content = r#"
+#notreal affirmative true
+value = affirmative;
+"#;
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
+    let config = hemtt_arma_config::render(config.unwrap());
+    println!("======");
+    println!("{}", config);
+    println!("======");
+    assert_eq!("\nvalue = affirmative;\n", config);
 }
