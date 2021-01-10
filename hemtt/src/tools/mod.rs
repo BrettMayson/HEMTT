@@ -3,15 +3,15 @@ use std::path::PathBuf;
 use crate::HEMTTError;
 
 #[cfg(windows)]
-/// Locate a BI tool on Windows
+/// Locate a BI tool
 ///
 /// Arguments:
 /// * `tool`: Name of the BI tool
 ///
 /// ```
-/// let bin_exe = hemtt::tools::find_exe("binarize");
+/// let bin_exe = hemtt::tools::find_bi_tool("binarize");
 /// ```
-pub fn find_exe(tool: &str) -> Result<PathBuf, HEMTTError> {
+pub fn find_bi_tool(tool: &str) -> Result<PathBuf, HEMTTError> {
     let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
     let binarize = hkcu.open_subkey(format!("Software\\Bohemia Interactive\\{}", tool))?;
     let value: String = binarize.get_value("path")?;

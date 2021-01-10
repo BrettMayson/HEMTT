@@ -2,9 +2,9 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 
+use vfs::FileSystem;
 use walkdir::WalkDir;
 
-use hemtt_cache::Temporary;
 use hemtt_handlebars::Variables;
 
 use crate::{
@@ -37,14 +37,14 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
     debug!(
         "[PreBuild] [{:^width$}] [{}] {}",
         "render",
-        ctx.addon.name,
+        ctx.addon.name(),
         dest.display(),
         width = ctx.global.task_pad
     );
     let mut source = String::new();
-    ctx.global.cache.read(path)?.read_to_string(&mut source)?;
+    ctx.global.fs().open_file(path.to_str().unwrap())?.read_to_string(&mut source)?;
     match hemtt_handlebars::render(&source.replace("\\{", "\\\\{"), &{
-        let mut vars = Variables::from(ctx.global.project);
+        let mut vars = Variables::from(ctx.global.project());
         vars.append(ctx.addon.into());
         vars
     }) {
@@ -54,16 +54,12 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
             debug!(
                 "[PreBuild] [{:^width$}] [{}] `{}` => `{}`",
                 "render",
-                ctx.addon.name,
+                ctx.addon.name(),
                 path.display(),
                 dest.display(),
                 width = ctx.global.task_pad
             );
-            // crate::RENDERED
-            //     .lock()
-            //     .unwrap()
-            //     .add(path.display().to_string(), dest.clone())?;
-            ctx.global.cache.insert(dest, Temporary::from_string(&out)?);
+            ctx.global.fs().create_file(dest.to_str().unwrap())?.write_all(out.as_bytes())?;
             Ok(())
         }
         Err(err) => {
@@ -104,7 +100,7 @@ impl Task for Render {
                     error!(
                         "[Check] [{:^width$}] [{}] target already exists: {}",
                         "render",
-                        ctx.addon.name,
+                        ctx.addon.name(),
                         dest.display(),
                         width = ctx.global.task_pad
                     );
@@ -130,7 +126,7 @@ impl Task for Render {
             debug!(
                 "[PreBuild] [{:^width$}] [{}] rendered {} files",
                 "render",
-                ctx.addon.name,
+                ctx.addon.name(),
                 count,
                 width = ctx.global.task_pad
             );

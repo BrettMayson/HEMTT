@@ -3,9 +3,9 @@ use std::time::{Duration, SystemTime};
 
 use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
 
-pub fn modtime(addon: &PathBuf) -> Result<SystemTime, HEMTTError> {
+pub fn modtime<P: Into<PathBuf>>(addon: P) -> Result<SystemTime, HEMTTError> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
-    for entry in walkdir::WalkDir::new(addon) {
+    for entry in walkdir::WalkDir::new(addon.into()) {
         let metadata = std::fs::metadata(entry.unwrap().path())?;
         if let Ok(time) = metadata.modified() {
             if time > recent {
@@ -31,7 +31,7 @@ impl Task for ModTime {
         let modified = modtime(&ctx.addon.source())?;
         let target = ctx.addon.destination(
             &hemtt::Project::find_root()?,
-            Some(&ctx.global.project.prefix),
+            Some(ctx.global.project().prefix()),
             None,
         );
         let mut skip = false;
@@ -40,7 +40,7 @@ impl Task for ModTime {
                 debug!(
                     "[Check] [{:^width$}] [{}] modtime: {:?} | lastbuild: {:?}",
                     "modtime",
-                    ctx.addon.name,
+                    ctx.addon.name(),
                     modified,
                     time,
                     width = ctx.global.task_pad,
@@ -50,7 +50,7 @@ impl Task for ModTime {
                     info!(
                         "[Check] [{:^width$}] [{}] The PBO is up to date: {}",
                         "modtime",
-                        ctx.addon.name,
+                        ctx.addon.name(),
                         target.display(),
                         width = ctx.global.task_pad,
                     );
@@ -60,7 +60,7 @@ impl Task for ModTime {
             debug!(
                 "[Check] [{:^width$}] [{}] no pbo exists at {}",
                 "modtime",
-                ctx.addon.name,
+                ctx.addon.name(),
                 target.display(),
                 width = ctx.global.task_pad,
             );

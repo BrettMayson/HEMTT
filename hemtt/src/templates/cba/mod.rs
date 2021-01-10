@@ -1,7 +1,9 @@
 use std::io::Write;
 use std::path::PathBuf;
 
-use crate as hemtt;
+use vfs::FileSystem;
+
+use crate::{self as hemtt, Project};
 use crate::{Addon, HEMTTError, Template};
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -40,13 +42,13 @@ impl Template for CBA {
     }
     fn new_addon(&self, addon: &Addon) -> Result<(), HEMTTError> {
         let source = addon.source();
-        if !source.exists() {
+        if !Project::fs()?.exists(source) {
             std::fs::create_dir_all(&source)?;
         }
         for file in AddonAssets::iter() {
             let mut f = create_file!({
                 let mut path = self.path.clone();
-                path.push(source.clone());
+                path.push(source);
                 path.push(file.as_ref());
                 trace!("Writing addon file: {:?}", path);
                 std::fs::create_dir_all(path.parent().unwrap())?;
@@ -55,7 +57,7 @@ impl Template for CBA {
             let content = AddonAssets::get(file.as_ref()).unwrap();
             f.write_all(
                 super::replace(
-                    &super::Vars { addon: &addon.name },
+                    &super::Vars { addon: &addon.name() },
                     String::from_utf8(content.to_vec()).unwrap(),
                 )
                 .as_bytes(),

@@ -19,6 +19,7 @@ impl Command for Build {
                     Box::new(crate::tasks::ValidName {}),
                     Box::new(crate::tasks::ModTime {}),
                     Box::new(crate::tasks::Render::new()),
+                    Box::new(crate::tasks::Preprocess {}),
                     // Step::single(
                     //     "",
                     //     vec![Box::new(crate::flow::Script {

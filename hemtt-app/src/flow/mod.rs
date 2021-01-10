@@ -23,7 +23,7 @@ impl Flow {
             .map(|addon| Ok((true, false, addon)))
             .collect();
 
-        let mut ctx = Context::new(p);
+        let mut ctx = Context::new(p)?;
 
         for task in &self.tasks {
             if task.name().len() > ctx.task_pad {
@@ -114,7 +114,7 @@ impl Flow {
                                 ok = ok && v.0;
                                 skip = skip || v.1;
                                 if !ok || skip {
-                                    trace!("[{}] skipping future tasks", addon.name);
+                                    trace!("[{}] skipping future tasks", addon.name());
                                 }
                             }
                             Err(e) => {
@@ -140,7 +140,7 @@ impl Flow {
                 let (ok, _, addon) = d.as_ref().unwrap();
                 if !ok {
                     can_continue = false;
-                    error!("Unable to build `{}`", addon.source().display().to_string())
+                    error!("Unable to build `{}`", addon.source())
                 }
             }
         });

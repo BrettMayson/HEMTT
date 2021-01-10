@@ -18,7 +18,7 @@ fn main() {
         .set_target_level(LevelFilter::Trace)
         .set_thread_level(LevelFilter::Trace)
         .set_time_level(LevelFilter::Off)
-        .set_level_padding(LevelPadding::Left)
+        .set_level_padding(LevelPadding::Right)
         .build();
 
     let level = match (*DEBUG, *TRACE) {

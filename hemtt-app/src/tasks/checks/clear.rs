@@ -24,7 +24,7 @@ impl Task for Clear {
         for data in &*context.addons {
             if let Ok(d) = data {
                 let (_, _, addon) = d;
-                targets.push(addon.pbo(Some(&context.global.project.prefix)));
+                targets.push(addon.pbo(Some(context.global.project().prefix())));
             }
         }
         for dir in AddonLocation::iter() {

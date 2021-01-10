@@ -17,6 +17,7 @@ pub struct WritablePBO<I: Seek + Read> {
 }
 
 impl<I: Seek + Read> WritablePBO<I> {
+    /// Create an empty PBO for writing
     pub fn new() -> Self {
         Self {
             extensions: IndexMap::new(),
@@ -83,8 +84,13 @@ impl<I: Seek + Read> WritablePBO<I> {
         Ok(None)
     }
 
+    /// Add an extension to the PBO
     pub fn add_extension<S: Into<String>>(&mut self, key: S, value: S) -> Option<String> {
         self.extensions.insert(key.into(), value.into().trim_matches('\\').to_string())
+    }
+
+    pub fn remove_extension(&mut self, key: &str) -> Option<String> {
+        self.extensions.remove(key)
     }
 
     /// Write the PBO file
@@ -155,10 +161,6 @@ impl<I: Seek + Read> WritablePBO<I> {
 
     /// Generate a checksum of the PBO
     pub fn checksum(&mut self) -> Result<Vec<u8>> {
-        self.gen_checksum()
-    }
-
-    pub fn gen_checksum(&mut self) -> Result<Vec<u8>> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
         let ext_header = Header {

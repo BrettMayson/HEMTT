@@ -15,7 +15,7 @@ impl Task for Clean {
     fn check(&self, context: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
         let target = context.addon.destination(
             &hemtt::Project::find_root()?,
-            Some(&context.global.project.prefix),
+            Some(context.global.project().prefix()),
             None,
         );
         if target.exists() {

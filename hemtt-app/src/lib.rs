@@ -101,7 +101,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                     let project = Project::read()?;
                     // info!("Environment: {}", project::environment());
                     if root && c.can_announce() {
-                        info!("{} {}", project.name, project.version);
+                        info!("{} {}", project.name(), project.version());
                         startup::startup();
                     }
                     c.run(sub_matches, project)?;
@@ -151,7 +151,7 @@ pub fn get_addons_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTT
             .filter(|a| {
                 args.values_of("addons")
                     .unwrap()
-                    .any(|x| addon_matches(a.name.as_str(), x))
+                    .any(|x| addon_matches(a.name(), x))
             })
             .collect()
     } else if all || (!args.is_present("opts") && !args.is_present("compats")) {
@@ -168,7 +168,7 @@ pub fn get_addons_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTT
                 .filter(|a| {
                     args.values_of("opts")
                         .unwrap()
-                        .any(|x| addon_matches(a.name.as_str(), x))
+                        .any(|x| addon_matches(a.name(), x))
                 })
                 .collect()
         });
@@ -182,7 +182,7 @@ pub fn get_addons_from_args(args: &clap::ArgMatches) -> Result<Vec<Addon>, HEMTT
                 .filter(|a| {
                     args.values_of("compats")
                         .unwrap()
-                        .any(|x| addon_matches(a.name.as_str(), x))
+                        .any(|x| addon_matches(a.name(), x))
                 })
                 .collect()
         });

@@ -4,10 +4,9 @@ version = "0.8.0"
 authors = ["Brett <brett@mayson.io>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 hemtt = { path = "../hemtt" }
+hemtt-arma-config = { path = "../hemtt-arma-config" }
 hemtt-cache = { path = "../hemtt-cache" }
 hemtt-handlebars = { path = "../hemtt-handlebars" }
 hemtt-macros = { path = "../hemtt-macros" }
@@ -21,8 +20,9 @@ log = "0.4"
 percent-encoding = "2.1"
 rayon = "1.5"
 regex = "1.4"
-simplelog = "0.8"
-strum = "0.19"
+simplelog = "0.9"
+strum = "0.20"
 toml = "0.5"
+vfs = "0.4"
 walkdir = "2.3"
 webbrowser = "0.5"

@@ -37,6 +37,7 @@ pub enum HEMTTError {
     IO(std::io::Error),
     IOPath(IOPathError),
     SemVer(semver::SemVerError),
+    Vfs(vfs::VfsError),
 
     // Addon
     AddonConflict(String, crate::AddonLocation, crate::AddonLocation),
@@ -94,6 +95,7 @@ impl std::fmt::Display for HEMTTError {
             Self::IO(ref e) => write!(f, "IO error: {}", e),
             Self::IOPath(ref e) => write!(f, "IO error: `{:#?}`\n{}", e.path, e.source),
             Self::SemVer(ref e) => write!(f, "SemVer error: `{}`", e),
+            Self::Vfs(ref e) => write!(f, "Vfs error: `{}`", e),
 
             // Addon
             Self::AddonConflict(ref name, ref target, ref other) => write!(
@@ -137,6 +139,7 @@ impl std::error::Error for HEMTTError {
             Self::IO(ref e) => Some(e),
             Self::IOPath(ref e) => Some(&e.source),
             Self::SemVer(ref e) => Some(e),
+            Self::Vfs(ref e) => Some(e),
 
             // Addon
             Self::AddonConflict(_, _, _) => Some(self),
@@ -161,5 +164,11 @@ impl From<std::io::Error> for HEMTTError {
 impl From<semver::SemVerError> for HEMTTError {
     fn from(err: semver::SemVerError) -> Self {
         Self::SemVer(err)
+    }
+}
+
+impl From<vfs::VfsError> for HEMTTError {
+    fn from(err: vfs::VfsError) -> Self {
+        Self::Vfs(err)
     }
 }

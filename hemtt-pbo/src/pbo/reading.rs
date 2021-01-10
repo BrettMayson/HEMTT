@@ -17,7 +17,7 @@ pub struct ReadablePBO<I: Seek + Read + Copy> {
 }
 
 impl<I: Seek + Read + Copy> ReadablePBO<I> {
-    /// Create a pbo object by reading a file
+    /// Open a PBO
     pub fn from(mut input: I) -> Result<Self, Error> {
         let mut pbo = Self {
             extensions: IndexMap::new(),

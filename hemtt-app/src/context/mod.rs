@@ -1,24 +1,33 @@
+use vfs::{MemoryFS, PhysicalFS, impls::overlay::OverlayFS};
+
 use crate::{AddonList, Project};
-use hemtt::Addon;
-use hemtt_cache::FileCache;
+use hemtt::{Addon, HEMTTError};
 
 mod addon;
 pub use addon::{AddonContext, AddonListContext};
 
 pub struct Context<'a> {
-    pub project: &'a Project,
-    pub cache: FileCache,
+    project: &'a Project,
     pub task_pad: usize,
+    fs: OverlayFS,
     // stage: &Stage,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(project: &'a Project) -> Self {
-        Self {
+    pub fn new(project: &'a Project) -> Result<Self, HEMTTError> {
+        Ok(Self {
             project,
-            cache: FileCache::new(),
             task_pad: 0usize,
-        }
+            fs: OverlayFS::new(&[MemoryFS::new().into(), PhysicalFS::new(Project::find_root()?).into()]),
+        })
+    }
+
+    pub fn project(&self) -> &Project {
+        self.project
+    }
+
+    pub fn fs(&self) -> &OverlayFS {
+        &self.fs
     }
 }
 

@@ -7,44 +7,51 @@ use crate::HEMTTError;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Addon {
-    pub name: String,
-    pub location: AddonLocation,
+    name: String,
+    location: AddonLocation,
+    source: String,
 }
 impl Addon {
     pub fn new<S: Into<String>>(name: S, location: AddonLocation) -> Result<Self, HEMTTError> {
+        let name = name.into();
+        let source = format!(
+            "{}{}{}",
+            location.to_string(),
+            std::path::MAIN_SEPARATOR,
+            name
+        );
         Ok(Self {
             name: validate_name(name.into())?,
             location,
+            source,
         })
     }
 
-    pub fn locate<S: Into<String>>(name: S) -> Option<Self> {
+    pub fn locate<S: Into<String>>(name: S) -> Result<Option<Self>, HEMTTError> {
         let name = name.into();
         for location in AddonLocation::first_class() {
             if location.exists() {
                 let mut path = PathBuf::from(location);
                 path.push(name.clone());
                 if path.exists() {
-                    return Some(Self { name, location });
+                    return Ok(Some(Self::new(name, location)?));
                 }
             }
         }
-        None
+        Ok(None)
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn location(&self) -> AddonLocation {
+        self.location
     }
 
     /// Path to the addon folder
-    pub fn source(&self) -> PathBuf {
-        PathBuf::from(format!(
-            "{}{}{}",
-            self.location.to_string(),
-            std::path::MAIN_SEPARATOR,
-            self.name
-        ))
-    }
-
-    /// Check if the addon exists
-    pub fn exists(&self) -> bool {
-        self.source().exists()
+    pub fn source(&self) -> &str {
+        &self.source
     }
 
     /// Filename of the PBO
@@ -123,7 +130,7 @@ impl From<&Addon> for hemtt_handlebars::Variables {
                     map.insert(String::from("name"), Value::String(addon.name.clone()));
                     map.insert(
                         String::from("source"),
-                        Value::String(addon.source().display().to_string()),
+                        Value::String(addon.source().to_string()),
                     );
                     map
                 }),
@@ -158,22 +165,22 @@ fn validate_name(name: String) -> Result<String, HEMTTError> {
 mod tests {
     use std::path::PathBuf;
     fn get_addon() -> super::Addon {
-        super::Addon {
-            name: "my_addon".to_string(),
-            location: super::AddonLocation::Addons,
-        }
+        super::Addon::new(
+            "my_addon".to_string(),
+            super::AddonLocation::Addons,
+        ).unwrap()
     }
     fn get_optional() -> super::Addon {
-        super::Addon {
-            name: "my_addon".to_string(),
-            location: super::AddonLocation::Optionals,
-        }
+        super::Addon::new(
+            "my_addon".to_string(),
+            super::AddonLocation::Optionals,
+        ).unwrap()
     }
     fn get_compat() -> super::Addon {
-        super::Addon {
-            name: "my_addon".to_string(),
-            location: super::AddonLocation::Compats,
-        }
+        super::Addon::new(
+            "my_addon".to_string(),
+            super::AddonLocation::Compats,
+        ).unwrap()
     }
     // fn get_custom() -> super::Addon {
     //     super::Addon {
@@ -185,14 +192,14 @@ mod tests {
     #[test]
     fn source() {
         let addons = vec![get_addon(), get_optional(), get_compat()]; //, get_custom()];
-        let addons: Vec<PathBuf> = addons.iter().map(|a| a.source()).collect();
+        let addons: Vec<&str> = addons.iter().map(|a| a.source()).collect();
         assert_eq!(
             addons,
             vec![
-                PathBuf::from("addons/my_addon"),
-                PathBuf::from("optionals/my_addon"),
-                PathBuf::from("compats/my_addon"),
-                // PathBuf::from("custom/my_addon"),
+                "addons/my_addon",
+                "optionals/my_addon",
+                "compats/my_addon",
+                // "custom/my_addon",
             ]
         );
     }
