@@ -64,18 +64,21 @@ impl<I: Seek + Read> WritablePBO<I> {
         if size > u32::MAX as u64 {
             Err(std::io::Error::from(std::io::ErrorKind::Other))
         } else {
-            Ok(self.files
-                .insert(filename.replace("/", "\\"), file))
+            Ok(self.files.insert(filename.replace("/", "\\"), file))
         }
     }
 
     /// Retrieves a file from a PBO
-    pub fn retrieve_file<S: Into<String>>(&mut self, filename: S) -> Result<Option<Cursor<Box<[u8]>>>> {
+    pub fn retrieve_file<S: Into<String>>(
+        &mut self,
+        filename: S,
+    ) -> Result<Option<Cursor<Box<[u8]>>>> {
         let filename_owned = filename.into().replace("/", "\\");
         let filename = filename_owned.as_str();
         if self.files.contains_key(filename) {
             let mut data = self.files.remove(filename).unwrap();
-            let mut buffer: Box<[u8]> = vec![0; data.seek(SeekFrom::End(0))? as usize].into_boxed_slice();
+            let mut buffer: Box<[u8]> =
+                vec![0; data.seek(SeekFrom::End(0))? as usize].into_boxed_slice();
             data.seek(SeekFrom::Start(0))?;
             data.read_exact(&mut buffer)?;
             self.files.insert(filename.to_string(), data);
@@ -86,7 +89,8 @@ impl<I: Seek + Read> WritablePBO<I> {
 
     /// Add an extension to the PBO
     pub fn add_extension<S: Into<String>>(&mut self, key: S, value: S) -> Option<String> {
-        self.extensions.insert(key.into(), value.into().trim_matches('\\').to_string())
+        self.extensions
+            .insert(key.into(), value.into().trim_matches('\\').to_string())
     }
 
     pub fn remove_extension(&mut self, key: &str) -> Option<String> {

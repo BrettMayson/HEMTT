@@ -57,7 +57,9 @@ impl Template for CBA {
             let content = AddonAssets::get(file.as_ref()).unwrap();
             f.write_all(
                 super::replace(
-                    &super::Vars { addon: &addon.name() },
+                    &super::Vars {
+                        addon: &addon.name(),
+                    },
                     String::from_utf8(content.to_vec()).unwrap(),
                 )
                 .as_bytes(),

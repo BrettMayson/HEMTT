@@ -43,7 +43,11 @@ impl Command for Template {
                 let name = b.value_of("name").unwrap().to_string();
                 debug!("Creating addon `{}` in location `{:?}`", name, location);
                 if let Some(existing) = Addon::locate(&name)? {
-                    return Err(HEMTTError::AddonConflict(name, location, existing.location()));
+                    return Err(HEMTTError::AddonConflict(
+                        name,
+                        location,
+                        existing.location(),
+                    ));
                 }
                 template.new_addon(&Addon::new(name.clone(), location)?)?;
                 info!("Addon `{}` created in {}", name, location.to_string());

@@ -48,11 +48,28 @@ impl Header {
 #[test]
 fn read() {
     use std::io::Cursor;
-    let (header, _) = crate::header::Header::read(&mut Cursor::new(String::from(
-        "images\\mission.jpg��*\\*Wi",
-    )))
-    .unwrap();
+
+    // There is additonal junk at the end of this header for the reading test
+    let bytes: Vec<u8> = vec![
+        105, 109, 97, 103, 101, 115, 92, 109, 105, 115, 115, 105, 111, 110, 46, 106, 112, 103, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 239, 191, 189, 239, 191, 189, 42, 92, 92, 42, 87, 8, 0,
+        105,
+    ];
+
+    let (header, _) =
+        crate::header::Header::read(&mut Cursor::new(String::from_utf8(bytes.clone()).unwrap()))
+            .unwrap();
     assert_eq!(header.filename, "images\\mission.jpg");
-    assert_eq!(header.size, 1_546_304_959);
+    assert_eq!(header.method, 0);
+    assert_eq!(header.original, 0);
+    assert_eq!(header.reserved, 0);
     assert_eq!(header.timestamp, 4_022_190_063);
+    assert_eq!(header.size, 1_546_304_959);
+
+    let mut write_buf = Vec::new();
+    header.write(&mut Cursor::new(&mut write_buf)).unwrap();
+    assert_eq!(
+        String::from_utf8(write_buf).unwrap(),
+        String::from_utf8(bytes[..39].to_vec()).unwrap()
+    );
 }

@@ -165,22 +165,13 @@ fn validate_name(name: String) -> Result<String, HEMTTError> {
 mod tests {
     use std::path::PathBuf;
     fn get_addon() -> super::Addon {
-        super::Addon::new(
-            "my_addon".to_string(),
-            super::AddonLocation::Addons,
-        ).unwrap()
+        super::Addon::new("my_addon".to_string(), super::AddonLocation::Addons).unwrap()
     }
     fn get_optional() -> super::Addon {
-        super::Addon::new(
-            "my_addon".to_string(),
-            super::AddonLocation::Optionals,
-        ).unwrap()
+        super::Addon::new("my_addon".to_string(), super::AddonLocation::Optionals).unwrap()
     }
     fn get_compat() -> super::Addon {
-        super::Addon::new(
-            "my_addon".to_string(),
-            super::AddonLocation::Compats,
-        ).unwrap()
+        super::Addon::new("my_addon".to_string(), super::AddonLocation::Compats).unwrap()
     }
     // fn get_custom() -> super::Addon {
     //     super::Addon {

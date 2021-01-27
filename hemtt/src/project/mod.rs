@@ -1,7 +1,7 @@
 use config::{Config, Environment, File};
-use vfs::PhysicalFS;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use vfs::PhysicalFS;
 
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -41,7 +41,12 @@ pub fn get_addon_from_location(location: &AddonLocation) -> Result<Vec<Addon>, H
     std::fs::read_dir(location.to_string())?
         .map(|file| file.unwrap().path())
         .filter(|file_or_dir| file_or_dir.is_dir())
-        .map(|file| Addon::new(file.file_name().unwrap().to_str().unwrap().to_owned(), *location))
+        .map(|file| {
+            Addon::new(
+                file.file_name().unwrap().to_str().unwrap().to_owned(),
+                *location,
+            )
+        })
         .collect()
 }
 

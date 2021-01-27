@@ -42,7 +42,10 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         width = ctx.global.task_pad
     );
     let mut source = String::new();
-    ctx.global.fs().open_file(path.to_str().unwrap())?.read_to_string(&mut source)?;
+    ctx.global
+        .fs()
+        .open_file(path.to_str().unwrap())?
+        .read_to_string(&mut source)?;
     match hemtt_handlebars::render(&source.replace("\\{", "\\\\{"), &{
         let mut vars = Variables::from(ctx.global.project());
         vars.append(ctx.addon.into());
@@ -59,7 +62,10 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
                 dest.display(),
                 width = ctx.global.task_pad
             );
-            ctx.global.fs().create_file(dest.to_str().unwrap())?.write_all(out.as_bytes())?;
+            ctx.global
+                .fs()
+                .create_file(dest.to_str().unwrap())?
+                .write_all(out.as_bytes())?;
             Ok(())
         }
         Err(err) => {
