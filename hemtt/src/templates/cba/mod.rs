@@ -42,7 +42,7 @@ impl Template for CBA {
     }
     fn new_addon(&self, addon: &Addon) -> Result<(), HEMTTError> {
         let source = addon.source();
-        if !Project::fs()?.exists(source) {
+        if !self.path.join(source).exists() {
             std::fs::create_dir_all(&source)?;
         }
         for file in AddonAssets::iter() {
@@ -83,7 +83,7 @@ impl Template for CBA {
         f.flush()?;
         let mut f = std::fs::OpenOptions::new().write(true).append(true).open({
             let mut path = self.path(addon.source());
-            path.push("XEH_prep.hpp");
+            path.push("XEH_PREP.hpp");
             path
         })?;
         f.write_all(format!("PREP({});\n", name).as_bytes())?;

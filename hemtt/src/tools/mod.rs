@@ -20,6 +20,6 @@ pub fn find_bi_tool(tool: &str) -> Result<PathBuf, HEMTTError> {
 }
 
 #[cfg(not(windows))]
-pub fn find_binarize_exe() -> Result<PathBuf, ArmakeError> {
+pub fn find_bi_tool(_tool: &str) -> Result<PathBuf, HEMTTError> {
     unreachable!();
 }
