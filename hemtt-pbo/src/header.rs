@@ -4,7 +4,7 @@ use std::io::{Error, Read, Write};
 
 use hemtt_io::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Header {
     pub filename: String,
     pub method: u32,
@@ -42,6 +42,25 @@ impl Header {
         output.write_u32::<LittleEndian>(self.timestamp)?;
         output.write_u32::<LittleEndian>(self.size)?;
         Ok(())
+    }
+
+    pub fn filename(&self) -> &str {
+        &self.filename
+    }
+    pub fn method(&self) -> u32 {
+        self.method
+    }
+    pub fn original(&self) -> u32 {
+        self.original
+    }
+    pub fn reserved(&self) -> u32 {
+        self.reserved
+    }
+    pub fn timestamp(&self) -> u32 {
+        self.timestamp
+    }
+    pub fn size(&self) -> u32 {
+        self.size
     }
 }
 

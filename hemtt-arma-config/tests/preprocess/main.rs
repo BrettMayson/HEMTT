@@ -37,6 +37,27 @@ value = SOMETHING;
 }
 
 #[test]
+fn undefine() {
+    let content = r#"
+#define affirmative true
+value = affirmative;
+#undef affirmative
+#ifdef affirmative
+defined = true;
+#else
+defined = false;
+#endif
+"#;
+    let config =
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content).unwrap(), &resolver);
+    let config = hemtt_arma_config::render(config.unwrap());
+    println!("======");
+    println!("{}", config);
+    println!("======");
+    assert_eq!("\nvalue = true;\n\n\ndefined = false;\n\n", config);
+}
+
+#[test]
 fn define_call() {
     let content = r#"
 #define SAY_HI(NAME) Hi NAME

@@ -1,9 +1,7 @@
 use std::io::Write;
 use std::path::PathBuf;
 
-use vfs::FileSystem;
-
-use crate::{self as hemtt, Project};
+use crate as hemtt;
 use crate::{Addon, HEMTTError, Template};
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]

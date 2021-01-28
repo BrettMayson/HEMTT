@@ -224,3 +224,10 @@ impl<I: Seek + Read> WritablePBO<I> {
         Ok(h.finish().unwrap().to_vec())
     }
 }
+
+#[test]
+fn empty_pbo() {
+    let mut pbo = WritablePBO::<Cursor<Vec<u8>>>::new();
+    let mut buffer = Vec::new();
+    pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+}

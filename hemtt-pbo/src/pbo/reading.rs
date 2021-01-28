@@ -8,7 +8,7 @@ use crate::Header;
 use super::WritablePBO;
 
 #[derive(Default)]
-pub struct ReadablePBO<I: Seek + Read + Copy> {
+pub struct ReadablePBO<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     headers: Vec<Header>,
     checksum: Option<Vec<u8>>,
@@ -16,28 +16,27 @@ pub struct ReadablePBO<I: Seek + Read + Copy> {
     blob_start: u64,
 }
 
-impl<I: Seek + Read + Copy> ReadablePBO<I> {
+impl<I: Seek + Read> ReadablePBO<I> {
     /// Open a PBO
-    pub fn from(mut input: I) -> Result<Self, Error> {
+    pub fn from(input: I) -> Result<Self, Error> {
         let mut pbo = Self {
             extensions: IndexMap::new(),
             headers: Vec::new(),
             checksum: None,
-
             input,
             blob_start: 0,
         };
         loop {
-            let (header, size) = Header::read(&mut input)?;
+            let (header, size) = Header::read(&mut pbo.input)?;
             pbo.blob_start += size as u64;
             if header.method == 0x5665_7273 {
                 loop {
-                    let s = input.read_cstring()?;
+                    let s = pbo.input.read_cstring()?;
                     pbo.blob_start += s.as_bytes().len() as u64 + 1;
                     if s.is_empty() {
                         break;
                     }
-                    let val = input.read_cstring()?;
+                    let val = pbo.input.read_cstring()?;
                     pbo.blob_start += val.as_bytes().len() as u64 + 1;
                     pbo.extensions.insert(s.clone(), val);
                 }
@@ -49,14 +48,14 @@ impl<I: Seek + Read + Copy> ReadablePBO<I> {
         }
 
         for header in &pbo.headers {
-            input
+            pbo.input
                 .seek(SeekFrom::Current(i64::from(header.size)))
                 .unwrap();
         }
 
-        input.seek(SeekFrom::Current(1))?;
+        pbo.input.seek(SeekFrom::Current(1))?;
         let mut checksum = vec![0; 20];
-        input.read_exact(&mut checksum)?;
+        pbo.input.read_exact(&mut checksum)?;
         pbo.checksum = Some(checksum);
 
         Ok(pbo)
@@ -71,11 +70,31 @@ impl<I: Seek + Read + Copy> ReadablePBO<I> {
         filenames
     }
 
-    /// Get files in alphabetical order
-    pub fn files_sorted(&self) -> Vec<Header> {
-        let mut sorted = self.files();
-        sorted.sort_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()));
-        sorted
+    /// Returns if the files are sorted into the correct order
+    pub fn is_sorted(&self) -> bool {
+        // self.files().is_sorted_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
+        fn compare(a: &&Header, b: &&Header) -> Option<std::cmp::Ordering> {
+            Some(a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
+        }
+        let sorted = self.files();
+        let mut sorted = sorted.iter();
+        let mut last = match sorted.next() {
+            Some(e) => e,
+            None => return true,
+        };
+
+        while let Some(curr) = sorted.next() {
+            if let Some(std::cmp::Ordering::Greater) | None = compare(&last, &curr) {
+                return false;
+            }
+            last = curr;
+        }
+
+        true
+    }
+
+    pub fn extensions(&self) -> &IndexMap<String, String> {
+        &self.extensions
     }
 
     /// Finds a header if it exists
@@ -86,6 +105,10 @@ impl<I: Seek + Read + Copy> ReadablePBO<I> {
             }
         }
         None
+    }
+
+    pub fn extension(&self, key: &str) -> Option<&String> {
+        self.extensions.get(key)
     }
 
     /// Retrieves a file from a PBO
@@ -108,10 +131,10 @@ impl<I: Seek + Read + Copy> ReadablePBO<I> {
     }
 }
 
-impl<B: Seek + Read + Copy> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
+impl<B: Seek + Read> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
     fn into(mut self) -> WritablePBO<Cursor<Box<[u8]>>> {
         let mut pbo = WritablePBO::new();
-        for header in self.files_sorted() {
+        for header in self.files() {
             pbo.add_file(&header.filename, self.retrieve(&header.filename).unwrap())
                 .unwrap();
         }
