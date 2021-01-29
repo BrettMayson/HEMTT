@@ -41,6 +41,18 @@ HEMTT is available for Linux and Windows via [GitHub Releases](https://github.co
 - Most Windows users will want to use `x86_64-pc-windows-msvc`
 - Most Linux users will want to use `x86_64-unknown-linux-gnu`
 
+### Other install methods
+##### Via Scoop (unofficial) - Windows
+[Scoop](https://scoop.sh/) users can download and install the latest version release by installing the `hemtt` package:
+```
+scoop bucket add Arma3Tools https://github.com/ColdEvul/arma3-scoop-bucket.git
+scoop install hemtt
+```
+To update HEMTT using Scoop, run the following:
+```
+scoop update hemtt
+```
+If you have any issues when installing/updating the package report the same on the [bucket issues page](https://github.com/ColdEvul/arma3-scoop-bucket/issues).
 
 ## Contributing
 
