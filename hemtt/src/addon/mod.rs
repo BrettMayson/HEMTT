@@ -121,7 +121,7 @@ impl From<&Addon> for hemtt_handlebars::Variables {
     fn from(addon: &Addon) -> Self {
         use serde_json::{Map, Value};
         use std::collections::BTreeMap;
-        Self({
+        Self::from({
             let mut map = BTreeMap::new();
             map.insert(
                 String::from("addon"),

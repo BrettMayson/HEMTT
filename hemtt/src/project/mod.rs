@@ -266,7 +266,7 @@ impl From<&Project> for hemtt_handlebars::Variables {
     fn from(project: &Project) -> Self {
         use serde_json::{Map, Value};
         use std::collections::BTreeMap;
-        Self({
+        Self::from({
             let mut map = BTreeMap::new();
             map.insert(
                 String::from("project"),

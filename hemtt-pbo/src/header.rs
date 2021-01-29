@@ -98,6 +98,7 @@ fn read() {
     assert_eq!(header.original, 0);
     assert_eq!(header.reserved, 0);
     assert_eq!(header.timestamp, Timestamp(4_022_190_063));
+    assert_eq!(*header.timestamp, 4_022_190_063);
     assert_eq!(header.size, 1_546_304_959);
 
     let mut write_buf = Vec::new();
