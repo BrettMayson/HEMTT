@@ -8,12 +8,12 @@ use hemtt_io::WriteExt;
 use indexmap::IndexMap;
 use openssl::hash::{Hasher, MessageDigest};
 
-use crate::Header;
+use crate::{Header, Timestamp};
 
 #[derive(Default)]
 pub struct WritablePBO<I: Seek + Read> {
     extensions: IndexMap<String, String>,
-    files: HashMap<String, I>,
+    files: HashMap<String, (I, Header)>,
 }
 
 impl<I: Seek + Read> WritablePBO<I> {
@@ -28,16 +28,9 @@ impl<I: Seek + Read> WritablePBO<I> {
     /// A list of filenames in the PBO
     pub fn files(&mut self) -> Result<Vec<Header>> {
         let mut filenames = Vec::new();
-        for (n, c) in &mut self.files {
-            let size = c.seek(SeekFrom::End(0))? as u32;
-            filenames.push(Header {
-                filename: n.clone(),
-                method: 0,
-                original: size,
-                reserved: 0,
-                timestamp: 0,
-                size,
-            });
+        for (_, (_, h)) in &mut self.files {
+            // let size = c.seek(SeekFrom::End(0))? as u32;
+            filenames.push(h.clone());
         }
         Ok(filenames)
     }
@@ -50,21 +43,21 @@ impl<I: Seek + Read> WritablePBO<I> {
     }
 
     /// Removes a file, returning it if it existed
-    pub fn remove_file<S: Into<String>>(&mut self, filename: S) -> Option<I> {
+    pub fn remove_file<S: Into<String>>(&mut self, filename: S) -> Option<(I, Header)> {
         let filename = filename.into();
         trace!("removing file from struct: {}", filename);
         self.files.remove(&filename.replace("/", "\\"))
     }
 
     /// Adds or updates a file to the PBO, returns the old file if it existed
-    pub fn add_file<S: Into<String>>(&mut self, filename: S, mut file: I) -> Result<Option<I>> {
+    pub fn add_file<S: Into<String>>(&mut self, filename: S, mut file: I, header: Header) -> Result<Option<(I, Header)>> {
         let filename = filename.into();
         trace!("adding file to struct: {}", filename);
         let size = file.seek(SeekFrom::End(0))?;
         if size > u32::MAX as u64 {
             Err(std::io::Error::from(std::io::ErrorKind::Other))
         } else {
-            Ok(self.files.insert(filename.replace("/", "\\"), file))
+            Ok(self.files.insert(filename.replace("/", "\\"), (file, header)))
         }
     }
 
@@ -76,12 +69,12 @@ impl<I: Seek + Read> WritablePBO<I> {
         let filename_owned = filename.into().replace("/", "\\");
         let filename = filename_owned.as_str();
         if self.files.contains_key(filename) {
-            let mut data = self.files.remove(filename).unwrap();
+            let (mut data, time) = self.files.remove(filename).unwrap();
             let mut buffer: Box<[u8]> =
                 vec![0; data.seek(SeekFrom::End(0))? as usize].into_boxed_slice();
             data.seek(SeekFrom::Start(0))?;
             data.read_exact(&mut buffer)?;
-            self.files.insert(filename.to_string(), data);
+            self.files.insert(filename.to_string(), (data, time));
             return Ok(Some(Cursor::new(buffer)));
         }
         Ok(None)
@@ -97,6 +90,10 @@ impl<I: Seek + Read> WritablePBO<I> {
         self.extensions.remove(key)
     }
 
+    pub fn extensions(&self) -> &IndexMap<String, String> {
+        &self.extensions
+    }
+
     /// Write the PBO file
     pub fn write<O: Write>(&mut self, output: &mut O) -> Result<()> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
@@ -106,7 +103,7 @@ impl<I: Seek + Read> WritablePBO<I> {
             method: 0x5665_7273,
             original: 0,
             reserved: 0,
-            timestamp: 0,
+            timestamp: Timestamp::from_u32(0),
             size: 0,
         };
         trace!("writing ext header: {:?}", ext_header);
@@ -128,7 +125,7 @@ impl<I: Seek + Read> WritablePBO<I> {
             trace!("writing `{}` header: {:?}", key, value);
             headers.write_cstring(value)?;
         }
-        headers.write_cstring(String::new())?;
+        headers.write_all(b"\0")?;
 
         let files_sorted = self.files_sorted()?;
 
@@ -172,7 +169,7 @@ impl<I: Seek + Read> WritablePBO<I> {
             method: 0x5665_7273,
             original: 0,
             reserved: 0,
-            timestamp: 0,
+            timestamp: Timestamp::from_u32(0),
             size: 0,
         };
         ext_header.write(&mut headers)?;
@@ -190,7 +187,7 @@ impl<I: Seek + Read> WritablePBO<I> {
             headers.write_cstring(key)?;
             headers.write_cstring(value)?;
         }
-        headers.write_cstring(String::new())?;
+        headers.write_all(b"\0")?;
 
         let files_sorted = self.files_sorted()?;
 
@@ -200,7 +197,7 @@ impl<I: Seek + Read> WritablePBO<I> {
                 method: 0,
                 original: header.original,
                 reserved: 0,
-                timestamp: 0,
+                timestamp: header.timestamp,
                 size: header.size,
             };
             header.write(&mut headers)?;
@@ -225,9 +222,17 @@ impl<I: Seek + Read> WritablePBO<I> {
     }
 }
 
-#[test]
-fn empty_pbo() {
-    let mut pbo = WritablePBO::<Cursor<Vec<u8>>>::new();
-    let mut buffer = Vec::new();
-    pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use crate::WritablePBO;
+
+    #[test]
+    fn empty_pbo() {
+        let mut pbo = WritablePBO::<Cursor<Vec<u8>>>::new();
+        let mut buffer = Vec::new();
+        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        assert_eq!(pbo.checksum().unwrap(), vec![68, 142, 162, 133, 179, 224, 152, 229, 10, 109, 120, 136, 145, 22, 232, 206, 165, 206, 130, 23]);
+    }
 }

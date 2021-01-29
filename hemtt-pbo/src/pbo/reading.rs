@@ -57,7 +57,11 @@ impl<I: Seek + Read> ReadablePBO<I> {
         let mut checksum = vec![0; 20];
         pbo.input.read_exact(&mut checksum)?;
         pbo.checksum = Some(checksum);
-
+        if let Ok(u) = pbo.input.read(&mut Vec::with_capacity(1)) {
+            if u > 0 {
+                error!("Unexpected data after reading checksum");
+            }
+        }
         Ok(pbo)
     }
 
@@ -111,6 +115,10 @@ impl<I: Seek + Read> ReadablePBO<I> {
         self.extensions.get(key)
     }
 
+    pub fn checksum(&self) -> Option<Vec<u8>> {
+        self.checksum.clone()
+    }
+
     /// Retrieves a file from a PBO
     pub fn retrieve(&mut self, filename: &str) -> Option<Cursor<Box<[u8]>>> {
         let filename_owned = filename.replace("/", "\\");
@@ -135,7 +143,7 @@ impl<B: Seek + Read> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
     fn into(mut self) -> WritablePBO<Cursor<Box<[u8]>>> {
         let mut pbo = WritablePBO::new();
         for header in self.files() {
-            pbo.add_file(&header.filename, self.retrieve(&header.filename).unwrap())
+            pbo.add_file(&header.filename, self.retrieve(&header.filename).unwrap(), header.clone())
                 .unwrap();
         }
         for (key, value) in self.extensions {

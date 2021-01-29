@@ -1,8 +1,23 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use std::io::{Error, Read, Write};
+use std::{io::{Error, Read, Write}, ops::Deref};
 
 use hemtt_io::*;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Timestamp(u32);
+impl Deref for Timestamp {
+    type Target = u32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl Timestamp {
+    pub fn from_u32(t: u32) -> Self {
+        Self(t)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Header {
@@ -10,7 +25,7 @@ pub struct Header {
     pub method: u32,
     pub original: u32,
     pub reserved: u32,
-    pub timestamp: u32,
+    pub timestamp: Timestamp,
     pub size: u32,
 }
 
@@ -26,7 +41,7 @@ impl Header {
                 method: input.read_u32::<LittleEndian>()?,
                 original: input.read_u32::<LittleEndian>()?,
                 reserved: input.read_u32::<LittleEndian>()?,
-                timestamp: input.read_u32::<LittleEndian>()?,
+                timestamp: Timestamp(input.read_u32::<LittleEndian>()?),
                 size: input.read_u32::<LittleEndian>()?,
             },
             size,
@@ -39,7 +54,7 @@ impl Header {
         output.write_u32::<LittleEndian>(self.method)?;
         output.write_u32::<LittleEndian>(self.original)?;
         output.write_u32::<LittleEndian>(self.reserved)?;
-        output.write_u32::<LittleEndian>(self.timestamp)?;
+        output.write_u32::<LittleEndian>(*self.timestamp)?;
         output.write_u32::<LittleEndian>(self.size)?;
         Ok(())
     }
@@ -56,7 +71,7 @@ impl Header {
     pub fn reserved(&self) -> u32 {
         self.reserved
     }
-    pub fn timestamp(&self) -> u32 {
+    pub fn timestamp(&self) -> Timestamp {
         self.timestamp
     }
     pub fn size(&self) -> u32 {
@@ -82,7 +97,7 @@ fn read() {
     assert_eq!(header.method, 0);
     assert_eq!(header.original, 0);
     assert_eq!(header.reserved, 0);
-    assert_eq!(header.timestamp, 4_022_190_063);
+    assert_eq!(header.timestamp, Timestamp(4_022_190_063));
     assert_eq!(header.size, 1_546_304_959);
 
     let mut write_buf = Vec::new();
