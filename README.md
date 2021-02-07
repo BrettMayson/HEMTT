@@ -12,7 +12,7 @@ The new HEMTT is modular, allowing certain pieces of it to be included in other 
 
 ## Why a rewrite?
 
-The biggest issues in my opinion with HEMTT were the lack of error reporting and logging. Some of that had to do with the use of armake2 since that project wasn't intended to be used in this way. Building more modular, library-first components should allow HEMTT to be more easily provide information to the user about what is happening, and allow developers to easily expand it or incorporate it in their own projects.
+The biggest issues in my opinion with HEMTT were the lack of error reporting and logging. Some of that had to do with the use of armake2 since that project wasn't intended to be used in this way. Building more modular, library-first components should allow HEMTT to more easily provide information to the user about what is happening, and allow developers to easily expand it or incorporate it in their own projects.
 
 Also it has tests now so that's alright.
 
