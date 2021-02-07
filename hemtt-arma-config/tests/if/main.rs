@@ -19,7 +19,7 @@ fn basic_if() {
         std::fs::read_to_string("tests/if/files/basic_if.out.hpp")
             .unwrap()
             .replace('\r', ""),
-        config
+        config.export()
     );
 }
 
@@ -38,6 +38,6 @@ fn nested_if() {
         std::fs::read_to_string("tests/if/files/nested_if.out.hpp")
             .unwrap()
             .replace('\r', ""),
-        config
+        config.export()
     );
 }

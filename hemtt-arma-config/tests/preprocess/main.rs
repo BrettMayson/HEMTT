@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write};
+use std::fs::read_to_string;
 
 fn resolver(name: &str) -> String {
     read_to_string(format!("tests/preprocess/{}", name)).unwrap()
