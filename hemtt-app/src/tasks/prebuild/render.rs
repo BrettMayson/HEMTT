@@ -1,19 +1,14 @@
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::RwLock;
-
-use vfs::FileSystem;
-use walkdir::WalkDir;
 
 use hemtt_handlebars::Variables;
+use vfs::VfsFileType;
 
-use crate::{
-    context::{AddonContext, AddonListContext},
-    HEMTTError, OkSkip, Stage, Task,
-};
+use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
 
-pub fn can_render(p: &Path) -> bool {
-    let name = p
+pub fn can_render(path: &str) -> bool {
+    let path = PathBuf::from(path);
+    let name = path
         .file_name()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
         .to_str()
@@ -21,7 +16,8 @@ pub fn can_render(p: &Path) -> bool {
     name.contains(".ht.") || name.ends_with(".ht")
 }
 
-pub fn destination(path: &Path) -> PathBuf {
+pub fn destination(path: &str) -> String {
+    let path = PathBuf::from(path);
     path.with_file_name(
         path.file_name()
             .unwrap()
@@ -30,21 +26,24 @@ pub fn destination(path: &Path) -> PathBuf {
             .replace(".ht.", ".")
             .trim_end_matches(".ht"),
     )
+    .display()
+    .to_string()
 }
 
-pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
-    let dest = destination(path);
+pub fn render(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+    let dest = destination(&path);
     debug!(
         "[PreBuild] [{:^width$}] [{}] {}",
         "render",
         ctx.addon.name(),
-        dest.display(),
+        dest,
         width = ctx.global.task_pad
     );
     let mut source = String::new();
     ctx.global
         .fs()
-        .open_file(path.to_str().unwrap())?
+        .join(path)?
+        .open_file()?
         .read_to_string(&mut source)?;
     match hemtt_handlebars::render(&source.replace("\\{", "\\\\{"), &{
         let mut vars = Variables::from(ctx.global.project());
@@ -58,13 +57,14 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
                 "[PreBuild] [{:^width$}] [{}] `{}` => `{}`",
                 "render",
                 ctx.addon.name(),
-                path.display(),
-                dest.display(),
+                path,
+                dest,
                 width = ctx.global.task_pad
             );
             ctx.global
                 .fs()
-                .create_file(dest.to_str().unwrap())?
+                .join(&dest)?
+                .create_file()?
                 .write_all(out.as_bytes())?;
             Ok(())
         }
@@ -76,38 +76,30 @@ pub fn render(path: &Path, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
     }
 }
 
-pub struct Render {
-    rendered: RwLock<Vec<PathBuf>>,
-}
-impl Render {
-    pub fn new() -> Self {
-        Self {
-            rendered: RwLock::new(Vec::new()),
-        }
-    }
-}
+pub struct Render {}
+impl Render {}
 impl Task for Render {
     fn name(&self) -> String {
         String::from("render")
     }
 
     fn hooks(&self) -> &[Stage] {
-        &[Stage::Check, Stage::PreBuild, Stage::PostBuild]
+        &[Stage::Check, Stage::PreBuild]
     }
 
     fn check(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
         let mut ok = true;
-        for entry in WalkDir::new(&ctx.addon.source()) {
-            let path = entry.unwrap();
-            if can_render(path.path()) {
-                let dest = destination(path.path());
-                if dest.exists() {
+        for entry in ctx.global.fs().join(ctx.addon.source())?.walk_dir()? {
+            let entry = entry?;
+            if can_render(entry.as_str()) {
+                let dest = destination(entry.as_str());
+                if ctx.global.fs().join(&dest)?.exists() {
                     ok = false;
                     error!(
                         "[Check] [{:^width$}] [{}] target already exists: {}",
                         "render",
                         ctx.addon.name(),
-                        dest.display(),
+                        dest,
                         width = ctx.global.task_pad
                     );
                 }
@@ -119,12 +111,10 @@ impl Task for Render {
     fn prebuild(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
         let mut ok = true;
         let mut count = 0;
-        for entry in WalkDir::new(&ctx.addon.source()) {
-            let path = entry.unwrap();
-            if can_render(path.path()) {
-                let dest = destination(path.path());
-                ok = ok && render(path.path(), ctx).is_ok();
-                self.rendered.write().unwrap().push(dest);
+        for entry in ctx.global.fs().join(ctx.addon.source())?.walk_dir()? {
+            let entry = entry?;
+            if entry.metadata()?.file_type == VfsFileType::File && can_render(entry.as_str()) {
+                ok = ok && render(entry.as_str(), ctx).is_ok();
                 count += 1;
             }
         }
@@ -138,31 +128,5 @@ impl Task for Render {
             );
         }
         Ok((ok, false))
-    }
-
-    fn postbuild_single(&self, ctx: &mut AddonListContext) -> Result<(), HEMTTError> {
-        let mut err = None;
-        self.rendered.read().unwrap().iter().for_each(|f| {
-            if f.exists() {
-                trace!("removing rendered file: {}", f.display(),);
-                if let Err(e) = remove_file!(f) {
-                    error!(
-                        "[PostBuild] [{:^width$}] failed to delete rendered file: {}",
-                        "render",
-                        f.display(),
-                        width = ctx.global.task_pad
-                    );
-                    err = Some(e);
-                }
-            } else {
-                warn!(
-                    "[PostBuild] [{:^width$}] expected rendered file was missing: {}",
-                    "render",
-                    f.display(),
-                    width = ctx.global.task_pad
-                );
-            }
-        });
-        Ok(())
     }
 }

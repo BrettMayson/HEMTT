@@ -1,7 +1,7 @@
-use std::{fs::read_to_string, path::PathBuf};
+use std::fs::read_to_string;
 
-fn resolver(name: &str) -> PathBuf {
-    PathBuf::from(format!("tests/preprocess/{}", name))
+fn resolver(name: &str) -> String {
+    read_to_string(format!("tests/preprocess/{}", name)).unwrap()
 }
 
 #[test]

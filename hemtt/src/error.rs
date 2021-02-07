@@ -6,13 +6,6 @@ pub struct IOPathError {
 }
 
 #[derive(Debug)]
-pub struct PreprocessParseError {
-    pub path: Option<String>,
-    pub message: String,
-    pub source: crate::preprocess::grammar::ParseError,
-}
-
-#[derive(Debug)]
 pub struct PreprocessError {
     pub path: Option<String>,
     pub message: String,
@@ -20,19 +13,10 @@ pub struct PreprocessError {
 }
 
 #[derive(Debug)]
-pub struct ConfigParseError {
-    pub path: Option<String>,
-    pub message: String,
-    pub source: crate::config::grammar::ParseError,
-}
-
-#[derive(Debug)]
 pub enum HEMTTError {
     User(String),
     UserHint(String, String),
     Generic(String),
-    Config(ConfigParseError),
-    Parse(PreprocessParseError),
     Preprocess(PreprocessError),
     IO(std::io::Error),
     IOPath(IOPathError),
@@ -89,8 +73,6 @@ impl std::fmt::Display for HEMTTError {
             Self::User(ref s) => write!(f, "{}", s),
             Self::UserHint(ref s, ref h) => write!(f, "{}\ntry: {}", s, h),
             Self::Generic(ref s) => write!(f, "{}", s),
-            Self::Config(ref e) => write!(f, "Config: {}", e.message),
-            Self::Parse(ref e) => write!(f, "Preprocessor Parse: {}", e.message),
             Self::Preprocess(ref e) => write!(f, "Preprocessor: {}", e.message),
             Self::IO(ref e) => write!(f, "IO error: {}", e),
             Self::IOPath(ref e) => write!(f, "IO error: `{:#?}`\n{}", e.path, e.source),
@@ -133,8 +115,6 @@ impl std::error::Error for HEMTTError {
             Self::User(_) => Some(self),
             Self::UserHint(_, ref _h) => Some(self),
             Self::Generic(_) => Some(self),
-            Self::Config(ref e) => Some(&e.source),
-            Self::Parse(ref e) => Some(&e.source),
             Self::Preprocess(ref e) => Some(&e.source),
             Self::IO(ref e) => Some(e),
             Self::IOPath(ref e) => Some(&e.source),
@@ -170,5 +150,11 @@ impl From<semver::SemVerError> for HEMTTError {
 impl From<vfs::VfsError> for HEMTTError {
     fn from(err: vfs::VfsError) -> Self {
         Self::Vfs(err)
+    }
+}
+
+impl From<String> for HEMTTError {
+    fn from(err: String) -> Self {
+        Self::Generic(err)
     }
 }

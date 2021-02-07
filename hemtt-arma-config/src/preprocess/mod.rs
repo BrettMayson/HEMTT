@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 use std::vec::IntoIter;
-use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
+use std::collections::HashMap;
 
 use pest::error::Error;
 use pest::Parser;
@@ -152,12 +152,14 @@ fn test_read_line() {
     )
 }
 
-pub fn _resolve(
+pub fn _resolve<R>(
     ident: &str,
     define: &Define,
-    resolver: &dyn Fn(&str) -> PathBuf,
+    resolver: R,
     defines: &HashMap<String, Define>,
-) -> Option<Vec<Token>> {
+) -> Option<Vec<Token>> where 
+    R: Fn(&str) -> String + Copy
+{
     if let Some(d) = defines.get(ident) {
         let mut ret = Vec::new();
         let mut context = defines.to_owned();
@@ -237,13 +239,15 @@ pub fn _resolve(
     }
 }
 
-fn _resolve_word(
+fn _resolve_word<R>(
     iter: &mut Peekable<IntoIter<Token>>,
     ident: &str,
     token: &Token,
-    resolver: &dyn Fn(&str) -> PathBuf,
+    resolver: R,
     mut defines: &mut HashMap<String, Define>,
-) -> Vec<Token> {
+) -> Vec<Token> where 
+    R: Fn(&str) -> String + Copy
+{
     if let Some(d2) = defines.get(ident) {
         if d2.call {
             if let Some(r) = _resolve(
@@ -273,19 +277,23 @@ fn _resolve_word(
     vec![token.to_owned()]
 }
 
-pub fn preprocess(
+pub fn preprocess<R>(
     source: Vec<Token>,
-    resolver: &dyn Fn(&str) -> PathBuf,
-) -> Result<Vec<Token>, String> {
+    resolver: R,
+) -> Result<Vec<Token>, String> where 
+    R: Fn(&str) -> String + Copy
+{
     let mut defines: HashMap<String, Define> = HashMap::new();
     _preprocess(source, resolver, &mut defines)
 }
 
-pub fn _preprocess(
+pub fn _preprocess<R>(
     source: Vec<Token>,
-    resolver: &dyn Fn(&str) -> PathBuf,
+    resolver: R,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
-) -> Result<Vec<Token>, String> {
+) -> Result<Vec<Token>, String> where 
+    R: Fn(&str) -> String + Copy
+{
     let mut ret = Vec::new();
     let mut iter = source.into_iter().peekable();
     let mut if_state = IfStates::new();
@@ -362,7 +370,7 @@ pub fn _preprocess(
                         ("include", true) => {
                             let file = render(read_line!(iter)).trim_matches('"').to_owned();
                             ret.append(&mut _preprocess(
-                                super::tokenize(&read_to_string(resolver(&file)).unwrap()).unwrap(),
+                                super::tokenize(&resolver(&file)).unwrap(),
                                 resolver,
                                 defines,
                             )?);

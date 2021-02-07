@@ -5,10 +5,8 @@ extern crate log;
 extern crate hemtt_macros;
 
 mod addon;
-mod config;
 mod error;
 pub use error::*;
-pub mod preprocess;
 pub mod project;
 pub mod templates;
 pub mod tools;

@@ -1,4 +1,4 @@
-use vfs::{impls::overlay::OverlayFS, MemoryFS, PhysicalFS};
+use vfs::{MemoryFS, PhysicalFS, VfsPath, impls::overlay::OverlayFS};
 
 use crate::{AddonList, Project};
 use hemtt::{Addon, HEMTTError};
@@ -9,7 +9,7 @@ pub use addon::{AddonContext, AddonListContext};
 pub struct Context<'a> {
     project: &'a Project,
     pub task_pad: usize,
-    fs: OverlayFS,
+    fs: VfsPath,
     // stage: &Stage,
 }
 
@@ -21,7 +21,7 @@ impl<'a> Context<'a> {
             fs: OverlayFS::new(&[
                 MemoryFS::new().into(),
                 PhysicalFS::new(Project::find_root()?).into(),
-            ]),
+            ]).into(),
         })
     }
 
@@ -29,7 +29,7 @@ impl<'a> Context<'a> {
         self.project
     }
 
-    pub fn fs(&self) -> &OverlayFS {
+    pub fn fs(&self) -> &VfsPath {
         &self.fs
     }
 }

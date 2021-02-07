@@ -87,7 +87,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
             None => return true,
         };
 
-        while let Some(curr) = sorted.next() {
+        for curr in sorted {
             if let Some(std::cmp::Ordering::Greater) | None = compare(&last, &curr) {
                 return false;
             }

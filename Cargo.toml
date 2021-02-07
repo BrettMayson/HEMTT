@@ -3,7 +3,6 @@ members = [
     "hemtt",
     "hemtt-app",
     "hemtt-arma-config",
-    "hemtt-cache",
     "hemtt-handlebars",
     "hemtt-io",
     "hemtt-macros",

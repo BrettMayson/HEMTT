@@ -28,7 +28,7 @@ impl<I: Seek + Read> WritablePBO<I> {
     /// A list of filenames in the PBO
     pub fn files(&mut self) -> Result<Vec<Header>> {
         let mut filenames = Vec::new();
-        for (_, (_, h)) in &mut self.files {
+        for (_, h) in self.files.values() {
             // let size = c.seek(SeekFrom::End(0))? as u32;
             filenames.push(h.clone());
         }
@@ -69,12 +69,12 @@ impl<I: Seek + Read> WritablePBO<I> {
         let filename_owned = filename.into().replace("/", "\\");
         let filename = filename_owned.as_str();
         if self.files.contains_key(filename) {
-            let (mut data, time) = self.files.remove(filename).unwrap();
+            let (mut data, header) = self.files.remove(filename).unwrap();
             let mut buffer: Box<[u8]> =
                 vec![0; data.seek(SeekFrom::End(0))? as usize].into_boxed_slice();
             data.seek(SeekFrom::Start(0))?;
             data.read_exact(&mut buffer)?;
-            self.files.insert(filename.to_string(), (data, time));
+            self.files.insert(filename.to_string(), (data, header));
             return Ok(Some(Cursor::new(buffer)));
         }
         Ok(None)

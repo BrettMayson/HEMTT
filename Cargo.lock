@@ -370,7 +370,6 @@ dependencies = [
  "glob",
  "hemtt",
  "hemtt-arma-config",
- "hemtt-cache",
  "hemtt-handlebars",
  "hemtt-macros",
  "lazy_static",
@@ -395,14 +394,6 @@ dependencies = [
  "log",
  "pest",
  "pest_derive",
-]
-
-[[package]]
-name = "hemtt-cache"
-version = "0.1.0"
-dependencies = [
- "log",
- "uuid",
 ]
 
 [[package]]

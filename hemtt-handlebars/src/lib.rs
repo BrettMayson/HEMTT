@@ -16,6 +16,7 @@ pub fn render(source: &str, data: &Variables) -> Result<String, TemplateRenderEr
     handlebars.render_template(source, data.inner())
 }
 
+#[derive(Default)]
 pub struct Variables(BTreeMap<String, Json>);
 impl Variables {
     pub fn new() -> Self {

@@ -15,13 +15,12 @@ impl Addon {
     pub fn new<S: Into<String>>(name: S, location: AddonLocation) -> Result<Self, HEMTTError> {
         let name = name.into();
         let source = format!(
-            "{}{}{}",
+            "{}/{}",
             location.to_string(),
-            std::path::MAIN_SEPARATOR,
             name
         );
         Ok(Self {
-            name: validate_name(name.into())?,
+            name: validate_name(name)?,
             location,
             source,
         })

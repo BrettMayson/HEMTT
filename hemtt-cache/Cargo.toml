@@ -1,9 +1,0 @@
-[package]
-name = "hemtt-cache"
-version = "0.1.0"
-authors = ["Brett <brett@mayson.io>"]
-edition = "2018"
-
-[dependencies]
-uuid = { version = "0.8", features = ["v4"] }
-log = "0.4"

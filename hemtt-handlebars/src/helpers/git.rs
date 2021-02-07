@@ -70,7 +70,7 @@ mod tests {
         pub fn new() -> Self {
             let root = tempdir::TempDir::new("hemtt_test").unwrap().path().to_path_buf();
             std::fs::create_dir_all(&root).unwrap();
-            copy_items(&vec![PathBuf::from("tests/test-git")], &root, &CopyOptions::default()).unwrap();
+            copy_items(&[PathBuf::from("tests/test-git")], &root, &CopyOptions::default()).unwrap();
             let mut dir = root.clone();
             dir.push("test-git");
             dir.push(".git");

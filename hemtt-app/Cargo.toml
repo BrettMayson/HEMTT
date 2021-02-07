@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 hemtt = { path = "../hemtt" }
 hemtt-arma-config = { path = "../hemtt-arma-config" }
-hemtt-cache = { path = "../hemtt-cache" }
 hemtt-handlebars = { path = "../hemtt-handlebars" }
 hemtt-macros = { path = "../hemtt-macros" }
 
