@@ -1,6 +1,5 @@
 pub fn wrap<S: Into<String>>(source: S) -> String {
-    let head = 
-r#"
+    let head = r#"
 <html>
   <head>
     <title>HEMTT PreProcess Inspection</title>
@@ -26,8 +25,7 @@ r#"
         <div class="code">
 <pre>
 "#;
-    let foot =
-r#"
+    let foot = r#"
 </pre>
         </div>
     </body>

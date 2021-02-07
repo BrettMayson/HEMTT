@@ -427,7 +427,10 @@ where
                             if_state.pop();
                         }
                         ("include", true) => {
-                            let file = render(read_line!(iter)).export().trim_matches('"').to_owned();
+                            let file = render(read_line!(iter))
+                                .export()
+                                .trim_matches('"')
+                                .to_owned();
                             ret.append(&mut _preprocess(
                                 super::tokenize(&resolver(&file), &file).unwrap(),
                                 resolver,

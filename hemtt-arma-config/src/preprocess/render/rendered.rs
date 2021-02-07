@@ -42,8 +42,16 @@ impl Rendered {
             let title = format!("Source: {} {:?}", token.path(), token.start().1);
             println!("D> {:?}", token.token());
             match token.token() {
-                Token::Keyword(_) => content.push_str(&format!("<span class=\"keyword\" title=\"{}\">{}</span>", title, token.to_string())),
-                _ => content.push_str(&format!("<span title=\"{}\">{}</span>", title, token.to_string())),
+                Token::Keyword(_) => content.push_str(&format!(
+                    "<span class=\"keyword\" title=\"{}\">{}</span>",
+                    title,
+                    token.to_string()
+                )),
+                _ => content.push_str(&format!(
+                    "<span title=\"{}\">{}</span>",
+                    title,
+                    token.to_string()
+                )),
                 // Token::Word(_) => {}
                 // Token::Alpha(_) => {}
                 // Token::Underscore => {}
