@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fs::read_to_string, io::Write};
 
 fn resolver(name: &str) -> String {
     read_to_string(format!("tests/preprocess/{}", name)).unwrap()
@@ -13,10 +13,10 @@ value = affirmative;
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\nvalue = true;\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\nvalue = true;\n", config.export());
 }
 
 #[test]
@@ -30,10 +30,10 @@ value = SOMETHING;
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\n\nvalue = 123;\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\n\nvalue = 123;\n", config.export());
 }
 
 #[test]
@@ -51,10 +51,10 @@ defined = false;
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\nvalue = true;\n\n\ndefined = false;\n\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\nvalue = true;\n\n\ndefined = false;\n\n", config.export());
 }
 
 #[test]
@@ -67,10 +67,10 @@ value = "SAY_HI(Brett)";
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\n\nvalue = \"Hi Brett\";\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\n\nvalue = \"Hi Brett\";\n", config.export());
 }
 
 #[test]
@@ -85,10 +85,10 @@ value = "SAY_HI(Brett)";
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\n\nvalue = \"Hi Mr. Brett.\";\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\n\nvalue = \"Hi Mr. Brett.\";\n", config.export());
 }
 
 #[test]
@@ -103,10 +103,10 @@ value = "SAY_HI(Brett)";
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\n\nvalue = \"Hi Mr. Brett.\";\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\n\nvalue = \"Hi Mr. Brett.\";\n", config.export());
 }
 
 #[test]
@@ -126,10 +126,10 @@ value = QUOTE(My variable is QQGVAR(myVar));
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\n\nvalue = test_myVar;\nvalue = \"test_myVar\";\nvalue = \"My variable is \"\"test_myVar\"\"\";\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\n\nvalue = test_myVar;\nvalue = \"test_myVar\";\nvalue = \"My variable is \"\"test_myVar\"\"\";\n", config.export());
 }
 
 #[test]
@@ -146,12 +146,12 @@ class CfgPatches {
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
     assert_eq!(
         "\nclass CfgPatches {\n    class q {\n        t = \"{({1})}; call f\";\n    };\n};",
-        config
+        config.export()
     );
 }
 
@@ -183,9 +183,9 @@ class CfgPatches {
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
     assert_eq!(
         r#"
 
@@ -194,7 +194,7 @@ class CfgPatches {
         expression = "if (_value != (if (isNumber (configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")) then {getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")} else {(if (0 < getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')) then {getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')} else {-1})})) then {[_this, _value] call test_fnc_makeSource}";
     };
 };"#,
-        config
+        config.export()
     );
 }
 
@@ -209,9 +209,9 @@ fn include() {
         &resolver,
     );
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
     assert_eq!(
         r#"
 class included {};
@@ -220,7 +220,7 @@ class test {
     value = 100;
 };
 "#,
-        config
+        config.export()
     );
 }
 
@@ -233,8 +233,8 @@ value = affirmative;
     let config =
         hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
     let config = hemtt_arma_config::render(config.unwrap());
-    println!("======");
-    println!("{}", config);
-    println!("======");
-    assert_eq!("\nvalue = affirmative;\n", config);
+    // println!("======");
+    // println!("{}", config);
+    // println!("======");
+    assert_eq!("\nvalue = affirmative;\n", config.export());
 }

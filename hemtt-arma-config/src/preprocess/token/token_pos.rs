@@ -35,6 +35,15 @@ impl TokenPos {
         }
     }
 
+    pub fn with_pos(token: Token, pos: &Self) -> Self {
+        Self {
+            start: pos.start(),
+            end: pos.end(),
+            path: pos.path().to_string(),
+            token,
+        }
+    }
+
     pub fn start(&self) -> (usize, (usize, usize)) {
         self.start
     }
@@ -49,6 +58,10 @@ impl TokenPos {
 
     pub fn token(&self) -> &Token {
         &self.token
+    }
+
+    pub fn into_token(self) -> Token {
+        self.token
     }
 }
 

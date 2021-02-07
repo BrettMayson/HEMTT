@@ -248,7 +248,7 @@ where
                         match tp.token() {
                             Token::Word(_) => {
                                 if let Token::Word(w) = iter.next().unwrap().token() {
-                                    ret.push(TokenPos::anon(Token::DoubleQuote));
+                                    ret.push(TokenPos::with_pos(Token::DoubleQuote, &token));
                                     ret.append(&mut _resolve_word(
                                         &mut iter,
                                         &w,
@@ -256,7 +256,7 @@ where
                                         resolver,
                                         &mut context,
                                     ));
-                                    ret.push(TokenPos::anon(Token::DoubleQuote));
+                                    ret.push(TokenPos::with_pos(Token::DoubleQuote, &token));
                                 }
                             }
                             Token::Directive => {
@@ -427,7 +427,7 @@ where
                             if_state.pop();
                         }
                         ("include", true) => {
-                            let file = render(read_line!(iter)).trim_matches('"').to_owned();
+                            let file = render(read_line!(iter)).export().trim_matches('"').to_owned();
                             ret.append(&mut _preprocess(
                                 super::tokenize(&resolver(&file), &file).unwrap(),
                                 resolver,

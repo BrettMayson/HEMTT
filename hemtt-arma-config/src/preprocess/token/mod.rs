@@ -10,6 +10,7 @@ mod whitespace;
 pub use whitespace::Whitespace;
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "maps", derive(serde::Serialize))]
 pub enum Token {
     Keyword(Keyword),
     Word(String),
@@ -52,11 +53,7 @@ impl Token {
     }
 
     pub fn is_whitespace(&self) -> bool {
-        if let Self::Whitespace(_) = &self {
-            true
-        } else {
-            false
-        }
+        matches!(&self, Self::Whitespace(_))
     }
 }
 
