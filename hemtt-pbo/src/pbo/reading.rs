@@ -143,8 +143,12 @@ impl<B: Seek + Read> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
     fn into(mut self) -> WritablePBO<Cursor<Box<[u8]>>> {
         let mut pbo = WritablePBO::new();
         for header in self.files() {
-            pbo.add_file(&header.filename, self.retrieve(&header.filename).unwrap(), header.clone())
-                .unwrap();
+            pbo.add_file(
+                &header.filename,
+                self.retrieve(&header.filename).unwrap(),
+                header.clone(),
+            )
+            .unwrap();
         }
         for (key, value) in self.extensions {
             pbo.add_extension(key, value);

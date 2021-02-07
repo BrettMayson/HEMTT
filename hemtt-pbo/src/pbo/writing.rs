@@ -50,14 +50,21 @@ impl<I: Seek + Read> WritablePBO<I> {
     }
 
     /// Adds or updates a file to the PBO, returns the old file if it existed
-    pub fn add_file<S: Into<String>>(&mut self, filename: S, mut file: I, header: Header) -> Result<Option<(I, Header)>> {
+    pub fn add_file<S: Into<String>>(
+        &mut self,
+        filename: S,
+        mut file: I,
+        header: Header,
+    ) -> Result<Option<(I, Header)>> {
         let filename = filename.into();
         trace!("adding file to struct: {}", filename);
         let size = file.seek(SeekFrom::End(0))?;
         if size > u32::MAX as u64 {
             Err(std::io::Error::from(std::io::ErrorKind::Other))
         } else {
-            Ok(self.files.insert(filename.replace("/", "\\"), (file, header)))
+            Ok(self
+                .files
+                .insert(filename.replace("/", "\\"), (file, header)))
         }
     }
 
@@ -233,6 +240,12 @@ mod tests {
         let mut pbo = WritablePBO::<Cursor<Vec<u8>>>::new();
         let mut buffer = Vec::new();
         pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
-        assert_eq!(pbo.checksum().unwrap(), vec![68, 142, 162, 133, 179, 224, 152, 229, 10, 109, 120, 136, 145, 22, 232, 206, 165, 206, 130, 23]);
+        assert_eq!(
+            pbo.checksum().unwrap(),
+            vec![
+                68, 142, 162, 133, 179, 224, 152, 229, 10, 109, 120, 136, 145, 22, 232, 206, 165,
+                206, 130, 23
+            ]
+        );
     }
 }

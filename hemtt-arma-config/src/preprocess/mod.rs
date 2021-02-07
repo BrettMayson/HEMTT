@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
-use std::collections::HashMap;
 
 use pest::error::Error;
 use pest::Parser;
@@ -157,8 +157,9 @@ pub fn _resolve<R>(
     define: &Define,
     resolver: R,
     defines: &HashMap<String, Define>,
-) -> Option<Vec<Token>> where 
-    R: Fn(&str) -> String + Copy
+) -> Option<Vec<Token>>
+where
+    R: Fn(&str) -> String + Copy,
 {
     if let Some(d) = defines.get(ident) {
         let mut ret = Vec::new();
@@ -245,8 +246,9 @@ fn _resolve_word<R>(
     token: &Token,
     resolver: R,
     mut defines: &mut HashMap<String, Define>,
-) -> Vec<Token> where 
-    R: Fn(&str) -> String + Copy
+) -> Vec<Token>
+where
+    R: Fn(&str) -> String + Copy,
 {
     if let Some(d2) = defines.get(ident) {
         if d2.call {
@@ -277,11 +279,9 @@ fn _resolve_word<R>(
     vec![token.to_owned()]
 }
 
-pub fn preprocess<R>(
-    source: Vec<Token>,
-    resolver: R,
-) -> Result<Vec<Token>, String> where 
-    R: Fn(&str) -> String + Copy
+pub fn preprocess<R>(source: Vec<Token>, resolver: R) -> Result<Vec<Token>, String>
+where
+    R: Fn(&str) -> String + Copy,
 {
     let mut defines: HashMap<String, Define> = HashMap::new();
     _preprocess(source, resolver, &mut defines)
@@ -291,8 +291,9 @@ pub fn _preprocess<R>(
     source: Vec<Token>,
     resolver: R,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
-) -> Result<Vec<Token>, String> where 
-    R: Fn(&str) -> String + Copy
+) -> Result<Vec<Token>, String>
+where
+    R: Fn(&str) -> String + Copy,
 {
     let mut ret = Vec::new();
     let mut iter = source.into_iter().peekable();

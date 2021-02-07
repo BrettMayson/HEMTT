@@ -1,6 +1,9 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use std::{io::{Error, Read, Write}, ops::Deref};
+use std::{
+    io::{Error, Read, Write},
+    ops::Deref,
+};
 
 use hemtt_io::*;
 

@@ -14,11 +14,7 @@ pub struct Addon {
 impl Addon {
     pub fn new<S: Into<String>>(name: S, location: AddonLocation) -> Result<Self, HEMTTError> {
         let name = name.into();
-        let source = format!(
-            "{}/{}",
-            location.to_string(),
-            name
-        );
+        let source = format!("{}/{}", location.to_string(), name);
         Ok(Self {
             name: validate_name(name)?,
             location,

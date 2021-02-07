@@ -133,18 +133,16 @@ impl Flow {
 
     fn can_continue(&self, addons: &AddonList) {
         let mut can_continue = true;
-        addons.iter().for_each(|d| {
-            match d {
-                Ok((ok, _, addon)) => {
-                    if !ok {
-                        can_continue = false;
-                        error!("Unable to build `{}`", addon.source())
-                    }
-                }
-                Err(e) => {
-                    error!("{}", e);
+        addons.iter().for_each(|d| match d {
+            Ok((ok, _, addon)) => {
+                if !ok {
                     can_continue = false;
+                    error!("Unable to build `{}`", addon.source())
                 }
+            }
+            Err(e) => {
+                error!("{}", e);
+                can_continue = false;
             }
         });
 

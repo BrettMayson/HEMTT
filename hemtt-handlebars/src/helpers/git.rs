@@ -60,7 +60,7 @@ mod tests {
 
     use fs_extra::{copy_items, dir::CopyOptions};
 
-    use crate::{Variables, render};
+    use crate::{render, Variables};
 
     struct TestFolder {
         pub root: PathBuf,
@@ -68,22 +68,31 @@ mod tests {
     }
     impl TestFolder {
         pub fn new() -> Self {
-            let root = tempdir::TempDir::new("hemtt_test").unwrap().path().to_path_buf();
+            let root = tempdir::TempDir::new("hemtt_test")
+                .unwrap()
+                .path()
+                .to_path_buf();
             std::fs::create_dir_all(&root).unwrap();
-            copy_items(&[PathBuf::from("tests/test-git")], &root, &CopyOptions::default()).unwrap();
+            copy_items(
+                &[PathBuf::from("tests/test-git")],
+                &root,
+                &CopyOptions::default(),
+            )
+            .unwrap();
             let mut dir = root.clone();
             dir.push("test-git");
             dir.push(".git");
-            std::fs::rename({
-                let mut root = root.clone();
-                root.push("test-git");
-                root.push("git");
-                root
-            }, &dir).unwrap();
-            Self {
-                root,
-                dir,
-            }
+            std::fs::rename(
+                {
+                    let mut root = root.clone();
+                    root.push("test-git");
+                    root.push("git");
+                    root
+                },
+                &dir,
+            )
+            .unwrap();
+            Self { root, dir }
         }
     }
     impl Drop for TestFolder {
@@ -96,7 +105,10 @@ mod tests {
     fn id() {
         let test = TestFolder::new();
         std::env::set_current_dir(&test.dir).unwrap();
-        assert_eq!(render("{{git \"id\"}}", &Variables::new()).unwrap(), "1a6bce22");
+        assert_eq!(
+            render("{{git \"id\"}}", &Variables::new()).unwrap(),
+            "1a6bce22"
+        );
         assert_eq!(render("{{git}}", &Variables::new()).unwrap(), "1a6bce22");
     }
 
@@ -104,7 +116,13 @@ mod tests {
     fn commit_count() {
         let test = TestFolder::new();
         std::env::set_current_dir(&test.dir).unwrap();
-        assert_eq!(render("{{git \"commitCount\"}}", &Variables::new()).unwrap(), "2");
-        assert_eq!(render("{{git \"commit_count\"}}", &Variables::new()).unwrap(), "2");
+        assert_eq!(
+            render("{{git \"commitCount\"}}", &Variables::new()).unwrap(),
+            "2"
+        );
+        assert_eq!(
+            render("{{git \"commit_count\"}}", &Variables::new()).unwrap(),
+            "2"
+        );
     }
 }

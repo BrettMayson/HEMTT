@@ -2,7 +2,14 @@ use std::{fs::File, path::Path};
 
 use hemtt_pbo::{Header, ReadablePBO, Timestamp, WritablePBO};
 
-fn test_pbo(file: File, file_count: usize, extension_count: usize, version: &str, prefix: &str, checksum: Vec<u8>) -> ReadablePBO<File> {
+fn test_pbo(
+    file: File,
+    file_count: usize,
+    extension_count: usize,
+    version: &str,
+    prefix: &str,
+    checksum: Vec<u8>,
+) -> ReadablePBO<File> {
     let mut pbo = ReadablePBO::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
     assert_eq!(pbo.extensions().len(), extension_count);
@@ -24,7 +31,6 @@ fn test_writeable_pbo(pbo: ReadablePBO<File>, file: File) {
     assert_eq!(original.checksum().unwrap(), writeable.checksum().unwrap());
 }
 
-
 fn test_header(
     header: &Header,
     filename: &str,
@@ -42,11 +48,7 @@ fn test_header(
     assert_eq!(header.size(), size);
 }
 
-fn test_file(
-    pbo: &mut ReadablePBO<File>,
-    file: &str,
-    content: String,
-) {
+fn test_file(pbo: &mut ReadablePBO<File>, file: &str, content: String) {
     let data = pbo.retrieve(file).unwrap();
     let data = String::from_utf8(data.into_inner().to_vec()).unwrap();
     assert_eq!(data, content);
@@ -61,7 +63,10 @@ fn ace_weather() {
         3,
         "cba6f72c",
         "z\\ace\\addons\\weather",
-        vec![210, 213, 255, 98, 5, 201, 111, 118, 217, 52, 219, 91, 163, 179, 230, 89, 98, 139, 31, 78],
+        vec![
+            210, 213, 255, 98, 5, 201, 111, 118, 217, 52, 219, 91, 163, 179, 230, 89, 98, 139, 31,
+            78,
+        ],
     );
     test_header(
         pbo.files().first().unwrap(),
@@ -81,20 +86,29 @@ fn ace_weather() {
         Timestamp::from_u32(1543422611),
         20,
     );
-    test_file(&mut pbo, "XEH_preStart.sqf", "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string());
+    test_file(
+        &mut pbo,
+        "XEH_preStart.sqf",
+        "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
+    );
     test_writeable_pbo(pbo, File::open("tests/ace_weather.pbo").unwrap());
 }
 
 #[test]
 fn bi_3den() {
-    if !Path::new("tests/3den.pbo").exists() { return; }
+    if !Path::new("tests/3den.pbo").exists() {
+        return;
+    }
     let mut pbo = test_pbo(
         File::open("tests/3den.pbo").unwrap(),
         368,
         3,
         "149197",
         "a3\\3den",
-        vec![57, 137, 163, 39, 148, 153, 116, 24, 229, 159, 191, 235, 207, 97, 198, 246, 142, 171, 33, 230],
+        vec![
+            57, 137, 163, 39, 148, 153, 116, 24, 229, 159, 191, 235, 207, 97, 198, 246, 142, 171,
+            33, 230,
+        ],
     );
     test_header(
         pbo.files().first().unwrap(),

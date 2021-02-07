@@ -1,4 +1,4 @@
-use vfs::{MemoryFS, PhysicalFS, VfsPath, impls::overlay::OverlayFS};
+use vfs::{impls::overlay::OverlayFS, MemoryFS, PhysicalFS, VfsPath};
 
 use crate::{AddonList, Project};
 use hemtt::{Addon, HEMTTError};
@@ -21,7 +21,8 @@ impl<'a> Context<'a> {
             fs: OverlayFS::new(&[
                 MemoryFS::new().into(),
                 PhysicalFS::new(Project::find_root()?).into(),
-            ]).into(),
+            ])
+            .into(),
         })
     }
 

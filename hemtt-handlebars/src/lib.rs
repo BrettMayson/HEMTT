@@ -69,10 +69,10 @@ impl From<semver::Version> for Variables {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
     use serde_json::value::Value as Json;
+    use std::collections::BTreeMap;
 
-    use crate::{Variables, render};
+    use crate::{render, Variables};
 
     #[test]
     fn variables() {
@@ -90,6 +90,9 @@ mod tests {
     fn version() {
         let version = semver::Version::from((1, 2, 3));
         let map = Variables::from(version);
-        assert_eq!(render("{{semver.major}}.{{semver.minor}}.{{semver.patch}}", &map).unwrap(), "1.2.3");
+        assert_eq!(
+            render("{{semver.major}}.{{semver.minor}}.{{semver.patch}}", &map).unwrap(),
+            "1.2.3"
+        );
     }
 }
