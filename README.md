@@ -35,11 +35,9 @@ Also it has tests now so that's alright.
     * [x] Version Bumping
 * [ ] hemtt-arma-config
   * [x] Preprocessor
-    * [x] Defines
-    * [x] If Else
+    * [x] All the bare requirements
   * [ ] Parser
     * [ ] All the fun usual stuff
-    * [ ] Enums
 * [x] hemtt-pbo
   * [x] Reading PBOs
   * [x] Writing PBOs
@@ -50,6 +48,8 @@ Also it has tests now so that's alright.
 * [ ] hemtt-arma-config
   * [ ] Preprocessor
     * [ ] __EVAL
+  * [ ] Parser
+    * [ ] Enums
   * [ ] Linter
 * [ ] hemtt-arma-sqf
   * [ ] Linter
