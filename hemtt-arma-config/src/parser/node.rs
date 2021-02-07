@@ -4,8 +4,11 @@ use super::{Rule, Statement};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
+    /// (Pos from Start, (Line, Col))
     pub start: (usize, (usize, usize)),
+    /// (Pos from Start, (Line, Col))
     pub end: (usize, (usize, usize)),
+    /// Original text of the line
     pub line: String,
     pub statement: Statement,
 }

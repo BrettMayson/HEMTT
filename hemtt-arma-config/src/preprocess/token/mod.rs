@@ -4,6 +4,8 @@ pub struct PreProcessParser;
 
 mod keyword;
 pub use keyword::Keyword;
+mod token_pos;
+pub use token_pos::TokenPos;
 mod whitespace;
 pub use whitespace::Whitespace;
 
@@ -46,6 +48,14 @@ impl Token {
             "delete" => Token::Keyword(Keyword::Delete),
             "enum" => Token::Keyword(Keyword::Enum),
             _ => Token::Word(word),
+        }
+    }
+
+    pub fn is_whitespace(&self) -> bool {
+        if let Self::Whitespace(_) = &self {
+            true
+        } else {
+            false
         }
     }
 }

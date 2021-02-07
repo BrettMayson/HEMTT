@@ -8,7 +8,7 @@ use pest::Parser;
 mod token;
 #[cfg(test)]
 use token::Whitespace;
-use token::{PreProcessParser, Rule, Token};
+use token::{PreProcessParser, Rule, Token, TokenPos};
 
 mod render;
 pub use render::render;
@@ -18,12 +18,12 @@ use define::Define;
 mod ifstate;
 use ifstate::{IfState, IfStates};
 
-pub fn tokenize(source: &str) -> Result<Vec<Token>, Error<Rule>> {
+pub fn tokenize(source: &str, path: &str) -> Result<Vec<TokenPos>, Error<Rule>> {
     let mut tokens = Vec::new();
 
     let pairs = PreProcessParser::parse(Rule::file, source)?;
     for pair in pairs {
-        tokens.push(Token::from(pair))
+        tokens.push(TokenPos::new(path, pair))
     }
 
     Ok(tokens)
@@ -32,51 +32,64 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, Error<Rule>> {
 macro_rules! skip_whitespace {
     ($i: ident) => {{
         let mut next = $i.peek();
-        while let Some(Token::Whitespace(_)) = next {
-            $i.next();
-            next = $i.peek();
+        loop {
+            if let Some(tp) = next {
+                if tp.token().is_whitespace() {
+                    $i.next();
+                    next = $i.peek();
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
     }};
 }
 
 macro_rules! read_args {
     ($i: ident) => {{
-        let mut ret: Vec<Vec<Token>> = Vec::new();
+        let mut ret: Vec<Vec<TokenPos>> = Vec::new();
         let mut next = $i.next();
-        let mut arg: Vec<Token> = Vec::new();
+        let mut arg: Vec<TokenPos> = Vec::new();
         let mut level = 0;
-        if let Some(Token::LeftParenthesis) = next {
-            next = $i.next();
+        if let Some(ref tp) = next {
+            if let Token::LeftParenthesis = tp.token() {
+                next = $i.next();
+            }
         }
         loop {
-            match next {
-                Some(Token::LeftParenthesis) => {
-                    level += 1;
-                    arg.push(Token::LeftParenthesis);
-                }
-                Some(Token::RightParenthesis) => {
-                    if level == 0 {
-                        if !arg.is_empty() {
-                            ret.push(arg);
-                        }
-                        break;
-                    } else {
-                        arg.push(Token::RightParenthesis);
+            if let Some(tp) = next {
+                match tp.token() {
+                    Token::LeftParenthesis => {
+                        level += 1;
+                        arg.push(TokenPos::anon(Token::LeftParenthesis));
                     }
-                    level -= 1;
-                }
-                Some(Token::Comma) => {
-                    if level == 0 {
-                        if !arg.is_empty() {
-                            ret.push(arg);
-                            arg = Vec::new();
+                    Token::RightParenthesis => {
+                        if level == 0 {
+                            if !arg.is_empty() {
+                                ret.push(arg);
+                            }
+                            break;
+                        } else {
+                            arg.push(TokenPos::anon(Token::RightParenthesis));
                         }
-                    } else {
-                        arg.push(Token::Comma);
+                        level -= 1;
                     }
+                    Token::Comma => {
+                        if level == 0 {
+                            if !arg.is_empty() {
+                                ret.push(arg);
+                                arg = Vec::new();
+                            }
+                        } else {
+                            arg.push(TokenPos::anon(Token::Comma));
+                        }
+                    }
+                    _ => arg.push(tp),
                 }
-                Some(t) => arg.push(t),
-                None => break,
+            } else {
+                break;
             }
             next = $i.next();
         }
@@ -86,7 +99,7 @@ macro_rules! read_args {
 
 #[test]
 fn test_read_args() {
-    let tokens = tokenize("(B(C); call f);").unwrap();
+    let tokens = tokenize("(B(C); call f);", "").unwrap();
     let mut a = tokens.into_iter().peekable();
     assert_eq!(
         vec![vec![
@@ -100,35 +113,59 @@ fn test_read_args() {
             Token::Whitespace(Whitespace::Space),
             Token::Word(String::from("f"))
         ]],
-        read_args!(a)
+        vec![read_args!(a)[0]
+            .iter()
+            .map(|tp| tp.token().to_owned())
+            .collect::<Vec<Token>>()]
     )
 }
 
 macro_rules! read_line {
     ($i: ident) => {{
-        let mut ret: Vec<Token> = Vec::new();
+        let mut ret: Vec<TokenPos> = Vec::new();
         let mut next = $i.next();
         // Skip initial whitespace
-        while let Some(Token::Whitespace(_)) = next {
-            next = $i.next();
+        loop {
+            if let Some(tp) = &next {
+                if tp.token().is_whitespace() {
+                    next = $i.next();
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
         loop {
-            match next {
-                Some(Token::Newline) => break,
-                Some(Token::Escape) => {
-                    if $i.peek() == Some(&Token::Newline) {
-                        $i.next();
+            if let Some(tp) = next {
+                match tp.token() {
+                    Token::Newline => break,
+                    Token::Escape => {
+                        if let Some(tp) = $i.peek() {
+                            if tp.token() == &Token::Newline {
+                                $i.next();
+                            }
+                        }
+                        next = $i.next();
+                        loop {
+                            if let Some(ref tp) = next {
+                                if tp.token().is_whitespace() {
+                                    next = $i.next();
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
                     }
-                    next = $i.next();
-                    while let Some(Token::Whitespace(_)) = next {
+                    _ => {
+                        ret.push(tp);
                         next = $i.next();
                     }
                 }
-                Some(n) => {
-                    ret.push(n);
-                    next = $i.next();
-                }
-                _ => break,
+            } else {
+                break;
             }
         }
         ret
@@ -137,7 +174,7 @@ macro_rules! read_line {
 
 #[test]
 fn test_read_line() {
-    let tokens = tokenize("test = false;\ntest = true;\n").unwrap();
+    let tokens = tokenize("test = false;\ntest = true;\n", "").unwrap();
     let mut a = tokens.into_iter().peekable();
     assert_eq!(
         vec![
@@ -149,6 +186,9 @@ fn test_read_line() {
             Token::Semicolon,
         ],
         read_line!(a)
+            .iter()
+            .map(|tp| tp.token().to_owned())
+            .collect::<Vec<Token>>()
     )
 }
 
@@ -157,7 +197,7 @@ pub fn _resolve<R>(
     define: &Define,
     resolver: R,
     defines: &HashMap<String, Define>,
-) -> Option<Vec<Token>>
+) -> Option<Vec<TokenPos>>
 where
     R: Fn(&str) -> String + Copy,
 {
@@ -170,9 +210,9 @@ where
                     panic!("Invalid arg lengths");
                 }
                 for i in 0..dargs.len() {
-                    if let Token::Word(key) = &dargs[i][0] {
+                    if let Token::Word(key) = &dargs[i][0].token() {
                         if args[i].len() == 1 {
-                            if let Token::Word(value) = &args[i][0] {
+                            if let Token::Word(value) = &args[i][0].token() {
                                 context.insert(
                                     key.to_owned(),
                                     if let Some(ed) = defines.get(value) {
@@ -202,26 +242,30 @@ where
         }
         let mut iter = d.statement.clone().into_iter().peekable();
         while let Some(token) = iter.next() {
-            match &token {
-                Token::Directive => match iter.peek() {
-                    Some(Token::Word(_)) => {
-                        if let Token::Word(w) = iter.next().unwrap() {
-                            ret.push(Token::DoubleQuote);
-                            ret.append(&mut _resolve_word(
-                                &mut iter,
-                                &w,
-                                &token,
-                                resolver,
-                                &mut context,
-                            ));
-                            ret.push(Token::DoubleQuote);
+            match &token.token() {
+                Token::Directive => {
+                    if let Some(tp) = iter.peek() {
+                        match tp.token() {
+                            Token::Word(_) => {
+                                if let Token::Word(w) = iter.next().unwrap().token() {
+                                    ret.push(TokenPos::anon(Token::DoubleQuote));
+                                    ret.append(&mut _resolve_word(
+                                        &mut iter,
+                                        &w,
+                                        &token,
+                                        resolver,
+                                        &mut context,
+                                    ));
+                                    ret.push(TokenPos::anon(Token::DoubleQuote));
+                                }
+                            }
+                            Token::Directive => {
+                                iter.next();
+                            }
+                            _ => {}
                         }
                     }
-                    Some(Token::Directive) => {
-                        iter.next();
-                    }
-                    _ => {}
-                },
+                }
                 Token::Word(w) => {
                     ret.append(&mut _resolve_word(
                         &mut iter,
@@ -241,12 +285,12 @@ where
 }
 
 fn _resolve_word<R>(
-    iter: &mut Peekable<IntoIter<Token>>,
+    iter: &mut Peekable<IntoIter<TokenPos>>,
     ident: &str,
-    token: &Token,
+    token: &TokenPos,
     resolver: R,
     mut defines: &mut HashMap<String, Define>,
-) -> Vec<Token>
+) -> Vec<TokenPos>
 where
     R: Fn(&str) -> String + Copy,
 {
@@ -260,7 +304,7 @@ where
                         read_args!(iter)
                             .into_iter()
                             .map(|arg| _preprocess(arg, resolver, &mut defines))
-                            .collect::<Result<Vec<Vec<Token>>, String>>()
+                            .collect::<Result<Vec<Vec<TokenPos>>, String>>()
                             .unwrap(),
                     ),
                     statement: Vec::new(),
@@ -279,7 +323,7 @@ where
     vec![token.to_owned()]
 }
 
-pub fn preprocess<R>(source: Vec<Token>, resolver: R) -> Result<Vec<Token>, String>
+pub fn preprocess<R>(source: Vec<TokenPos>, resolver: R) -> Result<Vec<TokenPos>, String>
 where
     R: Fn(&str) -> String + Copy,
 {
@@ -288,10 +332,10 @@ where
 }
 
 pub fn _preprocess<R>(
-    source: Vec<Token>,
+    source: Vec<TokenPos>,
     resolver: R,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
-) -> Result<Vec<Token>, String>
+) -> Result<Vec<TokenPos>, String>
 where
     R: Fn(&str) -> String + Copy,
 {
@@ -299,62 +343,76 @@ where
     let mut iter = source.into_iter().peekable();
     let mut if_state = IfStates::new();
     while let Some(token) = iter.next() {
-        match (&token, if_state.reading()) {
+        match (&token.token(), if_state.reading()) {
             (Token::Directive, r) => {
-                if let Token::Word(directive) = iter.next().unwrap() {
+                if let Token::Word(directive) = iter.next().unwrap().token() {
                     match (directive.as_str(), r) {
                         ("define", true) => {
                             skip_whitespace!(iter);
-                            if let Some(Token::Word(name)) = iter.next() {
-                                // skip_whitespace!(iter);
-                                let args = if iter.peek() == Some(&Token::LeftParenthesis) {
-                                    let args = read_args!(iter)
-                                        .into_iter()
-                                        .map(|arg| _preprocess(arg, resolver, &mut defines))
-                                        .collect::<Result<Vec<Vec<Token>>, String>>()
-                                        .unwrap();
-                                    Some(args)
+                            if let Some(tp) = iter.next() {
+                                if let Token::Word(name) = tp.token() {
+                                    // skip_whitespace!(iter);
+                                    let args = if let Some(tp) = iter.peek() {
+                                        if tp.token() == &Token::LeftParenthesis {
+                                            let args = read_args!(iter)
+                                                .into_iter()
+                                                .map(|arg| _preprocess(arg, resolver, &mut defines))
+                                                .collect::<Result<Vec<Vec<TokenPos>>, String>>()
+                                                .unwrap();
+                                            Some(args)
+                                        } else {
+                                            None
+                                        }
+                                    } else {
+                                        None
+                                    };
+                                    let body = read_line!(iter);
+                                    defines.insert(
+                                        name.to_owned(),
+                                        Define {
+                                            call: args.is_some(),
+                                            args,
+                                            statement: body,
+                                        },
+                                    );
                                 } else {
-                                    None
-                                };
-                                let body = read_line!(iter);
-                                defines.insert(
-                                    name,
-                                    Define {
-                                        call: args.is_some(),
-                                        args,
-                                        statement: body,
-                                    },
-                                );
-                            } else {
-                                return Err("define without name".to_string());
+                                    return Err("define without name".to_string());
+                                }
                             }
                         }
                         ("undef", true) => {
                             skip_whitespace!(iter);
-                            if let Some(Token::Word(name)) = iter.next() {
-                                defines.remove(&name);
+                            if let Some(tp) = iter.next() {
+                                if let Token::Word(name) = tp.token().clone() {
+                                    defines.remove(&name);
+                                } else {
+                                    return Err("undef without name".to_string());
+                                }
                             } else {
                                 return Err("undef without name".to_string());
                             }
                         }
                         ("ifdef", true) => {
                             skip_whitespace!(iter);
-                            if let Some(Token::Word(name)) = iter.next() {
-                                if defines.contains_key(&name) {
-                                    if_state.push(IfState::ReadingIf);
-                                } else {
-                                    if_state.push(IfState::PassingIf);
+                            if let Some(tp) = iter.next() {
+                                if let Token::Word(name) = tp.token().clone() {
+                                    if defines.contains_key(&name) {
+                                        if_state.push(IfState::ReadingIf);
+                                    } else {
+                                        if_state.push(IfState::PassingIf);
+                                    }
                                 }
                             }
                         }
                         ("ifndef", true) => {
                             skip_whitespace!(iter);
-                            if let Some(Token::Word(name)) = iter.next() {
-                                if defines.contains_key(&name) {
-                                    if_state.push(IfState::PassingIf);
-                                } else {
-                                    if_state.push(IfState::ReadingIf);
+                            if let Some(tp) = iter.next() {
+                                if let Token::Word(name) = tp.token().clone() {
+                                    if defines.contains_key(&name) {
+                                        if_state.push(IfState::PassingIf);
+                                    } else {
+                                        if_state.push(IfState::ReadingIf);
+                                    }
                                 }
                             }
                         }
@@ -371,7 +429,7 @@ where
                         ("include", true) => {
                             let file = render(read_line!(iter)).trim_matches('"').to_owned();
                             ret.append(&mut _preprocess(
-                                super::tokenize(&resolver(&file)).unwrap(),
+                                super::tokenize(&resolver(&file), &file).unwrap(),
                                 resolver,
                                 defines,
                             )?);
@@ -393,14 +451,18 @@ where
                             &text,
                             &Define {
                                 call: false,
-                                args: if iter.peek() == Some(&Token::LeftParenthesis) {
-                                    Some(
-                                        read_args!(iter)
-                                            .into_iter()
-                                            .map(|arg| _preprocess(arg, resolver, &mut defines))
-                                            .collect::<Result<Vec<Vec<Token>>, String>>()
-                                            .unwrap(),
-                                    )
+                                args: if let Some(tp) = iter.peek() {
+                                    if tp.token() == &Token::LeftParenthesis {
+                                        Some(
+                                            read_args!(iter)
+                                                .into_iter()
+                                                .map(|arg| _preprocess(arg, resolver, &mut defines))
+                                                .collect::<Result<Vec<Vec<TokenPos>>, String>>()
+                                                .unwrap(),
+                                        )
+                                    } else {
+                                        None
+                                    }
                                 } else {
                                     None
                                 },
@@ -412,7 +474,7 @@ where
                         .unwrap(),
                     );
                 } else {
-                    ret.push(Token::Word(text.to_owned()));
+                    ret.push(token);
                 }
             }
             (_, true) => {

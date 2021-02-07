@@ -6,10 +6,10 @@ extern crate log;
 
 mod error;
 mod linter;
-mod parser;
+// mod parser;
 mod preprocess;
-mod rapify;
-mod simplify;
+// mod rapify;
+// mod simplify;
 
 pub use error::ArmaConfigError;
 pub use linter::{InheritanceStyle, LinterOptions};
