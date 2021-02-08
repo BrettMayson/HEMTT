@@ -104,17 +104,20 @@ mod tests {
     #[test]
     fn id() {
         let test = TestFolder::new();
+        let orig = std::env::current_dir().unwrap();
         std::env::set_current_dir(&test.dir).unwrap();
         assert_eq!(
             render("{{git \"id\"}}", &Variables::new()).unwrap(),
             "1a6bce22"
         );
         assert_eq!(render("{{git}}", &Variables::new()).unwrap(), "1a6bce22");
+        std::env::set_current_dir(orig).unwrap();
     }
 
     #[test]
     fn commit_count() {
         let test = TestFolder::new();
+        let orig = std::env::current_dir().unwrap();
         std::env::set_current_dir(&test.dir).unwrap();
         assert_eq!(
             render("{{git \"commitCount\"}}", &Variables::new()).unwrap(),
@@ -124,5 +127,6 @@ mod tests {
             render("{{git \"commit_count\"}}", &Variables::new()).unwrap(),
             "2"
         );
+        std::env::set_current_dir(orig).unwrap();
     }
 }
