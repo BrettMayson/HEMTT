@@ -22,8 +22,9 @@ pub fn preprocess(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> 
         .join(path)?
         .open_file()?
         .read_to_string(&mut buf)?;
-    let processed =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(&buf, path).unwrap(), |include| {
+    let processed = hemtt_arma_config::preprocess(
+        hemtt_arma_config::tokenize(&buf, path).unwrap(),
+        |include| {
             let mut buf = String::new();
             ctx.global
                 .fs()
@@ -34,7 +35,8 @@ pub fn preprocess(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> 
                 .read_to_string(&mut buf)
                 .unwrap();
             buf
-        });
+        },
+    );
     let mut f = ctx.global.fs().join(path)?.create_file()?;
     f.write_all(hemtt_arma_config::render(processed?).export().as_bytes())?;
     Ok(())
