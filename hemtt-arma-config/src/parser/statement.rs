@@ -8,8 +8,6 @@ pub enum Statement {
     Integer(i32),
     Str(String),
     Bool(bool),
-    Char(char),
-    Unquoted(Vec<Node>),
     Property {
         ident: Box<Node>,
         value: Box<Node>,
@@ -24,10 +22,6 @@ pub enum Statement {
     ClassDelete(Box<Node>),
     Ident(String),
     IdentArray(String),
-
-    // Special
-    FILE,
-    LINE,
 
     Gone,
 }

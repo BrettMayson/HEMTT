@@ -13,7 +13,7 @@ pub struct Node {
     pub statement: Statement,
 }
 
-type ResultNodeVec = Result<Vec<Node>, String>;
+pub type ResultNodeVec = Result<Vec<Node>, String>;
 
 impl Node {
     pub fn from_expr(
@@ -102,18 +102,6 @@ impl Node {
                 Rule::identarray => {
                     Statement::IdentArray(String::from(pair.into_inner().next().unwrap().as_str()))
                 }
-                Rule::char => Statement::Char(pair.as_str().chars().next().unwrap()),
-                Rule::unquoted => Statement::Unquoted(
-                    pair.into_inner()
-                        .map(|x| Node::from_expr(wd.clone(), source, x))
-                        .collect::<ResultNodeVec>()?,
-                ),
-                // Special
-                Rule::special => match pair.as_str() {
-                    "__FILE__" => Statement::FILE,
-                    "__LINE__" => Statement::LINE,
-                    _ => panic!("Special was not handled. Please report this to ArmaLint"),
-                },
                 // Ignored
                 Rule::EOI => Statement::Gone,
                 Rule::file => unimplemented!(),

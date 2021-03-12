@@ -53,9 +53,6 @@ pub enum ArrayElement {
 
 impl Config {
     pub fn from_ast(ast: AST) -> Result<Self, ArmaConfigError> {
-        if !ast.processed {
-            return Err(ArmaConfigError::NotProcessed);
-        }
         if let Statement::Config(inner) = ast.config.statement {
             Ok(Config {
                 root: Class {

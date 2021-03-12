@@ -10,9 +10,7 @@ value = _{
     bool |
     float |
     integer |
-    string_wrapper |
-    special |
-    unquoted
+    string_wrapper
 }
 
 identarray = ${ ident ~ "[]" }
@@ -22,10 +20,6 @@ integer = @{ "-"? ~ ASCII_DIGIT+ }
 float = @{ "-"? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* }
 string_wrapper = _{ "\"" ~ string ~ "\"" }
 string = @{ ( "\"\"" | (!"\"" ~ ANY) )* }
-unquoted = ${ ( "\\\n" | "\\\r\n" | char )+ }
-char = { !( "\n" | ";" ) ~ ANY }
-
-special = { "__FILE__" | "__LINE__" }
 
 array = !{ "{" ~ "}" | "{" ~ ( array | value ) ~ ( "," ~ ( array | value ) )* ~ "}" }
 
