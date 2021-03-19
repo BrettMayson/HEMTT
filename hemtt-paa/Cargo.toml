@@ -1,0 +1,12 @@
+[package]
+name = "hemtt-paa"
+version = "0.1.0"
+authors = ["Brett <brett@mayson.io>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+byteorder = "1.3"
+image = "0.23"
