@@ -1,4 +1,4 @@
-mod lzo_decompress;
+mod lzo;
 mod mipmap;
 mod paa_file;
 mod pax_type;

@@ -43,7 +43,7 @@ impl MipMap {
         }
         let mut buffer: Box<[u8]> = vec![0; img_size as usize].into_boxed_slice();
         let decoder = if compress {
-            crate::lzo_decompress::decompress_to_slice(data, &mut buffer);
+            crate::lzo::LZOContext::decompress_to_slice(data, &mut buffer).unwrap();
             image::dxt::DxtDecoder::new(&*buffer, width_2 as u32, self.height as u32, self.format)
                 .unwrap()
         } else {
