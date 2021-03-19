@@ -125,7 +125,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
         let filename = filename_owned.as_str();
         self.input.seek(SeekFrom::Start(self.blob_start)).unwrap();
         for h in &self.headers {
-            if h.filename() == filename {
+            if h.filename().to_lowercase() == filename.to_lowercase() {
                 let mut buffer: Box<[u8]> = vec![0; h.size() as usize].into_boxed_slice();
                 self.input.read_exact(&mut buffer).unwrap();
                 return Some(Cursor::new(buffer));
