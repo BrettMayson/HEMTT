@@ -24,12 +24,12 @@ impl Timestamp {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Header {
-    pub filename: String,
-    pub method: u32,
-    pub original: u32,
-    pub reserved: u32,
-    pub timestamp: Timestamp,
-    pub size: u32,
+    filename: String,
+    method: u32,
+    original: u32,
+    reserved: u32,
+    timestamp: Timestamp,
+    size: u32,
 }
 
 impl Header {
