@@ -29,7 +29,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
         loop {
             let (header, size) = Header::read(&mut pbo.input)?;
             pbo.blob_start += size as u64;
-            if header.method == 0x5665_7273 {
+            if header.method() == 0x5665_7273 {
                 loop {
                     let s = pbo.input.read_cstring()?;
                     pbo.blob_start += s.as_bytes().len() as u64 + 1;
@@ -40,7 +40,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
                     pbo.blob_start += val.as_bytes().len() as u64 + 1;
                     pbo.extensions.insert(s.clone(), val);
                 }
-            } else if header.filename.is_empty() {
+            } else if header.filename().is_empty() {
                 break;
             } else {
                 pbo.headers.push(header);
@@ -49,7 +49,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
 
         for header in &pbo.headers {
             pbo.input
-                .seek(SeekFrom::Current(i64::from(header.size)))
+                .seek(SeekFrom::Current(i64::from(header.size())))
                 .unwrap();
         }
 
@@ -78,7 +78,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
     pub fn is_sorted(&self) -> bool {
         // self.files().is_sorted_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
         fn compare(a: &&Header, b: &&Header) -> Option<std::cmp::Ordering> {
-            Some(a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
+            Some(a.filename().to_lowercase().cmp(&b.filename().to_lowercase()))
         }
         let sorted = self.files();
         let mut sorted = sorted.iter();
@@ -104,7 +104,7 @@ impl<I: Seek + Read> ReadablePBO<I> {
     /// Finds a header if it exists
     pub fn header(&mut self, filename: &str) -> Option<Header> {
         for header in &self.headers {
-            if header.filename == filename.replace("/", "\\").as_str() {
+            if header.filename() == filename.replace("/", "\\").as_str() {
                 return Some(header.clone());
             }
         }
@@ -125,13 +125,13 @@ impl<I: Seek + Read> ReadablePBO<I> {
         let filename = filename_owned.as_str();
         self.input.seek(SeekFrom::Start(self.blob_start)).unwrap();
         for h in &self.headers {
-            if h.filename == filename {
-                let mut buffer: Box<[u8]> = vec![0; h.size as usize].into_boxed_slice();
+            if h.filename() == filename {
+                let mut buffer: Box<[u8]> = vec![0; h.size() as usize].into_boxed_slice();
                 self.input.read_exact(&mut buffer).unwrap();
                 return Some(Cursor::new(buffer));
             } else {
                 self.input
-                    .seek(SeekFrom::Current(i64::from(h.size)))
+                    .seek(SeekFrom::Current(i64::from(h.size())))
                     .unwrap();
             }
         }
@@ -144,8 +144,8 @@ impl<B: Seek + Read> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
         let mut pbo = WritablePBO::new();
         for header in self.files() {
             pbo.add_file(
-                &header.filename,
-                self.retrieve(&header.filename).unwrap(),
+                header.filename(),
+                self.retrieve(&header.filename()).unwrap(),
                 header.clone(),
             )
             .unwrap();

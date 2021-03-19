@@ -38,7 +38,7 @@ impl<I: Seek + Read> WritablePBO<I> {
     /// Get files in alphabetical order
     pub fn files_sorted(&mut self) -> Result<Vec<Header>> {
         let mut sorted = self.files()?;
-        sorted.sort_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()));
+        sorted.sort_by(|a, b| a.filename().to_lowercase().cmp(&b.filename().to_lowercase()));
         Ok(sorted)
     }
 
@@ -153,8 +153,8 @@ impl<I: Seek + Read> WritablePBO<I> {
         h.update(headers.get_ref()).unwrap();
 
         for header in &files_sorted {
-            trace!("writing & hashing file {}", header.filename);
-            let cursor = self.retrieve_file(&header.filename)?.unwrap();
+            trace!("writing & hashing file {}", header.filename());
+            let cursor = self.retrieve_file(header.filename())?.unwrap();
             output.write_all(cursor.get_ref())?;
             h.update(cursor.get_ref()).unwrap();
         }
@@ -200,12 +200,12 @@ impl<I: Seek + Read> WritablePBO<I> {
 
         for header in &files_sorted {
             let header = Header {
-                filename: header.filename.clone(),
+                filename: header.filename().to_string(),
                 method: 0,
-                original: header.original,
+                original: header.original(),
                 reserved: 0,
-                timestamp: header.timestamp,
-                size: header.size,
+                timestamp: header.timestamp(),
+                size: header.size(),
             };
             header.write(&mut headers)?;
         }
@@ -221,7 +221,7 @@ impl<I: Seek + Read> WritablePBO<I> {
         h.update(headers.get_ref()).unwrap();
 
         for header in &files_sorted {
-            let cursor = self.retrieve_file(&header.filename)?.unwrap();
+            let cursor = self.retrieve_file(header.filename())?.unwrap();
             h.update(cursor.get_ref()).unwrap();
         }
 
