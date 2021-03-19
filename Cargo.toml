@@ -8,4 +8,5 @@ members = [
     "hemtt-macros",
     "hemtt-paa",
     "hemtt-pbo",
+    "hemtt-serde",
 ]

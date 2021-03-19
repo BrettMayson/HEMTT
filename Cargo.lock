@@ -482,6 +482,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hemtt-serde"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "serde 1.0.124",
+ "serde-transcode",
+ "serde_json",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1121,6 +1131,15 @@ dependencies = [
  "num-traits 0.1.43",
  "regex",
  "serde 0.8.23",
+]
+
+[[package]]
+name = "serde-transcode"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97528f0dfcf8ce2d51d995cb513a103b9cd301dc3f387a9cae5ef974381d4e1c"
+dependencies = [
+ "serde 1.0.124",
 ]
 
 [[package]]
