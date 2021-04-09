@@ -106,6 +106,7 @@ mod tests {
         let test = TestFolder::new();
         let orig = std::env::current_dir().unwrap();
         std::env::set_current_dir(&test.dir).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10)); // Seemed to have occasional issues
         assert_eq!(
             render("{{git \"id\"}}", &Variables::new()).unwrap(),
             "1a6bce22"
@@ -119,6 +120,7 @@ mod tests {
         let test = TestFolder::new();
         let orig = std::env::current_dir().unwrap();
         std::env::set_current_dir(&test.dir).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10)); // Seemed to have occasional issues
         assert_eq!(
             render("{{git \"commitCount\"}}", &Variables::new()).unwrap(),
             "2"
