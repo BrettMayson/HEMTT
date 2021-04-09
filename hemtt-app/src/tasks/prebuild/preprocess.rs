@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use vfs::VfsFileType;
 
-use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
+use crate::{context::AddonContext, HEMTTError, Stage, Task};
 
 pub fn can_preprocess(path: &str) -> bool {
     let path = PathBuf::from(path);
@@ -17,7 +17,7 @@ pub fn can_preprocess(path: &str) -> bool {
 pub fn preprocess(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
     debug!("Preprocessing: {}", path);
     let mut buf = String::new();
-    ctx.global
+    ctx.global()
         .fs()
         .join(path)?
         .open_file()?
@@ -26,7 +26,7 @@ pub fn preprocess(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> 
         hemtt_arma_config::tokenize(&buf, path).unwrap(),
         |include| {
             let mut buf = String::new();
-            ctx.global
+            ctx.global()
                 .fs()
                 .join(include)
                 .unwrap()
@@ -37,7 +37,7 @@ pub fn preprocess(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> 
             buf
         },
     );
-    let mut f = ctx.global.fs().join(path)?.create_file()?;
+    let mut f = ctx.global().fs().join(path)?.create_file()?;
     f.write_all(hemtt_arma_config::render(processed?).export().as_bytes())?;
     Ok(())
 }
@@ -53,10 +53,10 @@ impl Task for Preprocess {
         &[Stage::Check, Stage::PreBuild, Stage::PostBuild]
     }
 
-    fn prebuild(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
+    fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         let mut ok = true;
         let mut count = 0;
-        for entry in ctx.global.fs().join(ctx.addon.source())?.walk_dir()? {
+        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             trace!("Entry: {:?}", entry);
             if ok
@@ -67,19 +67,14 @@ impl Task for Preprocess {
                 if let Err(e) = res {
                     ok = false;
                     error!("{}", e);
+                    ctx.set_failed(e);
                 }
                 count += 1;
             }
         }
         if count > 0 {
-            debug!(
-                "[PreBuild] [{:^width$}] [{}] preprocessed {} files",
-                "preprocess",
-                ctx.addon.name(),
-                count,
-                width = ctx.global.task_pad
-            );
+            ctx.debug(&format!("preprocessed {} files", count,));
         }
-        Ok((ok, false))
+        Ok(())
     }
 }

@@ -1,6 +1,8 @@
+use std::sync::RwLock;
+
 use vfs::{impls::overlay::OverlayFS, MemoryFS, PhysicalFS, VfsPath};
 
-use crate::{AddonList, Project};
+use crate::Project;
 use hemtt::{Addon, HEMTTError};
 
 mod addon;
@@ -8,9 +10,10 @@ pub use addon::{AddonContext, AddonListContext};
 
 pub struct Context<'a> {
     project: &'a Project,
-    pub task_pad: usize,
+    task_pad: usize,
     fs: VfsPath,
     // stage: &Stage,
+    message_info: RwLock<(String, String)>,
 }
 
 impl<'a> Context<'a> {
@@ -23,6 +26,8 @@ impl<'a> Context<'a> {
                 PhysicalFS::new(Project::find_root()?).into(),
             ])
             .into(),
+
+            message_info: RwLock::new((String::from("internal init"), String::from("new"))),
         })
     }
 
@@ -33,19 +38,28 @@ impl<'a> Context<'a> {
     pub fn fs(&self) -> &VfsPath {
         &self.fs
     }
+
+    pub fn task_pad(&self) -> usize {
+        self.task_pad
+    }
+
+    pub fn set_task_pad(&mut self, pad: usize) {
+        self.task_pad = pad
+    }
+
+    pub fn set_message_info(&self, stage: String, task: String) {
+        *self.message_info.write().unwrap() = (stage, task);
+    }
 }
 
 impl<'a, 'b> Context<'a> {
-    pub fn get_single(&'a self, addon: &'b Addon) -> AddonContext<'a, 'b> {
-        AddonContext {
-            global: &self,
-            addon: &addon,
-        }
-    }
-    pub fn get_list(&'a self, addons: &'b mut AddonList) -> AddonListContext<'a, 'b> {
-        AddonListContext {
-            global: &self,
-            addons,
-        }
+    // pub fn get_single(&'a self, addon: &'b Addon) -> Result<AddonContext<'a, 'b>, HEMTTError> {
+    //     AddonContext::new(&self, &addon)
+    // }
+    pub fn get_list(
+        &'a mut self,
+        addons: Vec<Addon>,
+    ) -> Result<AddonListContext<'a, 'b>, HEMTTError> {
+        AddonListContext::new(self, addons)
     }
 }

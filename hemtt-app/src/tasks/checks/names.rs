@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
+use crate::{context::AddonContext, HEMTTError, Stage, Task};
 use hemtt::AddonLocation;
 
 #[derive(Clone)]
@@ -14,18 +14,17 @@ impl Task for NotEmpty {
         &[Stage::Check]
     }
 
-    fn check(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
-        let mut ok = true;
-        let empty = std::fs::read_dir(ctx.addon.source())?.count() == 0;
+    fn check(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+        let empty = std::fs::read_dir(ctx.addon().source())?.count() == 0;
         if empty {
-            ok = false;
             error!(
                 "[{}] The addon source directory is empty: {}",
-                ctx.addon.name(),
-                ctx.addon.source()
+                ctx.addon().name(),
+                ctx.addon().source()
             );
+            unimplemented!()
         }
-        Ok((ok, false))
+        Ok(())
     }
 }
 
@@ -40,34 +39,31 @@ impl Task for ValidName {
         &[Stage::Check]
     }
 
-    fn check(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
+    fn check(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         // WARN: addon name standards
-        let addon = ctx.addon;
-        let p = ctx.global.project();
+        let addon = ctx.addon();
+        let p = ctx.global().project();
         let re = Regex::new(r"^([A-z0-9\-]+)$").unwrap();
         if !re.is_match(addon.name()) {
-            warn!("[{}] addon name is not following standards", addon.name());
-            info!("try using `{}`", &addon.name().replace(" ", "_"));
+            ctx.warn("addon name is not following standards");
+            ctx.info(&format!("try using `{}`", &addon.name().replace(" ", "_")));
         }
         // WARN: addons shouldn't start with the mod prefix
         if !p.prefix().is_empty() && addon.name().starts_with(p.prefix()) {
-            warn!("[{}] Redundant prefix in addon name", addon.name());
-            info!(
+            ctx.warn("Redundant prefix in addon name");
+            ctx.info(&format!(
                 "use `{}`, pbos are prefixed automatically",
                 if addon.name().starts_with(&format!("{}_", p.prefix())) {
                     &addon.name()[(p.prefix().len() + 1)..]
                 } else {
                     &addon.name()[p.prefix().len()..]
                 }
-            );
+            ));
         }
         // WARN: compat outside of compat folder
         if addon.name().starts_with("compat") && addon.location() != AddonLocation::Compats {
-            warn!(
-                "[{}] compatibility addon should be in `compats/`",
-                addon.name()
-            );
+            ctx.warn("[{}] compatibility addon should be in `compats/`");
         }
-        Ok((true, false))
+        Ok(())
     }
 }

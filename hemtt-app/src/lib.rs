@@ -21,9 +21,6 @@ mod tasks;
 use command::Command;
 use flow::{Flow, Stage, Task};
 
-pub type AddonList = Vec<Result<(bool, bool, Addon), HEMTTError>>;
-pub type OkSkip = (bool, bool);
-
 lazy_static::lazy_static! {
     pub static ref CI: bool = std::env::args().any(|x| x == "--ci") || ci::is_ci();
     pub static ref DEBUG: bool = std::env::args().any(|x| x == "--debug");

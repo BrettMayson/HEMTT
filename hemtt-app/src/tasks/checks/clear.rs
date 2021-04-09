@@ -18,14 +18,11 @@ impl Task for Clear {
         &[Stage::Check]
     }
 
-    fn check_single(&self, context: &mut AddonListContext) -> Result<(), HEMTTError> {
+    fn check_single(&self, ctx: &mut AddonListContext) -> Result<(), HEMTTError> {
         let re = Regex::new(r"(?m)(.+?)\.pbo$").unwrap();
         let mut targets = Vec::new();
-        for data in &*context.addons {
-            if let Ok(d) = data {
-                let (_, _, addon) = d;
-                targets.push(addon.pbo(Some(context.global.project().prefix())));
-            }
+        for data in &*ctx.addons() {
+            targets.push(data.addon().pbo(Some(ctx.global().project().prefix())));
         }
         for dir in AddonLocation::iter() {
             let dir = dir.to_string();

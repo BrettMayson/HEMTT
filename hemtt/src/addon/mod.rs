@@ -45,6 +45,7 @@ impl Addon {
     }
 
     /// Path to the addon folder
+    /// Ex: "addons/my_addon"
     pub fn source(&self) -> &str {
         &self.source
     }

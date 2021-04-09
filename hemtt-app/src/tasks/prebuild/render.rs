@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use hemtt_handlebars::Variables;
 use vfs::VfsFileType;
 
-use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
+use crate::{context::AddonContext, HEMTTError, Stage, Task};
 
 pub fn can_render(path: &str) -> bool {
     let path = PathBuf::from(path);
@@ -32,36 +32,23 @@ pub fn destination(path: &str) -> String {
 
 pub fn render(path: &str, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
     let dest = destination(&path);
-    debug!(
-        "[PreBuild] [{:^width$}] [{}] {}",
-        "render",
-        ctx.addon.name(),
-        dest,
-        width = ctx.global.task_pad
-    );
+    ctx.debug(&dest);
     let mut source = String::new();
-    ctx.global
+    ctx.global()
         .fs()
         .join(path)?
         .open_file()?
         .read_to_string(&mut source)?;
     match hemtt_handlebars::render(&source.replace("\\{", "\\\\{"), &{
-        let mut vars = Variables::from(ctx.global.project());
-        vars.append(ctx.addon.into());
+        let mut vars = Variables::from(ctx.global().project());
+        vars.append(ctx.addon().into());
         vars
     }) {
         Ok(out) => {
             let mut outfile = create_file!(Path::new(&dest))?;
             outfile.write_all(out.as_bytes())?;
-            debug!(
-                "[PreBuild] [{:^width$}] [{}] `{}` => `{}`",
-                "render",
-                ctx.addon.name(),
-                path,
-                dest,
-                width = ctx.global.task_pad
-            );
-            ctx.global
+            ctx.debug(&format!("`{}` => `{}`", path, dest));
+            ctx.global()
                 .fs()
                 .join(&dest)?
                 .create_file()?
@@ -87,31 +74,24 @@ impl Task for Render {
         &[Stage::Check, Stage::PreBuild]
     }
 
-    fn check(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
-        let mut ok = true;
-        for entry in ctx.global.fs().join(ctx.addon.source())?.walk_dir()? {
+    fn check(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if can_render(entry.as_str()) {
                 let dest = destination(entry.as_str());
-                if ctx.global.fs().join(&dest)?.exists()? {
-                    ok = false;
-                    error!(
-                        "[Check] [{:^width$}] [{}] target already exists: {}",
-                        "render",
-                        ctx.addon.name(),
-                        dest,
-                        width = ctx.global.task_pad
-                    );
+                if ctx.global().fs().join(&dest)?.exists()? {
+                    ctx.error(&format!("target already exists: {}", dest,));
+                    unimplemented!()
                 }
             }
         }
-        Ok((ok, false))
+        Ok(())
     }
 
-    fn prebuild(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
+    fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         let mut ok = true;
         let mut count = 0;
-        for entry in ctx.global.fs().join(ctx.addon.source())?.walk_dir()? {
+        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if entry.metadata()?.file_type == VfsFileType::File && can_render(entry.as_str()) {
                 ok = ok && render(entry.as_str(), ctx).is_ok();
@@ -119,14 +99,11 @@ impl Task for Render {
             }
         }
         if count > 0 {
-            debug!(
-                "[PreBuild] [{:^width$}] [{}] rendered {} files",
-                "render",
-                ctx.addon.name(),
-                count,
-                width = ctx.global.task_pad
-            );
+            ctx.debug(&format!("rendered {} files", count,));
         }
-        Ok((ok, false))
+        if !ok {
+            unimplemented!()
+        }
+        Ok(())
     }
 }

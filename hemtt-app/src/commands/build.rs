@@ -18,6 +18,7 @@ impl Command for Build {
                     Box::new(crate::tasks::NotEmpty {}),
                     Box::new(crate::tasks::ValidName {}),
                     Box::new(crate::tasks::ModTime {}),
+                    Box::new(crate::tasks::Prefix::new()),
                     Box::new(crate::tasks::Render {}),
                     Box::new(crate::tasks::Preprocess {}),
                     // Step::single(

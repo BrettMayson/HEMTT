@@ -1,3 +1,4 @@
+mod build;
 mod checks;
 mod prebuild;
 

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-use crate::{context::AddonContext, HEMTTError, OkSkip, Stage, Task};
+use crate::{context::AddonContext, HEMTTError, Stage, Task};
 
 pub fn modtime<P: Into<PathBuf>>(addon: P) -> Result<SystemTime, HEMTTError> {
     let mut recent: SystemTime = SystemTime::now() - Duration::new(60 * 60 * 24 * 365 * 10, 0);
@@ -27,44 +27,24 @@ impl Task for ModTime {
         &[Stage::Check]
     }
 
-    fn check(&self, ctx: &mut AddonContext) -> Result<OkSkip, HEMTTError> {
-        let modified = modtime(&ctx.addon.source())?;
-        let target = ctx.addon.destination(
+    fn check(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+        let modified = modtime(&ctx.addon().source())?;
+        let target = ctx.addon().destination(
             &hemtt::Project::find_root()?,
-            Some(ctx.global.project().prefix()),
+            Some(ctx.global().project().prefix()),
             None,
         );
-        let mut skip = false;
         if target.exists() {
             if let Ok(time) = std::fs::metadata(&target).unwrap().modified() {
-                debug!(
-                    "[Check] [{:^width$}] [{}] modtime: {:?} | lastbuild: {:?}",
-                    "modtime",
-                    ctx.addon.name(),
-                    modified,
-                    time,
-                    width = ctx.global.task_pad,
-                );
+                ctx.debug(&format!("modtime: {:?} | lastbuild: {:?}", modified, time));
                 if time >= modified {
-                    skip = true;
-                    info!(
-                        "[Check] [{:^width$}] [{}] The PBO is up to date: {}",
-                        "modtime",
-                        ctx.addon.name(),
-                        target.display(),
-                        width = ctx.global.task_pad,
-                    );
+                    ctx.set_skip(true);
+                    ctx.info(&format!("The PBO is up to date: {}", target.display()));
                 }
             }
         } else {
-            debug!(
-                "[Check] [{:^width$}] [{}] no pbo exists at {}",
-                "modtime",
-                ctx.addon.name(),
-                target.display(),
-                width = ctx.global.task_pad,
-            );
+            ctx.info(&format!("no pbo exists at {}", target.display()));
         }
-        Ok((true, skip))
+        Ok(())
     }
 }
