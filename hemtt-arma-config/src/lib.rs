@@ -13,5 +13,5 @@ mod preprocess;
 
 pub use error::ArmaConfigError;
 pub use linter::{InheritanceStyle, LinterOptions};
-pub use parser::{parse};
+pub use parser::parse;
 pub use preprocess::{preprocess, render, tokenize};

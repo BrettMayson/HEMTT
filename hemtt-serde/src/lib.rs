@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
-use serde::Deserialize;
 use serde::de::{self, Visitor};
+use serde::Deserialize;
 
 use std::ops::{AddAssign, MulAssign, Neg};
 
@@ -48,7 +48,7 @@ impl<'de> Deserializer<'de> {
 
 pub fn from_str<'a, T>(s: &'a str) -> Result<T>
 where
-    T: Deserialize<'a>
+    T: Deserialize<'a>,
 {
     let mut deserializer = Deserializer::from_str(s);
     let t = T::deserialize(&mut deserializer)?;
@@ -141,7 +141,9 @@ impl<'de> Deserializer<'de> {
             let mut stop = WHITESPACE.clone();
             stop.push('{');
             loop {
-                if self.input.chars().nth(i).unwrap() == ':' && self.input.chars().nth(i+1).unwrap() == ' ' {
+                if self.input.chars().nth(i).unwrap() == ':'
+                    && self.input.chars().nth(i + 1).unwrap() == ' '
+                {
                     s.push(':');
                     i += 2;
                 } else {
@@ -191,7 +193,7 @@ impl<'de> Deserializer<'de> {
                 None => {
                     println!("eof: |{}|", self.input);
                     Err(Error::Eof)
-                },
+                }
             }
         }
     }
@@ -234,7 +236,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                             i += 1;
                         }
                     }
-                },
+                }
                 '{' => {
                     if self.next_is_class {
                         self.next_is_class = false;
@@ -242,7 +244,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                     } else {
                         self.deserialize_seq(visitor)
                     }
-                },
+                }
                 _ => Err(Error::Syntax),
             }
         }
@@ -389,11 +391,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     // Unit struct means a named value containing no data.
-    fn deserialize_unit_struct<V>(
-        self,
-        _name: &'static str,
-        visitor: V,
-    ) -> Result<V::Value>
+    fn deserialize_unit_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
@@ -401,11 +399,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_unit(visitor)
     }
 
-    fn deserialize_newtype_struct<V>(
-        self,
-        _name: &'static str,
-        visitor: V,
-    ) -> Result<V::Value>
+    fn deserialize_newtype_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
@@ -533,6 +527,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         } else {
             Err(Error::ExpectedEnum)
         }*/
+        
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value>

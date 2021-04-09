@@ -8,9 +8,7 @@ pub struct ArmaClass<'a, 'de: 'a> {
 
 impl<'a, 'de> ArmaClass<'a, 'de> {
     pub fn new(de: &'a mut crate::Deserializer<'de>) -> Self {
-        ArmaClass {
-            de,
-        }
+        ArmaClass { de }
     }
 }
 

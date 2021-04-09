@@ -40,9 +40,7 @@ pub fn parse(source: &str) -> Result<AST, String> {
         .unwrap();
     let pair = pair.into_inner().next().unwrap();
     let config = Node::from_expr(std::env::current_dir().unwrap(), source, pair)?;
-    Ok(AST {
-        config,
-    })
+    Ok(AST { config })
 }
 
 #[cfg(test)]

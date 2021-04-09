@@ -38,7 +38,11 @@ impl<I: Seek + Read> WritablePBO<I> {
     /// Get files in alphabetical order
     pub fn files_sorted(&mut self) -> Result<Vec<Header>> {
         let mut sorted = self.files()?;
-        sorted.sort_by(|a, b| a.filename().to_lowercase().cmp(&b.filename().to_lowercase()));
+        sorted.sort_by(|a, b| {
+            a.filename()
+                .to_lowercase()
+                .cmp(&b.filename().to_lowercase())
+        });
         Ok(sorted)
     }
 

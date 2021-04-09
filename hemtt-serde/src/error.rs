@@ -61,7 +61,7 @@ impl std::error::Error for Error {
         match *self {
             Error::Message(ref msg) => msg,
             Error::Eof => "unexpected end of input",
-            _ => "no error messages eh"
+            _ => "no error messages eh",
         }
     }
 }

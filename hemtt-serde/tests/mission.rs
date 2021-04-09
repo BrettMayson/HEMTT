@@ -17,7 +17,7 @@ pub struct AddonsMetaData {
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct AddonsMetaDataList {
-    #[serde(rename="items")]
+    #[serde(rename = "items")]
     item_count: u8,
     #[serde(flatten)]
     items: HashMap<String, AddonsMetaDataListItem>,

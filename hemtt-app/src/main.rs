@@ -5,7 +5,8 @@ extern crate log;
 extern crate hemtt_macros;
 
 use simplelog::{
-    CombinedLogger, ConfigBuilder, LevelFilter, LevelPadding, TermLogger, TerminalMode, WriteLogger,
+    ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, LevelPadding, TermLogger,
+    TerminalMode, WriteLogger,
 };
 
 use hemtt_app::*;
@@ -27,7 +28,12 @@ fn main() {
         _ => LevelFilter::Info,
     };
     CombinedLogger::init(vec![
-        TermLogger::new(level, config.clone(), TerminalMode::Mixed),
+        TermLogger::new(
+            level,
+            config.clone(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
         WriteLogger::new(
             LevelFilter::Trace,
             config,

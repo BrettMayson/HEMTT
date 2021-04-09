@@ -35,7 +35,6 @@ fn test_escape() {
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
 }
 
-
 #[test]
 fn test_array() {
     #[derive(Deserialize, PartialEq, Debug)]
@@ -46,7 +45,7 @@ fn test_array() {
 
     let j = r#"numbers[] = {1,2,3};after="hi";"#;
     let expected = Test {
-        numbers: vec![1,2,3],
+        numbers: vec![1, 2, 3],
         after: "hi".to_string(),
     };
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
@@ -68,7 +67,7 @@ fn test_array_newline() {
 };
 after="hi";"#;
     let expected = Test {
-        numbers: vec![1,2,3],
+        numbers: vec![1, 2, 3],
         after: "hi".to_string(),
     };
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
@@ -96,12 +95,12 @@ class child
 };
     "#;
     let expected = Test {
-        numbers: vec![1,2,3],
+        numbers: vec![1, 2, 3],
         after: "hi".to_string(),
         child: Child {
             number: 123,
             string: "Hello".to_string(),
-        }
+        },
     };
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
 }
@@ -127,12 +126,12 @@ class child {
 };
     "#;
     let expected = Test {
-        numbers: vec![1,2,3],
+        numbers: vec![1, 2, 3],
         after: "hi".to_string(),
         child: Child {
             number: 123,
             string: "Hello".to_string(),
-        }
+        },
     };
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
 }
@@ -150,9 +149,9 @@ fn test_class_empty() {
 
     let j = r#"numbers[] = {1,2,3};after="hi";class child{};"#;
     let expected = Test {
-        numbers: vec![1,2,3],
+        numbers: vec![1, 2, 3],
         after: "hi".to_string(),
-        child: Child {}
+        child: Child {},
     };
     assert_eq!(expected, hemtt_serde::from_str(j).unwrap());
 }
@@ -173,9 +172,9 @@ fn test_dumb_newline() {
 
 #[test]
 fn test_transcode() {
-    use serde_json::{Serializer};
-    use std::io::{Write, BufReader, BufWriter};
+    use serde_json::Serializer;
     use std::fs::File;
+    use std::io::{BufReader, BufWriter, Write};
 
     let reader = BufReader::new(File::open("tests/example.hpp").unwrap());
     let writer = BufWriter::new(File::create("tests/example.json").unwrap());
@@ -189,8 +188,8 @@ fn test_transcode() {
 #[test]
 fn test_mission() {
     use std::fs;
-    let contents = fs::read_to_string("tests/example.hpp")
-        .expect("Something went wrong reading the file");
+    let contents =
+        fs::read_to_string("tests/example.hpp").expect("Something went wrong reading the file");
 
     let _: crate::mission::InternalArmaMission = hemtt_serde::from_str(&contents).unwrap();
 }

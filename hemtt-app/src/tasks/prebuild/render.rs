@@ -93,7 +93,7 @@ impl Task for Render {
             let entry = entry?;
             if can_render(entry.as_str()) {
                 let dest = destination(entry.as_str());
-                if ctx.global.fs().join(&dest)?.exists() {
+                if ctx.global.fs().join(&dest)?.exists()? {
                     ok = false;
                     error!(
                         "[Check] [{:^width$}] [{}] target already exists: {}",

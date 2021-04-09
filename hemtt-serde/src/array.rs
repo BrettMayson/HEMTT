@@ -9,10 +9,7 @@ pub struct CommaSeparated<'a, 'de: 'a> {
 
 impl<'a, 'de> CommaSeparated<'a, 'de> {
     pub fn new(de: &'a mut crate::Deserializer<'de>) -> Self {
-        CommaSeparated {
-            de,
-            first: true,
-        }
+        CommaSeparated { de, first: true }
     }
 }
 

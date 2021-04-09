@@ -9,5 +9,5 @@ serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4"
 
 [dev-dependencies]
-serde_json = "*"
-serde-transcode = "*"
+serde_json = "1.0"
+serde-transcode = "1.1"

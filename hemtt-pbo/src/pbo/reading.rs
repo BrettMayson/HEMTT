@@ -78,7 +78,11 @@ impl<I: Seek + Read> ReadablePBO<I> {
     pub fn is_sorted(&self) -> bool {
         // self.files().is_sorted_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
         fn compare(a: &&Header, b: &&Header) -> Option<std::cmp::Ordering> {
-            Some(a.filename().to_lowercase().cmp(&b.filename().to_lowercase()))
+            Some(
+                a.filename()
+                    .to_lowercase()
+                    .cmp(&b.filename().to_lowercase()),
+            )
         }
         let sorted = self.files();
         let mut sorted = sorted.iter();

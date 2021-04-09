@@ -3,16 +3,15 @@ mod lzo1x_decompress_safe;
 use std::error::Error;
 use std::{fmt, mem, slice};
 
-/// for a given `size` computes the worst case size that the compresed result can be
-pub fn worst_compress(size: usize) -> usize {
-    ((size) + ((size) / 16) + 64 + 3)
-}
-
-const LZO1X_1_MEM_COMPRESS: usize = (8192 * 16);
+#[allow(dead_code)]
+const LZO1X_1_MEM_COMPRESS: usize = 8192 * 16;
+#[allow(dead_code)]
 const LZO1X_MEM_COMPRESS: usize = LZO1X_1_MEM_COMPRESS;
 
 #[repr(i32)]
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)]
+#[allow(non_camel_case_types)]
 pub enum LZOError {
     //OK = 0,
     ERROR = -1,
@@ -132,35 +131,43 @@ impl LZOContext {
     }
 }
 
-#[test]
-fn it_works() {
-    unsafe {
-        let data = [
-            0u8, 2, 3, 4, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4,
-            2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4,
-        ];
-        let dst_len: usize = worst_compress(mem::size_of_val(&data));
-        let mut v = Vec::with_capacity(dst_len);
-        let dst = libc::malloc(dst_len);
-        let mut ctx = LZOContext::new();
-        let mut dst = slice::from_raw_parts_mut(dst as *mut u8, dst_len);
-        let result = ctx.compress_to_slice(&data, &mut dst);
-        assert_eq!(result.is_ok(), true);
-        let dst = result.unwrap();
-        let result = ctx.compress(&data, &mut v);
-        assert_eq!(result.is_ok(), true);
-        println!("{}", dst.len());
+#[cfg(test)]
+mod tests {
+    use super::*;
+    pub fn worst_compress(size: usize) -> usize {
+        (size) + ((size) / 16) + 64 + 3
+    }
 
-        let dec_dst = libc::malloc(mem::size_of_val(&data));
-        let result_len = mem::size_of_val(&data);
-        let mut dec_dst = slice::from_raw_parts_mut(dec_dst as *mut u8, result_len);
-        let result = LZOContext::decompress_to_slice(&dst, &mut dec_dst);
-        assert_eq!(result.is_ok(), true);
-        let result = result.unwrap();
-        println!("{}", result.len());
-        assert_eq!(result.len(), mem::size_of_val(&data));
-        assert!(&data[..] == result);
+    #[test]
+    fn it_works() {
+        unsafe {
+            let data = [
+                0u8, 2, 3, 4, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3,
+                4, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4,
+            ];
+            let dst_len: usize = worst_compress(mem::size_of_val(&data));
+            let mut v = Vec::with_capacity(dst_len);
+            let dst = libc::malloc(dst_len);
+            let mut ctx = LZOContext::new();
+            let mut dst = slice::from_raw_parts_mut(dst as *mut u8, dst_len);
+            let result = ctx.compress_to_slice(&data, &mut dst);
+            assert_eq!(result.is_ok(), true);
+            let dst = result.unwrap();
+            let result = ctx.compress(&data, &mut v);
+            assert_eq!(result.is_ok(), true);
+            println!("{}", dst.len());
+
+            let dec_dst = libc::malloc(mem::size_of_val(&data));
+            let result_len = mem::size_of_val(&data);
+            let mut dec_dst = slice::from_raw_parts_mut(dec_dst as *mut u8, result_len);
+            let result = LZOContext::decompress_to_slice(&dst, &mut dec_dst);
+            assert_eq!(result.is_ok(), true);
+            let result = result.unwrap();
+            println!("{}", result.len());
+            assert_eq!(result.len(), mem::size_of_val(&data));
+            assert!(&data[..] == result);
+        }
     }
 }
