@@ -1,6 +1,6 @@
 use std::{fs::File, path::Path};
 
-use hemtt_pbo::{Header, ReadablePBO, Timestamp, WritablePBO};
+use hemtt_pbo::{Header, ReadablePbo, Timestamp, WritablePbo};
 
 fn test_pbo(
     file: File,
@@ -9,8 +9,8 @@ fn test_pbo(
     version: &str,
     prefix: &str,
     checksum: Vec<u8>,
-) -> ReadablePBO<File> {
-    let mut pbo = ReadablePBO::from(file).unwrap();
+) -> ReadablePbo<File> {
+    let mut pbo = ReadablePbo::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
     assert_eq!(pbo.extensions().len(), extension_count);
     assert_eq!(pbo.is_sorted(), true);
@@ -22,9 +22,9 @@ fn test_pbo(
     pbo
 }
 
-fn test_writeable_pbo(pbo: ReadablePBO<File>, file: File) {
-    let mut writeable: WritablePBO<std::io::Cursor<Box<[u8]>>> = pbo.into();
-    let original = ReadablePBO::from(file).unwrap();
+fn test_writeable_pbo(pbo: ReadablePbo<File>, file: File) {
+    let mut writeable: WritablePbo<std::io::Cursor<Box<[u8]>>> = pbo.into();
+    let original = ReadablePbo::from(file).unwrap();
 
     assert_eq!(original.files(), writeable.files_sorted().unwrap());
     assert_eq!(original.extensions(), writeable.extensions());
@@ -48,7 +48,7 @@ fn test_header(
     assert_eq!(header.size(), size);
 }
 
-fn test_file(pbo: &mut ReadablePBO<File>, file: &str, content: String) {
+fn test_file(pbo: &mut ReadablePbo<File>, file: &str, content: String) {
     let data = pbo.retrieve(file).unwrap();
     let data = String::from_utf8(data.into_inner().to_vec()).unwrap();
     assert_eq!(data, content);

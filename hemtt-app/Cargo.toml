@@ -12,7 +12,7 @@ hemtt-macros = { path = "../hemtt-macros" }
 
 clap = "2"
 dyn-clone = "1.0"
-git2 = "0.13"
+git2 = { version = "0.13", default-features = false }
 glob = "0.3"
 lazy_static = "1.4"
 log = "0.4"

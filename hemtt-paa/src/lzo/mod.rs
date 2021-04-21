@@ -12,7 +12,7 @@ const LZO1X_MEM_COMPRESS: usize = LZO1X_1_MEM_COMPRESS;
 #[derive(Debug, PartialEq)]
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
-pub enum LZOError {
+pub enum LzoError {
     //OK = 0,
     ERROR = -1,
     OUT_OF_MEMORY = -2,
@@ -26,30 +26,30 @@ pub enum LZOError {
     INVALID_ARGUMENT = -10,
 }
 
-impl fmt::Display for LZOError {
+impl fmt::Display for LzoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LZOError::ERROR => write!(f, "Error"),
-            LZOError::OUT_OF_MEMORY => write!(f, "Out of memory"),
-            LZOError::NOT_COMPRESSIBLE => write!(f, "Not compressible"),
-            LZOError::INPUT_OVERRUN => write!(f, "Input overrun"),
-            LZOError::OUTPUT_OVERRUN => write!(f, "Output overrun"),
-            LZOError::LOOKBEHIND_OVERRUN => write!(f, "Lookbehind overrun"),
-            LZOError::EOF_NOT_FOUND => write!(f, "EOF not found"),
-            LZOError::INPUT_NOT_CONSUMED => write!(f, "Input not consumed"),
-            LZOError::NOT_YET_IMPLEMENTED => write!(f, "Not yet implemented"),
-            LZOError::INVALID_ARGUMENT => write!(f, "Invalid argument"),
+            LzoError::ERROR => write!(f, "Error"),
+            LzoError::OUT_OF_MEMORY => write!(f, "Out of memory"),
+            LzoError::NOT_COMPRESSIBLE => write!(f, "Not compressible"),
+            LzoError::INPUT_OVERRUN => write!(f, "Input overrun"),
+            LzoError::OUTPUT_OVERRUN => write!(f, "Output overrun"),
+            LzoError::LOOKBEHIND_OVERRUN => write!(f, "Lookbehind overrun"),
+            LzoError::EOF_NOT_FOUND => write!(f, "EOF not found"),
+            LzoError::INPUT_NOT_CONSUMED => write!(f, "Input not consumed"),
+            LzoError::NOT_YET_IMPLEMENTED => write!(f, "Not yet implemented"),
+            LzoError::INVALID_ARGUMENT => write!(f, "Invalid argument"),
         }
     }
 }
 
-impl Error for LZOError {}
+impl Error for LzoError {}
 
-pub struct LZOContext {
+pub struct LzoContext {
     wrkmem: *mut libc::c_void,
 }
 
-impl Drop for LZOContext {
+impl Drop for LzoContext {
     fn drop(&mut self) {
         unsafe {
             libc::free(self.wrkmem);
@@ -57,16 +57,16 @@ impl Drop for LZOContext {
     }
 }
 
-impl LZOContext {
-    pub fn new() -> LZOContext {
-        LZOContext {
+impl LzoContext {
+    pub fn new() -> LzoContext {
+        LzoContext {
             wrkmem: unsafe { libc::malloc(LZO1X_MEM_COMPRESS) },
         }
     }
 
     /// compress `input` into `output`
     /// returns an error if the Vec is not large enough
-    pub fn compress(&mut self, input: &[u8], output: &mut Vec<u8>) -> Result<(), LZOError> {
+    pub fn compress(&mut self, input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
         unsafe {
             let mut out_len = output.capacity();
             let err = lzo1x_compress::lzo1x_1_compress(
@@ -81,7 +81,7 @@ impl LZOContext {
             if err == 0 {
                 Ok(())
             } else {
-                Err(mem::transmute::<i32, LZOError>(err))
+                Err(mem::transmute::<i32, LzoError>(err))
             }
         }
     }
@@ -91,7 +91,7 @@ impl LZOContext {
         &mut self,
         in_: &[u8],
         out: &'a mut [u8],
-    ) -> Result<&'a mut [u8], LZOError> {
+    ) -> Result<&'a mut [u8], LzoError> {
         unsafe {
             let mut out_len = out.len();
             let err = lzo1x_compress::lzo1x_1_compress(
@@ -104,7 +104,7 @@ impl LZOContext {
             if err == 0 {
                 Ok(slice::from_raw_parts_mut(out.as_mut_ptr(), out_len))
             } else {
-                Err(mem::transmute::<i32, LZOError>(err))
+                Err(mem::transmute::<i32, LzoError>(err))
             }
         }
     }
@@ -113,7 +113,7 @@ impl LZOContext {
     pub fn decompress_to_slice<'a>(
         in_: &[u8],
         out: &'a mut [u8],
-    ) -> Result<&'a mut [u8], LZOError> {
+    ) -> Result<&'a mut [u8], LzoError> {
         unsafe {
             let mut out_len = out.len();
             let err = lzo1x_decompress_safe::lzo1x_decompress_safe(
@@ -125,7 +125,7 @@ impl LZOContext {
             if err == 0 {
                 Ok(slice::from_raw_parts_mut(out.as_mut_ptr(), out_len))
             } else {
-                Err(mem::transmute::<i32, LZOError>(err))
+                Err(mem::transmute::<i32, LzoError>(err))
             }
         }
     }
@@ -150,7 +150,7 @@ mod tests {
             let dst_len: usize = worst_compress(mem::size_of_val(&data));
             let mut v = Vec::with_capacity(dst_len);
             let dst = libc::malloc(dst_len);
-            let mut ctx = LZOContext::new();
+            let mut ctx = LzoContext::new();
             let mut dst = slice::from_raw_parts_mut(dst as *mut u8, dst_len);
             let result = ctx.compress_to_slice(&data, &mut dst);
             assert_eq!(result.is_ok(), true);
@@ -162,7 +162,7 @@ mod tests {
             let dec_dst = libc::malloc(mem::size_of_val(&data));
             let result_len = mem::size_of_val(&data);
             let mut dec_dst = slice::from_raw_parts_mut(dec_dst as *mut u8, result_len);
-            let result = LZOContext::decompress_to_slice(&dst, &mut dec_dst);
+            let result = LzoContext::decompress_to_slice(&dst, &mut dec_dst);
             assert_eq!(result.is_ok(), true);
             let result = result.unwrap();
             println!("{}", result.len());

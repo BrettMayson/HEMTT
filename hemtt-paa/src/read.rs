@@ -2,9 +2,9 @@ use std::io::{Error, Read, Seek, SeekFrom};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
-use crate::{MipMap, PaXType, PAA};
+use crate::{MipMap, PaXType, Paa};
 
-impl PAA {
+impl Paa {
     pub fn read<I: Seek + Read>(mut input: I) -> Result<Self, Error> {
         if let Some(pax) = PaXType::from_stream(&mut input) {
             let mut paa = Self::new(pax);

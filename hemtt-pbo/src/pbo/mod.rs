@@ -1,5 +1,5 @@
 mod reading;
-pub use reading::ReadablePBO;
+pub use reading::ReadablePbo;
 
 mod writing;
-pub use writing::WritablePBO;
+pub use writing::WritablePbo;

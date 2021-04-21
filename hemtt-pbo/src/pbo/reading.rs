@@ -5,10 +5,8 @@ use indexmap::IndexMap;
 
 use crate::Header;
 
-use super::WritablePBO;
-
 #[derive(Default)]
-pub struct ReadablePBO<I: Seek + Read> {
+pub struct ReadablePbo<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     headers: Vec<Header>,
     checksum: Option<Vec<u8>>,
@@ -16,7 +14,7 @@ pub struct ReadablePBO<I: Seek + Read> {
     blob_start: u64,
 }
 
-impl<I: Seek + Read> ReadablePBO<I> {
+impl<I: Seek + Read> ReadablePbo<I> {
     /// Open a PBO
     pub fn from(input: I) -> Result<Self, Error> {
         let mut pbo = Self {
@@ -76,7 +74,6 @@ impl<I: Seek + Read> ReadablePBO<I> {
 
     /// Returns if the files are sorted into the correct order
     pub fn is_sorted(&self) -> bool {
-        // self.files().is_sorted_by(|a, b| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
         fn compare(a: &&Header, b: &&Header) -> Option<std::cmp::Ordering> {
             Some(
                 a.filename()
@@ -140,23 +137,5 @@ impl<I: Seek + Read> ReadablePBO<I> {
             }
         }
         None
-    }
-}
-
-impl<B: Seek + Read> Into<WritablePBO<Cursor<Box<[u8]>>>> for ReadablePBO<B> {
-    fn into(mut self) -> WritablePBO<Cursor<Box<[u8]>>> {
-        let mut pbo = WritablePBO::new();
-        for header in self.files() {
-            pbo.add_file(
-                header.filename(),
-                self.retrieve(&header.filename()).unwrap(),
-                header.clone(),
-            )
-            .unwrap();
-        }
-        for (key, value) in self.extensions {
-            pbo.add_extension(key, value);
-        }
-        pbo
     }
 }

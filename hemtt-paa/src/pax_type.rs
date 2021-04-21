@@ -39,12 +39,12 @@ impl PaXType {
     }
 }
 
-impl Into<image::dxt::DXTVariant> for PaXType {
-    fn into(self) -> image::dxt::DXTVariant {
-        match self {
-            Self::DXT1 => image::dxt::DXTVariant::DXT1,
-            Self::DXT3 => image::dxt::DXTVariant::DXT3,
-            Self::DXT5 => image::dxt::DXTVariant::DXT5,
+impl From<PaXType> for image::dxt::DXTVariant {
+    fn from(pax: PaXType) -> Self {
+        match pax {
+            PaXType::DXT1 => image::dxt::DXTVariant::DXT1,
+            PaXType::DXT3 => image::dxt::DXTVariant::DXT3,
+            PaXType::DXT5 => image::dxt::DXTVariant::DXT5,
             _ => unimplemented!(),
         }
     }

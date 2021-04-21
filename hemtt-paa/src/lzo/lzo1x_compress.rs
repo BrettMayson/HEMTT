@@ -48,18 +48,18 @@ unsafe extern "C" fn lzo1x_1_do_compress(
     let mut current_block;
     let mut ip: *const u8;
     let mut op: *mut u8;
-    let in_end: *const u8 = in_.offset(in_len as isize);
-    let ip_end: *const u8 = in_.offset(in_len as isize).offset(-20isize);
+    let in_end: *const u8 = in_.add(in_len);
+    let ip_end: *const u8 = in_.add(in_len).offset(-20isize);
     let mut ii: *const u8;
     let dict: *mut u16 = wrkmem as *mut u16;
     op = out;
     ip = in_;
     ii = ip;
-    ip = ip.offset(if ti < 4usize {
+    ip = ip.add(if ti < 4usize {
         4usize.wrapping_sub(ti)
     } else {
         0usize
-    } as isize);
+    });
     let mut m_pos: *const u8;
     let mut t: usize;
     let mut m_len: usize;
@@ -76,12 +76,11 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                 break 'loop2;
             }
             dv = get_unaligned_le32(ip as *const ::std::os::raw::c_void);
-            t = (dv.wrapping_mul(0x1824429du32) >> 32i32 - 13i32
+            t = (dv.wrapping_mul(0x1824429du32) >> (32i32 - 13i32)
                 & (1u32 << 13i32).wrapping_sub(1u32)) as usize;
-            m_pos = in_.offset(*dict.offset(t as isize) as isize);
-            *dict.offset(t as isize) = ((ip as isize).wrapping_sub(in_ as isize)
-                / ::std::mem::size_of::<u8>() as isize)
-                as u16;
+            m_pos = in_.offset(*dict.add(t) as isize);
+            *dict.add(t) = ((ip as isize).wrapping_sub(in_ as isize)
+                / ::std::mem::size_of::<u8>() as isize) as u16;
             if dv != get_unaligned_le32(m_pos as *const ::std::os::raw::c_void) {
                 break;
             }
@@ -100,7 +99,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         get_unaligned(ii as *const u32 as *const ::std::os::raw::c_void),
                         op as *mut u32 as *mut ::std::os::raw::c_void,
                     );
-                    op = op.offset(t as isize);
+                    op = op.add(t);
                 } else if t <= 16usize {
                     *{
                         let _old = op;
@@ -128,7 +127,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             as *const ::std::os::raw::c_void),
                         op.offset(8isize).offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
                     );
-                    op = op.offset(t as isize);
+                    op = op.add(t);
                 } else {
                     if t <= 18usize {
                         *{
@@ -144,7 +143,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             _old
                         } = 0u8;
                         loop {
-                            if !(tt > 255usize) {
+                            if tt <= 255usize {
                                 break;
                             }
                             tt = tt.wrapping_sub(255usize);
@@ -186,7 +185,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         op = op.offset(16isize);
                         ii = ii.offset(16isize);
                         t = t.wrapping_sub(16usize);
-                        if !(t >= 16usize) {
+                        if t < 16usize {
                             break;
                         }
                     }
@@ -213,7 +212,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                 }
             }
             m_len = 4usize;
-            if *ip.offset(m_len as isize) as i32 == *m_pos.offset(m_len as isize) as i32 {
+            if *ip.add(m_len) as i32 == *m_pos.add(m_len) as i32 {
                 current_block = 22;
             } else {
                 current_block = 31;
@@ -221,46 +220,46 @@ unsafe extern "C" fn lzo1x_1_do_compress(
             loop {
                 if current_block == 22 {
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if *ip.offset(m_len as isize) as i32 != *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
                     m_len = m_len.wrapping_add(1usize);
-                    if ip.offset(m_len as isize) >= ip_end {
+                    if ip.add(m_len) >= ip_end {
                         current_block = 31;
                         continue;
                     }
-                    if *ip.offset(m_len as isize) as i32 == *m_pos.offset(m_len as isize) as i32 {
+                    if *ip.add(m_len) as i32 == *m_pos.add(m_len) as i32 {
                         current_block = 22;
                     } else {
                         current_block = 31;
@@ -269,7 +268,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     m_off = ((ip as isize).wrapping_sub(m_pos as isize)
                         / ::std::mem::size_of::<u8>() as isize)
                         as usize;
-                    ip = ip.offset(m_len as isize);
+                    ip = ip.add(m_len);
                     ii = ip;
                     if m_len <= 8usize && (m_off <= 0x800usize) {
                         current_block = 47;
@@ -297,7 +296,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             _old
                         } = (32i32 | 0i32) as u8;
                         loop {
-                            if !(m_len > 255usize) {
+                            if m_len <= 255usize {
                                 break;
                             }
                             m_len = m_len.wrapping_sub(255usize);
@@ -339,7 +338,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             _old
                         } = (16usize | m_off >> 11i32 & 8usize) as u8;
                         loop {
-                            if !(m_len > 255usize) {
+                            if m_len <= 255usize {
                                 break;
                             }
                             m_len = m_len.wrapping_sub(255usize);
@@ -401,7 +400,7 @@ pub unsafe extern "C" fn lzo1x_1_compress(
     let mut l: usize = in_len;
     let mut t: usize = 0usize;
     loop {
-        if !(l > 20usize) {
+        if l <= 20usize {
             break;
         }
         let ll: usize = if l <= (0xbfffi32 + 1i32) as usize {
@@ -419,13 +418,13 @@ pub unsafe extern "C" fn lzo1x_1_compress(
             ((1u32 << 13i32) as usize).wrapping_mul(::std::mem::size_of::<u16>()),
         );
         t = lzo1x_1_do_compress(ip, ll, op, out_len, t, wrkmem);
-        ip = ip.offset(ll as isize);
-        op = op.offset(*out_len as isize);
+        ip = ip.add(ll);
+        op = op.add(*out_len);
         l = l.wrapping_sub(ll);
     }
     t = t.wrapping_add(l);
     if t > 0usize {
-        let mut ii: *const u8 = in_.offset(in_len as isize).offset(-(t as isize));
+        let mut ii: *const u8 = in_.add(in_len).offset(-(t as isize));
         if op == out && (t <= 238usize) {
             *{
                 let _old = op;
@@ -450,7 +449,7 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                 _old
             } = 0u8;
             loop {
-                if !(tt > 255usize) {
+                if tt <= 255usize {
                     break;
                 }
                 tt = tt.wrapping_sub(255usize);

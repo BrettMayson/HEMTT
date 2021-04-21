@@ -8,15 +8,15 @@ use hemtt_io::WriteExt;
 use indexmap::IndexMap;
 use openssl::hash::{Hasher, MessageDigest};
 
-use crate::{Header, Timestamp};
+use crate::{Header, ReadablePbo, Timestamp};
 
 #[derive(Default)]
-pub struct WritablePBO<I: Seek + Read> {
+pub struct WritablePbo<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     files: HashMap<String, (I, Header)>,
 }
 
-impl<I: Seek + Read> WritablePBO<I> {
+impl<I: Seek + Read> WritablePbo<I> {
     /// Create an empty PBO for writing
     pub fn new() -> Self {
         Self {
@@ -233,15 +233,33 @@ impl<I: Seek + Read> WritablePBO<I> {
     }
 }
 
+impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Box<[u8]>>> {
+    fn from(mut rp: ReadablePbo<B>) -> Self {
+        let mut pbo = Self::new();
+        for header in rp.files() {
+            pbo.add_file(
+                header.filename(),
+                rp.retrieve(&header.filename()).unwrap(),
+                header.clone(),
+            )
+            .unwrap();
+        }
+        for (key, value) in rp.extensions() {
+            pbo.add_extension(key, value);
+        }
+        pbo
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
 
-    use crate::WritablePBO;
+    use crate::WritablePbo;
 
     #[test]
     fn empty_pbo() {
-        let mut pbo = WritablePBO::<Cursor<Vec<u8>>>::new();
+        let mut pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
         let mut buffer = Vec::new();
         pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
         assert_eq!(

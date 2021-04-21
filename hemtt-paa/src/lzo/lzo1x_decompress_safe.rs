@@ -17,11 +17,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
     let mut next: usize;
     let mut state: usize = 0usize;
     let mut m_pos: *const u8;
-    let ip_end: *const u8 = in_.offset(in_len as isize);
-    let op_end: *mut u8 = out.offset(*out_len as isize);
+    let ip_end: *const u8 = in_.add(in_len);
+    let op_end: *mut u8 = out.add(*out_len);
     op = out;
     ip = in_;
-    if !(in_len < 3usize) {
+    if in_len >= 3usize {
         if *ip as i32 > 17i32 {
             t = (*{
                 let _old = ip;
@@ -45,7 +45,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                     current_block = 63;
                 } else {
                     loop {
-                        if !(t > 0usize) {
+                        if t == 0usize {
                             break;
                         }
                         *{
@@ -111,7 +111,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 let mut offset: usize;
                                 let ip_last: *const u8 = ip;
                                 loop {
-                                    if !(*ip as i32 == 0i32) {
+                                    if *ip as i32 != 0i32 {
                                         break;
                                     }
                                     ip = ip.offset(1isize);
@@ -244,7 +244,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 let mut offset: usize;
                                 let ip_last: *const u8 = ip;
                                 loop {
-                                    if !(*ip as i32 == 0i32) {
+                                    if *ip as i32 != 0i32 {
                                         break;
                                     }
                                     ip = ip.offset(1isize);
@@ -286,7 +286,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             next = get_unaligned_le16(ip as *const ::std::os::raw::c_void) as usize;
                             ip = ip.offset(2isize);
                             m_pos = m_pos.offset(-((next >> 2i32) as isize));
-                            next = next & 3usize;
+                            next &= 3usize;
                         } else {
                             m_pos = op as *const u8;
                             m_pos = m_pos.offset(-(((t & 8usize) << 11i32) as isize));
@@ -295,7 +295,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 let mut offset: usize;
                                 let ip_last: *const u8 = ip;
                                 loop {
-                                    if !(*ip as i32 == 0i32) {
+                                    if *ip as i32 != 0i32 {
                                         break;
                                     }
                                     ip = ip.offset(1isize);
@@ -336,7 +336,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             next = get_unaligned_le16(ip as *const ::std::os::raw::c_void) as usize;
                             ip = ip.offset(2isize);
                             m_pos = m_pos.offset(-((next >> 2i32) as isize));
-                            next = next & 3usize;
+                            next &= 3usize;
                             if m_pos == op as *const u8 {
                                 current_block = 21;
                                 break;
@@ -350,7 +350,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             current_block = 48;
                             break;
                         }
-                        let oe: *mut u8 = op.offset(t as isize);
+                        let oe: *mut u8 = op.add(t);
                         if !(((op_end as isize).wrapping_sub(op as isize)
                             / ::std::mem::size_of::<u8>() as isize)
                             as usize
@@ -373,7 +373,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 m_pos = m_pos.offset(1isize);
                                 _old
                             };
-                            if !(op < oe) {
+                            if op >= oe {
                                 break;
                             }
                         }
@@ -395,7 +395,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                         continue;
                     }
                     loop {
-                        if !(t > 0usize) {
+                        if t == 0usize {
                             current_block = 11;
                             break;
                         }
