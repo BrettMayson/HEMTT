@@ -26,6 +26,3 @@ winreg = "0.7"
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }
-
-[build-dependencies]
-peg = "0.5"

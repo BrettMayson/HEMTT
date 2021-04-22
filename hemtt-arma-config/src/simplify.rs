@@ -1,5 +1,4 @@
 use super::parser::{Node, Statement, AST};
-use crate::parser::get_ident;
 use crate::ArmaConfigError;
 
 #[derive(Debug)]
@@ -25,14 +24,14 @@ pub enum Entry {
     Invisible(Vec<(String, Entry)>),
 }
 
-impl Into<ArrayElement> for Entry {
-    fn into(self) -> ArrayElement {
-        match self {
-            Entry::Str(v) => ArrayElement::Str(v),
-            Entry::Float(v) => ArrayElement::Float(v),
-            Entry::Int(v) => ArrayElement::Int(v),
-            Entry::Array(v) => ArrayElement::Array(v),
-            _ => panic!("Invalid item was found in array: {:?}", self),
+impl From<Entry> for ArrayElement {
+    fn from(e: Entry) -> Self {
+        match e {
+            Entry::Str(v) => Self::Str(v),
+            Entry::Float(v) => Self::Float(v),
+            Entry::Int(v) => Self::Int(v),
+            Entry::Array(v) => Self::Array(v),
+            _ => panic!("Invalid item was found in array: {:?}", e),
         }
     }
 }
@@ -91,11 +90,19 @@ pub fn get_entry(node: Node) -> Result<Option<(String, Entry)>, ArmaConfigError>
             extends,
             props,
         } => Some((
-            get_ident(ident.statement)?,
+            if let Statement::Ident(i) = ident.statement {
+                i
+            } else {
+                panic!()
+            },
             Entry::Class(Class {
                 parent: {
                     if let Some(ex) = extends {
-                        get_ident(ex.statement)?
+                        if let Statement::Ident(i) = ex.statement {
+                            i
+                        } else {
+                            panic!()
+                        }
                     } else {
                         String::new()
                     }
@@ -106,7 +113,11 @@ pub fn get_entry(node: Node) -> Result<Option<(String, Entry)>, ArmaConfigError>
             }),
         )),
         Statement::ClassDef(ident) => Some((
-            get_ident(ident.statement)?,
+            if let Statement::Ident(i) = ident.statement {
+                i
+            } else {
+                panic!()
+            },
             Entry::Class(Class {
                 parent: String::new(),
                 deletion: false,
@@ -119,7 +130,11 @@ pub fn get_entry(node: Node) -> Result<Option<(String, Entry)>, ArmaConfigError>
             value,
             expand,
         } => Some((
-            get_ident(ident.statement)?,
+            if let Statement::Ident(i) = ident.statement {
+                i
+            } else {
+                panic!()
+            },
             get_value(value.statement, expand)?,
         )),
         Statement::Config(inner) => Some((String::new(), Entry::Invisible(get_entries(inner)?))),

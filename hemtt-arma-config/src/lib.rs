@@ -8,8 +8,8 @@ mod error;
 mod linter;
 mod parser;
 mod preprocess;
-// mod rapify;
-// mod simplify;
+pub mod rapify;
+pub mod simplify;
 
 pub use error::ArmaConfigError;
 pub use linter::{InheritanceStyle, LinterOptions};
