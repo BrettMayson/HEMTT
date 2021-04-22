@@ -22,11 +22,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
     op = out;
     ip = in_;
     if in_len >= 3usize {
-        if *ip as i32 > 17i32 {
+        if i32::from(*ip) > 17i32 {
             t = (*{
-                let _old = ip;
+                let old = ip;
                 ip = ip.offset(1isize);
-                _old
+                old
             } as i32
                 - 17i32) as usize;
             if t < 4usize {
@@ -49,13 +49,13 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             break;
                         }
                         *{
-                            let _old = op;
+                            let old = op;
                             op = op.offset(1isize);
-                            _old
+                            old
                         } = *{
-                            let _old = ip;
+                            let old = ip;
                             ip = ip.offset(1isize);
-                            _old
+                            old
                         };
                         t = t.wrapping_sub(1usize);
                     }
@@ -74,13 +74,13 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
             } else {
                 loop {
                     *{
-                        let _old = op;
+                        let old = op;
                         op = op.offset(1isize);
-                        _old
+                        old
                     } = *{
-                        let _old = ip;
+                        let old = ip;
                         ip = ip.offset(1isize);
-                        _old
+                        old
                     };
                     if !({
                         t = t.wrapping_sub(1usize);
@@ -101,9 +101,9 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
             'loop11: loop {
                 if current_block == 11 {
                     t = *{
-                        let _old = ip;
+                        let old = ip;
                         ip = ip.offset(1isize);
-                        _old
+                        old
                     } as usize;
                     if t < 16usize {
                         if state == 0usize {
@@ -111,7 +111,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 let mut offset: usize;
                                 let ip_last: *const u8 = ip;
                                 loop {
-                                    if *ip as i32 != 0i32 {
+                                    if i32::from(*ip) != 0i32 {
                                         break;
                                     }
                                     ip = ip.offset(1isize);
@@ -135,9 +135,9 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 }
                                 offset = (offset << 8i32).wrapping_sub(offset);
                                 t = t.wrapping_add(offset.wrapping_add(15usize).wrapping_add(*{
-                                    let _old = ip;
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
+                                    old
                                 }
                                     as usize));
                             }
@@ -160,13 +160,13 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             }
                             loop {
                                 *{
-                                    let _old = op;
+                                    let old = op;
                                     op = op.offset(1isize);
-                                    _old
+                                    old
                                 } = *{
-                                    let _old = ip;
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
+                                    old
                                 };
                                 if !({
                                     t = t.wrapping_sub(1usize);
@@ -184,12 +184,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             m_pos = op.offset(-1isize) as *const u8;
                             m_pos = m_pos.offset(-((t >> 2i32) as isize));
                             m_pos = m_pos.offset(
-                                -(((*{
-                                    let _old = ip;
+                                -((i32::from(*{
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
-                                } as i32)
-                                    << 2i32) as isize),
+                                    old
+                                }) << 2i32) as isize),
                             );
                             if m_pos < out as *const u8 {
                                 current_block = 48;
@@ -212,12 +211,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             m_pos = op.offset(-((1i32 + 0x800i32) as isize)) as *const u8;
                             m_pos = m_pos.offset(-((t >> 2i32) as isize));
                             m_pos = m_pos.offset(
-                                -(((*{
-                                    let _old = ip;
+                                -((i32::from(*{
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
-                                } as i32)
-                                    << 2i32) as isize),
+                                    old
+                                }) << 2i32) as isize),
                             );
                             t = 3usize;
                             current_block = 36;
@@ -228,12 +226,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             m_pos = op.offset(-1isize) as *const u8;
                             m_pos = m_pos.offset(-((t >> 2i32 & 7usize) as isize));
                             m_pos = m_pos.offset(
-                                -(((*{
-                                    let _old = ip;
+                                -((i32::from(*{
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
-                                } as i32)
-                                    << 3i32) as isize),
+                                    old
+                                }) << 3i32) as isize),
                             );
                             t = (t >> 5i32)
                                 .wrapping_sub(1usize)
@@ -244,7 +241,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 let mut offset: usize;
                                 let ip_last: *const u8 = ip;
                                 loop {
-                                    if *ip as i32 != 0i32 {
+                                    if i32::from(*ip) != 0i32 {
                                         break;
                                     }
                                     ip = ip.offset(1isize);
@@ -268,9 +265,9 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 }
                                 offset = (offset << 8i32).wrapping_sub(offset);
                                 t = t.wrapping_add(offset.wrapping_add(31usize).wrapping_add(*{
-                                    let _old = ip;
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
+                                    old
                                 }
                                     as usize));
                                 if !(((ip_end as isize).wrapping_sub(ip as isize)
@@ -319,9 +316,9 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 }
                                 offset = (offset << 8i32).wrapping_sub(offset);
                                 t = t.wrapping_add(offset.wrapping_add(7usize).wrapping_add(*{
-                                    let _old = ip;
+                                    let old = ip;
                                     ip = ip.offset(1isize);
-                                    _old
+                                    old
                                 }
                                     as usize));
                                 if !(((ip_end as isize).wrapping_sub(ip as isize)
@@ -365,13 +362,13 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                         m_pos = m_pos.offset(2isize);
                         loop {
                             *{
-                                let _old = op;
+                                let old = op;
                                 op = op.offset(1isize);
-                                _old
+                                old
                             } = *{
-                                let _old = m_pos;
+                                let old = m_pos;
                                 m_pos = m_pos.offset(1isize);
-                                _old
+                                old
                             };
                             if op >= oe {
                                 break;
@@ -400,13 +397,13 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             break;
                         }
                         *{
-                            let _old = op;
+                            let old = op;
                             op = op.offset(1isize);
-                            _old
+                            old
                         } = *{
-                            let _old = ip;
+                            let old = ip;
                             ip = ip.offset(1isize);
-                            _old
+                            old
                         };
                         t = t.wrapping_sub(1usize);
                     }

@@ -38,7 +38,7 @@ impl Paa {
                     seek.clone_from_slice(&offs[p..p + 4]);
                     let seek = u32::from_le_bytes(seek);
                     if seek != 0 {
-                        input.seek(SeekFrom::Start(seek as u64))?;
+                        input.seek(SeekFrom::Start(u64::from(seek)))?;
                         paa.maps
                             .push(MipMap::from_stream(paa.format.clone().into(), &mut input)?);
                     }

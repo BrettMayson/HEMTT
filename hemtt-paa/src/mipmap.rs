@@ -37,18 +37,28 @@ impl MipMap {
             width_2 -= 32768;
             true
         };
-        let mut img_size: u32 = (width_2 as u32) * (self.height as u32);
+        let mut img_size: u32 = u32::from(width_2) * u32::from(self.height);
         if self.format == image::dxt::DXTVariant::DXT1 {
             img_size /= 2;
         }
         let mut buffer: Box<[u8]> = vec![0; img_size as usize].into_boxed_slice();
         let decoder = if compress {
             crate::lzo::LzoContext::decompress_to_slice(data, &mut buffer).unwrap();
-            image::dxt::DxtDecoder::new(&*buffer, width_2 as u32, self.height as u32, self.format)
-                .unwrap()
+            image::dxt::DxtDecoder::new(
+                &*buffer,
+                u32::from(width_2),
+                u32::from(self.height),
+                self.format,
+            )
+            .unwrap()
         } else {
-            image::dxt::DxtDecoder::new(data, width_2 as u32, self.height as u32, self.format)
-                .unwrap()
+            image::dxt::DxtDecoder::new(
+                data,
+                u32::from(width_2),
+                u32::from(self.height),
+                self.format,
+            )
+            .unwrap()
         };
         image::DynamicImage::from_decoder(decoder).unwrap()
     }
