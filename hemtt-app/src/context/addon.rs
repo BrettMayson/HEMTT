@@ -45,7 +45,7 @@ impl<'a, 'b> AddonContext<'a, 'b> {
                     }
                 }
             }
-            if prefix == "" {
+            if prefix.is_empty() {
                 warn!("Could not determine a prefix for {} using the $PBOPREFIX$ file, a prefix will be generated", addon.name());
                 prefix_gen
             } else {
@@ -72,7 +72,7 @@ impl<'a, 'b> AddonContext<'a, 'b> {
     }
 
     pub fn failed(&self) -> bool {
-        !self.failed.is_none()
+        self.failed.is_some()
     }
 
     pub fn get_failed(&self) -> &Option<HEMTTError> {

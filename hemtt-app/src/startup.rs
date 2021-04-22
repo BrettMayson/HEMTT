@@ -16,7 +16,6 @@ macro_rules! exec {
 
 pub fn startup() {
     exec!(check_git_ignore);
-    exec!(deprecated_json);
     exec!(deprecated_values);
 }
 
@@ -43,13 +42,6 @@ fn check_git_ignore() -> Result<(), HEMTTError> {
     Ok(())
 }
 
-fn deprecated_json() -> Result<(), HEMTTError> {
-    if Path::new("hemtt.json").exists() {
-        warn!("Use of `hemtt.json` is deprecated and may be removed in a future version, use `hemtt.toml`");
-    }
-    Ok(())
-}
-
 fn deprecated_values() -> Result<(), HEMTTError> {
     fn _check(file: PathBuf) -> Result<(), HEMTTError> {
         let items = [
@@ -63,17 +55,15 @@ fn deprecated_values() -> Result<(), HEMTTError> {
         open_file!(&file)?.read_to_string(&mut data)?;
         for line in data.lines() {
             let value = line.parse::<toml::Value>();
-            if let Ok(val) = value {
-                if let Table(t) = val {
-                    let old = items.iter().find(|x| t.contains_key((**x).0));
-                    if let Some(o) = old {
-                        warn!(
-                            "deprecated value `{}` in `{}` - use `{}`",
-                            o.0,
-                            file.display(),
-                            o.1
-                        )
-                    }
+            if let Ok(Table(t)) = value {
+                let old = items.iter().find(|x| t.contains_key((**x).0));
+                if let Some(o) = old {
+                    warn!(
+                        "deprecated value `{}` in `{}` - use `{}`",
+                        o.0,
+                        file.display(),
+                        o.1
+                    )
                 }
             }
         }

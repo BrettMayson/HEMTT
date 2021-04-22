@@ -13,9 +13,8 @@ impl<T: Read> ReadExt for T {
             let b = byte?;
             if b == 0 {
                 break;
-            } else {
-                bytes.push(b);
             }
+            bytes.push(b);
         }
 
         Ok(String::from_utf8(bytes).unwrap())
@@ -23,16 +22,13 @@ impl<T: Read> ReadExt for T {
 
     fn read_compressed_int(&mut self) -> io::Result<u32> {
         let mut result: u32 = 0;
-
         for (i, byte) in self.bytes().enumerate() {
             let b: u32 = byte?.into();
             result |= (b & 0x7f) << (i * 7);
-
             if b < 0x80 {
                 break;
             }
         }
-
         Ok(result)
     }
 }

@@ -37,23 +37,16 @@ pub enum HEMTTError {
 
 impl HEMTTError {
     pub fn can_submit_bug(&self) -> bool {
-        match *self {
-            Self::User(_) => false,
-            Self::UserHint(_, _) => false,
-
-            // Addons
-            Self::AddonConflict(_, _, _) => false,
-            Self::AddonInvalidName(_) => false,
-            Self::AddonInvalidLocation(_) => false,
-
-            // Project
-            Self::NoProjectFound => false,
-
-            // Templates
-            Self::TemplateUnknown(_) => false,
-
-            _ => true,
-        }
+        !matches!(
+            *self,
+            Self::User(_)
+                | Self::UserHint(_, _)
+                | Self::AddonConflict(_, _, _)
+                | Self::AddonInvalidName(_)
+                | Self::AddonInvalidLocation(_)
+                | Self::NoProjectFound
+                | Self::TemplateUnknown(_)
+        )
     }
 }
 

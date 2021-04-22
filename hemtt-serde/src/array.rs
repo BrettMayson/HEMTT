@@ -1,6 +1,6 @@
 use serde::de::{DeserializeSeed, SeqAccess};
 
-use crate::error::{Error, Result};
+use crate::error::Error;
 
 pub struct CommaSeparated<'a, 'de: 'a> {
     de: &'a mut crate::Deserializer<'de>,
@@ -18,13 +18,13 @@ impl<'a, 'de> CommaSeparated<'a, 'de> {
 impl<'de, 'a> SeqAccess<'de> for CommaSeparated<'a, 'de> {
     type Error = Error;
 
-    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Error>
     where
         T: DeserializeSeed<'de>,
     {
         loop {
             if crate::WHITESPACE.contains(self.de.peek_char()) {
-                self.de.next_char()?;
+                self.de.next_char();
             } else {
                 break;
             }
@@ -35,19 +35,19 @@ impl<'de, 'a> SeqAccess<'de> for CommaSeparated<'a, 'de> {
         }
         loop {
             if crate::WHITESPACE.contains(self.de.peek_char()) {
-                self.de.next_char()?;
+                self.de.next_char();
             } else {
                 break;
             }
         }
         // Comma is required before every element except the first.
-        if !self.first && self.de.next_char()? != ',' {
+        if !self.first && self.de.next_char() != ',' {
             return Err(Error::ExpectedArrayComma);
         }
         self.first = false;
         loop {
             if crate::WHITESPACE.contains(self.de.peek_char()) {
-                self.de.next_char()?;
+                self.de.next_char();
             } else {
                 break;
             }

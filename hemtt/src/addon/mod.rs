@@ -71,12 +71,12 @@ impl Addon {
     /// * `standalone`:
     ///                 Some(modname) - The destination should be it's own mod
     ///                 None - The destination is part of a larger mod
-    pub fn destination_parent(
+    pub fn destination_parent<P: Into<PathBuf>>(
         &self,
-        destination_root: &PathBuf,
+        destination_root: P,
         standalone: Option<&str>,
     ) -> PathBuf {
-        let mut r = destination_root.clone();
+        let mut r = destination_root.into();
         r.push(self.location.to_string());
 
         // Individual Mod
@@ -101,9 +101,9 @@ impl Addon {
     /// * `standalone`:
     ///                 Some(modname) - The destination should be it's own mod
     ///                 None - The destination is part of a larger mod
-    pub fn destination(
+    pub fn destination<P: Into<PathBuf>>(
         &self,
-        destination_root: &PathBuf,
+        destination_root: P,
         prefix: Option<&str>,
         standalone: Option<&str>,
     ) -> PathBuf {

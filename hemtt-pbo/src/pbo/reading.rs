@@ -74,12 +74,10 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
     /// Returns if the files are sorted into the correct order
     pub fn is_sorted(&self) -> bool {
-        fn compare(a: &&Header, b: &&Header) -> Option<std::cmp::Ordering> {
-            Some(
-                a.filename()
-                    .to_lowercase()
-                    .cmp(&b.filename().to_lowercase()),
-            )
+        fn compare(a: &&Header, b: &&Header) -> std::cmp::Ordering {
+            a.filename()
+                .to_lowercase()
+                .cmp(&b.filename().to_lowercase())
         }
         let sorted = self.files();
         let mut sorted = sorted.iter();
@@ -89,12 +87,11 @@ impl<I: Seek + Read> ReadablePbo<I> {
         };
 
         for curr in sorted {
-            if let Some(std::cmp::Ordering::Greater) | None = compare(&last, &curr) {
+            if compare(&last, &curr) == std::cmp::Ordering::Greater {
                 return false;
             }
             last = curr;
         }
-
         true
     }
 

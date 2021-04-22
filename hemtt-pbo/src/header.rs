@@ -5,7 +5,7 @@ use std::{
     ops::Deref,
 };
 
-use hemtt_io::*;
+use hemtt_io::{ReadExt, WriteExt};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Timestamp(u32);

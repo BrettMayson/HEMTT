@@ -68,7 +68,8 @@ unsafe extern "C" fn lzo1x_1_do_compress(
     'loop2: loop {
         ip = ip.offset(
             1isize
-                + ((ip as isize).wrapping_sub(ii as isize) / ::std::mem::size_of::<u8>() as isize
+                + (((ip as isize).wrapping_sub(ii as isize)
+                    / ::std::mem::size_of::<u8>() as isize)
                     >> 5i32),
         );
         loop {
@@ -200,10 +201,10 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                                 ii = ii.offset(1isize);
                                 _old
                             };
-                            if !({
+                            if {
                                 t = t.wrapping_sub(1usize);
                                 t
-                            } > 0usize)
+                            } == 0usize
                             {
                                 break;
                             }
@@ -294,7 +295,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             let _old = op;
                             op = op.offset(1isize);
                             _old
-                        } = (32i32 | 0i32) as u8;
+                        } = 32u8;
                         loop {
                             if m_len <= 255usize {
                                 break;
@@ -517,10 +518,10 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                     ii = ii.offset(1isize);
                     _old
                 };
-                if !({
+                if {
                     t = t.wrapping_sub(1usize);
                     t
-                } > 0usize)
+                } == 0usize
                 {
                     break;
                 }

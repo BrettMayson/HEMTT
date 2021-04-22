@@ -1,6 +1,5 @@
 use serde::Deserialize;
 
-use hemtt_serde;
 mod mission;
 
 #[test]

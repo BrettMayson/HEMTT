@@ -1,3 +1,5 @@
+#![allow(clippy::nonminimal_bool)]
+
 unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p as *const u8;
     (*input.offset(0isize) as i32 | (*input.offset(1isize) as i32) << 8i32) as u16
@@ -427,9 +429,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                 } else {
                     -4i32
                 };
-            } else if current_block == 22 {
-                return -1i32;
-            } else if current_block == 30 {
+            } else if current_block == 22 || current_block == 30 {
                 return -1i32;
             } else if current_block == 48 {
                 *out_len = ((op as isize).wrapping_sub(out as isize)

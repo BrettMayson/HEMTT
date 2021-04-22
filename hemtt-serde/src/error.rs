@@ -1,9 +1,6 @@
-use std;
 use std::fmt::{self, Display};
 
 use serde::{de, ser};
-
-pub type Result<T> = std::result::Result<T, Error>;
 
 // This is a bare-bones implementation. A real library would provide additional
 // information in its error type, for example the line and column at which the
