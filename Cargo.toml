@@ -40,4 +40,4 @@ webbrowser = "0.5"
 zip = "0.5"
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.7"
+winreg = "0.8"
