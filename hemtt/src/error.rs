@@ -96,7 +96,7 @@ impl std::fmt::Display for HEMTTError {
                 f,
                 "Unknown template: {}, {}",
                 template,
-                crate::Template::options()
+                <dyn crate::Template>::options()
             ),
         }
     }
