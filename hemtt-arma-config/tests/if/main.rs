@@ -9,7 +9,7 @@ fn basic_if() {
         )
         .unwrap(),
         ".",
-        hemtt_arma_config::resolver::Basic
+        hemtt_arma_config::resolver::Basic,
     );
     let config = hemtt_arma_config::render(config.unwrap());
     assert_eq!(
@@ -29,7 +29,7 @@ fn nested_if() {
         )
         .unwrap(),
         ".",
-        hemtt_arma_config::resolver::Basic
+        hemtt_arma_config::resolver::Basic,
     );
     let config = hemtt_arma_config::render(config.unwrap());
     assert_eq!(

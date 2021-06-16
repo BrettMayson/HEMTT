@@ -211,7 +211,16 @@ fn test_read_line() {
     let tokens = tokenize(" \"\\z\\mod\\addons\"\n", "").unwrap();
     let mut a = tokens.into_iter().peekable();
     assert_eq!(
-        vec![Token::DoubleQuote, Token::Escape, Token::Word(String::from("z")), Token::Escape, Token::Word(String::from("mod")), Token::Escape, Token::Word(String::from("addons")), Token::DoubleQuote],
+        vec![
+            Token::DoubleQuote,
+            Token::Escape,
+            Token::Word(String::from("z")),
+            Token::Escape,
+            Token::Word(String::from("mod")),
+            Token::Escape,
+            Token::Word(String::from("addons")),
+            Token::DoubleQuote
+        ],
         read_line!(a)
             .iter()
             .map(|tp| tp.token().to_owned())
@@ -355,7 +364,11 @@ where
     vec![token.to_owned()]
 }
 
-pub fn preprocess<R>(source: Vec<TokenPos>, root: &str, resolver: R) -> Result<Vec<TokenPos>, HEMTTError>
+pub fn preprocess<R>(
+    source: Vec<TokenPos>,
+    root: &str,
+    resolver: R,
+) -> Result<Vec<TokenPos>, HEMTTError>
 where
     R: Resolver,
 {
@@ -389,7 +402,14 @@ where
                                         if tp.token() == &Token::LeftParenthesis {
                                             let args = read_args!(iter)
                                                 .into_iter()
-                                                .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                                                .map(|arg| {
+                                                    _preprocess(
+                                                        arg,
+                                                        root,
+                                                        resolver.clone(),
+                                                        &mut defines,
+                                                    )
+                                                })
                                                 .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
                                                 .unwrap();
                                             Some(args)
@@ -409,7 +429,9 @@ where
                                         },
                                     );
                                 } else {
-                                    return Err(HEMTTError::Generic("define without name".to_string()));
+                                    return Err(HEMTTError::Generic(
+                                        "define without name".to_string(),
+                                    ));
                                 }
                             }
                         }
@@ -419,7 +441,9 @@ where
                                 if let Token::Word(name) = tp.token().clone() {
                                     defines.remove(&name);
                                 } else {
-                                    return Err(HEMTTError::Generic("undef without name".to_string()));
+                                    return Err(HEMTTError::Generic(
+                                        "undef without name".to_string(),
+                                    ));
                                 }
                             } else {
                                 return Err(HEMTTError::Generic("undef without name".to_string()));
@@ -478,7 +502,12 @@ where
                             read_line!(iter);
                         }
                         (_, true) => {
-                            error!("Unknown directive: {:?} at {}:{}", directive, token.path(), token.start().0);
+                            error!(
+                                "Unknown directive: {:?} at {}:{}",
+                                directive,
+                                token.path(),
+                                token.start().0
+                            );
                             read_line!(iter);
                         }
                     }
@@ -496,7 +525,14 @@ where
                                         Some(
                                             read_args!(iter)
                                                 .into_iter()
-                                                .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                                                .map(|arg| {
+                                                    _preprocess(
+                                                        arg,
+                                                        root,
+                                                        resolver.clone(),
+                                                        &mut defines,
+                                                    )
+                                                })
                                                 .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
                                                 .unwrap(),
                                         )

@@ -100,9 +100,12 @@ impl<'a> Resolver for VfsResolver<'a> {
             }
             Err(e) => {
                 // Check for prefix
-                if let Some((prefix, path)) = self.1.inner().iter().find(|(prefix, _)| {
-                    to.starts_with(&format!("\\{}", prefix))
-                }) {
+                if let Some((prefix, path)) = self
+                    .1
+                    .inner()
+                    .iter()
+                    .find(|(prefix, _)| to.starts_with(&format!("\\{}", prefix)))
+                {
                     let new_path = self
                         .0
                         .join(&path.replace("\\", "/"))?
@@ -112,8 +115,7 @@ impl<'a> Resolver for VfsResolver<'a> {
                 } else {
                     // TODO use the project's includes vec
                     if PathBuf::from("include").exists() {
-                        let new_path =
-                            self.0.join(&format!("include{}", to.replace("\\", "/")))?;
+                        let new_path = self.0.join(&format!("include{}", to.replace("\\", "/")))?;
                         new_path.open_file()?.read_to_string(&mut buf)?;
                         Ok(ResolvedFile::new(new_path.as_str(), buf))
                     } else {

@@ -7,9 +7,14 @@ pub struct ResolvedFile {
     data: String,
 }
 impl ResolvedFile {
-    pub fn new<S1, S2>(path: S1, data: S2) -> Self where S1: Into<String>, S2: Into<String> {
+    pub fn new<S1, S2>(path: S1, data: S2) -> Self
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
         Self {
-            path: path.into(), data: data.into(),
+            path: path.into(),
+            data: data.into(),
         }
     }
 
