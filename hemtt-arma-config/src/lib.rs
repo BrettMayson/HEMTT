@@ -10,6 +10,7 @@ mod parser;
 mod preprocess;
 pub mod rapify;
 pub mod simplify;
+pub mod resolver;
 
 pub use error::ArmaConfigError;
 pub use linter::{InheritanceStyle, LinterOptions};

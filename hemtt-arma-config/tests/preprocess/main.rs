@@ -1,9 +1,5 @@
 use std::fs::read_to_string;
 
-fn resolver(name: &str) -> String {
-    read_to_string(format!("tests/preprocess/{}", name)).unwrap()
-}
-
 #[test]
 fn define() {
     let content = r#"
@@ -11,7 +7,7 @@ fn define() {
 value = affirmative;
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -28,7 +24,7 @@ fn nested_define() {
 value = SOMETHING;
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -49,7 +45,7 @@ defined = false;
 #endif
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -65,7 +61,7 @@ fn define_call() {
 value = "SAY_HI(Brett)";
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -83,7 +79,7 @@ fn recursive() {
 value = "SAY_HI(Brett)";
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -101,7 +97,7 @@ fn recursive2() {
 value = "SAY_HI(Brett)";
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -124,7 +120,7 @@ value = QGVAR(myVar);
 value = QUOTE(My variable is QQGVAR(myVar));
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -144,7 +140,7 @@ class CfgPatches {
     };
 };"#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -181,7 +177,7 @@ class CfgPatches {
     };
 };"#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);
@@ -206,7 +202,7 @@ fn include() {
             "tests/preprocess/base.hpp",
         )
         .unwrap(),
-        &resolver,
+        "tests/preprocess/", hemtt_arma_config::resolver::Basic,
     );
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
@@ -231,7 +227,7 @@ fn unknown() {
 value = affirmative;
 "#;
     let config =
-        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), &resolver);
+        hemtt_arma_config::preprocess(hemtt_arma_config::tokenize(content, "").unwrap(), ".", hemtt_arma_config::resolver::Basic);
     let config = hemtt_arma_config::render(config.unwrap());
     // println!("======");
     // println!("{}", config);

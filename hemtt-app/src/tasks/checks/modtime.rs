@@ -36,14 +36,14 @@ impl Task for ModTime {
         );
         if target.exists() {
             if let Ok(time) = std::fs::metadata(&target).unwrap().modified() {
-                ctx.debug(&format!("modtime: {:?} | lastbuild: {:?}", modified, time));
+                ctx.trace(&format!("modtime: {:?} | lastbuild: {:?}", modified, time));
                 if time >= modified {
                     ctx.set_skip(true);
-                    ctx.info(&format!("The PBO is up to date: {}", target.display()));
+                    ctx.debug(&format!("The PBO is up to date: {}", target.display()));
                 }
             }
         } else {
-            ctx.info(&format!("no pbo exists at {}", target.display()));
+            ctx.debug(&format!("no pbo exists at {}", target.display()));
         }
         Ok(())
     }

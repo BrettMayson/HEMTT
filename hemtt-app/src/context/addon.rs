@@ -46,14 +46,14 @@ impl<'a, 'b> AddonContext<'a, 'b> {
                 }
             }
             if prefix.is_empty() {
-                warn!("Could not determine a prefix for {} using the $PBOPREFIX$ file, a prefix will be generated", addon.name());
+                warn!("Could not determine a prefix for {} using the $PBOPREFIX$ file, a prefix will be generated", addon.source());
                 prefix_gen
             } else {
-                debug!("Using prefix from $PBOPREFIX$ for {}", addon.name());
+                debug!("Using prefix from $PBOPREFIX$ for {}", addon.source());
                 prefix.to_string()
             }
         } else {
-            debug!("Using generated prefix for {}", addon.name());
+            debug!("Using generated prefix for {}", addon.source());
             prefix_gen
         };
         Ok(Self {

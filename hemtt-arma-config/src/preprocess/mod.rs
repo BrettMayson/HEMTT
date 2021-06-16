@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
+use hemtt::HEMTTError;
 use pest::error::Error;
 use pest::Parser;
 
@@ -17,6 +18,8 @@ mod define;
 use define::Define;
 mod ifstate;
 use ifstate::{IfState, IfStates};
+
+use crate::resolver::Resolver;
 
 pub fn tokenize(source: &str, path: &str) -> Result<Vec<TokenPos>, Error<Rule>> {
     let mut tokens = Vec::new();
@@ -136,32 +139,46 @@ macro_rules! read_line {
                 break;
             }
         }
+        let mut is_quoted = false;
         loop {
             if let Some(tp) = next {
-                match tp.token() {
-                    Token::Newline => break,
-                    Token::Escape => {
-                        if let Some(tp) = $i.peek() {
-                            if tp.token() == &Token::Newline {
-                                $i.next();
+                if is_quoted {
+                    if tp.token() == &Token::DoubleQuote {
+                        is_quoted = false;
+                    }
+                    ret.push(tp);
+                    next = $i.next();
+                } else {
+                    match tp.token() {
+                        Token::Newline => break,
+                        Token::Escape => {
+                            if let Some(tp) = $i.peek() {
+                                if tp.token() == &Token::Newline {
+                                    $i.next();
+                                }
                             }
-                        }
-                        next = $i.next();
-                        loop {
-                            if let Some(ref tp) = next {
-                                if tp.token().is_whitespace() {
-                                    next = $i.next();
+                            next = $i.next();
+                            loop {
+                                if let Some(ref tp) = next {
+                                    if tp.token().is_whitespace() {
+                                        next = $i.next();
+                                    } else {
+                                        break;
+                                    }
                                 } else {
                                     break;
                                 }
-                            } else {
-                                break;
                             }
                         }
-                    }
-                    _ => {
-                        ret.push(tp);
-                        next = $i.next();
+                        Token::DoubleQuote => {
+                            ret.push(tp);
+                            next = $i.next();
+                            is_quoted = true;
+                        }
+                        _ => {
+                            ret.push(tp);
+                            next = $i.next();
+                        }
                     }
                 }
             } else {
@@ -189,17 +206,28 @@ fn test_read_line() {
             .iter()
             .map(|tp| tp.token().to_owned())
             .collect::<Vec<Token>>()
+    );
+
+    let tokens = tokenize(" \"\\z\\mod\\addons\"\n", "").unwrap();
+    let mut a = tokens.into_iter().peekable();
+    assert_eq!(
+        vec![Token::DoubleQuote, Token::Escape, Token::Word(String::from("z")), Token::Escape, Token::Word(String::from("mod")), Token::Escape, Token::Word(String::from("addons")), Token::DoubleQuote],
+        read_line!(a)
+            .iter()
+            .map(|tp| tp.token().to_owned())
+            .collect::<Vec<Token>>()
     )
 }
 
 pub fn _resolve<R>(
     ident: &str,
     define: &Define,
+    root: &str,
     resolver: R,
     defines: &HashMap<String, Define>,
 ) -> Option<Vec<TokenPos>>
 where
-    R: Fn(&str) -> String + Copy,
+    R: Resolver,
 {
     if let Some(d) = defines.get(ident) {
         let mut ret = Vec::new();
@@ -253,7 +281,8 @@ where
                                         &mut iter,
                                         &w,
                                         &token,
-                                        resolver,
+                                        root,
+                                        resolver.clone(),
                                         &mut context,
                                     ));
                                     ret.push(TokenPos::with_pos(Token::DoubleQuote, &token));
@@ -271,7 +300,8 @@ where
                         &mut iter,
                         w,
                         &token,
-                        resolver,
+                        root,
+                        resolver.clone(),
                         &mut context,
                     ));
                 }
@@ -288,11 +318,12 @@ fn _resolve_word<R>(
     iter: &mut Peekable<IntoIter<TokenPos>>,
     ident: &str,
     token: &TokenPos,
+    root: &str,
     resolver: R,
     mut defines: &mut HashMap<String, Define>,
 ) -> Vec<TokenPos>
 where
-    R: Fn(&str) -> String + Copy,
+    R: Resolver,
 {
     if let Some(d2) = defines.get(ident) {
         if d2.call {
@@ -303,18 +334,19 @@ where
                     args: Some(
                         read_args!(iter)
                             .into_iter()
-                            .map(|arg| _preprocess(arg, resolver, &mut defines))
-                            .collect::<Result<Vec<Vec<TokenPos>>, String>>()
+                            .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                            .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
                             .unwrap(),
                     ),
                     statement: Vec::new(),
                 },
-                resolver,
+                root,
+                resolver.clone(),
                 &defines,
             ) {
                 return r;
             }
-        } else if let Some(r) = _resolve(ident, d2, resolver, &defines) {
+        } else if let Some(r) = _resolve(ident, d2, root, resolver.clone(), &defines) {
             return r;
         } else {
             return vec![token.to_owned()];
@@ -323,21 +355,22 @@ where
     vec![token.to_owned()]
 }
 
-pub fn preprocess<R>(source: Vec<TokenPos>, resolver: R) -> Result<Vec<TokenPos>, String>
+pub fn preprocess<R>(source: Vec<TokenPos>, root: &str, resolver: R) -> Result<Vec<TokenPos>, HEMTTError>
 where
-    R: Fn(&str) -> String + Copy,
+    R: Resolver,
 {
     let mut defines: HashMap<String, Define> = HashMap::new();
-    _preprocess(source, resolver, &mut defines)
+    _preprocess(source, root, resolver.clone(), &mut defines)
 }
 
 pub fn _preprocess<R>(
     source: Vec<TokenPos>,
+    root: &str,
     resolver: R,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
-) -> Result<Vec<TokenPos>, String>
+) -> Result<Vec<TokenPos>, HEMTTError>
 where
-    R: Fn(&str) -> String + Copy,
+    R: Resolver,
 {
     let mut ret = Vec::new();
     let mut iter = source.into_iter().peekable();
@@ -356,8 +389,8 @@ where
                                         if tp.token() == &Token::LeftParenthesis {
                                             let args = read_args!(iter)
                                                 .into_iter()
-                                                .map(|arg| _preprocess(arg, resolver, &mut defines))
-                                                .collect::<Result<Vec<Vec<TokenPos>>, String>>()
+                                                .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                                                .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
                                                 .unwrap();
                                             Some(args)
                                         } else {
@@ -376,7 +409,7 @@ where
                                         },
                                     );
                                 } else {
-                                    return Err("define without name".to_string());
+                                    return Err(HEMTTError::Generic("define without name".to_string()));
                                 }
                             }
                         }
@@ -386,10 +419,10 @@ where
                                 if let Token::Word(name) = tp.token().clone() {
                                     defines.remove(&name);
                                 } else {
-                                    return Err("undef without name".to_string());
+                                    return Err(HEMTTError::Generic("undef without name".to_string()));
                                 }
                             } else {
-                                return Err("undef without name".to_string());
+                                return Err(HEMTTError::Generic("undef without name".to_string()));
                             }
                         }
                         ("ifdef", true) => {
@@ -432,16 +465,20 @@ where
                                 .trim_matches('"')
                                 .to_owned();
                             ret.append(&mut _preprocess(
-                                super::tokenize(&resolver(&file), &file).unwrap(),
-                                resolver,
+                                {
+                                    let resolved = resolver.resolve(&root, &token.path(), &file)?;
+                                    super::tokenize(resolved.data(), resolved.path()).unwrap()
+                                },
+                                root,
+                                resolver.clone(),
                                 defines,
                             )?);
                         }
-                        ("include", _) => {
+                        (_, false) => {
                             read_line!(iter);
                         }
-                        _ => {
-                            error!("Unknown directive: {:?}", directive);
+                        (_, true) => {
+                            error!("Unknown directive: {:?} at {}:{}", directive, token.path(), token.start().0);
                             read_line!(iter);
                         }
                     }
@@ -459,8 +496,8 @@ where
                                         Some(
                                             read_args!(iter)
                                                 .into_iter()
-                                                .map(|arg| _preprocess(arg, resolver, &mut defines))
-                                                .collect::<Result<Vec<Vec<TokenPos>>, String>>()
+                                                .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                                                .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
                                                 .unwrap(),
                                         )
                                     } else {
@@ -471,7 +508,8 @@ where
                                 },
                                 statement: Vec::new(),
                             },
-                            resolver,
+                            root,
+                            resolver.clone(),
                             &defines,
                         )
                         .unwrap(),

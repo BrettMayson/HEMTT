@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use strum_macros::EnumIter;
+use strum::EnumIter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, EnumIter, Hash)]
 pub enum AddonLocation {

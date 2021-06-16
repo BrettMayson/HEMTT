@@ -40,7 +40,7 @@ impl Flow {
                     ctx_addons
                         .global()
                         .set_message_info(stage.to_string(), task.name());
-                    info!(
+                    debug!(
                         "[{}] [{:^width$}] Starting",
                         stage,
                         task.name(),
