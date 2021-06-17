@@ -50,7 +50,6 @@ impl Task for Preprocess {
         let mut count = 0;
         for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
-            trace!("Entry: {:?}", entry);
             if ok
                 && entry.metadata()?.file_type == VfsFileType::File
                 && can_preprocess(entry.as_str())
@@ -80,43 +79,71 @@ impl<'a> VfsResolver<'a> {
 }
 impl<'a> Resolver for VfsResolver<'a> {
     fn resolve(&self, _root: &str, from: &str, to: &str) -> Result<ResolvedFile, HEMTTError> {
+        let to = to.trim_start_matches('/');
+        let from = from.trim_start_matches('/');
         trace!("Resolving from {} to {} on {:?}", from, to, self.0);
+        trace!("root {:?}", self.0);
         let mut buf = String::new();
         let new_path = self
             .0
-            .join(
-                &PathBuf::from(from)
-                    .parent()
-                    .unwrap()
-                    .display()
-                    .to_string()
-                    .trim_start_matches('/'),
-            )?
-            .join(to)?;
+            .join(from)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join(&to)
+            .unwrap();
         match new_path.open_file() {
             Ok(mut f) => {
-                f.read_to_string(&mut buf)?;
+                f.read_to_string(&mut buf).unwrap();
                 Ok(ResolvedFile::new(new_path.as_str(), buf))
             }
             Err(e) => {
+                let to = to.replace("\\", "/");
+                trace!("using prefix map: {:?}", self.1.inner());
                 // Check for prefix
-                if let Some((prefix, path)) = self
-                    .1
-                    .inner()
-                    .iter()
-                    .find(|(prefix, _)| to.starts_with(&format!("\\{}", prefix)))
-                {
+                if let Some((prefix, path)) = self.1.inner().iter().find(|(prefix, _)| {
+                    debug!("prefix `{}` vs to `{}`", prefix.replace("\\", "/"), to);
+                    to.starts_with(&format!("/{}", prefix.replace("\\", "/")))
+                }) {
+                    debug!("found a match: {:?} with {}", path, prefix);
+                    debug!(
+                        "{:#?}",
+                        self.0
+                            .join("addons/main")
+                            .unwrap()
+                            .read_dir()
+                            .unwrap()
+                            .for_each(|f| {
+                                f.open_file().unwrap();
+                                debug!("{}", f.as_str());
+                            })
+                    );
+                    debug!(
+                        "joining {:?}",
+                        to.trim_start_matches(&format!("/{}/", prefix.replace("\\", "/")))
+                    );
                     let new_path = self
                         .0
-                        .join(&path.replace("\\", "/"))?
-                        .join(to.trim_start_matches(&format!("\\{}", prefix)))?;
-                    new_path.open_file()?.read_to_string(&mut buf)?;
+                        .join(&path.trim_start_matches('/'))
+                        .unwrap()
+                        .join(to.trim_start_matches(&format!("/{}/", prefix.replace("\\", "/"))))
+                        .unwrap();
+                    debug!("newpath {:?}", new_path);
+                    new_path
+                        .open_file()
+                        .unwrap()
+                        .read_to_string(&mut buf)
+                        .unwrap();
                     Ok(ResolvedFile::new(new_path.as_str(), buf))
                 } else {
                     // TODO use the project's includes vec
                     if PathBuf::from("include").exists() {
-                        let new_path = self.0.join(&format!("include{}", to.replace("\\", "/")))?;
-                        new_path.open_file()?.read_to_string(&mut buf)?;
+                        let new_path = self.0.join(&format!("include{}", to)).unwrap();
+                        new_path
+                            .open_file()
+                            .unwrap()
+                            .read_to_string(&mut buf)
+                            .unwrap();
                         Ok(ResolvedFile::new(new_path.as_str(), buf))
                     } else {
                         Err(e.into())

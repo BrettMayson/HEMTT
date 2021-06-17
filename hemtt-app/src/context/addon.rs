@@ -1,4 +1,5 @@
 use hemtt::{Addon, HEMTTError};
+use hemtt_handlebars::Variables;
 use vfs::VfsPath;
 
 use super::Context;
@@ -19,7 +20,7 @@ impl<'a, 'b> AddonContext<'a, 'b> {
         let prefix_file = fs.join("$PBOPREFIX$")?;
         let prefix_gen = format!(
             "{}\\{}\\{}",
-            global.project.mainprefix,
+            global.project.mainprefix(),
             global.project.prefix(),
             addon.source()
         )
@@ -45,6 +46,8 @@ impl<'a, 'b> AddonContext<'a, 'b> {
                     }
                 }
             }
+            let prefix =
+                hemtt_handlebars::render(prefix, &Variables::from(global.project())).unwrap();
             if prefix.is_empty() {
                 warn!("Could not determine a prefix for {} using the $PBOPREFIX$ file, a prefix will be generated", addon.source());
                 prefix_gen

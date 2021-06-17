@@ -1,4 +1,4 @@
-#define MAJOR {{semver.major}}
-#define MINOR {{semver.minor}}
-#define PATCH {{semver.patch}}
-#define BUILD {{semver.build}}
+#define MAJOR {{project.version.major}}
+#define MINOR {{project.version.minor}}
+#define PATCH {{project.version.patch}}
+#define BUILD {{project.version.build}}

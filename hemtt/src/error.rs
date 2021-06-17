@@ -1,3 +1,5 @@
+use crate::templates::Templates;
+
 #[derive(Debug)]
 pub struct IOPathError {
     pub source: std::io::Error,
@@ -96,7 +98,7 @@ impl std::fmt::Display for HEMTTError {
                 f,
                 "Unknown template: {}, {}",
                 template,
-                <dyn crate::Template>::options()
+                Templates::options()
             ),
         }
     }

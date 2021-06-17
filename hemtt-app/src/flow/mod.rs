@@ -110,7 +110,11 @@ impl Flow {
         addons.addons().iter().for_each(|addon| {
             if addon.failed() {
                 failed = true;
-                error!("Unable to build `{}`", addon.addon().source())
+                error!(
+                    "Unable to build `{}`: {:?}",
+                    addon.addon().source(),
+                    addon.get_failed()
+                )
             }
         });
         if failed {

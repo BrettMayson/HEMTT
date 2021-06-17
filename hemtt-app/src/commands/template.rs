@@ -1,38 +1,63 @@
 use crate::Command;
-use hemtt::{Addon, AddonLocation, HEMTTError, Project};
+use hemtt::{templates::Templates, Addon, AddonLocation, HEMTTError, Project};
+
+use clap::{App, Arg, ArgMatches, SubCommand};
 
 pub struct Template;
 impl Command for Template {
-    fn register(&self) -> clap::App {
-        clap::SubCommand::with_name("template")
+    fn register(&self) -> App {
+        SubCommand::with_name("template")
             .version(*crate::VERSION)
             .about("Manage the project template")
             .subcommand(
-                clap::SubCommand::with_name("addon")
-                    .about("Create a new addon")
-                    .arg(clap::Arg::with_name("name").required(true))
+                SubCommand::with_name("init")
+                    .about("Initialize a template")
                     .arg(
-                        clap::Arg::with_name("location")
+                        Arg::with_name("template")
+                            .required(true)
+                            .validator(Templates::validate),
+                    ),
+            )
+            .subcommand(
+                SubCommand::with_name("addon")
+                    .about("Create a new addon")
+                    .arg(Arg::with_name("name").required(true))
+                    .arg(
+                        Arg::with_name("location")
                             .required(false)
                             .validator(AddonLocation::validate)
                             .default_value("addons"),
                     )
                     .arg(
-                        clap::Arg::with_name("no-handlebars")
+                        Arg::with_name("no-handlebars")
                             .long("no-handlebars")
                             .required(false)
                             .takes_value(false),
                     ),
             )
             .subcommand(
-                clap::SubCommand::with_name("function")
+                SubCommand::with_name("function")
                     .about("Create a new function")
-                    .arg(clap::Arg::with_name("addon").required(true))
-                    .arg(clap::Arg::with_name("name").required(true)),
+                    .arg(Arg::with_name("addon").required(true))
+                    .arg(Arg::with_name("name").required(true)),
             )
     }
 
-    fn run(&self, a: &clap::ArgMatches, p: Project) -> Result<(), HEMTTError> {
+    fn require_project(&self) -> bool {
+        false
+    }
+
+    fn run_no_project(&self, a: &ArgMatches) -> Result<(), HEMTTError> {
+        if let ("init", Some(b)) = a.subcommand() {
+            return match b.value_of("template").unwrap() {
+                "cba" => hemtt::templates::init(
+                    hemtt::templates::Templates::CBA,
+                    std::env::current_dir()?,
+                ),
+                unknown => Err(HEMTTError::TemplateUnknown(unknown.to_string())),
+            };
+        }
+        let p = Project::read()?;
         let template: Box<dyn hemtt::Template> = match p.template().to_lowercase().as_str() {
             "cba" => Box::new(hemtt::templates::cba::CBA::new(hemtt::Project::find_root()?)),
             _ => return Err(HEMTTError::TemplateUnknown(p.template().to_string())),

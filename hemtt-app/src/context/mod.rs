@@ -1,7 +1,10 @@
 use std::{path::PathBuf, sync::RwLock};
 
 use state::Container;
-use vfs::{impls::overlay::OverlayFS, MemoryFS, PhysicalFS, VfsPath};
+use vfs::{
+    impls::{altroot::AltrootFS, overlay::OverlayFS},
+    MemoryFS, PhysicalFS, VfsPath,
+};
 
 use crate::Project;
 use hemtt::{Addon, HEMTTError};
@@ -25,8 +28,14 @@ impl<'a> Context<'a> {
         Ok(Self {
             project,
             task_pad: 0usize,
-            fs: OverlayFS::new(&[MemoryFS::new().into(), PhysicalFS::new(root.clone()).into()])
+            fs: AltrootFS::new(
+                OverlayFS::new(&[
+                    MemoryFS::new().into(),
+                    AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
+                ])
                 .into(),
+            )
+            .into(),
             root,
 
             message_info: RwLock::new((String::from("internal init"), String::from("new"))),

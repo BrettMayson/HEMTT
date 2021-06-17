@@ -350,12 +350,12 @@ where
                     statement: Vec::new(),
                 },
                 root,
-                resolver.clone(),
+                resolver,
                 &defines,
             ) {
                 return r;
             }
-        } else if let Some(r) = _resolve(ident, d2, root, resolver.clone(), &defines) {
+        } else if let Some(r) = _resolve(ident, d2, root, resolver, &defines) {
             return r;
         } else {
             return vec![token.to_owned()];
@@ -373,7 +373,7 @@ where
     R: Resolver,
 {
     let mut defines: HashMap<String, Define> = HashMap::new();
-    _preprocess(source, root, resolver.clone(), &mut defines)
+    _preprocess(source, root, resolver, &mut defines)
 }
 
 pub fn _preprocess<R>(

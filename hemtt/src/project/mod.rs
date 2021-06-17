@@ -65,16 +65,16 @@ pub struct Project {
 
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default = "String::new")]
-    pub modname: String,
+    modname: String,
 
     #[serde(default = "default_mainprefix")]
-    pub mainprefix: String,
+    mainprefix: String,
 
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default = "HashMap::new")]
     #[serde(rename(deserialize = "headerexts"))] // DEPRECATED
     #[serde(rename(deserialize = "header_exts"))]
-    pub header_exts: HashMap<String, String>,
+    header_exts: HashMap<String, String>,
 
     // Files
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -241,6 +241,11 @@ impl Project {
         &self.prefix
     }
 
+    /// The root prefix
+    pub fn mainprefix(&self) -> &str {
+        &self.mainprefix
+    }
+
     /// The author of the project
     pub fn author(&self) -> &str {
         &self.author
@@ -288,6 +293,43 @@ impl From<&Project> for hemtt_handlebars::Variables {
                     map.insert(
                         String::from("modname"),
                         Value::String(project.modname.clone()),
+                    );
+                    map.insert(
+                        String::from("version"),
+                        serde_json::Value::Object({
+                            let mut map = serde_json::Map::new();
+                            let version = project.version();
+                            map.insert(
+                                String::from("major"),
+                                serde_json::Value::Number(serde_json::value::Number::from(
+                                    version.major,
+                                )),
+                            );
+                            map.insert(
+                                String::from("minor"),
+                                serde_json::Value::Number(serde_json::value::Number::from(
+                                    version.minor,
+                                )),
+                            );
+                            map.insert(
+                                String::from("patch"),
+                                serde_json::Value::Number(serde_json::value::Number::from(
+                                    version.patch,
+                                )),
+                            );
+                            map.insert(
+                                String::from("build"),
+                                serde_json::Value::String(
+                                    version
+                                        .pre
+                                        .iter()
+                                        .map(|i| i.to_string())
+                                        .collect::<Vec<String>>()
+                                        .join("."),
+                                ),
+                            );
+                            map
+                        }),
                     );
                     map
                 }),

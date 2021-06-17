@@ -24,9 +24,3 @@ pub trait Template {
     /// * `name`: function name
     fn new_function(&self, addon: &Addon, name: &str) -> Result<PathBuf, HEMTTError>;
 }
-
-impl dyn Template {
-    pub fn options() -> String {
-        String::from("options are: cba")
-    }
-}

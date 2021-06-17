@@ -42,6 +42,11 @@ lazy_static::lazy_static! {
 static GIT_IGNORE: [&str; 4] = ["releases/*", "*.biprivatekey", "keys/*", ".hemtt/local*"];
 
 pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(1usize)
+        .build_global()
+        .unwrap();
+
     let mut app = App::new("HEMTT")
         .version(*crate::VERSION)
         .about(env!("CARGO_PKG_DESCRIPTION"))

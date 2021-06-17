@@ -1,1 +1,1 @@
-{{mainprefix}}\{{prefix}}\addons\main
+{{project.mainprefix}}\\{{project.prefix}}\addons\main

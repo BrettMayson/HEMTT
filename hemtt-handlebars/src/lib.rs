@@ -39,34 +39,6 @@ impl From<BTreeMap<String, Json>> for Variables {
     }
 }
 
-impl From<semver::Version> for Variables {
-    fn from(version: semver::Version) -> Self {
-        Self({
-            let mut map = BTreeMap::new();
-            map.insert(
-                String::from("semver"),
-                serde_json::Value::Object({
-                    let mut map = serde_json::Map::new();
-                    map.insert(
-                        String::from("major"),
-                        serde_json::Value::Number(serde_json::value::Number::from(version.major)),
-                    );
-                    map.insert(
-                        String::from("minor"),
-                        serde_json::Value::Number(serde_json::value::Number::from(version.minor)),
-                    );
-                    map.insert(
-                        String::from("patch"),
-                        serde_json::Value::Number(serde_json::value::Number::from(version.patch)),
-                    );
-                    map
-                }),
-            );
-            map
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use serde_json::value::Value as Json;
@@ -84,15 +56,5 @@ mod tests {
         map2.insert("c".to_string(), Json::String(String::from("3")));
         var.append(Variables::from(map2));
         assert_eq!(render("{{a}}{{b}}{{c}}", &var).unwrap(), "123");
-    }
-
-    #[test]
-    fn version() {
-        let version = semver::Version::from((1, 2, 3));
-        let map = Variables::from(version);
-        assert_eq!(
-            render("{{semver.major}}.{{semver.minor}}.{{semver.patch}}", &map).unwrap(),
-            "1.2.3"
-        );
     }
 }

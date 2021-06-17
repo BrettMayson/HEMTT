@@ -15,7 +15,7 @@ fn main() {
     let args: Vec<_> = std::env::args().collect();
 
     let config = ConfigBuilder::new()
-        .set_location_level(LevelFilter::Trace)
+        .set_location_level(LevelFilter::Error)
         .set_target_level(LevelFilter::Trace)
         .set_thread_level(LevelFilter::Trace)
         .set_time_level(LevelFilter::Off)
