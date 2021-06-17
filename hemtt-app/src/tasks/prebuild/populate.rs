@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use hemtt_handlebars::Variables;
 use vfs::{VfsFileType, VfsPath};
@@ -13,7 +13,7 @@ pub fn can_populate(path: &str) -> bool {
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
         .to_str()
         .unwrap();
-    name.contains(".ht.") || name.ends_with(".ht")
+    name.contains(".ht.") || name.ends_with(".ht") || name == "$PBOPREFIX$"
 }
 
 pub fn destination(path: VfsPath) -> Result<VfsPath, HEMTTError> {
@@ -33,15 +33,12 @@ pub fn populate(source: VfsPath, dest: VfsPath, ctx: &mut AddonContext) -> Resul
         vars
     }) {
         Ok(out) => {
-            // let mut outfile = create_file!(Path::new(&dest))?;
-            // outfile.write_all(out.as_bytes())?;
             dest.create_file()?.write_all(out.as_bytes())?;
             Ok(())
         }
         Err(err) => {
             error!("Populate error: {}", err);
             panic!("TODO convert error type")
-            // Err(err.into())
         }
     }
 }
@@ -63,22 +60,16 @@ impl Task for Populate {
             ctx.trace(&format!("checking file: {:?}", entry));
             if can_populate(entry.as_str()) {
                 let dest = destination(entry)?;
-                if dest.exists()? {
-                    ctx.error(&format!("target already exists: {}", dest.as_str()));
-                    unimplemented!()
+                if dest.filename() != "$PBOPREFIX$" && dest.exists()? {
+                    ctx.warn(&format!("target already exists: {}", dest.as_str()));
                 }
             }
         }
-        let mut count = 0;
         for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if entry.metadata()?.file_type == VfsFileType::File && can_populate(entry.as_str()) {
                 populate(entry.clone(), destination(entry)?, ctx)?;
-                count += 1;
             }
-        }
-        if count > 0 {
-            ctx.debug(&format!("rendered {} files", count,));
         }
         Ok(())
     }

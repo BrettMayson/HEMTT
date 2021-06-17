@@ -46,25 +46,15 @@ impl Task for Preprocess {
     }
 
     fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
-        let mut ok = true;
-        let mut count = 0;
         for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
-            if ok
-                && entry.metadata()?.file_type == VfsFileType::File
-                && can_preprocess(entry.as_str())
-            {
+            if entry.metadata()?.file_type == VfsFileType::File && can_preprocess(entry.as_str()) {
                 let res = preprocess(entry, ctx);
                 if let Err(e) = res {
-                    ok = false;
                     ctx.error(&format!("{}", e));
                     ctx.set_failed(e);
                 }
-                count += 1;
             }
-        }
-        if count > 0 {
-            ctx.debug(&format!("preprocessed {} files", count,));
         }
         Ok(())
     }
@@ -82,7 +72,6 @@ impl<'a> Resolver for VfsResolver<'a> {
         let to = to.trim_start_matches('/');
         let from = from.trim_start_matches('/');
         trace!("Resolving from {} to {} on {:?}", from, to, self.0);
-        trace!("root {:?}", self.0);
         let mut buf = String::new();
         let new_path = self
             .0
@@ -99,36 +88,18 @@ impl<'a> Resolver for VfsResolver<'a> {
             }
             Err(e) => {
                 let to = to.replace("\\", "/");
-                trace!("using prefix map: {:?}", self.1.inner());
                 // Check for prefix
-                if let Some((prefix, path)) = self.1.inner().iter().find(|(prefix, _)| {
-                    debug!("prefix `{}` vs to `{}`", prefix.replace("\\", "/"), to);
-                    to.starts_with(&format!("/{}", prefix.replace("\\", "/")))
-                }) {
-                    debug!("found a match: {:?} with {}", path, prefix);
-                    debug!(
-                        "{:#?}",
-                        self.0
-                            .join("addons/main")
-                            .unwrap()
-                            .read_dir()
-                            .unwrap()
-                            .for_each(|f| {
-                                f.open_file().unwrap();
-                                debug!("{}", f.as_str());
-                            })
-                    );
-                    debug!(
-                        "joining {:?}",
-                        to.trim_start_matches(&format!("/{}/", prefix.replace("\\", "/")))
-                    );
+                if let Some((prefix, path)) =
+                    self.1.inner().iter().find(|(prefix, _)| {
+                        to.starts_with(&format!("/{}", prefix.replace("\\", "/")))
+                    })
+                {
                     let new_path = self
                         .0
                         .join(&path.trim_start_matches('/'))
                         .unwrap()
                         .join(to.trim_start_matches(&format!("/{}/", prefix.replace("\\", "/"))))
                         .unwrap();
-                    debug!("newpath {:?}", new_path);
                     new_path
                         .open_file()
                         .unwrap()

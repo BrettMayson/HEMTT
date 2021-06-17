@@ -9,6 +9,7 @@ hemtt = { path = "../hemtt" }
 hemtt-arma-config = { path = "../hemtt-arma-config" }
 hemtt-handlebars = { path = "../hemtt-handlebars" }
 hemtt-macros = { path = "../hemtt-macros" }
+hemtt-pbo = { path = "../hemtt-pbo" }
 
 clap = "2"
 dyn-clone = "1.0"

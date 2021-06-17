@@ -130,10 +130,10 @@ pub fn get_entry(node: Node) -> Result<Option<(String, Entry)>, ArmaConfigError>
             value,
             expand,
         } => Some((
-            if let Statement::Ident(i) = ident.statement {
-                i
-            } else {
-                panic!()
+            match ident.statement {
+                Statement::Ident(i) => i,
+                Statement::IdentArray(i) => i,
+                _ => panic!("{:?}", ident.statement),
             },
             get_value(value.statement, expand)?,
         )),

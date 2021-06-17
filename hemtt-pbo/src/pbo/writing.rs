@@ -58,6 +58,31 @@ impl<I: Seek + Read> WritablePbo<I> {
         &mut self,
         filename: S,
         mut file: I,
+    ) -> Result<Option<(I, Header)>> {
+        let filename = filename.into();
+        trace!("adding file to struct: {}", filename);
+        let size = file.seek(SeekFrom::End(0))? as u32;
+        if size > u32::MAX {
+            Err(std::io::Error::from(std::io::ErrorKind::Other))
+        } else {
+            Ok(self
+                .files
+                .insert(filename.replace("/", "\\"), (file, Header {
+                    filename: filename.into(),
+                    method: 0,
+                    original: size,
+                    reserved: 0,
+                    timestamp: Timestamp::from_u32(0),
+                    size,
+                })))
+        }
+    }
+
+    /// Adds or updates a file with an existing header to the PBO, returns the old file if it existed
+    pub fn add_file_header<S: Into<String>>(
+        &mut self,
+        filename: S,
+        mut file: I,
         header: Header,
     ) -> Result<Option<(I, Header)>> {
         let filename = filename.into();
@@ -237,7 +262,7 @@ impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Box<[u8]>>> {
     fn from(mut rp: ReadablePbo<B>) -> Self {
         let mut pbo = Self::new();
         for header in rp.files() {
-            pbo.add_file(
+            pbo.add_file_header(
                 header.filename(),
                 rp.retrieve(&header.filename()).unwrap(),
                 header.clone(),

@@ -21,6 +21,8 @@ impl Command for Build {
                     Box::new(crate::tasks::Populate {}),
                     Box::new(crate::tasks::Prefix::new()),
                     Box::new(crate::tasks::Preprocess {}),
+                    Box::new(crate::tasks::Rapify {}),
+                    Box::new(crate::tasks::Pack {}),
                     // Step::single(
                     //     "",
                     //     vec![Box::new(crate::flow::Script {

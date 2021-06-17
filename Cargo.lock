@@ -420,6 +420,7 @@ dependencies = [
  "hemtt-arma-config",
  "hemtt-handlebars",
  "hemtt-macros",
+ "hemtt-pbo",
  "lazy_static",
  "log",
  "percent-encoding",
