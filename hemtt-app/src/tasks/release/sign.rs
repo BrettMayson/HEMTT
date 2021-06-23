@@ -34,19 +34,14 @@ impl Task for Sign {
                         )?,
                         project.sig_version().try_into().unwrap(),
                     )
-                    .write(
-                        {
-                            let path = ctx
-                            .global()
-                            .rfs()?
-                            .join(
-                                &ctx.addon()
-                                    .location_sig(Some(project.prefix()), &project.authority()?),
-                            )?;
-                            path.parent().unwrap().create_dir_all()?;
-                            &mut path.create_file()?
-                        }
-                    )?;
+                    .write({
+                        let path = ctx.global().rfs()?.join(
+                            &ctx.addon()
+                                .location_sig(Some(project.prefix()), &project.authority()?),
+                        )?;
+                        path.parent().unwrap().create_dir_all()?;
+                        &mut path.create_file()?
+                    })?;
                 Ok(())
             })
             .collect::<Result<(), HEMTTError>>()?;

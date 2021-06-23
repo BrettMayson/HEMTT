@@ -28,7 +28,8 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     pub fn new(project: &'a Project) -> Result<Self, HEMTTError> {
         let root = Project::find_root()?;
-        let release_path = PathBuf::from(format!("release/{}/@{}", project.version(), project.name()));
+        let release_path =
+            PathBuf::from(format!("release/{}/@{}", project.version(), project.name()));
         Ok(Self {
             project,
             task_pad: 0usize,
@@ -41,14 +42,7 @@ impl<'a> Context<'a> {
             )
             .into(),
             pfs: AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
-            rfs: AltrootFS::new(
-                PhysicalFS::new(
-                    root.join(&release_path)
-                        .clone(),
-                )
-                .into(),
-            )
-            .into(),
+            rfs: AltrootFS::new(PhysicalFS::new(root.join(&release_path).clone()).into()).into(),
             root,
             release_path,
 

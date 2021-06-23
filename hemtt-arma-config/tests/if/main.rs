@@ -1,5 +1,3 @@
-use std::fs::read_to_string;
-
 #[test]
 fn basic_if() {
     let config = hemtt_arma_config::preprocess(

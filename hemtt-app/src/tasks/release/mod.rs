@@ -1,9 +1,7 @@
 mod sign;
 pub use sign::Sign;
 
-
-
-use crate::{HEMTTError, Stage, Task, context::AddonListContext};
+use crate::{context::AddonListContext, HEMTTError, Stage, Task};
 
 // Cleans existing files that are part of the hemtt project
 #[derive(Clone)]
