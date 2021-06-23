@@ -26,6 +26,6 @@ pub const fn default_folder_optionals() -> Option<bool> {
     Some(true)
 }
 
-pub const fn default_sig_version() -> u8 {
+pub const fn default_sig_version() -> u32 {
     3
 }

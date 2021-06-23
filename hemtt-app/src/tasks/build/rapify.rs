@@ -25,7 +25,7 @@ impl Task for Rapify {
     }
 
     fn build(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
-        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
+        for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if entry.metadata()?.file_type == VfsFileType::File && can_rapify(entry.as_str()) {
                 ctx.debug(&format!("rapify: {:?}", entry.as_str()));

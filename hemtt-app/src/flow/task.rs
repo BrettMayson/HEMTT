@@ -31,6 +31,12 @@ pub trait Task: std::marker::Send + std::marker::Sync {
     fn postbuild_single(&self, _: &mut AddonListContext) -> Result<(), HEMTTError> {
         Ok(())
     }
+    fn prerelease(&self, _: &mut AddonContext) -> Result<(), HEMTTError> {
+        Ok(())
+    }
+    fn prerelease_single(&self, _: &mut AddonListContext) -> Result<(), HEMTTError> {
+        Ok(())
+    }
     fn release(&self, _: &mut AddonContext) -> Result<(), HEMTTError> {
         Ok(())
     }

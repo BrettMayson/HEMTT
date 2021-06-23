@@ -50,6 +50,14 @@ impl Addon {
         &self.source
     }
 
+    pub fn sig(&self, prefix: Option<&str>, authority: &str) -> String {
+        format!("{}.{}.bisign", self.pbo(prefix), authority)
+    }
+
+    pub fn location_sig(&self, prefix: Option<&str>, authority: &str) -> String {
+        format!("{}/{}", self.location, self.sig(prefix, authority))
+    }
+
     /// Filename of the PBO
     ///
     /// Arguments:
@@ -62,6 +70,16 @@ impl Addon {
         } else {
             format!("{}.pbo", self.name)
         }
+    }
+
+    /// Location of the PBO
+    ///
+    /// Arguments:
+    /// * `prefix`: Prefix of the destination pbo
+    ///             Some(prefix) => {prefix}_{self.name}.pbo
+    ///             None => {self.name}.pbo
+    pub fn location_pbo(&self, prefix: Option<&str>) -> String {
+        format!("{}/{}", self.location, self.pbo(prefix))
     }
 
     /// Folder containing the released addon

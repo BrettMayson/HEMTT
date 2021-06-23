@@ -13,14 +13,18 @@ use crate::{
 };
 use hemtt::Addon;
 
-// #[derive(Clone)]
 pub struct Flow {
     pub tasks: Vec<Box<dyn Task>>,
 }
 
 impl Flow {
     /// Execute the flow against a vector of addons
-    pub fn execute(&self, addons: Vec<Addon>, p: &Project) -> Result<(), HEMTTError> {
+    pub fn execute(
+        &self,
+        addons: Vec<Addon>,
+        stages: Vec<Stage>,
+        p: &Project,
+    ) -> Result<(), HEMTTError> {
         let mut ctx = Context::new(p)?;
 
         for task in &self.tasks {
@@ -31,7 +35,7 @@ impl Flow {
 
         let mut ctx_addons = ctx.get_list(addons)?;
 
-        for stage in Stage::all() {
+        for stage in stages {
             for task in &self.tasks {
                 if ctx_addons.addons().is_empty() {
                     continue;
@@ -81,10 +85,9 @@ impl Flow {
                 Stage::PreBuild => task.prebuild_single(addons)?,
                 Stage::Build => task.build_single(addons)?,
                 Stage::PostBuild => task.postbuild_single(addons)?,
+                Stage::PreRelease => task.prerelease_single(addons)?,
                 Stage::Release => task.release_single(addons)?,
                 Stage::PostRelease => task.postrelease_single(addons)?,
-                Stage::Script => {}
-                Stage::None => {}
             };
         }
         addons.mut_addons().par_iter_mut().for_each(|mut addon| {
@@ -94,10 +97,9 @@ impl Flow {
                     Stage::PreBuild => task.prebuild(&mut addon),
                     Stage::Build => task.build(&mut addon),
                     Stage::PostBuild => task.postbuild(&mut addon),
+                    Stage::PreRelease => task.prerelease(&mut addon),
                     Stage::Release => task.release(&mut addon),
                     Stage::PostRelease => task.postrelease(&mut addon),
-                    Stage::Script => Ok(()),
-                    Stage::None => Ok(()),
                 } {
                     Ok(_) => {}
                     Err(e) => {

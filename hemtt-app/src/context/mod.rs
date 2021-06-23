@@ -15,8 +15,11 @@ pub use addon::{AddonContext, AddonListContext};
 pub struct Context<'a> {
     project: &'a Project,
     task_pad: usize,
-    fs: VfsPath,
+    vfs: VfsPath,
+    pfs: VfsPath,
+    rfs: VfsPath,
     root: PathBuf,
+    release_path: PathBuf,
     // stage: &Stage,
     message_info: RwLock<(String, String)>,
     pub container: Container![Send + Sync],
@@ -25,10 +28,11 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     pub fn new(project: &'a Project) -> Result<Self, HEMTTError> {
         let root = Project::find_root()?;
+        let release_path = PathBuf::from(format!("release/{}/@{}", project.version(), project.name()));
         Ok(Self {
             project,
             task_pad: 0usize,
-            fs: AltrootFS::new(
+            vfs: AltrootFS::new(
                 OverlayFS::new(&[
                     MemoryFS::new().into(),
                     AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
@@ -36,7 +40,17 @@ impl<'a> Context<'a> {
                 .into(),
             )
             .into(),
+            pfs: AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
+            rfs: AltrootFS::new(
+                PhysicalFS::new(
+                    root.join(&release_path)
+                        .clone(),
+                )
+                .into(),
+            )
+            .into(),
             root,
+            release_path,
 
             message_info: RwLock::new((String::from("internal init"), String::from("new"))),
             container: <Container![Send + Sync]>::new(),
@@ -47,12 +61,22 @@ impl<'a> Context<'a> {
         self.project
     }
 
-    pub fn fs(&self) -> &VfsPath {
-        &self.fs
+    /// Virtual file system
+    pub fn vfs(&self) -> &VfsPath {
+        &self.vfs
     }
 
-    pub fn root(&self) -> &PathBuf {
-        &self.root
+    /// Physical file system
+    pub fn pfs(&self) -> &VfsPath {
+        &self.pfs
+    }
+
+    /// Release file system
+    pub fn rfs(&self) -> Result<&VfsPath, HEMTTError> {
+        if !self.release_path.exists() {
+            std::fs::create_dir_all(&self.release_path)?;
+        }
+        Ok(&self.rfs)
     }
 
     pub fn task_pad(&self) -> usize {

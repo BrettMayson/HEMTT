@@ -8,7 +8,7 @@ use serde_json::value::Value as Json;
 
 mod helpers;
 
-pub fn render(source: &str, data: &Variables) -> Result<String, TemplateRenderError> {
+pub fn render(source: &str, data: &Variables) -> Result<String, RenderError> {
     let mut handlebars = Handlebars::new();
     handlebars.register_helper("date", Box::new(helpers::date));
     handlebars.register_helper("git", Box::new(helpers::git));

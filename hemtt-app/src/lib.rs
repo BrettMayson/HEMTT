@@ -76,6 +76,7 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
     commands.push(Box::new(commands::Build {}));
     commands.push(Box::new(commands::Clean {}));
     commands.push(Box::new(commands::Project {}));
+    commands.push(Box::new(commands::Release {}));
     commands.push(Box::new(commands::Template {}));
 
     for command in commands.iter() {

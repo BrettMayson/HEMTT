@@ -1,9 +1,10 @@
-use std::io::{Cursor, Error, Read, Seek, SeekFrom};
+use std::io::{Cursor, Error, Read, Seek, SeekFrom, Write};
 
 use hemtt_io::*;
 use indexmap::IndexMap;
+use sha1::{Digest, Sha1};
 
-use crate::Header;
+use crate::{Header, Timestamp};
 
 #[derive(Default)]
 pub struct ReadablePbo<I: Seek + Read> {
@@ -115,6 +116,58 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
     pub fn checksum(&self) -> Option<Vec<u8>> {
         self.checksum.clone()
+    }
+
+    /// Generate a checksum of the PBO
+    pub fn gen_checksum(&mut self) -> std::io::Result<Vec<u8>> {
+        let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+
+        let ext_header = Header {
+            filename: String::new(),
+            method: 0x5665_7273,
+            original: 0,
+            reserved: 0,
+            timestamp: Timestamp::from_u32(0),
+            size: 0,
+        };
+        ext_header.write(&mut headers)?;
+
+        if let Some(prefix) = self.extensions.get("prefix") {
+            headers.write_all(b"prefix\0")?;
+            headers.write_cstring(prefix)?;
+        }
+
+        for (key, value) in &self.extensions {
+            if key == "prefix" {
+                continue;
+            }
+            headers.write_cstring(key)?;
+            headers.write_cstring(value)?;
+        }
+        headers.write_all(b"\0")?;
+
+        let files_sorted = self.files();
+
+        for header in &files_sorted {
+            header.write(&mut headers)?;
+        }
+
+        let header = Header {
+            method: 0,
+            ..ext_header
+        };
+        header.write(&mut headers)?;
+
+        let mut h = Sha1::new();
+
+        h.update(headers.get_ref());
+
+        for header in &files_sorted {
+            let cursor = self.retrieve(header.filename()).unwrap();
+            h.update(cursor.get_ref());
+        }
+
+        Ok(h.finalize().to_vec())
     }
 
     /// Retrieves a file from a PBO

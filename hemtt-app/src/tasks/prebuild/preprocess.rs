@@ -25,7 +25,7 @@ pub fn preprocess(path: VfsPath, ctx: &mut AddonContext) -> Result<(), HEMTTErro
         hemtt_arma_config::tokenize(&buf, path.as_str()).unwrap(),
         ctx.addon().source(),
         VfsResolver::new(
-            ctx.global().fs().clone(),
+            ctx.global().vfs().clone(),
             ctx.global().container.get::<PrefixMap>(),
         ),
     );
@@ -46,7 +46,7 @@ impl Task for Preprocess {
     }
 
     fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
-        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
+        for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if entry.metadata()?.file_type == VfsFileType::File && can_preprocess(entry.as_str()) {
                 let res = preprocess(entry, ctx);

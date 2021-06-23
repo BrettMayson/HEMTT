@@ -51,11 +51,11 @@ impl Task for Populate {
     }
 
     fn hooks(&self) -> &[Stage] {
-        &[Stage::Check]
+        &[Stage::PreBuild]
     }
 
-    fn check(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
-        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
+    fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+        for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             ctx.trace(&format!("checking file: {:?}", entry));
             if can_populate(entry.as_str()) {
@@ -65,7 +65,7 @@ impl Task for Populate {
                 }
             }
         }
-        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
+        for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
             if entry.metadata()?.file_type == VfsFileType::File && can_populate(entry.as_str()) {
                 populate(entry.clone(), destination(entry)?, ctx)?;

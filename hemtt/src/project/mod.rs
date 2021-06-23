@@ -104,17 +104,16 @@ pub struct Project {
     #[serde(rename(deserialize = "key_name"))]
     key_name: String,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
-    #[serde(default = "String::new")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename(deserialize = "signame"))] // DEPRECATED
     #[serde(rename(deserialize = "sig_name"))] // DEPRECATED
     #[serde(rename(deserialize = "authority"))]
-    pub authority: String,
+    authority: Option<String>,
 
     #[serde(default = "default_sig_version")]
     #[serde(rename(deserialize = "sigversion"))] // DEPRECATED
     #[serde(rename(deserialize = "sig_version"))]
-    pub sig_version: u8,
+    sig_version: u32,
 
     // Scripts
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -192,7 +191,7 @@ impl Project {
 
             reuse_private_key: default_reuse_private_key(),
             key_name: String::new(),
-            authority: String::new(),
+            authority: None,
             sig_version: default_sig_version(),
 
             check: Vec::new(),
@@ -264,6 +263,24 @@ impl Project {
     /// Mutable version of the project
     pub fn version_mut(&mut self) -> &mut Version {
         &mut self.version
+    }
+
+    /// Signing authority
+    pub fn authority(&self) -> Result<String, HEMTTError> {
+        if let Some(authority) = &self.authority {
+            hemtt_handlebars::render(authority, &self.into()).map_err(|e| e.into())
+        } else {
+            Ok(format!(
+                "{}-{}",
+                self.name().replace(" ", "_").to_lowercase(),
+                self.version()
+            ))
+        }
+    }
+
+    /// Signature version used to sign releases
+    pub fn sig_version(&self) -> u32 {
+        self.sig_version
     }
 }
 

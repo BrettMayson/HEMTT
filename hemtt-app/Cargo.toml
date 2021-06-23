@@ -1,6 +1,6 @@
 [package]
 name = "hemtt-app"
-version = "0.8.0"
+version = "0.8.0-alpha"
 authors = ["Brett <brett@mayson.io>"]
 edition = "2018"
 
@@ -10,6 +10,7 @@ hemtt-arma-config = { path = "../hemtt-arma-config" }
 hemtt-handlebars = { path = "../hemtt-handlebars" }
 hemtt-macros = { path = "../hemtt-macros" }
 hemtt-pbo = { path = "../hemtt-pbo" }
+hemtt-sign = { path = "../hemtt-sign" }
 
 clap = "2"
 dyn-clone = "1.0"

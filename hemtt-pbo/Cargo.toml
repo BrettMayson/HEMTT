@@ -9,5 +9,5 @@ hemtt-io = { path = "../hemtt-io" }
 
 log = "0.4"
 byteorder = "1.4"
-openssl = "0.10"
+sha-1 = "0.9"
 indexmap = "1.6.1"

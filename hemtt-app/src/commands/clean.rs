@@ -1,4 +1,4 @@
-use crate::{Command, Flow, HEMTTError, Project};
+use crate::{flow::Stage, Command, Flow, HEMTTError, Project};
 
 pub struct Clean {}
 impl Command for Clean {
@@ -16,7 +16,7 @@ impl Command for Clean {
                 Box::new(crate::tasks::Clean {}),
             ],
         };
-        flow.execute(addons, &p)?;
+        flow.execute(addons, Stage::check(), &p)?;
         Ok(())
     }
 }

@@ -1,12 +1,11 @@
-use hemtt::Project;
-use vfs::{PhysicalFS, SeekAndRead, VfsFileType};
+use vfs::{SeekAndRead, VfsFileType};
 
 use crate::{context::AddonContext, HEMTTError, Stage, Task};
 
 pub struct Pack {}
 impl Task for Pack {
     fn name(&self) -> String {
-        String::from("rapify")
+        String::from("pack")
     }
 
     fn hooks(&self) -> &[Stage] {
@@ -15,9 +14,13 @@ impl Task for Pack {
 
     fn build(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         let mut pbo = hemtt_pbo::WritablePbo::<Box<dyn SeekAndRead>>::new();
-        for entry in ctx.global().fs().join(ctx.addon().source())?.walk_dir()? {
+
+        pbo.add_extension("prefix", ctx.prefix());
+        pbo.add_extension("hemtt", *crate::VERSION);
+
+        for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;
-            if entry.filename().contains(".ht.") {
+            if entry.filename().contains(".ht.") || entry.filename().starts_with("$") {
                 continue;
             }
             if entry.metadata()?.file_type == VfsFileType::File {
@@ -31,9 +34,10 @@ impl Task for Pack {
                 }
             }
         }
-        let pbo_path = vfs::VfsPath::from(PhysicalFS::new(Project::find_root()?))
-            .join(&ctx.addon().location().to_string())?
-            .join(&ctx.addon().pbo(Some(ctx.global().project().prefix())))?;
+        let pbo_path = ctx.global().pfs().join(
+            &ctx.addon()
+                .location_pbo(Some(ctx.global().project().prefix())),
+        )?;
         ctx.debug(&format!("Creating PBO at {}", pbo_path.as_str()));
         pbo.write(&mut pbo_path.create_file()?)?;
         Ok(())

@@ -16,7 +16,7 @@ pub struct AddonContext<'a, 'b> {
 
 impl<'a, 'b> AddonContext<'a, 'b> {
     pub fn new(global: &'b Context<'a>, addon: Addon) -> Result<Self, HEMTTError> {
-        let fs = global.fs().join(addon.source())?;
+        let fs = global.vfs().join(addon.source())?;
         let prefix_file = fs.join("$PBOPREFIX$")?;
         let prefix_gen = format!(
             "{}\\{}\\{}",

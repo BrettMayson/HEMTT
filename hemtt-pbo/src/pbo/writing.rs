@@ -6,7 +6,7 @@ use std::{
 
 use hemtt_io::WriteExt;
 use indexmap::IndexMap;
-use openssl::hash::{Hasher, MessageDigest};
+use sha1::{Digest, Sha1};
 
 use crate::{Header, ReadablePbo, Timestamp};
 
@@ -59,22 +59,26 @@ impl<I: Seek + Read> WritablePbo<I> {
         filename: S,
         mut file: I,
     ) -> Result<Option<(I, Header)>> {
-        let filename = filename.into();
+        let filename = filename.into().replace("/", "\\");
         trace!("adding file to struct: {}", filename);
         let size = file.seek(SeekFrom::End(0))? as u32;
         if size > u32::MAX {
             Err(std::io::Error::from(std::io::ErrorKind::Other))
         } else {
-            Ok(self
-                .files
-                .insert(filename.replace("/", "\\"), (file, Header {
-                    filename: filename.into(),
-                    method: 0,
-                    original: size,
-                    reserved: 0,
-                    timestamp: Timestamp::from_u32(0),
-                    size,
-                })))
+            Ok(self.files.insert(
+                filename.clone(),
+                (
+                    file,
+                    Header {
+                        filename: filename,
+                        method: 0,
+                        original: size,
+                        reserved: 0,
+                        timestamp: Timestamp::from_u32(0),
+                        size,
+                    },
+                ),
+            ))
         }
     }
 
@@ -157,8 +161,8 @@ impl<I: Seek + Read> WritablePbo<I> {
             if key == "prefix" {
                 continue;
             }
-            headers.write_cstring(key)?;
             trace!("writing `{}` header: {:?}", key, value);
+            headers.write_cstring(key)?;
             headers.write_cstring(value)?;
         }
         headers.write_all(b"\0")?;
@@ -176,22 +180,23 @@ impl<I: Seek + Read> WritablePbo<I> {
         trace!("writing null header");
         header.write(&mut headers)?;
 
-        let mut h = Hasher::new(MessageDigest::sha1()).unwrap();
+        let mut h = Sha1::new();
 
         output.write_all(headers.get_ref())?;
-        h.update(headers.get_ref()).unwrap();
+        h.update(headers.get_ref());
 
         for header in &files_sorted {
-            trace!("writing & hashing file {}", header.filename());
+            trace!("writing file {}", header.filename());
             let cursor = self.retrieve_file(header.filename())?.unwrap();
             output.write_all(cursor.get_ref())?;
-            h.update(cursor.get_ref()).unwrap();
+            trace!("hashing");
+            h.update(cursor.get_ref());
         }
 
         output.write_all(&[0])?;
-        let hash = &*h.finish().unwrap();
+        let hash = h.finalize().to_vec();
         debug!("pbo generated hash: {:?}", hash);
-        output.write_all(hash)?;
+        output.write_all(&hash)?;
 
         Ok(())
     }
@@ -219,7 +224,6 @@ impl<I: Seek + Read> WritablePbo<I> {
             if key == "prefix" {
                 continue;
             }
-
             headers.write_cstring(key)?;
             headers.write_cstring(value)?;
         }
@@ -228,14 +232,6 @@ impl<I: Seek + Read> WritablePbo<I> {
         let files_sorted = self.files_sorted()?;
 
         for header in &files_sorted {
-            let header = Header {
-                filename: header.filename().to_string(),
-                method: 0,
-                original: header.original(),
-                reserved: 0,
-                timestamp: header.timestamp(),
-                size: header.size(),
-            };
             header.write(&mut headers)?;
         }
 
@@ -245,16 +241,16 @@ impl<I: Seek + Read> WritablePbo<I> {
         };
         header.write(&mut headers)?;
 
-        let mut h = Hasher::new(MessageDigest::sha1()).unwrap();
+        let mut h = Sha1::new();
 
-        h.update(headers.get_ref()).unwrap();
+        h.update(headers.get_ref());
 
         for header in &files_sorted {
             let cursor = self.retrieve_file(header.filename())?.unwrap();
-            h.update(cursor.get_ref()).unwrap();
+            h.update(cursor.get_ref());
         }
 
-        Ok(h.finish().unwrap().to_vec())
+        Ok(h.finalize().to_vec())
     }
 }
 
