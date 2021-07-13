@@ -66,11 +66,11 @@ impl<I: Seek + Read> WritablePbo<I> {
             Err(std::io::Error::from(std::io::ErrorKind::Other))
         } else {
             Ok(self.files.insert(
-                filename.clone(),
+                filename.replace("/", "\\"),
                 (
                     file,
                     Header {
-                        filename: filename,
+                        filename: filename.into(),
                         method: 0,
                         original: size,
                         reserved: 0,
