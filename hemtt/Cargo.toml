@@ -21,7 +21,7 @@ strum = { version = "0.21", features = ["derive"] }
 vfs = "0.5"
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.7"
+winreg = "0.9"
 
 [dev-dependencies]
 uuid = { version = "0.8", features = ["v4"] }
