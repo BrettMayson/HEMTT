@@ -1,1 +1,1 @@
-{{mainprefix}}\{{prefix}}\addons\%%addon%%
+{{project.mainprefix}}\{{project.prefix}}\addons\%%addon%%
