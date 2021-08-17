@@ -23,7 +23,7 @@ impl Variables {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
-    
+
     #[must_use]
     pub const fn inner(&self) -> &BTreeMap<String, Json> {
         &self.0

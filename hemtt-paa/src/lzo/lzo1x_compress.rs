@@ -126,7 +126,8 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     put_unaligned(
                         get_unaligned(ii.offset(8_isize).offset(4_isize) as *const u32
                             as *const ::std::os::raw::c_void),
-                        op.offset(8_isize).offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                        op.offset(8_isize).offset(4_isize) as *mut u32
+                            as *mut ::std::os::raw::c_void,
                     );
                     op = op.add(t);
                 } else {
@@ -329,7 +330,8 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             let _old = op;
                             op = op.offset(1_isize);
                             _old
-                        } = (16_usize | m_off >> 11_i32 & 8_usize | m_len.wrapping_sub(2_usize)) as u8;
+                        } = (16_usize | m_off >> 11_i32 & 8_usize | m_len.wrapping_sub(2_usize))
+                            as u8;
                     } else {
                         m_len = m_len.wrapping_sub(9_usize);
                         *{

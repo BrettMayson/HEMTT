@@ -10,7 +10,9 @@ pub fn helper(
     _: &mut RenderContext,
     out: &mut dyn Output,
 ) -> HelperResult {
-    let param = h.param(0).map_or_else(|| "%s".to_string(), |p| p.value().render());
+    let param = h
+        .param(0)
+        .map_or_else(|| "%s".to_string(), |p| p.value().render());
 
     let now = if let Some(p) = h.param(1) {
         let p = p.render();
@@ -84,10 +86,8 @@ mod tests {
         handlebars.register_helper("date", Box::new(super::helper));
         handlebars.set_strict_mode(true);
         let data: BTreeMap<&'static str, Json> = BTreeMap::new();
-        assert!(
-            handlebars
-                .render_template("The hour is `{{date \"%H\" \"nyc\"}}` utc", &data)
-                .is_err()
-        );
+        assert!(handlebars
+            .render_template("The hour is `{{date \"%H\" \"nyc\"}}` utc", &data)
+            .is_err());
     }
 }

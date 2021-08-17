@@ -10,7 +10,9 @@ pub fn helper(
     _: &mut RenderContext,
     out: &mut dyn Output,
 ) -> HelperResult {
-    let param = h.param(0).map_or_else(|| "id".to_string(), |p| p.value().render());
+    let param = h
+        .param(0)
+        .map_or_else(|| "id".to_string(), |p| p.value().render());
     let params: Vec<&str> = param.split_whitespace().collect();
 
     let repo = Repository::open(".").map_err(|e| RenderError::new(e.to_string()))?;
