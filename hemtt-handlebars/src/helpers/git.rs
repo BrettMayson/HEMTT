@@ -10,17 +10,13 @@ pub fn helper(
     _: &mut RenderContext,
     out: &mut dyn Output,
 ) -> HelperResult {
-    let param = if let Some(p) = h.param(0) {
-        p.value().render()
-    } else {
-        "id".to_string()
-    };
+    let param = h.param(0).map_or_else(|| "id".to_string(), |p| p.value().render());
     let params: Vec<&str> = param.split_whitespace().collect();
 
     let repo = Repository::open(".").map_err(|e| RenderError::new(e.to_string()))?;
 
-    match params[0] {
-        "id" => {
+    match params.get(0) {
+        Some(&"id") => {
             // SHA-1 Commit Hash
             let rev = repo
                 .revparse_single("HEAD")
@@ -36,7 +32,7 @@ pub fn helper(
             let id_sliced = &id[0..length];
             out.write(id_sliced)?;
         }
-        "commitCount" | "commit_count" => {
+        Some(&("commitCount" | "commit_count")) => {
             if params[0] == "commitCount" {
                 warn!("commitCount is deprecated. use commit_count");
             }
@@ -49,7 +45,7 @@ pub fn helper(
                 .map_err(|e| RenderError::new(e.to_string()))?;
             out.write(&format!("{}", revwalk.count()))?;
         }
-        &_ => {}
+        _ => {}
     }
     Ok(())
 }

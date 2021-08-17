@@ -26,7 +26,8 @@ pub struct Deserializer<'de> {
 
 impl<'de> Deserializer<'de> {
     #[allow(clippy::should_implement_trait)]
-    pub fn from_str(input: &'de str) -> Self {
+    #[must_use]
+    pub const fn from_str(input: &'de str) -> Self {
         Deserializer {
             input,
             next_is_class: false,
@@ -34,6 +35,7 @@ impl<'de> Deserializer<'de> {
             first_reader: false,
         }
     }
+
     pub fn from_reader<R: std::io::Read>(mut reader: R) -> Self {
         let mut text = String::new();
         reader.read_to_string(&mut text).unwrap();
@@ -87,9 +89,8 @@ impl<'de> Deserializer<'de> {
         loop {
             if DIGIT_END.contains(self.peek_char()) {
                 return Ok(s.parse::<T>().unwrap());
-            } else {
-                s.push(self.next_char());
             }
+            s.push(self.next_char());
         }
     }
 
@@ -102,9 +103,8 @@ impl<'de> Deserializer<'de> {
         loop {
             if DIGIT_END.contains(self.peek_char()) {
                 return Ok(s.parse::<T>().unwrap());
-            } else {
-                s.push(self.next_char());
             }
+            s.push(self.next_char());
         }
     }
 
@@ -117,9 +117,8 @@ impl<'de> Deserializer<'de> {
         loop {
             if DIGIT_END.contains(self.peek_char()) {
                 return Ok(s.parse::<T>().unwrap());
-            } else {
-                s.push(self.next_char());
             }
+            s.push(self.next_char());
         }
     }
 
@@ -177,21 +176,16 @@ impl<'de> Deserializer<'de> {
             }
             let sstr: &'static str = Box::leak(s.into_boxed_str());
             Ok(sstr)
-        } else {
-            match self.input.find('=') {
-                Some(len) => {
-                    let s = &self.input[..len].trim();
-                    self.input = &self.input[len..];
-                    if let Some(pos) = s.find('[') {
-                        return Ok(&s[..pos]);
-                    }
-                    Ok(s)
-                }
-                None => {
-                    println!("eof: |{}|", self.input);
-                    Err(Error::Eof)
-                }
+        } else if let Some(len) = self.input.find('=') {
+            let s = &self.input[..len].trim();
+            self.input = &self.input[len..];
+            if let Some(pos) = s.find('[') {
+                return Ok(&s[..pos]);
             }
+            Ok(s)
+        } else {
+            println!("eof: |{}|", self.input);
+            Err(Error::Eof)
         }
     }
 }
@@ -223,13 +217,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                                 return self.deserialize_f64(visitor);
                             } else if s.contains('-') {
                                 return self.deserialize_i64(visitor);
-                            } else {
-                                return self.deserialize_u64(visitor);
                             }
-                        } else {
-                            s.push(self.input.chars().nth(i).unwrap());
-                            i += 1;
+                            return self.deserialize_u64(visitor);
                         }
+                        s.push(self.input.chars().nth(i).unwrap());
+                        i += 1;
                     }
                 }
                 '{' => {

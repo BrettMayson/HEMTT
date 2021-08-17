@@ -37,13 +37,13 @@ pub enum Error {
 
 impl ser::Error for Error {
     fn custom<T: Display>(msg: T) -> Self {
-        Error::Message(msg.to_string())
+        Self::Message(msg.to_string())
     }
 }
 
 impl de::Error for Error {
     fn custom<T: Display>(msg: T) -> Self {
-        Error::Message(msg.to_string())
+        Self::Message(msg.to_string())
     }
 }
 

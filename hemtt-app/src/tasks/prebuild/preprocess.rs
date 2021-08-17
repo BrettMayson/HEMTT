@@ -79,7 +79,7 @@ impl<'a> Resolver for VfsResolver<'a> {
             .unwrap()
             .parent()
             .unwrap()
-            .join(&to)
+            .join(to)
             .unwrap();
         match new_path.open_file() {
             Ok(mut f) => {
@@ -96,7 +96,7 @@ impl<'a> Resolver for VfsResolver<'a> {
                 {
                     let new_path = self
                         .0
-                        .join(&path.trim_start_matches('/'))
+                        .join(path.trim_start_matches('/'))
                         .unwrap()
                         .join(to.trim_start_matches(&format!("/{}/", prefix.replace("\\", "/"))))
                         .unwrap();

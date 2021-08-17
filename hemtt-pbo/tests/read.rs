@@ -13,11 +13,11 @@ fn test_pbo(
     let mut pbo = ReadablePbo::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
     assert_eq!(pbo.extensions().len(), extension_count);
-    assert_eq!(pbo.is_sorted(), true);
+    assert!(pbo.is_sorted());
     assert_eq!(pbo.extension("version"), Some(&version.to_string()));
     assert_eq!(pbo.extension("prefix"), Some(&prefix.to_string()));
-    assert_eq!(pbo.retrieve("not_real").is_none(), true);
-    assert_eq!(pbo.header("not_real").is_none(), true);
+    assert!(pbo.retrieve("not_real").is_none());
+    assert!(pbo.header("not_real").is_none());
     assert_eq!(pbo.checksum(), Some(checksum));
     pbo
 }

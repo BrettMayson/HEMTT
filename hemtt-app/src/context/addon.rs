@@ -53,7 +53,7 @@ impl<'a, 'b> AddonContext<'a, 'b> {
                 prefix_gen
             } else {
                 debug!("Using prefix from $PBOPREFIX$ for {}", addon.source());
-                prefix.to_string()
+                prefix
             }
         } else {
             debug!("Using generated prefix for {}", addon.source());
@@ -71,7 +71,7 @@ impl<'a, 'b> AddonContext<'a, 'b> {
     }
 
     pub fn global(&self) -> &Context {
-        &self.global
+        self.global
     }
 
     pub fn failed(&self) -> bool {
@@ -184,7 +184,7 @@ impl<'a, 'b> AddonListContext<'a, 'b> {
     }
 
     pub fn global(&self) -> &Context {
-        &self.global
+        self.global
     }
 
     pub fn addons(&self) -> &Vec<AddonContext<'a, 'b>> {

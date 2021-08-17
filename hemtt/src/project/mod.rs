@@ -256,7 +256,7 @@ impl Project {
     }
 
     /// The version of the project
-    pub fn version(&self) -> &Version {
+    pub const fn version(&self) -> &Version {
         &self.version
     }
 
@@ -279,7 +279,7 @@ impl Project {
     }
 
     /// Signature version used to sign releases
-    pub fn sig_version(&self) -> u32 {
+    pub const fn sig_version(&self) -> u32 {
         self.sig_version
     }
 }

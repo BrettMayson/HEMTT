@@ -3,7 +3,7 @@ extern crate log;
 
 use std::collections::BTreeMap;
 
-use handlebars::*;
+use handlebars::{Handlebars, RenderError};
 use serde_json::value::Value as Json;
 
 mod helpers;
@@ -19,15 +19,20 @@ pub fn render(source: &str, data: &Variables) -> Result<String, RenderError> {
 #[derive(Default)]
 pub struct Variables(BTreeMap<String, Json>);
 impl Variables {
+    #[must_use]
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
-    pub fn inner(&self) -> &BTreeMap<String, Json> {
+    
+    #[must_use]
+    pub const fn inner(&self) -> &BTreeMap<String, Json> {
         &self.0
     }
-    pub fn append(&mut self, mut other: Variables) {
+
+    pub fn append(&mut self, mut other: Self) {
         self.0.append(&mut other.0);
     }
+
     pub fn insert<S: Into<String>>(&mut self, key: S, value: Json) {
         self.0.insert(key.into(), value);
     }

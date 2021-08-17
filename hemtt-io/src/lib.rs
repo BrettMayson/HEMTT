@@ -61,7 +61,8 @@ impl<T: Write> WriteExt for T {
     }
 }
 
-pub fn compressed_int_len(x: u32) -> usize {
+#[must_use]
+pub const fn compressed_int_len(x: u32) -> usize {
     let mut temp = x;
     let mut len = 0;
 

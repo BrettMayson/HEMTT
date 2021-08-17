@@ -17,7 +17,7 @@ impl Deref for Timestamp {
     }
 }
 impl Timestamp {
-    pub fn from_u32(t: u32) -> Self {
+    pub const fn from_u32(t: u32) -> Self {
         Self(t)
     }
 }
@@ -65,19 +65,19 @@ impl Header {
     pub fn filename(&self) -> &str {
         &self.filename
     }
-    pub fn method(&self) -> u32 {
+    pub const fn method(&self) -> u32 {
         self.method
     }
-    pub fn original(&self) -> u32 {
+    pub const fn original(&self) -> u32 {
         self.original
     }
-    pub fn reserved(&self) -> u32 {
+    pub const fn reserved(&self) -> u32 {
         self.reserved
     }
-    pub fn timestamp(&self) -> Timestamp {
+    pub const fn timestamp(&self) -> Timestamp {
         self.timestamp
     }
-    pub fn size(&self) -> u32 {
+    pub const fn size(&self) -> u32 {
         self.size
     }
 }

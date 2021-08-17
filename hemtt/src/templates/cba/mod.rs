@@ -10,7 +10,7 @@ pub struct CBA {
 }
 
 impl CBA {
-    pub fn new(path: PathBuf) -> Self {
+    pub const fn new(path: PathBuf) -> Self {
         Self { path }
     }
 
@@ -56,7 +56,7 @@ impl Template for CBA {
             f.write_all(
                 super::replace(
                     &super::Vars {
-                        addon: &addon.name(),
+                        addon: addon.name(),
                     },
                     String::from_utf8(content.to_vec()).unwrap(),
                 )

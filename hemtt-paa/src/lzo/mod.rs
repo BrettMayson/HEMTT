@@ -58,8 +58,8 @@ impl Drop for LzoContext {
 }
 
 impl LzoContext {
-    pub fn new() -> LzoContext {
-        LzoContext {
+    pub fn new() -> Self {
+        Self {
             wrkmem: unsafe { libc::malloc(LZO1X_MEM_COMPRESS) },
         }
     }
@@ -153,17 +153,17 @@ mod tests {
             let mut ctx = LzoContext::new();
             let mut dst = slice::from_raw_parts_mut(dst as *mut u8, dst_len);
             let result = ctx.compress_to_slice(&data, &mut dst);
-            assert_eq!(result.is_ok(), true);
+            assert!(result.is_ok());
             let dst = result.unwrap();
             let result = ctx.compress(&data, &mut v);
-            assert_eq!(result.is_ok(), true);
+            assert!(result.is_ok());
             println!("{}", dst.len());
 
             let dec_dst = libc::malloc(mem::size_of_val(&data));
             let result_len = mem::size_of_val(&data);
             let mut dec_dst = slice::from_raw_parts_mut(dec_dst as *mut u8, result_len);
-            let result = LzoContext::decompress_to_slice(&dst, &mut dec_dst);
-            assert_eq!(result.is_ok(), true);
+            let result = LzoContext::decompress_to_slice(dst, &mut dec_dst);
+            assert!(result.is_ok());
             let result = result.unwrap();
             println!("{}", result.len());
             assert_eq!(result.len(), mem::size_of_val(&data));

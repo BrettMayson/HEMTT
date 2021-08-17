@@ -40,7 +40,7 @@ impl Addon {
         &self.name
     }
 
-    pub fn location(&self) -> AddonLocation {
+    pub const fn location(&self) -> AddonLocation {
         self.location
     }
 

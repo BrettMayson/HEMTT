@@ -42,7 +42,7 @@ impl<'a> Context<'a> {
             )
             .into(),
             pfs: AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
-            rfs: AltrootFS::new(PhysicalFS::new(root.join(&release_path).clone()).into()).into(),
+            rfs: AltrootFS::new(PhysicalFS::new(root.join(&release_path)).into()).into(),
             root,
             release_path,
 

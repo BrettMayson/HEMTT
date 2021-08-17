@@ -13,10 +13,10 @@ extern "C" {
 
 unsafe extern "C" fn get_unaligned_le32(p: *const ::std::os::raw::c_void) -> u32 {
     let input: *const u8 = p as *const u8;
-    (*input.offset(0isize) as i32
-        | (*input.offset(1isize) as i32) << 8i32
-        | (*input.offset(2isize) as i32) << 16i32
-        | (*input.offset(3isize) as i32) << 24i32) as u32
+    (*input.offset(0_isize) as i32
+        | (*input.offset(1_isize) as i32) << 8_i32
+        | (*input.offset(2_isize) as i32) << 16_i32
+        | (*input.offset(3_isize) as i32) << 24_i32) as u32
 }
 
 unsafe extern "C" fn put_unaligned(mut v: u32, p: *mut ::std::os::raw::c_void) {
@@ -28,7 +28,7 @@ unsafe extern "C" fn put_unaligned(mut v: u32, p: *mut ::std::os::raw::c_void) {
 }
 
 unsafe extern "C" fn get_unaligned(p: *const ::std::os::raw::c_void) -> u32 {
-    let mut ret: u32 = 0u32;
+    let mut ret: u32 = 0_u32;
     memcpy(
         &mut ret as *mut u32 as *mut ::std::os::raw::c_void,
         p,
@@ -49,16 +49,16 @@ unsafe extern "C" fn lzo1x_1_do_compress(
     let mut ip: *const u8;
     let mut op: *mut u8;
     let in_end: *const u8 = in_.add(in_len);
-    let ip_end: *const u8 = in_.add(in_len).offset(-20isize);
+    let ip_end: *const u8 = in_.add(in_len).offset(-20_isize);
     let mut ii: *const u8;
     let dict: *mut u16 = wrkmem as *mut u16;
     op = out;
     ip = in_;
     ii = ip;
-    ip = ip.add(if ti < 4usize {
-        4usize.wrapping_sub(ti)
+    ip = ip.add(if ti < 4_usize {
+        4_usize.wrapping_sub(ti)
     } else {
-        0usize
+        0_usize
     });
     let mut m_pos: *const u8;
     let mut t: usize;
@@ -67,18 +67,18 @@ unsafe extern "C" fn lzo1x_1_do_compress(
     let mut dv: u32;
     'loop2: loop {
         ip = ip.offset(
-            1isize
+            1_isize
                 + (((ip as isize).wrapping_sub(ii as isize)
                     / ::std::mem::size_of::<u8>() as isize)
-                    >> 5i32),
+                    >> 5_i32),
         );
         loop {
             if ip >= ip_end {
                 break 'loop2;
             }
             dv = get_unaligned_le32(ip as *const ::std::os::raw::c_void);
-            t = (dv.wrapping_mul(0x1824429du32) >> (32i32 - 13i32)
-                & (1u32 << 13i32).wrapping_sub(1u32)) as usize;
+            t = (dv.wrapping_mul(0x1824_429d_u32) >> (32_i32 - 13_i32)
+                & (1_u32 << 13_i32).wrapping_sub(1_u32)) as usize;
             m_pos = in_.offset(*dict.add(t) as isize);
             *dict.add(t) = ((ip as isize).wrapping_sub(in_ as isize)
                 / ::std::mem::size_of::<u8>() as isize) as u16;
@@ -86,14 +86,14 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                 break;
             }
             ii = ii.offset(-(ti as isize));
-            ti = 0usize;
+            ti = 0_usize;
             t = ((ip as isize).wrapping_sub(ii as isize) / ::std::mem::size_of::<u8>() as isize)
                 as usize;
-            if t != 0usize {
-                if t <= 3usize {
+            if t != 0_usize {
+                if t <= 3_usize {
                     {
                         let _rhs = t;
-                        let _lhs = &mut *op.offset(-2isize);
+                        let _lhs = &mut *op.offset(-2_isize);
                         *_lhs = (*_lhs as usize | _rhs) as u8;
                     }
                     put_unaligned(
@@ -101,62 +101,62 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         op as *mut u32 as *mut ::std::os::raw::c_void,
                     );
                     op = op.add(t);
-                } else if t <= 16usize {
+                } else if t <= 16_usize {
                     *{
                         let _old = op;
-                        op = op.offset(1isize);
+                        op = op.offset(1_isize);
                         _old
-                    } = t.wrapping_sub(3usize) as u8;
+                    } = t.wrapping_sub(3_usize) as u8;
                     put_unaligned(
                         get_unaligned(ii as *const u32 as *const ::std::os::raw::c_void),
                         op as *mut u32 as *mut ::std::os::raw::c_void,
                     );
                     put_unaligned(
                         get_unaligned(
-                            ii.offset(4isize) as *const u32 as *const ::std::os::raw::c_void
+                            ii.offset(4_isize) as *const u32 as *const ::std::os::raw::c_void
                         ),
-                        op.offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                        op.offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                     );
                     put_unaligned(
                         get_unaligned(
-                            ii.offset(8isize) as *const u32 as *const ::std::os::raw::c_void
+                            ii.offset(8_isize) as *const u32 as *const ::std::os::raw::c_void
                         ),
-                        op.offset(8isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                        op.offset(8_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                     );
                     put_unaligned(
-                        get_unaligned(ii.offset(8isize).offset(4isize) as *const u32
+                        get_unaligned(ii.offset(8_isize).offset(4_isize) as *const u32
                             as *const ::std::os::raw::c_void),
-                        op.offset(8isize).offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                        op.offset(8_isize).offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                     );
                     op = op.add(t);
                 } else {
-                    if t <= 18usize {
+                    if t <= 18_usize {
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = t.wrapping_sub(3usize) as u8;
+                        } = t.wrapping_sub(3_usize) as u8;
                     } else {
-                        let mut tt: usize = t.wrapping_sub(18usize);
+                        let mut tt: usize = t.wrapping_sub(18_usize);
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = 0u8;
+                        } = 0_u8;
                         loop {
-                            if tt <= 255usize {
+                            if tt <= 255_usize {
                                 break;
                             }
-                            tt = tt.wrapping_sub(255usize);
+                            tt = tt.wrapping_sub(255_usize);
                             *{
                                 let _old = op;
-                                op = op.offset(1isize);
+                                op = op.offset(1_isize);
                                 _old
-                            } = 0u8;
+                            } = 0_u8;
                         }
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
                         } = tt as u8;
                     }
@@ -167,44 +167,44 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         );
                         put_unaligned(
                             get_unaligned(
-                                ii.offset(4isize) as *const u32 as *const ::std::os::raw::c_void
+                                ii.offset(4_isize) as *const u32 as *const ::std::os::raw::c_void
                             ),
-                            op.offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                            op.offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                         );
                         put_unaligned(
                             get_unaligned(
-                                ii.offset(8isize) as *const u32 as *const ::std::os::raw::c_void
+                                ii.offset(8_isize) as *const u32 as *const ::std::os::raw::c_void
                             ),
-                            op.offset(8isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                            op.offset(8_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                         );
                         put_unaligned(
-                            get_unaligned(ii.offset(8isize).offset(4isize) as *const u32
+                            get_unaligned(ii.offset(8_isize).offset(4_isize) as *const u32
                                 as *const ::std::os::raw::c_void),
-                            op.offset(8isize).offset(4isize) as *mut u32
+                            op.offset(8_isize).offset(4_isize) as *mut u32
                                 as *mut ::std::os::raw::c_void,
                         );
-                        op = op.offset(16isize);
-                        ii = ii.offset(16isize);
-                        t = t.wrapping_sub(16usize);
-                        if t < 16usize {
+                        op = op.offset(16_isize);
+                        ii = ii.offset(16_isize);
+                        t = t.wrapping_sub(16_usize);
+                        if t < 16_usize {
                             break;
                         }
                     }
-                    if t > 0usize {
+                    if t > 0_usize {
                         loop {
                             *{
                                 let _old = op;
-                                op = op.offset(1isize);
+                                op = op.offset(1_isize);
                                 _old
                             } = *{
                                 let _old = ii;
-                                ii = ii.offset(1isize);
+                                ii = ii.offset(1_isize);
                                 _old
                             };
                             if {
-                                t = t.wrapping_sub(1usize);
+                                t = t.wrapping_sub(1_usize);
                                 t
-                            } == 0usize
+                            } == 0_usize
                             {
                                 break;
                             }
@@ -212,7 +212,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     }
                 }
             }
-            m_len = 4usize;
+            m_len = 4_usize;
             if *ip.add(m_len) as i32 == *m_pos.add(m_len) as i32 {
                 current_block = 22;
             } else {
@@ -220,42 +220,42 @@ unsafe extern "C" fn lzo1x_1_do_compress(
             }
             loop {
                 if current_block == 22 {
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if *ip.add(m_len) as i32 != *m_pos.add(m_len) as i32 {
                         current_block = 31;
                         continue;
                     }
-                    m_len = m_len.wrapping_add(1usize);
+                    m_len = m_len.wrapping_add(1_usize);
                     if ip.add(m_len) >= ip_end {
                         current_block = 31;
                         continue;
@@ -271,113 +271,112 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         as usize;
                     ip = ip.add(m_len);
                     ii = ip;
-                    if m_len <= 8usize && (m_off <= 0x800usize) {
+                    if m_len <= 8_usize && (m_off <= 0x800_usize) {
                         current_block = 47;
-                        break;
                     } else {
                         current_block = 32;
-                        break;
                     }
+                    break;
                 }
             }
             if current_block == 32 {
-                if m_off <= 0x4000usize {
-                    m_off = m_off.wrapping_sub(1usize);
-                    if m_len <= 33usize {
+                if m_off <= 0x4000_usize {
+                    m_off = m_off.wrapping_sub(1_usize);
+                    if m_len <= 33_usize {
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = (32usize | m_len.wrapping_sub(2usize)) as u8;
+                        } = (32_usize | m_len.wrapping_sub(2_usize)) as u8;
                     } else {
-                        m_len = m_len.wrapping_sub(33usize);
+                        m_len = m_len.wrapping_sub(33_usize);
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = 32u8;
+                        } = 32_u8;
                         loop {
-                            if m_len <= 255usize {
+                            if m_len <= 255_usize {
                                 break;
                             }
-                            m_len = m_len.wrapping_sub(255usize);
+                            m_len = m_len.wrapping_sub(255_usize);
                             *{
                                 let _old = op;
-                                op = op.offset(1isize);
+                                op = op.offset(1_isize);
                                 _old
-                            } = 0u8;
+                            } = 0_u8;
                         }
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
                         } = m_len as u8;
                     }
                     *{
                         let _old = op;
-                        op = op.offset(1isize);
+                        op = op.offset(1_isize);
                         _old
-                    } = (m_off << 2i32) as u8;
+                    } = (m_off << 2_i32) as u8;
                     *{
                         let _old = op;
-                        op = op.offset(1isize);
+                        op = op.offset(1_isize);
                         _old
-                    } = (m_off >> 6i32) as u8;
+                    } = (m_off >> 6_i32) as u8;
                 } else {
-                    m_off = m_off.wrapping_sub(0x4000usize);
-                    if m_len <= 9usize {
+                    m_off = m_off.wrapping_sub(0x4000_usize);
+                    if m_len <= 9_usize {
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = (16usize | m_off >> 11i32 & 8usize | m_len.wrapping_sub(2usize)) as u8;
+                        } = (16_usize | m_off >> 11_i32 & 8_usize | m_len.wrapping_sub(2_usize)) as u8;
                     } else {
-                        m_len = m_len.wrapping_sub(9usize);
+                        m_len = m_len.wrapping_sub(9_usize);
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
-                        } = (16usize | m_off >> 11i32 & 8usize) as u8;
+                        } = (16_usize | m_off >> 11_i32 & 8_usize) as u8;
                         loop {
-                            if m_len <= 255usize {
+                            if m_len <= 255_usize {
                                 break;
                             }
-                            m_len = m_len.wrapping_sub(255usize);
+                            m_len = m_len.wrapping_sub(255_usize);
                             *{
                                 let _old = op;
-                                op = op.offset(1isize);
+                                op = op.offset(1_isize);
                                 _old
-                            } = 0u8;
+                            } = 0_u8;
                         }
                         *{
                             let _old = op;
-                            op = op.offset(1isize);
+                            op = op.offset(1_isize);
                             _old
                         } = m_len as u8;
                     }
-                    *{
-                        let _old = op;
-                        op = op.offset(1isize);
-                        _old
-                    } = (m_off << 2i32) as u8;
-                    *{
-                        let _old = op;
-                        op = op.offset(1isize);
-                        _old
-                    } = (m_off >> 6i32) as u8;
                 }
+                *{
+                    let _old = op;
+                    op = op.offset(1_isize);
+                    _old
+                } = (m_off << 2_i32) as u8;
+                *{
+                    let _old = op;
+                    op = op.offset(1_isize);
+                    _old
+                } = (m_off >> 6_i32) as u8;
             } else {
-                m_off = m_off.wrapping_sub(1usize);
+                m_off = m_off.wrapping_sub(1_usize);
                 *{
                     let _old = op;
-                    op = op.offset(1isize);
+                    op = op.offset(1_isize);
                     _old
-                } = (m_len.wrapping_sub(1usize) << 5i32 | (m_off & 7usize) << 2i32) as u8;
+                } = (m_len.wrapping_sub(1_usize) << 5_i32 | (m_off & 7_usize) << 2_i32) as u8;
                 *{
                     let _old = op;
-                    op = op.offset(1isize);
+                    op = op.offset(1_isize);
                     _old
-                } = (m_off >> 3i32) as u8;
+                } = (m_off >> 3_i32) as u8;
             }
         }
     }
@@ -399,24 +398,24 @@ pub unsafe extern "C" fn lzo1x_1_compress(
     let mut ip: *const u8 = in_;
     let mut op: *mut u8 = out;
     let mut l: usize = in_len;
-    let mut t: usize = 0usize;
+    let mut t: usize = 0_usize;
     loop {
-        if l <= 20usize {
+        if l <= 20_usize {
             break;
         }
-        let ll: usize = if l <= (0xbfffi32 + 1i32) as usize {
+        let ll: usize = if l <= (0xbfff_i32 + 1_i32) as usize {
             l
         } else {
-            (0xbfffi32 + 1i32) as usize
+            (0xbfff_i32 + 1_i32) as usize
         };
         let ll_end: usize = (ip as usize).wrapping_add(ll);
-        if ll_end.wrapping_add(t.wrapping_add(ll) >> 5i32) <= ll_end {
+        if ll_end.wrapping_add(t.wrapping_add(ll) >> 5_i32) <= ll_end {
             break;
         }
         memset(
             wrkmem,
-            0i32,
-            ((1u32 << 13i32) as usize).wrapping_mul(::std::mem::size_of::<u16>()),
+            0_i32,
+            ((1_u32 << 13_i32) as usize).wrapping_mul(::std::mem::size_of::<u16>()),
         );
         t = lzo1x_1_do_compress(ip, ll, op, out_len, t, wrkmem);
         ip = ip.add(ll);
@@ -424,49 +423,49 @@ pub unsafe extern "C" fn lzo1x_1_compress(
         l = l.wrapping_sub(ll);
     }
     t = t.wrapping_add(l);
-    if t > 0usize {
+    if t > 0_usize {
         let mut ii: *const u8 = in_.add(in_len).offset(-(t as isize));
-        if op == out && (t <= 238usize) {
+        if op == out && (t <= 238_usize) {
             *{
                 let _old = op;
-                op = op.offset(1isize);
+                op = op.offset(1_isize);
                 _old
-            } = 17usize.wrapping_add(t) as u8;
-        } else if t <= 3usize {
+            } = 17_usize.wrapping_add(t) as u8;
+        } else if t <= 3_usize {
             let _rhs = t;
-            let _lhs = &mut *op.offset(-2isize);
+            let _lhs = &mut *op.offset(-2_isize);
             *_lhs = (*_lhs as usize | _rhs) as u8;
-        } else if t <= 18usize {
+        } else if t <= 18_usize {
             *{
                 let _old = op;
-                op = op.offset(1isize);
+                op = op.offset(1_isize);
                 _old
-            } = t.wrapping_sub(3usize) as u8;
+            } = t.wrapping_sub(3_usize) as u8;
         } else {
-            let mut tt: usize = t.wrapping_sub(18usize);
+            let mut tt: usize = t.wrapping_sub(18_usize);
             *{
                 let _old = op;
-                op = op.offset(1isize);
+                op = op.offset(1_isize);
                 _old
-            } = 0u8;
+            } = 0_u8;
             loop {
-                if tt <= 255usize {
+                if tt <= 255_usize {
                     break;
                 }
-                tt = tt.wrapping_sub(255usize);
+                tt = tt.wrapping_sub(255_usize);
                 *{
                     let _old = op;
-                    op = op.offset(1isize);
+                    op = op.offset(1_isize);
                     _old
-                } = 0u8;
+                } = 0_u8;
             }
             *{
                 let _old = op;
-                op = op.offset(1isize);
+                op = op.offset(1_isize);
                 _old
             } = tt as u8;
         }
-        if t >= 16usize {
+        if t >= 16_usize {
             current_block = 16;
         } else {
             current_block = 18;
@@ -478,27 +477,27 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                     op as *mut u32 as *mut ::std::os::raw::c_void,
                 );
                 put_unaligned(
-                    get_unaligned(ii.offset(4isize) as *const u32 as *const ::std::os::raw::c_void),
-                    op.offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                    get_unaligned(ii.offset(4_isize) as *const u32 as *const ::std::os::raw::c_void),
+                    op.offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                 );
                 put_unaligned(
-                    get_unaligned(ii.offset(8isize) as *const u32 as *const ::std::os::raw::c_void),
-                    op.offset(8isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                    get_unaligned(ii.offset(8_isize) as *const u32 as *const ::std::os::raw::c_void),
+                    op.offset(8_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                 );
                 put_unaligned(
-                    get_unaligned(ii.offset(8isize).offset(4isize) as *const u32
+                    get_unaligned(ii.offset(8_isize).offset(4_isize) as *const u32
                         as *const ::std::os::raw::c_void),
-                    op.offset(8isize).offset(4isize) as *mut u32 as *mut ::std::os::raw::c_void,
+                    op.offset(8_isize).offset(4_isize) as *mut u32 as *mut ::std::os::raw::c_void,
                 );
-                op = op.offset(16isize);
-                ii = ii.offset(16isize);
-                t = t.wrapping_sub(16usize);
-                if t >= 16usize {
+                op = op.offset(16_isize);
+                ii = ii.offset(16_isize);
+                t = t.wrapping_sub(16_usize);
+                if t >= 16_usize {
                     current_block = 16;
                 } else {
                     current_block = 18;
                 }
-            } else if t > 0usize {
+            } else if t > 0_usize {
                 current_block = 19;
                 break;
             } else {
@@ -511,17 +510,17 @@ pub unsafe extern "C" fn lzo1x_1_compress(
             loop {
                 *{
                     let _old = op;
-                    op = op.offset(1isize);
+                    op = op.offset(1_isize);
                     _old
                 } = *{
                     let _old = ii;
-                    ii = ii.offset(1isize);
+                    ii = ii.offset(1_isize);
                     _old
                 };
                 if {
-                    t = t.wrapping_sub(1usize);
+                    t = t.wrapping_sub(1_usize);
                     t
-                } == 0usize
+                } == 0_usize
                 {
                     break;
                 }
@@ -530,20 +529,20 @@ pub unsafe extern "C" fn lzo1x_1_compress(
     }
     *{
         let _old = op;
-        op = op.offset(1isize);
+        op = op.offset(1_isize);
         _old
-    } = (16i32 | 1i32) as u8;
+    } = (16_i32 | 1_i32) as u8;
     *{
         let _old = op;
-        op = op.offset(1isize);
+        op = op.offset(1_isize);
         _old
-    } = 0u8;
+    } = 0_u8;
     *{
         let _old = op;
-        op = op.offset(1isize);
+        op = op.offset(1_isize);
         _old
-    } = 0u8;
+    } = 0_u8;
     *out_len =
         ((op as isize).wrapping_sub(out as isize) / ::std::mem::size_of::<u8>() as isize) as usize;
-    0i32
+    0_i32
 }

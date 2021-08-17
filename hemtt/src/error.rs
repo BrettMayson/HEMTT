@@ -39,7 +39,7 @@ pub enum HEMTTError {
 }
 
 impl HEMTTError {
-    pub fn can_submit_bug(&self) -> bool {
+    pub const fn can_submit_bug(&self) -> bool {
         !matches!(
             *self,
             Self::User(_)
@@ -134,7 +134,7 @@ impl std::error::Error for HEMTTError {
 }
 
 impl From<std::io::Error> for HEMTTError {
-    fn from(err: std::io::Error) -> HEMTTError {
+    fn from(err: std::io::Error) -> Self {
         Self::IO(err)
     }
 }

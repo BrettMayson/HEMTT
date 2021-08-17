@@ -288,7 +288,7 @@ where
                                     ret.push(TokenPos::with_pos(Token::DoubleQuote, &token));
                                     ret.append(&mut _resolve_word(
                                         &mut iter,
-                                        &w,
+                                        w,
                                         &token,
                                         root,
                                         resolver.clone(),
@@ -351,11 +351,11 @@ where
                 },
                 root,
                 resolver,
-                &defines,
+                defines,
             ) {
                 return r;
             }
-        } else if let Some(r) = _resolve(ident, d2, root, resolver, &defines) {
+        } else if let Some(r) = _resolve(ident, d2, root, resolver, defines) {
             return r;
         } else {
             return vec![token.to_owned()];
@@ -490,7 +490,7 @@ where
                                 .to_owned();
                             ret.append(&mut _preprocess(
                                 {
-                                    let resolved = resolver.resolve(&root, &token.path(), &file)?;
+                                    let resolved = resolver.resolve(root, token.path(), &file)?;
                                     super::tokenize(resolved.data(), resolved.path()).unwrap()
                                 },
                                 root,
@@ -517,7 +517,7 @@ where
                 if defines.contains_key(text) {
                     ret.append(
                         &mut _resolve(
-                            &text,
+                            text,
                             &Define {
                                 call: false,
                                 args: if let Some(tp) = iter.peek() {
@@ -546,7 +546,7 @@ where
                             },
                             root,
                             resolver.clone(),
-                            &defines,
+                            defines,
                         )
                         .unwrap(),
                     );

@@ -10,11 +10,7 @@ pub fn helper(
     _: &mut RenderContext,
     out: &mut dyn Output,
 ) -> HelperResult {
-    let param = if let Some(p) = h.param(0) {
-        p.value().render()
-    } else {
-        "%s".to_string()
-    };
+    let param = h.param(0).map_or_else(|| "%s".to_string(), |p| p.value().render());
 
     let now = if let Some(p) = h.param(1) {
         let p = p.render();
@@ -49,7 +45,7 @@ mod tests {
         assert_eq!(
             format!("The year is `{}`", Local::now().year()),
             handlebars
-                .render_template(&"The year is `{{date \"%Y\"}}`", &data)
+                .render_template("The year is `{{date \"%Y\"}}`", &data)
                 .unwrap()
         );
     }
@@ -63,7 +59,7 @@ mod tests {
         assert_eq!(
             format!("The hour is `{}` locally", Local::now().format("%H")),
             handlebars
-                .render_template(&"The hour is `{{date \"%H\"}}` locally", &data)
+                .render_template("The hour is `{{date \"%H\"}}` locally", &data)
                 .unwrap()
         );
     }
@@ -77,7 +73,7 @@ mod tests {
         assert_eq!(
             format!("The hour is `{}` utc", Utc::now().format("%H")),
             handlebars
-                .render_template(&"The hour is `{{date \"%H\" \"utc\"}}` utc", &data)
+                .render_template("The hour is `{{date \"%H\" \"utc\"}}` utc", &data)
                 .unwrap()
         );
     }
@@ -88,10 +84,9 @@ mod tests {
         handlebars.register_helper("date", Box::new(super::helper));
         handlebars.set_strict_mode(true);
         let data: BTreeMap<&'static str, Json> = BTreeMap::new();
-        assert_eq!(
-            true,
+        assert!(
             handlebars
-                .render_template(&"The hour is `{{date \"%H\" \"nyc\"}}` utc", &data)
+                .render_template("The hour is `{{date \"%H\" \"nyc\"}}` utc", &data)
                 .is_err()
         );
     }

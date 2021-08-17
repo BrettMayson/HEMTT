@@ -17,7 +17,7 @@ impl AddonLocation {
     }
 
     /// Is the location a supported location
-    pub fn is_first_class(&self) -> bool {
+    pub const fn is_first_class(&self) -> bool {
         match *self {
             Self::Addons => true,
             Self::Compats => true,
@@ -29,7 +29,7 @@ impl AddonLocation {
     /// CLI - Is the location a valid target
     pub fn validate(location: String) -> Result<(), String> {
         // Currently only first class locations are supported
-        if AddonLocation::from(location.as_str()).is_first_class() {
+        if Self::from(location.as_str()).is_first_class() {
             Ok(())
         } else {
             Err(Self::options())
@@ -94,12 +94,12 @@ impl From<&str> for AddonLocation {
 
 impl From<AddonLocation> for PathBuf {
     fn from(al: AddonLocation) -> Self {
-        PathBuf::from(al.to_string())
+        Self::from(al.to_string())
     }
 }
 
 impl From<&AddonLocation> for PathBuf {
     fn from(al: &AddonLocation) -> Self {
-        PathBuf::from(al.to_string())
+        Self::from(al.to_string())
     }
 }

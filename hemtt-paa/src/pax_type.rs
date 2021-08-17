@@ -23,7 +23,7 @@ impl PaXType {
         }
     }
 
-    pub fn from_bytes(bytes: [u8; 2]) -> Option<Self> {
+    pub const fn from_bytes(bytes: [u8; 2]) -> Option<Self> {
         match bytes {
             [1, 255] => Some(Self::DXT1),    // 0x01FF
             [2, 255] => Some(Self::DXT2),    // 0x02FF
@@ -42,9 +42,9 @@ impl PaXType {
 impl From<PaXType> for image::dxt::DXTVariant {
     fn from(pax: PaXType) -> Self {
         match pax {
-            PaXType::DXT1 => image::dxt::DXTVariant::DXT1,
-            PaXType::DXT3 => image::dxt::DXTVariant::DXT3,
-            PaXType::DXT5 => image::dxt::DXTVariant::DXT5,
+            PaXType::DXT1 => Self::DXT1,
+            PaXType::DXT3 => Self::DXT3,
+            PaXType::DXT5 => Self::DXT5,
             _ => unimplemented!(),
         }
     }
