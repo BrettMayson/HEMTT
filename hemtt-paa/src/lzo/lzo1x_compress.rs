@@ -313,16 +313,6 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             _old
                         } = m_len as u8;
                     }
-                    *{
-                        let _old = op;
-                        op = op.offset(1_isize);
-                        _old
-                    } = (m_off << 2_i32) as u8;
-                    *{
-                        let _old = op;
-                        op = op.offset(1_isize);
-                        _old
-                    } = (m_off >> 6_i32) as u8;
                 } else {
                     m_off = m_off.wrapping_sub(0x4000_usize);
                     if m_len <= 9_usize {
