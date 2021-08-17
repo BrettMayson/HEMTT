@@ -21,6 +21,8 @@ fn test_pbo(
     assert!(pbo.header("not_real").is_none());
     if sorted {
         assert_eq!(pbo.checksum(), checksum);
+    } else {
+        assert_eq!(pbo.gen_checksum().unwrap(), checksum);
     }
     pbo
 }
@@ -107,7 +109,10 @@ fn ace_weather_8bd4922f() {
         3,
         "8bd4922f",
         "z\\ace\\addons\\weather",
-        vec![],
+        vec![
+            182, 44, 18, 201, 133, 232, 236, 162, 127, 37, 203, 45, 42, 137, 130, 36, 120, 104,
+            187, 203,
+        ],
     );
     test_header(
         pbo.files().first().unwrap(),

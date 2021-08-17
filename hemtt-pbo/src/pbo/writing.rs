@@ -287,4 +287,20 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn extensions() {
+        let mut pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
+        pbo.add_extension("prefix", "foobar");
+        pbo.add_extension("version", "1.2.3");
+        let mut buffer = Vec::new();
+        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        assert_eq!(
+            pbo.checksum().unwrap(),
+            vec![
+                82, 23, 199, 92, 103, 114, 230, 42, 118, 31, 171, 248, 220, 143, 202, 47, 233, 33,
+                217, 248
+            ]
+        );
+    }
 }
