@@ -57,6 +57,7 @@ mod tests {
     use std::path::PathBuf;
 
     use fs_extra::{copy_items, dir::CopyOptions};
+    use serial_test::serial;
 
     use crate::{render, Variables};
 
@@ -100,6 +101,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn id() {
         let test = TestFolder::new();
         let orig = std::env::current_dir().unwrap();
@@ -114,6 +116,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn commit_count() {
         let test = TestFolder::new();
         let orig = std::env::current_dir().unwrap();

@@ -1,10 +1,10 @@
-use std::fs::File;
 use std::path::PathBuf;
+use std::{fs::File, io::Cursor};
 
 use super::Command;
 use crate::{BIPublicKey, BISign, BISignError};
 
-use hemtt_pbo::ReadablePbo;
+use hemtt_pbo::{ReadablePbo, WritablePbo};
 
 pub struct Verify {}
 impl Command for Verify {
@@ -64,10 +64,26 @@ impl Command for Verify {
 
         println!();
         println!("PBO: {:?}", pbo_path);
-        let stored = pbo.checksum().unwrap();
+        let stored = pbo.checksum();
         let actual = pbo.gen_checksum().unwrap();
-        println!("\tStored Hash: {:?}", stored);
-        println!("\tActual Hash: {:?}", actual);
+        println!("\tStored Hash:  {:?}", stored);
+        let sorted = pbo.is_sorted();
+        if let Err((_, files_sorted)) = sorted {
+            println!("\tInvalid Hash: {:?}", actual);
+            let mut new_pbo = WritablePbo::<Cursor<std::boxed::Box<[u8]>>>::new();
+            for f in files_sorted {
+                new_pbo
+                    .add_file_header(
+                        f.filename(),
+                        pbo.retrieve(f.filename()).unwrap(),
+                        f.to_owned(),
+                    )
+                    .unwrap();
+            }
+            println!("\tActual Hash:  {:?}", new_pbo.checksum().unwrap());
+        } else {
+            println!("\tActual Hash:  {:?}", actual);
+        }
         println!("\tExtensions");
         for ext in pbo.extensions() {
             println!("\t\t{}: {}", ext.0, ext.1);
@@ -121,6 +137,15 @@ impl Command for Verify {
             }
             Err(BISignError::IOError(e)) => {
                 println!("Verification Failed: Encountered IO error: {}", e);
+            }
+            Err(BISignError::InvalidFileSorting) => {
+                if pbo.extension("Mikero").is_some() {
+                    println!(
+                        "Verification Failed: Invalid file sorting. This is a bug in Mikero tools."
+                    );
+                } else {
+                    println!("Verification Failed: Invalid file sorting");
+                }
             }
         }
 

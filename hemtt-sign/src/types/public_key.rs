@@ -54,6 +54,10 @@ impl BIPublicKey {
             });
         }
 
+        if pbo.is_sorted().is_err() {
+            return Err(BISignError::InvalidFileSorting);
+        }
+
         let (real_hash1, real_hash2, real_hash3) =
             crate::types::generate_hashes(pbo, signature.version, self.length);
 

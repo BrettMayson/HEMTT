@@ -13,11 +13,11 @@ pub enum BISignVersion {
     V3,
 }
 
-impl Into<u32> for BISignVersion {
-    fn into(self) -> u32 {
-        match self {
-            Self::V2 => 2,
-            Self::V3 => 3,
+impl From<BISignVersion> for u32 {
+    fn from(v: BISignVersion) -> u32 {
+        match v {
+            BISignVersion::V2 => 0x02,
+            BISignVersion::V3 => 0x03,
         }
     }
 }

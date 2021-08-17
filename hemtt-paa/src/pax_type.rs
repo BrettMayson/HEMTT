@@ -37,6 +37,20 @@ impl PaXType {
             _ => None,
         }
     }
+
+    pub const fn as_bytes(&self) -> [u8; 2] {
+        match self {
+            Self::DXT1 => [1, 255],
+            Self::DXT2 => [2, 255],
+            Self::DXT3 => [3, 255],
+            Self::DXT4 => [4, 255],
+            Self::DXT5 => [5, 255],
+            Self::RGBA4 => [68, 68],
+            Self::RGBA5 => [21, 85],
+            Self::RGBA8 => [136, 136],
+            Self::GRAYA => [128, 128],
+        }
+    }
 }
 
 impl From<PaXType> for image::dxt::DXTVariant {
@@ -46,6 +60,16 @@ impl From<PaXType> for image::dxt::DXTVariant {
             PaXType::DXT3 => Self::DXT3,
             PaXType::DXT5 => Self::DXT5,
             _ => unimplemented!(),
+        }
+    }
+}
+
+impl From<image::dxt::DXTVariant> for PaXType {
+    fn from(pax: image::dxt::DXTVariant) -> Self {
+        match pax {
+            image::dxt::DXTVariant::DXT1 => PaXType::DXT1,
+            image::dxt::DXTVariant::DXT3 => PaXType::DXT3,
+            image::dxt::DXTVariant::DXT5 => PaXType::DXT5,
         }
     }
 }

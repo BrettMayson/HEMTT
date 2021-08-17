@@ -100,29 +100,6 @@ macro_rules! read_args {
     }};
 }
 
-#[test]
-fn test_read_args() {
-    let tokens = tokenize("(B(C); call f);", "").unwrap();
-    let mut a = tokens.into_iter().peekable();
-    assert_eq!(
-        vec![vec![
-            Token::Word(String::from("B")),
-            Token::LeftParenthesis,
-            Token::Word(String::from("C")),
-            Token::RightParenthesis,
-            Token::Semicolon,
-            Token::Whitespace(Whitespace::Space),
-            Token::Word(String::from("call")),
-            Token::Whitespace(Whitespace::Space),
-            Token::Word(String::from("f"))
-        ]],
-        vec![read_args!(a)[0]
-            .iter()
-            .map(|tp| tp.token().to_owned())
-            .collect::<Vec<Token>>()]
-    )
-}
-
 macro_rules! read_line {
     ($i: ident) => {{
         let mut ret: Vec<TokenPos> = Vec::new();
@@ -187,45 +164,6 @@ macro_rules! read_line {
         }
         ret
     }};
-}
-
-#[test]
-fn test_read_line() {
-    let tokens = tokenize("test = false;\ntest = true;\n", "").unwrap();
-    let mut a = tokens.into_iter().peekable();
-    assert_eq!(
-        vec![
-            Token::Word(String::from("test")),
-            Token::Whitespace(Whitespace::Space),
-            Token::Assignment,
-            Token::Whitespace(Whitespace::Space),
-            Token::Word(String::from("false")),
-            Token::Semicolon,
-        ],
-        read_line!(a)
-            .iter()
-            .map(|tp| tp.token().to_owned())
-            .collect::<Vec<Token>>()
-    );
-
-    let tokens = tokenize(" \"\\z\\mod\\addons\"\n", "").unwrap();
-    let mut a = tokens.into_iter().peekable();
-    assert_eq!(
-        vec![
-            Token::DoubleQuote,
-            Token::Escape,
-            Token::Word(String::from("z")),
-            Token::Escape,
-            Token::Word(String::from("mod")),
-            Token::Escape,
-            Token::Word(String::from("addons")),
-            Token::DoubleQuote
-        ],
-        read_line!(a)
-            .iter()
-            .map(|tp| tp.token().to_owned())
-            .collect::<Vec<Token>>()
-    )
 }
 
 pub fn _resolve<R>(
@@ -561,4 +499,71 @@ where
         }
     }
     Ok(ret)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn read_args() {
+        let tokens = tokenize("(B(C); call f);", "").unwrap();
+        let mut a = tokens.into_iter().peekable();
+        assert_eq!(
+            vec![vec![
+                Token::Word(String::from("B")),
+                Token::LeftParenthesis,
+                Token::Word(String::from("C")),
+                Token::RightParenthesis,
+                Token::Semicolon,
+                Token::Whitespace(Whitespace::Space),
+                Token::Word(String::from("call")),
+                Token::Whitespace(Whitespace::Space),
+                Token::Word(String::from("f"))
+            ]],
+            vec![read_args!(a)[0]
+                .iter()
+                .map(|tp| tp.token().to_owned())
+                .collect::<Vec<Token>>()]
+        )
+    }
+
+    #[test]
+    fn read_line() {
+        let tokens = tokenize("test = false;\ntest = true;\n", "").unwrap();
+        let mut a = tokens.into_iter().peekable();
+        assert_eq!(
+            vec![
+                Token::Word(String::from("test")),
+                Token::Whitespace(Whitespace::Space),
+                Token::Assignment,
+                Token::Whitespace(Whitespace::Space),
+                Token::Word(String::from("false")),
+                Token::Semicolon,
+            ],
+            read_line!(a)
+                .iter()
+                .map(|tp| tp.token().to_owned())
+                .collect::<Vec<Token>>()
+        );
+
+        let tokens = tokenize(" \"\\z\\mod\\addons\"\n", "").unwrap();
+        let mut a = tokens.into_iter().peekable();
+        assert_eq!(
+            vec![
+                Token::DoubleQuote,
+                Token::Escape,
+                Token::Word(String::from("z")),
+                Token::Escape,
+                Token::Word(String::from("mod")),
+                Token::Escape,
+                Token::Word(String::from("addons")),
+                Token::DoubleQuote
+            ],
+            read_line!(a)
+                .iter()
+                .map(|tp| tp.token().to_owned())
+                .collect::<Vec<Token>>()
+        )
+    }
 }

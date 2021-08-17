@@ -512,6 +512,7 @@ dependencies = [
  "log",
  "semver",
  "serde_json",
+ "serial_test",
  "shell-words",
  "tempdir",
 ]
@@ -617,6 +618,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "instant"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "itoa"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -703,6 +713,15 @@ name = "linked-hash-map"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
+
+[[package]]
+name = "lock_api"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0382880606dff6d15c9476c416d18690b72742aa7b605bb6dd6ec9030fbf07eb"
+dependencies = [
+ "scopeguard",
+]
 
 [[package]]
 name = "log"
@@ -889,6 +908,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "parking_lot"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d7744ac029df22dca6284efe4e898991d28e3085c706c972bcd7da4a27a15eb"
+dependencies = [
+ "instant",
+ "lock_api",
+ "parking_lot_core",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa7a782938e745763fe6907fc6ba86946d72f49fe7e21de074e08128a99fb018"
+dependencies = [
+ "cfg-if",
+ "instant",
+ "libc",
+ "redox_syscall",
+ "smallvec",
+ "winapi",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1039,6 +1083,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "678054eb77286b51581ba43620cc911abf02758c91f93f479767aed0f90458b2"
 dependencies = [
  "rand_core 0.3.1",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.2.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8383f39639269cde97d255a32bdb68c047337295414940c68bdd30c2e13203ff"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]
@@ -1223,6 +1276,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "serial_test"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0bccbcf40c8938196944a3da0e133e031a33f4d6b72db3bda3cc556e361905d"
+dependencies = [
+ "lazy_static",
+ "parking_lot",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2acd6defeddb41eb60bb468f8825d0cfd0c2a76bc03bfd235b6a1dc4f6a1ad5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1263,6 +1338,12 @@ dependencies = [
  "log",
  "termcolor",
 ]
+
+[[package]]
+name = "smallvec"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 
 [[package]]
 name = "state"

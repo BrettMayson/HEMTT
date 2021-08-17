@@ -9,6 +9,7 @@ pub use token_pos::TokenPos;
 mod whitespace;
 pub use whitespace::Whitespace;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "maps", derive(serde::Serialize))]
 pub enum Token {

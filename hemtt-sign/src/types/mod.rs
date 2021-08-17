@@ -18,7 +18,7 @@ pub fn generate_hashes<I: Seek + Read>(
     version: BISignVersion,
     length: u32,
 ) -> (BigNum, BigNum, BigNum) {
-    let checksum = pbo.checksum().unwrap();
+    let checksum = pbo.checksum();
     let hash1 = checksum.as_slice();
 
     let mut h = Hasher::new(MessageDigest::sha1()).unwrap();
@@ -51,10 +51,7 @@ pub fn generate_hashes<I: Seek + Read>(
 }
 
 pub fn pad_hash(hash: &[u8], size: usize) -> BigNum {
-    let mut vec: Vec<u8> = Vec::new();
-
-    vec.push(0);
-    vec.push(1);
+    let mut vec: Vec<u8> = vec![0, 1];
     vec.resize(size - 36, 255);
     vec.extend(b"\x00\x30\x21\x30\x09\x06\x05\x2b");
     vec.extend(b"\x0e\x03\x02\x1a\x05\x00\x04\x14");
@@ -69,7 +66,7 @@ pub fn namehash<I: Seek + Read>(pbo: &mut ReadablePbo<I>) -> DigestBytes {
     let files = pbo.files();
 
     for header in &files {
-        let data = pbo.retrieve(&header.filename()).unwrap();
+        let data = pbo.retrieve(header.filename()).unwrap();
         if data.get_ref().is_empty() {
             continue;
         }
@@ -130,7 +127,7 @@ pub fn filehash<I: Seek + Read>(pbo: &mut ReadablePbo<I>, version: BISignVersion
                 }
             }
         }
-        let cursor = pbo.retrieve(&header.filename()).unwrap();
+        let cursor = pbo.retrieve(header.filename()).unwrap();
         h.update((&cursor).get_ref()).unwrap();
         nothing = false;
     }
@@ -174,5 +171,5 @@ pub fn write_bignum<O: Write>(output: &mut O, bn: &BigNum, size: usize) -> Resul
     vec = vec.iter().rev().cloned().collect();
     vec.resize(size, 0);
 
-    Ok(output.write_all(&vec)?)
+    output.write_all(&vec)
 }

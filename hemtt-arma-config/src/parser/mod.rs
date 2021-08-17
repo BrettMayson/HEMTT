@@ -10,6 +10,7 @@ pub use statement::Statement;
 #[grammar = "parser/config.pest"]
 pub struct ConfigParser;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone)]
 /// Abstract Syntax Tree
 pub struct AST {

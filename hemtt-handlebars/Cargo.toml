@@ -18,3 +18,4 @@ shell-words = "1"
 [dev-dependencies]
 fs_extra = "1.2"
 tempdir = "0.3"
+serial_test = "0.5"

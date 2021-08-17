@@ -3,9 +3,7 @@ mod lzo1x_decompress_safe;
 use std::error::Error;
 use std::{fmt, mem, slice};
 
-#[allow(dead_code)]
 const LZO1X_1_MEM_COMPRESS: usize = 8192 * 16;
-#[allow(dead_code)]
 const LZO1X_MEM_COMPRESS: usize = LZO1X_1_MEM_COMPRESS;
 
 #[repr(i32)]
@@ -14,31 +12,31 @@ const LZO1X_MEM_COMPRESS: usize = LZO1X_1_MEM_COMPRESS;
 #[allow(non_camel_case_types)]
 pub enum LzoError {
     //OK = 0,
-    ERROR = -1,
-    OUT_OF_MEMORY = -2,
-    NOT_COMPRESSIBLE = -3,
-    INPUT_OVERRUN = -4,
-    OUTPUT_OVERRUN = -5,
-    LOOKBEHIND_OVERRUN = -6,
-    EOF_NOT_FOUND = -7,
-    INPUT_NOT_CONSUMED = -8,
-    NOT_YET_IMPLEMENTED = -9,
-    INVALID_ARGUMENT = -10,
+    Error = -1,
+    OutOfMemory = -2,
+    NotCompressible = -3,
+    InputOverrun = -4,
+    OutputOverrun = -5,
+    LookbehindOverrun = -6,
+    EOFNotFound = -7,
+    InputNotConsumed = -8,
+    NotYetImplemented = -9,
+    InvalidArgument = -10,
 }
 
 impl fmt::Display for LzoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LzoError::ERROR => write!(f, "Error"),
-            LzoError::OUT_OF_MEMORY => write!(f, "Out of memory"),
-            LzoError::NOT_COMPRESSIBLE => write!(f, "Not compressible"),
-            LzoError::INPUT_OVERRUN => write!(f, "Input overrun"),
-            LzoError::OUTPUT_OVERRUN => write!(f, "Output overrun"),
-            LzoError::LOOKBEHIND_OVERRUN => write!(f, "Lookbehind overrun"),
-            LzoError::EOF_NOT_FOUND => write!(f, "EOF not found"),
-            LzoError::INPUT_NOT_CONSUMED => write!(f, "Input not consumed"),
-            LzoError::NOT_YET_IMPLEMENTED => write!(f, "Not yet implemented"),
-            LzoError::INVALID_ARGUMENT => write!(f, "Invalid argument"),
+            LzoError::Error => write!(f, "Error"),
+            LzoError::OutOfMemory => write!(f, "Out of memory"),
+            LzoError::NotCompressible => write!(f, "Not compressible"),
+            LzoError::InputOverrun => write!(f, "Input overrun"),
+            LzoError::OutputOverrun => write!(f, "Output overrun"),
+            LzoError::LookbehindOverrun => write!(f, "Lookbehind overrun"),
+            LzoError::EOFNotFound => write!(f, "EOF not found"),
+            LzoError::InputNotConsumed => write!(f, "Input not consumed"),
+            LzoError::NotYetImplemented => write!(f, "Not yet implemented"),
+            LzoError::InvalidArgument => write!(f, "Invalid argument"),
         }
     }
 }
@@ -58,6 +56,7 @@ impl Drop for LzoContext {
 }
 
 impl LzoContext {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             wrkmem: unsafe { libc::malloc(LZO1X_MEM_COMPRESS) },
@@ -66,6 +65,7 @@ impl LzoContext {
 
     /// compress `input` into `output`
     /// returns an error if the Vec is not large enough
+    #[allow(dead_code)]
     pub fn compress(&mut self, input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
         unsafe {
             let mut out_len = output.capacity();
@@ -87,6 +87,7 @@ impl LzoContext {
     }
 
     /// returns a slice containing the compressed data
+    #[allow(dead_code)]
     pub fn compress_to_slice<'a>(
         &mut self,
         in_: &[u8],

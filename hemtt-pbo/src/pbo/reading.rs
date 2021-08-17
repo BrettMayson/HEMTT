@@ -10,7 +10,7 @@ use crate::{Header, Timestamp};
 pub struct ReadablePbo<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     headers: Vec<Header>,
-    checksum: Option<Vec<u8>>,
+    checksum: Vec<u8>,
     input: I,
     blob_start: u64,
 }
@@ -21,7 +21,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
         let mut pbo = Self {
             extensions: IndexMap::new(),
             headers: Vec::new(),
-            checksum: None,
+            checksum: Vec::new(),
             input,
             blob_start: 0,
         };
@@ -55,7 +55,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
         pbo.input.seek(SeekFrom::Current(1))?;
         let mut checksum = vec![0; 20];
         pbo.input.read_exact(&mut checksum)?;
-        pbo.checksum = Some(checksum);
+        pbo.checksum = checksum;
         if let Ok(u) = pbo.input.read(&mut Vec::with_capacity(1)) {
             if u > 0 {
                 error!("Unexpected data after reading checksum");
@@ -74,26 +74,30 @@ impl<I: Seek + Read> ReadablePbo<I> {
     }
 
     /// Returns if the files are sorted into the correct order
-    pub fn is_sorted(&self) -> bool {
-        fn compare(a: &&Header, b: &&Header) -> std::cmp::Ordering {
+    pub fn is_sorted(&self) -> Result<(), (Vec<Header>, Vec<Header>)> {
+        fn compare(a: &Header, b: &Header) -> std::cmp::Ordering {
             a.filename()
                 .to_lowercase()
                 .cmp(&b.filename().to_lowercase())
         }
-        let sorted = self.files();
-        let mut sorted = sorted.iter();
-        let mut last = match sorted.next() {
+        let files = self.files();
+        let mut files = files.iter();
+        let mut last = match files.next() {
             Some(e) => e,
-            None => return true,
+            None => return Ok(()),
         };
 
-        for curr in sorted {
-            if compare(&last, &curr) == std::cmp::Ordering::Greater {
-                return false;
+        for curr in files {
+            if compare(last, curr) == std::cmp::Ordering::Greater {
+                return Err((self.files(), {
+                    let mut files = self.files();
+                    files.sort_by(compare);
+                    files
+                }));
             }
             last = curr;
         }
-        true
+        Ok(())
     }
 
     pub fn extensions(&self) -> &IndexMap<String, String> {
@@ -114,7 +118,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
         self.extensions.get(key)
     }
 
-    pub fn checksum(&self) -> Option<Vec<u8>> {
+    pub fn checksum(&self) -> Vec<u8> {
         self.checksum.clone()
     }
 
@@ -146,9 +150,9 @@ impl<I: Seek + Read> ReadablePbo<I> {
         }
         headers.write_all(b"\0")?;
 
-        let files_sorted = self.files();
+        let files = self.files();
 
-        for header in &files_sorted {
+        for header in &files {
             header.write(&mut headers)?;
         }
 
@@ -162,7 +166,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         h.update(headers.get_ref());
 
-        for header in &files_sorted {
+        for header in &files {
             let cursor = self.retrieve(header.filename()).unwrap();
             h.update(cursor.get_ref());
         }
