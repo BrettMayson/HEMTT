@@ -17,6 +17,7 @@ impl Task for Pack {
 
         pbo.add_extension("prefix", ctx.prefix());
         pbo.add_extension("hemtt", *crate::VERSION);
+        pbo.add_extension("version", &ctx.global().project().version().to_string());
 
         for entry in ctx.global().vfs().join(ctx.addon().source())?.walk_dir()? {
             let entry = entry?;

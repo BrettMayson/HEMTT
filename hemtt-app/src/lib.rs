@@ -42,10 +42,12 @@ lazy_static::lazy_static! {
 static GIT_IGNORE: [&str; 4] = ["releases/*", "*.biprivatekey", "keys/*", ".hemtt/local*"];
 
 pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(1usize)
-        .build_global()
-        .unwrap();
+    if root {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(1_usize)
+            .build_global()
+            .unwrap();
+    }
 
     let mut app = App::new("HEMTT")
         .version(*crate::VERSION)
@@ -67,6 +69,13 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 .global(true)
                 .help("Time the execution")
                 .long("time"),
+        )
+        .arg(
+            clap::Arg::with_name("root")
+                .global(true)
+                .help("Specify the root of the HEMTT project")
+                .long("root")
+                .takes_value(true),
         );
 
     let mut commands: Vec<Box<dyn Command>> = Vec::new();
@@ -87,6 +96,10 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
 
     let matches = app.get_matches_from(input);
 
+    if let Some(root) = matches.value_of("root") {
+        std::env::set_current_dir(root).expect("Could not find specified root folder");
+    }
+
     let start = if matches.is_present("time") {
         Some(Instant::now())
     } else {
@@ -99,6 +112,9 @@ pub fn execute(input: &[String], root: bool) -> Result<(), HEMTTError> {
                 let sub_matches = matches.subcommand_matches(v).unwrap();
                 if root && c.can_announce() {
                     info!("HEMTT {}", *crate::VERSION);
+                    if cfg!(debug_assertions) {
+                        warn!("HEMTT is compiled in dev mode, some commands will run very slow compared to their release versions. It can be 70x or more slower.")
+                    }
                 }
                 if c.require_project() {
                     let project = Project::read()?;

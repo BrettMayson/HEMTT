@@ -1,3 +1,8 @@
 target/
+
+# cargo tarpaulin
 lcov.info
 cov
+
+# cargo flamegraph
+perf.data

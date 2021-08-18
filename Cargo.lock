@@ -478,6 +478,7 @@ dependencies = [
  "percent-encoding",
  "rayon",
  "regex",
+ "semver",
  "simplelog",
  "state",
  "strum",

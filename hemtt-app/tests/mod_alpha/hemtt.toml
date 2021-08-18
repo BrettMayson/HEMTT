@@ -1,0 +1,4 @@
+name = "CBA Base Template"
+prefix = "test"
+author = "CBA Base Template"
+template = "cba"

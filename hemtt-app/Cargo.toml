@@ -28,3 +28,6 @@ toml = "0.5"
 vfs = "0.5"
 walkdir = "2.3"
 webbrowser = "0.5"
+
+[dev-dependencies]
+semver = "0.11"
