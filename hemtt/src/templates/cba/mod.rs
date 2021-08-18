@@ -10,7 +10,7 @@ pub struct CBA {
 }
 
 impl CBA {
-    pub const fn new(path: PathBuf) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         Self { path }
     }
 
@@ -100,43 +100,48 @@ struct AddonAssets;
 
 #[cfg(test)]
 mod test {
+    use std::path::PathBuf;
+
     use super::Template;
     use crate::{Addon, AddonLocation};
-    #[test]
-    fn init() {
-        let folder = {
+
+    struct TempFolder(PathBuf);
+    impl TempFolder {
+        fn new() -> Self {
             let mut tmp = std::env::temp_dir();
             tmp.push(uuid::Uuid::new_v4().to_string());
-            tmp
-        };
-        let template = super::CBA::new(folder.clone());
-        template.init().unwrap();
-        std::fs::remove_dir_all(folder).unwrap();
+            Self(tmp)
+        }
+        fn path(&self) -> PathBuf {
+            self.0.clone()
+        }
+    }
+    impl Drop for TempFolder {
+        fn drop(&mut self) {
+            std::fs::remove_dir_all(&self.0).unwrap();
+        }
+    }
+
+    #[test]
+    fn init() {
+        let tmp = TempFolder::new();
+        super::super::init(super::super::Templates::CBA, tmp.path()).unwrap();
     }
 
     #[test]
     fn addon() {
-        let folder = {
-            let mut tmp = std::env::temp_dir();
-            tmp.push(uuid::Uuid::new_v4().to_string());
-            tmp
-        };
-        let template = super::CBA::new(folder.clone());
+        let tmp = TempFolder::new();
+        let template = super::CBA::new(tmp.path());
         template.init().unwrap();
         template
             .new_addon(&Addon::new("test", AddonLocation::Addons).unwrap())
             .unwrap();
-        std::fs::remove_dir_all(folder).unwrap();
     }
 
     #[test]
     fn function() {
-        let folder = {
-            let mut tmp = std::env::temp_dir();
-            tmp.push(uuid::Uuid::new_v4().to_string());
-            tmp
-        };
-        let template = super::CBA::new(folder.clone());
+        let tmp = TempFolder::new();
+        let template = super::CBA::new(tmp.path());
         template.init().unwrap();
         template
             .new_addon(&Addon::new("test", AddonLocation::Addons).unwrap())
@@ -144,6 +149,21 @@ mod test {
         template
             .new_function(&Addon::new("test", AddonLocation::Addons).unwrap(), "test")
             .unwrap();
-        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn function_collision() {
+        let tmp = TempFolder::new();
+        let template = super::CBA::new(tmp.path());
+        template.init().unwrap();
+        template
+            .new_addon(&Addon::new("test", AddonLocation::Addons).unwrap())
+            .unwrap();
+        template
+            .new_function(&Addon::new("test", AddonLocation::Addons).unwrap(), "test")
+            .unwrap();
+        assert!(template
+            .new_function(&Addon::new("test", AddonLocation::Addons).unwrap(), "test")
+            .is_err());
     }
 }

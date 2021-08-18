@@ -303,4 +303,45 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn files() {
+        let mut pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
+        pbo.add_extension("prefix", "foobar");
+        pbo.add_extension("version", "1.2.3");
+        pbo.add_file("test.txt", Cursor::new("test".as_bytes().to_vec()))
+            .unwrap();
+        let mut buffer = Vec::new();
+        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        assert_eq!(
+            pbo.checksum().unwrap(),
+            vec![
+                32, 124, 152, 177, 225, 36, 144, 241, 249, 65, 204, 102, 179, 29, 72, 181, 149, 17,
+                171, 46
+            ]
+        );
+    }
+
+    #[test]
+    fn remove() {
+        let mut pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
+        pbo.add_extension("prefix", "foobar");
+        pbo.add_extension("version", "1.2.3");
+        pbo.add_extension("remove_me", "faz");
+        pbo.remove_extension("remove_me");
+        pbo.add_file("test.txt", Cursor::new("test".as_bytes().to_vec()))
+            .unwrap();
+        pbo.add_file("test2.txt", Cursor::new("test".as_bytes().to_vec()))
+            .unwrap();
+        pbo.remove_file("test2.txt");
+        let mut buffer = Vec::new();
+        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        assert_eq!(
+            pbo.checksum().unwrap(),
+            vec![
+                32, 124, 152, 177, 225, 36, 144, 241, 249, 65, 204, 102, 179, 29, 72, 181, 149, 17,
+                171, 46
+            ]
+        );
+    }
 }

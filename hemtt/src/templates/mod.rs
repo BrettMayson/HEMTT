@@ -19,8 +19,8 @@ pub enum Templates {
     CBA,
 }
 impl Templates {
-    pub fn validate(template: String) -> Result<(), String> {
-        if Self::try_from(template).is_ok() {
+    pub fn validate<S: Into<String>>(template: S) -> Result<(), String> {
+        if Self::try_from(template.into()).is_ok() {
             Ok(())
         } else {
             Err(Self::options())
@@ -58,5 +58,16 @@ impl Display for Templates {
 pub fn init(template: Templates, path: PathBuf) -> Result<(), HEMTTError> {
     match template {
         Templates::CBA => cba::CBA::new(path).init(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validate() {
+        assert!(Templates::validate("cba").is_ok());
+        assert!(Templates::validate("fake").is_err());
     }
 }
