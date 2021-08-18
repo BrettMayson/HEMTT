@@ -570,13 +570,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hemtt-tests"
-version = "0.1.0"
-dependencies = [
- "rust-embed",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
