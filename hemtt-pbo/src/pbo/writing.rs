@@ -117,7 +117,11 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Add an extension to the PBO
-    pub fn add_extension<K: Into<String>, V: Into<String>>(&mut self, key: K, value: V) -> Option<String> {
+    pub fn add_extension<K: Into<String>, V: Into<String>>(
+        &mut self,
+        key: K,
+        value: V,
+    ) -> Option<String> {
         self.extensions
             .insert(key.into(), value.into().trim_matches('\\').to_string())
     }

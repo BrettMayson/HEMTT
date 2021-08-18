@@ -125,7 +125,7 @@ pub fn get_entry(node: Node) -> Result<Option<(String, Entry)>, ArmaConfigError>
                 entries: Vec::new(),
             }),
         )),
-        Statement::ClassDelete(ident) => Some ((
+        Statement::ClassDelete(ident) => Some((
             if let Statement::Ident(i) = ident.statement {
                 i
             } else {

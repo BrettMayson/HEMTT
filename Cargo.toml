@@ -9,5 +9,6 @@ members = [
     "hemtt-paa",
     "hemtt-pbo",
     "hemtt-serde",
-    "hemtt-sign"
+    "hemtt-sign",
+    "hemtt-tests"
 ]

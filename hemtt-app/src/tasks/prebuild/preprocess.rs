@@ -42,7 +42,7 @@ impl Task for Preprocess {
     }
 
     fn hooks(&self) -> &[Stage] {
-        &[Stage::Check, Stage::PreBuild, Stage::PostBuild]
+        &[Stage::PreBuild]
     }
 
     fn prebuild(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {

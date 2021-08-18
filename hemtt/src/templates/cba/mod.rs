@@ -34,7 +34,7 @@ impl Template for CBA {
                 std::fs::create_dir_all(path.parent().unwrap())?;
                 path
             })?;
-            f.write_all(&InitAssets::get(file.as_ref()).unwrap())?;
+            f.write_all(&InitAssets::get(file.as_ref()).unwrap().data)?;
         }
         Ok(())
     }
@@ -58,7 +58,7 @@ impl Template for CBA {
                     &super::Vars {
                         addon: addon.name(),
                     },
-                    String::from_utf8(content.to_vec()).unwrap(),
+                    String::from_utf8(content.data.to_vec()).unwrap(),
                 )
                 .as_bytes(),
             )?;
