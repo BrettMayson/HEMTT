@@ -9,7 +9,7 @@ use hemtt_pbo::ReadablePbo;
 
 use super::{BIPublicKey, BISign, BISignVersion};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct BIPrivateKey {
     pub authority: String,
     pub length: u32,

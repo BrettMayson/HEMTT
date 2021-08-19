@@ -282,6 +282,14 @@ impl Project {
     pub const fn sig_version(&self) -> u32 {
         self.sig_version
     }
+
+    pub fn key_name(&self) -> Result<String, HEMTTError> {
+        Ok(format!("{}.bikey", if !self.key_name.is_empty() {
+            self.key_name.to_string()
+        } else {
+            self.authority()?
+        }))
+    }
 }
 
 impl From<&Project> for hemtt_handlebars::Variables {

@@ -1,13 +1,11 @@
 use hemtt::{Addon, HEMTTError};
 use hemtt_handlebars::Variables;
-use vfs::VfsPath;
 
 use super::Context;
 
 pub struct AddonContext<'a, 'b> {
     global: &'b Context<'a>,
     addon: Addon,
-    fs: VfsPath,
     prefix: String,
 
     failed: Option<HEMTTError>,
@@ -62,7 +60,6 @@ impl<'a, 'b> AddonContext<'a, 'b> {
         Ok(Self {
             global,
             addon,
-            fs,
             prefix,
 
             failed: None,
@@ -92,10 +89,6 @@ impl<'a, 'b> AddonContext<'a, 'b> {
 
     pub fn set_skip(&mut self, skip: bool) {
         self.skip = skip;
-    }
-
-    pub fn fs(&self) -> &VfsPath {
-        &self.fs
     }
 
     pub fn addon(&self) -> &Addon {

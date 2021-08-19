@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::templates::Templates;
 
 #[derive(Debug)]
@@ -36,6 +38,9 @@ pub enum HEMTTError {
 
     // Templates
     TemplateUnknown(String),
+
+    // Release
+    ReleaseExists(PathBuf),
 }
 
 impl HEMTTError {
@@ -49,6 +54,7 @@ impl HEMTTError {
                 | Self::AddonInvalidLocation(_)
                 | Self::NoProjectFound
                 | Self::TemplateUnknown(_)
+                | Self::ReleaseExists(_)
         )
     }
 }
@@ -102,6 +108,9 @@ impl std::fmt::Display for HEMTTError {
                 template,
                 Templates::options()
             ),
+
+            // Release
+            Self::ReleaseExists(ref rel) => write!(f, "Release already exists: `{}`", rel.display()),
         }
     }
 }
@@ -129,6 +138,9 @@ impl std::error::Error for HEMTTError {
 
             // Template
             Self::TemplateUnknown(_) => Some(self),
+
+            // Release
+            Self::ReleaseExists(_) => Some(self),
         }
     }
 }

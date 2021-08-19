@@ -13,6 +13,10 @@ impl Task for Pack {
     }
 
     fn build(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
+        if ctx.skip() {
+            return Ok(())
+        }
+
         let mut pbo = hemtt_pbo::WritablePbo::<Box<dyn SeekAndRead>>::new();
 
         pbo.add_extension("prefix", ctx.prefix());

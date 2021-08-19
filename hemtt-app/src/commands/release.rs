@@ -13,18 +13,17 @@ impl Command for Release {
         let flow = Flow {
             tasks: {
                 vec![
-                    // Box::new(crate::tasks::Clean {}),
-                    // Box::new(crate::tasks::Clear {}),
+                    Box::new(crate::tasks::Release {}),
+                    Box::new(crate::tasks::Clean {}),
+                    Box::new(crate::tasks::Clear {}),
                     Box::new(crate::tasks::NotEmpty {}),
                     Box::new(crate::tasks::ValidName {}),
-                    // Box::new(crate::tasks::ModTime {}),
                     Box::new(crate::tasks::Populate {}),
                     Box::new(crate::tasks::Prefix::new()),
                     Box::new(crate::tasks::Preprocess {}),
                     Box::new(crate::tasks::Rapify {}),
                     Box::new(crate::tasks::Pack {}),
-                    Box::new(crate::tasks::Release {}),
-                    Box::new(crate::tasks::Sign {}),
+                    Box::new(crate::tasks::Sign::default()),
                 ]
             },
         };

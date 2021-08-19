@@ -18,7 +18,6 @@ pub struct Context<'a> {
     vfs: VfsPath,
     pfs: VfsPath,
     rfs: VfsPath,
-    root: PathBuf,
     release_path: PathBuf,
     // stage: &Stage,
     message_info: RwLock<(String, String)>,
@@ -43,7 +42,6 @@ impl<'a> Context<'a> {
             .into(),
             pfs: AltrootFS::new(PhysicalFS::new(root.clone()).into()).into(),
             rfs: AltrootFS::new(PhysicalFS::new(root.join(&release_path)).into()).into(),
-            root,
             release_path,
 
             message_info: RwLock::new((String::from("internal init"), String::from("new"))),
@@ -71,6 +69,10 @@ impl<'a> Context<'a> {
             std::fs::create_dir_all(&self.release_path)?;
         }
         Ok(&self.rfs)
+    }
+
+    pub fn release_path(&self) -> &PathBuf {
+        &self.release_path
     }
 
     pub fn task_pad(&self) -> usize {
