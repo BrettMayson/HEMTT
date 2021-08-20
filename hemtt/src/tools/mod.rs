@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
+#[cfg(windows)]
 use crate as hemtt;
+#[cfg(windows)]
 use hemtt_macros::open_file;
 
 use crate::HEMTTError;
