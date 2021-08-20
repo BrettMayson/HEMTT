@@ -265,3 +265,24 @@ value = affirmative;
     // println!("======");
     assert_eq!("\nvalue = affirmative;\n", config.export());
 }
+
+#[test]
+fn backslash() {
+    let content = r#"
+#define QUOTE(var1) #var1
+#define TEST \something\else
+value = QUOTE(TEST);
+"#;
+    let config = hemtt_arma_config::preprocess(
+        hemtt_arma_config::tokenize(content, "").unwrap(),
+        ".",
+        hemtt_arma_config::resolver::Basic,
+    );
+    let config = hemtt_arma_config::render(config.unwrap());
+    assert_eq!(
+        r#"
+value = "\something\else";
+"#,
+        config.export()
+    );
+}

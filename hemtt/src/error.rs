@@ -110,7 +110,9 @@ impl std::fmt::Display for HEMTTError {
             ),
 
             // Release
-            Self::ReleaseExists(ref rel) => write!(f, "Release already exists: `{}`", rel.display()),
+            Self::ReleaseExists(ref rel) => {
+                write!(f, "Release already exists: `{}`", rel.display())
+            }
         }
     }
 }

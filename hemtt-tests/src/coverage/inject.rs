@@ -14,7 +14,10 @@ pub fn inject(source: &str, key: &str) -> (String, Vec<i32>) {
             }
             if char == ';' || char == '{' {
                 lines.push(line);
-                result.push_str(&format!("\n\"hemtt_tests\" callExtension [\"cov\", [\"{}\", {}]];", key, line));
+                result.push_str(&format!(
+                    "\n\"hemtt_tests\" callExtension [\"cov\", [\"{}\", {}]];",
+                    key, line
+                ));
             }
         }
     }

@@ -284,11 +284,14 @@ impl Project {
     }
 
     pub fn key_name(&self) -> Result<String, HEMTTError> {
-        Ok(format!("{}.bikey", if !self.key_name.is_empty() {
-            self.key_name.to_string()
-        } else {
-            self.authority()?
-        }))
+        Ok(format!(
+            "{}.bikey",
+            if !self.key_name.is_empty() {
+                self.key_name.to_string()
+            } else {
+                self.authority()?
+            }
+        ))
     }
 }
 

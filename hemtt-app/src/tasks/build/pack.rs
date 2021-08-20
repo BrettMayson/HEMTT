@@ -14,7 +14,7 @@ impl Task for Pack {
 
     fn build(&self, ctx: &mut AddonContext) -> Result<(), HEMTTError> {
         if ctx.skip() {
-            return Ok(())
+            return Ok(());
         }
 
         let mut pbo = hemtt_pbo::WritablePbo::<Box<dyn SeekAndRead>>::new();
@@ -34,8 +34,17 @@ impl Task for Pack {
                 {
                     ctx.debug("skipping config.cpp");
                 } else {
-                    ctx.debug(&format!("pack: {:?}", entry.as_str()));
-                    pbo.add_file(entry.as_str(), entry.open_file()?)?;
+                    ctx.debug(&format!(
+                        "pack: {:?} from {:?}",
+                        entry.as_str(),
+                        ctx.addon().source()
+                    ));
+                    pbo.add_file(
+                        entry
+                            .as_str()
+                            .trim_start_matches(&format!("/{}/", ctx.addon().source())),
+                        entry.open_file()?,
+                    )?;
                 }
             }
         }

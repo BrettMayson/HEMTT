@@ -13,7 +13,7 @@ pub fn render(source: &str, data: &Variables) -> Result<String, RenderError> {
     handlebars.register_helper("date", Box::new(helpers::date));
     handlebars.register_helper("git", Box::new(helpers::git));
     handlebars.set_strict_mode(true);
-    handlebars.render_template(source, data.inner())
+    handlebars.render_template(&source, data.inner())
 }
 
 #[derive(Default)]

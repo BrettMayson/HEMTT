@@ -44,8 +44,12 @@ impl<'a, 'b> AddonContext<'a, 'b> {
                     }
                 }
             }
-            let prefix =
-                hemtt_handlebars::render(prefix, &Variables::from(global.project())).unwrap();
+            let prefix = hemtt_handlebars::render(
+                &prefix.replace("\\", "\\\\"),
+                &Variables::from(global.project()),
+            )
+            .unwrap()
+            .replace("\\\\", "\\");
             if prefix.is_empty() {
                 warn!("Could not determine a prefix for {} using the $PBOPREFIX$ file, a prefix will be generated", addon.source());
                 prefix_gen

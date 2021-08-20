@@ -135,10 +135,15 @@ macro_rules! read_line {
                                 }
                             }
                             next = $i.next();
+                            let mut first = true;
                             loop {
-                                if let Some(ref tp) = next {
-                                    if tp.token().is_whitespace() {
+                                if let Some(ref ntp) = next {
+                                    if ntp.token().is_whitespace() {
                                         next = $i.next();
+                                        first = false;
+                                    } else if first {
+                                        ret.push(tp.clone());
+                                        break;
                                     } else {
                                         break;
                                     }
