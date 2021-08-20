@@ -92,7 +92,7 @@ impl<'a> Resolver for VfsResolver<'a> {
                 // Check for prefix
                 if let Some((prefix, path)) = self.1.inner().iter().find(|(prefix, _)| {
                     trace!("Checking prefix {}", prefix.replace("\\", "/"));
-                    to.starts_with(&format!("{}", prefix.replace("\\", "/")))
+                    to.starts_with(&prefix.replace("\\", "/"))
                 }) {
                     let new_path = self
                         .0
