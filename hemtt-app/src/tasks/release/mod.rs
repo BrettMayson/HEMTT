@@ -20,7 +20,9 @@ impl Task for Release {
 
     fn check_single(&self, ctx: &mut AddonListContext) -> Result<(), HEMTTError> {
         if ctx.global().release_path().exists() {
-            Err(HEMTTError::ReleaseExists(ctx.global().release_path().clone()))
+            Err(HEMTTError::ReleaseExists(
+                ctx.global().release_path().clone(),
+            ))
         } else {
             Ok(())
         }
