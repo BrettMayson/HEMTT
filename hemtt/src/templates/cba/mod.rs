@@ -10,7 +10,7 @@ pub struct CBA {
 }
 
 impl CBA {
-    pub fn new(path: PathBuf) -> Self {
+    pub const fn new(path: PathBuf) -> Self {
         Self { path }
     }
 

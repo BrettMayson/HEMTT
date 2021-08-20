@@ -67,9 +67,9 @@ impl From<PaXType> for image::dxt::DXTVariant {
 impl From<image::dxt::DXTVariant> for PaXType {
     fn from(pax: image::dxt::DXTVariant) -> Self {
         match pax {
-            image::dxt::DXTVariant::DXT1 => PaXType::DXT1,
-            image::dxt::DXTVariant::DXT3 => PaXType::DXT3,
-            image::dxt::DXTVariant::DXT5 => PaXType::DXT5,
+            image::dxt::DXTVariant::DXT1 => Self::DXT1,
+            image::dxt::DXTVariant::DXT3 => Self::DXT3,
+            image::dxt::DXTVariant::DXT5 => Self::DXT5,
         }
     }
 }
