@@ -43,7 +43,11 @@ pub fn parse(source: &str, context: &str) -> Result<AST, String> {
             let mut f = std::fs::File::create(&out).expect("failed to create failed.txt");
             f.write_all(clean.as_bytes()).unwrap();
             f.flush().unwrap();
-            panic!("failed to parse context: {}, saved at {}", context, out.display())
+            panic!(
+                "failed to parse context: {}, saved at {}",
+                context,
+                out.display()
+            )
         })
         .next()
         .unwrap();
