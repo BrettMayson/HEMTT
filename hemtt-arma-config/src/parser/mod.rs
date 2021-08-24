@@ -40,7 +40,7 @@ pub fn parse(source: &str, context: &str) -> Result<AST, String> {
     let pair = ConfigParser::parse(Rule::file, &clean)
         .unwrap_or_else(|_| {
             let out = std::env::temp_dir().join("failed.txt");
-            let mut f = std::fs::File::create(&out).expect(&format!("failed to create {}", out.display()));
+            let mut f = std::fs::File::create(&out).expect("failed to create failed.txt");
             f.write_all(clean.as_bytes()).unwrap();
             f.flush().unwrap();
             panic!("failed to parse context: {}, saved at {}", context, out.display())
