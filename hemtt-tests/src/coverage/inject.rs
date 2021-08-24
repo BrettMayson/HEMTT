@@ -1,3 +1,4 @@
+#[must_use]
 pub fn inject(source: &str, key: &str) -> (String, Vec<i32>) {
     let mut quote = false;
     let mut line = 1;

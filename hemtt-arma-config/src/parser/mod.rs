@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use pest::Parser;
 
 mod node;
@@ -31,12 +33,18 @@ pub struct AST {
 ///
 /// ```
 /// let content = "value = 123;";
-/// hemtt_arma_config::parse(content);
+/// hemtt_arma_config::parse(content, "doc test");
 /// ```
-pub fn parse(source: &str) -> Result<AST, String> {
+pub fn parse(source: &str, context: &str) -> Result<AST, String> {
     let clean = source.replace("\r", "");
     let pair = ConfigParser::parse(Rule::file, &clean)
-        .unwrap()
+        .unwrap_or_else(|_| {
+            let out = std::env::temp_dir().join("failed.txt");
+            let mut f = std::fs::File::create(&out).expect(&format!("failed to create {}", out.display()));
+            f.write_all(clean.as_bytes()).unwrap();
+            f.flush().unwrap();
+            panic!("failed to parse context: {}, saved at {}", context, out.display())
+        })
         .next()
         .unwrap();
     let pair = pair.into_inner().next().unwrap();
@@ -50,7 +58,7 @@ mod tests {
 
     #[test]
     fn property() {
-        let ast = parse("value = 123;");
+        let ast = parse("value = 123;", "test");
         println!("{:?}", ast);
     }
 }

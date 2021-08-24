@@ -129,26 +129,31 @@ macro_rules! read_line {
                     match tp.token() {
                         Token::Newline => break,
                         Token::Escape => {
+                            let mut skip = false;
                             if let Some(tp) = $i.peek() {
                                 if tp.token() == &Token::Newline {
+                                    ret.push(tp.clone());
                                     $i.next();
+                                    skip = true;
                                 }
                             }
                             next = $i.next();
-                            let mut first = true;
-                            loop {
-                                if let Some(ref ntp) = next {
-                                    if ntp.token().is_whitespace() {
-                                        next = $i.next();
-                                        first = false;
-                                    } else if first {
-                                        ret.push(tp.clone());
-                                        break;
+                            if !skip {
+                                let mut first = true;
+                                loop {
+                                    if let Some(ref ntp) = next {
+                                        if ntp.token().is_whitespace() {
+                                            next = $i.next();
+                                            first = false;
+                                        } else if first {
+                                            ret.push(tp.clone());
+                                            break;
+                                        } else {
+                                            break;
+                                        }
                                     } else {
                                         break;
                                     }
-                                } else {
-                                    break;
                                 }
                             }
                         }

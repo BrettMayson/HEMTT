@@ -23,8 +23,8 @@ string = @{ ( "\"\"" | (!"\"" ~ ANY) )* }
 
 array = !{ "{" ~ "}" | "{" ~ ( array | value ) ~ ( "," ~ ( array | value ) )* ~ "}" }
 
-class = { "class " ~ ident ~ "{" ~ item+ ~ "}" }
-classextends = { "class " ~ ident ~ ":" ~ ident ~ "{" ~ item+ ~ "}" }
+class = { "class " ~ ident ~ "{" ~ item* ~ "}" }
+classextends = { "class " ~ ident ~ ":" ~ ident ~ "{" ~ item* ~ "}" }
 classdef = { "class " ~ ident }
 classdelete = { "delete " ~ ident }
 
