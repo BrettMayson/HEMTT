@@ -214,7 +214,12 @@ class CfgPatches {
 
 class CfgPatches {
     class q {
-        expression = "if (_value != (if (isNumber (configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")) then {getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")} else {(if (0 < getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')) then {getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')} else {-1})})) then {[_this, _value] call test_fnc_makeSource}";
+        expression = "if (_value != 
+    (if (isNumber (
+        configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")) then {getNumber (
+        configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")} else {
+        (if (0 < getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')) then {getNumber (configFile >> 'CfgVehicles' >> typeOf _this >> 'transportFuel')} else {-1})
+    })) then {[_this, _value] call test_fnc_makeSource}";
     };
 };"#,
         config.export()
@@ -282,6 +287,32 @@ value = QUOTE(TEST);
     assert_eq!(
         r#"
 value = "\something\else";
+"#,
+        config.export()
+    );
+}
+
+#[test]
+fn backslash_macro() {
+    let content = r#"
+#define MACRO_ADDITEM(ITEM,COUNT) class _xx_##ITEM { \
+    name = #ITEM; \
+    count = COUNT; \
+}
+MACRO_ADDITEM(item,0);
+"#;
+    let config = hemtt_arma_config::preprocess(
+        hemtt_arma_config::tokenize(content, "").unwrap(),
+        ".",
+        hemtt_arma_config::resolver::Basic,
+    );
+    let config = hemtt_arma_config::render(config.unwrap());
+    assert_eq!(
+        r#"
+class _xx_item { 
+    name = "item"; 
+    count = 0; 
+};
 "#,
         config.export()
     );
