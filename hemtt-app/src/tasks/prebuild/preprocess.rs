@@ -9,6 +9,9 @@ use super::prefix::PrefixMap;
 
 pub fn can_preprocess(path: &str) -> bool {
     let path = PathBuf::from(path);
+    if path.display().to_string().contains(".ht.") {
+        return false;
+    }
     let name = path
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
