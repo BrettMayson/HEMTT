@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
-use hemtt::HEMTTError;
 use pest::error::Error;
 use pest::Parser;
 
@@ -385,7 +384,7 @@ where
                                     return Err(ArmaConfigError::DefineWithoutName { token: tp });
                                 }
                             } else {
-                                return Err(ArmaConfigError::DefineWithoutName { token: token });
+                                return Err(ArmaConfigError::DefineWithoutName { token });
                             }
                         }
                         ("undef", true) => {
@@ -397,7 +396,7 @@ where
                                     return Err(ArmaConfigError::UndefineWithoutName { token: tp });
                                 }
                             } else {
-                                return Err(ArmaConfigError::UndefineWithoutName { token: token });
+                                return Err(ArmaConfigError::UndefineWithoutName { token });
                             }
                         }
                         ("ifdef", true) => {
