@@ -2,8 +2,8 @@
 fn cba_common_macros() {
     let config = hemtt_arma_config::preprocess(
         hemtt_arma_config::tokenize(
-            &std::fs::read_to_string("tests/cba/config.cpp").unwrap(),
-            "tests/cba/config.cpp",
+            &std::fs::read_to_string("tests/cba/script_common_macros.hpp").unwrap(),
+            "tests/cbascript_common_macros.hpp",
         )
         .unwrap(),
         ".",
