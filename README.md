@@ -1,6 +1,6 @@
 # HEMTT
 
-[![codecov](https://codecov.io/gh/BrettMayson/HEMTT/branch/experiment/graph/badge.svg?token=A6AG4OK9SH)](https://codecov.io/gh/BrettMayson/HEMTT)
+[![codecov](https://codecov.io/gh/BrettMayson/HEMTT/branch/main/graph/badge.svg?token=A6AG4OK9SH)](https://codecov.io/gh/BrettMayson/HEMTT)
 
 Build System for Arma 3
 
