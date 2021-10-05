@@ -28,8 +28,8 @@ lazy_static::lazy_static! {
     pub static ref DEBUG: bool = std::env::args().any(|x| x == "--debug");
 }
 
-pub fn execute(input: &[String]) -> Result<(), BISignError> {
-    let mut app = clap::App::new("bisign")
+pub fn execute(name: &str, input: &[String]) -> Result<(), BISignError> {
+    let mut app = clap::App::new(name)
         .version(*crate::VERSION)
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(

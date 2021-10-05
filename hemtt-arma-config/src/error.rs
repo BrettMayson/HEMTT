@@ -1,3 +1,8 @@
+use hemtt::HEMTTError;
+use thiserror::Error;
+
+use crate::preprocess::{Token, TokenPos};
+
 pub trait PrintableError<T, E> {
     fn unwrap_or_print(self) -> T;
 }
@@ -11,7 +16,7 @@ impl<T, E: std::fmt::Debug + std::fmt::Display> PrintableError<T, E> for Result<
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum ArmaConfigError {
     ParsingError {
         positives: Vec<String>,
@@ -22,6 +27,19 @@ pub enum ArmaConfigError {
     InvalidProperty(String),
     NotProcessed,
     NotRoot,
+
+    // Syntax
+    ArgCoundMismatch {
+        expected: usize,
+        actual: usize,
+        args: Vec<String>,
+    },
+    DefineWithoutName {
+        token: TokenPos,
+    },
+    UndefineWithoutName {
+        token: TokenPos,
+    },
 
     // Wrappers
     IO(std::io::Error),
@@ -53,6 +71,23 @@ impl std::fmt::Display for ArmaConfigError {
                 ref position,
                 ..
             } => write!(f, "Expected {:?} at {:?}", positives, position),
+
+            //Syntax
+            Self::ArgCoundMismatch {
+                expected,
+                actual,
+                ref args,
+            } => write!(
+                f,
+                "Expected {} arguments, got {}: {:?}",
+                expected, actual, args
+            ),
+            Self::DefineWithoutName { ref token } => {
+                write!(f, "Expected a name after define, at {:?}", token)
+            }
+            Self::UndefineWithoutName { ref token } => {
+                write!(f, "Expected a name after undef, at {:?}", token)
+            }
         }
     }
 }
