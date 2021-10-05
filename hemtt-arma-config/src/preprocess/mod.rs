@@ -9,7 +9,7 @@ use pest::Parser;
 mod token;
 #[cfg(test)]
 use token::Whitespace;
-use token::{PreProcessParser, Rule, Token, TokenPos};
+pub use token::{PreProcessParser, Rule, Token, TokenPos};
 
 mod render;
 pub use render::render;
@@ -19,7 +19,7 @@ use define::Define;
 mod ifstate;
 use ifstate::{IfState, IfStates};
 
-use crate::resolver::Resolver;
+use crate::{resolver::Resolver, ArmaConfigError};
 
 pub fn tokenize(source: &str, path: &str) -> Result<Vec<TokenPos>, Error<Rule>> {
     let mut tokens = Vec::new();
@@ -182,17 +182,21 @@ pub fn _resolve<R>(
     root: &str,
     resolver: R,
     defines: &HashMap<String, Define>,
-) -> Option<Vec<TokenPos>>
+) -> Result<Option<Vec<TokenPos>>, ArmaConfigError>
 where
     R: Resolver,
 {
-    if let Some(d) = defines.get(ident) {
+    Ok(if let Some(d) = defines.get(ident) {
         let mut ret = Vec::new();
         let mut context = defines.to_owned();
         if let Some(dargs) = &d.args {
             if let Some(args) = &define.args {
                 if dargs.len() != args.len() {
-                    panic!("Invalid arg lengths");
+                    return Err(ArmaConfigError::ArgCoundMismatch {
+                        expected: args.len(),
+                        actual: dargs.len(),
+                        args: args.iter().map(|a| render(a.to_vec()).export()).collect(),
+                    });
                 }
                 for i in 0..dargs.len() {
                     if let Token::Word(key) = &dargs[i][0].token() {
@@ -241,7 +245,7 @@ where
                                         root,
                                         resolver.clone(),
                                         &mut context,
-                                    ));
+                                    )?);
                                     ret.push(TokenPos::with_pos(Token::DoubleQuote, &token));
                                 }
                             }
@@ -260,7 +264,7 @@ where
                         root,
                         resolver.clone(),
                         &mut context,
-                    ));
+                    )?);
                 }
                 _ => ret.push(token.to_owned()),
             }
@@ -268,7 +272,7 @@ where
         Some(ret)
     } else {
         None
-    }
+    })
 }
 
 fn _resolve_word<R>(
@@ -278,7 +282,7 @@ fn _resolve_word<R>(
     root: &str,
     resolver: R,
     mut defines: &mut HashMap<String, Define>,
-) -> Vec<TokenPos>
+) -> Result<Vec<TokenPos>, ArmaConfigError>
 where
     R: Resolver,
 {
@@ -292,7 +296,7 @@ where
                         read_args!(iter)
                             .into_iter()
                             .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
-                            .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
+                            .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()
                             .unwrap(),
                     ),
                     statement: Vec::new(),
@@ -300,23 +304,23 @@ where
                 root,
                 resolver,
                 defines,
-            ) {
-                return r;
+            )? {
+                return Ok(r);
             }
-        } else if let Some(r) = _resolve(ident, d2, root, resolver, defines) {
-            return r;
+        } else if let Some(r) = _resolve(ident, d2, root, resolver, defines)? {
+            return Ok(r);
         } else {
-            return vec![token.to_owned()];
+            return Ok(vec![token.to_owned()]);
         }
     }
-    vec![token.to_owned()]
+    Ok(vec![token.to_owned()])
 }
 
 pub fn preprocess<R>(
     source: Vec<TokenPos>,
     root: &str,
     resolver: R,
-) -> Result<Vec<TokenPos>, HEMTTError>
+) -> Result<Vec<TokenPos>, ArmaConfigError>
 where
     R: Resolver,
 {
@@ -329,16 +333,17 @@ pub fn _preprocess<R>(
     root: &str,
     resolver: R,
     mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
-) -> Result<Vec<TokenPos>, HEMTTError>
+) -> Result<Vec<TokenPos>, ArmaConfigError>
 where
     R: Resolver,
 {
     let mut ret = Vec::new();
     let mut iter = source.into_iter().peekable();
     let mut if_state = IfStates::new();
+    let mut new_line = true;
     while let Some(token) = iter.next() {
-        match (&token.token(), if_state.reading()) {
-            (Token::Directive, r) => {
+        match (&token.token(), if_state.reading(), new_line) {
+            (Token::Directive, r, true) => {
                 if let Token::Word(directive) = iter.next().unwrap().token() {
                     match (directive.as_str(), r) {
                         ("define", true) => {
@@ -358,7 +363,7 @@ where
                                                         &mut defines,
                                                     )
                                                 })
-                                                .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
+                                                .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()
                                                 .unwrap();
                                             Some(args)
                                         } else {
@@ -377,10 +382,10 @@ where
                                         },
                                     );
                                 } else {
-                                    return Err(HEMTTError::Generic(
-                                        "define without name".to_string(),
-                                    ));
+                                    return Err(ArmaConfigError::DefineWithoutName { token: tp });
                                 }
+                            } else {
+                                return Err(ArmaConfigError::DefineWithoutName { token: token });
                             }
                         }
                         ("undef", true) => {
@@ -389,12 +394,10 @@ where
                                 if let Token::Word(name) = tp.token().clone() {
                                     defines.remove(&name);
                                 } else {
-                                    return Err(HEMTTError::Generic(
-                                        "undef without name".to_string(),
-                                    ));
+                                    return Err(ArmaConfigError::UndefineWithoutName { token: tp });
                                 }
                             } else {
-                                return Err(HEMTTError::Generic("undef without name".to_string()));
+                                return Err(ArmaConfigError::UndefineWithoutName { token: token });
                             }
                         }
                         ("ifdef", true) => {
@@ -461,7 +464,7 @@ where
                     }
                 }
             }
-            (Token::Word(text), true) => {
+            (Token::Word(text), true, _) => {
                 if defines.contains_key(text) {
                     ret.append(
                         &mut _resolve(
@@ -481,7 +484,7 @@ where
                                                         &mut defines,
                                                     )
                                                 })
-                                                .collect::<Result<Vec<Vec<TokenPos>>, HEMTTError>>()
+                                                .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()
                                                 .unwrap(),
                                         )
                                     } else {
@@ -495,14 +498,22 @@ where
                             root,
                             resolver.clone(),
                             defines,
-                        )
+                        )?
                         .unwrap(),
                     );
                 } else {
                     ret.push(token);
                 }
             }
-            (_, true) => {
+            (Token::Newline, true, _) => {
+                new_line = true;
+                ret.push(token);
+            }
+            (Token::Whitespace(_), true, _) => {
+                ret.push(token);
+            }
+            (_, true, _) => {
+                new_line = false;
                 ret.push(token);
             }
             _ => {}

@@ -1,6 +1,9 @@
 use std::{path::PathBuf, sync::Arc};
 
-use hemtt_arma_config::resolver::{ResolvedFile, Resolver};
+use hemtt_arma_config::{
+    resolver::{ResolvedFile, Resolver},
+    ArmaConfigError,
+};
 use vfs::{VfsFileType, VfsPath};
 
 use crate::{context::AddonContext, HEMTTError, Stage, Task};
@@ -33,7 +36,12 @@ pub fn preprocess(path: VfsPath, ctx: &mut AddonContext) -> Result<(), HEMTTErro
         ),
     );
     let mut f = path.create_file()?;
-    f.write_all(hemtt_arma_config::render(processed?).export().as_bytes())?;
+    // TODO remove processed.unwrap()
+    f.write_all(
+        hemtt_arma_config::render(processed.unwrap())
+            .export()
+            .as_bytes(),
+    )?;
     Ok(())
 }
 
@@ -71,7 +79,7 @@ impl<'a> VfsResolver<'a> {
     }
 }
 impl<'a> Resolver for VfsResolver<'a> {
-    fn resolve(&self, _root: &str, from: &str, to: &str) -> Result<ResolvedFile, HEMTTError> {
+    fn resolve(&self, _root: &str, from: &str, to: &str) -> Result<ResolvedFile, ArmaConfigError> {
         trace!("Resolving from {} to {}", from, to);
         let to_f = to.replace("\\", "/");
         let to = to_f.trim_start_matches('/');
@@ -120,7 +128,8 @@ impl<'a> Resolver for VfsResolver<'a> {
                             .unwrap();
                         Ok(ResolvedFile::new(new_path.as_str(), buf))
                     } else {
-                        Err(e.into())
+                        panic!("{}", e);
+                        // TODO Err(e.into())
                     }
                 }
             }

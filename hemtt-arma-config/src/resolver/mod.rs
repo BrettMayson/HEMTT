@@ -2,6 +2,8 @@ use std::fs::read_to_string;
 
 use hemtt::HEMTTError;
 
+use crate::ArmaConfigError;
+
 pub struct ResolvedFile {
     path: String,
     data: String,
@@ -28,13 +30,13 @@ impl ResolvedFile {
 }
 
 pub trait Resolver: Clone {
-    fn resolve(&self, root: &str, from: &str, to: &str) -> Result<ResolvedFile, HEMTTError>;
+    fn resolve(&self, root: &str, from: &str, to: &str) -> Result<ResolvedFile, ArmaConfigError>;
 }
 
 #[derive(Clone, Copy)]
 pub struct Basic;
 impl Resolver for Basic {
-    fn resolve(&self, root: &str, _: &str, to: &str) -> Result<ResolvedFile, HEMTTError> {
+    fn resolve(&self, root: &str, _: &str, to: &str) -> Result<ResolvedFile, ArmaConfigError> {
         let path = format!("{}/{}", root, to);
         Ok(ResolvedFile::new(&path, &read_to_string(&path)?))
     }
