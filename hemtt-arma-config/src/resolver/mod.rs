@@ -1,7 +1,5 @@
 use std::fs::read_to_string;
 
-use hemtt::HEMTTError;
-
 use crate::ArmaConfigError;
 
 pub struct ResolvedFile {

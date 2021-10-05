@@ -1,7 +1,7 @@
-use hemtt::HEMTTError;
+
 use thiserror::Error;
 
-use crate::preprocess::{Token, TokenPos};
+use crate::preprocess::TokenPos;
 
 pub trait PrintableError<T, E> {
     fn unwrap_or_print(self) -> T;
