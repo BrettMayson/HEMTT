@@ -1,5 +1,0 @@
-name = "HEMTT Testing Framework"
-prefix = "tests"
-mainprefix = "hemtt"
-author = "Brett Mayson"
-template = "cba"

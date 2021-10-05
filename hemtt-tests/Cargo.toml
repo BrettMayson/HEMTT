@@ -1,9 +1,0 @@
-[package]
-name = "hemtt-tests"
-version = "0.1.0"
-edition = "2018"
-
-[dependencies]
-arma-rs = { git = "https://github.com/synixebrett/arma-rs", branch = "expirement" }
-enigo = "0.0"
-rust-embed="6.0"

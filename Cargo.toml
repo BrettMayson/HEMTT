@@ -10,6 +10,4 @@ members = [
     "hemtt-pbo",
     "hemtt-serde",
     "hemtt-sign",
-    # "hemtt-tests",
-    # "hemtt-tests-extension",
 ]
