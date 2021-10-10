@@ -181,7 +181,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
         self.input.seek(SeekFrom::Start(self.blob_start)).unwrap();
         for h in &self.headers {
             if h.filename().to_lowercase() == filename.to_lowercase() {
-                let mut buffer: Vec<u8> = Vec::new();
+                let mut buffer: Vec<u8> = Vec::with_capacity(h.size() as usize);
                 self.input.read_exact(&mut buffer).unwrap();
                 return Some(Cursor::new(buffer));
             } else {
