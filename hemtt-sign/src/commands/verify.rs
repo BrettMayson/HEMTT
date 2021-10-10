@@ -70,7 +70,7 @@ impl Command for Verify {
         let sorted = pbo.is_sorted();
         if let Err((_, files_sorted)) = sorted {
             println!("\tInvalid Hash: {:?}", actual);
-            let mut new_pbo = WritablePbo::<Cursor<std::boxed::Box<[u8]>>>::new();
+            let mut new_pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
             for f in files_sorted {
                 new_pbo
                     .add_file_header(

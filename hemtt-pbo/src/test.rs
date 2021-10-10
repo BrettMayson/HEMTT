@@ -28,7 +28,7 @@ pub fn pbo(
 }
 
 pub fn writeable_pbo(pbo: ReadablePbo<File>, file: File) {
-    let mut writeable: WritablePbo<std::io::Cursor<Box<[u8]>>> = pbo.into();
+    let mut writeable: WritablePbo<std::io::Cursor<Vec<u8>>> = pbo.into();
     let original = ReadablePbo::from(file).unwrap();
 
     assert_eq!(original.files(), writeable.files_sorted().unwrap());

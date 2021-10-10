@@ -175,13 +175,13 @@ impl<I: Seek + Read> ReadablePbo<I> {
     }
 
     /// Retrieves a file from a PBO
-    pub fn retrieve(&mut self, filename: &str) -> Option<Cursor<Box<[u8]>>> {
+    pub fn retrieve(&mut self, filename: &str) -> Option<Cursor<Vec<u8>>> {
         let filename_owned = filename.replace("/", "\\");
         let filename = filename_owned.as_str();
         self.input.seek(SeekFrom::Start(self.blob_start)).unwrap();
         for h in &self.headers {
             if h.filename().to_lowercase() == filename.to_lowercase() {
-                let mut buffer: Box<[u8]> = vec![0; h.size() as usize].into_boxed_slice();
+                let mut buffer: Vec<u8> = Vec::new();
                 self.input.read_exact(&mut buffer).unwrap();
                 return Some(Cursor::new(buffer));
             } else {

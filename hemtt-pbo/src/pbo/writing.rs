@@ -254,7 +254,7 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 }
 
-impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Box<[u8]>>> {
+impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Vec<u8>>> {
     fn from(mut rp: ReadablePbo<B>) -> Self {
         let mut pbo = Self::new();
         for header in rp.files() {
