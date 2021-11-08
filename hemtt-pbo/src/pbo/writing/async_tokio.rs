@@ -257,7 +257,7 @@ impl<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin + std::marker::Send> Wr
 }
 
 impl WritablePbo<Cursor<Vec<u8>>> {
-    pub async fn from_readable(mut rp: ReadablePbo<Cursor<Vec<u8>>>) -> Result<Self> {
+    pub async fn from_readable<B: AsyncSeekExt + AsyncReadExt + std::marker::Unpin + std::marker::Send>(mut rp: ReadablePbo<B>) -> Result<Self> {
         let mut pbo = Self::new();
         for header in rp.files() {
             pbo.add_file_header(
