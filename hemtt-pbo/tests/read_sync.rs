@@ -1,10 +1,10 @@
 use std::{fs::File, path::Path};
 
-use hemtt_pbo::Timestamp;
+use hemtt_pbo::{tests::sync::*, Timestamp};
 
 #[test]
 fn ace_weather_cba6f72c() {
-    let mut pbo = hemtt_pbo::test::pbo(
+    let mut pbo = pbo(
         File::open("tests/ace_weather.pbo_cba6f72c").unwrap(),
         41,
         true,
@@ -16,7 +16,7 @@ fn ace_weather_cba6f72c() {
             78,
         ],
     );
-    hemtt_pbo::test::header(
+    header(
         pbo.files().first().unwrap(),
         "$PBOPREFIX$.backup",
         0,
@@ -25,7 +25,7 @@ fn ace_weather_cba6f72c() {
         Timestamp::from_u32(1543422611),
         20,
     );
-    hemtt_pbo::test::header(
+    header(
         &pbo.header("$PBOPREFIX$.backup").unwrap(),
         "$PBOPREFIX$.backup",
         0,
@@ -34,17 +34,17 @@ fn ace_weather_cba6f72c() {
         Timestamp::from_u32(1543422611),
         20,
     );
-    hemtt_pbo::test::file(
+    file(
         &mut pbo,
         "XEH_preStart.sqf",
         "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
     );
-    hemtt_pbo::test::writeable_pbo(pbo, File::open("tests/ace_weather.pbo_cba6f72c").unwrap());
+    writeable_pbo(pbo, File::open("tests/ace_weather.pbo_cba6f72c").unwrap());
 }
 
 #[test]
 fn ace_weather_8bd4922f() {
-    let mut pbo = hemtt_pbo::test::pbo(
+    let mut pbo = pbo(
         File::open("tests/ace_weather.pbo_8bd4922f").unwrap(),
         45,
         false,
@@ -56,7 +56,7 @@ fn ace_weather_8bd4922f() {
             187, 203,
         ],
     );
-    hemtt_pbo::test::header(
+    header(
         pbo.files().first().unwrap(),
         "$PBOPREFIX$.backup",
         0,
@@ -65,7 +65,7 @@ fn ace_weather_8bd4922f() {
         Timestamp::from_u32(1615389445),
         20,
     );
-    hemtt_pbo::test::header(
+    header(
         &pbo.header("$PBOPREFIX$.backup").unwrap(),
         "$PBOPREFIX$.backup",
         0,
@@ -74,7 +74,7 @@ fn ace_weather_8bd4922f() {
         Timestamp::from_u32(1615389445),
         20,
     );
-    hemtt_pbo::test::file(
+    file(
         &mut pbo,
         "XEH_preStart.sqf",
         "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
@@ -86,7 +86,7 @@ fn bi_3den() {
     if !Path::new("tests/3den.pbo").exists() {
         return;
     }
-    let mut pbo = hemtt_pbo::test::pbo(
+    let mut pbo = pbo(
         File::open("tests/3den.pbo").unwrap(),
         368,
         true,
@@ -98,7 +98,7 @@ fn bi_3den() {
             33, 230,
         ],
     );
-    hemtt_pbo::test::header(
+    header(
         pbo.files().first().unwrap(),
         "config.bin",
         0,
@@ -107,7 +107,7 @@ fn bi_3den() {
         Timestamp::from_u32(1601975345),
         516713,
     );
-    hemtt_pbo::test::header(
+    header(
         &pbo.header("config.bin").unwrap(),
         "config.bin",
         0,
@@ -116,6 +116,6 @@ fn bi_3den() {
         Timestamp::from_u32(1601975345),
         516713,
     );
-    // hemtt_pbo::test::file(pbo.retrieve("XEH_preStart.sqf").unwrap(), "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string());
-    hemtt_pbo::test::writeable_pbo(pbo, File::open("tests/3den.pbo").unwrap());
+    // file(pbo.retrieve("XEH_preStart.sqf").unwrap(), "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string());
+    writeable_pbo(pbo, File::open("tests/3den.pbo").unwrap());
 }

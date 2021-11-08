@@ -13,28 +13,28 @@ pub trait ReadExt: AsyncReadExt + std::marker::Unpin + std::marker::Send {
 #[async_trait]
 impl<T: AsyncReadExt + std::marker::Unpin + std::marker::Send> ReadExt for T {
     async fn read_cstring(&mut self) -> Result<String> {
-        let mut raw_bytes = Vec::new();
-        self.read_to_end(&mut raw_bytes).await?;
+        let mut byte = vec![0u8; 1];
         let mut bytes: Vec<u8> = Vec::new();
-        for byte in raw_bytes {
-            let b = byte;
-            if b == 0 {
+        loop {
+            self.read_exact(&mut byte).await?;
+            if byte[0] == 0 {
                 break;
             }
-            bytes.push(b);
+            bytes.push(byte[0]);
         }
-
         Ok(String::from_utf8(bytes).unwrap())
     }
 
     async fn read_compressed_int(&mut self) -> Result<u32> {
-        let mut raw_bytes = Vec::new();
-        self.read_to_end(&mut raw_bytes).await?;
+        let mut byte = vec![0u8; 1];
         let mut result: u32 = 0;
-        for (i, byte) in raw_bytes.into_iter().enumerate() {
-            let b: u32 = byte.into();
+        let mut i = 0;
+        loop {
+            self.read_exact(&mut byte).await?;
+            let b: u32 = byte[0].into();
             result |= (b & 0x7f) << (i * 7);
-            if b < 0x80 {
+            i += 1;
+            if byte[0] < 0x80 {
                 break;
             }
         }
