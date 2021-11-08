@@ -5,7 +5,7 @@ use openssl::bn::{BigNum, BigNumContext};
 use openssl::rsa::Rsa;
 
 use hemtt_io::*;
-use hemtt_pbo::ReadablePbo;
+use hemtt_pbo::sync::ReadablePbo;
 
 use super::{BIPublicKey, BISign, BISignVersion};
 

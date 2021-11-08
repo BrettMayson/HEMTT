@@ -1,6 +1,9 @@
 use std::io;
 use std::io::{Read, Write};
 
+#[cfg(feature = "async-tokio")]
+pub mod async_tokio;
+
 pub trait ReadExt: Read {
     fn read_cstring(&mut self) -> io::Result<String>;
     fn read_compressed_int(&mut self) -> io::Result<u32>;

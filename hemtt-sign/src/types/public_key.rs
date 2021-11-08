@@ -2,7 +2,7 @@ use std::io::{Error, Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_io::*;
-use hemtt_pbo::ReadablePbo;
+use hemtt_pbo::sync::ReadablePbo;
 use openssl::bn::{BigNum, BigNumContext};
 
 use crate::{BISign, BISignError};

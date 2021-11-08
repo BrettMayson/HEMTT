@@ -25,7 +25,7 @@ pub fn find_bi_tool(tool: &str) -> Result<PathBuf, HEMTTError> {
 }
 
 #[cfg(not(windows))]
-pub fn find_bi_tool(_tool: &str) -> Result<PathBuf, HEMTTError> {
+pub const fn find_bi_tool(_tool: &str) -> Result<PathBuf, HEMTTError> {
     unreachable!();
 }
 
@@ -92,6 +92,6 @@ pub fn find_arma_path() -> Result<PathBuf, HEMTTError> {
 }
 
 #[cfg(not(windows))]
-pub fn find_arma_path() -> Result<PathBuf, HEMTTError> {
+pub const fn find_arma_path() -> Result<PathBuf, HEMTTError> {
     unreachable!();
 }

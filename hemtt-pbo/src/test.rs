@@ -1,6 +1,9 @@
-use std::fs::File;
+use std::{convert::TryInto, fs::File};
 
-use crate::{Header, ReadablePbo, Timestamp, WritablePbo};
+use crate::{
+    sync::{ReadablePbo, WritablePbo},
+    Header, Timestamp,
+};
 
 pub fn pbo(
     file: File,
@@ -28,7 +31,7 @@ pub fn pbo(
 }
 
 pub fn writeable_pbo(pbo: ReadablePbo<File>, file: File) {
-    let mut writeable: WritablePbo<std::io::Cursor<Vec<u8>>> = pbo.into();
+    let mut writeable: WritablePbo<std::io::Cursor<Vec<u8>>> = pbo.try_into().unwrap();
     let original = ReadablePbo::from(file).unwrap();
 
     assert_eq!(original.files(), writeable.files_sorted().unwrap());

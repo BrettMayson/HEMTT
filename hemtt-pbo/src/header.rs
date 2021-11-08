@@ -1,5 +1,11 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+#[cfg(feature = "async-tokio")]
+use hemtt_io::async_tokio::{ReadExt as ReadExtAsync, WriteExt as WriteExtAsync};
+#[cfg(feature = "async-tokio")]
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncWriteExt;
+
 use std::{
     io::{Error, Read, Write},
     ops::Deref,
@@ -79,6 +85,43 @@ impl Header {
     }
     pub const fn size(&self) -> u32 {
         self.size
+    }
+}
+
+#[cfg(feature = "async-tokio")]
+impl Header {
+    pub async fn read_async<I: AsyncReadExt + std::marker::Unpin + std::marker::Send>(
+        input: &mut I,
+    ) -> Result<(Self, usize), Error> {
+        let mut size = 4 * 5;
+        let filename = input.read_cstring().await?.replace("/", "\\");
+        size += filename.as_bytes().len() + 1;
+        trace!("reading header of size: {} bytes", size);
+        Ok((
+            Self {
+                filename,
+                method: input.read_u32_le().await?,
+                original: input.read_u32_le().await?,
+                reserved: input.read_u32_le().await?,
+                timestamp: Timestamp(input.read_u32_le().await?),
+                size: input.read_u32_le().await?,
+            },
+            size,
+        ))
+    }
+
+    pub async fn write_async<O: AsyncWriteExt + std::marker::Unpin + std::marker::Send>(
+        &self,
+        output: &mut O,
+    ) -> Result<(), Error> {
+        trace!("writing header for `{}`", self.filename);
+        output.write_cstring(self.filename.as_bytes()).await?;
+        output.write_u32_le(self.method).await?;
+        output.write_u32_le(self.original).await?;
+        output.write_u32_le(self.reserved).await?;
+        output.write_u32_le(*self.timestamp).await?;
+        output.write_u32_le(self.size).await?;
+        Ok(())
     }
 }
 

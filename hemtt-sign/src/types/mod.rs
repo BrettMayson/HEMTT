@@ -9,7 +9,7 @@ pub use signature::{BISign, BISignVersion};
 
 use std::io::{Error, Read, Seek, Write};
 
-use hemtt_pbo::ReadablePbo;
+use hemtt_pbo::sync::ReadablePbo;
 use openssl::bn::BigNum;
 use openssl::hash::{DigestBytes, Hasher, MessageDigest};
 

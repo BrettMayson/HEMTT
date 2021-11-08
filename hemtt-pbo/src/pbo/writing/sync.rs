@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::io::{Cursor, Read, Result, Seek};
 use std::{
     collections::HashMap,
@@ -8,7 +9,8 @@ use hemtt_io::WriteExt;
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 
-use crate::{Header, ReadablePbo, Timestamp};
+use crate::pbo::sync::ReadablePbo;
+use crate::{Header, Timestamp};
 
 #[derive(Default)]
 pub struct WritablePbo<I: Seek + Read> {
@@ -254,21 +256,22 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 }
 
-impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Vec<u8>>> {
-    fn from(mut rp: ReadablePbo<B>) -> Self {
+impl<B: Seek + Read> TryFrom<ReadablePbo<B>> for WritablePbo<Cursor<Vec<u8>>> {
+    type Error = std::io::Error;
+
+    fn try_from(mut rp: ReadablePbo<B>) -> Result<Self> {
         let mut pbo = Self::new();
         for header in rp.files() {
             pbo.add_file_header(
                 header.filename(),
                 rp.retrieve(header.filename()).unwrap(),
                 header.clone(),
-            )
-            .unwrap();
+            )?;
         }
         for (key, value) in rp.extensions() {
             pbo.add_extension(key, value);
         }
-        pbo
+        Ok(pbo)
     }
 }
 
@@ -276,7 +279,7 @@ impl<B: Seek + Read> From<ReadablePbo<B>> for WritablePbo<Cursor<Vec<u8>>> {
 mod tests {
     use std::io::Cursor;
 
-    use crate::WritablePbo;
+    use super::WritablePbo;
 
     #[test]
     fn empty_pbo() {

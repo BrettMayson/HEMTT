@@ -280,7 +280,7 @@ fn _resolve_word<R>(
     token: &TokenPos,
     root: &str,
     resolver: R,
-    mut defines: &mut HashMap<String, Define>,
+    defines: &mut HashMap<String, Define>,
 ) -> Result<Vec<TokenPos>, ArmaConfigError>
 where
     R: Resolver,
@@ -294,7 +294,7 @@ where
                     args: Some(
                         read_args!(iter)
                             .into_iter()
-                            .map(|arg| _preprocess(arg, root, resolver.clone(), &mut defines))
+                            .map(|arg| _preprocess(arg, root, resolver.clone(), defines))
                             .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()
                             .unwrap(),
                     ),
@@ -331,7 +331,7 @@ pub fn _preprocess<R>(
     source: Vec<TokenPos>,
     root: &str,
     resolver: R,
-    mut defines: &mut std::collections::HashMap<std::string::String, define::Define>,
+    defines: &mut std::collections::HashMap<std::string::String, define::Define>,
 ) -> Result<Vec<TokenPos>, ArmaConfigError>
 where
     R: Resolver,
@@ -359,7 +359,7 @@ where
                                                         arg,
                                                         root,
                                                         resolver.clone(),
-                                                        &mut defines,
+                                                        defines,
                                                     )
                                                 })
                                                 .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()
@@ -480,7 +480,7 @@ where
                                                         arg,
                                                         root,
                                                         resolver.clone(),
-                                                        &mut defines,
+                                                        defines,
                                                     )
                                                 })
                                                 .collect::<Result<Vec<Vec<TokenPos>>, ArmaConfigError>>()

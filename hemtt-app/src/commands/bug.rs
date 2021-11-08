@@ -69,7 +69,7 @@ Provide any additional information that will help us solve this issue.
         );
         let url = format!(
             "https://github.com/synixebrett/HEMTT/issues/new?body={}",
-            utf8_percent_encode(&body, FRAGMENT).to_string()
+            utf8_percent_encode(&body, FRAGMENT)
         );
         if webbrowser::open(&url).is_err() {
             Err(HEMTTError::Generic("Unable to open a browser".to_string()))

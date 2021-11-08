@@ -4,7 +4,7 @@ use std::{fs::File, io::Cursor};
 use super::Command;
 use crate::{BIPublicKey, BISign, BISignError};
 
-use hemtt_pbo::{ReadablePbo, WritablePbo};
+use hemtt_pbo::sync::{ReadablePbo, WritablePbo};
 
 pub struct Verify {}
 impl Command for Verify {

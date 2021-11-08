@@ -17,7 +17,7 @@ impl Task for Pack {
             return Ok(());
         }
 
-        let mut pbo = hemtt_pbo::WritablePbo::<Box<dyn SeekAndRead>>::new();
+        let mut pbo = hemtt_pbo::sync::WritablePbo::<Box<dyn SeekAndRead>>::new();
 
         pbo.add_extension("prefix", ctx.prefix());
         pbo.add_extension("hemtt", *crate::VERSION);

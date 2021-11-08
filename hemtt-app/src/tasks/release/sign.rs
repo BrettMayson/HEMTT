@@ -1,6 +1,6 @@
 use std::{convert::TryInto, sync::RwLock};
 
-use hemtt_pbo::ReadablePbo;
+use hemtt_pbo::sync::ReadablePbo;
 use hemtt_sign::BIPrivateKey;
 
 use crate::{

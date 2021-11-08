@@ -405,7 +405,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.next_is_class = false;
         if self.next_char() == '{' {
             // Give the visitor access to each element of the sequence.
-            let value = visitor.visit_seq(CommaSeparated::new(&mut self))?;
+            let value = visitor.visit_seq(CommaSeparated::new(self))?;
             // Parse the closing bracket of the sequence.
             loop {
                 if crate::WHITESPACE.contains(self.peek_char()) {
@@ -449,7 +449,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     {
         self.next_is_class = false;
         if self.next_char() == '{' {
-            let value = visitor.visit_map(ArmaClass::new(&mut self))?;
+            let value = visitor.visit_map(ArmaClass::new(self))?;
             loop {
                 if WHITESPACE.contains(self.peek_char()) {
                     self.next_char();
@@ -479,7 +479,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             self.next_char();
         }
         self.next_is_class = false;
-        let value = visitor.visit_map(ArmaClass::new(&mut self));
+        let value = visitor.visit_map(ArmaClass::new(self));
         loop {
             if WHITESPACE.contains(self.peek_char()) {
                 self.next_char();

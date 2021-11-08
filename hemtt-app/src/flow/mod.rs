@@ -90,16 +90,16 @@ impl Flow {
                 Stage::PostRelease => task.postrelease_single(addons)?,
             };
         }
-        addons.mut_addons().par_iter_mut().for_each(|mut addon| {
+        addons.mut_addons().par_iter_mut().for_each(|addon| {
             if !addon.failed() {
                 match match stage {
-                    Stage::Check => task.check(&mut addon),
-                    Stage::PreBuild => task.prebuild(&mut addon),
-                    Stage::Build => task.build(&mut addon),
-                    Stage::PostBuild => task.postbuild(&mut addon),
-                    Stage::PreRelease => task.prerelease(&mut addon),
-                    Stage::Release => task.release(&mut addon),
-                    Stage::PostRelease => task.postrelease(&mut addon),
+                    Stage::Check => task.check(addon),
+                    Stage::PreBuild => task.prebuild(addon),
+                    Stage::Build => task.build(addon),
+                    Stage::PostBuild => task.postbuild(addon),
+                    Stage::PreRelease => task.prerelease(addon),
+                    Stage::Release => task.release(addon),
+                    Stage::PostRelease => task.postrelease(addon),
                 } {
                     Ok(_) => {}
                     Err(e) => {
