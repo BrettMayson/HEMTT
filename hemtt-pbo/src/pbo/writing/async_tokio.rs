@@ -9,15 +9,16 @@ use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
+use crate::async_tokio::ReadablePbo;
 use crate::{Header, Timestamp};
 
 #[derive(Default)]
-pub struct WritablePbo<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin> {
+pub struct WritablePbo<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin + std::marker::Send> {
     extensions: IndexMap<String, String>,
     files: HashMap<String, (I, Header)>,
 }
 
-impl<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin> WritablePbo<I> {
+impl<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin + std::marker::Send> WritablePbo<I> {
     /// Create an empty PBO for writing
     pub fn new() -> Self {
         Self {
@@ -253,21 +254,23 @@ impl<I: AsyncSeekExt + AsyncReadExt + std::marker::Unpin> WritablePbo<I> {
 
         Ok(h.finalize().to_vec())
     }
+}
 
-    // async fn from_readable(mut rp: ReadablePbo<I>) -> Result<Self> {
-    //     let mut pbo = Self::new();
-    //     for header in rp.files() {
-    //         pbo.add_file_header(
-    //             header.filename(),
-    //             rp.retrieve(header.filename()).unwrap(),
-    //             header.clone(),
-    //         ).await?;
-    //     }
-    //     for (key, value) in rp.extensions() {
-    //         pbo.add_extension(key, value);
-    //     }
-    //     Ok(pbo)
-    // }
+impl WritablePbo<Cursor<Vec<u8>>> {
+    pub async fn from_readable(mut rp: ReadablePbo<Cursor<Vec<u8>>>) -> Result<Self> {
+        let mut pbo = Self::new();
+        for header in rp.files() {
+            pbo.add_file_header(
+                header.filename(),
+                rp.retrieve(header.filename()).await.unwrap(),
+                header.clone(),
+            ).await?;
+        }
+        for (key, value) in rp.extensions() {
+            pbo.add_extension(key, value);
+        }
+        Ok(pbo)
+    }
 }
 
 #[cfg(test)]
