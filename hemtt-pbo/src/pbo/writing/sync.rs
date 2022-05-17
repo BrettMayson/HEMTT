@@ -137,7 +137,7 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Write the PBO file
-    pub fn write<O: Write>(&mut self, output: &mut O) -> Result<()> {
+    pub fn write<O: Write>(&mut self, output: &mut O, extensions: bool) -> Result<()> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
         let ext_header = Header {
@@ -148,26 +148,28 @@ impl<I: Seek + Read> WritablePbo<I> {
             timestamp: Timestamp::from_u32(0),
             size: 0,
         };
-        trace!("writing ext header: {:?}", ext_header);
-        ext_header.write(&mut headers)?;
+        if extensions {
+            trace!("writing ext header: {:?}", ext_header);
+            ext_header.write(&mut headers)?;
 
-        if let Some(prefix) = self.extensions.get("prefix") {
-            trace!("writing prefix header: {:?}", prefix);
-            headers.write_all(b"prefix\0")?;
-            headers.write_cstring(prefix)?;
-        } else {
-            trace!("no prefix header")
-        }
-
-        for (key, value) in &self.extensions {
-            if key == "prefix" {
-                continue;
+            if let Some(prefix) = self.extensions.get("prefix") {
+                trace!("writing prefix header: {:?}", prefix);
+                headers.write_all(b"prefix\0")?;
+                headers.write_cstring(prefix)?;
+            } else {
+                trace!("no prefix header")
             }
-            trace!("writing `{}` header: {:?}", key, value);
-            headers.write_cstring(key)?;
-            headers.write_cstring(value)?;
+
+            for (key, value) in &self.extensions {
+                if key == "prefix" {
+                    continue;
+                }
+                trace!("writing `{}` header: {:?}", key, value);
+                headers.write_cstring(key)?;
+                headers.write_cstring(value)?;
+            }
+            headers.write_all(b"\0")?;
         }
-        headers.write_all(b"\0")?;
 
         let files_sorted = self.files_sorted()?;
 
@@ -285,7 +287,7 @@ mod tests {
     fn empty_pbo() {
         let mut pbo = WritablePbo::<Cursor<Vec<u8>>>::new();
         let mut buffer = Vec::new();
-        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        pbo.write(&mut Cursor::new(&mut buffer), true).unwrap();
         assert_eq!(
             pbo.checksum().unwrap(),
             vec![
@@ -301,7 +303,7 @@ mod tests {
         pbo.add_extension("prefix", "foobar");
         pbo.add_extension("version", "1.2.3");
         let mut buffer = Vec::new();
-        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        pbo.write(&mut Cursor::new(&mut buffer), true).unwrap();
         assert_eq!(
             pbo.checksum().unwrap(),
             vec![
@@ -319,7 +321,7 @@ mod tests {
         pbo.add_file("test.txt", Cursor::new("test".as_bytes().to_vec()))
             .unwrap();
         let mut buffer = Vec::new();
-        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        pbo.write(&mut Cursor::new(&mut buffer), true).unwrap();
         assert_eq!(
             pbo.checksum().unwrap(),
             vec![
@@ -342,7 +344,7 @@ mod tests {
             .unwrap();
         pbo.remove_file("test2.txt");
         let mut buffer = Vec::new();
-        pbo.write(&mut Cursor::new(&mut buffer)).unwrap();
+        pbo.write(&mut Cursor::new(&mut buffer), true).unwrap();
         assert_eq!(
             pbo.checksum().unwrap(),
             vec![
