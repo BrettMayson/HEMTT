@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use hemtt_pbo::sync::ReadablePbo;
+use hemtt_pbo::ReadablePbo;
 use hemtt_sign::{BIPublicKey, BISign};
 
 #[test]

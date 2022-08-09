@@ -657,13 +657,11 @@ dependencies = [
 name = "hemtt-pbo"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "byteorder",
  "hemtt-io",
  "indexmap",
  "log",
  "sha-1 0.9.8",
- "tokio",
 ]
 
 [[package]]

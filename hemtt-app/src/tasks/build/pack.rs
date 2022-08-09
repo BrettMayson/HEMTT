@@ -17,7 +17,7 @@ impl Task for Pack {
             return Ok(());
         }
 
-        let mut pbo = hemtt_pbo::sync::WritablePbo::<Box<dyn SeekAndRead>>::new();
+        let mut pbo = hemtt_pbo::WritablePbo::<Box<dyn SeekAndRead>>::new();
 
         pbo.add_extension("prefix", ctx.prefix());
         pbo.add_extension("hemtt", *crate::VERSION);
@@ -53,7 +53,7 @@ impl Task for Pack {
                 .location_pbo(Some(ctx.global().project().prefix())),
         )?;
         ctx.debug(&format!("Creating PBO at {}", pbo_path.as_str()));
-        pbo.write(&mut pbo_path.create_file()?)?;
+        pbo.write(&mut pbo_path.create_file()?, true)?;
         Ok(())
     }
 }
