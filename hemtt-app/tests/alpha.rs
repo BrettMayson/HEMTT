@@ -35,7 +35,7 @@ fn project_info() {
     .unwrap();
     hemtt_app::execute(&["hemtt-app".to_string(), "build".to_string()], false).unwrap();
 
-    hemtt_pbo::tests::sync::pbo(
+    hemtt_pbo::tests::pbo(
         File::open("addons/test_main.pbo").unwrap(),
         5,
         true,

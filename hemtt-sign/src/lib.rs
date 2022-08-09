@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 
-use hemtt_pbo::sync::ReadablePbo;
+use hemtt_pbo::ReadablePbo;
 
 mod commands;
 pub use commands::Command;

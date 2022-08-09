@@ -1,11 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-#[cfg(feature = "async-tokio")]
-use hemtt_io::async_tokio::{ReadExt as ReadExtAsync, WriteExt as WriteExtAsync};
-#[cfg(feature = "async-tokio")]
-use tokio::io::AsyncReadExt;
-use tokio::io::AsyncWriteExt;
-
 use std::{
     io::{Error, Read, Write},
     ops::Deref,
