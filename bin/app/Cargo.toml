@@ -1,0 +1,11 @@
+[package]
+name = "hemtt"
+description = "HEMTT - Arma 3 Build Tool"
+version = "0.10.0"
+edition = "2021"
+
+[dependencies]
+hemtt-error = { path = "../../libs/error" }
+hemtt-bin-internal = { path = "../libs/internal" }
+
+clap = { workspace = true }

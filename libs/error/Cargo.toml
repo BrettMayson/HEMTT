@@ -1,0 +1,9 @@
+[package]
+name = "hemtt-error"
+version = "0.10.0"
+edition = "2021"
+
+[dependencies]
+hemtt-tokens = { path = "../tokens" }
+
+colored = "2.0.0"

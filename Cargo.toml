@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "bin/app",
+    "bin/libs/internal",
+
+    "libs/config",
+    "libs/error",
+    "libs/preprocessor",
+    "libs/tokens",
+]
+
+[workspace.dependencies]
+pest = "2.4.0"
+pest_derive = "2.4.0"
+clap = "4.0.17"
