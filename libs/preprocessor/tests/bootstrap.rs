@@ -13,7 +13,11 @@ fn bootstrap() {
                 "bootstrap `{}`",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let tokens = preprocess_file(&file.path().join("source.hpp"), &mut resolver).unwrap();
+            let tokens = preprocess_file(
+                &file.path().join("source.hpp").display().to_string(),
+                &mut resolver,
+            )
+            .unwrap();
             let processed = Processed::from(tokens);
             let map = processed.get_source_map(file.path().join("expected.hpp"));
             std::fs::write(file.path().join("expected.hpp.map"), map).unwrap();

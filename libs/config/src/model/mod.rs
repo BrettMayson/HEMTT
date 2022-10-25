@@ -52,7 +52,7 @@ impl Rapify for Config {
     fn rapify<O: std::io::Write>(
         &self,
         output: &mut O,
-        offset: usize,
+        _offset: usize,
     ) -> Result<usize, std::io::Error> {
         output.write_all(b"\0raP")?;
         output.write_all(b"\0\0\0\0\x08\0\0\0")?;

@@ -8,6 +8,7 @@ pub struct Position {
 }
 
 impl Position {
+    #[must_use]
     pub const fn new(start: LineCol, end: LineCol, source: String) -> Self {
         Self {
             start,
@@ -16,6 +17,7 @@ impl Position {
         }
     }
 
+    #[must_use]
     pub fn builtin() -> Self {
         Self {
             start: (0, (0, 0)),
@@ -24,14 +26,17 @@ impl Position {
         }
     }
 
+    #[must_use]
     pub const fn start(&self) -> &LineCol {
         &self.start
     }
 
+    #[must_use]
     pub const fn end(&self) -> &LineCol {
         &self.end
     }
 
+    #[must_use]
     pub fn path(&self) -> &str {
         &self.path
     }

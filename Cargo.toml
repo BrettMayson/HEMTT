@@ -2,9 +2,12 @@
 members = [
     "bin/app",
     "bin/libs/internal",
+    "bin/libs/project",
 
     "libs/config",
     "libs/error",
+    "libs/io",
+    "libs/pbo",
     "libs/preprocessor",
     "libs/tokens",
 ]

@@ -1,8 +1,15 @@
+#![deny(clippy::all, clippy::nursery)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::cast_possible_truncation)]
+
 use std::{io::BufRead, path::Path};
+
+pub use thiserror;
 
 use colored::Colorize;
 use hemtt_tokens::{position::Position, Token};
 
+#[derive(Debug)]
 pub struct AppError {
     pub brief: String,
     pub details: Option<String>,
@@ -17,11 +24,13 @@ pub enum DisplayStyle {
 }
 
 impl AppError {
+    #[must_use]
     pub fn short(&self) -> &str {
         &self.brief
     }
 
-    pub fn long(&self, style: DisplayStyle) -> String {
+    #[must_use]
+    pub fn long(&self, style: &DisplayStyle) -> String {
         format!(
             "{}{}\n{}{}{}",
             match style {
@@ -36,6 +45,7 @@ impl AppError {
         )
     }
 
+    #[must_use]
     pub fn source(&self) -> Option<String> {
         let source = self.source.as_ref()?;
         Some(format!(
@@ -98,12 +108,21 @@ pub trait PrettyError: ToString {
     }
 }
 
+#[derive(Debug)]
 pub struct Source {
     pub lines: Vec<String>,
     pub position: Position,
     pub note: String,
 }
 
+/// Read specific lines from a file
+///
+/// # Errors
+/// if the file cannot be read
+///
+/// # Panics
+/// if the lines are out of bounds
+///
 pub fn read_lines_from_file(
     path: &Path,
     start: usize,
@@ -124,15 +143,18 @@ pub fn read_lines_from_file(
     Ok(ret)
 }
 
-pub fn make_source(token: &Token, note: String) -> Source {
-    Source {
+/// Create a source object from a token
+///
+/// # Errors
+/// if the file cannot be read
+pub fn make_source(token: &Token, note: String) -> Result<Source, std::io::Error> {
+    Ok(Source {
         lines: read_lines_from_file(
             Path::new(token.source().path()),
             token.source().start().1 .0,
             token.source().end().1 .0,
-        )
-        .unwrap(),
+        )?,
         position: token.source().clone(),
         note,
-    }
+    })
 }

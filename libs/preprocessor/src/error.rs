@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use hemtt_error::{make_source, read_lines_from_file, PrettyError, Source};
+use hemtt_error::{make_source, thiserror, PrettyError, Source};
 use hemtt_tokens::{symbol::Symbol, Token};
 
 use crate::parse::Rule;
@@ -118,39 +116,32 @@ impl PrettyError for Error {
 
     fn source(&self) -> Option<Source> {
         match self {
-            Self::UnexpectedToken { token, expected } => Some(make_source(
-                token,
-                format!("expected one of: {:?}", expected),
-            )),
-            Self::UnexpectedEOF => None,
+            Self::UnexpectedToken { token, expected } => {
+                make_source(token, format!("expected one of: {:?}", expected)).ok()
+            }
             Self::ExpectedIdent { token } => {
-                Some(make_source(token, "expected an identifier".to_string()))
+                make_source(token, "expected an identifier".to_string()).ok()
             }
             Self::UnknownDirective { directive } => {
-                Some(make_source(directive, "unknown directive".to_string()))
+                make_source(directive, "unknown directive".to_string()).ok()
             }
             Self::DefineMultiTokenArgument { token } => {
-                Some(make_source(token, "invalid arguments".to_string()))
+                make_source(token, "invalid arguments".to_string()).ok()
             }
-            Self::ChangeBuiltin { token } => Some(make_source(token, "build-in macro".to_string())),
+            Self::ChangeBuiltin { token } => make_source(token, "build-in macro".to_string()).ok(),
             Self::IfUnitOrFunction { token } => {
-                Some(make_source(token, "invalid macro type".to_string()))
+                make_source(token, "invalid macro type".to_string()).ok()
             }
             Self::IfUndefined { token } => {
-                Some(make_source(token, "macro is undefined".to_string()))
+                make_source(token, "macro is undefined".to_string()).ok()
             }
             Self::FunctionCallArgumentCount {
                 token, expected, ..
-            } => Some(make_source(
-                token,
-                format!("Expects {} arguments", expected),
-            )),
+            } => make_source(token, format!("Expects {} arguments", expected)).ok(),
             Self::ExpectedFunctionOrValue { token } => {
-                Some(make_source(token, "expects function or value".to_string()))
+                make_source(token, "expects function or value".to_string()).ok()
             }
-            Self::ResolveWithNoResolver => None,
-            Self::Io(_) => None,
-            Self::Pest(_) => None,
+            _ => None,
         }
     }
 }

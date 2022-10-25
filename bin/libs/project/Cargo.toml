@@ -1,0 +1,12 @@
+[package]
+name = "hemtt-bin-project"
+description = "HEMTT - Project Configuration"
+version = "0.10.0"
+edition = "2021"
+
+[dependencies]
+hemtt-error = { path = "../../../libs/error" }
+
+serde = { version = "1.0.145", features = ["derive"] }
+thiserror = "1.0.37"
+toml = { version = "0.5.9" }

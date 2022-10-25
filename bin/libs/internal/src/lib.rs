@@ -1,9 +1,13 @@
+#![deny(clippy::all, clippy::nursery)]
+#![warn(clippy::pedantic)]
+
 use clap::{ArgMatches, Command};
 use hemtt_error::AppError;
 
 mod preprocessor;
 mod rapify;
 
+#[must_use]
 pub fn cli() -> Command {
     Command::new("hemtt-app-internal")
         .about("HEMTT Internal Commands")

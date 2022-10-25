@@ -1,3 +1,6 @@
+#![deny(clippy::all, clippy::nursery)]
+#![warn(clippy::pedantic)]
+
 pub mod position;
 pub mod symbol;
 pub mod whitespace;
@@ -12,10 +15,12 @@ pub struct Token {
 }
 
 impl Token {
+    #[must_use]
     pub const fn new(symbol: Symbol, source: Position) -> Self {
         Self { symbol, source }
     }
 
+    #[must_use]
     pub fn builtin() -> Self {
         Self {
             symbol: Symbol::Void,
@@ -23,14 +28,17 @@ impl Token {
         }
     }
 
+    #[must_use]
     pub const fn symbol(&self) -> &Symbol {
         &self.symbol
     }
 
+    #[must_use]
     pub const fn source(&self) -> &Position {
         &self.source
     }
 
+    #[must_use]
     pub const fn word(&self) -> Option<&String> {
         if let Symbol::Word(word) = &self.symbol {
             Some(word)

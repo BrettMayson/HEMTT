@@ -9,7 +9,6 @@ hemtt-error = { path = "../error" }
 hemtt-tokens = { path = "../tokens" }
 
 byteorder = "1.4.3"
-thiserror = "1.0.37"
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }

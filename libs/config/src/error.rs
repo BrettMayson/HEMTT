@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use hemtt_error::{make_source, read_lines_from_file, PrettyError, Source};
+use hemtt_error::{make_source, thiserror, PrettyError, Source};
 use hemtt_tokens::{symbol::Symbol, Token};
 
 #[derive(thiserror::Error, Debug)]
@@ -49,12 +47,11 @@ impl PrettyError for Error {
 
     fn source(&self) -> Option<Source> {
         match self {
-            Self::UnexpectedToken { token, expected } => Some(make_source(
-                token,
-                format!("expected one of: {:?}", expected),
-            )),
+            Self::UnexpectedToken { token, expected } => {
+                make_source(token, format!("expected one of: {:?}", expected)).ok()
+            }
             Self::ExpectedIdent { token } => {
-                Some(make_source(token, "expected: <ident>".to_string()))
+                make_source(token, "expected: <ident>".to_string()).ok()
             }
             _ => None,
         }

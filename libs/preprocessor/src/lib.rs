@@ -33,17 +33,17 @@ pub use resolver::{
 /// it can fail
 /// # Panics
 /// it can panic
-pub fn preprocess_file<R>(entry: &Path, resolver: &mut R) -> Result<Vec<Token>, Error>
+pub fn preprocess_file<R>(entry: &str, resolver: &mut R) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
 {
     let source = resolver.find_include(
-        entry.parent().unwrap(),
+        Path::new(entry).parent().unwrap().to_str().unwrap(),
         entry,
-        entry.file_name().unwrap().to_str().unwrap(),
+        Path::new(entry).file_name().unwrap().to_str().unwrap(),
     )?;
-    let tokens = crate::parse::parse(&entry.display().to_string(), &source.1)?;
-    let mut context = Context::new(entry.display().to_string());
+    let tokens = crate::parse::parse(entry, &source.1)?;
+    let mut context = Context::new(entry.to_string());
     let mut tokenstream = tokens.into_iter().peekable();
     root_preprocess(resolver, &mut context, &mut tokenstream, false)
 }
@@ -239,11 +239,8 @@ where
         return Err(Error::UnexpectedEOF);
     }
     let (pathbuf, tokens) = {
-        let (resolved_path, source) = resolver.find_include(
-            Path::new(context.entry()),
-            Path::new(context.current_file()),
-            &path,
-        )?;
+        let (resolved_path, source) =
+            resolver.find_include(context.entry(), context.current_file(), &path)?;
         let parsed = crate::parse::parse(&resolved_path.display().to_string(), &source)?;
         (resolved_path, parsed)
     };

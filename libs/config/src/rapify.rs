@@ -1,6 +1,10 @@
 use std::io::Write;
 
 pub trait Rapify {
+    /// Rapify the object into the output stream
+    ///
+    /// # Errors
+    /// if the output stream fails
     fn rapify<O: Write>(&self, output: &mut O, offset: usize) -> Result<usize, std::io::Error>;
     fn rapified_length(&self) -> usize;
     fn rapified_code(&self) -> Option<u8> {

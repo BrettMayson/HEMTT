@@ -15,7 +15,11 @@ fn rapify() {
                 "rapify `{}`",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let tokens = preprocess_file(&file.path().join("source.hpp"), &mut resolver).unwrap();
+            let tokens = preprocess_file(
+                &file.path().join("source.hpp").display().to_string(),
+                &mut resolver,
+            )
+            .unwrap();
             let rapified = Config::parse(&mut tokens.into_iter().peekable()).unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();

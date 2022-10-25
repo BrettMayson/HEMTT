@@ -64,14 +64,17 @@ impl Symbol {
         Self::Word(word.into())
     }
 
+    #[must_use]
     pub const fn is_whitespace(&self) -> bool {
         matches!(&self, Self::Whitespace(_))
     }
 
+    #[must_use]
     pub const fn is_newline(&self) -> bool {
         matches!(&self, Self::Newline)
     }
 
+    #[must_use]
     pub fn output(&self) -> String {
         match *self {
             Self::Join => String::new(),

@@ -36,14 +36,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
 }
 
 fn run(source: &Path, dest: &Path) -> Result<(), AppError> {
-    if !source.exists() {
-        panic!("Source file does not exist");
-    }
-    if dest.exists() {
-        panic!("Destination file already exists");
-    }
+    assert!(source.is_file(), "Source file does not exist");
+    assert!(!dest.is_file(), "Destination file already exists");
     let mut resolver = LocalResolver::new();
-    let tokens = preprocess_file(source, &mut resolver)?;
+    let tokens = preprocess_file(&source.display().to_string(), &mut resolver)?;
     let processed = Processed::from(tokens);
     std::fs::write(dest, processed.output()).unwrap();
     Ok(())

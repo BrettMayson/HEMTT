@@ -163,7 +163,7 @@ impl Rapify for Class {
                         + p.rapified_length()
                         + match p {
                             Property::Class(c) => c.rapified_length(),
-                            _ => 0,
+                            Property::Entry(_) => 0,
                         }
                 })
                 .sum::<usize>()
@@ -286,7 +286,9 @@ impl Parse for Properties {
                     entries.push((ident, Property::Entry(entry)));
                 }
             }
-            let t = tokens.peek().map_or(Token::builtin(), |t| t.clone());
+            let t = tokens
+                .peek()
+                .map_or(Token::builtin(), std::clone::Clone::clone);
             if t.symbol() == &Symbol::Semicolon {
                 tokens.next();
             } else {
@@ -334,7 +336,7 @@ impl Property {
 impl Rapify for Property {
     fn rapify<O: std::io::Write>(
         &self,
-        output: &mut O,
+        _output: &mut O,
         _offset: usize,
     ) -> Result<usize, std::io::Error> {
         unreachable!()
