@@ -23,11 +23,10 @@ impl Module for Preprocessor {
     fn name(&self) -> &'static str {
         "Preprocessor"
     }
-
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
+        let resolver = VfsResolver::new(ctx)?;
         // TODO map to extra error
         ctx.addons().par_iter().for_each(|addon| {
-            // for addon in ctx.addons() {
             // TODO fix error in vfs
             for entry in ctx.fs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
@@ -35,19 +34,17 @@ impl Module for Preprocessor {
                     && can_preprocess(entry.as_str())
                 {
                     println!("preprocessing {}", entry.as_str());
-                    preprocess(entry, ctx).unwrap();
+                    preprocess(entry, ctx, &resolver).unwrap();
                 }
             }
-            // }
         });
         Ok(())
     }
 }
 
-pub fn preprocess(path: VfsPath, ctx: &Context) -> Result<(), Error> {
+pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
     // TODO fix error in vfs
-    let mut resolver = VfsResolver::new(ctx)?;
-    let tokens = preprocess_file(path.as_str(), &mut resolver)?;
+    let tokens = preprocess_file(path.as_str(), resolver)?;
     let rapified = Config::parse(
         ctx.config().hemtt().config(),
         &mut tokens.into_iter().peekable(),
@@ -75,7 +72,7 @@ pub fn can_preprocess(path: &str) -> bool {
     ["cpp", "rvmat", "ext"].contains(&name)
 }
 
-struct VfsResolver<'a> {
+pub struct VfsResolver<'a> {
     vfs: &'a VfsPath,
     prefixes: HashMap<String, VfsPath>,
 }
@@ -85,7 +82,9 @@ impl<'a> VfsResolver<'a> {
         let mut prefixes = HashMap::new();
         for addon in ctx.addons() {
             // TODO fix error in vfs
-            for file in FILES {
+            let mut files: Vec<String> = FILES.iter().map(|i| i.to_string()).collect();
+            files.extend(FILES.iter().map(|i| i.to_uppercase()));
+            for file in files {
                 let root = ctx.fs().join(addon.folder()).unwrap();
                 let path = root.join(file).unwrap();
                 if path.exists().unwrap() {
@@ -130,13 +129,19 @@ impl<'a> Resolver for VfsResolver<'a> {
                 })
                 .map(|(prefix, path)| {
                     let mut path = PathBuf::from(path.as_str());
-                    path.push(to.strip_prefix(prefix).unwrap().trim_start_matches('\\'));
+                    path.push(
+                        to.strip_prefix(prefix)
+                            .unwrap()
+                            .trim_start_matches('\\')
+                            .replace('\\', "/"),
+                    );
                     path
                 })
             {
                 path
             } else {
-                let include = PathBuf::from("include").join(to.trim_start_matches('\\'));
+                let include =
+                    PathBuf::from("include").join(to.trim_start_matches('\\').replace('\\', "/"));
                 if include.exists() {
                     include
                 } else {
@@ -145,7 +150,7 @@ impl<'a> Resolver for VfsResolver<'a> {
             }
         } else {
             let mut path = PathBuf::from(from).parent().unwrap().to_path_buf();
-            path.push(to);
+            path.push(to.replace('\\', "/"));
             path
         };
         if let Ok(mut file) = self

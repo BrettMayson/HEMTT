@@ -30,7 +30,7 @@ pub use resolver::{
 /// it can fail
 /// # Panics
 /// it can panic
-pub fn preprocess_file<R>(entry: &str, resolver: &mut R) -> Result<Vec<Token>, Error>
+pub fn preprocess_file<R>(entry: &str, resolver: &R) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
 {
@@ -55,16 +55,11 @@ pub fn preprocess_string(source: &str) -> Result<Vec<Token>, Error> {
     let tokens = crate::parse::parse("%anonymous%", source)?;
     let mut context = Context::new(String::from("%anonymous%"));
     let mut tokenstream = tokens.into_iter().peekable();
-    root_preprocess(
-        &mut NoResolver::new(),
-        &mut context,
-        &mut tokenstream,
-        false,
-    )
+    root_preprocess(&NoResolver::new(), &mut context, &mut tokenstream, false)
 }
 
 fn root_preprocess<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
     allow_quote: bool,
@@ -99,7 +94,7 @@ where
 }
 
 fn directive_preprocess<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
     allow_quote: bool,
@@ -203,7 +198,7 @@ where
 }
 
 fn directive_include_preprocess<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Token>, Error>
@@ -261,7 +256,7 @@ where
 }
 
 fn directive_define_preprocess<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<(), Error>
@@ -460,7 +455,7 @@ fn directive_define_read_body(
 }
 
 fn read_args<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Vec<Token>>, Error>
@@ -537,7 +532,7 @@ where
 }
 
 fn walk_line<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Token>, Error>
@@ -591,7 +586,7 @@ where
 }
 
 fn walk_definition<R>(
-    resolver: &mut R,
+    resolver: &R,
     context: &mut Context,
     tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
     source: Token,

@@ -199,7 +199,7 @@ impl Parse for Children {
             if token.symbol() != &Symbol::LeftBrace {
                 return Err(Error::UnexpectedToken {
                     token: Box::new(token),
-                    expected: vec![Symbol::LeftBrace],
+                    expected: vec![Symbol::LeftBrace, Symbol::Semicolon],
                 });
             }
         } else {
