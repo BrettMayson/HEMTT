@@ -3,10 +3,10 @@ name: Build
 on:
   push:
     branches: [ v10 ]
+    tags:
+    - v0.10.*
   pull_request:
     branches: [ v10 ]
-  tags:
-    - v0.10.*
 
 jobs:
   build:
