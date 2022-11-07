@@ -13,7 +13,7 @@ members = [
 ]
 
 [workspace.dependencies]
-pest = "2.4.0"
-pest_derive = "2.4.0"
-clap = "4.0.17"
-serde = { version = "1.0.145", features = ["derive"] }
+pest = "2.4.1"
+pest_derive = "2.4.1"
+clap = "4.0.20"
+serde = { version = "1.0.147", features = ["derive"] }

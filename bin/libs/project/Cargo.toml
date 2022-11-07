@@ -10,6 +10,6 @@ hemtt-error = { path = "../../../libs/error" }
 hemtt-config = { path = "../../../libs/config" }
 hemtt-preprocessor = { path = "../../../libs/preprocessor" }
 
-serde = { version = "1.0.145", features = ["derive"] }
+serde = { version = "1.0.147", features = ["derive"] }
 thiserror = "1.0.37"
 toml = { version = "0.5.9" }

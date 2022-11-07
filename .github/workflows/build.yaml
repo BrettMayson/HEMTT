@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ v10 ]
+    branches: [ main ]
     tags:
     - v0.10.*
   pull_request:
-    branches: [ v10 ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,8 +18,10 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux-x64
+            exe: hemtt
           - os: windows-latest
             name: windows-x64
+            exe: hemtt.exe
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -36,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.name }}
-          path: target/release
+          path: target/release/${{ matrix.exe }}
   release:
     name: Release
     if: startsWith(github.ref, 'refs/tags/')
