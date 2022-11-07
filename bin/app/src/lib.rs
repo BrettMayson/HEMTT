@@ -1,7 +1,7 @@
 #![deny(clippy::all, clippy::nursery)]
 #![warn(clippy::pedantic)]
 
-use clap::{ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command};
 use hemtt_error::AppError;
 
 mod addons;
@@ -33,9 +33,25 @@ pub fn cli() -> Command {
         .arg_required_else_help(true)
         .subcommand(commands::dev::cli())
         .subcommand(hemtt_bin_internal::cli().name("internal"))
+        .arg(
+            clap::Arg::new("threads")
+                .global(true)
+                .help("Number of threads, defaults to # of CPUs")
+                .action(ArgAction::Set)
+                .long("threads")
+                .short('t'),
+        )
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
+    if let Some(threads) = matches.get_one::<String>("threads") {
+        if let Err(e) = rayon::ThreadPoolBuilder::new()
+            .num_threads(usize::from_str_radix(&threads, 10).unwrap())
+            .build_global()
+        {
+            println!("Failed to initialize thread pool: {}", e);
+        }
+    }
     match matches.subcommand() {
         Some(("dev", matches)) => commands::dev::execute(matches),
         Some(("internal", matches)) => hemtt_bin_internal::execute(matches),

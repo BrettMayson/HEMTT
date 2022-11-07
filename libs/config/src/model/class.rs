@@ -221,6 +221,7 @@ impl Parse for Properties {
     where
         Self: Sized,
     {
+        // whitespace::skip(tokens);
         let mut entries = Vec::new();
         loop {
             let ident = match tokens.peek() {
