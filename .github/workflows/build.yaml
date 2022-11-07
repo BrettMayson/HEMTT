@@ -10,12 +10,14 @@ jobs:
   build:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    matrix:
-      include:
-        - os: ubuntu-latest
-          name: linux-x64
-        - os: windows-latest
-          name: windows-x64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x64
+          - os: windows-latest
+            name: windows-x64
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
