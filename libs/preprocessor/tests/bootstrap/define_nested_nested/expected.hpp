@@ -10,3 +10,4 @@ class CfgPatches {
 })) then {[_this, _value] call test_fnc_makeSource}";
     };
 };
+

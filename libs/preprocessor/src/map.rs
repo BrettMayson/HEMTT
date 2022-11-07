@@ -100,10 +100,13 @@ impl From<Vec<Token>> for Processed {
                 .position(|(name, _)| name == &source.path().to_string())
                 .map_or_else(
                     || {
-                        sources.push((
-                            source.path().to_string(),
-                            std::fs::read_to_string(source.path()).unwrap(),
-                        ));
+                        sources.push((source.path().to_string(), {
+                            if source.path() != "%builtin%" {
+                                std::fs::read_to_string(source.path()).unwrap()
+                            } else {
+                                String::new()
+                            }
+                        }));
                         sources.len() - 1
                     },
                     |index| index,
