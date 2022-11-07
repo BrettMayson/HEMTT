@@ -4,7 +4,7 @@ file = _{ SOI ~ (
     double_quote | single_quote | left_angle | right_angle | unicode | newline
 )* ~ EOI }
 word = ${ ( underscore | alpha ) ~ ( alpha | digit | underscore )* }
-alpha = { ASCII_ALPHA }
+alpha = { LETTER }
 digit = { ASCII_DIGIT }
 underscore = { "_" }
 dash = { "-" }
