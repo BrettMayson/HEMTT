@@ -41,7 +41,9 @@ where
         vec![Token::builtin()],
     )?;
     let mut tokens = crate::parse::parse(entry, &source.1)?;
+    let eoi = tokens.pop().unwrap();
     tokens.push(Token::ending_newline());
+    tokens.push(eoi);
     let mut context = Context::new(entry.to_string());
     let mut tokenstream = tokens.into_iter().peekable();
     root_preprocess(resolver, &mut context, &mut tokenstream, false)
@@ -247,7 +249,9 @@ where
         let parsed = crate::parse::parse(&resolved_path.display().to_string(), &source)?;
         (resolved_path, parsed)
     };
+    let eoi = tokens.pop().unwrap();
     tokens.push(Token::ending_newline());
+    tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekable();
     let current = context.current_file().clone();
     context.set_current_file(pathbuf.display().to_string());

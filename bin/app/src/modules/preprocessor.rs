@@ -136,7 +136,12 @@ impl<'a> Resolver for VfsResolver<'a> {
             {
                 path
             } else {
-                return Err(hemtt_preprocessor::Error::IncludeNotFound { target: source });
+                let include = PathBuf::from("include").join(to.trim_start_matches('\\'));
+                if include.exists() {
+                    include
+                } else {
+                    return Err(hemtt_preprocessor::Error::IncludeNotFound { target: source });
+                }
             }
         } else {
             let mut path = PathBuf::from(from).parent().unwrap().to_path_buf();
