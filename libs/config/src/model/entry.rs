@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn array_trailing_comman() {
+    fn array_trailing_comma() {
         for source in ["{1,2,3,}", "{1,   2,3    ,    }", "{ 1, 2, 3, }"] {
             let mut tokens = hemtt_preprocessor::preprocess_string(source)
                 .unwrap()
