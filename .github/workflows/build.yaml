@@ -10,7 +10,7 @@ jobs:
   build:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    maxtrix:
+    matrix:
       include:
         - os: ubuntu-latest
           name: linux-x64
