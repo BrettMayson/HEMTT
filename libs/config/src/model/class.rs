@@ -74,6 +74,16 @@ impl Parse for Class {
         };
         // read children
         whitespace::skip_newline(tokens);
+        if let Some(token) = tokens.peek() {
+            if token.symbol() == &Symbol::Semicolon {
+                return Ok(Self {
+                    name,
+                    parent,
+                    external: true,
+                    children: Children::default(),
+                });
+            }
+        }
         let children = Children::parse(options, tokens)?;
         Ok(Self {
             name,
