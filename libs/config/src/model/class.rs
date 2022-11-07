@@ -7,6 +7,7 @@ use crate::{
     error::Error,
     model::Array,
     rapify::{compressed_int_len, Rapify, WriteExt},
+    Options,
 };
 
 use super::{Entry, Ident, Parse};
@@ -21,6 +22,7 @@ pub struct Class {
 
 impl Parse for Class {
     fn parse(
+        options: &Options,
         tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -30,14 +32,14 @@ impl Parse for Class {
             if let Symbol::Word(word) = token.symbol() {
                 if word != "class" {
                     return Err(Error::UnexpectedToken {
-                        token: token.clone(),
+                        token: Box::new(token.clone()),
                         expected: vec![Symbol::Word("class".into())],
                     });
                 }
                 word.to_string()
             } else {
                 return Err(Error::UnexpectedToken {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                     expected: vec![Symbol::Word("class".into())],
                 });
             }
@@ -46,7 +48,7 @@ impl Parse for Class {
         };
         // get name
         whitespace::skip(tokens);
-        let name = Ident::parse(tokens)?;
+        let name = Ident::parse(options, tokens)?;
         // Check for : and parent
         whitespace::skip(tokens);
         let parent = if let Some(token) = tokens.peek() {
@@ -57,20 +59,22 @@ impl Parse for Class {
                     if let Symbol::Word(word) = token.symbol() {
                         word.to_string()
                     } else {
-                        return Err(Error::ExpectedIdent { token });
+                        return Err(Error::ExpectedIdent {
+                            token: Box::new(token),
+                        });
                     }
                 } else {
                     return Err(Error::UnexpectedEOF);
                 }
             } else {
-                "".to_string()
+                String::new()
             }
         } else {
             return Err(Error::UnexpectedEOF);
         };
         // read children
         whitespace::skip_newline(tokens);
-        let children = Children::parse(tokens)?;
+        let children = Children::parse(options, tokens)?;
         Ok(Self {
             name,
             parent,
@@ -175,6 +179,7 @@ pub struct Children(pub Properties);
 
 impl Parse for Children {
     fn parse(
+        options: &Options,
         tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -183,18 +188,18 @@ impl Parse for Children {
         if let Some(token) = tokens.next() {
             if token.symbol() != &Symbol::LeftBrace {
                 return Err(Error::UnexpectedToken {
-                    token,
+                    token: Box::new(token),
                     expected: vec![Symbol::LeftBrace],
                 });
             }
         } else {
             return Err(Error::UnexpectedEOF);
         }
-        let children = Properties::parse(tokens)?;
+        let children = Properties::parse(options, tokens)?;
         if let Some(token) = tokens.next() {
             if token.symbol() != &Symbol::RightBrace {
                 return Err(Error::UnexpectedToken {
-                    token,
+                    token: Box::new(token),
                     expected: vec![Symbol::RightBrace],
                 });
             }
@@ -210,6 +215,7 @@ pub struct Properties(pub Vec<(String, Property)>);
 
 impl Parse for Properties {
     fn parse(
+        options: &Options,
         tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -233,7 +239,7 @@ impl Parse for Properties {
                     }
                     _ => {
                         return Err(Error::ExpectedIdent {
-                            token: token.clone(),
+                            token: Box::new(token.clone()),
                         })
                     }
                 },
@@ -242,7 +248,7 @@ impl Parse for Properties {
             whitespace::skip(tokens);
             match ident.as_str() {
                 "class" => {
-                    let class = Class::parse(tokens)?;
+                    let class = Class::parse(options, tokens)?;
                     entries.push((class.name.to_string(), Property::Class(class)));
                 }
                 "delete" => unimplemented!("delete"),
@@ -268,20 +274,20 @@ impl Parse for Properties {
                         != Symbol::Assignment
                     {
                         return Err(Error::UnexpectedToken {
-                            token: tokens.next().unwrap(),
+                            token: Box::new(tokens.next().unwrap()),
                             expected: vec![Symbol::Assignment],
                         });
                     }
                     tokens.next();
                     whitespace::skip(tokens);
                     let entry = if array_expand {
-                        let array = Array::parse(tokens)?;
+                        let array = Array::parse(options, tokens)?;
                         Entry::Array(Array {
                             elements: array.elements,
                             expand: true,
                         })
                     } else {
-                        Entry::parse(tokens)?
+                        Entry::parse(options, tokens)?
                     };
                     entries.push((ident, Property::Entry(entry)));
                 }
@@ -293,7 +299,7 @@ impl Parse for Properties {
                 tokens.next();
             } else {
                 return Err(Error::UnexpectedToken {
-                    token: t,
+                    token: Box::new(t),
                     expected: vec![Symbol::Semicolon],
                 });
             }
@@ -391,7 +397,7 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekable();
-        let children = Children::parse(&mut tokens).unwrap();
+        let children = Children::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(
             children.0 .0,
             vec![
@@ -457,7 +463,7 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekable();
-        let class = super::Class::parse(&mut tokens).unwrap();
+        let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
         assert_eq!(class.parent, "");
         assert_eq!(
@@ -487,7 +493,7 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekable();
-        let class = super::Class::parse(&mut tokens).unwrap();
+        let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
         assert_eq!(class.parent, "CfgPatches");
         assert_eq!(

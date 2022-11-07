@@ -135,7 +135,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         let mut hasher = Sha1::new();
 
         output.write_all(headers.get_ref())?;
-        hasher.update(&headers.get_ref());
+        hasher.update(headers.get_ref());
 
         for header in &files_sorted {
             let file = self.file(header.filename())?.unwrap();

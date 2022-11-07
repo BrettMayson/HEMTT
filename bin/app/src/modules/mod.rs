@@ -10,22 +10,22 @@ pub use preprocessor::Preprocessor;
 
 pub trait Module {
     fn name(&self) -> &'static str;
-    fn init(&mut self, ctx: &Context) -> Result<(), Error> {
+    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
-    fn check(&self, ctx: &Context) -> Result<(), Error> {
+    fn check(&self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_build(&self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
-    fn post_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn post_build(&self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
-    fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_release(&self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
-    fn post_release(&self, ctx: &Context) -> Result<(), Error> {
+    fn post_release(&self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
 }

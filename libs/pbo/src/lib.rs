@@ -7,11 +7,13 @@ use std::io::{Read, Write};
 mod error;
 mod file;
 mod model;
+pub mod prefix;
 mod read;
 mod write;
 
 pub use error::Error;
 pub use model::{Checksum, Header, Mime};
+pub use prefix::Prefix;
 pub use read::ReadablePbo;
 pub use write::WritablePbo;
 

@@ -66,7 +66,7 @@ impl Symbol {
 
     #[must_use]
     pub const fn is_whitespace(&self) -> bool {
-        matches!(&self, Self::Whitespace(_))
+        matches!(&self, Self::Whitespace(_) | Self::Comment(_))
     }
 
     #[must_use]
@@ -113,7 +113,7 @@ impl ToString for Symbol {
             Self::Unicode(s) => s.to_string(),
             Self::Newline => "\n".to_string(),
             Self::Whitespace(w) => w.to_string(),
-            Self::Eoi | Self::Void | Self::Comment(_) => "".to_string(),
+            Self::Eoi | Self::Void | Self::Comment(_) => String::new(),
         }
     }
 }

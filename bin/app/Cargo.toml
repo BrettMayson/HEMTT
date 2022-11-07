@@ -13,6 +13,7 @@ hemtt-bin-project = { path = "../libs/project" }
 hemtt-config = { path = "../../libs/config" }
 hemtt-pbo = { path = "../../libs/pbo" }
 hemtt-preprocessor = { path = "../../libs/preprocessor" }
+hemtt-tokens = { path = "../../libs/tokens" }
 
 anyhow = "1.0.66"
 clap = { workspace = true }

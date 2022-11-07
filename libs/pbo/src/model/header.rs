@@ -29,7 +29,7 @@ impl Header {
     #[must_use]
     pub fn ext() -> Self {
         Self {
-            filename: String::from(""),
+            filename: String::new(),
             mime: Mime::Vers,
             ..Default::default()
         }

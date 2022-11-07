@@ -14,7 +14,7 @@ pub struct AppError {
     pub brief: String,
     pub details: Option<String>,
     pub help: Option<String>,
-    pub source: Option<Source>,
+    pub source: Option<Box<Source>>,
 }
 
 pub enum DisplayStyle {
@@ -73,7 +73,7 @@ impl AppError {
                     source.note.red(),
                     offset = source.position.start().1 .1
                 ));
-                format!("{}\n{}", bar, lines)
+                format!("{bar}\n{lines}")
             }
         ))
     }
@@ -103,7 +103,7 @@ pub trait PrettyError: ToString {
     fn help(&self) -> Option<String> {
         None
     }
-    fn source(&self) -> Option<Source> {
+    fn source(&self) -> Option<Box<Source>> {
         None
     }
 }

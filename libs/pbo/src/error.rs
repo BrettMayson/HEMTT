@@ -11,4 +11,6 @@ pub enum Error {
     UnexpectedDataAfterChecksum,
     #[error("File is too large for PBO format")]
     FileTooLarge,
+    #[error("Invalid prefix: {0}")]
+    InvalidPrefix(String),
 }

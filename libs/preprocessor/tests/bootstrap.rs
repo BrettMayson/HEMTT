@@ -21,7 +21,7 @@ fn bootstrap() {
             let processed = Processed::from(tokens);
             let map = processed.get_source_map(file.path().join("expected.hpp"));
             std::fs::write(file.path().join("expected.hpp.map"), map).unwrap();
-            assert_eq!(processed.output(), expected);
+            assert_eq!(processed.output(), expected.replace('\r', ""));
         }
     }
 }

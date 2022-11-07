@@ -9,7 +9,7 @@ use std::{io::Cursor, iter::Peekable};
 
 use byteorder::{LittleEndian, WriteBytesExt};
 
-use crate::{error::Error, Rapify};
+use crate::{error::Error, Options, Rapify};
 
 use self::class::Properties;
 pub use self::str::Str;
@@ -23,6 +23,7 @@ pub trait Parse {
     /// # Errors
     /// if the token stream is invalid
     fn parse(
+        options: &Options,
         tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -36,9 +37,10 @@ pub struct Config {
 
 impl Parse for Config {
     fn parse(
+        options: &Options,
         tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error> {
-        let properties: Properties = Properties::parse(tokens)?;
+        let properties: Properties = Properties::parse(options, tokens)?;
         Ok(Self {
             root: Class {
                 children: Children(properties),
@@ -68,7 +70,7 @@ impl Rapify for Config {
         output.write_all(cursor.get_ref())?;
 
         output.write_all(b"\0\0\0\0")?;
-        Ok(written as usize + 4)
+        Ok(written + 4)
     }
 
     fn rapified_length(&self) -> usize {

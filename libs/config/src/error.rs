@@ -4,14 +4,23 @@ use hemtt_tokens::{symbol::Symbol, Token};
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Expected `{expected:?}`, found `{token:?}`,")]
-    UnexpectedToken { token: Token, expected: Vec<Symbol> },
+    UnexpectedToken {
+        token: Box<Token>,
+        expected: Vec<Symbol>,
+    },
     #[error("Unexpected EOF")]
     UnexpectedEOF,
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
-    ExpectedIdent { token: Token },
+    ExpectedIdent { token: Box<Token> },
 
     #[error("IO Error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(Box<std::io::Error>),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(Box::new(e))
+    }
 }
 
 impl PrettyError for Error {
@@ -32,7 +41,7 @@ impl PrettyError for Error {
                 )
             }
             Self::Io(e) => {
-                format!("IO Error: {}", e)
+                format!("IO Error: {e}")
             }
         }
     }
@@ -45,14 +54,16 @@ impl PrettyError for Error {
         None
     }
 
-    fn source(&self) -> Option<Source> {
+    fn source(&self) -> Option<Box<Source>> {
         match self {
             Self::UnexpectedToken { token, expected } => {
-                make_source(token, format!("expected one of: {:?}", expected)).ok()
+                make_source(token, format!("expected one of: {expected:?}"))
+                    .ok()
+                    .map(Box::new)
             }
-            Self::ExpectedIdent { token } => {
-                make_source(token, "expected: <ident>".to_string()).ok()
-            }
+            Self::ExpectedIdent { token } => make_source(token, "expected: <ident>".to_string())
+                .ok()
+                .map(Box::new),
             _ => None,
         }
     }

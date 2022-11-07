@@ -6,11 +6,8 @@
 use std::{iter::Peekable, path::Path};
 
 use context::{Context, Definition, FunctionDefinition};
-use hemtt_tokens::{
-    symbol::Symbol,
-    whitespace::{self, Whitespace},
-    Token,
-};
+use hemtt_tokens::whitespace;
+use hemtt_tokens::{symbol::Symbol, Token};
 use ifstate::IfState;
 
 mod context;
@@ -41,8 +38,10 @@ where
         Path::new(entry).parent().unwrap().to_str().unwrap(),
         entry,
         Path::new(entry).file_name().unwrap().to_str().unwrap(),
+        vec![Token::builtin()],
     )?;
-    let tokens = crate::parse::parse(entry, &source.1)?;
+    let mut tokens = crate::parse::parse(entry, &source.1)?;
+    tokens.push(Token::ending_newline());
     let mut context = Context::new(entry.to_string());
     let mut tokenstream = tokens.into_iter().peekable();
     root_preprocess(resolver, &mut context, &mut tokenstream, false)
@@ -111,7 +110,7 @@ where
             Symbol::Directive => {}
             _ => {
                 return Err(Error::UnexpectedToken {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                     expected: vec![Symbol::Directive],
                 })
             }
@@ -187,7 +186,9 @@ where
                         }
                         output.push(Token::new(Symbol::DoubleQuote, source));
                     } else {
-                        return Err(Error::UnknownDirective { directive: token });
+                        return Err(Error::UnknownDirective {
+                            directive: Box::new(token),
+                        });
                     }
                 }
                 _ => {}
@@ -215,12 +216,13 @@ where
         }
         _ => {
             return Err(Error::UnexpectedToken {
-                token: tokenstream.peek().unwrap().clone(),
+                token: Box::new(tokenstream.peek().unwrap().clone()),
                 expected: vec![Symbol::DoubleQuote, Symbol::SingleQuote, Symbol::LeftAngle],
             })
         }
     };
     let mut path = String::new();
+    let mut path_tokens = Vec::new();
     while let Some(token) = tokenstream.peek() {
         if token.symbol() == &encased_in {
             tokenstream.next();
@@ -228,22 +230,24 @@ where
         }
         if token.symbol() == &Symbol::Newline {
             return Err(Error::UnexpectedToken {
-                token: token.clone(),
+                token: Box::new(token.clone()),
                 expected: vec![encased_in],
             });
         }
         path.push_str(token.to_string().as_str());
+        path_tokens.push(token.clone());
         tokenstream.next();
     }
     if tokenstream.peek().is_none() {
         return Err(Error::UnexpectedEOF);
     }
-    let (pathbuf, tokens) = {
+    let (pathbuf, mut tokens) = {
         let (resolved_path, source) =
-            resolver.find_include(context.entry(), context.current_file(), &path)?;
+            resolver.find_include(context.entry(), context.current_file(), &path, path_tokens)?;
         let parsed = crate::parse::parse(&resolved_path.display().to_string(), &source)?;
         (resolved_path, parsed)
     };
+    tokens.push(Token::ending_newline());
     let mut tokenstream = tokens.into_iter().peekable();
     let current = context.current_file().clone();
     context.set_current_file(pathbuf.display().to_string());
@@ -268,21 +272,30 @@ where
             }
             _ => {
                 return Err(Error::ExpectedIdent {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                 })
             }
         }
     } else {
         return Err(Error::UnexpectedEOF);
     };
+    let mut skipped = false;
+    if let Some(token) = tokenstream.peek() {
+        if let Symbol::Whitespace(_) | Symbol::Comment(_) = token.symbol() {
+            whitespace::skip(tokenstream);
+            skipped = true;
+        }
+    }
     // check directive type
     if let Some(token) = tokenstream.peek() {
-        match token.symbol() {
-            Symbol::LeftParenthesis => {
+        match (token.symbol(), skipped) {
+            (Symbol::LeftParenthesis, false) => {
                 let args = read_args(resolver, context, tokenstream)?;
                 whitespace::skip(tokenstream);
                 if args.iter().any(|arg| arg.len() != 1) {
-                    return Err(Error::DefineMultiTokenArgument { token: ident_token });
+                    return Err(Error::DefineMultiTokenArgument {
+                        token: Box::new(ident_token),
+                    });
                 }
                 context.define(
                     ident,
@@ -295,32 +308,24 @@ where
                     )),
                 )?;
             }
-            Symbol::Whitespace(_) => {
-                whitespace::skip(tokenstream);
-                if let Some(token) = tokenstream.peek() {
-                    if let Symbol::Newline = token.symbol() {
-                        context.define(ident, ident_token, Definition::Unit)?;
-                    } else {
-                        context.define(
-                            ident,
-                            ident_token,
-                            Definition::Value(directive_define_read_body(tokenstream)),
-                        )?;
-                    }
-                }
-            }
-            Symbol::Newline => {
+            (Symbol::Newline, _) => {
                 context.define(ident, ident_token, Definition::Unit)?;
             }
-            _ => {
-                return Err(Error::UnexpectedToken {
-                    token: token.clone(),
-                    expected: vec![
-                        Symbol::LeftParenthesis,
-                        Symbol::Whitespace(Whitespace::Space),
-                        Symbol::Whitespace(Whitespace::Tab),
-                    ],
-                });
+            (_, _) => {
+                context.define(
+                    ident,
+                    ident_token,
+                    Definition::Value(directive_define_read_body(tokenstream)),
+                )?;
+                // return Err(Error::UnexpectedToken {
+                //     token: Box::new(token.clone()),
+                //     expected: vec![
+                //         Symbol::LeftParenthesis,
+                //         Symbol::Whitespace(Whitespace::Space),
+                //         Symbol::Whitespace(Whitespace::Tab),
+                //         Symbol::Escape,
+                //     ],
+                // });
             }
         }
     } else {
@@ -342,14 +347,14 @@ fn directive_undef_preprocess(
                     tokenstream.next();
                 } else {
                     return Err(Error::UnexpectedToken {
-                        token: tokenstream.next().unwrap(),
+                        token: Box::new(tokenstream.next().unwrap()),
                         expected: vec![Symbol::Newline],
                     });
                 }
             }
             _ => {
                 return Err(Error::ExpectedIdent {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                 })
             }
         }
@@ -371,7 +376,7 @@ fn directive_if_preprocess(
             }
             _ => {
                 return Err(Error::ExpectedIdent {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                 })
             }
         }
@@ -388,10 +393,14 @@ fn directive_if_preprocess(
                 IfState::PassingIf
             });
         } else {
-            return Err(Error::IfUnitOrFunction { token: ident_token });
+            return Err(Error::IfUnitOrFunction {
+                token: Box::new(ident_token),
+            });
         }
     } else {
-        return Err(Error::IfUndefined { token: ident_token });
+        return Err(Error::IfUndefined {
+            token: Box::new(ident_token),
+        });
     }
     eat_newline(tokenstream)
 }
@@ -409,7 +418,7 @@ fn directive_ifdef_preprocess(
             }
             _ => {
                 return Err(Error::ExpectedIdent {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                 })
             }
         }
@@ -431,7 +440,8 @@ fn directive_define_read_body(
     let mut output: Vec<Token> = Vec::new();
     while let Some(token) = tokenstream.peek() {
         if let Symbol::Newline = token.symbol() {
-            if output.last().unwrap().symbol() == &Symbol::Escape {
+            let builtin = Token::builtin();
+            if output.last().unwrap_or(&builtin).symbol() == &Symbol::Escape {
                 output.pop();
                 output.push(tokenstream.next().unwrap());
             } else {
@@ -460,7 +470,7 @@ where
             Symbol::LeftParenthesis => {}
             _ => {
                 return Err(Error::UnexpectedToken {
-                    token: token.clone(),
+                    token: Box::new(token.clone()),
                     expected: vec![Symbol::LeftParenthesis],
                 })
             }
@@ -603,7 +613,7 @@ where
             let args = read_args(resolver, context, tokenstream)?;
             if args.len() != func.parameters().len() {
                 return Err(Error::FunctionCallArgumentCount {
-                    token: source,
+                    token: Box::new(source),
                     expected: func.parameters().len(),
                     got: args.len(),
                 });
@@ -632,7 +642,9 @@ where
             }
         }
         Definition::Unit => {
-            return Err(Error::ExpectedFunctionOrValue { token: source });
+            return Err(Error::ExpectedFunctionOrValue {
+                token: Box::new(source),
+            });
         }
     }
     Ok(output)
@@ -645,7 +657,7 @@ fn eat_newline(tokenstream: &mut Peekable<impl Iterator<Item = Token>>) -> Resul
             tokenstream.next();
         } else {
             return Err(Error::UnexpectedToken {
-                token: token.clone(),
+                token: Box::new(token.clone()),
                 expected: vec![Symbol::Newline],
             });
         }

@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use hemtt_tokens::Token;
+
 use crate::Error;
 
 pub trait Resolver {
@@ -7,7 +9,13 @@ pub trait Resolver {
     ///
     /// # Errors
     /// if the file cannot be found
-    fn find_include(&self, root: &str, from: &str, to: &str) -> Result<(PathBuf, String), Error>;
+    fn find_include(
+        &self,
+        root: &str,
+        from: &str,
+        to: &str,
+        source: Vec<Token>,
+    ) -> Result<(PathBuf, String), Error>;
 }
 
 pub mod resolvers {
@@ -15,6 +23,8 @@ pub mod resolvers {
         io::Read,
         path::{Path, PathBuf},
     };
+
+    use hemtt_tokens::Token;
 
     use crate::Error;
 
@@ -28,7 +38,13 @@ pub mod resolvers {
         }
     }
     impl Resolver for LocalResolver {
-        fn find_include(&self, _: &str, from: &str, to: &str) -> Result<(PathBuf, String), Error> {
+        fn find_include(
+            &self,
+            _: &str,
+            from: &str,
+            to: &str,
+            _source: Vec<Token>,
+        ) -> Result<(PathBuf, String), Error> {
             let mut path = Path::new(from).parent().unwrap().to_path_buf();
             path.push(to);
             let mut file = std::fs::File::open(&path)?;
@@ -46,7 +62,13 @@ pub mod resolvers {
         }
     }
     impl Resolver for NoResolver {
-        fn find_include(&self, _: &str, _: &str, _: &str) -> Result<(PathBuf, String), Error> {
+        fn find_include(
+            &self,
+            _: &str,
+            _: &str,
+            _: &str,
+            _: Vec<Token>,
+        ) -> Result<(PathBuf, String), Error> {
             Err(Error::ResolveWithNoResolver)
         }
     }

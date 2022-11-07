@@ -6,35 +6,52 @@ use crate::parse::Rule;
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Expected `{expected:?}`, found `{token:?}`,")]
-    UnexpectedToken { token: Token, expected: Vec<Symbol> },
+    UnexpectedToken {
+        token: Box<Token>,
+        expected: Vec<Symbol>,
+    },
     #[error("Unexpected EOF")]
     UnexpectedEOF,
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
-    ExpectedIdent { token: Token },
+    ExpectedIdent { token: Box<Token> },
     #[error("Unknown directive `{directive:?}`, ")]
-    UnknownDirective { directive: Token },
+    UnknownDirective { directive: Box<Token> },
     #[error("Function definition has multi-token arguments, `{token:?}`")]
-    DefineMultiTokenArgument { token: Token },
+    DefineMultiTokenArgument { token: Box<Token> },
     #[error("Can not change built-in macros `{token:?}`")]
-    ChangeBuiltin { token: Token },
+    ChangeBuiltin { token: Box<Token> },
     #[error("Attempted to use `#if` on a unit or function macro, `{token:?}`")]
-    IfUnitOrFunction { token: Token },
+    IfUnitOrFunction { token: Box<Token> },
     #[error("Attempted to use `#if` on an undefined macro, `{token:?}`")]
-    IfUndefined { token: Token },
+    IfUndefined { token: Box<Token> },
     #[error("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{token:?}`")]
     FunctionCallArgumentCount {
-        token: Token,
+        token: Box<Token>,
         expected: usize,
         got: usize,
     },
     #[error("Expected Function or Value, found Unit, `{token:?}`")]
-    ExpectedFunctionOrValue { token: Token },
+    ExpectedFunctionOrValue { token: Box<Token> },
     #[error("`#include` was encountered while using `NoResolver`")]
     ResolveWithNoResolver,
+    #[error("`#include` target `{target:?}` was not found")]
+    IncludeNotFound { target: Vec<Token> },
     #[error("IO Error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(Box<std::io::Error>),
     #[error("Pest Error: {0}")]
-    Pest(#[from] pest::error::Error<Rule>),
+    Pest(Box<pest::error::Error<Rule>>),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(Box::new(e))
+    }
+}
+
+impl From<pest::error::Error<Rule>> for Error {
+    fn from(e: pest::error::Error<Rule>) -> Self {
+        Self::Pest(Box::new(e))
+    }
 }
 
 impl PrettyError for Error {
@@ -86,7 +103,7 @@ impl PrettyError for Error {
                 expected,
                 got,
             } => {
-                format!("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{symbol:?}`", symbol = token.symbol(), expected = expected, got = got)
+                format!("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{symbol:?}`", symbol = token.symbol())
             }
             Self::ExpectedFunctionOrValue { token } => {
                 format!(
@@ -97,11 +114,18 @@ impl PrettyError for Error {
             Self::ResolveWithNoResolver => {
                 "`#include` was encountered while using `NoResolver`".to_string()
             }
+            Self::IncludeNotFound { target } => {
+                let target = target
+                    .iter()
+                    .map(|t| t.symbol().to_string())
+                    .collect::<String>();
+                format!("`#include` target `{target:?}` was not found")
+            }
             Self::Io(e) => {
-                format!("IO Error: {}", e)
+                format!("IO Error: {e}")
             }
             Self::Pest(e) => {
-                format!("Pest Error: {}", e)
+                format!("Pest Error: {e}")
             }
         }
     }
@@ -114,32 +138,48 @@ impl PrettyError for Error {
         None
     }
 
-    fn source(&self) -> Option<Source> {
+    fn source(&self) -> Option<Box<Source>> {
         match self {
             Self::UnexpectedToken { token, expected } => {
-                make_source(token, format!("expected one of: {:?}", expected)).ok()
+                make_source(token, format!("expected one of: {expected:?}"))
+                    .ok()
+                    .map(Box::new)
             }
             Self::ExpectedIdent { token } => {
-                make_source(token, "expected an identifier".to_string()).ok()
+                make_source(token, "expected an identifier".to_string())
+                    .ok()
+                    .map(Box::new)
             }
             Self::UnknownDirective { directive } => {
-                make_source(directive, "unknown directive".to_string()).ok()
+                make_source(directive, "unknown directive".to_string())
+                    .ok()
+                    .map(Box::new)
             }
             Self::DefineMultiTokenArgument { token } => {
-                make_source(token, "invalid arguments".to_string()).ok()
+                make_source(token, "invalid arguments".to_string())
+                    .ok()
+                    .map(Box::new)
             }
-            Self::ChangeBuiltin { token } => make_source(token, "build-in macro".to_string()).ok(),
+            Self::ChangeBuiltin { token } => make_source(token, "build-in macro".to_string())
+                .ok()
+                .map(Box::new),
             Self::IfUnitOrFunction { token } => {
-                make_source(token, "invalid macro type".to_string()).ok()
+                make_source(token, "invalid macro type".to_string())
+                    .ok()
+                    .map(Box::new)
             }
-            Self::IfUndefined { token } => {
-                make_source(token, "macro is undefined".to_string()).ok()
-            }
+            Self::IfUndefined { token } => make_source(token, "macro is undefined".to_string())
+                .ok()
+                .map(Box::new),
             Self::FunctionCallArgumentCount {
                 token, expected, ..
-            } => make_source(token, format!("Expects {} arguments", expected)).ok(),
+            } => make_source(token, format!("Expects {expected} arguments"))
+                .ok()
+                .map(Box::new),
             Self::ExpectedFunctionOrValue { token } => {
-                make_source(token, "expects function or value".to_string()).ok()
+                make_source(token, "expects function or value".to_string())
+                    .ok()
+                    .map(Box::new)
             }
             _ => None,
         }

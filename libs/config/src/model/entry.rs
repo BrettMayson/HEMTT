@@ -1,6 +1,6 @@
 use hemtt_tokens::{symbol::Symbol, whitespace};
 
-use crate::{error::Error, rapify::Rapify};
+use crate::{error::Error, rapify::Rapify, Options};
 
 use super::{Array, Number, Parse, Str};
 
@@ -13,6 +13,7 @@ pub enum Entry {
 
 impl Parse for Entry {
     fn parse(
+        options: &Options,
         tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -22,37 +23,37 @@ impl Parse for Entry {
         if let Some(token) = tokens.peek() {
             match token.symbol() {
                 Symbol::LeftBrace => {
-                    let array = Self::Array(Array::parse(tokens)?);
+                    let array = Self::Array(Array::parse(options, tokens)?);
                     return Ok(array);
                 }
                 Symbol::DoubleQuote => {
-                    let string = Self::Str(Str::parse(tokens)?);
+                    let string = Self::Str(Str::parse(options, tokens)?);
                     return Ok(string);
                 }
-                Symbol::Digit(_) => {
-                    let number = Self::Number(Number::parse(tokens)?);
+                Symbol::Digit(_) | Symbol::Dash => {
+                    let number = Self::Number(Number::parse(options, tokens)?);
                     return Ok(number);
                 }
                 Symbol::Newline => {
                     return Err(Error::UnexpectedToken {
-                        token: tokens.next().unwrap(),
+                        token: Box::new(tokens.next().unwrap()),
                         expected: vec![Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)],
                     });
                 }
                 Symbol::Whitespace(_) => {
                     tokens.next();
-                    return Self::parse(tokens);
+                    return Self::parse(options, tokens);
                 }
                 _ => {
                     return Err(Error::UnexpectedToken {
-                        token: token.clone(),
+                        token: Box::new(token.clone()),
                         expected: vec![Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)],
                     });
                 }
             }
         }
         Err(Error::UnexpectedToken {
-            token: tokens.next().unwrap(),
+            token: Box::new(tokens.next().unwrap()),
             expected: vec![Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)],
         })
     }
@@ -92,6 +93,8 @@ impl Rapify for Entry {
 
 #[cfg(test)]
 mod tests {
+    use crate::Preset;
+
     use super::*;
 
     #[test]
@@ -100,18 +103,38 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let entry = Entry::parse(&mut tokens).unwrap();
+        let entry = Entry::parse(&Options::default(), &mut tokens).unwrap();
         assert_eq!(entry, Entry::Str(Str("test".to_string())));
     }
 
     #[test]
     fn number() {
-        let mut tokens = hemtt_preprocessor::preprocess_string("1234")
-            .unwrap()
-            .into_iter()
-            .peekable();
-        let number = super::Entry::parse(&mut tokens).unwrap();
-        assert_eq!(number, super::Entry::Number(Number::Int32(1234)));
+        for source in [-1, 0, 1, 23] {
+            let mut tokens = hemtt_preprocessor::preprocess_string(&source.to_string())
+                .unwrap()
+                .into_iter()
+                .peekable();
+            let number = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
+            assert_eq!(number, super::Entry::Number(Number::Int32(source)));
+        }
+    }
+
+    #[test]
+    fn empty_array() {
+        for source in ["{}", "{   }"] {
+            let mut tokens = hemtt_preprocessor::preprocess_string(source)
+                .unwrap()
+                .into_iter()
+                .peekable();
+            let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
+            assert_eq!(
+                array,
+                super::Entry::Array(Array {
+                    expand: false,
+                    elements: vec![]
+                })
+            );
+        }
     }
 
     #[test]
@@ -121,9 +144,31 @@ mod tests {
                 .unwrap()
                 .into_iter()
                 .peekable();
-            let array = super::Entry::parse(&mut tokens).unwrap();
+            let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
             assert_eq!(
                 array,
+                super::Entry::Array(Array {
+                    expand: false,
+                    elements: vec![
+                        super::Entry::Number(Number::Int32(1)),
+                        super::Entry::Number(Number::Int32(2)),
+                        super::Entry::Number(Number::Int32(3)),
+                    ]
+                })
+            );
+        }
+    }
+
+    #[test]
+    fn array_trailing_comman() {
+        for source in ["{1,2,3,}", "{1,   2,3    ,    }", "{ 1, 2, 3, }"] {
+            let mut tokens = hemtt_preprocessor::preprocess_string(source)
+                .unwrap()
+                .into_iter()
+                .peekable();
+            assert!(super::Entry::parse(&Options::default(), &mut tokens.clone()).is_err());
+            assert_eq!(
+                super::Entry::parse(&Options::from_preset(Preset::Hemtt), &mut tokens).unwrap(),
                 super::Entry::Array(Array {
                     expand: false,
                     elements: vec![

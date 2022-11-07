@@ -29,6 +29,14 @@ impl Token {
     }
 
     #[must_use]
+    pub fn ending_newline() -> Self {
+        Self {
+            symbol: Symbol::Newline,
+            source: Position::builtin(),
+        }
+    }
+
+    #[must_use]
     pub const fn symbol(&self) -> &Symbol {
         &self.symbol
     }

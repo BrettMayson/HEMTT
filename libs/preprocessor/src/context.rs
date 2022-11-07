@@ -102,7 +102,9 @@ impl Context {
         definition: Definition,
     ) -> Result<(), Error> {
         if BUILTIN.contains(&ident.as_str()) {
-            return Err(Error::ChangeBuiltin { token: source });
+            return Err(Error::ChangeBuiltin {
+                token: Box::new(source),
+            });
         }
         self.definitions.insert(ident, (source, definition));
         Ok(())
@@ -115,7 +117,7 @@ impl Context {
     ) -> Result<Option<(Token, Definition)>, Error> {
         if BUILTIN.contains(&ident) {
             return Err(Error::ChangeBuiltin {
-                token: source.clone(),
+                token: Box::new(source.clone()),
             });
         }
         Ok(self.definitions.remove(ident))
@@ -137,7 +139,7 @@ impl Context {
             "__FILE__" => Some((
                 Token::builtin(),
                 Definition::Value(vec![Token::new(
-                    Symbol::Word(token.source().path().to_string()),
+                    Symbol::Word(token.source().path().to_string().replace('\\', "/")),
                     token.source().clone(),
                 )]),
             )),

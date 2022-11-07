@@ -30,7 +30,6 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
 
     executor.add_module(Box::new(Preprocessor::new()));
     if matches.get_one::<bool>("binarize") == Some(&true) {
-        println!("will binarize");
         executor.add_module(Box::new(Binarize::new()));
     }
 

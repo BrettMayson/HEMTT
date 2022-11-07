@@ -4,8 +4,6 @@ use hemtt_error::{thiserror, PrettyError};
 pub enum Error {
     #[error("Invalid addon location: {0}")]
     InvalidAddonLocation(String),
-    #[error("Invalid prefix: {0}")]
-    InvalidPrefix(String),
 
     #[error("Project error: {0}")]
     Project(#[from] hemtt_bin_project::Error),
@@ -35,7 +33,7 @@ impl PrettyError for Error {
         None
     }
 
-    fn source(&self) -> Option<hemtt_error::Source> {
+    fn source(&self) -> Option<Box<hemtt_error::Source>> {
         None
     }
 }

@@ -1,18 +1,20 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use hemtt_config::{Config, Parse, Rapify};
+use hemtt_pbo::{prefix::FILES, Prefix};
 use hemtt_preprocessor::{preprocess_file, Resolver};
+use hemtt_tokens::Token;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::{VfsFileType, VfsPath};
 
-use crate::error::Error;
+use crate::{context::Context, error::Error};
 
 use super::Module;
 
 pub struct Preprocessor;
 
 impl Preprocessor {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -22,10 +24,10 @@ impl Module for Preprocessor {
         "Preprocessor"
     }
 
-    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         // TODO map to extra error
         ctx.addons().par_iter().for_each(|addon| {
-            println!("{}", addon.name());
+            // for addon in ctx.addons() {
             // TODO fix error in vfs
             for entry in ctx.fs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
@@ -36,16 +38,20 @@ impl Module for Preprocessor {
                     preprocess(entry, ctx).unwrap();
                 }
             }
+            // }
         });
         Ok(())
     }
 }
 
-pub fn preprocess(path: VfsPath, ctx: &crate::context::Context) -> Result<(), Error> {
+pub fn preprocess(path: VfsPath, ctx: &Context) -> Result<(), Error> {
     // TODO fix error in vfs
-    let mut resolver = VfsResolver::new(ctx.fs());
+    let mut resolver = VfsResolver::new(ctx)?;
     let tokens = preprocess_file(path.as_str(), &mut resolver)?;
-    let rapified = Config::parse(&mut tokens.into_iter().peekable())?;
+    let rapified = Config::parse(
+        ctx.config().hemtt().config(),
+        &mut tokens.into_iter().peekable(),
+    )?;
     let out = if path.filename() == "config.cpp" {
         path.parent().unwrap().join("config.bin").unwrap()
     } else {
@@ -71,11 +77,33 @@ pub fn can_preprocess(path: &str) -> bool {
 
 struct VfsResolver<'a> {
     vfs: &'a VfsPath,
+    prefixes: HashMap<String, VfsPath>,
 }
 
 impl<'a> VfsResolver<'a> {
-    pub fn new(vfs: &'a VfsPath) -> Self {
-        Self { vfs }
+    pub fn new(ctx: &'a Context) -> Result<Self, Error> {
+        let mut prefixes = HashMap::new();
+        for addon in ctx.addons() {
+            // TODO fix error in vfs
+            for file in FILES {
+                let root = ctx.fs().join(addon.folder()).unwrap();
+                let path = root.join(file).unwrap();
+                if path.exists().unwrap() {
+                    prefixes.insert(
+                        Prefix::new(
+                            &path.read_to_string().unwrap(),
+                            ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
+                        )?
+                        .into_inner(),
+                        root,
+                    );
+                }
+            }
+        }
+        Ok(Self {
+            vfs: ctx.fs(),
+            prefixes,
+        })
     }
 }
 
@@ -85,17 +113,47 @@ impl<'a> Resolver for VfsResolver<'a> {
         _root: &str,
         from: &str,
         to: &str,
+        source: Vec<Token>,
     ) -> Result<(PathBuf, String), hemtt_preprocessor::Error> {
-        let mut path = PathBuf::from(from).parent().unwrap().to_path_buf();
-        path.push(to);
-        let mut file = self
+        let path = if to.starts_with('\\') {
+            let to = to.trim_start_matches('\\');
+            if let Some(path) = self
+                .prefixes
+                .iter()
+                .find(|(prefix, _)| {
+                    let prefix = prefix.trim_start_matches('\\');
+                    to.starts_with(&{
+                        let mut prefix = prefix.to_string();
+                        prefix.push('\\');
+                        prefix
+                    })
+                })
+                .map(|(prefix, path)| {
+                    let mut path = PathBuf::from(path.as_str());
+                    path.push(to.strip_prefix(prefix).unwrap().trim_start_matches('\\'));
+                    path
+                })
+            {
+                path
+            } else {
+                return Err(hemtt_preprocessor::Error::IncludeNotFound { target: source });
+            }
+        } else {
+            let mut path = PathBuf::from(from).parent().unwrap().to_path_buf();
+            path.push(to);
+            path
+        };
+        if let Ok(mut file) = self
             .vfs
             .join(path.display().to_string().trim_start_matches('/'))
             .unwrap()
             .open_file()
-            .unwrap();
-        let mut content = String::new();
-        file.read_to_string(&mut content)?;
-        Ok((path, content))
+        {
+            let mut content = String::new();
+            file.read_to_string(&mut content)?;
+            Ok((path, content))
+        } else {
+            Err(hemtt_preprocessor::Error::IncludeNotFound { target: source })
+        }
     }
 }

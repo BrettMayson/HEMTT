@@ -3,6 +3,7 @@ use hemtt_tokens::symbol::Symbol;
 use crate::{
     error::Error,
     rapify::{Rapify, WriteExt},
+    Options,
 };
 
 use super::Parse;
@@ -12,6 +13,7 @@ pub struct Str(pub String);
 
 impl Parse for Str {
     fn parse(
+        _options: &Options,
         tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -20,7 +22,7 @@ impl Parse for Str {
         if let Some(token) = tokens.next() {
             if token.symbol() != &Symbol::DoubleQuote {
                 return Err(Error::UnexpectedToken {
-                    token,
+                    token: Box::new(token),
                     expected: vec![Symbol::DoubleQuote],
                 });
             }
@@ -46,7 +48,7 @@ impl Parse for Str {
                     }
                     Symbol::Newline => {
                         return Err(Error::UnexpectedToken {
-                            token: token.clone(),
+                            token: Box::new(token.clone()),
                             expected: vec![Symbol::DoubleQuote],
                         });
                     }
@@ -91,7 +93,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let string = super::Str::parse(&mut tokens).unwrap();
+        let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(string, super::Str("test".to_string()));
     }
 
@@ -101,7 +103,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let string = super::Str::parse(&mut tokens).unwrap();
+        let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(string, super::Str(r#"test is "cool""#.to_string()));
     }
 }

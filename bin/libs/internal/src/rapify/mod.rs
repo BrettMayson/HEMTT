@@ -44,7 +44,10 @@ fn run(source: &Path, dest: &Path) -> Result<(), AppError> {
     assert!(!dest.is_file(), "Destination file already exists");
     let mut resolver = LocalResolver::new();
     let tokens = preprocess_file(&source.display().to_string(), &mut resolver)?;
-    let rapified = Config::parse(&mut tokens.into_iter().peekable())?;
+    let rapified = Config::parse(
+        &hemtt_config::Options::default(),
+        &mut tokens.into_iter().peekable(),
+    )?;
     let mut output = Vec::new();
     rapified.rapify(&mut output, 0).unwrap();
     let mut fs = std::fs::File::create(dest).unwrap();

@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_tokens::symbol::Symbol;
 
-use crate::{error::Error, rapify::Rapify};
+use crate::{error::Error, rapify::Rapify, Options};
 
 use super::Parse;
 
@@ -14,22 +14,36 @@ pub enum Number {
 
 impl Parse for Number {
     fn parse(
+        _options: &Options,
         tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
     {
         let mut buffer: i64 = 0;
+        let mut negative = false;
+        let mut seen_digit = false;
         while let Some(token) = tokens.peek() {
             match token.symbol() {
+                Symbol::Dash => {
+                    if seen_digit || negative {
+                        return Err(Error::UnexpectedToken {
+                            token: Box::new(token.clone()),
+                            expected: vec![Symbol::Decimal],
+                        });
+                    }
+                    tokens.next();
+                    negative = true;
+                }
                 Symbol::Digit(digit) => {
                     buffer = buffer * 10 + *digit as i64;
                     tokens.next();
+                    seen_digit = true;
                 }
                 Symbol::Decimal => {
-                    if buffer == 0 {
+                    if !seen_digit {
                         return Err(Error::UnexpectedToken {
-                            token: token.clone(),
+                            token: Box::new(token.clone()),
                             expected: vec![Symbol::Decimal],
                         });
                     }
@@ -48,17 +62,20 @@ impl Parse for Number {
                     }
                     if decimal_place == 0 {
                         return Err(Error::UnexpectedToken {
-                            token: current_token,
+                            token: Box::new(current_token),
                             expected: vec![Symbol::Digit(0)],
                         });
                     }
                     #[allow(clippy::cast_precision_loss)]
                     return Ok(Self::Float32(
-                        buffer as f32 + decimal as f32 / 10f32.powi(decimal_place as i32),
+                        buffer as f32 + decimal as f32 / 10f32.powi(decimal_place),
                     ));
                 }
                 _ => break,
             }
+        }
+        if negative {
+            buffer = -buffer;
         }
         if buffer > i64::from(i32::MAX) {
             Ok(Self::Int64(buffer))
@@ -119,7 +136,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let number = super::Number::parse(&mut tokens).unwrap();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Int64(12_345_678_901_234_567));
     }
 
@@ -129,7 +146,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let number = super::Number::parse(&mut tokens).unwrap();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Int32(1_234_567_890));
     }
 
@@ -139,7 +156,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekable();
-        let number = super::Number::parse(&mut tokens).unwrap();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Float32(1_234_567_890.123_456_789));
     }
 }

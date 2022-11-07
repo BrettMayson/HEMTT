@@ -16,3 +16,4 @@ members = [
 pest = "2.4.0"
 pest_derive = "2.4.0"
 clap = "4.0.17"
+serde = { version = "1.0.145", features = ["derive"] }

@@ -20,7 +20,11 @@ fn rapify() {
                 &mut resolver,
             )
             .unwrap();
-            let rapified = Config::parse(&mut tokens.into_iter().peekable()).unwrap();
+            let rapified = Config::parse(
+                &hemtt_config::Options::default(),
+                &mut tokens.into_iter().peekable(),
+            )
+            .unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();
             // read binary file

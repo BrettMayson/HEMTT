@@ -176,7 +176,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         let mut hasher = Sha1::new();
 
-        hasher.update(&headers.get_ref());
+        hasher.update(headers.get_ref());
 
         for header in &self.files() {
             let mut file = self.file(header.filename())?.unwrap();

@@ -1,3 +1,6 @@
+#![deny(clippy::all, clippy::nursery)]
+#![warn(clippy::pedantic)]
+
 use clap::{ArgMatches, Command};
 use hemtt_error::AppError;
 
@@ -22,6 +25,7 @@ lazy_static::lazy_static! {
     };
 }
 
+#[must_use]
 pub fn cli() -> Command {
     Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))

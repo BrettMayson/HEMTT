@@ -5,6 +5,7 @@ use hemtt_tokens::{symbol::Symbol, whitespace};
 use crate::{
     error::Error,
     rapify::{compressed_int_len, Rapify, WriteExt},
+    Options,
 };
 
 use super::{Entry, Parse};
@@ -17,6 +18,7 @@ pub struct Array {
 
 impl Parse for Array {
     fn parse(
+        options: &Options,
         tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
@@ -25,7 +27,7 @@ impl Parse for Array {
         if let Some(token) = tokens.next() {
             if token.symbol() != &Symbol::LeftBrace {
                 return Err(Error::UnexpectedToken {
-                    token,
+                    token: Box::new(token),
                     expected: vec![Symbol::LeftBrace],
                 });
             }
@@ -33,24 +35,41 @@ impl Parse for Array {
             return Err(Error::UnexpectedEOF);
         }
         let mut elements = Vec::new();
+        let mut first = true;
         loop {
-            let entry = Entry::parse(tokens)?;
+            whitespace::skip_newline(tokens);
+            if let Some(token) = tokens.peek() {
+                if token.symbol() == &Symbol::RightBrace {
+                    if first || options.array_allow_trailing_comma() {
+                        tokens.next();
+                        break;
+                    }
+                    return Err(Error::UnexpectedToken {
+                        token: Box::new(tokens.next().unwrap()),
+                        expected: vec![Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)],
+                    });
+                }
+            } else {
+                return Err(Error::UnexpectedEOF);
+            }
+            let entry = Entry::parse(options, tokens)?;
             elements.push(entry);
+            first = false;
             whitespace::skip_newline(tokens);
             if let Some(token) = tokens.next() {
                 if token.symbol() == &Symbol::RightBrace {
                     break;
                 } else if token.symbol() != &Symbol::Comma {
                     return Err(Error::UnexpectedToken {
-                        token,
+                        token: Box::new(token),
                         expected: vec![Symbol::Comma, Symbol::RightBrace],
                     });
                 }
             } else {
                 return Err(Error::UnexpectedEOF);
             }
-            whitespace::skip_newline(tokens);
         }
+        whitespace::skip_newline(tokens);
         Ok(Self {
             expand: false,
             elements,

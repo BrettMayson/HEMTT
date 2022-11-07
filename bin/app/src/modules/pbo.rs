@@ -1,19 +1,22 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
-use hemtt_pbo::WritablePbo;
+use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
 use vfs::VfsFileType;
 
 use crate::{addons::Location, context::Context, error::Error};
 
 pub fn dev(ctx: &Context) -> Result<(), Error> {
-    get_pbos(ctx, PathBuf::from(Location::Addons.to_string()))
+    get_pbos(ctx, &PathBuf::from(Location::Addons.to_string()))
 }
 
-pub fn release(ctx: &Context) -> Result<(), Error> {
+pub fn release(_ctx: &Context) -> Result<(), Error> {
     unimplemented!()
 }
 
-fn get_pbos(ctx: &Context, target: PathBuf) -> Result<(), Error> {
+fn get_pbos(ctx: &Context, target: &Path) -> Result<(), Error> {
     ctx.addons()
         .to_vec()
         .iter()
@@ -34,23 +37,12 @@ fn get_pbos(ctx: &Context, target: PathBuf) -> Result<(), Error> {
                         continue;
                     }
 
-                    if ["$pboprefix$", "pboprefix.txt", "$prefix$"]
-                        .contains(&entry.filename().to_lowercase().as_str())
-                    {
-                        let mut prefix = String::new();
-                        entry
-                            .open_file()
-                            .unwrap()
-                            .read_to_string(&mut prefix)
-                            .unwrap();
-                        if prefix.starts_with('\\')
-                            && ctx.config().hemtt().pbo_prefix_allow_leading_slash()
-                        {
-                            prefix = prefix[1..].to_string();
-                        } else {
-                            return Err(Error::InvalidPrefix(prefix));
-                        }
-                        pbo.add_extension("prefix", prefix);
+                    if FILES.contains(&entry.filename().to_lowercase().as_str()) {
+                        let prefix = Prefix::new(
+                            &entry.read_to_string().unwrap(),
+                            ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
+                        )?;
+                        pbo.add_extension("prefix", prefix.into_inner());
                     }
 
                     pbo.add_extension("hemtt", crate::VERSION.to_string());
@@ -61,7 +53,7 @@ fn get_pbos(ctx: &Context, target: PathBuf) -> Result<(), Error> {
                         .trim_start_matches(&addon.folder())
                         .trim_start_matches('/')
                         .replace('/', "\\");
-                    println!("adding {} from {}", file, addon.folder());
+                    println!("adding {file} from {}", addon.folder());
                     pbo.add_file(file, entry.open_file().unwrap()).unwrap();
                 }
             }
