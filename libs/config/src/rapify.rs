@@ -8,7 +8,8 @@ pub trait Rapify {
     fn rapify<O: Write>(&self, output: &mut O, offset: usize) -> Result<usize, std::io::Error>;
     fn rapified_length(&self) -> usize;
     fn rapified_code(&self) -> Option<u8> {
-        None
+        // None
+        Some(3)
     }
 }
 

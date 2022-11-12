@@ -66,6 +66,7 @@ impl Rapify for Entry {
         output: &mut O,
         offset: usize,
     ) -> Result<usize, std::io::Error> {
+        println!("self: {:?}", self);
         let written = match self {
             Self::Str(s) => s.rapify(output, offset),
             Self::Number(n) => n.rapify(output, offset),

@@ -87,8 +87,11 @@ impl Rapify for Array {
         let mut written = output.write_compressed_int(self.elements.len() as u32)?;
 
         for element in &self.elements {
-            output.write_all(&[element.rapified_code().unwrap()])?;
-            written += element.rapify(output, offset).unwrap() + 1;
+            if let Some(code) = element.rapified_code() {
+                output.write_all(&[code])?;
+                written += 1;
+            }
+            written += element.rapify(output, offset).unwrap();
         }
 
         assert_eq!(written, self.rapified_length());

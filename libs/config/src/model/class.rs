@@ -16,7 +16,7 @@ use super::{Entry, Ident, Parse};
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Class {
     pub name: Ident,
-    pub parent: String,
+    pub parent: Option<Ident>,
     pub external: bool,
     pub children: Children,
 }
@@ -50,25 +50,16 @@ impl Parse for Class {
         // get name
         whitespace::skip(tokens);
         let name = Ident::parse(options, tokens)?;
+        println!("name: {:?}", name);
         // Check for : and parent
         whitespace::skip(tokens);
         let parent = if let Some(token) = tokens.peek() {
             if token.symbol() == &Symbol::Colon {
                 tokens.next();
                 whitespace::skip(tokens);
-                if let Some(token) = tokens.next() {
-                    if let Symbol::Word(word) = token.symbol() {
-                        word.to_string()
-                    } else {
-                        return Err(Error::ExpectedIdent {
-                            token: Box::new(token),
-                        });
-                    }
-                } else {
-                    return Err(Error::UnexpectedEOF);
-                }
+                Some(Ident::parse(options, tokens)?)
             } else {
-                String::new()
+                None
             }
         } else {
             return Err(Error::UnexpectedEOF);
@@ -104,8 +95,14 @@ impl Rapify for Class {
         if self.children.0 .0.is_empty() {
             return Ok(0);
         }
-        output.write_cstring(&self.parent)?;
-        let mut written = self.parent.len() + 1;
+        let mut written = 0;
+        if let Some(parent) = &self.parent {
+            output.write_cstring(parent.to_string())?;
+            written += parent.to_string().len() + 1;
+        } else {
+            output.write_cstring(b"\0")?;
+            written += 1;
+        }
         written += output.write_compressed_int(self.children.0 .0.len() as u32)?;
 
         let children_len = self
@@ -164,7 +161,8 @@ impl Rapify for Class {
         if self.children.0 .0.is_empty() {
             return 0;
         }
-        self.parent.len()
+        let parent_length = self.parent.as_ref().map_or(0, |parent| parent.to_string().len());
+        parent_length
             + 1
             + compressed_int_len(self.children.0 .0.len() as u32)
             + self
@@ -245,10 +243,9 @@ impl Parse for Properties {
                         ident
                     }
                     Symbol::RightBrace | Symbol::Eoi => {
-                        println!("BREAK");
                         break
                     }
-                    Symbol::Whitespace(_) | Symbol::Newline => {
+                    Symbol::Whitespace(_) | Symbol::Newline | Symbol::Comment(_) => {
                         tokens.next();
                         continue;
                     }
@@ -482,7 +479,7 @@ mod tests {
         .peekmore();
         let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
-        assert_eq!(class.parent, "");
+        assert_eq!(class.parent, None);
         assert_eq!(
             class.children.0 .0,
             vec![
@@ -512,7 +509,38 @@ mod tests {
         .peekmore();
         let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
-        assert_eq!(class.parent, "CfgPatches");
+        assert_eq!(class.parent.unwrap().to_string(), "CfgPatches");
+        assert_eq!(
+            class.children.0 .0,
+            vec![
+                (
+                    "alpha".to_string(),
+                    Property::Entry(Entry::Str(Str("Alpha".to_string())))
+                ),
+                (
+                    "version".to_string(),
+                    Property::Entry(Entry::Number(Number::Int32(10)))
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn class_parent_join() {
+        let mut tokens = hemtt_preprocessor::preprocess_string(
+            r#"#define DOUBLES(a,b) a##b
+class HEMTT: DOUBLES(hello,world) 
+{
+    alpha = "Alpha";
+    version = 10;
+}"#,
+        )
+        .unwrap()
+        .into_iter()
+        .peekmore();
+        let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(class.name.to_string(), "HEMTT");
+        assert_eq!(class.parent.unwrap().to_string(), "helloworld");
         assert_eq!(
             class.children.0 .0,
             vec![
