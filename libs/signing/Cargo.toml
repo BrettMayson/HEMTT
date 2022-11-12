@@ -12,5 +12,5 @@ hemtt-pbo = { path = "../pbo" }
 byteorder = "1.4.3"
 num-bigint-dig = "0.8.1"
 rand = "0.8.5"
-rsa = { git = "https://github.com/brettmayson/rsa" }
+rsa = { git = "https://github.com/RustCrypto/rsa" }
 sha-1 = "0.10.0"

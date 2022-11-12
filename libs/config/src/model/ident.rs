@@ -17,7 +17,7 @@ impl Parse for Ident {
         let mut ident = Vec::new();
         while let Some(token) = tokens.peek() {
             match token.symbol() {
-                Symbol::Word(_) => {
+                Symbol::Digit(_) | Symbol::Word(_) => {
                     ident.push(tokens.next().unwrap());
                 }
                 Symbol::Join => {

@@ -26,6 +26,21 @@ impl Parse for Number {
         let mut seen_digit = false;
         while let Some(token) = tokens.peek() {
             match token.symbol() {
+                Symbol::Word(word) => {
+                    if seen_digit && buffer == 0 {
+                        // parse hex
+                        if word.starts_with('x') {
+                            let hex = word.trim_start_matches('x');
+                            buffer = i64::from_str_radix(hex, 16).unwrap();
+                            tokens.next();
+                            if buffer > i64::from(i32::MAX) {
+                                return Ok(Self::Int64(buffer));
+                            }
+                            #[allow(clippy::cast_possible_truncation)]
+                            return Ok(Self::Int32(buffer as i32));
+                        }
+                    }
+                }
                 Symbol::Dash => {
                     if seen_digit || negative {
                         return Err(Error::UnexpectedToken {

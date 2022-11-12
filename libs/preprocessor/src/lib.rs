@@ -19,7 +19,7 @@ mod resolver;
 pub use context::{Context, Definition, FunctionDefinition};
 pub use error::Error;
 pub use map::{Mapping, Processed};
-use peekmore::{PeekMoreIterator, PeekMore};
+use peekmore::{PeekMore, PeekMoreIterator};
 pub use resolver::resolvers;
 pub use resolver::{
     resolvers::{LocalResolver, NoResolver},
@@ -79,7 +79,7 @@ where
                     allow_quote,
                 )?);
             }
-            Symbol::Comment(_) => {
+            Symbol::Comment(_) | Symbol::Whitespace(_) => {
                 tokenstream.next();
             }
             Symbol::Slash => {
@@ -588,10 +588,8 @@ where
                 )?);
             }
             Symbol::Slash => {
-                println!("found slash");
                 if let Some(next) = tokenstream.peek_forward(1) {
                     if next.symbol() == &Symbol::Slash {
-                        println!("Skipping comment");
                         whitespace::skip_comment(tokenstream);
                     }
                 }
@@ -666,7 +664,9 @@ where
     Ok(output)
 }
 
-fn eat_newline(tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Result<(), Error> {
+fn eat_newline(
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+) -> Result<(), Error> {
     whitespace::skip(tokenstream);
     if let Some(token) = tokenstream.peek() {
         if let Symbol::Newline = token.symbol() {

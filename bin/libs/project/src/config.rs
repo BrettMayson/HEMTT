@@ -65,9 +65,15 @@ impl Project {
     #[must_use]
     pub fn files(&self) -> Vec<String> {
         let mut files = self.files.clone();
-        for default in ["mod.cpp", "meta.cpp", "LICENSE", "logo_ca.paa", "logo_co.paa"]
-            .iter()
-            .map(std::string::ToString::to_string)
+        for default in [
+            "mod.cpp",
+            "meta.cpp",
+            "LICENSE",
+            "logo_ca.paa",
+            "logo_co.paa",
+        ]
+        .iter()
+        .map(std::string::ToString::to_string)
         {
             if !files.contains(&default) {
                 let path = Path::new(&default);

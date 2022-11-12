@@ -12,6 +12,8 @@ pub enum Error {
     UnexpectedEOF,
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
     ExpectedIdent { token: Box<Token> },
+    #[error("Expected `{{number}}`, found `{token:?}`, ")]
+    ExpectedNumber { token: Box<Token> },
 
     #[error("IO Error: {0}")]
     Io(Box<std::io::Error>),
@@ -37,6 +39,12 @@ impl PrettyError for Error {
             Self::ExpectedIdent { token } => {
                 format!(
                     "Expected `{{ident}}`, found `{symbol:?}`,",
+                    symbol = token.symbol()
+                )
+            }
+            Self::ExpectedNumber { token } => {
+                format!(
+                    "Expected `{{number}}`, found `{symbol:?}`,",
                     symbol = token.symbol()
                 )
             }

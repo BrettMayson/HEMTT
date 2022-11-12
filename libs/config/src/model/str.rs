@@ -47,12 +47,12 @@ impl Parse for Str {
                             break;
                         }
                     }
-                    Symbol::Newline => {
-                        return Err(Error::UnexpectedToken {
-                            token: Box::new(token.clone()),
-                            expected: vec![Symbol::DoubleQuote],
-                        });
-                    }
+                    // Symbol::Newline => {
+                    //     return Err(Error::UnexpectedToken {
+                    //         token: Box::new(token.clone()),
+                    //         expected: vec![Symbol::DoubleQuote],
+                    //     });
+                    // }
                     _ => {
                         string.push_str(&tokens.next().unwrap().to_string());
                     }

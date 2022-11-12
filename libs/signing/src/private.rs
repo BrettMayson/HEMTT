@@ -27,15 +27,18 @@ impl BIPrivateKey {
     ///
     /// # Errors
     /// If RSA generation fails.
+    ///
+    /// # Panics
+    /// It won't
     pub fn generate(length: u32, authority: &str) -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
         let mut rsa = RsaPrivateKey::new(&mut rng, length as usize)?;
         rsa.precompute()?;
-        let Some(precomputed) = rsa.precomputed() else {
-            return Err(Error::Rsa(rsa::errors::Error::Internal));
-        };
+        // let Some(precomputed) = rsa.precomputed() else {
+        //     return Err(Error::Rsa(rsa::errors::Error::Internal));
+        // };
         let primes = rsa.primes();
-        let Some(qinv) = precomputed.qinv.to_biguint() else {
+        let Some(qinv) = rsa.qinv().unwrap().to_biguint() else {
             return Err(Error::Rsa(rsa::errors::Error::Internal));
         };
         Ok(Self {
@@ -45,8 +48,8 @@ impl BIPrivateKey {
             n: rsa.n().clone(),
             p: primes[0].clone(),
             q: primes[1].clone(),
-            dp: precomputed.dp.clone(),
-            dq: precomputed.dq.clone(),
+            dp: rsa.dp().unwrap().clone(),
+            dq: rsa.dq().unwrap().clone(),
             qinv,
             d: rsa.d().clone(),
         })

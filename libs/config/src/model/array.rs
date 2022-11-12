@@ -86,6 +86,11 @@ impl Rapify for Array {
     ) -> Result<usize, std::io::Error> {
         let mut written = output.write_compressed_int(self.elements.len() as u32)?;
 
+        if self.expand {
+            output.write_all(&[1, 0, 0, 0])?;
+            written += 4;
+        }
+
         for element in &self.elements {
             if let Some(code) = element.rapified_code() {
                 output.write_all(&[code])?;

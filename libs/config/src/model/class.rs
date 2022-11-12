@@ -50,7 +50,6 @@ impl Parse for Class {
         // get name
         whitespace::skip(tokens);
         let name = Ident::parse(options, tokens)?;
-        println!("name: {:?}", name);
         // Check for : and parent
         whitespace::skip(tokens);
         let parent = if let Some(token) = tokens.peek() {
@@ -100,8 +99,7 @@ impl Rapify for Class {
             output.write_cstring(parent.to_string())?;
             written += parent.to_string().len() + 1;
         } else {
-            output.write_cstring(b"\0")?;
-            written += 1;
+            written += output.write(b"\0")?;
         }
         written += output.write_compressed_int(self.children.0 .0.len() as u32)?;
 
@@ -128,6 +126,7 @@ impl Rapify for Class {
                     written += e.rapify(output, offset)?;
                 }
                 Property::Class(c) => {
+                    // TODO extract out to property
                     if c.external {
                         continue;
                     }
@@ -140,6 +139,7 @@ impl Rapify for Class {
 
                     class_bodies.push(cursor);
                 }
+                Property::Delete(_) => continue,
             }
             assert_eq!(
                 written - pre_write,
@@ -161,7 +161,10 @@ impl Rapify for Class {
         if self.children.0 .0.is_empty() {
             return 0;
         }
-        let parent_length = self.parent.as_ref().map_or(0, |parent| parent.to_string().len());
+        let parent_length = self
+            .parent
+            .as_ref()
+            .map_or(0, |parent| parent.to_string().len());
         parent_length
             + 1
             + compressed_int_len(self.children.0 .0.len() as u32)
@@ -177,6 +180,7 @@ impl Rapify for Class {
                         + match p {
                             Property::Class(c) => c.rapified_length(),
                             Property::Entry(_) => 0,
+                            Property::Delete(i) => i.to_string().len() + 1,
                         }
                 })
                 .sum::<usize>()
@@ -236,15 +240,13 @@ impl Parse for Properties {
             let ident = match tokens.peek() {
                 Some(token) => match token.symbol() {
                     Symbol::Word(ref ident) => {
-                        let ident = ident.to_string();
-                        if ident != "class" {
-                            tokens.next();
+                        if ident == "class" {
+                            None
+                        } else {
+                            Some(Ident::parse(options, tokens)?)
                         }
-                        ident
                     }
-                    Symbol::RightBrace | Symbol::Eoi => {
-                        break
-                    }
+                    Symbol::RightBrace | Symbol::Eoi => break,
                     Symbol::Whitespace(_) | Symbol::Newline | Symbol::Comment(_) => {
                         tokens.next();
                         continue;
@@ -258,50 +260,59 @@ impl Parse for Properties {
                 None => return Err(Error::UnexpectedEOF),
             };
             whitespace::skip(tokens);
-            match ident.as_str() {
-                "class" => {
-                    let class = Class::parse(options, tokens)?;
-                    entries.push((class.name.to_string(), Property::Class(class)));
-                }
-                "delete" => unimplemented!("delete"),
-                _ => {
-                    // Check for array
-                    let array_expand = if tokens.peek().unwrap().symbol() == &Symbol::LeftBracket {
-                        tokens.next();
-                        tokens.next();
-                        whitespace::skip(tokens);
-                        match tokens.peek().map_or(Symbol::Void, |t| t.symbol().clone()) {
-                            Symbol::Plus => {
-                                tokens.next();
-                                true
-                            }
-                            _ => false,
-                        }
-                    } else {
-                        whitespace::skip(tokens);
-                        false
-                    };
-                    whitespace::skip(tokens);
-                    if tokens.peek().map_or(Symbol::Void, |t| t.symbol().clone())
-                        != Symbol::Assignment
-                    {
-                        return Err(Error::UnexpectedToken {
-                            token: Box::new(tokens.next().unwrap()),
-                            expected: vec![Symbol::Assignment],
-                        });
+            'read_ident: {
+                match ident {
+                    None => {
+                        let class = Class::parse(options, tokens)?;
+                        entries.push((class.name.to_string(), Property::Class(class)));
                     }
-                    tokens.next();
-                    whitespace::skip(tokens);
-                    let entry = if array_expand {
-                        let array = Array::parse(options, tokens)?;
-                        Entry::Array(Array {
-                            elements: array.elements,
-                            expand: true,
-                        })
-                    } else {
-                        Entry::parse(options, tokens)?
-                    };
-                    entries.push((ident, Property::Entry(entry)));
+                    Some(ident) => {
+                        if ident.to_string() == "delete" {
+                            println!("found delete");
+                            whitespace::skip(tokens);
+                            let ident = Ident::parse(options, tokens)?;
+                            entries.push((ident.to_string(), Property::Delete(ident)));
+                            break 'read_ident;
+                        }
+                        // Check for array
+                        let array_expand =
+                            if tokens.peek().unwrap().symbol() == &Symbol::LeftBracket {
+                                tokens.next();
+                                tokens.next();
+                                whitespace::skip(tokens);
+                                match tokens.peek().map_or(Symbol::Void, |t| t.symbol().clone()) {
+                                    Symbol::Plus => {
+                                        tokens.next();
+                                        true
+                                    }
+                                    _ => false,
+                                }
+                            } else {
+                                whitespace::skip(tokens);
+                                false
+                            };
+                        whitespace::skip(tokens);
+                        if tokens.peek().map_or(Symbol::Void, |t| t.symbol().clone())
+                            != Symbol::Assignment
+                        {
+                            return Err(Error::UnexpectedToken {
+                                token: Box::new(tokens.next().unwrap()),
+                                expected: vec![Symbol::Assignment],
+                            });
+                        }
+                        tokens.next();
+                        whitespace::skip(tokens);
+                        let entry = if array_expand {
+                            let array = Array::parse(options, tokens)?;
+                            Entry::Array(Array {
+                                elements: array.elements,
+                                expand: true,
+                            })
+                        } else {
+                            Entry::parse(options, tokens)?
+                        };
+                        entries.push((ident.to_string(), Property::Entry(entry)));
+                    }
                 }
             }
             let t = tokens
@@ -324,6 +335,7 @@ impl Parse for Properties {
 pub enum Property {
     Entry(Entry),
     Class(Class),
+    Delete(Ident),
 }
 
 impl Property {
@@ -346,6 +358,9 @@ impl Property {
                 } else {
                     vec![0]
                 }
+            }
+            Self::Delete(_) => {
+                vec![4]
             }
         }
     }
@@ -384,6 +399,7 @@ impl Rapify for Property {
                         4
                     }
                 }
+                Self::Delete(_) => 0,
             }
     }
 }

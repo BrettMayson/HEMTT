@@ -1,3 +1,5 @@
+#![allow(clippy::use_self)] // serde false positive
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

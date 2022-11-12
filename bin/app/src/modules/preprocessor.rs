@@ -27,19 +27,22 @@ impl Module for Preprocessor {
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx)?;
         // TODO map to extra error
-        ctx.addons().par_iter().map(|addon| {
-            // TODO fix error in vfs
-            for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
-                let entry = entry?;
-                if entry.metadata()?.file_type == VfsFileType::File
-                    && can_preprocess(entry.as_str())
-                {
-                    println!("preprocessing {}", entry.as_str());
-                    preprocess(entry, ctx, &resolver)?;
+        ctx.addons()
+            .par_iter()
+            .map(|addon| {
+                // TODO fix error in vfs
+                for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
+                    let entry = entry?;
+                    if entry.metadata()?.file_type == VfsFileType::File
+                        && can_preprocess(entry.as_str())
+                    {
+                        println!("preprocessing {}", entry.as_str());
+                        preprocess(entry, ctx, &resolver)?;
+                    }
                 }
-            }
-            Ok(())
-        }).collect()
+                Ok(())
+            })
+            .collect()
     }
 }
 
@@ -51,7 +54,7 @@ pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Resul
         ctx.config().hemtt().config(),
         &mut tokens.into_iter().peekmore(),
     )?;
-    println!("rapified: {}", rapified.root.children.0.0.len());
+    println!("rapified: {}", rapified.root.children.0 .0.len());
     let out = if path.filename() == "config.cpp" {
         path.parent().unwrap().join("config.bin").unwrap()
     } else {
