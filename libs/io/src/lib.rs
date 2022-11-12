@@ -1,8 +1,20 @@
+#![deny(clippy::all, clippy::nursery)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::cast_possible_truncation)]
+
 use std::io;
 use std::io::{Read, Write};
 
 pub trait ReadExt: Read {
+    /// Read a null-terminated string from the input.
+    ///
+    /// # Errors
+    /// If the input fails to read.
     fn read_cstring(&mut self) -> io::Result<String>;
+    /// Reads a compressed `u32` from the input.
+    ///
+    /// # Errors
+    /// If the input fails to read.
     fn read_compressed_int(&mut self) -> io::Result<u32>;
 }
 
@@ -34,7 +46,15 @@ impl<T: Read> ReadExt for T {
 }
 
 pub trait WriteExt: Write {
+    /// Writes a null-terminated string to the output.
+    ///
+    /// # Errors
+    /// If the output fails to write.
     fn write_cstring<S: AsRef<[u8]>>(&mut self, s: S) -> io::Result<()>;
+    /// Writes a compressed `u32` to the output.
+    ///
+    /// # Errors
+    /// If the output fails to write.
     fn write_compressed_int(&mut self, x: u32) -> io::Result<usize>;
 }
 

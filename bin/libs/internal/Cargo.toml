@@ -11,3 +11,4 @@ hemtt-config = { path = "../../../libs/config" }
 hemtt-preprocessor = { path = "../../../libs/preprocessor" }
 
 clap = { workspace = true }
+peekmore = "1.0.0"

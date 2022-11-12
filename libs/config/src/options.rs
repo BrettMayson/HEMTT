@@ -10,8 +10,16 @@ pub enum Preset {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Options {
     #[serde(default = "default_preset")]
+    /// Preset to use for config parsing
+    ///
+    /// BI: Match a strict definition of BI's parser
+    /// HEMTT: Superset of BI with some QOL improvements
     preset: Preset,
 
+    /// Can arrays have trailing commas?
+    ///
+    /// Default (BI): false
+    /// Default (HEMTT): true
     array_allow_trailing_comma: Option<bool>,
 }
 

@@ -1,6 +1,7 @@
 use std::iter::Sum;
 
 use hemtt_tokens::{symbol::Symbol, whitespace};
+use peekmore::PeekMoreIterator;
 
 use crate::{
     error::Error,
@@ -19,7 +20,7 @@ pub struct Array {
 impl Parse for Array {
     fn parse(
         options: &Options,
-        tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,

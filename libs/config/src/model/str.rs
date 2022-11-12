@@ -1,4 +1,5 @@
 use hemtt_tokens::symbol::Symbol;
+use peekmore::PeekMoreIterator;
 
 use crate::{
     error::Error,
@@ -14,7 +15,7 @@ pub struct Str(pub String);
 impl Parse for Str {
     fn parse(
         _options: &Options,
-        tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -85,6 +86,8 @@ impl Rapify for Str {
 
 #[cfg(test)]
 mod tests {
+    use peekmore::PeekMore;
+
     use crate::model::Parse;
 
     #[test]
@@ -92,7 +95,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string(r#""test""#)
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(string, super::Str("test".to_string()));
     }
@@ -102,7 +105,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string(r#""test is ""cool""""#)
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(string, super::Str(r#"test is "cool""#.to_string()));
     }

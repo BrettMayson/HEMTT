@@ -1,28 +1,66 @@
-use std::{
-    fs::File,
-    path::{Path, PathBuf},
-};
+use std::fs::{create_dir_all, File};
 
 use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
 use vfs::VfsFileType;
 
 use crate::{addons::Location, context::Context, error::Error};
 
-pub fn dev(ctx: &Context) -> Result<(), Error> {
-    get_pbos(ctx, &PathBuf::from(Location::Addons.to_string()))
+/// Should the PBOs be collapsed into the addons folder
+pub enum Collapse {
+    /// Yes, used for development
+    Yes,
+    /// No, used for release
+    No,
 }
 
-pub fn release(_ctx: &Context) -> Result<(), Error> {
-    unimplemented!()
-}
-
-fn get_pbos(ctx: &Context, target: &Path) -> Result<(), Error> {
+pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
     ctx.addons()
         .to_vec()
         .iter()
         .map(|addon| {
             let mut pbo = WritablePbo::new();
-            for entry in ctx.fs().join(addon.folder()).unwrap().walk_dir().unwrap() {
+            let target = ctx.hemtt_folder();
+
+            let target_pbo = {
+                let mut path = match collapse {
+                    Collapse::No => match addon.location() {
+                        Location::Addons => target.join("addons").join(addon.name()),
+                        Location::Compats => {
+                            if ctx.config().hemtt().build().compat_mod_folders() {
+                                target
+                                    .join("compats")
+                                    .join(format!("@{}", addon.name()))
+                                    .join("addons")
+                                    .join(addon.name())
+                            } else {
+                                target.join(addon.location().to_string()).join(addon.name())
+                            }
+                        }
+                        Location::Optionals => {
+                            if ctx.config().hemtt().build().optional_mod_folders() {
+                                target
+                                    .join("optionals")
+                                    .join(format!("@{}", addon.name()))
+                                    .join("addons")
+                                    .join(addon.name())
+                            } else {
+                                target.join(addon.location().to_string()).join(addon.name())
+                            }
+                        }
+                    },
+                    Collapse::Yes => target.join("addons").join(addon.name()),
+                };
+                path.set_extension("pbo");
+                path
+            };
+            create_dir_all(target_pbo.parent().unwrap())?;
+            println!(
+                "building `{}` => `{}`",
+                addon.folder(),
+                target_pbo.display()
+            );
+
+            for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File {
                     if entry.filename() == "config.cpp"
@@ -53,14 +91,10 @@ fn get_pbos(ctx: &Context, target: &Path) -> Result<(), Error> {
                         .trim_start_matches(&addon.folder())
                         .trim_start_matches('/')
                         .replace('/', "\\");
-                    println!("adding {file} from {}", addon.folder());
                     pbo.add_file(file, entry.open_file().unwrap()).unwrap();
                 }
             }
-            pbo.write(
-                &mut File::create(target.join(format!("{}.pbo", addon.name())))?,
-                true,
-            )?;
+            pbo.write(&mut File::create(target_pbo)?, true)?;
             Ok(())
         })
         .collect::<Result<Vec<_>, Error>>()?;

@@ -1,5 +1,6 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_tokens::symbol::Symbol;
+use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, rapify::Rapify, Options};
 
@@ -15,7 +16,7 @@ pub enum Number {
 impl Parse for Number {
     fn parse(
         _options: &Options,
-        tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -128,6 +129,8 @@ impl Rapify for Number {
 
 #[cfg(test)]
 mod tests {
+    use peekmore::PeekMore;
+
     use crate::model::Parse;
 
     #[test]
@@ -135,7 +138,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string("12345678901234567")
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Int64(12_345_678_901_234_567));
     }
@@ -145,7 +148,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string("1234567890")
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Int32(1_234_567_890));
     }
@@ -155,7 +158,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string("1234567890.1234567890")
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Float32(1_234_567_890.123_456_789));
     }

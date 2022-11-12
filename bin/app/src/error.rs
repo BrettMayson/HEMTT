@@ -4,6 +4,8 @@ use hemtt_error::{thiserror, PrettyError};
 pub enum Error {
     #[error("Invalid addon location: {0}")]
     InvalidAddonLocation(String),
+    #[error("Unable to create link: {0}")]
+    Link(String),
 
     #[error("Project error: {0}")]
     Project(#[from] hemtt_bin_project::Error),
@@ -16,8 +18,16 @@ pub enum Error {
 
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
-    // #[error("Vfs Error")]
-    // Vfs(#[from] vfs::VfsError),
+    #[error("Vfs Error {0}")]
+    Vfs(Box<vfs::VfsError>),
+    #[error("Glob Error: {0}")]
+    GlobPattern(#[from] glob::PatternError),
+}
+
+impl From<vfs::VfsError> for Error {
+    fn from(e: vfs::VfsError) -> Self {
+        Self::Vfs(Box::new(e))
+    }
 }
 
 impl PrettyError for Error {

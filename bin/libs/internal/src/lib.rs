@@ -17,6 +17,10 @@ pub fn cli() -> Command {
         .subcommand(rapify::cli())
 }
 
+/// Run the internal commands
+///
+/// # Errors
+/// If the command fails
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     match matches.subcommand() {
         Some(("preprocessor", matches)) => preprocessor::execute(matches),

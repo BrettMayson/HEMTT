@@ -36,6 +36,8 @@ pub enum Symbol {
     Directive,
     /// \
     Escape,
+    /// /
+    Slash,
     /// ,
     Comma,
     /// .
@@ -104,6 +106,7 @@ impl ToString for Symbol {
             Self::Join => "##".to_string(),
             Self::Directive => "#".to_string(),
             Self::Escape => "\\".to_string(),
+            Self::Slash => "/".to_string(),
             Self::Comma => ",".to_string(),
             Self::Decimal => ".".to_string(),
             Self::DoubleQuote => "\"".to_string(),

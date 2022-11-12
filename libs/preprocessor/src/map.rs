@@ -101,10 +101,10 @@ impl From<Vec<Token>> for Processed {
                 .map_or_else(
                     || {
                         sources.push((source.path().to_string(), {
-                            if source.path() != "%builtin%" {
-                                std::fs::read_to_string(source.path()).unwrap()
-                            } else {
+                            if source.path() == "%builtin%" {
                                 String::new()
+                            } else {
+                                std::fs::read_to_string(source.path()).unwrap()
                             }
                         }));
                         sources.len() - 1

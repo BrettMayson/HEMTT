@@ -2,6 +2,7 @@ use std::io::Read;
 
 use hemtt_config::{Config, Parse, Rapify};
 use hemtt_preprocessor::{preprocess_file, resolvers::LocalResolver};
+use peekmore::PeekMore;
 
 const ROOT: &str = "tests/rapify/";
 
@@ -10,19 +11,18 @@ fn rapify() {
     for file in std::fs::read_dir(ROOT).unwrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
-            let mut resolver = LocalResolver::new();
             println!(
                 "rapify `{}`",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
             let tokens = preprocess_file(
                 &file.path().join("source.hpp").display().to_string(),
-                &mut resolver,
+                &LocalResolver::new(),
             )
             .unwrap();
             let rapified = Config::parse(
                 &hemtt_config::Options::default(),
-                &mut tokens.into_iter().peekable(),
+                &mut tokens.into_iter().peekmore(),
             )
             .unwrap();
             let mut output = Vec::new();

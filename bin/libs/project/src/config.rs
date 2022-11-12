@@ -47,4 +47,35 @@ pub struct Project {
     name: String,
     #[serde(default)]
     headers: HashMap<String, String>,
+    #[serde(default)]
+    files: Vec<String>,
+}
+
+impl Project {
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub const fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    #[must_use]
+    pub fn files(&self) -> Vec<String> {
+        let mut files = self.files.clone();
+        for default in ["mod.cpp", "meta.cpp", "LICENSE", "logo_ca.paa", "logo_co.paa"]
+            .iter()
+            .map(std::string::ToString::to_string)
+        {
+            if !files.contains(&default) {
+                let path = Path::new(&default);
+                if path.exists() {
+                    files.push(default.clone());
+                }
+            }
+        }
+        files
+    }
 }

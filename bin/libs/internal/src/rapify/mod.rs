@@ -7,6 +7,7 @@ use clap::{arg, value_parser, ArgMatches, Command};
 use hemtt_config::{Config, Parse, Rapify};
 use hemtt_error::AppError;
 use hemtt_preprocessor::{preprocess_file, LocalResolver};
+use peekmore::PeekMore;
 
 pub fn cli() -> Command {
     Command::new("rapify")
@@ -42,11 +43,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
 fn run(source: &Path, dest: &Path) -> Result<(), AppError> {
     assert!(source.is_file(), "Source file does not exist");
     assert!(!dest.is_file(), "Destination file already exists");
-    let mut resolver = LocalResolver::new();
-    let tokens = preprocess_file(&source.display().to_string(), &mut resolver)?;
+    let tokens = preprocess_file(&source.display().to_string(), &LocalResolver::new())?;
     let rapified = Config::parse(
         &hemtt_config::Options::default(),
-        &mut tokens.into_iter().peekable(),
+        &mut tokens.into_iter().peekmore(),
     )?;
     let mut output = Vec::new();
     rapified.rapify(&mut output, 0).unwrap();

@@ -4,6 +4,7 @@ use hemtt_config::{Config, Parse, Rapify};
 use hemtt_pbo::{prefix::FILES, Prefix};
 use hemtt_preprocessor::{preprocess_file, Resolver};
 use hemtt_tokens::Token;
+use peekmore::PeekMore;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::{VfsFileType, VfsPath};
 
@@ -26,44 +27,43 @@ impl Module for Preprocessor {
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx)?;
         // TODO map to extra error
-        ctx.addons().par_iter().for_each(|addon| {
+        ctx.addons().par_iter().map(|addon| {
             // TODO fix error in vfs
-            for entry in ctx.fs().join(addon.folder()).unwrap().walk_dir().unwrap() {
-                let entry = entry.unwrap();
-                if entry.metadata().unwrap().file_type == VfsFileType::File
+            for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
+                let entry = entry?;
+                if entry.metadata()?.file_type == VfsFileType::File
                     && can_preprocess(entry.as_str())
                 {
                     println!("preprocessing {}", entry.as_str());
-                    preprocess(entry, ctx, &resolver).unwrap();
+                    preprocess(entry, ctx, &resolver)?;
                 }
             }
-        });
-        Ok(())
+            Ok(())
+        }).collect()
     }
 }
 
 pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
     // TODO fix error in vfs
     let tokens = preprocess_file(path.as_str(), resolver)?;
+    println!("tokens: {}", tokens.len());
     let rapified = Config::parse(
         ctx.config().hemtt().config(),
-        &mut tokens.into_iter().peekable(),
+        &mut tokens.into_iter().peekmore(),
     )?;
+    println!("rapified: {}", rapified.root.children.0.0.len());
     let out = if path.filename() == "config.cpp" {
         path.parent().unwrap().join("config.bin").unwrap()
     } else {
         path
     };
-    let mut output = out.create_file().unwrap();
+    let mut output = out.create_file()?;
     rapified.rapify(&mut output, 0)?;
     Ok(())
 }
 
 pub fn can_preprocess(path: &str) -> bool {
     let path = PathBuf::from(path);
-    // if path.display().to_string().contains(".ht.") {
-    //     return false;
-    // }
     let name = path
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
@@ -82,10 +82,11 @@ impl<'a> VfsResolver<'a> {
         let mut prefixes = HashMap::new();
         for addon in ctx.addons() {
             // TODO fix error in vfs
-            let mut files: Vec<String> = FILES.iter().map(|i| i.to_string()).collect();
+            let mut files: Vec<String> =
+                FILES.iter().map(std::string::ToString::to_string).collect();
             files.extend(FILES.iter().map(|i| i.to_uppercase()));
             for file in files {
-                let root = ctx.fs().join(addon.folder()).unwrap();
+                let root = ctx.vfs().join(addon.folder()).unwrap();
                 let path = root.join(file).unwrap();
                 if path.exists().unwrap() {
                     prefixes.insert(
@@ -100,7 +101,7 @@ impl<'a> VfsResolver<'a> {
             }
         }
         Ok(Self {
-            vfs: ctx.fs(),
+            vfs: ctx.vfs(),
             prefixes,
         })
     }

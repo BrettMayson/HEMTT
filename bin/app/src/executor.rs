@@ -1,73 +1,64 @@
 use crate::{
     context::Context,
     error::Error,
-    modules::{self, Module},
+    modules::{self, pbo::Collapse, Module},
 };
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum PboTarget {
-    BySource,
-    Release,
-    Nowhere,
-}
-
-pub struct Executor {
+pub struct Executor<'a> {
+    ctx: &'a Context,
     modules: Vec<Box<dyn Module>>,
-    build_pbo: PboTarget,
+    collapse: Collapse,
 }
 
-impl Executor {
-    pub fn new() -> Self {
+impl<'a> Executor<'a> {
+    pub fn new(ctx: &'a Context) -> Self {
         Self {
+            ctx,
             modules: Vec::new(),
-            build_pbo: PboTarget::Nowhere,
+            collapse: Collapse::Yes,
         }
     }
 
-    pub fn build_pbo(&mut self, build_pbo: PboTarget) {
-        self.build_pbo = build_pbo;
+    pub fn collapse(&mut self, collpase: Collapse) {
+        self.collapse = collpase;
     }
 
     pub fn add_module(&mut self, module: Box<dyn Module>) {
         self.modules.push(module);
     }
 
-    pub fn init(&mut self, ctx: &mut Context) -> Result<(), Error> {
+    pub fn init(&mut self) -> Result<(), Error> {
         for module in &mut self.modules {
-            module.init(ctx)?;
+            module.init(self.ctx)?;
         }
         Ok(())
     }
 
-    pub fn check(&self, ctx: &Context) -> Result<(), Error> {
+    pub fn check(&self) -> Result<(), Error> {
         for module in &self.modules {
-            module.check(ctx)?;
+            module.check(self.ctx)?;
         }
         Ok(())
     }
 
-    pub fn build(&self, ctx: &Context) -> Result<(), Error> {
+    pub fn build(&self) -> Result<(), Error> {
         for module in &self.modules {
-            module.pre_build(ctx)?;
+            module.pre_build(self.ctx)?;
         }
-        if self.build_pbo == PboTarget::BySource {
-            modules::pbo::dev(ctx)?;
-        }
+        modules::pbo::build(self.ctx, &self.collapse)?;
         for module in &self.modules {
-            module.post_build(ctx)?;
+            module.post_build(self.ctx)?;
         }
         Ok(())
     }
 
-    pub fn release(&self, ctx: &Context) -> Result<(), Error> {
+    pub fn release(&self) -> Result<(), Error> {
         for module in &self.modules {
-            module.pre_release(ctx)?;
+            module.pre_release(self.ctx)?;
         }
-        if self.build_pbo == PboTarget::Release {
-            modules::pbo::release(ctx)?;
-        }
+        // TODO: Release
         for module in &self.modules {
-            module.post_release(ctx)?;
+            module.post_release(self.ctx)?;
         }
         Ok(())
     }

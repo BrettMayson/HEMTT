@@ -10,6 +10,7 @@ mod context;
 mod error;
 mod executor;
 mod modules;
+mod utils;
 
 lazy_static::lazy_static! {
     pub static ref VERSION: &'static str = {
@@ -32,6 +33,7 @@ pub fn cli() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(commands::dev::cli())
+        .subcommand(commands::build::cli())
         .subcommand(hemtt_bin_internal::cli().name("internal"))
         .arg(
             clap::Arg::new("threads")
@@ -43,17 +45,27 @@ pub fn cli() -> Command {
         )
 }
 
+/// Run the HEMTT CLI
+///
+/// # Errors
+/// If the command fails
+///
+/// # Panics
+/// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     if let Some(threads) = matches.get_one::<String>("threads") {
         if let Err(e) = rayon::ThreadPoolBuilder::new()
-            .num_threads(usize::from_str_radix(&threads, 10).unwrap())
+            .num_threads(threads.parse::<usize>().unwrap())
             .build_global()
         {
-            println!("Failed to initialize thread pool: {}", e);
+            println!("Failed to initialize thread pool: {e}");
         }
     }
     match matches.subcommand() {
-        Some(("dev", matches)) => commands::dev::execute(matches),
+        Some(("dev", matches)) => commands::dev::execute(matches).map_err(std::convert::Into::into),
+        Some(("build", matches)) => {
+            commands::build::execute(matches).map_err(std::convert::Into::into)
+        }
         Some(("internal", matches)) => hemtt_bin_internal::execute(matches),
         _ => unreachable!(),
     }

@@ -8,19 +8,20 @@ fn bootstrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
             let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
-            let mut resolver = LocalResolver::new();
+            let resolver = LocalResolver::new();
             println!(
                 "bootstrap `{}`",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
             let tokens = preprocess_file(
                 &file.path().join("source.hpp").display().to_string(),
-                &mut resolver,
+                &resolver,
             )
             .unwrap();
             let processed = Processed::from(tokens);
             let map = processed.get_source_map(file.path().join("expected.hpp"));
-            std::fs::write(file.path().join("expected.hpp.map"), map).unwrap();
+            std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
+            std::fs::write(file.path().join("generated.hpp.map"), map).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }
     }

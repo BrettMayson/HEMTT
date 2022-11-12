@@ -1,4 +1,5 @@
 use hemtt_tokens::{symbol::Symbol, Token};
+use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, Options, Parse};
 
@@ -8,7 +9,7 @@ pub struct Ident(Vec<Token>);
 impl Parse for Ident {
     fn parse(
         _options: &Options,
-        tokens: &mut std::iter::Peekable<impl Iterator<Item = Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<Self, crate::error::Error>
     where
         Self: Sized,

@@ -81,6 +81,7 @@ impl Parse for Symbol {
             Rule::join => Self::Join,
             Rule::directive => Self::Directive,
             Rule::escape => Self::Escape,
+            Rule::slash => Self::Slash,
             Rule::comma => Self::Comma,
             Rule::decimal => Self::Decimal,
             Rule::double_quote => Self::DoubleQuote,

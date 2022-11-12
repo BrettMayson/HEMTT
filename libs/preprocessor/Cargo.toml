@@ -8,6 +8,7 @@ hemtt-error = { path = "../error" }
 
 hemtt-tokens = { path = "../tokens" }
 
+peekmore = "1.0.0"
 pest = { workspace = true }
 pest_derive = { workspace = true }
 serde = { workspace = true }

@@ -9,7 +9,7 @@ use crate::{
     error::Error,
     file::File,
     model::{Checksum, Header, Mime},
-    ReadPbo, WritePbo,
+    BISignVersion, ReadPbo, WritePbo,
 };
 
 pub struct ReadablePbo<I: Seek + Read> {
@@ -168,7 +168,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         headers.write_all(&[0])?;
 
-        for header in &self.files() {
+        for header in &self.files_sorted() {
             header.write_pbo(&mut headers)?;
         }
 
@@ -178,8 +178,54 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         hasher.update(headers.get_ref());
 
-        for header in &self.files() {
+        for header in &self.files_sorted() {
             let mut file = self.file(header.filename())?.unwrap();
+            std::io::copy(&mut file, &mut hasher)?;
+        }
+
+        Ok(hasher.finalize().to_vec().into())
+    }
+
+    /// Hashes all the files names in a PBO, expects the PBO to be sorted
+    /// Empty files are not hashed
+    ///
+    /// # Errors
+    /// if the pbo cannot be read
+    pub fn hash_filenames(&mut self) -> Result<Checksum, Error> {
+        let mut hasher = Sha1::new();
+
+        for header in &self.files_sorted() {
+            // Skip empty files
+            let Some(mut file) = self.file(header.filename())? else {
+                continue;
+            };
+            if file.read_u8().is_err() {
+                continue;
+            }
+            hasher.update(header.filename().replace('/', "\\").to_lowercase());
+        }
+
+        Ok(hasher.finalize().to_vec().into())
+    }
+
+    /// Hashes all the files in a PBO, expects the PBO to be sorted
+    ///
+    /// # Errors
+    /// if the pbo cannot be read
+    pub fn hash_files(&mut self, version: BISignVersion) -> Result<Checksum, Error> {
+        let mut hasher = Sha1::new();
+
+        if self.files().is_empty() {
+            hasher.update(version.nothing());
+        }
+
+        for header in &self.files_sorted() {
+            if !version.should_hash_file(header.filename()) {
+                continue;
+            }
+            let Some(mut file) = self.file(header.filename())? else {
+                continue;
+            };
             std::io::copy(&mut file, &mut hasher)?;
         }
 

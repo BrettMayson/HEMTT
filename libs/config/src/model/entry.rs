@@ -1,4 +1,5 @@
 use hemtt_tokens::{symbol::Symbol, whitespace};
+use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, rapify::Rapify, Options};
 
@@ -14,7 +15,7 @@ pub enum Entry {
 impl Parse for Entry {
     fn parse(
         options: &Options,
-        tokens: &mut std::iter::Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -93,6 +94,8 @@ impl Rapify for Entry {
 
 #[cfg(test)]
 mod tests {
+    use peekmore::PeekMore;
+
     use crate::Preset;
 
     use super::*;
@@ -102,7 +105,7 @@ mod tests {
         let mut tokens = hemtt_preprocessor::preprocess_string(r#""test""#)
             .unwrap()
             .into_iter()
-            .peekable();
+            .peekmore();
         let entry = Entry::parse(&Options::default(), &mut tokens).unwrap();
         assert_eq!(entry, Entry::Str(Str("test".to_string())));
     }
@@ -113,7 +116,7 @@ mod tests {
             let mut tokens = hemtt_preprocessor::preprocess_string(&source.to_string())
                 .unwrap()
                 .into_iter()
-                .peekable();
+                .peekmore();
             let number = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
             assert_eq!(number, super::Entry::Number(Number::Int32(source)));
         }
@@ -125,7 +128,7 @@ mod tests {
             let mut tokens = hemtt_preprocessor::preprocess_string(source)
                 .unwrap()
                 .into_iter()
-                .peekable();
+                .peekmore();
             let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
             assert_eq!(
                 array,
@@ -143,7 +146,7 @@ mod tests {
             let mut tokens = hemtt_preprocessor::preprocess_string(source)
                 .unwrap()
                 .into_iter()
-                .peekable();
+                .peekmore();
             let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
             assert_eq!(
                 array,
@@ -165,7 +168,7 @@ mod tests {
             let mut tokens = hemtt_preprocessor::preprocess_string(source)
                 .unwrap()
                 .into_iter()
-                .peekable();
+                .peekmore();
             assert!(super::Entry::parse(&Options::default(), &mut tokens.clone()).is_err());
             assert_eq!(
                 super::Entry::parse(&Options::from_preset(Preset::Hemtt), &mut tokens).unwrap(),

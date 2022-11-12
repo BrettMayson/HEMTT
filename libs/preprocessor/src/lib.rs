@@ -3,9 +3,8 @@
 
 //! Arma 3 config preprocessor.
 
-use std::{iter::Peekable, path::Path};
+use std::path::Path;
 
-use context::{Context, Definition, FunctionDefinition};
 use hemtt_tokens::whitespace;
 use hemtt_tokens::{symbol::Symbol, Token};
 use ifstate::IfState;
@@ -17,8 +16,10 @@ mod map;
 mod parse;
 mod resolver;
 
+pub use context::{Context, Definition, FunctionDefinition};
 pub use error::Error;
 pub use map::{Mapping, Processed};
+use peekmore::{PeekMoreIterator, PeekMore};
 pub use resolver::resolvers;
 pub use resolver::{
     resolvers::{LocalResolver, NoResolver},
@@ -45,7 +46,7 @@ where
     tokens.push(Token::ending_newline());
     tokens.push(eoi);
     let mut context = Context::new(entry.to_string());
-    let mut tokenstream = tokens.into_iter().peekable();
+    let mut tokenstream = tokens.into_iter().peekmore();
     root_preprocess(resolver, &mut context, &mut tokenstream, false)
 }
 
@@ -54,14 +55,14 @@ where
 pub fn preprocess_string(source: &str) -> Result<Vec<Token>, Error> {
     let tokens = crate::parse::parse("%anonymous%", source)?;
     let mut context = Context::new(String::from("%anonymous%"));
-    let mut tokenstream = tokens.into_iter().peekable();
+    let mut tokenstream = tokens.into_iter().peekmore();
     root_preprocess(&NoResolver::new(), &mut context, &mut tokenstream, false)
 }
 
 fn root_preprocess<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     allow_quote: bool,
 ) -> Result<Vec<Token>, Error>
 where
@@ -81,6 +82,13 @@ where
             Symbol::Comment(_) => {
                 tokenstream.next();
             }
+            Symbol::Slash => {
+                if let Some(next) = tokenstream.peek_forward(1) {
+                    if next.symbol() == &Symbol::Slash {
+                        whitespace::skip_comment(tokenstream);
+                    }
+                }
+            }
             _ => {
                 if context.ifstates().reading() {
                     output.append(&mut walk_line(resolver, context, tokenstream)?);
@@ -96,7 +104,7 @@ where
 fn directive_preprocess<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     allow_quote: bool,
 ) -> Result<Vec<Token>, Error>
 where
@@ -200,7 +208,7 @@ where
 fn directive_include_preprocess<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -244,10 +252,10 @@ where
         let parsed = crate::parse::parse(&resolved_path.display().to_string(), &source)?;
         (resolved_path, parsed)
     };
-    let eoi = tokens.pop().unwrap();
+    // Remove EOI token
+    tokens.pop().unwrap();
     tokens.push(Token::ending_newline());
-    tokens.push(eoi);
-    let mut tokenstream = tokens.into_iter().peekable();
+    let mut tokenstream = tokens.into_iter().peekmore();
     let current = context.current_file().clone();
     context.set_current_file(pathbuf.display().to_string());
     let output = root_preprocess(resolver, context, &mut tokenstream, false);
@@ -258,7 +266,7 @@ where
 fn directive_define_preprocess<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<(), Error>
 where
     R: Resolver,
@@ -335,7 +343,7 @@ where
 
 fn directive_undef_preprocess(
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<(), Error> {
     if let Some(token) = tokenstream.next() {
         match token.symbol() {
@@ -365,7 +373,7 @@ fn directive_undef_preprocess(
 
 fn directive_if_preprocess(
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<(), Error> {
     let (ident_token, ident) = if let Some(token) = tokenstream.next() {
         match token.symbol() {
@@ -406,7 +414,7 @@ fn directive_if_preprocess(
 
 fn directive_ifdef_preprocess(
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     has: bool,
 ) -> Result<(), Error> {
     let (_, ident) = if let Some(token) = tokenstream.next() {
@@ -434,7 +442,7 @@ fn directive_ifdef_preprocess(
 }
 
 fn directive_define_read_body(
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Vec<Token> {
     let mut output: Vec<Token> = Vec::new();
     while let Some(token) = tokenstream.peek() {
@@ -457,7 +465,7 @@ fn directive_define_read_body(
 fn read_args<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Vec<Token>>, Error>
 where
     R: Resolver,
@@ -534,7 +542,7 @@ where
 fn walk_line<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
 ) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -579,6 +587,15 @@ where
                     true,
                 )?);
             }
+            Symbol::Slash => {
+                println!("found slash");
+                if let Some(next) = tokenstream.peek_forward(1) {
+                    if next.symbol() == &Symbol::Slash {
+                        println!("Skipping comment");
+                        whitespace::skip_comment(tokenstream);
+                    }
+                }
+            }
             _ => output.push(tokenstream.next().unwrap()),
         }
     }
@@ -588,7 +605,7 @@ where
 fn walk_definition<R>(
     resolver: &R,
     context: &mut Context,
-    tokenstream: &mut Peekable<impl Iterator<Item = Token>>,
+    tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     source: Token,
     definition: Definition,
 ) -> Result<Vec<Token>, Error>
@@ -598,7 +615,7 @@ where
     let mut output = Vec::new();
     match definition {
         Definition::Value(tokens) => {
-            let mut tokenstream = tokens.into_iter().peekable();
+            let mut tokenstream = tokens.into_iter().peekmore();
             while tokenstream.peek().is_some() {
                 output.append(&mut root_preprocess(
                     resolver,
@@ -625,12 +642,12 @@ where
                     Definition::Value(root_preprocess(
                         resolver,
                         context,
-                        &mut arg.into_iter().peekable(),
+                        &mut arg.into_iter().peekmore(),
                         true,
                     )?),
                 )?;
             }
-            let mut tokenstream = func.body().iter().cloned().peekable();
+            let mut tokenstream = func.body().iter().cloned().peekmore();
             while tokenstream.peek().is_some() {
                 output.append(&mut root_preprocess(
                     resolver,
@@ -649,7 +666,7 @@ where
     Ok(output)
 }
 
-fn eat_newline(tokenstream: &mut Peekable<impl Iterator<Item = Token>>) -> Result<(), Error> {
+fn eat_newline(tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Result<(), Error> {
     whitespace::skip(tokenstream);
     if let Some(token) = tokenstream.peek() {
         if let Symbol::Newline = token.symbol() {

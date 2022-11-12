@@ -5,9 +5,10 @@ mod ident;
 mod number;
 mod str;
 
-use std::{io::Cursor, iter::Peekable};
+use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
+use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, Options, Rapify};
 
@@ -24,7 +25,7 @@ pub trait Parse {
     /// if the token stream is invalid
     fn parse(
         options: &Options,
-        tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized;
@@ -38,7 +39,7 @@ pub struct Config {
 impl Parse for Config {
     fn parse(
         options: &Options,
-        tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error> {
         let properties: Properties = Properties::parse(options, tokens)?;
         Ok(Self {

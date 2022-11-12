@@ -7,6 +7,10 @@ pub const FILES: [&str; 3] = ["$pboprefix$", "pboprefix.txt", "$prefix$"];
 pub struct Prefix(String);
 
 impl Prefix {
+    /// Read a prefix from a prefix file
+    ///
+    /// # Errors
+    /// If the prefix is invalid
     pub fn new(content: &str, allow_leading_slash: bool) -> Result<Self, Error> {
         let prefix = Self::_from_prefix_file(content, allow_leading_slash)?;
         if prefix.0.contains('/') {

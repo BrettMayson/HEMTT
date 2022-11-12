@@ -28,6 +28,12 @@ impl From<Vec<u8>> for Checksum {
     }
 }
 
+impl AsRef<[u8]> for Checksum {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 impl ReadPbo for Checksum {
     fn read_pbo<I: std::io::Read>(input: &mut I) -> Result<(Self, usize), crate::error::Error> {
         let mut checksum = [0; 20];

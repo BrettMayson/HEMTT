@@ -3,9 +3,13 @@ use crate::{context::Context, error::Error};
 pub mod pbo;
 
 mod binarize;
+mod file_patching;
+mod files;
 mod preprocessor;
 
 pub use binarize::Binarize;
+pub use file_patching::FilePatching;
+pub use files::Files;
 pub use preprocessor::Preprocessor;
 
 pub trait Module {

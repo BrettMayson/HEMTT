@@ -2,3 +2,6 @@
 name = "hemtt-tokens"
 version = "0.10.0"
 edition = "2021"
+
+[dependencies]
+peekmore = "1.0.0"

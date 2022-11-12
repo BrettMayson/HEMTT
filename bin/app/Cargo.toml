@@ -17,9 +17,12 @@ hemtt-tokens = { path = "../../libs/tokens" }
 
 anyhow = "1.0.66"
 clap = { workspace = true }
+fs_extra = "1.2.0"
+glob = "0.3.0"
 lazy_static = "1.4.0"
-vfs = "0.7.1"
+peekmore = "1.0.0"
 rayon = "1.5.3"
+vfs = "0.7.1"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.10.1"

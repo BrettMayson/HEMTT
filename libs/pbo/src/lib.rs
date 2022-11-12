@@ -9,12 +9,14 @@ mod file;
 mod model;
 pub mod prefix;
 mod read;
+mod sign_version;
 mod write;
 
 pub use error::Error;
 pub use model::{Checksum, Header, Mime};
 pub use prefix::Prefix;
 pub use read::ReadablePbo;
+pub use sign_version::BISignVersion;
 pub use write::WritablePbo;
 
 trait WritePbo {

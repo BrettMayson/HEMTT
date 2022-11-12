@@ -117,6 +117,9 @@ impl<I: Seek + Read> WritablePbo<I> {
             }
 
             for (key, value) in &self.extensions {
+                if key == "prefix" {
+                    continue;
+                }
                 headers.write_cstring(key.as_bytes())?;
                 headers.write_cstring(value.as_bytes())?;
             }

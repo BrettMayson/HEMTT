@@ -1,7 +1,8 @@
-use std::{io::Cursor, iter::Peekable};
+use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_tokens::{symbol::Symbol, whitespace, Token};
+use peekmore::PeekMoreIterator;
 
 use crate::{
     error::Error,
@@ -23,7 +24,7 @@ pub struct Class {
 impl Parse for Class {
     fn parse(
         options: &Options,
-        tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -190,7 +191,7 @@ pub struct Children(pub Properties);
 impl Parse for Children {
     fn parse(
         options: &Options,
-        tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -226,7 +227,7 @@ pub struct Properties(pub Vec<(String, Property)>);
 impl Parse for Properties {
     fn parse(
         options: &Options,
-        tokens: &mut Peekable<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -243,7 +244,10 @@ impl Parse for Properties {
                         }
                         ident
                     }
-                    Symbol::RightBrace | Symbol::Eoi => break,
+                    Symbol::RightBrace | Symbol::Eoi => {
+                        println!("BREAK");
+                        break
+                    }
                     Symbol::Whitespace(_) | Symbol::Newline => {
                         tokens.next();
                         continue;
@@ -389,6 +393,8 @@ impl Rapify for Property {
 
 #[cfg(test)]
 mod tests {
+    use peekmore::PeekMore;
+
     use crate::model::{class::Property, Array, Children, Entry, Number, Parse, Str};
 
     #[test]
@@ -407,7 +413,7 @@ mod tests {
         )
         .unwrap()
         .into_iter()
-        .peekable();
+        .peekmore();
         let children = Children::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(
             children.0 .0,
@@ -473,7 +479,7 @@ mod tests {
         )
         .unwrap()
         .into_iter()
-        .peekable();
+        .peekmore();
         let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
         assert_eq!(class.parent, "");
@@ -503,7 +509,7 @@ mod tests {
         )
         .unwrap()
         .into_iter()
-        .peekable();
+        .peekmore();
         let class = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(class.name.to_string(), "HEMTT");
         assert_eq!(class.parent, "CfgPatches");

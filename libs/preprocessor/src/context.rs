@@ -57,6 +57,7 @@ pub struct Context {
 }
 
 impl Context {
+    #[must_use]
     pub fn new(entry: String) -> Self {
         Self {
             ifstates: IfStates::new(),
@@ -67,6 +68,7 @@ impl Context {
         }
     }
 
+    #[must_use]
     pub const fn ifstates(&self) -> &IfStates {
         &self.ifstates
     }
@@ -75,6 +77,7 @@ impl Context {
         &mut self.ifstates
     }
 
+    #[must_use]
     pub const fn definitions(&self) -> &HashMap<String, (Token, Definition)> {
         &self.definitions
     }
@@ -83,10 +86,12 @@ impl Context {
         &mut self.definitions
     }
 
+    #[must_use]
     pub const fn entry(&self) -> &String {
         &self.entry
     }
 
+    #[must_use]
     pub const fn current_file(&self) -> &String {
         &self.current_file
     }
@@ -95,6 +100,10 @@ impl Context {
         self.current_file = file;
     }
 
+    /// Define a macro
+    ///
+    /// # Errors
+    /// If the macro is a builtin macro
     pub fn define(
         &mut self,
         ident: String,
@@ -110,6 +119,10 @@ impl Context {
         Ok(())
     }
 
+    /// Undefine a macro
+    ///
+    /// # Errors
+    /// If the macro is a builtin macro
     pub fn undefine(
         &mut self,
         ident: &str,
@@ -123,10 +136,12 @@ impl Context {
         Ok(self.definitions.remove(ident))
     }
 
+    #[must_use]
     pub fn has(&self, ident: &str) -> bool {
         self.definitions.contains_key(ident)
     }
 
+    #[must_use]
     pub fn get(&self, ident: &str, token: &Token) -> Option<(Token, Definition)> {
         match ident {
             "__LINE__" => Some((
@@ -187,14 +202,17 @@ pub struct FunctionDefinition {
 }
 
 impl FunctionDefinition {
+    #[must_use]
     pub fn new(parameters: Vec<Token>, body: Vec<Token>) -> Self {
         Self { parameters, body }
     }
 
+    #[must_use]
     pub fn parameters(&self) -> &[Token] {
         &self.parameters
     }
 
+    #[must_use]
     pub fn body(&self) -> &[Token] {
         &self.body
     }

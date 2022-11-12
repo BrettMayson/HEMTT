@@ -1,5 +1,6 @@
 use std::{
     env::temp_dir,
+    fs::{create_dir_all, remove_dir_all},
     path::{Path, PathBuf},
 };
 
@@ -14,12 +15,13 @@ use crate::{
 pub struct Context {
     config: Configuration,
     addons: Vec<Addon>,
-    fs: VfsPath,
+    vfs: VfsPath,
+    hemtt_folder: PathBuf,
     tmp: PathBuf,
 }
 
 impl Context {
-    pub fn new(locations: &[Location]) -> Result<Self, Error> {
+    pub fn new(locations: &[Location], folder: &str) -> Result<Self, Error> {
         let tmp = temp_dir().join("hemtt").join(
             std::env::current_dir()
                 .unwrap()
@@ -30,9 +32,16 @@ impl Context {
                 .unwrap()
                 .replace(['\\', '/'], "_"),
         );
+        let hemtt_folder = std::env::current_dir().unwrap().join(".hemtt");
+        create_dir_all(&hemtt_folder)?;
+        let build_folder = hemtt_folder.join(folder);
+        if build_folder.exists() {
+            remove_dir_all(&build_folder)?;
+        }
+        create_dir_all(&build_folder)?;
         Ok(Self {
             config: Configuration::from_file(Path::new("hemtt.toml"))?,
-            fs: AltrootFS::new(
+            vfs: AltrootFS::new(
                 OverlayFS::new(&{
                     let mut layers = vec![MemoryFS::new().into()];
                     if cfg!(target_os = "windows") {
@@ -46,6 +55,7 @@ impl Context {
                 .into(),
             )
             .into(),
+            hemtt_folder: build_folder,
             addons: Addon::scan(locations)?,
             tmp,
         })
@@ -59,8 +69,12 @@ impl Context {
         &self.addons
     }
 
-    pub const fn fs(&self) -> &VfsPath {
-        &self.fs
+    pub const fn vfs(&self) -> &VfsPath {
+        &self.vfs
+    }
+
+    pub const fn hemtt_folder(&self) -> &PathBuf {
+        &self.hemtt_folder
     }
 
     pub const fn tmp(&self) -> &PathBuf {

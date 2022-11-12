@@ -9,6 +9,7 @@ hemtt-error = { path = "../error" }
 hemtt-tokens = { path = "../tokens" }
 
 byteorder = "1.4.3"
+peekmore = "1.0.0"
 serde = { workspace = true }
 
 [dev-dependencies]

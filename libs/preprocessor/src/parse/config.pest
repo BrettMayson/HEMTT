@@ -1,6 +1,6 @@
 file = _{ SOI ~ (
     word | alpha | digit | underscore | dash | assignment | plus | left_brace | right_brace | left_bracket | right_bracket |
-    left_parentheses | right_parentheses | colon | semicolon | join | directive | escape | comma | decimal |
+    left_parentheses | right_parentheses | colon | semicolon | join | directive | escape | slash | comma | decimal |
     double_quote | single_quote | left_angle | right_angle | unicode | newline
 )* ~ EOI }
 word = ${ ( underscore | alpha ) ~ ( alpha | digit | underscore )* }
@@ -21,6 +21,7 @@ semicolon = { ";" }
 join = { "##" }
 directive = { "#" }
 escape = { "\\" }
+slash = { "/" }
 comma = { "," }
 decimal = { "." }
 double_quote = { "\"" }
@@ -33,4 +34,4 @@ newline = { NEWLINE }
 space = { " " }
 tab = { "\t" }
 WHITESPACE = ${ space | tab }
-COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!"\n" ~ ANY)* ~ "\n") }
+COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }

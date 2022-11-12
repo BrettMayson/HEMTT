@@ -1,11 +1,11 @@
 use clap::{ArgAction, ArgMatches, Command};
-use hemtt_error::AppError;
 
 use crate::{
     addons::Location,
     context::Context,
-    executor::{Executor, PboTarget},
-    modules::{Binarize, Preprocessor},
+    error::Error,
+    executor::Executor,
+    modules::{pbo::Collapse, Binarize, FilePatching, Files, Preprocessor},
 };
 
 #[must_use]
@@ -22,20 +22,22 @@ pub fn cli() -> Command {
         )
 }
 
-pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
-    let mut context = Context::new(&[Location::Addons])?;
-    let mut executor = Executor::new();
+pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+    let ctx = Context::new(&[Location::Addons], "dev")?;
+    let mut executor = Executor::new(&ctx);
 
-    executor.build_pbo(PboTarget::BySource);
+    executor.collapse(Collapse::Yes);
 
+    executor.add_module(Box::new(FilePatching::new()));
     executor.add_module(Box::new(Preprocessor::new()));
     if matches.get_one::<bool>("binarize") == Some(&true) {
         executor.add_module(Box::new(Binarize::new()));
     }
+    executor.add_module(Box::new(Files::new()));
 
-    executor.init(&mut context)?;
-    executor.check(&context)?;
-    executor.build(&context)?;
+    executor.init()?;
+    executor.check()?;
+    executor.build()?;
 
     Ok(())
 }

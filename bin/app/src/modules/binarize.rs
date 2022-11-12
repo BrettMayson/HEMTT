@@ -4,6 +4,7 @@ use hemtt_pbo::{prefix::FILES, Prefix};
 use vfs::VfsFileType;
 
 use super::Module;
+use crate::utils::create_link;
 
 pub struct Binarize {
     command: Option<String>,
@@ -17,11 +18,13 @@ impl Binarize {
 
 impl Module for Binarize {
     fn name(&self) -> &'static str {
-        "binarize"
+        "Binarize"
     }
 
     #[cfg(windows)]
     fn init(&mut self, ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
+        use std::fs::remove_dir_all;
+
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let path: String = hkcu
             .open_subkey("Software\\Bohemia Interactive\\binarize")?
@@ -30,12 +33,16 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
+        // Perhaps in the future we can reuse old binarized output if the source hasn't changed.
+        if ctx.tmp().exists() {
+            remove_dir_all(ctx.tmp())?;
+        }
         create_dir_all(ctx.tmp().join("output"))?;
         let tmp = ctx.tmp().join("source");
         create_dir_all(&tmp)?;
         for addon in ctx.addons() {
             for file in FILES {
-                let root = ctx.fs().join(addon.folder()).unwrap();
+                let root = ctx.vfs().join(addon.folder()).unwrap();
                 let path = root.join(file).unwrap();
                 if path.exists().unwrap() {
                     let prefix = Prefix::new(
@@ -47,11 +54,15 @@ impl Module for Binarize {
                     create_dir_all(tmp_addon.parent().unwrap())?;
                     let target = std::env::current_dir()?
                         .join(root.as_str().trim_start_matches('/').replace('/', "\\"));
-                    create_link(tmp_addon.to_str().unwrap(), target.to_str().unwrap());
+                    create_link(tmp_addon.to_str().unwrap(), target.to_str().unwrap())?;
                 }
             }
         }
-        for outer_prefix in std::fs::read_dir(std::env::current_dir().unwrap().join("include"))? {
+        let include = std::env::current_dir().unwrap().join("include");
+        if !include.exists() {
+            return Ok(());
+        }
+        for outer_prefix in std::fs::read_dir(include)? {
             let outer_prefix = outer_prefix?.path();
             if outer_prefix.is_dir() {
                 let tmp_outer_prefix = tmp.join(outer_prefix.file_name().unwrap());
@@ -60,7 +71,7 @@ impl Module for Binarize {
                     if prefix.is_dir() {
                         let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
                         create_dir_all(tmp_mod.parent().unwrap())?;
-                        create_link(tmp_mod.to_str().unwrap(), prefix.to_str().unwrap());
+                        create_link(tmp_mod.to_str().unwrap(), prefix.to_str().unwrap())?;
                     }
                 }
             }
@@ -80,7 +91,7 @@ impl Module for Binarize {
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         for addon in ctx.addons() {
-            for entry in ctx.fs().join(addon.folder()).unwrap().walk_dir().unwrap() {
+            for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File
                     && ["rtm", "p3d"].contains(&entry.extension().unwrap_or_default().as_str())
@@ -93,7 +104,7 @@ impl Module for Binarize {
                     let mut tmp_outed = None;
                     for file in FILES {
                         let prefix_path = ctx
-                            .fs()
+                            .vfs()
                             .join(
                                 addon_root
                                     .join(file)
@@ -148,16 +159,4 @@ impl Module for Binarize {
     fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
         Ok(())
     }
-}
-
-fn create_link(original: &str, target: &str) {
-    let out = Command::new("cmd")
-        .arg("/C")
-        .arg("mklink")
-        .arg("/J")
-        .arg(original)
-        .arg(target)
-        .output()
-        .unwrap();
-    assert!(out.status.success(), "failed to make link");
 }

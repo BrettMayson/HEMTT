@@ -1,0 +1,16 @@
+[package]
+name = "hemtt-signing"
+version = "0.10.0"
+edition = "2021"
+
+[dependencies]
+hemtt-error = { path = "../error" }
+
+hemtt-io = { path = "../io" }
+hemtt-pbo = { path = "../pbo" }
+
+byteorder = "1.4.3"
+num-bigint-dig = "0.8.1"
+rand = "0.8.5"
+rsa = { git = "https://github.com/brettmayson/rsa" }
+sha-1 = "0.10.0"

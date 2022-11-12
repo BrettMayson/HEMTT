@@ -1,4 +1,4 @@
-use std::{fs::DirEntry, str::FromStr};
+use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
 use crate::error::Error;
 
@@ -43,6 +43,9 @@ pub enum Location {
 
 impl Location {
     pub fn scan(self) -> Result<Vec<Addon>, Error> {
+        if !PathBuf::from(self.to_string()).exists() {
+            return Ok(Vec::new());
+        }
         // TODO scope to root
         Ok(std::fs::read_dir(self.to_string())?
             .collect::<std::io::Result<Vec<DirEntry>>>()?

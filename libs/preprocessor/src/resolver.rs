@@ -48,6 +48,7 @@ pub mod resolvers {
             let mut path = Path::new(from).parent().unwrap().to_path_buf();
             path.push(to);
             let mut file = std::fs::File::open(&path)?;
+            println!("reading `{}`", path.display());
             let mut content = String::new();
             file.read_to_string(&mut content)?;
             Ok((path, content))
