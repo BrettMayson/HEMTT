@@ -9,12 +9,8 @@ pub struct Position {
 
 impl Position {
     #[must_use]
-    pub const fn new(start: LineCol, end: LineCol, source: String) -> Self {
-        Self {
-            start,
-            end,
-            path: source,
-        }
+    pub const fn new(start: LineCol, end: LineCol, path: String) -> Self {
+        Self { start, end, path }
     }
 
     #[must_use]

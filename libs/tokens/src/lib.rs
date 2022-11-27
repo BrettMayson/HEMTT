@@ -12,19 +12,25 @@ use symbol::Symbol;
 pub struct Token {
     symbol: Symbol,
     source: Position,
+    trace: Vec<Self>,
 }
 
 impl Token {
     #[must_use]
-    pub const fn new(symbol: Symbol, source: Position) -> Self {
-        Self { symbol, source }
+    pub const fn new(symbol: Symbol, source: Position, trace: Vec<Self>) -> Self {
+        Self {
+            symbol,
+            source,
+            trace,
+        }
     }
 
     #[must_use]
-    pub fn builtin() -> Self {
+    pub fn builtin(trace: Vec<Self>) -> Self {
         Self {
             symbol: Symbol::Void,
             source: Position::builtin(),
+            trace,
         }
     }
 
@@ -33,6 +39,7 @@ impl Token {
         Self {
             symbol: Symbol::Newline,
             source: Position::builtin(),
+            trace: Vec::new(),
         }
     }
 

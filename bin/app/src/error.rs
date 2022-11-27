@@ -40,10 +40,19 @@ impl PrettyError for Error {
     }
 
     fn help(&self) -> Option<String> {
-        None
+        match self {
+            Self::Preprocessor(e) => e.help(),
+            Self::Config(e) => e.help(),
+            _ => None,
+        }
     }
 
     fn source(&self) -> Option<Box<hemtt_error::Source>> {
-        None
+        match self {
+            Self::Preprocessor(e) => e.source(),
+            Self::Config(e) => e.source(),
+            // Self::Pbo(e) => e.source(),
+            _ => None,
+        }
     }
 }

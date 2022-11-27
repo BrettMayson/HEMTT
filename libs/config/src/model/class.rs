@@ -268,7 +268,6 @@ impl Parse for Properties {
                     }
                     Some(ident) => {
                         if ident.to_string() == "delete" {
-                            println!("found delete");
                             whitespace::skip(tokens);
                             let ident = Ident::parse(options, tokens)?;
                             entries.push((ident.to_string(), Property::Delete(ident)));

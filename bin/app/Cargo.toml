@@ -21,7 +21,7 @@ fs_extra = "1.2.0"
 glob = "0.3.0"
 lazy_static = "1.4.0"
 peekmore = "1.0.0"
-rayon = "1.5.3"
+rayon = "1.6.0"
 vfs = "0.7.1"
 
 [target.'cfg(windows)'.dependencies]

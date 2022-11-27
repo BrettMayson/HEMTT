@@ -37,7 +37,8 @@ impl Module for Preprocessor {
                         && can_preprocess(entry.as_str())
                     {
                         println!("preprocessing {}", entry.as_str());
-                        preprocess(entry, ctx, &resolver)?;
+                        preprocess(entry.clone(), ctx, &resolver)?;
+                        println!("done {}", entry.as_str());
                     }
                 }
                 Ok(())
@@ -49,12 +50,12 @@ impl Module for Preprocessor {
 pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
     // TODO fix error in vfs
     let tokens = preprocess_file(path.as_str(), resolver)?;
-    println!("tokens: {}", tokens.len());
+    println!("parsing {}", path.as_str());
     let rapified = Config::parse(
         ctx.config().hemtt().config(),
         &mut tokens.into_iter().peekmore(),
     )?;
-    println!("rapified: {}", rapified.root.children.0 .0.len());
+    println!("parsed {}", path.as_str());
     let out = if path.filename() == "config.cpp" {
         path.parent().unwrap().join("config.bin").unwrap()
     } else {
@@ -163,6 +164,7 @@ impl<'a> Resolver for VfsResolver<'a> {
             .unwrap()
             .open_file()
         {
+            println!("found include {}", path.display());
             let mut content = String::new();
             file.read_to_string(&mut content)?;
             Ok((path, content))

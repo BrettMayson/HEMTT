@@ -3,6 +3,7 @@ use std::process::Command;
 use crate::error::Error;
 
 #[allow(clippy::module_name_repetitions)]
+#[cfg(windows)]
 pub fn create_link(original: &str, target: &str) -> Result<(), Error> {
     let out = Command::new("cmd")
         .arg("/C")

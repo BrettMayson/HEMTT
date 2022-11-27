@@ -10,7 +10,7 @@ hemtt-io = { path = "../io" }
 hemtt-pbo = { path = "../pbo" }
 
 byteorder = "1.4.3"
-num-bigint-dig = "0.8.1"
+num-bigint-dig = "0.8.2"
 rand = "0.8.5"
-rsa = { git = "https://github.com/RustCrypto/rsa" }
+rsa = "0.7.2"
 sha-1 = "0.10.0"

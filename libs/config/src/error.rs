@@ -59,12 +59,31 @@ impl PrettyError for Error {
     }
 
     fn help(&self) -> Option<String> {
+        match self {
+            Self::UnexpectedToken { token, expected } => {
+                println!("checking expected");
+                if expected == &[Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)] {
+                    println!("checking symbol");
+                    if let Symbol::Word(_) = token.symbol() {
+                        println!("providing help");
+                        return Some("Did you forget to place quotes around a string? Or perhaps you forgot to define / import a value.".to_string());
+                    }
+                } else if expected == &[Symbol::Semicolon] {
+                    return Some("Did you forget to place a semicolon at the end of a line? Or perhaps you are missing quotes around a string?".to_string());
+                }
+            }
+            Self::ExpectedIdent { token: _ } => {
+                return Some("Is something in quotes that shouldn't be?".to_string());
+            }
+            _ => (),
+        }
         None
     }
 
     fn source(&self) -> Option<Box<Source>> {
         match self {
             Self::UnexpectedToken { token, expected } => {
+                println!("error for unexpected token: {:?}", token);
                 make_source(token, format!("expected one of: {expected:?}"))
                     .ok()
                     .map(Box::new)

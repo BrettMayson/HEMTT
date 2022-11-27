@@ -32,7 +32,7 @@ impl AppError {
     #[must_use]
     pub fn long(&self, style: &DisplayStyle) -> String {
         format!(
-            "{}{}\n{}{}{}",
+            "{}{}\n\n{}{}{}",
             match style {
                 DisplayStyle::Info => format!("{}: ", "info".bright_blue()).bold(),
                 DisplayStyle::Warning => format!("{}: ", "warning".bright_yellow()).bold(),
@@ -40,14 +40,23 @@ impl AppError {
             },
             self.brief.bold(),
             self.details.clone().unwrap_or_default(),
-            self.help.clone().unwrap_or_default(),
-            self.source().unwrap_or_default()
+            self.source().unwrap_or_default(),
+            {
+                let help = self.help.clone().unwrap_or_default();
+                if help.is_empty() {
+                    String::new()
+                } else {
+                    format!("{}: {}\n", "help".bright_yellow(), help)
+                }
+            },
         )
     }
 
     #[must_use]
     pub fn source(&self) -> Option<String> {
+        println!("building source");
         let source = self.source.as_ref()?;
+        println!("source available");
         Some(format!(
             "   {} {}:{}:{}\n{}\n",
             "-->".blue(),
@@ -128,6 +137,12 @@ pub fn read_lines_from_file(
     start: usize,
     end: usize,
 ) -> Result<Vec<String>, std::io::Error> {
+    println!(
+        "reading lines from file {} , start: {}, end: {}",
+        path.display(),
+        start,
+        end
+    );
     let file = std::fs::File::open(path)?;
     let reader = std::io::BufReader::new(file);
     let mut lines = reader.lines();
@@ -140,6 +155,7 @@ pub fn read_lines_from_file(
             ret.push(x.unwrap().trim_end().to_string());
         }
     }
+    println!("lines read");
     Ok(ret)
 }
 
@@ -148,9 +164,16 @@ pub fn read_lines_from_file(
 /// # Errors
 /// if the file cannot be read
 pub fn make_source(token: &Token, note: String) -> Result<Source, std::io::Error> {
+    println!("making source");
     Ok(Source {
         lines: read_lines_from_file(
-            Path::new(token.source().path()),
+            Path::new(
+                token
+                    .source()
+                    .path()
+                    .replace('\\', "/")
+                    .trim_start_matches('/'),
+            ),
             token.source().start().1 .0,
             token.source().end().1 .0,
         )?,

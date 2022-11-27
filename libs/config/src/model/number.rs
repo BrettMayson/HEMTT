@@ -14,6 +14,7 @@ pub enum Number {
 }
 
 impl Parse for Number {
+    #[allow(clippy::too_many_lines)]
     fn parse(
         _options: &Options,
         tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
@@ -25,6 +26,7 @@ impl Parse for Number {
         let mut negative = false;
         let mut seen_digit = false;
         while let Some(token) = tokens.peek() {
+            let token = token.clone();
             match token.symbol() {
                 Symbol::Word(word) => {
                     if seen_digit && buffer == 0 {
@@ -40,6 +42,34 @@ impl Parse for Number {
                             return Ok(Self::Int32(buffer as i32));
                         }
                     }
+                    if word == "e" {
+                        // 1e-1
+                        tokens.next();
+                        if let Some(dash) = tokens.peek() {
+                            if dash.symbol() != &Symbol::Dash {
+                                return Err(Error::UnexpectedToken {
+                                    token: Box::new(dash.clone()),
+                                    expected: vec![Symbol::Dash, Symbol::Digit(0)],
+                                });
+                            }
+                            tokens.next();
+                        }
+                        if let Some(token) = tokens.next() {
+                            if let Symbol::Digit(exp) = token.symbol() {
+                                #[allow(clippy::cast_precision_loss)]
+                                return Ok(Self::Float32(buffer as f32 / 10_f32.powf(*exp as f32)));
+                            }
+                        }
+                    } else if word.starts_with('e') {
+                        // 1e1
+                        tokens.next();
+                        let exp = word.trim_start_matches('e').parse::<u32>().unwrap();
+                        #[allow(clippy::cast_precision_loss)]
+                        return Ok(Self::Float32(buffer as f32 * 10_f32.powf(exp as f32)));
+                    }
+                    return Err(Error::ExpectedNumber {
+                        token: Box::new(token.clone()),
+                    });
                 }
                 Symbol::Dash => {
                     if seen_digit || negative {
@@ -176,5 +206,31 @@ mod tests {
             .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Float32(1_234_567_890.123_456_789));
+    }
+
+    #[test]
+    fn hex() {
+        let mut tokens = hemtt_preprocessor::preprocess_string("0x1234567890")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Int64(0x1234_5678_90));
+    }
+
+    #[test]
+    fn e() {
+        let mut tokens = hemtt_preprocessor::preprocess_string("1e-3")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e-3));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1e3")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e3));
     }
 }
