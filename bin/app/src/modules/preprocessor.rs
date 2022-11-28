@@ -114,6 +114,7 @@ impl<'a> VfsResolver<'a> {
 impl<'a> Resolver for VfsResolver<'a> {
     fn find_include(
         &self,
+        context: &hemtt_preprocessor::Context,
         _root: &str,
         from: &str,
         to: &str,
@@ -150,7 +151,10 @@ impl<'a> Resolver for VfsResolver<'a> {
                 if include.exists() {
                     include
                 } else {
-                    return Err(hemtt_preprocessor::Error::IncludeNotFound { target: source });
+                    return Err(hemtt_preprocessor::Error::IncludeNotFound {
+                        target: source,
+                        trace: context.trace(),
+                    });
                 }
             }
         } else {
@@ -165,11 +169,14 @@ impl<'a> Resolver for VfsResolver<'a> {
             .open_file()
         {
             println!("found include {}", path.display());
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-            Ok((path, content))
+            let mut include_content = String::new();
+            file.read_to_string(&mut include_content)?;
+            Ok((path, include_content))
         } else {
-            Err(hemtt_preprocessor::Error::IncludeNotFound { target: source })
+            Err(hemtt_preprocessor::Error::IncludeNotFound {
+                target: source,
+                trace: context.trace(),
+            })
         }
     }
 }

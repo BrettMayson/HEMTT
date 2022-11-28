@@ -83,7 +83,7 @@ impl PrettyError for Error {
     fn source(&self) -> Option<Box<Source>> {
         match self {
             Self::UnexpectedToken { token, expected } => {
-                println!("error for unexpected token: {:?}", token);
+                println!("error for unexpected token: {token:?}");
                 make_source(token, format!("expected one of: {expected:?}"))
                     .ok()
                     .map(Box::new)

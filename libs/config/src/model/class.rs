@@ -316,7 +316,7 @@ impl Parse for Properties {
             }
             let t = tokens
                 .peek()
-                .map_or(Token::builtin(), std::clone::Clone::clone);
+                .map_or_else(Token::builtin, std::clone::Clone::clone);
             if t.symbol() == &Symbol::Semicolon {
                 tokens.next();
             } else {

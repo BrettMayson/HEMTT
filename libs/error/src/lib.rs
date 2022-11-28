@@ -46,7 +46,7 @@ impl AppError {
                 if help.is_empty() {
                     String::new()
                 } else {
-                    format!("{}: {}\n", "help".bright_yellow(), help)
+                    format!("{}: {help}\n", "help".bright_yellow())
                 }
             },
         )

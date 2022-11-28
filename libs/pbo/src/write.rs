@@ -51,7 +51,7 @@ impl<I: Seek + Read> WritablePbo<I> {
     pub fn file(&mut self, name: &str) -> Result<Option<&mut I>, Error> {
         let name = name.replace('/', "\\");
         if let Some((input, _)) = self.files.get_mut(&name) {
-            input.seek(SeekFrom::Start(0))?;
+            input.rewind()?;
             Ok(Some(input))
         } else {
             Ok(None)
@@ -143,7 +143,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         for header in &files_sorted {
             let file = self.file(header.filename())?.unwrap();
             std::io::copy(file, output)?;
-            file.seek(SeekFrom::Start(0))?;
+            file.rewind()?;
             std::io::copy(file, &mut hasher)?;
         }
 

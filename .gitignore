@@ -3,3 +3,5 @@ target/
 *.pbo
 
 bin/app/tests/ace*
+
+.hemtt

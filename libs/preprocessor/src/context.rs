@@ -54,6 +54,7 @@ pub struct Context {
     entry: String,
     current_file: String,
     counter: Arc<AtomicUsize>,
+    trace: Vec<Token>,
 }
 
 impl Context {
@@ -65,7 +66,37 @@ impl Context {
             current_file: entry.clone(),
             entry,
             counter: Arc::new(AtomicUsize::new(0)),
+            trace: Vec::new(),
         }
+    }
+
+    #[must_use]
+    pub fn stack(&self, source: Token) -> Self {
+        Self {
+            ifstates: self.ifstates.clone(),
+            definitions: self.definitions.clone(),
+            current_file: self.current_file.clone(),
+            entry: self.entry.clone(),
+            counter: self.counter.clone(),
+            trace: {
+                let mut trace = self.trace.clone();
+                trace.push(source);
+                trace
+            },
+        }
+    }
+
+    pub fn push(&mut self, source: Token) {
+        self.trace.push(source);
+    }
+
+    pub fn pop(&mut self) -> Option<Token> {
+        self.trace.pop()
+    }
+
+    #[must_use]
+    pub fn trace(&self) -> Vec<Token> {
+        self.trace.clone()
     }
 
     #[must_use]
@@ -113,6 +144,7 @@ impl Context {
         if BUILTIN.contains(&ident.as_str()) {
             return Err(Error::ChangeBuiltin {
                 token: Box::new(source),
+                trace: self.trace(),
             });
         }
         self.definitions.insert(ident, (source, definition));
@@ -131,6 +163,7 @@ impl Context {
         if BUILTIN.contains(&ident) {
             return Err(Error::ChangeBuiltin {
                 token: Box::new(source.clone()),
+                trace: self.trace(),
             });
         }
         Ok(self.definitions.remove(ident))

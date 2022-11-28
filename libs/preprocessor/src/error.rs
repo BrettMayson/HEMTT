@@ -9,33 +9,62 @@ pub enum Error {
     UnexpectedToken {
         token: Box<Token>,
         expected: Vec<Symbol>,
+        trace: Vec<Token>,
     },
     #[error("Unexpected EOF")]
     UnexpectedEOF,
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
-    ExpectedIdent { token: Box<Token> },
+    ExpectedIdent {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Unknown directive `{directive:?}`, ")]
-    UnknownDirective { directive: Box<Token> },
+    UnknownDirective {
+        directive: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Function definition has multi-token arguments, `{token:?}`")]
-    DefineMultiTokenArgument { token: Box<Token> },
+    DefineMultiTokenArgument {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Can not change built-in macros `{token:?}`")]
-    ChangeBuiltin { token: Box<Token> },
+    ChangeBuiltin {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Attempted to use `#if` on a unit or function macro, `{token:?}`")]
-    IfUnitOrFunction { token: Box<Token> },
+    IfUnitOrFunction {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Attempted to use `#if` on an undefined macro, `{token:?}`")]
-    IfUndefined { token: Box<Token> },
+    IfUndefined {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{token:?}`")]
     FunctionCallArgumentCount {
         token: Box<Token>,
         expected: usize,
         got: usize,
+        trace: Vec<Token>,
     },
     #[error("Expected Function or Value, found Unit, `{token:?}`")]
-    ExpectedFunctionOrValue { token: Box<Token> },
+    ExpectedFunctionOrValue {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("`#include` was encountered while using `NoResolver`")]
-    ResolveWithNoResolver,
+    ResolveWithNoResolver {
+        token: Box<Token>,
+        trace: Vec<Token>,
+    },
     #[error("`#include` target `{target:?}` was not found")]
-    IncludeNotFound { target: Vec<Token> },
+    IncludeNotFound {
+        target: Vec<Token>,
+        trace: Vec<Token>,
+    },
     #[error("IO Error: {0}")]
     Io(Box<std::io::Error>),
     #[error("Pest Error: {0}")]
@@ -57,7 +86,11 @@ impl From<pest::error::Error<Rule>> for Error {
 impl PrettyError for Error {
     fn brief(&self) -> String {
         match self {
-            Self::UnexpectedToken { token, expected } => {
+            Self::UnexpectedToken {
+                token,
+                expected,
+                trace: _,
+            } => {
                 format!(
                     "Expected `{expected:?}`, found `{symbol:?}`,",
                     symbol = token.symbol(),
@@ -65,13 +98,16 @@ impl PrettyError for Error {
                 )
             }
             Self::UnexpectedEOF => "Unexpected EOF".to_string(),
-            Self::ExpectedIdent { token } => {
+            Self::ExpectedIdent { token, trace: _ } => {
                 format!(
                     "Expected `{{ident}}`, found `{symbol:?}`,",
                     symbol = token.symbol()
                 )
             }
-            Self::UnknownDirective { directive } => {
+            Self::UnknownDirective {
+                directive,
+                trace: _,
+            } => {
                 format!(
                     "Unknown directive `{directive:?}`,",
                     directive = directive.symbol()
@@ -80,19 +116,19 @@ impl PrettyError for Error {
             Self::DefineMultiTokenArgument { .. } => {
                 "Function definition has multi-token arguments".to_string()
             }
-            Self::ChangeBuiltin { token } => {
+            Self::ChangeBuiltin { token, trace: _ } => {
                 format!(
                     "Can not change built-in macros `{symbol:?}`",
                     symbol = token.symbol()
                 )
             }
-            Self::IfUnitOrFunction { token } => {
+            Self::IfUnitOrFunction { token, trace: _ } => {
                 format!(
                     "Attempted to use `#if` on a unit or function macro, `{symbol:?}`",
                     symbol = token.symbol()
                 )
             }
-            Self::IfUndefined { token } => {
+            Self::IfUndefined { token, trace: _ } => {
                 format!(
                     "Attempted to use `#if` on an undefined macro, `{symbol:?}`",
                     symbol = token.symbol()
@@ -102,19 +138,20 @@ impl PrettyError for Error {
                 token,
                 expected,
                 got,
+                trace: _,
             } => {
                 format!("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{symbol:?}`", symbol = token.symbol())
             }
-            Self::ExpectedFunctionOrValue { token } => {
+            Self::ExpectedFunctionOrValue { token, trace: _ } => {
                 format!(
                     "Expected Function or Value, found Unit, `{symbol:?}`",
                     symbol = token.symbol()
                 )
             }
-            Self::ResolveWithNoResolver => {
+            Self::ResolveWithNoResolver { token: _, trace: _ } => {
                 "`#include` was encountered while using `NoResolver`".to_string()
             }
-            Self::IncludeNotFound { target } => {
+            Self::IncludeNotFound { target, trace: _ } => {
                 let target = target
                     .iter()
                     .map(|t| t.symbol().to_string())
@@ -140,43 +177,50 @@ impl PrettyError for Error {
 
     fn source(&self) -> Option<Box<Source>> {
         match self {
-            Self::UnexpectedToken { token, expected } => {
-                make_source(token, format!("expected one of: {expected:?}"))
-                    .ok()
-                    .map(Box::new)
-            }
-            Self::ExpectedIdent { token } => {
+            Self::UnexpectedToken {
+                token,
+                expected,
+                trace: _,
+            } => make_source(token, format!("expected one of: {expected:?}"))
+                .ok()
+                .map(Box::new),
+            Self::ExpectedIdent { token, trace: _ } => {
                 make_source(token, "expected an identifier".to_string())
                     .ok()
                     .map(Box::new)
             }
-            Self::UnknownDirective { directive } => {
-                make_source(directive, "unknown directive".to_string())
-                    .ok()
-                    .map(Box::new)
-            }
-            Self::DefineMultiTokenArgument { token } => {
+            Self::UnknownDirective {
+                directive,
+                trace: _,
+            } => make_source(directive, "unknown directive".to_string())
+                .ok()
+                .map(Box::new),
+            Self::DefineMultiTokenArgument { token, trace: _ } => {
                 make_source(token, "invalid arguments".to_string())
                     .ok()
                     .map(Box::new)
             }
-            Self::ChangeBuiltin { token } => make_source(token, "build-in macro".to_string())
-                .ok()
-                .map(Box::new),
-            Self::IfUnitOrFunction { token } => {
+            Self::ChangeBuiltin { token, trace: _ } => {
+                make_source(token, "build-in macro".to_string())
+                    .ok()
+                    .map(Box::new)
+            }
+            Self::IfUnitOrFunction { token, trace: _ } => {
                 make_source(token, "invalid macro type".to_string())
                     .ok()
                     .map(Box::new)
             }
-            Self::IfUndefined { token } => make_source(token, "macro is undefined".to_string())
-                .ok()
-                .map(Box::new),
+            Self::IfUndefined { token, trace: _ } => {
+                make_source(token, "macro is undefined".to_string())
+                    .ok()
+                    .map(Box::new)
+            }
             Self::FunctionCallArgumentCount {
                 token, expected, ..
             } => make_source(token, format!("Expects {expected} arguments"))
                 .ok()
                 .map(Box::new),
-            Self::ExpectedFunctionOrValue { token } => {
+            Self::ExpectedFunctionOrValue { token, trace: _ } => {
                 make_source(token, "expects function or value".to_string())
                     .ok()
                     .map(Box::new)

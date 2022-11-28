@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use hemtt_tokens::Token;
 
-use crate::Error;
+use crate::{Context, Error};
 
 pub trait Resolver {
     /// Find the path to an included file
@@ -11,6 +11,7 @@ pub trait Resolver {
     /// if the file cannot be found
     fn find_include(
         &self,
+        context: &Context,
         root: &str,
         from: &str,
         to: &str,
@@ -40,6 +41,7 @@ pub mod resolvers {
     impl Resolver for LocalResolver {
         fn find_include(
             &self,
+            _: &crate::Context,
             _: &str,
             from: &str,
             to: &str,
@@ -65,12 +67,16 @@ pub mod resolvers {
     impl Resolver for NoResolver {
         fn find_include(
             &self,
+            context: &crate::Context,
             _: &str,
             _: &str,
             _: &str,
-            _: Vec<Token>,
+            source: Vec<Token>,
         ) -> Result<(PathBuf, String), Error> {
-            Err(Error::ResolveWithNoResolver)
+            Err(Error::ResolveWithNoResolver {
+                token: Box::new(source.first().unwrap().clone()),
+                trace: context.trace(),
+            })
         }
     }
 }
