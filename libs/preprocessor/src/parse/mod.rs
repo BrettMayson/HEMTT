@@ -8,7 +8,7 @@ use crate::Error;
 #[grammar = "parse/config.pest"]
 pub struct PreprocessorParser;
 
-pub fn parse(path: &str, source: &str) -> Result<Vec<Token>, Error> {
+pub fn parse(path: &str, source: &str, parent: &Option<Box<Token>>) -> Result<Vec<Token>, Error> {
     let pairs = PreprocessorParser::parse(Rule::file, source)?;
     let mut tokens = Vec::new();
     let mut line = 1;
@@ -38,6 +38,7 @@ pub fn parse(path: &str, source: &str) -> Result<Vec<Token>, Error> {
                             (offset + pair.as_str().len() + 1, (line, col + 1)),
                             path.to_string(),
                         ),
+                        parent.clone(),
                     ));
                 }
             }
@@ -50,6 +51,7 @@ pub fn parse(path: &str, source: &str) -> Result<Vec<Token>, Error> {
         tokens.push(Token::new(
             Symbol::to_symbol(pair),
             Position::new(start, end, path.to_string()),
+            parent.clone(),
         ));
     }
     Ok(tokens)

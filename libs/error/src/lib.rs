@@ -15,6 +15,7 @@ pub struct AppError {
     pub details: Option<String>,
     pub help: Option<String>,
     pub source: Option<Box<Source>>,
+    pub trace: Vec<Source>,
 }
 
 pub enum DisplayStyle {
@@ -54,13 +55,40 @@ impl AppError {
 
     #[must_use]
     pub fn source(&self) -> Option<String> {
-        println!("building source");
         let source = self.source.as_ref()?;
-        println!("source available");
+        let trace = {
+            let mut trace = String::new();
+            for source in &self.trace {
+                if let Some(line) = source.lines.first() {
+                    trace.push_str(&format!(
+                        "    {}  {}:{}:{}\n{: >3} {} {}\n",
+                        "↓".bright_blue(),
+                        source
+                            .position
+                            .path()
+                            .replace('\\', "/")
+                            .trim_start_matches('/')
+                            .bold(),
+                        source.position.start().1 .0,
+                        source.position.start().1 .1,
+                        (source.position.start().1 .0).to_string().bright_blue(),
+                        "|".bright_blue(),
+                        line
+                    ));
+                }
+            }
+            trace
+        };
         Some(format!(
-            "   {} {}:{}:{}\n{}\n",
+            "{}   {} {}:{}:{}\n{}\n",
+            trace,
             "-->".blue(),
-            source.position.path(),
+            source
+                .position
+                .path()
+                .replace('\\', "/")
+                .trim_start_matches('/')
+                .bold(),
             source.position.start().1 .0,
             source.position.start().1 .1,
             {
@@ -98,6 +126,7 @@ where
             details: e.details(),
             help: e.help(),
             source: e.source(),
+            trace: e.trace(),
         }
     }
 }
@@ -114,6 +143,9 @@ pub trait PrettyError: ToString {
     }
     fn source(&self) -> Option<Box<Source>> {
         None
+    }
+    fn trace(&self) -> Vec<Source> {
+        Vec::new()
     }
 }
 
@@ -137,12 +169,6 @@ pub fn read_lines_from_file(
     start: usize,
     end: usize,
 ) -> Result<Vec<String>, std::io::Error> {
-    println!(
-        "reading lines from file {} , start: {}, end: {}",
-        path.display(),
-        start,
-        end
-    );
     let file = std::fs::File::open(path)?;
     let reader = std::io::BufReader::new(file);
     let mut lines = reader.lines();
@@ -155,7 +181,6 @@ pub fn read_lines_from_file(
             ret.push(x.unwrap().trim_end().to_string());
         }
     }
-    println!("lines read");
     Ok(ret)
 }
 
@@ -164,7 +189,6 @@ pub fn read_lines_from_file(
 /// # Errors
 /// if the file cannot be read
 pub fn make_source(token: &Token, note: String) -> Result<Source, std::io::Error> {
-    println!("making source");
     Ok(Source {
         lines: read_lines_from_file(
             Path::new(

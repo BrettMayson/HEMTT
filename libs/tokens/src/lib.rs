@@ -12,27 +12,34 @@ use symbol::Symbol;
 pub struct Token {
     symbol: Symbol,
     source: Position,
+    parent: Option<Box<Self>>,
 }
 
 impl Token {
     #[must_use]
-    pub const fn new(symbol: Symbol, source: Position) -> Self {
-        Self { symbol, source }
-    }
-
-    #[must_use]
-    pub fn builtin() -> Self {
+    pub const fn new(symbol: Symbol, source: Position, parent: Option<Box<Self>>) -> Self {
         Self {
-            symbol: Symbol::Void,
-            source: Position::builtin(),
+            symbol,
+            source,
+            parent,
         }
     }
 
     #[must_use]
-    pub fn ending_newline() -> Self {
+    pub fn builtin(parent: Option<Box<Self>>) -> Self {
+        Self {
+            symbol: Symbol::Void,
+            source: Position::builtin(),
+            parent,
+        }
+    }
+
+    #[must_use]
+    pub fn ending_newline(parent: Option<Box<Self>>) -> Self {
         Self {
             symbol: Symbol::Newline,
             source: Position::builtin(),
+            parent,
         }
     }
 
@@ -44,6 +51,15 @@ impl Token {
     #[must_use]
     pub const fn source(&self) -> &Position {
         &self.source
+    }
+
+    #[must_use]
+    pub const fn parent(&self) -> &Option<Box<Self>> {
+        &self.parent
+    }
+
+    pub fn set_parent(&mut self, parent: Option<Box<Self>>) {
+        self.parent = parent;
     }
 
     #[must_use]

@@ -23,7 +23,14 @@ pub fn cli() -> Command {
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let ctx = Context::new(&[Location::Addons], "dev")?;
+    let ctx = Context::new(&[Location::Addons], "dev")?.filter(|a, config| {
+        !config
+            .hemtt()
+            .dev()
+            .exclude()
+            .iter()
+            .any(|e| (a.folder() + "/").starts_with(&format!("{e}/")))
+    });
     let mut executor = Executor::new(&ctx);
 
     executor.collapse(Collapse::Yes);

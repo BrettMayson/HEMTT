@@ -9,5 +9,5 @@ hemtt-error = { path = "../error" }
 hemtt-io = { path = "../io" }
 
 byteorder = "1.4.3"
-indexmap = "1.9.1"
+indexmap = "1.9.2"
 sha-1 = "0.10.0"

@@ -60,6 +60,8 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
                 target_pbo.display()
             );
 
+            pbo.add_extension("hemtt", crate::VERSION.to_string());
+
             for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File {
@@ -81,9 +83,8 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
                             ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
                         )?;
                         pbo.add_extension("prefix", prefix.into_inner());
+                        continue;
                     }
-
-                    pbo.add_extension("hemtt", crate::VERSION.to_string());
 
                     let file = entry
                         .as_str()

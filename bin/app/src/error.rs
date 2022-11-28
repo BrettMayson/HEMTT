@@ -55,4 +55,12 @@ impl PrettyError for Error {
             _ => None,
         }
     }
+
+    fn trace(&self) -> Vec<hemtt_error::Source> {
+        match self {
+            Self::Preprocessor(e) => e.trace(),
+            Self::Config(e) => e.trace(),
+            _ => vec![],
+        }
+    }
 }

@@ -178,21 +178,23 @@ impl Context {
     pub fn get(&self, ident: &str, token: &Token) -> Option<(Token, Definition)> {
         match ident {
             "__LINE__" => Some((
-                Token::builtin(),
+                Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
                     Symbol::Word(token.source().start().1 .0.to_string()),
                     token.source().clone(),
+                    Some(Box::new(token.clone())),
                 )]),
             )),
             "__FILE__" => Some((
-                Token::builtin(),
+                Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
                     Symbol::Word(token.source().path().to_string().replace('\\', "/")),
                     token.source().clone(),
+                    Some(Box::new(token.clone())),
                 )]),
             )),
             "__COUNTER__" => Some((
-                Token::builtin(),
+                Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
                     Symbol::Word(
                         self.counter
@@ -200,18 +202,27 @@ impl Context {
                             .to_string(),
                     ),
                     token.source().clone(),
+                    Some(Box::new(token.clone())),
                 )]),
             )),
             "__COUNTER_RESET__" => {
                 self.counter.store(0, std::sync::atomic::Ordering::SeqCst);
                 Some((
-                    Token::builtin(),
-                    Definition::Value(vec![Token::new(Symbol::Void, token.source().clone())]),
+                    Token::builtin(Some(Box::new(token.clone()))),
+                    Definition::Value(vec![Token::new(
+                        Symbol::Void,
+                        token.source().clone(),
+                        Some(Box::new(token.clone())),
+                    )]),
                 ))
             }
             "__ARMA__" | "__ARMA3__" | "__HEMTT__" => Some((
-                Token::builtin(),
-                Definition::Value(vec![Token::new(Symbol::Digit(1), token.source().clone())]),
+                Token::builtin(Some(Box::new(token.clone()))),
+                Definition::Value(vec![Token::new(
+                    Symbol::Digit(1),
+                    token.source().clone(),
+                    Some(Box::new(token.clone())),
+                )]),
             )),
             _ => self
                 .definitions

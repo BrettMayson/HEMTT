@@ -61,19 +61,19 @@ impl PrettyError for Error {
     fn help(&self) -> Option<String> {
         match self {
             Self::UnexpectedToken { token, expected } => {
-                println!("checking expected");
                 if expected == &[Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)] {
-                    println!("checking symbol");
                     if let Symbol::Word(_) = token.symbol() {
-                        println!("providing help");
                         return Some("Did you forget to place quotes around a string? Or perhaps you forgot to define / import a value.".to_string());
+                    }
+                    if token.symbol() == &Symbol::Escape {
+                        return Some("Did you forget to place quotes around a string? Or perhaps you forgot to use Q infront of a path macro.".to_string());
                     }
                 } else if expected == &[Symbol::Semicolon] {
                     return Some("Did you forget to place a semicolon at the end of a line? Or perhaps you are missing quotes around a string?".to_string());
                 }
             }
             Self::ExpectedIdent { token: _ } => {
-                return Some("Is something in quotes that shouldn't be?".to_string());
+                return Some("Is something quoted that shouldn't be?".to_string());
             }
             _ => (),
         }
@@ -91,7 +91,29 @@ impl PrettyError for Error {
             Self::ExpectedIdent { token } => make_source(token, "expected: <ident>".to_string())
                 .ok()
                 .map(Box::new),
+            Self::ExpectedNumber { token } => make_source(token, "expected: <number>".to_string())
+                .ok()
+                .map(Box::new),
             _ => None,
         }
+    }
+
+    fn trace(&self) -> Vec<Source> {
+        let mut parent = match self {
+            Self::ExpectedIdent { token }
+            | Self::UnexpectedToken { token, expected: _ }
+            | Self::ExpectedNumber { token } => token.parent(),
+            _ => &None,
+        };
+        let mut trace = Vec::new();
+        while let Some(p) = parent {
+            parent = p.parent();
+            let source = make_source(p, String::new());
+            if let Ok(source) = source {
+                trace.push(source);
+            }
+        }
+        trace.reverse();
+        trace
     }
 }

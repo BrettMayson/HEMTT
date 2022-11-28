@@ -42,11 +42,14 @@ impl Parse for Number {
                             return Ok(Self::Int32(buffer as i32));
                         }
                     }
-                    if word == "e" {
-                        // 1e-1
+                    if word.to_lowercase() == "e" {
+                        // 1e-1 or 1e+1
+                        let mut positive = true;
                         tokens.next();
                         if let Some(dash) = tokens.peek() {
-                            if dash.symbol() != &Symbol::Dash {
+                            if dash.symbol() == &Symbol::Dash {
+                                positive = false;
+                            } else if dash.symbol() != &Symbol::Plus {
                                 return Err(Error::UnexpectedToken {
                                     token: Box::new(dash.clone()),
                                     expected: vec![Symbol::Dash, Symbol::Digit(0)],
@@ -54,16 +57,29 @@ impl Parse for Number {
                             }
                             tokens.next();
                         }
-                        if let Some(token) = tokens.next() {
-                            if let Symbol::Digit(exp) = token.symbol() {
-                                #[allow(clippy::cast_precision_loss)]
-                                return Ok(Self::Float32(buffer as f32 / 10_f32.powf(*exp as f32)));
+                        let mut exp = 0;
+                        while let Some(digit) = tokens.peek() {
+                            if let Symbol::Digit(d) = digit.symbol() {
+                                exp = exp * 10 + d;
+                                tokens.next();
+                            } else {
+                                break;
                             }
                         }
-                    } else if word.starts_with('e') {
+                        #[allow(clippy::cast_precision_loss)]
+                        if positive {
+                            return Ok(Self::Float32(buffer as f32 * 10_f32.powf(exp as f32)));
+                        }
+                        #[allow(clippy::cast_precision_loss)]
+                        return Ok(Self::Float32(buffer as f32 / 10_f32.powf(exp as f32)));
+                    } else if word.to_lowercase().starts_with('e') {
                         // 1e1
                         tokens.next();
-                        let exp = word.trim_start_matches('e').parse::<u32>().unwrap();
+                        let exp = word
+                            .to_lowercase()
+                            .trim_start_matches('e')
+                            .parse::<u32>()
+                            .unwrap();
                         #[allow(clippy::cast_precision_loss)]
                         return Ok(Self::Float32(buffer as f32 * 10_f32.powf(exp as f32)));
                     }
@@ -232,5 +248,35 @@ mod tests {
             .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Float32(1e3));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1e-007")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e-007));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1e007")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e007));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1E007")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e007));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1E-007")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e-007));
+        let mut tokens = hemtt_preprocessor::preprocess_string("1e+007")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(1e+007));
     }
 }

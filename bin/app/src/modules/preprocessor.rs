@@ -168,7 +168,6 @@ impl<'a> Resolver for VfsResolver<'a> {
             .unwrap()
             .open_file()
         {
-            println!("found include {}", path.display());
             let mut include_content = String::new();
             file.read_to_string(&mut include_content)?;
             Ok((path, include_content))

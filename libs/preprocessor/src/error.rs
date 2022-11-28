@@ -228,4 +228,25 @@ impl PrettyError for Error {
             _ => None,
         }
     }
+
+    fn trace(&self) -> Vec<Source> {
+        let trace = match self {
+            Self::UnexpectedToken { trace, .. }
+            | Self::ExpectedIdent { trace, .. }
+            | Self::UnknownDirective { trace, .. }
+            | Self::DefineMultiTokenArgument { trace, .. }
+            | Self::ChangeBuiltin { trace, .. }
+            | Self::IfUnitOrFunction { trace, .. }
+            | Self::IfUndefined { trace, .. }
+            | Self::FunctionCallArgumentCount { trace, .. }
+            | Self::ExpectedFunctionOrValue { trace, .. }
+            | Self::ResolveWithNoResolver { trace, .. }
+            | Self::IncludeNotFound { trace, .. } => trace.clone(),
+            _ => vec![],
+        };
+        trace
+            .into_iter()
+            .map(|t| make_source(&t, String::new()).unwrap()) // TODO remove unwrap
+            .collect()
+    }
 }

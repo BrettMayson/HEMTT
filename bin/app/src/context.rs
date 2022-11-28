@@ -61,6 +61,21 @@ impl Context {
         })
     }
 
+    pub fn filter<F>(self, mut filter: F) -> Self
+    where
+        F: FnMut(&Addon, &Configuration) -> bool,
+    {
+        let config = self.config.clone();
+        Self {
+            addons: self
+                .addons
+                .into_iter()
+                .filter(|a| filter(a, &config))
+                .collect(),
+            ..self
+        }
+    }
+
     pub const fn config(&self) -> &Configuration {
         &self.config
     }

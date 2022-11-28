@@ -41,11 +41,11 @@ where
         Path::new(entry).parent().unwrap().to_str().unwrap(),
         entry,
         Path::new(entry).file_name().unwrap().to_str().unwrap(),
-        vec![Token::builtin()],
+        vec![Token::builtin(None)],
     )?;
-    let mut tokens = crate::parse::parse(entry, &source.1)?;
+    let mut tokens = crate::parse::parse(entry, &source.1, &None)?;
     let eoi = tokens.pop().unwrap();
-    tokens.push(Token::ending_newline());
+    tokens.push(Token::ending_newline(None));
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
     root_preprocess(resolver, &mut context, &mut tokenstream, false)
@@ -54,7 +54,7 @@ where
 /// # Errors
 /// it can fail
 pub fn preprocess_string(source: &str) -> Result<Vec<Token>, Error> {
-    let tokens = crate::parse::parse("%anonymous%", source)?;
+    let tokens = crate::parse::parse("%anonymous%", source, &None)?;
     let mut context = Context::new(String::from("%anonymous%"));
     let mut tokenstream = tokens.into_iter().peekmore();
     root_preprocess(&NoResolver::new(), &mut context, &mut tokenstream, false)
@@ -133,11 +133,12 @@ where
             match (command.as_str(), context.ifstates().reading()) {
                 ("include", true) => {
                     whitespace::skip(tokenstream);
-                    context.push(token);
+                    context.push(token.clone());
                     output.append(&mut directive_include_preprocess(
                         resolver,
                         context,
                         tokenstream,
+                        token,
                     )?);
                     context.pop();
                 }
@@ -178,7 +179,11 @@ where
                 (_, true) => {
                     if allow_quote {
                         let source = token.source().clone();
-                        output.push(Token::new(Symbol::DoubleQuote, source.clone()));
+                        output.push(Token::new(
+                            Symbol::DoubleQuote,
+                            source.clone(),
+                            Some(Box::new(token.clone())),
+                        ));
                         if let Symbol::Word(word) = token.symbol() {
                             if let Some((_source, definition)) = context.get(word, &token) {
                                 output.append(
@@ -186,7 +191,7 @@ where
                                         resolver,
                                         context,
                                         tokenstream,
-                                        token,
+                                        token.clone(),
                                         definition,
                                     )?
                                     .into_iter()
@@ -194,12 +199,16 @@ where
                                     .collect(),
                                 );
                             } else {
-                                output.push(token);
+                                output.push(token.clone());
                             }
                         } else {
-                            output.push(token);
+                            output.push(token.clone());
                         }
-                        output.push(Token::new(Symbol::DoubleQuote, source));
+                        output.push(Token::new(
+                            Symbol::DoubleQuote,
+                            source,
+                            Some(Box::new(token)),
+                        ));
                     } else {
                         return Err(Error::UnknownDirective {
                             directive: Box::new(token),
@@ -220,6 +229,7 @@ fn directive_include_preprocess<R>(
     resolver: &R,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+    import_token: Token,
 ) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -267,12 +277,16 @@ where
             &path,
             path_tokens,
         )?;
-        let parsed = crate::parse::parse(&resolved_path.display().to_string(), &source)?;
+        let parsed = crate::parse::parse(
+            &resolved_path.display().to_string(),
+            &source,
+            &Some(Box::new(import_token)),
+        )?;
         (resolved_path, parsed)
     };
     // Remove EOI token
     tokens.pop().unwrap();
-    tokens.push(Token::ending_newline());
+    tokens.push(Token::ending_newline(None));
     let mut tokenstream = tokens.into_iter().peekmore();
     let current = context.current_file().clone();
     context.set_current_file(pathbuf.display().to_string());
@@ -467,7 +481,7 @@ fn directive_define_read_body(
     let mut output: Vec<Token> = Vec::new();
     while let Some(token) = tokenstream.peek() {
         if matches!(token.symbol(), Symbol::Newline) {
-            let builtin = Token::builtin();
+            let builtin = Token::builtin(Some(Box::new(token.clone())));
             if output.last().unwrap_or(&builtin).symbol() == &Symbol::Escape {
                 output.pop();
                 output.push(tokenstream.next().unwrap());
@@ -634,7 +648,16 @@ where
     let mut output = Vec::new();
     match definition {
         Definition::Value(tokens) => {
-            let mut tokenstream = tokens.into_iter().peekmore();
+            let parent = Some(Box::new(source));
+            let mut tokenstream = tokens
+                .into_iter()
+                .map(|mut t| {
+                    t.set_parent(parent.clone());
+                    t
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .peekmore();
             while tokenstream.peek().is_some() {
                 output.append(&mut root_preprocess(
                     resolver,
@@ -654,7 +677,7 @@ where
                     trace: context.trace(),
                 });
             }
-            let mut stack = context.stack(source);
+            let mut stack = context.stack(source.clone());
             for (param, arg) in func.parameters().iter().zip(args.into_iter()) {
                 stack.define(
                     param.word().unwrap().to_string(),
@@ -667,7 +690,18 @@ where
                     )?),
                 )?;
             }
-            let mut tokenstream = func.body().iter().cloned().peekmore();
+            let parent = Some(Box::new(source));
+            let mut tokenstream = func
+                .body()
+                .iter()
+                .cloned()
+                .map(|mut t| {
+                    t.set_parent(parent.clone());
+                    t
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .peekmore();
             while tokenstream.peek().is_some() {
                 output.append(&mut root_preprocess(
                     resolver,

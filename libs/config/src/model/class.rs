@@ -246,6 +246,7 @@ impl Parse for Properties {
                             Some(Ident::parse(options, tokens)?)
                         }
                     }
+                    Symbol::Digit(_) => Some(Ident::parse(options, tokens)?),
                     Symbol::RightBrace | Symbol::Eoi => break,
                     Symbol::Whitespace(_) | Symbol::Newline | Symbol::Comment(_) => {
                         tokens.next();
@@ -316,7 +317,7 @@ impl Parse for Properties {
             }
             let t = tokens
                 .peek()
-                .map_or_else(Token::builtin, std::clone::Clone::clone);
+                .map_or_else(|| Token::builtin(None), std::clone::Clone::clone);
             if t.symbol() == &Symbol::Semicolon {
                 tokens.next();
             } else {

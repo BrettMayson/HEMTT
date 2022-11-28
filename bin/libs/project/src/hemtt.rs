@@ -2,9 +2,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Features {
+    #[serde(default)]
     config: hemtt_config::Options,
+    #[serde(default)]
+    dev: DevOptions,
+    #[serde(default)]
     build: BuildOptions,
 
+    #[serde(default)]
     /// Can PBO prefixes have a leading slash?
     ///
     /// Default: false
@@ -15,6 +20,11 @@ impl Features {
     #[must_use]
     pub const fn config(&self) -> &hemtt_config::Options {
         &self.config
+    }
+
+    #[must_use]
+    pub const fn dev(&self) -> &DevOptions {
+        &self.dev
     }
 
     #[must_use]
@@ -29,6 +39,19 @@ impl Features {
         } else {
             false
         }
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct DevOptions {
+    #[serde(default)]
+    exclude: Vec<String>,
+}
+
+impl DevOptions {
+    #[must_use]
+    pub fn exclude(&self) -> &[String] {
+        &self.exclude
     }
 }
 
