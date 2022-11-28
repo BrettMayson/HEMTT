@@ -12,4 +12,4 @@ peekmore = "1.0.0"
 pest = { workspace = true }
 pest_derive = { workspace = true }
 serde = { workspace = true }
-serde_json = "1.0.87"
+serde_json = "1.0.89"

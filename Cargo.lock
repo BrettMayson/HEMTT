@@ -908,9 +908,9 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "vfs"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1b1e0d0acf64feca12e658122b5ac3f0bea4178cbbb3f6532e05aec96f50759"
+checksum = "f595a49341cf9178d418a68c1454a400ac03fb2cb5b9470f89b5b7f8d9027977"
 
 [[package]]
 name = "wasi"
