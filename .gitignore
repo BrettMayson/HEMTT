@@ -2,6 +2,4 @@ target/
 *.map
 *.pbo
 
-bin/app/tests/ace*
-
 .hemtt

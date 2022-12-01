@@ -16,5 +16,6 @@ members = [
 [workspace.dependencies]
 pest = "2.5.0"
 pest_derive = "2.5.0"
-clap = "4.0.27"
-serde = { version = "1.0.147", features = ["derive"] }
+clap = "4.0.29"
+serde = { version = "1.0.148", features = ["derive"] }
+sha-1 = "0.10.1"

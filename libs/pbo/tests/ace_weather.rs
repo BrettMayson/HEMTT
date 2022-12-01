@@ -1,3 +1,5 @@
+use hemtt_pbo::WritablePbo;
+
 include!("utils.rs");
 
 #[test]
@@ -37,7 +39,33 @@ fn ace_weather_cba6f72c() {
         "XEH_preStart.sqf",
         "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
     );
-    // writeable_pbo(pbo, File::open("tests/ace_weather.pbo_cba6f72c").unwrap());
+    let mut new_pbo = WritablePbo::new();
+    let mut new_files = std::collections::HashMap::new();
+    for file in pbo.files() {
+        let mut content = pbo.file(file.filename()).unwrap().unwrap();
+        let mut data = Vec::new();
+        content.read_to_end(&mut data).unwrap();
+        new_files.insert(file.filename().to_string(), data);
+    }
+    for file in pbo.files() {
+        new_pbo
+            .add_file_with_header(
+                file.clone(),
+                std::io::Cursor::new(new_files[file.filename()].as_slice()),
+            )
+            .unwrap();
+    }
+    for ext in pbo.extensions() {
+        new_pbo.add_extension(ext.0, ext.1);
+    }
+    let mut new_pbo_bin = std::io::Cursor::new(Vec::new());
+    new_pbo.write(&mut new_pbo_bin, true).unwrap();
+    let mut old_pbo_bin = std::io::Cursor::new(Vec::new());
+    File::open("tests/ace_weather.pbo_cba6f72c")
+        .unwrap()
+        .read_to_end(old_pbo_bin.get_mut())
+        .unwrap();
+    assert_eq!(old_pbo_bin.get_ref(), new_pbo_bin.get_ref());
 }
 
 #[test]

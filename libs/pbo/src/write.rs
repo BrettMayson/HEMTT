@@ -44,6 +44,19 @@ impl<I: Seek + Read> WritablePbo<I> {
         ))
     }
 
+    /// Add a file with a custom header
+    ///
+    /// # Errors
+    /// if the file cannot be read
+    pub fn add_file_with_header(
+        &mut self,
+        header: Header,
+        input: I,
+    ) -> Result<Option<(I, Header)>, Error> {
+        let name = header.filename().replace('/', "\\");
+        Ok(self.files.insert(name, (input, header)))
+    }
+
     /// Read a file from the PBO
     ///
     /// # Errors

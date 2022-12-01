@@ -43,9 +43,10 @@ impl Parse for Config {
     ) -> Result<Self, Error> {
         let properties: Properties = Properties::parse(options, tokens)?;
         Ok(Self {
-            root: Class {
+            root: Class::Local {
                 children: Children(properties),
-                ..Default::default()
+                name: Ident::default(),
+                parent: None,
             },
         })
     }

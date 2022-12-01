@@ -27,18 +27,12 @@ fn rapify() {
             .unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();
-            // read binary file
             let mut expected = Vec::new();
             std::fs::File::open(file.path().join("expected.bin"))
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            // assert_eq!(output, expected);
-            // write to generated.bin
-            // std::fs::File::create(file.path().join("generated.bin"))
-            //     .unwrap()
-            //     .write_all(&output)
-            //     .unwrap();
+            assert_eq!(output, expected);
         }
     }
 }

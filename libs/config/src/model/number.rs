@@ -129,9 +129,14 @@ impl Parse for Number {
                         });
                     }
                     #[allow(clippy::cast_precision_loss)]
-                    return Ok(Self::Float32(
-                        buffer as f32 + decimal as f32 / 10f32.powi(decimal_place),
-                    ));
+                    return Ok(Self::Float32({
+                        let val = buffer as f32 + decimal as f32 / 10f32.powi(decimal_place);
+                        if negative {
+                            -val
+                        } else {
+                            val
+                        }
+                    }));
                 }
                 _ => break,
             }
@@ -212,6 +217,12 @@ mod tests {
             .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Int32(1_234_567_890));
+        let mut tokens = hemtt_preprocessor::preprocess_string("-1234567890")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Int32(-1_234_567_890));
     }
 
     #[test]
@@ -222,6 +233,12 @@ mod tests {
             .peekmore();
         let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
         assert_eq!(number, super::Number::Float32(1_234_567_890.123_456_789));
+        let mut tokens = hemtt_preprocessor::preprocess_string("-1234567890.1234567890")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(&crate::Options::default(), &mut tokens).unwrap();
+        assert_eq!(number, super::Number::Float32(-1_234_567_890.123_456_789));
     }
 
     #[test]
