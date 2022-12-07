@@ -2,9 +2,9 @@ name: Lint
 
 on:
   push:
-    branches: [ v10 ]
+    branches: [ main ]
   pull_request:
-    branches: [ v10 ]
+    branches: [ main ]
 
 jobs:
   fmt:
