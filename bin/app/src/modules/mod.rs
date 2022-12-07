@@ -6,11 +6,13 @@ mod binarize;
 mod file_patching;
 mod files;
 mod preprocessor;
+mod sign;
 
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;
 pub use preprocessor::Preprocessor;
+pub use sign::Sign;
 
 pub trait Module {
     fn name(&self) -> &'static str;

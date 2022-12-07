@@ -1,14 +1,9 @@
 [package]
-name = "hemtt-pbo"
+name = "hemtt-version"
 version = "0.10.0"
 edition = "2021"
 
 [dependencies]
 hemtt-error = { path = "../error" }
 
-hemtt-io = { path = "../io" }
-
-byteorder = "1.4.3"
-indexmap = "1.9.2"
 serde = { workspace = true }
-sha-1 = { workspace = true }

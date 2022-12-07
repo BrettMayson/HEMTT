@@ -9,13 +9,14 @@ members = [
     "libs/io",
     "libs/pbo",
     "libs/preprocessor",
-    "libs/tokens",
     "libs/signing",
+    "libs/tokens",
+    "libs/version",
 ]
 
 [workspace.dependencies]
-pest = "2.5.0"
-pest_derive = "2.5.0"
+pest = "2.5.1"
+pest_derive = "2.5.1"
 clap = "4.0.29"
-serde = { version = "1.0.148", features = ["derive"] }
+serde = { version = "1.0.149", features = ["derive"] }
 sha-1 = "0.10.1"

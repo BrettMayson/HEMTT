@@ -34,6 +34,7 @@ pub fn cli() -> Command {
         .arg_required_else_help(true)
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
+        .subcommand(commands::release::cli())
         .subcommand(hemtt_bin_internal::cli().name("internal"))
         .arg(
             clap::Arg::new("threads")
@@ -65,6 +66,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         Some(("dev", matches)) => commands::dev::execute(matches).map_err(std::convert::Into::into),
         Some(("build", matches)) => {
             commands::build::execute(matches).map_err(std::convert::Into::into)
+        }
+        Some(("release", matches)) => {
+            commands::release::execute(matches).map_err(std::convert::Into::into)
         }
         Some(("internal", matches)) => hemtt_bin_internal::execute(matches),
         _ => unreachable!(),

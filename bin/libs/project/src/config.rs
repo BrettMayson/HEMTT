@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::Path, str::FromStr};
 
+use hemtt_version::Version;
 use serde::{Deserialize, Serialize};
 
 use crate::{hemtt::Features, Error};
@@ -44,10 +45,17 @@ impl FromStr for Configuration {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Project {
+    /// The name of the project
     name: String,
+    /// Semver version of the project
+    version: Version,
+
     #[serde(default)]
+    /// Headers to be added to built PBOs
     headers: HashMap<String, String>,
+
     #[serde(default)]
+    /// Files to be included in the root of the project, supports glob patterns
     files: Vec<String>,
 }
 
@@ -55,6 +63,11 @@ impl Project {
     #[must_use]
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    #[must_use]
+    pub const fn version(&self) -> &Version {
+        &self.version
     }
 
     #[must_use]

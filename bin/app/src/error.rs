@@ -15,6 +15,8 @@ pub enum Error {
     Config(#[from] hemtt_config::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
+    #[error("Signing error: {0}")]
+    Signing(#[from] hemtt_signing::Error),
 
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
@@ -22,6 +24,8 @@ pub enum Error {
     Vfs(Box<vfs::VfsError>),
     #[error("Glob Error: {0}")]
     GlobPattern(#[from] glob::PatternError),
+    #[error("Git Error: {0}")]
+    Git(#[from] git2::Error),
 }
 
 impl From<vfs::VfsError> for Error {

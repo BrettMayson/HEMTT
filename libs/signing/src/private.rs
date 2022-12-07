@@ -9,6 +9,7 @@ use sha1::{Digest, Sha1};
 use crate::{error::Error, public::BIPublicKey, signature::BISign};
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Clone)]
 pub struct BIPrivateKey {
     authority: String,
     length: u32,

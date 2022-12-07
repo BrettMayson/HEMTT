@@ -5,18 +5,18 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Preprocessor},
+    modules::{pbo::Collapse, Binarize, Files, Preprocessor, Sign},
 };
 
 #[must_use]
 pub fn cli() -> Command {
-    Command::new("build")
-        .about("Build the project")
-        .long_about("Build your project")
+    Command::new("release")
+        .about("Release the project")
+        .long_about("Release your project")
 }
 
 pub fn execute(_matches: &ArgMatches) -> Result<(), Error> {
-    let ctx = Context::new(&[Location::Addons, Location::Optionals], "build")?;
+    let ctx = Context::new(&[Location::Addons, Location::Optionals], "release")?;
     let mut executor = Executor::new(&ctx);
 
     executor.collapse(Collapse::No);
@@ -24,10 +24,12 @@ pub fn execute(_matches: &ArgMatches) -> Result<(), Error> {
     executor.add_module(Box::new(Preprocessor::new()));
     executor.add_module(Box::new(Binarize::new()));
     executor.add_module(Box::new(Files::new()));
+    executor.add_module(Box::new(Sign::new()));
 
     executor.init()?;
     executor.check()?;
     executor.build()?;
+    executor.release()?;
 
     Ok(())
 }

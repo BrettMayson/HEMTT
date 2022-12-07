@@ -15,6 +15,10 @@ pub struct BIPublicKey {
 }
 
 impl BIPublicKey {
+    /// Write the public key to a writer
+    ///
+    /// # Errors
+    /// If the writer fails to write
     pub fn write<O: Write>(&self, output: &mut O) -> Result<(), Error> {
         output.write_cstring(&self.authority)?;
         output.write_u32::<LittleEndian>(self.length / 8 + 20)?;

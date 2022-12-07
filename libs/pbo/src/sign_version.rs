@@ -1,9 +1,12 @@
 use std::{ffi::OsStr, path::PathBuf};
 
-#[derive(Copy, Clone, Debug)]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+#[derive(Copy, Clone, Debug, Default)]
 #[allow(clippy::module_name_repetitions)]
 pub enum BISignVersion {
     V2,
+    #[default]
     V3,
 }
 
@@ -60,6 +63,31 @@ impl From<BISignVersion> for u32 {
         match v {
             BISignVersion::V2 => 0x02,
             BISignVersion::V3 => 0x03,
+        }
+    }
+}
+
+impl Serialize for BISignVersion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u32(u32::from(*self))
+    }
+}
+
+impl<'de> Deserialize<'de> for BISignVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v = u32::deserialize(deserializer)?;
+        match v {
+            0x02 => Ok(Self::V2),
+            0x03 => Ok(Self::V3),
+            _ => Err(serde::de::Error::custom(format!(
+                "Invalid BISignVersion: {v}"
+            ))),
         }
     }
 }

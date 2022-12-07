@@ -37,7 +37,6 @@ impl Addon {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Location {
     Addons,
-    Compats,
     Optionals,
 }
 
@@ -63,7 +62,6 @@ impl FromStr for Location {
     fn from_str(s: &str) -> Result<Self, Error> {
         match s {
             "addons" => Ok(Self::Addons),
-            "compats" => Ok(Self::Compats),
             "optionals" => Ok(Self::Optionals),
             _ => Err(Error::InvalidAddonLocation(s.to_string())),
         }
@@ -74,7 +72,6 @@ impl ToString for Location {
     fn to_string(&self) -> String {
         match self {
             Self::Addons => "addons",
-            Self::Compats => "compats",
             Self::Optionals => "optionals",
         }
         .to_string()

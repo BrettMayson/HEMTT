@@ -5,11 +5,11 @@ use vfs::VfsFileType;
 
 use crate::{addons::Location, context::Context, error::Error};
 
-/// Should the PBOs be collapsed into the addons folder
+/// Should the optional and compat PBOs be collapsed into the addons folder
 pub enum Collapse {
     /// Yes, used for development
     Yes,
-    /// No, used for release
+    /// No, used for build and release
     No,
 }
 
@@ -25,17 +25,6 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
                 let mut path = match collapse {
                     Collapse::No => match addon.location() {
                         Location::Addons => target.join("addons").join(addon.name()),
-                        Location::Compats => {
-                            if ctx.config().hemtt().build().compat_mod_folders() {
-                                target
-                                    .join("compats")
-                                    .join(format!("@{}", addon.name()))
-                                    .join("addons")
-                                    .join(addon.name())
-                            } else {
-                                target.join(addon.location().to_string()).join(addon.name())
-                            }
-                        }
                         Location::Optionals => {
                             if ctx.config().hemtt().build().optional_mod_folders() {
                                 target

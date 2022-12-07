@@ -12,6 +12,8 @@ mod signature;
 
 pub use error::Error;
 pub use private::BIPrivateKey;
+pub use public::BIPublicKey;
+pub use signature::BISign;
 
 /// Writes a ``BigUint`` to the given output.
 ///

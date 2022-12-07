@@ -8,7 +8,10 @@ edition = "2021"
 hemtt-error = { path = "../../../libs/error" }
 
 hemtt-config = { path = "../../../libs/config" }
+hemtt-pbo = { path = "../../../libs/pbo" }
 hemtt-preprocessor = { path = "../../../libs/preprocessor" }
+hemtt-signing = { path = "../../../libs/signing" }
+hemtt-version = { path = "../../../libs/version" }
 
 serde = { workspace = true, features = ["derive"] }
 thiserror = "1.0.37"

@@ -11,6 +11,9 @@ pub enum Error {
 
     #[error("Invalid length while reading")]
     InvalidLength,
+
+    #[error("Missing authority")]
+    MissingAuthority,
 }
 
 impl From<std::io::Error> for Error {

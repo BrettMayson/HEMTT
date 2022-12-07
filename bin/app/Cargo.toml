@@ -14,10 +14,12 @@ hemtt-config = { path = "../../libs/config" }
 hemtt-pbo = { path = "../../libs/pbo" }
 hemtt-preprocessor = { path = "../../libs/preprocessor" }
 hemtt-tokens = { path = "../../libs/tokens" }
+hemtt-signing = { path = "../../libs/signing" }
 
 anyhow = "1.0.66"
 clap = { workspace = true }
 fs_extra = "1.2.0"
+git2 = "0.15"
 glob = "0.3.0"
 lazy_static = "1.4.0"
 peekmore = "1.0.0"
