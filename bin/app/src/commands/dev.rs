@@ -35,12 +35,12 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     executor.collapse(Collapse::Yes);
 
-    executor.add_module(Box::new(FilePatching::new()));
     executor.add_module(Box::new(Preprocessor::new()));
+    executor.add_module(Box::new(Files::new()));
+    executor.add_module(Box::new(FilePatching::new()));
     if matches.get_one::<bool>("binarize") == Some(&true) {
         executor.add_module(Box::new(Binarize::new()));
     }
-    executor.add_module(Box::new(Files::new()));
 
     executor.init()?;
     executor.check()?;

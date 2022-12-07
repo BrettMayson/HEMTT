@@ -679,16 +679,13 @@ where
             }
             let mut stack = context.stack(source.clone());
             for (param, arg) in func.parameters().iter().zip(args.into_iter()) {
-                stack.define(
-                    param.word().unwrap().to_string(),
-                    param.clone(),
-                    Definition::Value(root_preprocess(
-                        resolver,
-                        context,
-                        &mut arg.into_iter().peekmore(),
-                        true,
-                    )?),
-                )?;
+                let def = Definition::Value(root_preprocess(
+                    resolver,
+                    &mut stack,
+                    &mut arg.into_iter().peekmore(),
+                    true,
+                )?);
+                stack.define(param.word().unwrap().to_string(), param.clone(), def)?;
             }
             let parent = Some(Box::new(source));
             let mut tokenstream = func

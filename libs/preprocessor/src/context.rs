@@ -48,16 +48,17 @@ const BUILTIN: [&str; 37] = [
 ];
 
 #[derive(Clone, Debug)]
-pub struct Context {
+pub struct Context<'a> {
     ifstates: IfStates,
     definitions: HashMap<String, (Token, Definition)>,
     entry: String,
     current_file: String,
     counter: Arc<AtomicUsize>,
     trace: Vec<Token>,
+    parent: Option<&'a Self>,
 }
 
-impl Context {
+impl<'a> Context<'a> {
     #[must_use]
     pub fn new(entry: String) -> Self {
         Self {
@@ -67,14 +68,15 @@ impl Context {
             entry,
             counter: Arc::new(AtomicUsize::new(0)),
             trace: Vec::new(),
+            parent: None,
         }
     }
 
     #[must_use]
-    pub fn stack(&self, source: Token) -> Self {
+    pub fn stack(&'a self, source: Token) -> Context<'a> {
         Self {
             ifstates: self.ifstates.clone(),
-            definitions: self.definitions.clone(),
+            definitions: HashMap::new(),
             current_file: self.current_file.clone(),
             entry: self.entry.clone(),
             counter: self.counter.clone(),
@@ -83,6 +85,7 @@ impl Context {
                 trace.push(source);
                 trace
             },
+            parent: Some(self),
         }
     }
 
@@ -224,10 +227,21 @@ impl Context {
                     Some(Box::new(token.clone())),
                 )]),
             )),
-            _ => self
-                .definitions
-                .get(ident)
-                .map(|(source, definition)| (source.clone(), definition.clone())),
+            _ => {
+                // get locally or from parent
+                let mut context = self;
+                loop {
+                    if let Some((source, definition)) = context.definitions.get(ident) {
+                        return Some((source.clone(), definition.clone()));
+                    }
+                    if let Some(parent) = &context.parent {
+                        context = parent;
+                    } else {
+                        break;
+                    }
+                }
+                None
+            }
         }
     }
 }
