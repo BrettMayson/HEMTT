@@ -57,7 +57,7 @@ pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Resul
     )?;
     println!("parsed {}", path.as_str());
     let out = if path.filename() == "config.cpp" {
-        path.parent().unwrap().join("config.bin").unwrap()
+        path.parent().join("config.bin").unwrap()
     } else {
         path
     };

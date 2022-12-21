@@ -24,6 +24,57 @@ pub struct Version {
     hash: Option<String>,
 }
 
+impl Version {
+    /// Read a version from a `script_version.hpp` files using macros
+    ///
+    /// ```hpp
+    /// #define MAJOR 3
+    /// #define MINOR 15
+    /// #define PATCHLVL 2
+    /// #define BUILD 69
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file does not contain the correct macros
+    pub fn try_from_script_version(version: &str) -> Result<Self, Error> {
+        let lines = version.lines().map(str::trim).collect::<Vec<_>>();
+        Ok(Self {
+            major: Self::extract_version(&lines, "MAJOR")?,
+            minor: Self::extract_version(&lines, "MINOR")?,
+            patch: Self::extract_version(&lines, "PATCH")?,
+            build: Self::extract_version(&lines, "BUILD").ok(),
+            hash: None,
+        })
+    }
+
+    fn extract_version(lines: &[&str], component: &str) -> Result<u32, Error> {
+        let error = match component {
+            "MAJOR" => Error::ExpectedMajor,
+            "MINOR" => Error::ExpectedMinor,
+            "PATCH" => Error::ExpectedPatch,
+            "BUILD" => Error::ExpectedBuild,
+            _ => unreachable!(),
+        };
+        let line = lines
+            .iter()
+            .find(|line| line.starts_with(&format!("#define {component}")))
+            .ok_or_else(|| error.clone())?;
+        // remove comment
+        let component = line
+            .split_once("//")
+            .unwrap_or((line, ""))
+            .0
+            .trim()
+            .rsplit_once(' ')
+            .ok_or(error)?;
+        component
+            .1
+            .parse::<u32>()
+            .map_err(|_| Error::InvalidComponent(component.1.to_string()))
+    }
+}
+
 impl TryFrom<&str> for Version {
     type Error = Error;
 
@@ -174,5 +225,100 @@ mod tests {
         let version = Version::try_from("1.2");
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedPatch);
+    }
+
+    #[test]
+    fn test_script_version() {
+        let content = r#"
+            #define MAJOR 1
+            #define MINOR 2
+            #define PATCH 3
+            #define BUILD 4
+        "#;
+        let version = Version::try_from_script_version(content).unwrap();
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 2);
+        assert_eq!(version.patch, 3);
+        assert_eq!(version.build, Some(4));
+
+        assert_eq!(version.hash, None);
+    }
+
+    #[test]
+    fn test_script_version_comment() {
+        let content = r#"
+            #define MAJOR 1
+            #define MINOR 2
+            #define PATCHLVL 3 // some comment
+            #define BUILD 4
+        "#;
+        let version = Version::try_from_script_version(content).unwrap();
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 2);
+        assert_eq!(version.patch, 3);
+        assert_eq!(version.build, Some(4));
+        assert_eq!(version.hash, None);
+    }
+
+    #[test]
+    fn test_script_version_no_build() {
+        let content = r#"
+            #define MAJOR 1
+            #define MINOR 2
+            #define PATCH 3
+        "#;
+        let version = Version::try_from_script_version(content).unwrap();
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 2);
+        assert_eq!(version.patch, 3);
+        assert_eq!(version.build, None);
+        assert_eq!(version.hash, None);
+    }
+
+    #[test]
+    fn test_script_version_invalid_component() {
+        let content = r#"
+            #define MAJOR 1
+            #define MINOR 2
+            #define PATCHLVL a
+        "#;
+        let version = Version::try_from_script_version(content);
+        assert!(version.is_err());
+        assert_eq!(
+            version.unwrap_err(),
+            Error::InvalidComponent("a".to_string())
+        );
+    }
+
+    #[test]
+    fn test_script_version_missing_minor() {
+        let content = r#"
+            #define MAJOR 1
+        "#;
+        let version = Version::try_from_script_version(content);
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::ExpectedMinor);
+    }
+
+    #[test]
+    fn test_script_version_missing_patch() {
+        let content = r#"
+            #define MAJOR 1
+            #define MINOR 2
+        "#;
+        let version = Version::try_from_script_version(content);
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::ExpectedPatch);
+    }
+
+    #[test]
+    fn test_script_version_missing_major() {
+        let content = r#"
+            #define MINOR 2
+            #define PATCH 3
+        "#;
+        let version = Version::try_from_script_version(content);
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::ExpectedMajor);
     }
 }

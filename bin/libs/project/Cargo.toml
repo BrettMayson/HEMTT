@@ -14,5 +14,5 @@ hemtt-signing = { path = "../../../libs/signing" }
 hemtt-version = { path = "../../../libs/version" }
 
 serde = { workspace = true, features = ["derive"] }
-thiserror = "1.0.37"
-toml = { version = "0.5.9" }
+thiserror = "1.0.38"
+toml = { version = "0.5.10" }

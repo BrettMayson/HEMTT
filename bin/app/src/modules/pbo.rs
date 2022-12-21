@@ -21,23 +21,25 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
             let mut pbo = WritablePbo::new();
             let target = ctx.hemtt_folder();
 
+            let pbo_name = addon.pbo_name(ctx.config().prefix());
+
             let target_pbo = {
                 let mut path = match collapse {
                     Collapse::No => match addon.location() {
-                        Location::Addons => target.join("addons").join(addon.name()),
+                        Location::Addons => target.join("addons").join(pbo_name),
                         Location::Optionals => {
                             if ctx.config().hemtt().build().optional_mod_folders() {
                                 target
                                     .join("optionals")
-                                    .join(format!("@{}", addon.name()))
+                                    .join(format!("@{pbo_name}"))
                                     .join("addons")
-                                    .join(addon.name())
+                                    .join(pbo_name)
                             } else {
-                                target.join(addon.location().to_string()).join(addon.name())
+                                target.join(addon.location().to_string()).join(pbo_name)
                             }
                         }
                     },
-                    Collapse::Yes => target.join("addons").join(addon.name()),
+                    Collapse::Yes => target.join("addons").join(pbo_name),
                 };
                 path.set_extension("pbo");
                 path
@@ -55,13 +57,7 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File {
                     if entry.filename() == "config.cpp"
-                        && entry
-                            .parent()
-                            .unwrap()
-                            .join("config.bin")
-                            .unwrap()
-                            .exists()
-                            .unwrap()
+                        && entry.parent().join("config.bin").unwrap().exists().unwrap()
                     {
                         continue;
                     }

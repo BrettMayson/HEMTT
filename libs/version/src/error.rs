@@ -1,6 +1,6 @@
 use hemtt_error::thiserror;
 
-#[derive(thiserror::Error, Debug, PartialEq, Eq)]
+#[derive(thiserror::Error, Clone, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("Expected Major")]
     ExpectedMajor,
@@ -10,6 +10,9 @@ pub enum Error {
 
     #[error("Expected Patch")]
     ExpectedPatch,
+
+    #[error("Expected Build")]
+    ExpectedBuild,
 
     #[error("Not a valid component: {0}")]
     InvalidComponent(String),

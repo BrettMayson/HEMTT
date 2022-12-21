@@ -121,10 +121,8 @@ impl Module for Binarize {
                             )?
                             .into_inner();
                             tmp_sourced = Some(tmp_source.join(prefix.trim_start_matches('\\')));
-                            tmp_outed = Some(
-                                tmp_out
-                                    .join(entry.parent().unwrap().as_str().trim_start_matches('/')),
-                            );
+                            tmp_outed =
+                                Some(tmp_out.join(entry.parent().as_str().trim_start_matches('/')));
                             break;
                         }
                     }

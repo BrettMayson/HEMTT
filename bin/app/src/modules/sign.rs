@@ -21,8 +21,7 @@ impl Module for Sign {
     }
 
     fn check(&self, ctx: &crate::context::Context) -> Result<(), Error> {
-        ctx.config().hemtt().signing().authority()?;
-        if ctx.config().hemtt().signing().include_git_hash() {
+        if ctx.config().signing().include_git_hash() {
             let _ = Repository::open(".")?;
         }
         Ok(())
@@ -35,14 +34,14 @@ impl Module for Sign {
         addons_key.write(&mut File::create(
             ctx.hemtt_folder()
                 .join("keys")
-                .join(&authority)
-                .with_extension(".bikey"),
+                .join(format!("{authority}.bikey")),
         )?)?;
         ctx.addons().to_vec().iter().try_for_each(|addon| {
+            let pbo_name = addon.pbo_name(ctx.config().prefix());
             let (mut pbo, sig_location, key) = match addon.location() {
                 Location::Addons => {
                     let target_pbo = {
-                        let mut path = ctx.hemtt_folder().join("addons").join(addon.name());
+                        let mut path = ctx.hemtt_folder().join("addons").join(pbo_name);
                         path.set_extension("pbo");
                         path
                     };
@@ -55,23 +54,23 @@ impl Module for Sign {
                 Location::Optionals => {
                     let (mut target_pbo, key, authority) =
                         if ctx.config().hemtt().build().optional_mod_folders() {
-                            let authority = get_authority(ctx, Some(addon.name()))?;
+                            let authority = get_authority(ctx, Some(&pbo_name))?;
                             let key = BIPrivateKey::generate(1024, &authority)?;
                             let pubkey = key.to_public_key();
                             let mod_root = ctx
                                 .hemtt_folder()
                                 .join("optionals")
-                                .join(format!("@{}", addon.name()));
+                                .join(format!("@{pbo_name}"));
                             create_dir_all(mod_root.join("keys"))?;
                             pubkey.write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),
                             )?)?;
-                            (mod_root.join("addons").join(addon.name()), key, authority)
+                            (mod_root.join("addons").join(pbo_name), key, authority)
                         } else {
                             (
                                 ctx.hemtt_folder()
                                     .join(addon.location().to_string())
-                                    .join(addon.name()),
+                                    .join(pbo_name),
                                 addons_key.clone(),
                                 authority.clone(),
                             )
@@ -85,7 +84,7 @@ impl Module for Sign {
                 }
             };
             println!("signing `{}`", sig_location.display());
-            let sig = key.sign(&mut pbo, hemtt_pbo::BISignVersion::V3)?;
+            let sig = key.sign(&mut pbo, ctx.config().signing().version())?;
             sig.write(&mut File::create(sig_location)?)?;
             Result::<(), Error>::Ok(())
         })?;
@@ -96,13 +95,16 @@ impl Module for Sign {
 fn get_authority(ctx: &crate::context::Context, suffix: Option<&str>) -> Result<String, Error> {
     let mut authority = format!(
         "{}_{}",
-        ctx.config().hemtt().signing().authority()?,
-        ctx.config().project().version()
+        ctx.config().signing().authority().map_or_else(
+            || ctx.config().prefix().to_string(),
+            std::string::ToString::to_string
+        ),
+        ctx.config().version()?
     );
     if let Some(suffix) = suffix {
         authority.push_str(&format!("_{suffix}"));
     }
-    if ctx.config().hemtt().signing().include_git_hash() {
+    if ctx.config().signing().include_git_hash() {
         let repo = Repository::open(".")?;
         let rev = repo.revparse_single("HEAD")?;
         let id = rev.id().to_string();

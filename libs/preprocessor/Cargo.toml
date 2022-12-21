@@ -12,7 +12,7 @@ peekmore = "1.0.0"
 pest = { workspace = true }
 pest_derive = { workspace = true }
 serde = { workspace = true }
-serde_json = "1.0.89"
+serde_json = "1.0.91"
 
 [dev-dependencies]
 criterion = "0.4.0"

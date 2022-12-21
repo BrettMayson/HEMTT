@@ -17,6 +17,10 @@ impl Addon {
         &self.name
     }
 
+    pub fn pbo_name(&self, prefix: &str) -> String {
+        format!("{}_{}", prefix, self.name)
+    }
+
     pub const fn location(&self) -> &Location {
         &self.location
     }
