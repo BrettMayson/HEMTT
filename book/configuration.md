@@ -25,6 +25,16 @@ HEMTT uses a custom version format based on standards in the Arma 3 community. Y
 
 You can additionally configure optional settings for your project.
 
+### Main Prefix
+
+The `mainprefix` option allows you to set a the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](launch.md).
+
+**hemtt.toml**
+
+```toml
+mainprefix = "z"
+```
+
 ### Files
 
 You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions.

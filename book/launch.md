@@ -13,6 +13,8 @@ hemtt launch
 **hemtt.toml**
 
 ```toml
+mainprefix = "z"
+
 [hemtt.launch]
 mods = [
     "450814997", # CBA_A3's Workshop ID
@@ -25,6 +27,8 @@ parameters = [
     "-filePatching",
 ]
 ```
+
+`hemtt launch` requires the [`mainprefix`](configuration.md#main-prefix) option to be set.
 
 ### mods
 
