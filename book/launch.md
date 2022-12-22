@@ -22,7 +22,7 @@ parameters = [
     "-noSplash",            # They do not need to be added to your list
     "-showScriptErrors",    # You can add additional parameters here
     "-debug",
-    "-filePatching,
+    "-filePatching",
 ]
 ```
 
