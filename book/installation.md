@@ -2,7 +2,7 @@
 
 ## Download
 
-The latest HEMTT release can be downloaded from the [GitHub releases page](https://github.com/acemod/HEMTT/releases).
+The latest HEMTT release can be downloaded from the [GitHub releases page](https://github.com/brettmayson/HEMTT/releases).
 
 Builds are available for Windows and Linux.
 
@@ -22,7 +22,7 @@ HEMTT can then be ran from any terminal with `hemtt`.
 
 ## Compile from Source
 
-HEMTT can be compiled from [source](https://github.com/acemod/HEMTT) using [Rust](https://www.rust-lang.org/).
+HEMTT can be compiled from [source](https://github.com/brettmayson/HEMTT) using [Rust](https://www.rust-lang.org/).
 
 HEMTT usually requires the latest stable version of Rust, older versions may work but are not supported.
 
