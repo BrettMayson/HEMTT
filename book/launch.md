@@ -10,6 +10,8 @@ hemtt launch
 
 ## Configuration
 
+`hemtt launch` requires the [`mainprefix`](configuration.md#main-prefix) option to be set.
+
 **hemtt.toml**
 
 ```toml
@@ -28,7 +30,6 @@ parameters = [
 ]
 ```
 
-`hemtt launch` requires the [`mainprefix`](configuration.md#main-prefix) option to be set.
 
 ### mods
 

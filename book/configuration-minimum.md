@@ -20,11 +20,11 @@ The prefix of your mod.
 It should be used in the `$PBOPREFIX$` file in each addon folder in the following format.
 
 ```text
-\z\{prefix}\addons\main
+z\{prefix}\addons\main
 ```
 
-**\addons\main\$PBOPREFIX$**
+**addons/main/$PBOPREFIX$**
 
 ```text
-\z\abe\addons\main
+z\abe\addons\main
 ```

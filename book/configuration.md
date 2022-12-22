@@ -35,6 +35,14 @@ The `mainprefix` option allows you to set a the root prefix for your project, us
 mainprefix = "z"
 ```
 
+It should match the `$PBOPREFIX$` file in each addon folder.
+
+**addons/main/$PBOPREFIX$**
+
+```txt
+z\abe\addons\main
+```
+
 ### Files
 
 You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions.
