@@ -26,4 +26,4 @@ HEMTT can be compiled from [source](https://github.com/brettmayson/HEMTT) using 
 
 HEMTT usually requires the latest stable version of Rust, older versions may work but are not supported.
 
-You can use the `cargo install --path .` command to install HEMTT while in the root of the repository.
+You can use the `cargo install --path bin/app` command to install HEMTT while in the root of the repository.

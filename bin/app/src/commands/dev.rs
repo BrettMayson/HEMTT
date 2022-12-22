@@ -22,7 +22,7 @@ pub fn cli() -> Command {
         )
 }
 
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
     let ctx = Context::new(&[Location::Addons], "dev")?.filter(|a, config| {
         !config
             .hemtt()
@@ -46,5 +46,5 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     executor.check()?;
     executor.build()?;
 
-    Ok(())
+    Ok(ctx)
 }

@@ -9,6 +9,9 @@ pub struct Features {
     dev: DevOptions,
 
     #[serde(default)]
+    launch: LaunchOptions,
+
+    #[serde(default)]
     build: BuildOptions,
 
     #[serde(default)]
@@ -27,6 +30,11 @@ impl Features {
     #[must_use]
     pub const fn dev(&self) -> &DevOptions {
         &self.dev
+    }
+
+    #[must_use]
+    pub const fn launch(&self) -> &LaunchOptions {
+        &self.launch
     }
 
     #[must_use]
@@ -54,6 +62,29 @@ impl DevOptions {
     #[must_use]
     pub fn exclude(&self) -> &[String] {
         &self.exclude
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct LaunchOptions {
+    #[serde(default)]
+    /// Workshop mods that should be launched with the mod
+    mods: Vec<String>,
+
+    #[serde(default)]
+    // Extra launch parameters
+    parameters: Vec<String>,
+}
+
+impl LaunchOptions {
+    #[must_use]
+    pub fn mods(&self) -> &[String] {
+        &self.mods
+    }
+
+    #[must_use]
+    pub fn parameters(&self) -> &[String] {
+        &self.parameters
     }
 }
 

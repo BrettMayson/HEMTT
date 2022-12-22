@@ -86,6 +86,9 @@ impl Context {
         &self.vfs
     }
 
+    /// The folder where the build output is stored
+    ///
+    /// Example: `.hemtt\dev`
     pub const fn hemtt_folder(&self) -> &PathBuf {
         &self.hemtt_folder
     }

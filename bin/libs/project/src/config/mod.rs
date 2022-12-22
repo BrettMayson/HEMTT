@@ -14,6 +14,8 @@ pub struct Configuration {
     name: String,
     /// Prefix for the project
     prefix: String,
+    /// Main prefix for the project
+    mainprefix: Option<String>,
 
     #[serde(default)]
     /// version of the project
@@ -48,6 +50,11 @@ impl Configuration {
     #[must_use]
     pub fn prefix(&self) -> &str {
         &self.prefix
+    }
+
+    #[must_use]
+    pub const fn mainprefix(&self) -> Option<&String> {
+        self.mainprefix.as_ref()
     }
 
     #[must_use]

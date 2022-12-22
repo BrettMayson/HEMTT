@@ -2,14 +2,14 @@ use hemtt_bin_error::Error;
 
 #[allow(clippy::module_name_repetitions)]
 #[cfg(windows)]
-pub fn create_link(original: &str, target: &str) -> Result<(), Error> {
+pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
     use std::process::Command;
 
     let out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")
         .arg("/J")
-        .arg(original)
+        .arg(link)
         .arg(target)
         .output()?;
     if !out.status.success() {

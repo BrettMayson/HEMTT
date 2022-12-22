@@ -27,22 +27,25 @@ lazy_static::lazy_static! {
 
 #[must_use]
 pub fn cli() -> Command {
-    Command::new(env!("CARGO_PKG_NAME"))
+    let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
         .subcommand(commands::release::cli())
-        .subcommand(hemtt_bin_internal::cli().name("internal"))
-        .arg(
-            clap::Arg::new("threads")
-                .global(true)
-                .help("Number of threads, defaults to # of CPUs")
-                .action(ArgAction::Set)
-                .long("threads")
-                .short('t'),
-        )
+        .subcommand(hemtt_bin_internal::cli().name("internal"));
+    if cfg!(windows) {
+        global = global.subcommand(commands::launch::cli());
+    }
+    global.arg(
+        clap::Arg::new("threads")
+            .global(true)
+            .help("Number of threads, defaults to # of CPUs")
+            .action(ArgAction::Set)
+            .long("threads")
+            .short('t'),
+    )
 }
 
 /// Run the HEMTT CLI
@@ -62,7 +65,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         }
     }
     match matches.subcommand() {
-        Some(("dev", matches)) => commands::dev::execute(matches).map_err(std::convert::Into::into),
+        Some(("dev", matches)) => {
+            let _ = commands::dev::execute(matches)?;
+            Ok(())
+        }
         Some(("build", matches)) => {
             commands::build::execute(matches).map_err(std::convert::Into::into)
         }
@@ -70,6 +76,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
             commands::release::execute(matches).map_err(std::convert::Into::into)
         }
         Some(("internal", matches)) => hemtt_bin_internal::execute(matches),
+        #[cfg(windows)]
+        Some(("launch", matches)) => {
+            commands::launch::execute(matches).map_err(std::convert::Into::into)
+        }
         _ => unreachable!(),
     }
 }

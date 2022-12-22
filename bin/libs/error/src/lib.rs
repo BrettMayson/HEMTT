@@ -6,6 +6,14 @@ pub enum Error {
     InvalidAddonLocation(String),
     #[error("Unable to create link: {0}")]
     Link(String),
+    #[error("Arma 3 not found in Steam")]
+    Arma3NotFound,
+    #[error("Workshop folder not found")]
+    WorkshopNotFound,
+    #[error("Workshop mod not found: {0}")]
+    WorkshopModNotFound(String),
+    #[error("Main prefix not found: {0}")]
+    MainPrefixNotFound(String),
 
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
