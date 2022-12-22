@@ -15,4 +15,6 @@ edit-url-template = "https://github.com/acemod/HEMTT/edit/main/book/{path}"
 [build]
 build-dir = "target/book"
 
-output.html.preferred-dark-theme = "ayu"
+[output.html]
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
