@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
-use hemtt_tokens::{symbol::Symbol, Token};
+use hemtt_tokens::{Symbol, Token};
 use serde::Serialize;
 
+/// Output of preprocessing a file
 pub struct Processed {
     sources: Vec<(String, String)>,
     mappings: Vec<Vec<Mapping>>,
@@ -11,13 +12,17 @@ pub struct Processed {
 
 impl Processed {
     #[must_use]
+    /// Get the output of preprocessing a file
     pub fn output(&self) -> &str {
         &self.output
     }
 
     #[must_use]
+    /// Get the source map for the processed file
+    /// Work in progress, does not produce a valid source map yet
+    ///
     /// # Panics
-    /// yeah it might panic
+    /// Panics if the processed file is not in the same directory as the source file
     pub fn get_source_map(&self, processed: PathBuf) -> String {
         #[derive(Serialize)]
         struct Intermediate {
@@ -33,23 +38,6 @@ impl Processed {
             file: processed,
             sources: self.sources.iter().map(|(path, _)| path.clone()).collect(),
             mappings: {
-                // self.mappings
-                //     .iter()
-                //     .map(|o| {
-                //         o.iter()
-                //             .map(|i| {
-                //                 let mut buffer = Vec::new();
-                //                 vlq::encode(i.processed_column as i64, &mut buffer).unwrap();
-                //                 vlq::encode(i.source as i64, &mut buffer).unwrap();
-                //                 vlq::encode(i.original_line as i64, &mut buffer).unwrap();
-                //                 vlq::encode(i.original_column as i64, &mut buffer).unwrap();
-                //                 String::from_utf8(buffer).unwrap()
-                //             })
-                //             .collect::<Vec<String>>()
-                //             .join(",")
-                //     })
-                //     .collect::<Vec<String>>()
-                //     .join(";")
                 self.mappings
                     .iter()
                     .map(|o| {
@@ -69,13 +57,6 @@ impl Processed {
         })
         .unwrap()
     }
-}
-
-pub struct Mapping {
-    pub processed_column: usize,
-    pub source: usize,
-    pub original_line: usize,
-    pub original_column: usize,
 }
 
 #[allow(clippy::fallible_impl_from)] // TODO
@@ -131,5 +112,39 @@ impl From<Vec<Token>> for Processed {
             mappings,
             output,
         }
+    }
+}
+
+/// Mapping of a processed token to its source
+pub struct Mapping {
+    processed_column: usize,
+    source: usize,
+    original_line: usize,
+    original_column: usize,
+}
+
+impl Mapping {
+    #[must_use]
+    /// Get the column of the processed token
+    pub const fn processed_column(&self) -> usize {
+        self.processed_column
+    }
+
+    #[must_use]
+    /// Get the source of the processed token
+    pub const fn source(&self) -> usize {
+        self.source
+    }
+
+    #[must_use]
+    /// Get the line of the original token
+    pub const fn original_line(&self) -> usize {
+        self.original_line
+    }
+
+    #[must_use]
+    /// Get the column of the original token
+    pub const fn original_column(&self) -> usize {
+        self.original_column
     }
 }

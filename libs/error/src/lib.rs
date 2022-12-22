@@ -7,7 +7,7 @@ use std::{io::BufRead, path::Path};
 pub use thiserror;
 
 use colored::Colorize;
-use hemtt_tokens::{position::Position, Token};
+use hemtt_tokens::{Position, Token};
 
 #[derive(Debug)]
 pub struct AppError {

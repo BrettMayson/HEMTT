@@ -4,13 +4,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use hemtt_bin_error::Error;
 use hemtt_bin_project::config::Configuration;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
-use crate::{
-    addons::{Addon, Location},
-    error::Error,
-};
+use crate::addons::{Addon, Location};
 
 pub struct Context {
     config: Configuration,

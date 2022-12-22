@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 hemtt-error = { path = "../../libs/error" }
+hemtt-bin-error = { path = "../libs/error"}
 
 hemtt-bin-internal = { path = "../libs/internal" }
 hemtt-bin-project = { path = "../libs/project" }

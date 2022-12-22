@@ -7,8 +7,6 @@ pub enum Error {
     #[error("Unable to create link: {0}")]
     Link(String),
 
-    #[error("Project error: {0}")]
-    Project(#[from] hemtt_bin_project::Error),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
     #[error("Config error: {0}")]
@@ -18,14 +16,18 @@ pub enum Error {
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
 
-    #[error("IO Error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("Vfs Error {0}")]
-    Vfs(Box<vfs::VfsError>),
-    #[error("Glob Error: {0}")]
-    GlobPattern(#[from] glob::PatternError),
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
+    #[error("Glob Error: {0}")]
+    GlobPattern(#[from] glob::PatternError),
+    #[error("IO Error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Toml Error: {0}")]
+    Toml(#[from] toml::de::Error),
+    #[error("Version Error: {0}")]
+    Version(#[from] hemtt_version::Error),
+    #[error("Vfs Error {0}")]
+    Vfs(Box<vfs::VfsError>),
 }
 
 impl From<vfs::VfsError> for Error {

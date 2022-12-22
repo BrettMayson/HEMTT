@@ -1,21 +1,35 @@
 use hemtt_error::{make_source, thiserror, PrettyError, Source};
-use hemtt_tokens::{symbol::Symbol, Token};
+use hemtt_tokens::{Symbol, Token};
 
 #[derive(thiserror::Error, Debug)]
+/// Error type for the config parser
 pub enum Error {
     #[error("Expected `{expected:?}`, found `{token:?}`,")]
+    /// Expected a different token in the current context
     UnexpectedToken {
+        /// The token that was found
         token: Box<Token>,
+        /// The token that was expected
         expected: Vec<Symbol>,
     },
     #[error("Unexpected EOF")]
+    /// Unexpected end of file
     UnexpectedEOF,
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
-    ExpectedIdent { token: Box<Token> },
+    /// Expected an identifier in the current context
+    ExpectedIdent {
+        /// The token that was found
+        token: Box<Token>,
+    },
     #[error("Expected `{{number}}`, found `{token:?}`, ")]
-    ExpectedNumber { token: Box<Token> },
+    /// Expected a number in the current context
+    ExpectedNumber {
+        /// The token that was found
+        token: Box<Token>,
+    },
 
     #[error("IO Error: {0}")]
+    /// [std::io::Error]
     Io(Box<std::io::Error>),
 }
 

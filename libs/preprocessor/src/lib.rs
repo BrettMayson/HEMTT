@@ -1,12 +1,12 @@
-#![deny(clippy::all, clippy::nursery)]
+#![deny(clippy::all, clippy::nursery, missing_docs)]
 #![warn(clippy::pedantic)]
 
-//! Arma 3 config preprocessor.
+//! HEMTT - Arma 3 Preprocessor
 
-use std::path::Path;
+use std::path::PathBuf;
 
 use hemtt_tokens::whitespace;
-use hemtt_tokens::{symbol::Symbol, Token};
+use hemtt_tokens::{Symbol, Token};
 use ifstate::IfState;
 
 mod context;
@@ -27,10 +27,12 @@ pub use resolver::{
 };
 
 /// Preprocesses a config file.
+///
 /// # Errors
-/// it can fail
+/// [`Error`]
+///
 /// # Panics
-/// it can panic
+/// If the files
 pub fn preprocess_file<R>(entry: &str, resolver: &R) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -38,9 +40,9 @@ where
     let mut context = Context::new(entry.to_string());
     let source = resolver.find_include(
         &context,
-        Path::new(entry).parent().unwrap().to_str().unwrap(),
+        PathBuf::from(entry).parent().unwrap().to_str().unwrap(),
         entry,
-        Path::new(entry).file_name().unwrap().to_str().unwrap(),
+        PathBuf::from(entry).file_name().unwrap().to_str().unwrap(),
         vec![Token::builtin(None)],
     )?;
     let mut tokens = crate::parse::parse(entry, &source.1, &None)?;

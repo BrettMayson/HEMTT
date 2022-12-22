@@ -1,14 +1,21 @@
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
+/// A PBO file header
 pub enum Mime {
+    /// The version of the PBO
+    /// Always the first extension
     Vers,
+    /// A compressed entry
     Cprs,
+    /// A compressed entry used by VBS
     Enco,
     #[default]
+    /// A blank entry, use to denote the end of the extensions section
     Blank,
 }
 
 impl Mime {
     #[must_use]
+    /// Get the mime type as a u32
     pub const fn as_u32(&self) -> u32 {
         match self {
             Self::Vers => 0x5665_7273,
@@ -19,6 +26,7 @@ impl Mime {
     }
 
     #[must_use]
+    /// Get the mime type from a u32
     pub const fn from_u32(value: u32) -> Option<Self> {
         match value {
             0x5665_7273 => Some(Self::Vers),

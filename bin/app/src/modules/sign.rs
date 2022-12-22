@@ -1,10 +1,11 @@
 use std::fs::{create_dir_all, File};
 
 use git2::Repository;
+use hemtt_bin_error::Error;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
 
-use crate::{addons::Location, error::Error};
+use crate::addons::Location;
 
 use super::Module;
 
@@ -21,7 +22,7 @@ impl Module for Sign {
     }
 
     fn check(&self, ctx: &crate::context::Context) -> Result<(), Error> {
-        if ctx.config().signing().include_git_hash() {
+        if ctx.config().version().git_hash().is_some() {
             let _ = Repository::open(".")?;
         }
         Ok(())
@@ -99,16 +100,10 @@ fn get_authority(ctx: &crate::context::Context, suffix: Option<&str>) -> Result<
             || ctx.config().prefix().to_string(),
             std::string::ToString::to_string
         ),
-        ctx.config().version()?
+        ctx.config().version().get()?
     );
     if let Some(suffix) = suffix {
         authority.push_str(&format!("_{suffix}"));
-    }
-    if ctx.config().signing().include_git_hash() {
-        let repo = Repository::open(".")?;
-        let rev = repo.revparse_single("HEAD")?;
-        let id = rev.id().to_string();
-        authority.push_str(&format!("-{}", &id[0..8]));
     }
     Ok(authority)
 }

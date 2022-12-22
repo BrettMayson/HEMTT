@@ -1,6 +1,6 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
-use crate::error::Error;
+use hemtt_bin_error::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Addon {

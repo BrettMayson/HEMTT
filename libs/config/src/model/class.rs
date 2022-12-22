@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use hemtt_tokens::{symbol::Symbol, whitespace, Token};
+use hemtt_tokens::{whitespace, Symbol, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{
@@ -14,19 +14,43 @@ use crate::{
 use super::{Entry, Ident, Parse};
 
 #[derive(Debug, Clone, PartialEq)]
+/// A class definition
 pub enum Class {
+    /// A local class definition
+    ///
+    /// ```cpp
+    /// class CfgPatches {
+    ///     ...
+    /// };
+    /// ```
     Local {
+        /// The name of the class
         name: Ident,
+        /// The parent class
+        ///
+        /// ```cpp
+        /// class MyClass: MyParent {
+        ///    ...
+        /// };
+        /// ```
         parent: Option<Ident>,
+        /// The children of the class
         children: Children,
     },
+    /// An external class definition
+    ///
+    /// ```cpp
+    /// class CfgPatches;
+    /// ```
     External {
+        /// The name of the class
         name: Ident,
     },
 }
 
 impl Class {
     #[must_use]
+    /// Get the name of the class
     pub const fn name(&self) -> &Ident {
         match self {
             Self::External { name } | Self::Local { name, .. } => name,
@@ -206,6 +230,7 @@ impl Rapify for Class {
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
+/// The list of children of a class
 pub struct Children(pub Properties);
 
 impl Parse for Children {

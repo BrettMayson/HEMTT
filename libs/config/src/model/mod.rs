@@ -20,6 +20,7 @@ pub use entry::Entry;
 pub use ident::Ident;
 pub use number::Number;
 
+/// A trait for parsing a type from a token stream
 pub trait Parse {
     /// # Errors
     /// if the token stream is invalid
@@ -32,7 +33,9 @@ pub trait Parse {
 }
 
 #[derive(Debug)]
+/// A config file
 pub struct Config {
+    /// The root, unnamed class
     pub root: Class,
 }
 

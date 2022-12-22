@@ -7,6 +7,7 @@ use rsa::BigUint;
 use crate::Error;
 
 #[derive(Debug)]
+/// A public key
 pub struct BIPublicKey {
     pub(crate) authority: String,
     pub(crate) length: u32,

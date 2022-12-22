@@ -1,13 +1,13 @@
-use std::{collections::HashMap, mem::MaybeUninit, path::Path, str::FromStr};
+use std::{collections::HashMap, path::Path, str::FromStr};
 
-use hemtt_version::Version;
+use hemtt_bin_error::Error;
 use serde::{Deserialize, Serialize};
 
-use crate::{hemtt::Features, Error};
+use crate::hemtt::Features;
 
 mod signing;
+mod version;
 
-#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Configuration {
     /// The name of the project
@@ -15,8 +15,9 @@ pub struct Configuration {
     /// Prefix for the project
     prefix: String,
 
-    /// Semver version of the project
-    version: Option<String>,
+    #[serde(default)]
+    /// version of the project
+    version: version::Options,
 
     #[serde(default)]
     /// Headers to be added to built PBOs
@@ -39,48 +40,9 @@ impl Configuration {
         &self.name
     }
 
-    /// Get the version of the project
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the version is not a valid semver version
-    /// or a points to a file that does not contain a valid version macro
-    pub fn version(&self) -> Result<Version, Error> {
-        static mut VERSION: MaybeUninit<Version> = MaybeUninit::uninit();
-        static mut INIT: bool = false;
-
-        let version = self
-            .version
-            .as_ref()
-            .map_or("script_version", |v| v.as_str());
-
-        // Check for a cached version
-        unsafe {
-            if INIT {
-                return Ok(VERSION.assume_init_ref().clone());
-            }
-        }
-
-        // Check for script_version.hpp in the main addon
-        let binding = if version == "script_version" {
-            String::from("addons/main/script_version.hpp")
-        } else {
-            version.replace('\\', "/")
-        };
-        let path = Path::new(&binding);
-
-        // Check for a path to a version macro file
-        if path.exists() {
-            let content = std::fs::read_to_string(path)?;
-            let version = Version::try_from_script_version(&content)?;
-            unsafe {
-                VERSION = MaybeUninit::new(version);
-                INIT = true;
-            }
-            return unsafe { Ok(VERSION.assume_init_ref().clone()) };
-        }
-
-        Version::try_from(version).map_err(std::convert::Into::into)
+    #[must_use]
+    pub const fn version(&self) -> &version::Options {
+        &self.version
     }
 
     #[must_use]

@@ -12,12 +12,13 @@ use crate::{
     BISignVersion, ReadPbo, WritePbo,
 };
 
+/// An existing PBO file that can be read from
 pub struct ReadablePbo<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     headers: Vec<Header>,
     checksum: Checksum,
     input: I,
-    pub blob_start: u64,
+    blob_start: u64,
 }
 
 impl<I: Seek + Read> ReadablePbo<I> {
@@ -68,24 +69,29 @@ impl<I: Seek + Read> ReadablePbo<I> {
         })
     }
 
+    /// Find a header by name
     pub fn header(&self, name: &str) -> Option<&Header> {
         self.headers
             .iter()
             .find(|h| h.filename() == name.replace('/', "\\"))
     }
 
+    /// Get the PBO's extensions
     pub const fn extensions(&self) -> &IndexMap<String, String> {
         &self.extensions
     }
 
+    /// Get the PBO's stored checksum
     pub const fn checksum(&self) -> &Checksum {
         &self.checksum
     }
 
+    /// Get the PBO's headers
     pub fn files(&self) -> Vec<Header> {
         self.headers.clone()
     }
 
+    /// Get the PBO's headers sorted by name
     pub fn files_sorted(&mut self) -> Vec<Header> {
         let mut sorted = self.files();
         sorted.sort_by(|a, b| {

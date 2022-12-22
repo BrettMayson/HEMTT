@@ -1,9 +1,20 @@
-use hemtt_tokens::{symbol::Symbol, Token};
+use hemtt_tokens::{Symbol, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, Options, Parse};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
+/// An identifier
+///
+/// ```cpp
+/// my_ident = 1;
+/// ```
+///
+/// ```cpp
+/// class my_ident {
+///    ...
+/// };
+/// ```
 pub struct Ident(Vec<Token>);
 
 impl Parse for Ident {

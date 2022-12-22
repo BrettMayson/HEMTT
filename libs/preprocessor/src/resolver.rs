@@ -4,11 +4,12 @@ use hemtt_tokens::Token;
 
 use crate::{Context, Error};
 
+/// A trait for resolving includes
 pub trait Resolver {
     /// Find the path to an included file
     ///
     /// # Errors
-    /// if the file cannot be found
+    /// [`Error::IncludeNotFound`] if the file is not found
     fn find_include(
         &self,
         context: &Context,
@@ -19,6 +20,7 @@ pub trait Resolver {
     ) -> Result<(PathBuf, String), Error>;
 }
 
+/// Built-in include resolvers
 pub mod resolvers {
     use std::{
         io::Read,
@@ -31,9 +33,11 @@ pub mod resolvers {
 
     use super::Resolver;
 
+    /// A resolver that only follows relative paths
     pub struct LocalResolver;
     impl LocalResolver {
         #[must_use]
+        /// Create a new `LocalResolver`
         pub const fn new() -> Self {
             Self
         }
@@ -56,9 +60,11 @@ pub mod resolvers {
         }
     }
 
+    /// A resolver that does not resolve includes
     pub struct NoResolver;
     impl NoResolver {
         #[must_use]
+        /// Create a new `NoResolver`
         pub const fn new() -> Self {
             Self
         }

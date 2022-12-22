@@ -10,6 +10,7 @@ use crate::{error::Error, public::BIPublicKey, signature::BISign};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone)]
+/// A private key for signing PBOs
 pub struct BIPrivateKey {
     authority: String,
     length: u32,
@@ -24,13 +25,13 @@ pub struct BIPrivateKey {
 }
 
 impl BIPrivateKey {
+    // It won't panic, but clippy doesn't know that.
+    // If the precompute fails it return at that point, and won't reach the unwraps.
+    #[allow(clippy::missing_panics_doc)]
     /// Generate a new private key.
     ///
     /// # Errors
     /// If RSA generation fails.
-    ///
-    /// # Panics
-    /// It won't
     pub fn generate(length: u32, authority: &str) -> Result<Self, Error> {
         let mut rng = rand::thread_rng();
         let mut rsa = RsaPrivateKey::new(&mut rng, length as usize)?;

@@ -8,6 +8,7 @@ use rsa::BigUint;
 use crate::Error;
 
 #[derive(Debug)]
+/// A signature for a PBO
 pub struct BISign {
     pub(crate) version: BISignVersion,
     pub(crate) authority: String,

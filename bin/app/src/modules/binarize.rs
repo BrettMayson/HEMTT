@@ -1,5 +1,6 @@
 use std::{fs::create_dir_all, path::PathBuf, process::Command};
 
+use hemtt_bin_error::Error;
 use hemtt_pbo::{prefix::FILES, Prefix};
 use vfs::VfsFileType;
 
@@ -22,7 +23,7 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
+    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), Error> {
         use std::fs::remove_dir_all;
 
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
@@ -80,11 +81,11 @@ impl Module for Binarize {
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
+    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), Error> {
         Ok(())
     }
 
-    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
+    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
         if self.command.is_none() {
             return Ok(());
         }
@@ -154,7 +155,7 @@ impl Module for Binarize {
         Ok(())
     }
 
-    fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), crate::error::Error> {
+    fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), Error> {
         Ok(())
     }
 }

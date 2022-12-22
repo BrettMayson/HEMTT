@@ -1,5 +1,7 @@
-#![deny(clippy::all, clippy::nursery)]
+#![deny(clippy::all, clippy::nursery, missing_docs)]
 #![warn(clippy::pedantic)]
+
+//! Versioning for Arma mods
 
 mod error;
 use std::fmt::{Display, Formatter};
@@ -25,6 +27,18 @@ pub struct Version {
 }
 
 impl Version {
+    /// Create a new version
+    #[must_use]
+    pub const fn new(major: u32, minor: u32, patch: u32, build: Option<u32>) -> Self {
+        Self {
+            major,
+            minor,
+            patch,
+            build,
+            hash: None,
+        }
+    }
+
     /// Read a version from a `script_version.hpp` files using macros
     ///
     /// ```hpp
@@ -46,6 +60,11 @@ impl Version {
             build: Self::extract_version(&lines, "BUILD").ok(),
             hash: None,
         })
+    }
+
+    /// Set the build number
+    pub fn set_build(&mut self, build: impl Into<String>) {
+        self.hash = Some(build.into());
     }
 
     fn extract_version(lines: &[&str], component: &str) -> Result<u32, Error> {

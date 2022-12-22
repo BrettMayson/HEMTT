@@ -1,5 +1,7 @@
-#![deny(clippy::all, clippy::nursery)]
+#![deny(clippy::all, clippy::nursery, missing_docs)]
 #![warn(clippy::pedantic)]
+
+//! HEMTT - Arma 3 Signing
 
 use std::io::Write;
 
@@ -15,7 +17,7 @@ pub use private::BIPrivateKey;
 pub use public::BIPublicKey;
 pub use signature::BISign;
 
-/// Writes a ``BigUint`` to the given output.
+/// Writes a [`BigUint`] to the given output.
 ///
 /// # Errors
 /// If the output fails to write.

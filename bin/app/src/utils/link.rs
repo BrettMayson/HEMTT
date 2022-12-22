@@ -1,9 +1,10 @@
-use crate::error::Error;
+use hemtt_bin_error::Error;
 
 #[allow(clippy::module_name_repetitions)]
 #[cfg(windows)]
 pub fn create_link(original: &str, target: &str) -> Result<(), Error> {
     use std::process::Command;
+
     let out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")

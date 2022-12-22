@@ -1,9 +1,9 @@
 use clap::{ArgAction, ArgMatches, Command};
+use hemtt_bin_error::Error;
 
 use crate::{
     addons::Location,
     context::Context,
-    error::Error,
     executor::Executor,
     modules::{pbo::Collapse, Binarize, FilePatching, Files, Preprocessor},
 };

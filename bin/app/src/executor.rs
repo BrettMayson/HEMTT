@@ -1,6 +1,7 @@
+use hemtt_bin_error::Error;
+
 use crate::{
     context::Context,
-    error::Error,
     modules::{self, pbo::Collapse, Module},
 };
 

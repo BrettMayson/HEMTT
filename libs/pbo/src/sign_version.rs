@@ -4,14 +4,46 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Copy, Clone, Debug, Default)]
 #[allow(clippy::module_name_repetitions)]
+/// Version of BI's signature
 pub enum BISignVersion {
+    /// Version 2
+    ///
+    /// Hashes the following file extensions:
+    /// - fxy
+    /// - jpg
+    /// - lip
+    /// - ogg
+    /// - p3d
+    /// - paa
+    /// - pac
+    /// - png
+    /// - rtm
+    /// - rvmat
+    /// - tga
+    /// - wrp
+    /// - wss
     V2,
     #[default]
+    /// Version 3
+    ///
+    /// Hashes the following file extensions:
+    /// - bikb
+    /// - cfg
+    /// - ext
+    /// - fsm
+    /// - h
+    /// - hpp
+    /// - inc
+    /// - sqf
+    /// - sqfc
+    /// - sqm
+    /// - sqs
     V3,
 }
 
 impl BISignVersion {
     #[must_use]
+    /// Should a file be hashed?
     pub fn should_hash_file(&self, name: &str) -> bool {
         let path = PathBuf::from(name);
         let ext = path.extension().unwrap_or_else(|| OsStr::new(""));
@@ -33,24 +65,24 @@ impl BISignVersion {
             ]
             .contains(&ext),
             Self::V3 => [
-                OsStr::new("sqf"),
-                OsStr::new("inc"),
                 OsStr::new("bikb"),
+                OsStr::new("cfg"),
                 OsStr::new("ext"),
                 OsStr::new("fsm"),
-                OsStr::new("sqm"),
-                OsStr::new("hpp"),
-                OsStr::new("cfg"),
-                OsStr::new("sqs"),
                 OsStr::new("h"),
+                OsStr::new("hpp"),
+                OsStr::new("inc"),
+                OsStr::new("sqf"),
                 OsStr::new("sqfc"),
+                OsStr::new("sqm"),
+                OsStr::new("sqs"),
             ]
             .contains(&ext),
         }
     }
 
     #[must_use]
-    pub const fn nothing(&self) -> &str {
+    pub(crate) const fn nothing(&self) -> &str {
         match self {
             Self::V2 => "nothing",
             Self::V3 => "gnihton",

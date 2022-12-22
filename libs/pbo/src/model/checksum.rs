@@ -1,20 +1,26 @@
 use crate::ReadPbo;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+/// A checksum found at the end of a PBO
+///
+/// The checksum is a SHA1 hash of the PBO's extensions & files
 pub struct Checksum([u8; 20]);
 
 impl Checksum {
     #[must_use]
+    /// Create a new empty checksum
     pub const fn new() -> Self {
         Self([0; 20])
     }
 
     #[must_use]
+    /// Create a new checksum from a byte array
     pub const fn from_bytes(bytes: [u8; 20]) -> Self {
         Self(bytes)
     }
 
     #[must_use]
+    /// Get the checksum as a byte array
     pub const fn as_bytes(&self) -> &[u8; 20] {
         &self.0
     }

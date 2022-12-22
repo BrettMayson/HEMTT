@@ -1,3 +1,5 @@
+//! Whitespace and comments
+
 use peekmore::PeekMoreIterator;
 
 use crate::symbol::Symbol;
@@ -5,8 +7,11 @@ use crate::symbol::Symbol;
 use super::Token;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// Whitespace characters
 pub enum Whitespace {
+    /// A space
     Space,
+    /// A tab (\t)
     Tab,
 }
 
@@ -20,6 +25,7 @@ impl ToString for Whitespace {
     }
 }
 
+/// Skip through whitespace
 pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() {
@@ -40,6 +46,7 @@ pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
     }
 }
 
+/// Skip through whitespace and newlines
 pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() || token.symbol().is_newline() {
@@ -60,6 +67,7 @@ pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
     }
 }
 
+/// Skip through a comment until a newline is found
 /// Assumes the slashes are peeked but not consumed
 pub fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
     input.next();

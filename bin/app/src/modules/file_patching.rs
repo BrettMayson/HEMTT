@@ -1,8 +1,9 @@
 use std::fs::create_dir_all;
 
+use hemtt_bin_error::Error;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{error::Error, utils::create_link};
+use crate::utils::create_link;
 
 use super::Module;
 

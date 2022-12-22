@@ -7,7 +7,6 @@ use hemtt_error::AppError;
 mod addons;
 mod commands;
 mod context;
-mod error;
 mod executor;
 mod modules;
 mod utils;

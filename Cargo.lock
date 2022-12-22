@@ -397,6 +397,7 @@ dependencies = [
  "fs_extra",
  "git2",
  "glob",
+ "hemtt-bin-error",
  "hemtt-bin-internal",
  "hemtt-bin-project",
  "hemtt-config",
@@ -410,6 +411,23 @@ dependencies = [
  "rayon",
  "vfs",
  "winreg",
+]
+
+[[package]]
+name = "hemtt-bin-error"
+version = "0.10.0"
+dependencies = [
+ "git2",
+ "glob",
+ "hemtt-config",
+ "hemtt-error",
+ "hemtt-pbo",
+ "hemtt-preprocessor",
+ "hemtt-signing",
+ "hemtt-version",
+ "serde",
+ "toml",
+ "vfs",
 ]
 
 [[package]]
@@ -427,6 +445,8 @@ dependencies = [
 name = "hemtt-bin-project"
 version = "0.10.0"
 dependencies = [
+ "git2",
+ "hemtt-bin-error",
  "hemtt-config",
  "hemtt-error",
  "hemtt-pbo",
@@ -434,7 +454,6 @@ dependencies = [
  "hemtt-signing",
  "hemtt-version",
  "serde",
- "thiserror",
  "toml",
 ]
 

@@ -10,6 +10,7 @@ use sha1::{Digest, Sha1};
 use crate::{error::Error, model::Header, WritePbo};
 
 #[derive(Default)]
+/// A PBO file that can be written to
 pub struct WritablePbo<I: Seek + Read> {
     extensions: IndexMap<String, String>,
     files: HashMap<String, (I, Header)>,
@@ -17,6 +18,7 @@ pub struct WritablePbo<I: Seek + Read> {
 
 impl<I: Seek + Read> WritablePbo<I> {
     #[must_use]
+    /// Create a new PBO
     pub fn new() -> Self {
         Self {
             extensions: IndexMap::new(),
@@ -71,6 +73,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         }
     }
 
+    /// Get a list of all files in the PBO
     pub fn files(&mut self) -> std::vec::Vec<Header> {
         let mut filenames = Vec::new();
         for (_, h) in self.files.values() {
@@ -79,6 +82,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         filenames
     }
 
+    /// Get a list of all files in the PBO sorted by name
     pub fn files_sorted(&mut self) -> Vec<Header> {
         let mut sorted = self.files();
         sorted.sort_by(|a, b| {
@@ -89,6 +93,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         sorted
     }
 
+    /// Add an extension to the PBO
     pub fn add_extension<K: Into<String>, V: Into<String>>(
         &mut self,
         key: K,
@@ -98,16 +103,19 @@ impl<I: Seek + Read> WritablePbo<I> {
             .insert(key.into(), value.into().trim_matches('\\').to_string())
     }
 
+    /// Remove an extension from the PBO
     pub fn remove_extension(&mut self, key: &str) -> Option<String> {
         self.extensions.remove(key)
     }
 
     #[must_use]
+    /// Get an extension from the PBO
     pub fn extension(&self, key: &str) -> Option<&String> {
         self.extensions.get(key)
     }
 
     #[must_use]
+    /// Get all extensions from the PBO
     pub const fn extensions(&self) -> &IndexMap<String, String> {
         &self.extensions
     }

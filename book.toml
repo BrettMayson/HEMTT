@@ -1,0 +1,18 @@
+[book]
+title = "The HEMTT Book"
+description = "Everything you need to build Arma 3 mods with HEMTT"
+authors = ["Brett Mayson"]
+language = "en"
+src = "book"
+
+[rust]
+edition = "2021"
+
+[output.html]
+git-repository-url = "https://github.com/acemod/HEMTT/tree/main/book"
+edit-url-template = "https://github.com/acemod/HEMTT/edit/main/book/{path}"
+
+[build]
+build-dir = "target/book"
+
+output.html.preferred-dark-theme = "ayu"

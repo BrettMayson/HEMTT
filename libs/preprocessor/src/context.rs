@@ -3,7 +3,7 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
 };
 
-use hemtt_tokens::{symbol::Symbol, Token};
+use hemtt_tokens::{Symbol, Token};
 
 use crate::{ifstate::IfStates, Error};
 
@@ -48,6 +48,7 @@ const BUILTIN: [&str; 37] = [
 ];
 
 #[derive(Clone, Debug)]
+/// Preprocessor context
 pub struct Context<'a> {
     ifstates: IfStates,
     definitions: HashMap<String, (Token, Definition)>,
@@ -60,6 +61,7 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     #[must_use]
+    /// Create a new `Context`
     pub fn new(entry: String) -> Self {
         Self {
             ifstates: IfStates::new(),
@@ -73,6 +75,7 @@ impl<'a> Context<'a> {
     }
 
     #[must_use]
+    /// Create a new `Context` from a parent
     pub fn stack(&'a self, source: Token) -> Context<'a> {
         Self {
             ifstates: self.ifstates.clone(),
@@ -89,55 +92,65 @@ impl<'a> Context<'a> {
         }
     }
 
+    /// Push a [`Token`] to the trace
     pub fn push(&mut self, source: Token) {
         self.trace.push(source);
     }
 
+    /// Pop a [`Token`] from the trace
     pub fn pop(&mut self) -> Option<Token> {
         self.trace.pop()
     }
 
     #[must_use]
+    /// Get the current trace
     pub fn trace(&self) -> Vec<Token> {
         self.trace.clone()
     }
 
     #[must_use]
+    /// Get the current [`IfState`](crate::ifstate::IfState)
     pub const fn ifstates(&self) -> &IfStates {
         &self.ifstates
     }
 
+    /// Get the current [`IfState`](crate::ifstate::IfState) mutably
     pub fn ifstates_mut(&mut self) -> &mut IfStates {
         &mut self.ifstates
     }
 
     #[must_use]
+    /// Get the current [`Definition`]s
     pub const fn definitions(&self) -> &HashMap<String, (Token, Definition)> {
         &self.definitions
     }
 
+    /// Get the current [`Definition`]s mutably
     pub fn definitions_mut(&mut self) -> &mut HashMap<String, (Token, Definition)> {
         &mut self.definitions
     }
 
     #[must_use]
+    /// Get the entry name
     pub const fn entry(&self) -> &String {
         &self.entry
     }
 
     #[must_use]
+    /// Get the current file
     pub const fn current_file(&self) -> &String {
         &self.current_file
     }
 
+    /// Set the current file
     pub fn set_current_file(&mut self, file: String) {
         self.current_file = file;
     }
 
-    /// Define a macro
+    /// Define a macro [`Definition`]
     ///
     /// # Errors
-    /// If the macro is a builtin macro
+    /// [`Error::ChangeBuiltin`] if the macro is a builtin macro
     pub fn define(
         &mut self,
         ident: String,
@@ -154,10 +167,10 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    /// Undefine a macro
+    /// Undefine a macro [`Definition`]
     ///
     /// # Errors
-    /// If the macro is a builtin macro
+    /// [`Error::ChangeBuiltin`] if the macro is a builtin macro
     pub fn undefine(
         &mut self,
         ident: &str,
@@ -173,11 +186,13 @@ impl<'a> Context<'a> {
     }
 
     #[must_use]
+    /// Check if a macro [`Definition`] exists
     pub fn has(&self, ident: &str) -> bool {
         self.definitions.contains_key(ident)
     }
 
     #[must_use]
+    /// Get a macro [`Definition`]
     pub fn get(&self, ident: &str, token: &Token) -> Option<(Token, Definition)> {
         match ident {
             "__LINE__" => Some((
@@ -247,13 +262,26 @@ impl<'a> Context<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// A macro definition
 pub enum Definition {
+    /// A [`FunctionDefinition`] that takes parameters
     Function(FunctionDefinition),
+    /// A value that is a list of [`Token`]s to be added at the call site
     Value(Vec<Token>),
+    /// A flag that can be checked with `#ifdef`
     Unit,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// A function definition
+///
+/// # Examples
+///
+/// ```cpp
+/// #define QUOTE(x) #x
+/// #define FOO(a, b) QUOTE(a + b)
+/// my_value = FOO(1, 2);
+/// ```
 pub struct FunctionDefinition {
     parameters: Vec<Token>,
     body: Vec<Token>,
@@ -261,16 +289,19 @@ pub struct FunctionDefinition {
 
 impl FunctionDefinition {
     #[must_use]
+    /// Create a new [`FunctionDefinition`]
     pub fn new(parameters: Vec<Token>, body: Vec<Token>) -> Self {
         Self { parameters, body }
     }
 
     #[must_use]
+    /// Get the parameter [`Token`]s
     pub fn parameters(&self) -> &[Token] {
         &self.parameters
     }
 
     #[must_use]
+    /// Get the body [`Token`]s
     pub fn body(&self) -> &[Token] {
         &self.body
     }

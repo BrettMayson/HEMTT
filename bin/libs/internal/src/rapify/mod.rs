@@ -40,10 +40,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     }
 }
 
-fn run(source: &Path, dest: &Path) -> Result<(), AppError> {
+fn run(source: &Path, dest: &PathBuf) -> Result<(), AppError> {
     assert!(source.is_file(), "Source file does not exist");
     assert!(!dest.is_file(), "Destination file already exists");
-    let tokens = preprocess_file(&source.display().to_string(), &LocalResolver::new())?;
+    let tokens = preprocess_file(source.display().to_string().as_str(), &LocalResolver::new())?;
     let rapified = Config::parse(
         &hemtt_config::Options::default(),
         &mut tokens.into_iter().peekmore(),

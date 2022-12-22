@@ -1,8 +1,12 @@
 use crate::whitespace::Whitespace;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// The symbol of a [`Token`](crate::Token)
 pub enum Symbol {
+    /// A word is a contiguous sequence of letters, digits, and underscores.
+    /// A word will never start with a digit.
     Word(String),
+    /// A single alphanumeric character
     Alpha(char),
     /// Parsed digits will always be a single digit, but generated digits may have multiple digits.
     Digit(usize),
@@ -51,32 +55,48 @@ pub enum Symbol {
     /// >
     RightAngle,
 
+    /// A unicode character
     Unicode(String),
 
+    /// A newline \n
     Newline,
+    /// A [`Whitespace`] character
     Whitespace(Whitespace),
+    /// A comment
+    /// Comments are not parsed, but are kept in the token stream
+    /// so that they can be outputted in the same format as the input.
+    ///
+    /// Comments have two forms:
+    /// Single line comments start with `//` and end with a newline.
+    /// Multi line comments start with `/*` and end with `*/`.
     Comment(String),
 
+    /// End of input
     Eoi,
+    /// Void token, not outputted
     Void,
 }
 
 impl Symbol {
+    /// Create a new [`Word`](Symbol::Word) symbol
     pub fn from_word<S: Into<String>>(word: S) -> Self {
         Self::Word(word.into())
     }
 
     #[must_use]
+    /// Check if a symbol is [`Whitespace`](Symbol::Whitespace) or [`Comment`](Symbol::Comment)
     pub const fn is_whitespace(&self) -> bool {
         matches!(&self, Self::Whitespace(_) | Self::Comment(_))
     }
 
     #[must_use]
+    /// Check if a symbol is [`Newline`](Symbol::Newline)
     pub const fn is_newline(&self) -> bool {
         matches!(&self, Self::Newline)
     }
 
     #[must_use]
+    /// Get the output of a symbol
     pub fn output(&self) -> String {
         match *self {
             Self::Join => String::new(),

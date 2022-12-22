@@ -6,6 +6,7 @@ use crate::{ReadPbo, WritePbo};
 use super::mime::Mime;
 
 #[derive(Clone, Default, Debug)]
+/// A PBO file header
 pub struct Header {
     filename: String,
     mime: Mime,
@@ -17,6 +18,7 @@ pub struct Header {
 
 impl Header {
     #[must_use]
+    /// Create a new header for a file
     pub fn new_for_file(filename: String, size: u32) -> Self {
         Self {
             filename,
@@ -27,6 +29,7 @@ impl Header {
     }
 
     #[must_use]
+    /// Create a new header for an extension
     pub fn ext() -> Self {
         Self {
             filename: String::new(),
@@ -36,31 +39,40 @@ impl Header {
     }
 
     #[must_use]
+    /// Get the filename
     pub fn filename(&self) -> &str {
         &self.filename
     }
 
     #[must_use]
+    /// Get the mime type
     pub const fn mime(&self) -> &Mime {
         &self.mime
     }
 
     #[must_use]
+    /// Get the original size
     pub const fn original(&self) -> u32 {
         self.original
     }
 
     #[must_use]
+    /// Get the reserved field
     pub const fn reserved(&self) -> u32 {
         self.reserved
     }
 
     #[must_use]
+    /// Get the timestamp
+    ///
+    /// Stored as a UNIX timestamp
+    /// This is the number of seconds since 1/1/1970
     pub const fn timestamp(&self) -> u32 {
         self.timestamp
     }
 
     #[must_use]
+    /// Get the size
     pub const fn size(&self) -> u32 {
         self.size
     }

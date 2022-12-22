@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use hemtt_bin_error::Error;
 use hemtt_config::{Config, Parse, Rapify};
 use hemtt_pbo::{prefix::FILES, Prefix};
 use hemtt_preprocessor::{preprocess_file, Resolver};
@@ -8,7 +9,7 @@ use peekmore::PeekMore;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::{VfsFileType, VfsPath};
 
-use crate::{context::Context, error::Error};
+use crate::context::Context;
 
 use super::Module;
 
@@ -48,7 +49,6 @@ impl Module for Preprocessor {
 }
 
 pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
-    // TODO fix error in vfs
     let tokens = preprocess_file(path.as_str(), resolver)?;
     println!("parsing {}", path.as_str());
     let rapified = Config::parse(

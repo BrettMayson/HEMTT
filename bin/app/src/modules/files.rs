@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 
-use crate::error::Error;
+use hemtt_bin_error::Error;
 
 use super::Module;
 

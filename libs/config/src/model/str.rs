@@ -1,4 +1,4 @@
-use hemtt_tokens::symbol::Symbol;
+use hemtt_tokens::Symbol;
 use peekmore::PeekMoreIterator;
 
 use crate::{
@@ -10,6 +10,7 @@ use crate::{
 use super::Parse;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// A string value
 pub struct Str(pub String);
 
 impl Parse for Str {

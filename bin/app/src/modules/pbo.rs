@@ -1,9 +1,10 @@
 use std::fs::{create_dir_all, File};
 
+use hemtt_bin_error::Error;
 use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
 use vfs::VfsFileType;
 
-use crate::{addons::Location, context::Context, error::Error};
+use crate::{addons::Location, context::Context};
 
 /// Should the optional and compat PBOs be collapsed into the addons folder
 pub enum Collapse {
@@ -68,6 +69,7 @@ pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
                             ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
                         )?;
                         pbo.add_extension("prefix", prefix.into_inner());
+                        pbo.add_extension("version", ctx.config().version().get()?.to_string());
                         continue;
                     }
 

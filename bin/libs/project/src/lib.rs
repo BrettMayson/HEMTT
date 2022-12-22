@@ -4,6 +4,3 @@
 
 pub mod config;
 pub mod hemtt;
-
-mod error;
-pub use error::Error;

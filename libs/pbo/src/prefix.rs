@@ -1,9 +1,25 @@
+//! A prefix file for a PBO
+//!
+//! It can be a single line defining the prefix, or a key-value pair defining the prefix and extra headers
+//!
+//! # Examples
+//!
+//! ```text
+//! \z\hemtt\addons\main
+//! ```
+//!
+//! ```text
+//! prefix=\z\hemtt\addons\main
+//! extra=header
+//! ```
+
 use crate::Error;
 
 /// Files that may be used to contain the prefix, case insensitive, convert to lowercase
 pub const FILES: [&str; 3] = ["$pboprefix$", "pboprefix.txt", "$prefix$"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// A prefix for a PBO
 pub struct Prefix(String);
 
 impl Prefix {
@@ -21,6 +37,7 @@ impl Prefix {
 
     #[allow(clippy::missing_const_for_fn)]
     #[must_use]
+    /// Get the prefix as a string
     pub fn into_inner(self) -> String {
         self.0
     }

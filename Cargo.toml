@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "bin/app",
+    "bin/libs/error",
     "bin/libs/internal",
     "bin/libs/project",
 
