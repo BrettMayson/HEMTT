@@ -35,9 +35,10 @@ pub fn cli() -> Command {
         .subcommand(commands::build::cli())
         .subcommand(commands::release::cli())
         .subcommand(hemtt_bin_internal::cli().name("internal"));
-    if cfg!(windows) {
-        global = global.subcommand(commands::launch::cli());
-    }
+        #[cfg(windows)]
+        {
+            global = global.subcommand(commands::launch::cli());
+        }
     global.arg(
         clap::Arg::new("threads")
             .global(true)
