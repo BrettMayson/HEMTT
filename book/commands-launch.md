@@ -22,7 +22,7 @@ Options:
 </code>
 </pre>
 
-`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](commands-dev.md) command internally after a few checks, and options are passed to the `dev` command.
+`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](commands-dev.md) command internally after a few checks, options are passed to the `dev` command.
 
 ## Configuration
 
