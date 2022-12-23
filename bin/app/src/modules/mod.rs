@@ -7,12 +7,14 @@ pub mod pbo;
 mod binarize;
 mod file_patching;
 mod files;
+mod new;
 mod preprocessor;
 mod sign;
 
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;
+pub use new::Licenses;
 pub use preprocessor::Preprocessor;
 pub use sign::Sign;
 

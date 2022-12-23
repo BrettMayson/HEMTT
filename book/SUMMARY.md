@@ -10,7 +10,20 @@
     - [Minimum](configuration-minimum.md)
     - [Version](configuration-version.md)
 - [Commands](commands.md)
-    - [dev](dev.md)
-    - [launch](launch.md)
-    - [build](build.md)
-    - [release](release.md)
+    - [new](commands-new.md)
+    - [dev](commands-dev.md)
+    - [launch](commands-launch.md)
+    - [build](commands-build.md)
+    - [release](commands-release.md)
+
+<!-- # Modding Guide
+
+- [Getting Started](getting-started.md)
+    - [Project Setup](getting-started-setup.md)
+    - [Testing](getting-started-testing.md)
+    - [Releasing](getting-started-releasing.md)
+    - [Automating with GitHub](getting-started-github.md)
+- [Project Structure](project-structure.md)
+    - [Prefixing](project-structure-prefixing.md)
+    - [Addons](project-structure-addons.md)
+    - [Optionals](project-structure-optionals.md) -->

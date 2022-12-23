@@ -1,8 +1,6 @@
 # hemtt dev
 
-<pre>
-<code>
-Build your mod for local development and testing.
+<pre><code>Build your mod for local development and testing.
 
 Usage: hemtt.exe dev [OPTIONS]
 

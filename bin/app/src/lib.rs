@@ -31,6 +31,7 @@ pub fn cli() -> Command {
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .subcommand_required(true)
         .arg_required_else_help(true)
+        .subcommand(commands::new::cli())
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
         .subcommand(commands::release::cli())
@@ -66,6 +67,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         }
     }
     match matches.subcommand() {
+        Some(("new", matches)) => commands::new::execute(matches).map_err(std::convert::Into::into),
         Some(("dev", matches)) => {
             let _ = commands::dev::execute(matches)?;
             Ok(())

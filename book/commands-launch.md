@@ -2,20 +2,18 @@
 
 Available in: **v0.10.0 Alpha 8**
 
-<pre>
-<code>
-Launch Arma 3 with your mod and dependencies.
+<pre><code>Launch Arma 3 with your mod and dependencies.
 
 Usage: hemtt.exe launch [OPTIONS]
 
 Options:
-  <a href="dev.md#-b---binarize">-b, --binarize</a>
+  <a href="commands-dev.md#-b---binarize">-b, --binarize</a>
           Use BI's binarize on supported files
 
-  <a href="dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
+  <a href="commands-dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
           Include an optional addon folder
 
-  <a href="dev.md#-o---all-optionals">-O, --all-optionals</a>
+  <a href="commands-dev.md#-o---all-optionals">-O, --all-optionals</a>
           Include all optional addon folders
 
   <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
@@ -26,7 +24,7 @@ Options:
 </code>
 </pre>
 
-`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, and options are passed to the `dev` command.
+`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](commands-dev.md) command internally after a few checks, and options are passed to the `dev` command.
 
 ## Configuration
 

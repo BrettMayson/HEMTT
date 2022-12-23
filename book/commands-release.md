@@ -12,7 +12,7 @@ It is intended to be used for releasing your mod.
 
 ## Configuration
 
-`hemtt release` is built the same way as `hemtt build`, and will use its configuration.
+`hemtt release` is built the same way as [`hemtt build`](commands-build.md), and will use its configuration.
 
 **hemtt.toml**
 

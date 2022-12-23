@@ -7,6 +7,11 @@ pub enum Error {
     #[error("Invalid config: {0}")]
     ConfigInvalid(String),
 
+    #[error("Folder already exists: {0}")]
+    NewFolderExists(String),
+    #[error("New can only be ran in an interactive terminal")]
+    NewNoInput,
+
     #[error("Invalid addon location: {0}")]
     AddonLocationInvalid(String),
     #[error("Optional addon not found: {0}")]

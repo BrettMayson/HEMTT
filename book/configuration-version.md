@@ -67,5 +67,5 @@ The git hash can be disabled by setting `version.git_hash = 0`, or configured to
 ```toml
 [version]
 git_hash = 0 # Disabled
-git_hash = 7 # 7 characters
+git_hash = 4 # 4 characters
 ```
