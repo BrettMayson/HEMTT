@@ -41,12 +41,12 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         let Some(root) = common.parent() else {
             return Err(Error::WorkshopNotFound);
         };
-        let workshop = root.join("workshop").join("content").join("107410");
-        if !workshop.exists() {
+        let workshop_folder = root.join("workshop").join("content").join("107410");
+        if !workshop_folder.exists() {
             return Err(Error::WorkshopNotFound);
         };
         for load_mod in config.hemtt().launch().workshop() {
-            let mod_path = workshop.join(load_mod);
+            let mod_path = workshop_folder.join(load_mod);
             if !mod_path.exists() {
                 return Err(Error::WorkshopModNotFound(load_mod.to_string()));
             };
