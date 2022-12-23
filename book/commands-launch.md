@@ -1,7 +1,5 @@
 # hemtt launch
 
-Available in: **v0.10.0 Alpha 8**
-
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
 Usage: hemtt.exe launch [OPTIONS]
