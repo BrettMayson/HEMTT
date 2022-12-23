@@ -2,8 +2,16 @@ use hemtt_error::{thiserror, PrettyError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("`hemtt.toml` not found")]
+    ConfigNotFound,
+    #[error("Invalid config: {0}")]
+    ConfigInvalid(String),
+
     #[error("Invalid addon location: {0}")]
-    InvalidAddonLocation(String),
+    AddonLocationInvalid(String),
+    #[error("Optional addon not found: {0}")]
+    AddonOptionalNotFound(String),
+
     #[error("Unable to create link: {0}")]
     Link(String),
     #[error("Arma 3 not found in Steam")]

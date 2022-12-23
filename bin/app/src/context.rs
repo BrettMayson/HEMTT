@@ -8,7 +8,7 @@ use hemtt_bin_error::Error;
 use hemtt_bin_project::config::Configuration;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
-use crate::addons::{Addon, Location};
+use crate::addons::Addon;
 
 pub struct Context {
     config: Configuration,
@@ -19,7 +19,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(locations: &[Location], folder: &str) -> Result<Self, Error> {
+    pub fn new(folder: &str) -> Result<Self, Error> {
         let tmp = temp_dir().join("hemtt").join(
             std::env::current_dir()
                 .unwrap()
@@ -38,7 +38,13 @@ impl Context {
         }
         create_dir_all(&build_folder)?;
         Ok(Self {
-            config: Configuration::from_file(Path::new("hemtt.toml"))?,
+            config: {
+                let path = Path::new("hemtt.toml");
+                if !path.exists() {
+                    return Err(Error::ConfigNotFound);
+                }
+                Configuration::from_file(path)?
+            },
             vfs: AltrootFS::new(
                 OverlayFS::new(&{
                     let mut layers = vec![MemoryFS::new().into()];
@@ -54,7 +60,7 @@ impl Context {
             )
             .into(),
             hemtt_folder: build_folder,
-            addons: Addon::scan(locations)?,
+            addons: Addon::scan()?,
             tmp,
         })
     }

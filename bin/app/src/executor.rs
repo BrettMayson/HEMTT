@@ -46,7 +46,7 @@ impl<'a> Executor<'a> {
         for module in &self.modules {
             module.pre_build(self.ctx)?;
         }
-        modules::pbo::build(self.ctx, &self.collapse)?;
+        modules::pbo::build(self.ctx, self.collapse)?;
         for module in &self.modules {
             module.post_build(self.ctx)?;
         }

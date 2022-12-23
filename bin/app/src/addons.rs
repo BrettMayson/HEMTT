@@ -29,9 +29,9 @@ impl Addon {
         format!("{}/{}", self.location.to_string(), self.name)
     }
 
-    pub fn scan(locations: &[Location]) -> Result<Vec<Self>, Error> {
+    pub fn scan() -> Result<Vec<Self>, Error> {
         let mut addons = Vec::new();
-        for location in locations {
+        for location in [Location::Addons, Location::Optionals] {
             addons.extend(location.scan()?);
         }
         Ok(addons)
@@ -67,7 +67,7 @@ impl FromStr for Location {
         match s {
             "addons" => Ok(Self::Addons),
             "optionals" => Ok(Self::Optionals),
-            _ => Err(Error::InvalidAddonLocation(s.to_string())),
+            _ => Err(Error::AddonLocationInvalid(s.to_string())),
         }
     }
 }

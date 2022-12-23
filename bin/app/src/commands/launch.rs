@@ -1,23 +1,17 @@
 use std::path::Path;
 
-use clap::{ArgAction, ArgMatches, Command};
+use clap::{ArgMatches, Command};
 use hemtt_bin_error::Error;
 use hemtt_bin_project::config::Configuration;
 use steamlocate::SteamDir;
 
 use crate::utils::create_link;
 
+use super::dev;
+
 #[must_use]
 pub fn cli() -> Command {
-    Command::new("launch")
-        .about("Launch Arma 3 with your mod and dependencies")
-        .arg(
-            clap::Arg::new("binarize")
-                .long("binarize")
-                .short('b')
-                .help("Use BI's binarize on supported files")
-                .action(ArgAction::SetTrue),
-        )
+    dev::add_args(Command::new("launch").about("Launch Arma 3 with your mod and dependencies."))
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {

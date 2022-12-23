@@ -105,7 +105,14 @@ impl Configuration {
     /// file does not contain a valid configuration, an error is returned.
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
-        Self::from_str(&file)
+        let config = Self::from_str(&file)?;
+
+        // Validate
+        if config.prefix.is_empty() {
+            return Err(Error::ConfigInvalid("prefix cannot be empty".to_string()));
+        }
+
+        Ok(config)
     }
 }
 

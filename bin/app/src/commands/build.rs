@@ -2,7 +2,6 @@ use clap::{ArgMatches, Command};
 use hemtt_bin_error::Error;
 
 use crate::{
-    addons::Location,
     context::Context,
     executor::Executor,
     modules::{pbo::Collapse, Binarize, Files, Preprocessor},
@@ -16,7 +15,7 @@ pub fn cli() -> Command {
 }
 
 pub fn execute(_matches: &ArgMatches) -> Result<(), Error> {
-    let ctx = Context::new(&[Location::Addons, Location::Optionals], "build")?;
+    let ctx = Context::new("build")?;
     let mut executor = Executor::new(&ctx);
 
     executor.collapse(Collapse::No);

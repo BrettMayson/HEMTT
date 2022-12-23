@@ -6,6 +6,7 @@ use vfs::VfsFileType;
 
 use crate::{addons::Location, context::Context};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Should the optional and compat PBOs be collapsed into the addons folder
 pub enum Collapse {
     /// Yes, used for development
@@ -14,7 +15,7 @@ pub enum Collapse {
     No,
 }
 
-pub fn build(ctx: &Context, collapse: &Collapse) -> Result<(), Error> {
+pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
     ctx.addons()
         .to_vec()
         .iter()
