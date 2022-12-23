@@ -23,7 +23,7 @@ impl Module for Sign {
 
     fn check(&self, ctx: &crate::context::Context) -> Result<(), Error> {
         if ctx.config().version().git_hash().is_some() {
-            let _ = Repository::open(".")?;
+            Repository::open(".")?;
         }
         Ok(())
     }

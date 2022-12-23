@@ -69,7 +69,7 @@ impl DevOptions {
 pub struct LaunchOptions {
     #[serde(default)]
     /// Workshop mods that should be launched with the mod
-    mods: Vec<String>,
+    workshop: Vec<String>,
 
     #[serde(default)]
     // Extra launch parameters
@@ -78,8 +78,8 @@ pub struct LaunchOptions {
 
 impl LaunchOptions {
     #[must_use]
-    pub fn mods(&self) -> &[String] {
-        &self.mods
+    pub fn workshop(&self) -> &[String] {
+        &self.workshop
     }
 
     #[must_use]

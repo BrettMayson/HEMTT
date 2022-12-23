@@ -25,16 +25,16 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     println!("Arma 3 found at: {:?}", arma3dir.path);
 
-    let mut mods = config.hemtt().launch().parameters().to_vec();
+    let mut workshop = config.hemtt().launch().parameters().to_vec();
 
-    mods.push({
+    workshop.push({
         let mut path = std::env::current_dir()?;
         path.push(".hemtt/dev");
         path.display().to_string()
     });
 
     // climb to the workshop folder
-    if !config.hemtt().launch().mods().is_empty() {
+    if !config.hemtt().launch().workshop().is_empty() {
         let Some(common) = arma3dir.path.parent() else {
             return Err(Error::WorkshopNotFound);
         };
@@ -45,12 +45,12 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         if !workshop.exists() {
             return Err(Error::WorkshopNotFound);
         };
-        for load_mod in config.hemtt().launch().mods() {
+        for load_mod in config.hemtt().launch().workshop() {
             let mod_path = workshop.join(load_mod);
             if !mod_path.exists() {
                 return Err(Error::WorkshopModNotFound(load_mod.to_string()));
             };
-            mods.push(mod_path.display().to_string());
+            workshop.push(mod_path.display().to_string());
         }
     }
 
@@ -71,7 +71,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     let args = vec![format!(
         "-mod=\"{}\" -skipIntro -noSplash -showScriptErrors -debug -filePatching",
-        mods.join(";")
+        workshop.join(";")
     )];
 
     println!(

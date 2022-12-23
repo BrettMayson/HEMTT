@@ -5,6 +5,8 @@ use hemtt_pbo::{prefix::FILES, Prefix};
 use vfs::VfsFileType;
 
 use super::Module;
+
+#[cfg(windows)]
 use crate::utils::create_link;
 
 pub struct Binarize {
@@ -81,7 +83,7 @@ impl Module for Binarize {
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn init(&mut self, _ctx: &crate::context::Context) -> Result<(), Error> {
         Ok(())
     }
 

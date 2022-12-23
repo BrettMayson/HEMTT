@@ -27,6 +27,7 @@ lazy_static::lazy_static! {
 
 #[must_use]
 pub fn cli() -> Command {
+    #[allow(unused_mut)]
     let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .subcommand_required(true)
@@ -69,7 +70,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     match matches.subcommand() {
         Some(("new", matches)) => commands::new::execute(matches).map_err(std::convert::Into::into),
         Some(("dev", matches)) => {
-            let _ = commands::dev::execute(matches)?;
+            commands::dev::execute(matches)?;
             Ok(())
         }
         Some(("build", matches)) => {

@@ -20,8 +20,9 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
     Ok(())
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[cfg(not(windows))]
-pub fn create_link(original: &str, target: &str) -> Result<(), Error> {
-    std::os::unix::fs::symlink(target, original)?;
+pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
+    std::os::unix::fs::symlink(target, link)?;
     Ok(())
 }
