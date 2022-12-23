@@ -25,7 +25,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     println!("Arma 3 found at: {:?}", arma3dir.path);
 
-    let mut workshop = config.hemtt().launch().parameters().to_vec();
+    let mut workshop = Vec::new();
 
     workshop.push({
         let mut path = std::env::current_dir()?;
@@ -70,8 +70,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
 
     let args = vec![format!(
-        "-mod=\"{}\" -skipIntro -noSplash -showScriptErrors -debug -filePatching",
-        workshop.join(";")
+        "-mod=\"{}\" -skipIntro -noSplash -showScriptErrors -debug -filePatching {}",
+        workshop.join(";"),
+        config.hemtt().launch().parameters().join(" ")
     )];
 
     println!(

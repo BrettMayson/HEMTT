@@ -2,6 +2,7 @@
 #![warn(clippy::pedantic)]
 
 use clap::{ArgAction, ArgMatches, Command};
+use context::Context;
 use hemtt_error::AppError;
 
 mod addons;
@@ -74,7 +75,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
             Ok(())
         }
         Some(("build", matches)) => {
-            commands::build::execute(matches).map_err(std::convert::Into::into)
+            let ctx = Context::new("build")?;
+            let mut executor = executor::Executor::new(&ctx);
+            commands::build::execute(matches, &mut executor).map_err(std::convert::Into::into)
         }
         Some(("release", matches)) => {
             commands::release::execute(matches).map_err(std::convert::Into::into)
