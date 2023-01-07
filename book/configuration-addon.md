@@ -2,7 +2,7 @@
 
 In addition to the `hemtt.toml` in the root of the project, HEMTT also supports an optional `hemtt.toml` in each addon folder.
 
-***hemtt.toml***
+***/addons/banana/hemtt.toml***
 
 ```toml
 no_bin = [
