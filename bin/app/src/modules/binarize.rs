@@ -99,6 +99,23 @@ impl Module for Binarize {
                 if entry.metadata().unwrap().file_type == VfsFileType::File
                     && ["rtm", "p3d"].contains(&entry.extension().unwrap_or_default().as_str())
                 {
+                    if let Some(config) = addon.config() {
+                        if config
+                            .no_bin(&addon.folder())?
+                            .contains(&PathBuf::from(entry.as_str().trim_start_matches('/')))
+                        {
+                            println!("skipping binarization of {}", entry.as_str());
+                            continue;
+                        }
+                    }
+
+                    // skip OLOD & BMTR files as they are already binarized
+                    let mut buf = [0; 4];
+                    entry.open_file().unwrap().read_exact(&mut buf).unwrap();
+                    if buf == [0x4F, 0x4C, 0x4F, 0x44] || buf == [0x42, 0x4D, 0x54, 0x52] {
+                        continue;
+                    }
+
                     let addon_root = PathBuf::from(entry.as_str())
                         .components()
                         .take(3)

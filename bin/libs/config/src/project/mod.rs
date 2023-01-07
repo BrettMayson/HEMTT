@@ -3,8 +3,7 @@ use std::{collections::HashMap, path::Path, str::FromStr};
 use hemtt_bin_error::Error;
 use serde::{Deserialize, Serialize};
 
-use crate::hemtt::Features;
-
+mod hemtt;
 mod signing;
 mod version;
 
@@ -30,7 +29,7 @@ pub struct Configuration {
     files: Vec<String>,
 
     #[serde(default)]
-    hemtt: Features,
+    hemtt: hemtt::Features,
 
     #[serde(default)]
     signing: signing::Options,
@@ -88,7 +87,7 @@ impl Configuration {
     }
 
     #[must_use]
-    pub const fn hemtt(&self) -> &Features {
+    pub const fn hemtt(&self) -> &hemtt::Features {
         &self.hemtt
     }
 

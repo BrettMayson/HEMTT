@@ -1,6 +1,6 @@
 [package]
-name = "hemtt-bin-project"
-description = "HEMTT - Project Configuration"
+name = "hemtt-bin-config"
+description = "HEMTT - Configuration"
 version = "0.10.0"
 edition = "2021"
 
@@ -15,5 +15,6 @@ hemtt-signing = { path = "../../../libs/signing" }
 hemtt-version = { path = "../../../libs/version" }
 
 git2 = "0.15.0"
+glob = "0.3.1"
 serde = { workspace = true, features = ["derive"] }
 toml = { version = "0.5.10" }

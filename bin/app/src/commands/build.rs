@@ -1,4 +1,4 @@
-use clap::{ArgMatches, Command, ArgAction};
+use clap::{ArgAction, ArgMatches, Command};
 use hemtt_bin_error::Error;
 
 use crate::{

@@ -40,6 +40,8 @@ pub enum Error {
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
     #[error("Glob Error: {0}")]
+    GlobError(#[from] glob::GlobError),
+    #[error("Glob Pattern Error: {0}")]
     GlobPattern(#[from] glob::PatternError),
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),

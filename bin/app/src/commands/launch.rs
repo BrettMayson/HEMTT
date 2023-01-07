@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use clap::{ArgMatches, Command};
+use hemtt_bin_config::project::Configuration;
 use hemtt_bin_error::Error;
-use hemtt_bin_project::config::Configuration;
 use steamlocate::SteamDir;
 
 use crate::utils::create_link;

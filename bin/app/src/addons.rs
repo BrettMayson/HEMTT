@@ -1,16 +1,30 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
+use hemtt_bin_config::addon::Configuration;
 use hemtt_bin_error::Error;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Addon {
     name: String,
     location: Location,
+    config: Option<Configuration>,
 }
 
 impl Addon {
-    pub const fn new(name: String, location: Location) -> Self {
-        Self { name, location }
+    pub fn new(name: String, location: Location) -> Self {
+        Self {
+            config: {
+                let path =
+                    PathBuf::from(format!("{}/{}", location.to_string(), name)).join("hemtt.toml");
+                if path.exists() {
+                    Some(Configuration::from_file(&path).unwrap())
+                } else {
+                    None
+                }
+            },
+            location,
+            name,
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -27,6 +41,10 @@ impl Addon {
 
     pub fn folder(&self) -> String {
         format!("{}/{}", self.location.to_string(), self.name)
+    }
+
+    pub const fn config(&self) -> Option<&Configuration> {
+        self.config.as_ref()
     }
 
     pub fn scan() -> Result<Vec<Self>, Error> {

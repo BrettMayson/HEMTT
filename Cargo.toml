@@ -1,9 +1,9 @@
 [workspace]
 members = [
     "bin/app",
+    "bin/libs/config",
     "bin/libs/error",
     "bin/libs/internal",
-    "bin/libs/project",
 
     "libs/config",
     "libs/error",
@@ -16,8 +16,8 @@ members = [
 ]
 
 [workspace.dependencies]
-pest = "2.5.1"
-pest_derive = "2.5.1"
+pest = "2.5.2"
+pest_derive = "2.5.2"
 clap = "4.0.32"
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 sha-1 = "0.10.1"

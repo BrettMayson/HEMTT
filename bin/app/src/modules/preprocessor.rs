@@ -28,18 +28,25 @@ impl Module for Preprocessor {
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx)?;
         // TODO map to extra error
+        // TODO ^ remember what that means
         ctx.addons()
             .par_iter()
             .map(|addon| {
-                // TODO fix error in vfs
                 for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
                     let entry = entry?;
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
                     {
+                        if entry.filename() == "config.cpp" {
+                            if let Some(config) = addon.config() {
+                                if !config.preprocess() {
+                                    println!("skiping {}", entry.as_str());
+                                    continue;
+                                }
+                            }
+                        }
                         println!("preprocessing {}", entry.as_str());
                         preprocess(entry.clone(), ctx, &resolver)?;
-                        println!("done {}", entry.as_str());
                     }
                 }
                 Ok(())

@@ -1,4 +1,4 @@
-# Version
+# Version Configuration
 
 HEMTT uses the project version as part of the signing authority.
 It is also included as an extension in built PBOs.

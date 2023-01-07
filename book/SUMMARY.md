@@ -9,6 +9,7 @@
 - [Configuration](configuration.md)
     - [Minimum](configuration-minimum.md)
     - [Version](configuration-version.md)
+    - [Addon](configuration-addon.md)
 - [Commands](commands.md)
     - [new](commands-new.md)
     - [dev](commands-dev.md)
