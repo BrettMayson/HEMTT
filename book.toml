@@ -9,8 +9,8 @@ src = "book"
 edition = "2021"
 
 [output.html]
-git-repository-url = "https://github.com/acemod/HEMTT/tree/main/book"
-edit-url-template = "https://github.com/acemod/HEMTT/edit/main/book/{path}"
+git-repository-url = "https://github.com/brettmayson/HEMTT/tree/main/book"
+edit-url-template = "https://github.com/brettmayson/HEMTT/edit/main/book/{path}"
 default-theme = "ayu"
 preferred-dark-theme = "ayu"
 
