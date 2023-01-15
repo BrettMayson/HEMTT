@@ -10,6 +10,8 @@ hemtt release
 
 It is intended to be used for releasing your mod.
 
+It will create a zip archive in the `.hemtt` folder, named `{project name}.zip`.
+
 ## Configuration
 
 `hemtt release` is built the same way as [`hemtt build`](commands-build.md), and will use its configuration.

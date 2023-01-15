@@ -51,6 +51,8 @@ pub enum Error {
     Version(#[from] hemtt_version::Error),
     #[error("Vfs Error {0}")]
     Vfs(Box<vfs::VfsError>),
+    #[error("Zip Error: {0}")]
+    Zip(#[from] zip::result::ZipError),
 }
 
 impl From<vfs::VfsError> for Error {

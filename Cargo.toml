@@ -16,8 +16,10 @@ members = [
 ]
 
 [workspace.dependencies]
+clap = "4.0.32"
+git2 = "0.16.0"
 pest = "2.5.2"
 pest_derive = "2.5.2"
-clap = "4.0.32"
 serde = { version = "1.0.152", features = ["derive"] }
 sha-1 = "0.10.1"
+zip = "0.6.3"

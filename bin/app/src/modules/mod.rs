@@ -2,6 +2,7 @@ use hemtt_bin_error::Error;
 
 use crate::context::Context;
 
+pub mod archive;
 pub mod pbo;
 
 mod binarize;

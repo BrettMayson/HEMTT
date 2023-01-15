@@ -57,7 +57,7 @@ impl<'a> Executor<'a> {
         for module in &self.modules {
             module.pre_release(self.ctx)?;
         }
-        // TODO: Release
+        modules::archive::release(self.ctx)?;
         for module in &self.modules {
             module.post_release(self.ctx)?;
         }
