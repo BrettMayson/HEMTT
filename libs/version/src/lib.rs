@@ -67,6 +67,30 @@ impl Version {
         self.hash = Some(build.into());
     }
 
+    /// Major version number
+    #[must_use]
+    pub const fn major(&self) -> u32 {
+        self.major
+    }
+
+    /// Minor version number
+    #[must_use]
+    pub const fn minor(&self) -> u32 {
+        self.minor
+    }
+
+    /// Patch version number
+    #[must_use]
+    pub const fn patch(&self) -> u32 {
+        self.patch
+    }
+
+    /// Build number
+    #[must_use]
+    pub const fn build(&self) -> Option<u32> {
+        self.build
+    }
+
     fn extract_version(lines: &[&str], component: &str) -> Result<u32, Error> {
         let error = match component {
             "MAJOR" => Error::ExpectedMajor,

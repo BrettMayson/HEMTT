@@ -1,14 +1,14 @@
 # Configuration
 
-Every HEMTT project requires a `hemtt.toml` file in the root of the project. This file contains all the information HEMTT needs to build your mod.
+Every HEMTT project requires a `.hemtt/project.toml` file. This file contains all the information HEMTT needs to build your mod.
 
-Previous versions of HEMTT supported a `hemtt.json` file or `.hemtt` folder, but these are no longer supported. 
+Previous versions of HEMTT supported a `hemtt.json` or `hemtt.toml` file, but these are no longer supported. 
 
 ## Minimum Configuration
 
 The minimum configuration only requires a `name` and `prefix` to be set.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 name = "Advanced Banana Environment"
@@ -29,7 +29,7 @@ You can additionally configure optional settings for your project.
 
 The `mainprefix` option allows you to set a the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](launch.md).
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 mainprefix = "z"
@@ -47,7 +47,7 @@ z\abe\addons\main
 
 You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 files = [

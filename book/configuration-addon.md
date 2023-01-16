@@ -1,8 +1,8 @@
 # Addon Configuration
 
-In addition to the `hemtt.toml` in the root of the project, HEMTT also supports an optional `hemtt.toml` in each addon folder.
+In addition to `.hemtt/project.toml`, HEMTT also supports an optional `addon.toml` in each addon folder.
 
-***/addons/banana/hemtt.toml***
+***/addons/banana/addon.toml***
 
 ```toml
 no_bin = [

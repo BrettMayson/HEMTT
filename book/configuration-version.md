@@ -5,7 +5,7 @@ It is also included as an extension in built PBOs.
 
 No `[version]` configuration is required if you use macros in your `script_version.hpp` file.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [version]
@@ -35,7 +35,7 @@ A major, minor, and patch version are required, and a build version is optional.
 
 If your macros are in another file, you can set the path with the `version.path` key.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [version]
@@ -46,7 +46,7 @@ path = "addons/common/script_version.hpp"
 
 If you do not want to use a version file, you can set the version components directly in the configuration. If a version is defined in the configuration, the macros will not be used, even if a path is set.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [version]
@@ -62,7 +62,7 @@ By default, HEMTT will include the fist 8 characters of the current git hash in 
 Since the git hash is enabled by default, without configuration HEMTT will require a git repository to be present.
 The git hash can be disabled by setting `version.git_hash = 0`, or configured to a different length.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [version]

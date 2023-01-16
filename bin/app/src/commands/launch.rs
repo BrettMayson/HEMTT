@@ -15,7 +15,7 @@ pub fn cli() -> Command {
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let config = Configuration::from_file(Path::new("hemtt.toml"))?;
+    let config = Configuration::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
         return Err(Error::MainPrefixNotFound(String::from("Required for launch")));
     };
@@ -23,13 +23,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         return Err(Error::Arma3NotFound);
     };
 
-    println!("Arma 3 found at: {:?}", arma3dir.path);
+    println!("Arma 3 found at: {}", arma3dir.path.display());
 
     let mut workshop = Vec::new();
 
     workshop.push({
         let mut path = std::env::current_dir()?;
-        path.push(".hemtt/dev");
+        path.push(".hemttout/dev");
         path.display().to_string()
     });
 
@@ -65,7 +65,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if !link.exists() {
         create_link(
             link.display().to_string().as_str(),
-            ctx.hemtt_folder().display().to_string().as_str(),
+            ctx.out_folder().display().to_string().as_str(),
         )?;
     }
 

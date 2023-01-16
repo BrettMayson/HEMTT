@@ -15,7 +15,7 @@ impl Addon {
         Self {
             config: {
                 let path =
-                    PathBuf::from(format!("{}/{}", location.to_string(), name)).join("hemtt.toml");
+                    PathBuf::from(format!("{}/{}", location.to_string(), name)).join("addon.toml");
                 if path.exists() {
                     Some(Configuration::from_file(&path).unwrap())
                 } else {

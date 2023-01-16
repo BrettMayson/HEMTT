@@ -21,7 +21,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
         .iter()
         .map(|addon| {
             let mut pbo = WritablePbo::new();
-            let target = ctx.hemtt_folder();
+            let target = ctx.out_folder();
 
             let pbo_name = addon.pbo_name(ctx.config().prefix());
 

@@ -48,8 +48,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     git2::Repository::init(path)?;
 
-    // Create hemtt.toml
-    let mut file = std::fs::File::create(path.join("hemtt.toml"))?;
+    // Create .hemtt/project.toml
+    let mut file = std::fs::File::create(path.join(".hemtt").join("project.toml"))?;
     file.write_all(
         format!("name = \"{full_name}\"\nauthor = \"{author}\"\nprefix = \"{prefix}\"\nmainprefix = \"{mainprefix}\"\n")
             .as_bytes(),
@@ -57,7 +57,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     // Create .gitignore
     let mut file = std::fs::File::create(path.join(".gitignore"))?;
-    file.write_all(b"*.pbo\n.hemtt\nhemtt\nhemtt.exe\n*.biprivatekey\n")?;
+    file.write_all(b"*.pbo\n.hemttout\nhemtt\nhemtt.exe\n*.biprivatekey\n")?;
 
     // Create LICENSE
     if let Some(license) = license {

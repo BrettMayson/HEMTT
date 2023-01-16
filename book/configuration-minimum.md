@@ -2,7 +2,7 @@
 
 The minimum configuration only requires a `name` and `prefix` to be set.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 name = "Advanced Banana Environment"

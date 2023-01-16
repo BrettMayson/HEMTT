@@ -28,7 +28,7 @@ Options:
 
 `hemtt launch` requires the [`mainprefix`](configuration.md#main-prefix) option to be set.
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 mainprefix = "z"

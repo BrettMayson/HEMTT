@@ -14,7 +14,9 @@ pub struct Context {
     config: Configuration,
     addons: Vec<Addon>,
     vfs: VfsPath,
+    project_folder: PathBuf,
     hemtt_folder: PathBuf,
+    out_folder: PathBuf,
     tmp: PathBuf,
 }
 
@@ -30,36 +32,35 @@ impl Context {
                 .unwrap()
                 .replace(['\\', '/'], "_"),
         );
-        let hemtt_folder = std::env::current_dir().unwrap().join(".hemtt");
-        create_dir_all(&hemtt_folder)?;
-        let build_folder = hemtt_folder.join(folder);
+        let project_folder = std::env::current_dir().expect("Unable to get current directory");
+        let hemtt_folder = project_folder.join(".hemtt");
+        let out_folder = project_folder.join(".hemttout");
+        create_dir_all(&out_folder)?;
+        let build_folder = out_folder.join(folder);
         if build_folder.exists() {
             remove_dir_all(&build_folder)?;
         }
         create_dir_all(&build_folder)?;
         Ok(Self {
             config: {
-                let path = Path::new("hemtt.toml");
+                let path = Path::new(".hemtt").join("project.toml");
                 if !path.exists() {
                     return Err(Error::ConfigNotFound);
                 }
-                Configuration::from_file(path)?
+                Configuration::from_file(&path)?
             },
-            vfs: AltrootFS::new(
-                OverlayFS::new(&{
-                    let mut layers = vec![MemoryFS::new().into()];
-                    if cfg!(target_os = "windows") {
-                        layers.push(
-                            AltrootFS::new(PhysicalFS::new(tmp.join("output")).into()).into(),
-                        );
-                    }
-                    layers.push(AltrootFS::new(PhysicalFS::new(".").into()).into());
-                    layers
-                })
-                .into(),
-            )
+            vfs: OverlayFS::new(&{
+                let mut layers = vec![AltrootFS::new(MemoryFS::new().into()).into()];
+                if cfg!(target_os = "windows") {
+                    layers.push(AltrootFS::new(PhysicalFS::new(tmp.join("output")).into()).into());
+                }
+                layers.push(AltrootFS::new(PhysicalFS::new(".").into()).into());
+                layers
+            })
             .into(),
-            hemtt_folder: build_folder,
+            project_folder,
+            hemtt_folder,
+            out_folder: build_folder,
             addons: Addon::scan()?,
             tmp,
         })
@@ -92,20 +93,22 @@ impl Context {
         &self.vfs
     }
 
-    /// The folder where the build output is stored
-    ///
-    /// Example: `.hemtt\dev`
+    /// The project folder
+    pub const fn project_folder(&self) -> &PathBuf {
+        &self.project_folder
+    }
+
+    /// The .hemtt folder
     pub const fn hemtt_folder(&self) -> &PathBuf {
         &self.hemtt_folder
+    }
+
+    /// The .hemttout folder
+    pub const fn out_folder(&self) -> &PathBuf {
+        &self.out_folder
     }
 
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp
     }
 }
-
-// impl Drop for Context {
-//     fn drop(&mut self) {
-//         remove_dir_all(self.tmp()).unwrap();
-//     }
-// }

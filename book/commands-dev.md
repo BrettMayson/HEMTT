@@ -22,11 +22,11 @@ Options:
 </code>
 </pre>
 
-`hemtt dev` is designed to help your development workflows. It will build your mod into `.hemtt/dev`, with links back to the original addon folders. This allows you to use [file-patching](#file-patching) with optional mods for easy development.
+`hemtt dev` is designed to help your development workflows. It will build your mod into `.hemttout/dev`, with links back to the original addon folders. This allows you to use [file-patching](#file-patching) with optional mods for easy development.
 
 ## Configuration
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [hemtt.dev]

@@ -75,10 +75,7 @@ impl Configuration {
         .map(std::string::ToString::to_string)
         {
             if !files.contains(&default) {
-                let path = Path::new(&default);
-                if path.exists() {
-                    files.push(default.clone());
-                }
+                files.push(default.clone());
             }
         }
         files.sort();

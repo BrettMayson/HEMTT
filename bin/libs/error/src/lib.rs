@@ -2,7 +2,7 @@ use hemtt_error::{thiserror, PrettyError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("`hemtt.toml` not found")]
+    #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
     #[error("Invalid config: {0}")]
     ConfigInvalid(String),

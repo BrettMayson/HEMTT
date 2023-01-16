@@ -21,12 +21,12 @@ impl Module for FilePatching {
     }
 
     fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
-        create_dir_all(ctx.hemtt_folder().join("addons"))?;
+        create_dir_all(ctx.out_folder().join("addons"))?;
         ctx.addons()
             .par_iter()
             .map(|addon| {
                 create_link(
-                    ctx.hemtt_folder()
+                    ctx.out_folder()
                         .join("addons")
                         .join(addon.name().replace('/', "\\"))
                         .to_str()

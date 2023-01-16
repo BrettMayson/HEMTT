@@ -31,9 +31,9 @@ impl Module for Sign {
     fn pre_release(&self, ctx: &crate::context::Context) -> Result<(), Error> {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
-        create_dir_all(ctx.hemtt_folder().join("keys"))?;
+        create_dir_all(ctx.out_folder().join("keys"))?;
         addons_key.write(&mut File::create(
-            ctx.hemtt_folder()
+            ctx.out_folder()
                 .join("keys")
                 .join(format!("{authority}.bikey")),
         )?)?;
@@ -42,7 +42,7 @@ impl Module for Sign {
             let (mut pbo, sig_location, key) = match addon.location() {
                 Location::Addons => {
                     let target_pbo = {
-                        let mut path = ctx.hemtt_folder().join("addons").join(pbo_name);
+                        let mut path = ctx.out_folder().join("addons").join(pbo_name);
                         path.set_extension("pbo");
                         path
                     };
@@ -59,7 +59,7 @@ impl Module for Sign {
                             let key = BIPrivateKey::generate(1024, &authority)?;
                             let pubkey = key.to_public_key();
                             let mod_root = ctx
-                                .hemtt_folder()
+                                .out_folder()
                                 .join("optionals")
                                 .join(format!("@{pbo_name}"));
                             create_dir_all(mod_root.join("keys"))?;
@@ -69,7 +69,7 @@ impl Module for Sign {
                             (mod_root.join("addons").join(pbo_name), key, authority)
                         } else {
                             (
-                                ctx.hemtt_folder()
+                                ctx.out_folder()
                                     .join(addon.location().to_string())
                                     .join(pbo_name),
                                 addons_key.clone(),

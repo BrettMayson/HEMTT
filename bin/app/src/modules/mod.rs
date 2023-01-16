@@ -3,7 +3,10 @@ use hemtt_bin_error::Error;
 use crate::context::Context;
 
 pub mod archive;
+pub mod hook;
 pub mod pbo;
+
+pub use hook::Hooks;
 
 mod binarize;
 mod file_patching;

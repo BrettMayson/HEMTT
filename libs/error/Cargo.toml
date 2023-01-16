@@ -6,5 +6,5 @@ edition = "2021"
 [dependencies]
 hemtt-tokens = { path = "../tokens" }
 
-colored = "2.0.0"
+colored = { workspace = true }
 thiserror = "1.0.38"

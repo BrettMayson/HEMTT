@@ -22,21 +22,34 @@ impl Module for Files {
             if mirror_structure {
                 file.pop();
             };
-            for path in (glob::glob(&file)?).flatten() {
-                let mut d = ctx.hemtt_folder().clone();
+            for entry in ctx.vfs().walk_dir()? {
+                let entry = entry?;
+                if entry.is_dir()? {
+                    continue;
+                }
+                if entry.as_str().starts_with("/.hemtt") {
+                    continue;
+                }
+                if !entry.exists()? {
+                    continue;
+                }
+
+                let relative = entry.filename().trim_start_matches('/').to_string();
+
+                if !glob::Pattern::new(&file)?.matches(&relative) {
+                    continue;
+                }
+
+                let mut d = ctx.out_folder().clone();
+
                 if mirror_structure {
-                    d.push(path.parent().unwrap());
+                    d.push(entry.parent().filename().trim_start_matches('/'));
                     create_dir_all(&d)?;
                 }
 
-                if std::fs::metadata(&path).unwrap().is_dir() {
-                    println!("Copying dir `{path:#?}` => {d:#?}");
-                    fs_extra::dir::copy(&path, &d, &fs_extra::dir::CopyOptions::new()).unwrap();
-                } else {
-                    d.push(path.file_name().unwrap().to_str().unwrap());
-                    println!("Copying file `{path:#?}` => {d:#?}");
-                    fs_extra::file::copy(&path, &d, &fs_extra::file::CopyOptions::new()).unwrap();
-                }
+                d.push(relative);
+                println!("Copying `{:#?}` => {:#?}", entry.as_str(), d);
+                std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?).unwrap();
             }
         }
         Ok(())

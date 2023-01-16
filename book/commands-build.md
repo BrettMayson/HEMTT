@@ -14,13 +14,13 @@ Options:
 </code>
 </pre>
 
-`hemtt build` will build your mod into `.hemtt/build`. It will binarize all applicable files, and will not create folder links like `hemtt dev`.
+`hemtt build` will build your mod into `.hemttout/build`. It will binarize all applicable files, and will not create folder links like `hemtt dev`.
 
 It is intended to be used for testing your mod locally before release.
 
 ## Configuration
 
-**hemtt.toml**
+**.hemtt/project.toml**
 
 ```toml
 [hemtt.build]
