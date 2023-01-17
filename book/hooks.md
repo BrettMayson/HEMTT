@@ -76,17 +76,17 @@ When using the virtual files system, an additional `HEMTT_VFS` constant is avail
 
 ```ts
 // Get the path to the script_version.hpp file
-let script_version = HEMTT_VFS
+let version = HEMTT_VFS
         .join("addons")
         .join("main")
         .join("script_version.hpp");
 // Read the current contents
-let current = script_version.open_file().read();
+let current = version.open_file().read();
 // Replace the placeholder version with the actual version
 current.replace("0.0.0", HEMTT_PROJECT_VERSION);
 // Write the new contents
 // create_file will overwrite the file if it exists
-script_version.create_file().write(current);
+version.create_file().write(current);
 ```
 
 ### Real
@@ -98,20 +98,20 @@ When using the real file system, two additional constants are available. `HEMTT_
 **.hemtt/hooks/pre_release/set_version.rhai**
 
 ```ts
-// Read the current contents of the script_version.hpp
+// Read the current contents of the docs/version.txt
 // file from the project source
-let script_version = HEMTT_DIRECTORY
+let version = HEMTT_DIRECTORY
         .join("docs")
         .join("version.txt")
         .open_file()
         .read();
 // Replace the placeholder version with the actual version
-script_version.replace("0.0.0", HEMTT_PROJECT_VERSION);
+version.replace("0.0.0", HEMTT_PROJECT_VERSION);
 // Write the new contents to the build output
 // create_file will overwrite the file if it exists
 HEMTT_OUTPUT
         .join("docs")
         .join("version.txt")
         .create_file()
-        .write(script_version);
+        .write(version);
 ```
