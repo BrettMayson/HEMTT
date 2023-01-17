@@ -4,7 +4,8 @@
 use hemtt_error::DisplayStyle;
 
 fn main() {
-    if cfg!(windows) && ansi_term::enable_ansi_support().is_err() {
+    #[cfg(windows)]
+    if ansi_term::enable_ansi_support().is_err() {
         colored::control::set_override(false);
     }
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
