@@ -77,7 +77,7 @@ When using the virtual files system, an additional `HEMTT_VFS` constant is avail
 ```ts
 // Get the path to the script_version.hpp file
 let script_version = HEMTT_VFS
-        .join("addon")
+        .join("addons")
         .join("main")
         .join("script_version.hpp");
 // Read the current contents
