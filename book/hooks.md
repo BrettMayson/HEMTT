@@ -41,6 +41,10 @@ The `post_build` hook is run after all preprocessing, binarization, and packing 
 
 The `pre_release` hook is run before any release tasks. It is only run during the [hemtt release](commands-release.md) command.
 
+### `post_release`
+
+The `post_release` hook is run after all release tasks, and archives have been created. It is only run during the [hemtt release](commands-release.md) command.
+
 ## Constants
 
 Several constants are available to the hook scripts. These are:
@@ -66,7 +70,7 @@ Several constants are available to the hook scripts. These are:
 
 This is useful for modifying files with find-and-replace, or adding files to the build output, without the need for cleaning up after the build.
 
-When using the virtual files system, an additional `HEMTT_VFS` constant is availabe. It is used as the root path.
+When using the virtual files system, an additional `HEMTT_VFS` constant is available. It is used as the root path.
 
 **.hemtt/hooks/pre_build/set_version.rhai**
 
