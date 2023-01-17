@@ -1,11 +1,7 @@
 use clap::{ArgMatches, Command};
 use hemtt_bin_error::Error;
 
-use crate::{
-    context::Context,
-    executor::Executor,
-    modules::{Hooks, Sign},
-};
+use crate::{context::Context, executor::Executor, modules::Sign};
 
 use super::build;
 

@@ -23,7 +23,7 @@ anyhow = "1.0.68"
 atty = "0.2.14"
 clap = { workspace = true }
 colored = { workspace = true }
-dialoguer = "0.10.2"
+dialoguer = "0.10.3"
 fs_extra = "1.2.0"
 git2 = { workspace = true }
 glob = "0.3.1"
