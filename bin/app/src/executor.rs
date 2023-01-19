@@ -3,7 +3,6 @@ use std::fs::{create_dir_all, remove_dir_all};
 use hemtt_bin_error::Error;
 use hemtt_pbo::{prefix::FILES, Prefix};
 
-#[cfg(windows)]
 use crate::utils::create_link;
 
 use crate::{
