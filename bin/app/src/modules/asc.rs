@@ -10,8 +10,14 @@ use serde::Serialize;
 
 use super::{preprocessor::VfsResolver, Module};
 
+#[cfg(windows)]
 #[derive(RustEmbed)]
-#[folder = "dist/asc/"]
+#[folder = "dist/asc/windows"]
+struct Distributables;
+
+#[cfg(not(windows))]
+#[derive(RustEmbed)]
+#[folder = "dist/asc/linux"]
 struct Distributables;
 
 pub struct ArmaScriptCompiler;
@@ -22,10 +28,10 @@ impl ArmaScriptCompiler {
 }
 
 #[cfg(windows)]
-const SOURCE: [&str; 1] = ["windows/asc.exe"];
+const SOURCE: [&str; 1] = ["asc.exe"];
 
 #[cfg(not(windows))]
-const SOURCE: [&str; 1] = ["linux/asc"];
+const SOURCE: [&str; 1] = ["asc"];
 
 impl Module for ArmaScriptCompiler {
     fn name(&self) -> &'static str {
@@ -48,7 +54,7 @@ impl Module for ArmaScriptCompiler {
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
-            let mut f = File::create(tmp.join(file.split_once('/').unwrap().1))?;
+            let mut f = File::create(tmp.join(file))?;
             f.write_all(&Distributables::get(file).unwrap().data)?;
         }
         let resolver = VfsResolver::new(ctx)?;
@@ -98,7 +104,7 @@ impl Module for ArmaScriptCompiler {
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
         let old_dir = std::env::current_dir()?;
         std::env::set_current_dir(&tmp)?;
-        let command = Command::new(tmp.join(SOURCE[0].split_once('/').unwrap().1)).output()?;
+        let command = Command::new(tmp.join(SOURCE[0])).output()?;
         if command.status.success() {
             println!("Compiled sqf files");
         } else {
