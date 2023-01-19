@@ -7,6 +7,9 @@ pub enum Error {
     #[error("Invalid config: {0}")]
     ConfigInvalid(String),
 
+    #[error("ASC: {0}")]
+    ASC(String),
+
     #[error("Folder already exists: {0}")]
     NewFolderExists(String),
     #[error("New can only be ran in an interactive terminal")]
@@ -45,12 +48,16 @@ pub enum Error {
     GlobPattern(#[from] glob::PatternError),
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
+    #[error("serde_json Error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
     #[error("Toml Error: {0}")]
     Toml(#[from] toml::de::Error),
     #[error("Version Error: {0}")]
     Version(#[from] hemtt_version::Error),
     #[error("Vfs Error {0}")]
     Vfs(Box<vfs::VfsError>),
+    #[error("Walkdir Error: {0}")]
+    Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
 }

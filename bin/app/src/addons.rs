@@ -39,6 +39,8 @@ impl Addon {
         &self.location
     }
 
+    /// addons/foobar
+    /// optionals/foobar
     pub fn folder(&self) -> String {
         format!("{}/{}", self.location.to_string(), self.name)
     }

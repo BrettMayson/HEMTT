@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -15,6 +16,15 @@ pub struct Configuration {
     #[serde(default)]
     /// A list of files to skip binarizing
     no_bin: Vec<String>,
+
+    #[serde(default)]
+    /// Headers to add to the pbo
+    headers: HashMap<String, String>,
+
+    #[serde(default)]
+    /// Files to exclude from the pbo
+    /// Supports glob patterns
+    exclude: Vec<String>,
 }
 
 impl Configuration {
@@ -52,6 +62,18 @@ impl Configuration {
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
         Self::from_str(&file)
+    }
+
+    #[must_use]
+    /// Headers to be added to the built PBO
+    pub const fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    #[must_use]
+    /// Files to be excluded from the built PBO
+    pub const fn exclude(&self) -> &Vec<String> {
+        &self.exclude
     }
 }
 

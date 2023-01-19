@@ -8,6 +8,7 @@ pub mod pbo;
 
 pub use hook::Hooks;
 
+mod asc;
 mod binarize;
 mod file_patching;
 mod files;
@@ -15,6 +16,7 @@ mod new;
 mod preprocessor;
 mod sign;
 
+pub use asc::ArmaScriptCompiler;
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;

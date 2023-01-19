@@ -1,7 +1,7 @@
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed)]
-#[folder = "licenses/"]
+#[folder = "dist/licenses/"]
 pub struct Licenses;
 
 impl Licenses {

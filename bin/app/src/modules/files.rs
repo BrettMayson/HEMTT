@@ -17,7 +17,7 @@ impl Module for Files {
     }
 
     fn post_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
-        for mut file in ctx.config().files() {
+        for mut file in ctx.config().files().include() {
             let mirror_structure = file.ends_with('/');
             if mirror_structure {
                 file.pop();

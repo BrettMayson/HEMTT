@@ -3,6 +3,8 @@ use std::{collections::HashMap, path::Path, str::FromStr};
 use hemtt_bin_error::Error;
 use serde::{Deserialize, Serialize};
 
+mod asc;
+mod files;
 mod hemtt;
 mod signing;
 mod version;
@@ -26,13 +28,16 @@ pub struct Configuration {
 
     #[serde(default)]
     /// Files to be included in the root of the project, supports glob patterns
-    files: Vec<String>,
+    files: files::Options,
 
     #[serde(default)]
     hemtt: hemtt::Features,
 
     #[serde(default)]
     signing: signing::Options,
+
+    #[serde(default)]
+    asc: asc::Options,
 }
 
 impl Configuration {
@@ -57,30 +62,15 @@ impl Configuration {
     }
 
     #[must_use]
+    /// Headers to be added to built PBOs
     pub const fn headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
 
     #[must_use]
-    pub fn files(&self) -> Vec<String> {
-        let mut files = self.files.clone();
-        for default in [
-            "mod.cpp",
-            "meta.cpp",
-            "LICENSE",
-            "logo_ca.paa",
-            "logo_co.paa",
-        ]
-        .iter()
-        .map(std::string::ToString::to_string)
-        {
-            if !files.contains(&default) {
-                files.push(default.clone());
-            }
-        }
-        files.sort();
-        files.dedup();
-        files
+    /// Files to be included / excluded in the root of the project, supports glob patterns
+    pub const fn files(&self) -> &files::Options {
+        &self.files
     }
 
     #[must_use]
@@ -91,6 +81,11 @@ impl Configuration {
     #[must_use]
     pub const fn signing(&self) -> &signing::Options {
         &self.signing
+    }
+
+    #[must_use]
+    pub const fn asc(&self) -> &asc::Options {
+        &self.asc
     }
 
     /// Load a configuration from a file.

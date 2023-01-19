@@ -272,6 +272,26 @@ pub enum Definition {
     Unit,
 }
 
+impl Definition {
+    #[must_use]
+    /// Check if the definition is a [`FunctionDefinition`]
+    pub const fn is_function(&self) -> bool {
+        matches!(self, Self::Function(_))
+    }
+
+    #[must_use]
+    /// Check if the definition is a value
+    pub const fn is_value(&self) -> bool {
+        matches!(self, Self::Value(_))
+    }
+
+    #[must_use]
+    /// Check if the definition is a flag
+    pub const fn is_unit(&self) -> bool {
+        matches!(self, Self::Unit)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A function definition
 ///

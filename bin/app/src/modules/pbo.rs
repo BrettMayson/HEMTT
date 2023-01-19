@@ -55,13 +55,34 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
 
             pbo.add_extension("hemtt", crate::VERSION.to_string());
 
-            for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
+            'entries: for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File {
                     if entry.filename() == "config.cpp"
                         && entry.parent().join("config.bin").unwrap().exists().unwrap()
                     {
                         continue;
+                    }
+
+                    if entry.filename() == "addon.toml" {
+                        continue;
+                    }
+
+                    for exclude in ctx.config().files().exclude() {
+                        if glob::Pattern::new(exclude)?.matches(entry.as_str()) {
+                            continue 'entries;
+                        }
+                    }
+                    if let Some(config) = addon.config() {
+                        for exclude in config.exclude() {
+                            if glob::Pattern::new(exclude)?.matches(
+                                entry
+                                    .as_str()
+                                    .trim_start_matches(&format!("/{}/", addon.folder())),
+                            ) {
+                                continue 'entries;
+                            }
+                        }
                     }
 
                     if FILES.contains(&entry.filename().to_lowercase().as_str()) {
@@ -76,11 +97,17 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
 
                     let file = entry
                         .as_str()
-                        .trim_start_matches('/')
-                        .trim_start_matches(&addon.folder())
-                        .trim_start_matches('/')
+                        .trim_start_matches(&format!("/{}/", addon.folder()))
                         .replace('/', "\\");
                     pbo.add_file(file, entry.open_file().unwrap()).unwrap();
+                }
+            }
+            for header in ctx.config().headers() {
+                pbo.add_extension(header.0, header.1.clone());
+            }
+            if let Some(config) = addon.config() {
+                for header in config.headers() {
+                    pbo.add_extension(header.0, header.1.clone());
                 }
             }
             pbo.write(&mut File::create(target_pbo)?, true)?;

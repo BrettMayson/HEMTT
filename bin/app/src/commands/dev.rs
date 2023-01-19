@@ -5,7 +5,9 @@ use crate::{
     addons::Location,
     context::Context,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Preprocessor},
+    modules::{
+        pbo::Collapse, ArmaScriptCompiler, Binarize, FilePatching, Files, Hooks, Preprocessor,
+    },
 };
 
 #[must_use]
@@ -72,7 +74,9 @@ pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
 
     executor.collapse(Collapse::Yes);
 
+    executor.add_module(Box::new(Hooks::new()));
     executor.add_module(Box::new(Preprocessor::new()));
+    executor.add_module(Box::new(ArmaScriptCompiler::new()));
     executor.add_module(Box::new(Files::new()));
     executor.add_module(Box::new(FilePatching::new()));
     if matches.get_one::<bool>("binarize") == Some(&true) {

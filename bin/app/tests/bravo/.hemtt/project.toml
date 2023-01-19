@@ -1,0 +1,5 @@
+name = "My Mod"
+prefix = "test"
+
+[version]
+git_hash = 0

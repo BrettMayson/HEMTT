@@ -108,6 +108,7 @@ impl Context {
         &self.out_folder
     }
 
+    /// %temp%/hemtt/project
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp
     }

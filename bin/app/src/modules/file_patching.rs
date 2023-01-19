@@ -26,12 +26,15 @@ impl Module for FilePatching {
             .par_iter()
             .map(|addon| {
                 create_link(
-                    ctx.out_folder()
+                    &ctx.out_folder()
                         .join("addons")
                         .join(addon.name().replace('/', "\\"))
-                        .to_str()
-                        .unwrap(),
-                    &addon.folder().replace('/', "\\"),
+                        .display()
+                        .to_string(),
+                    &ctx.project_folder()
+                        .join(addon.folder())
+                        .display()
+                        .to_string(),
                 )
             })
             .collect::<Result<(), Error>>()

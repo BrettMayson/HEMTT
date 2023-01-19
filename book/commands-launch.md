@@ -34,7 +34,7 @@ Options:
 mainprefix = "z"
 
 [hemtt.launch]
-mods = [
+workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
 parameters = [
@@ -47,7 +47,7 @@ parameters = [
 ```
 
 
-### mods
+### workshop
 
 A list of workshop IDs to launch with your mod. These are not subscribed to, and will need to be manually subscribed to in Steam.
 

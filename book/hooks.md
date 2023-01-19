@@ -2,7 +2,7 @@
 
 HEMTT supports hooks at various points in the build process. The hooks are written using [Rhai](https://rhai.rs/). Rhai has an [extension for VSCode](https://marketplace.visualstudio.com/items?itemName=rhaiscript.vscode-rhai) that provides syntax highlighting.
 
-Some example Rhai scripts can be found on the [Rhai Playground](https://rhai.rs/playground/stable/)
+Some example Rhai scripts can be found on the [Rhai Playground](https://rhai.rs/playground/stable/). Additional commands can be requested as a [GitHub Discussion](https://github.com/BrettMayson/HEMTT/discussions/categories/hook-commands).
 
 Hooks are stored in the `.hemtt/hooks/{phase}` folders. The `{phase}` is the name of the phase that the hook is run in. The hooks are run in alphabetical order.
 
@@ -57,6 +57,7 @@ Several constants are available to the hook scripts. These are:
 | `HEMTT_PROJECT_VERSION_MINOR` | The minor version of the project, ex: 3 |
 | `HEMTT_PROJECT_VERSION_PATCH` | The patch version of the project, ex: 5 |
 | `HEMTT_PROJECT_VERSION_BUILD` | The build of the project, ex: a8c20d |
+| `HEMTT_PROJECT_VERSION_HASBUILD` | Whether the project has a build, ex: true |
 | `HEMTT_PROJECT_NAME` | The name of the project |
 | `HEMTT_PROJECT_PREFIX` | The prefix of the project |
 | `HEMTT_PROJECT_HEADERS` | The headers of the project |
@@ -72,6 +73,15 @@ This is useful for modifying files with find-and-replace, or adding files to the
 
 When using the virtual files system, an additional `HEMTT_VFS` constant is available. It is used as the root path.
 
+**.hemtt/project.toml**
+
+```toml
+[version]
+major = 1
+minor = 0
+patch = 3
+```
+
 **.hemtt/hooks/pre_build/set_version.rhai**
 
 ```ts
@@ -80,13 +90,15 @@ let version = HEMTT_VFS
         .join("addons")
         .join("main")
         .join("script_version.hpp");
-// Read the current contents
-let current = version.open_file().read();
-// Replace the placeholder version with the actual version
-current.replace("0.0.0", HEMTT_PROJECT_VERSION);
-// Write the new contents
-// create_file will overwrite the file if it exists
-version.create_file().write(current);
+// Create (or overwrite) the file
+let out = version.create_file();
+out.write("#define MAJOR " + HEMTT_PROJECT_VERSION_MAJOR + "\n");
+out.write("#define MINOR " + HEMTT_PROJECT_VERSION_MINOR + "\n");
+out.write("#define PATCH " + HEMTT_PROJECT_VERSION_PATCH + "\n");
+if HEMTT_PROJECT_VERSION_HASBUILD {
+    out.write("#define BUILD " + HEMTT_PROJECT_VERSION_BUILD + "\n");
+}
+print("Set version to " + HEMTT_PROJECT_VERSION);
 ```
 
 ### Real

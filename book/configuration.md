@@ -50,7 +50,29 @@ You can add a list of files to be copied to the build directory. This is useful 
 **.hemtt/project.toml**
 
 ```toml
-files = [
+[files]
+include = [
+    "mod.cpp",      # These files are copied to the build directory by default
+    "meta.cpp",     # They do not need to be added to your list
+    "LICENSE",
+    "logo_ca.paa",
+    "logo_co.paa",
+]
+exclude = [
+    "*.psd",        # By default this list is empty
+    "addons/main/README.md",
+]
+```
+
+#### Include
+
+By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additon files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) can be added to the list.
+
+**.hemtt/project.toml**
+
+```toml
+[files]
+include = [
     "mod.cpp",      # These files are copied to the build directory by default
     "meta.cpp",     # They do not need to be added to your list
     "LICENSE",
@@ -59,4 +81,28 @@ files = [
 ]
 ```
 
-By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additon files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) can be added to the list.
+#### Exclude
+
+By default, no files are excluded from PBOs. You can add files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) to the list.
+
+**.hemtt/project.toml**
+
+```toml
+[files]
+exclude = [
+    "*.psd",        # By default this list is empty
+    "addons/main/README.md",
+]
+```
+
+### Headers
+
+You can add a list of headers to be added to every PBO.
+
+**.hemtt/project.toml**
+
+```toml
+[headers]
+author = "ABE Team"
+url = "https://github.com/ABE-Mod/ABE"
+```

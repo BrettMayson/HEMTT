@@ -557,6 +557,11 @@ where
                 if let Some((_source, definition)) = context.get(word, token) {
                     let token = token.clone();
                     tokenstream.next();
+                    if definition.is_function()
+                        && tokenstream.peek().unwrap().symbol() != &Symbol::LeftParenthesis
+                    {
+                        continue;
+                    }
                     arg.append(&mut walk_definition(
                         resolver,
                         context,
@@ -567,6 +572,13 @@ where
                 } else {
                     arg.push(tokenstream.next().unwrap());
                 }
+            }
+            Symbol::Newline => {
+                let builtin = Token::builtin(Some(Box::new(token.clone())));
+                if arg.last().unwrap_or(&builtin).symbol() == &Symbol::Escape {
+                    arg.pop();
+                }
+                arg.push(tokenstream.next().unwrap());
             }
             _ => {
                 arg.push(tokenstream.next().unwrap());
@@ -587,7 +599,14 @@ where
     let mut output = Vec::new();
     while let Some(token) = tokenstream.peek() {
         if matches!(token.symbol(), Symbol::Newline) {
-            output.push(tokenstream.next().unwrap());
+            // check if last token was an escape
+            let builtin = Token::builtin(Some(Box::new(token.clone())));
+            if output.last().unwrap_or(&builtin).symbol() == &Symbol::Escape {
+                output.pop();
+                tokenstream.next();
+            } else {
+                output.push(tokenstream.next().unwrap());
+            }
             break;
         }
         match token.symbol() {

@@ -14,7 +14,10 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_PROJECT_VERSION_MINOR", version.minor());
     scope.push_constant("HEMTT_PROJECT_VERSION_PATCH", version.patch());
     if let Some(build) = version.build() {
+        scope.push_constant("HEMTT_PROJECT_VERSION_HASBUILD", true);
         scope.push_constant("HEMTT_PROJECT_VERSION_BUILD", build);
+    } else {
+        scope.push_constant("HEMTT_PROJECT_VERSION_HASBUILD", false);
     }
     scope.push_constant("HEMTT_PROJECT_NAME", ctx.config().name().to_string());
     scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
@@ -104,18 +107,18 @@ impl Module for Hooks {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre-build", true)
+        self.run_folder(ctx, "pre_build", true)
     }
 
     fn post_build(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "post-build", true)
+        self.run_folder(ctx, "post_build", true)
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre-release", false)
+        self.run_folder(ctx, "pre_release", false)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "post-release", false)
+        self.run_folder(ctx, "post_release", false)
     }
 }

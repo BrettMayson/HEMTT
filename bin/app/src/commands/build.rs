@@ -3,7 +3,7 @@ use hemtt_bin_error::Error;
 
 use crate::{
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Hooks, Preprocessor},
+    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Preprocessor},
 };
 
 #[must_use]
@@ -32,6 +32,7 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
         executor.add_module(Box::new(Binarize::new()));
     }
     executor.add_module(Box::new(Hooks::new()));
+    executor.add_module(Box::new(ArmaScriptCompiler::new()));
     executor.add_module(Box::new(Files::new()));
 
     executor.init()?;
