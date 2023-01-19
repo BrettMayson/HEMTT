@@ -33,12 +33,18 @@ impl Module for ArmaScriptCompiler {
     }
 
     fn init(&mut self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+        if !ctx.config().asc().enabled() {
+            return Ok(());
+        }
         create_dir_all(ctx.tmp().join("asc"))?;
         create_dir_all(ctx.tmp().join("asc").join("output"))?;
         Ok(())
     }
 
     fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+        if !ctx.config().asc().enabled() {
+            return Ok(());
+        }
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
