@@ -16,7 +16,7 @@ exclude = [
     "data/*.psd",
 ]
 
-[headers]
+[properties]
 iso = "14001"
 ```
 
@@ -57,13 +57,13 @@ exclude = [
 ]
 ```
 
-## headers
+## properties
 
-Much like the `headers` key in `.hemtt/project.toml`, the `headers` key in `addon.toml` allows you to add custom headers to the PBO.
+Much like the `properties` key in `.hemtt/project.toml`, the `properties` key in `addon.toml` allows you to add custom properties to the PBO.
 
 ***/addons/banana/addon.toml***
 
 ```toml
-[headers]
+[properties]
 iso = "14001"
 ```

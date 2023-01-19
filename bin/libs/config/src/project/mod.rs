@@ -23,8 +23,8 @@ pub struct Configuration {
     version: version::Options,
 
     #[serde(default)]
-    /// Headers to be added to built PBOs
-    headers: HashMap<String, String>,
+    /// Properties to be added to built PBOs
+    properties: HashMap<String, String>,
 
     #[serde(default)]
     /// Files to be included in the root of the project, supports glob patterns
@@ -62,9 +62,9 @@ impl Configuration {
     }
 
     #[must_use]
-    /// Headers to be added to built PBOs
-    pub const fn headers(&self) -> &HashMap<String, String> {
-        &self.headers
+    /// Properties to be added to built PBOs
+    pub const fn properties(&self) -> &HashMap<String, String> {
+        &self.properties
     }
 
     #[must_use]

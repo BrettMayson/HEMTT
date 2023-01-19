@@ -64,7 +64,7 @@ exclude = [
 ]
 ```
 
-#### Include
+#### include
 
 By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additon files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) can be added to the list.
 
@@ -81,7 +81,7 @@ include = [
 ]
 ```
 
-#### Exclude
+#### exclude
 
 By default, no files are excluded from PBOs. You can add files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) to the list.
 
@@ -95,14 +95,14 @@ exclude = [
 ]
 ```
 
-### Headers
+### properties
 
-You can add a list of headers to be added to every PBO.
+You can add a list of properties to be added to every PBO.
 
 **.hemtt/project.toml**
 
 ```toml
-[headers]
+[properties]
 author = "ABE Team"
 url = "https://github.com/ABE-Mod/ABE"
 ```

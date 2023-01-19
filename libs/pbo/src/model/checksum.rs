@@ -3,7 +3,7 @@ use crate::ReadPbo;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 /// A checksum found at the end of a PBO
 ///
-/// The checksum is a SHA1 hash of the PBO's extensions & files
+/// The checksum is a SHA1 hash of the PBO's properties & files
 pub struct Checksum([u8; 20]);
 
 impl Checksum {

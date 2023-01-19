@@ -1,6 +1,6 @@
 //! A prefix file for a PBO
 //!
-//! It can be a single line defining the prefix, or a key-value pair defining the prefix and extra headers
+//! It can be a single line defining the prefix, or a key-value pair defining the prefix and extra properties
 //!
 //! # Examples
 //!

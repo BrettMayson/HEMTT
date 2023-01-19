@@ -60,7 +60,6 @@ Several constants are available to the hook scripts. These are:
 | `HEMTT_PROJECT_VERSION_HASBUILD` | Whether the project has a build, ex: true |
 | `HEMTT_PROJECT_NAME` | The name of the project |
 | `HEMTT_PROJECT_PREFIX` | The prefix of the project |
-| `HEMTT_PROJECT_HEADERS` | The headers of the project |
 | `HEMTT_PROJECT_ADDONS` | The addons of the project |
 
 ## File System

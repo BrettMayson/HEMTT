@@ -13,10 +13,10 @@ pub fn pbo(
 ) -> ReadablePbo<File> {
     let mut pbo = ReadablePbo::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
-    assert_eq!(pbo.extensions().len(), extension_count);
+    assert_eq!(pbo.properties().len(), extension_count);
     assert_eq!(pbo.is_sorted().is_ok(), sorted);
-    assert_eq!(pbo.extensions().get("version"), Some(&version.to_string()));
-    assert_eq!(pbo.extensions().get("prefix"), Some(&prefix.to_string()));
+    assert_eq!(pbo.properties().get("version"), Some(&version.to_string()));
+    assert_eq!(pbo.properties().get("prefix"), Some(&prefix.to_string()));
     assert!(pbo.file("not_real").unwrap().is_none());
     assert!(pbo.header("not_real").is_none());
     if sorted {
@@ -33,7 +33,7 @@ pub fn pbo(
 //     let original = ReadablePbo::from(file).unwrap();
 
 //     assert_eq!(original.files(), writeable.files_sorted().unwrap());
-//     assert_eq!(original.extensions(), writeable.extensions());
+//     assert_eq!(original.properties(), writeable.properties());
 //     assert_eq!(original.checksum(), writeable.checksum().unwrap());
 // }
 

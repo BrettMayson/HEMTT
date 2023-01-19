@@ -21,7 +21,6 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     }
     scope.push_constant("HEMTT_PROJECT_NAME", ctx.config().name().to_string());
     scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
-    scope.push_constant("HEMTT_PROJECT_HEADERS", ctx.config().headers().clone());
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.vfs().clone());

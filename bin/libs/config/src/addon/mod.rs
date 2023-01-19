@@ -18,8 +18,8 @@ pub struct Configuration {
     no_bin: Vec<String>,
 
     #[serde(default)]
-    /// Headers to add to the pbo
-    headers: HashMap<String, String>,
+    /// Properties to add to the pbo
+    properties: HashMap<String, String>,
 
     #[serde(default)]
     /// Files to exclude from the pbo
@@ -65,9 +65,9 @@ impl Configuration {
     }
 
     #[must_use]
-    /// Headers to be added to the built PBO
-    pub const fn headers(&self) -> &HashMap<String, String> {
-        &self.headers
+    /// Properties to be added to the built PBO
+    pub const fn properties(&self) -> &HashMap<String, String> {
+        &self.properties
     }
 
     #[must_use]

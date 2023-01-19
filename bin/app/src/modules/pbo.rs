@@ -102,11 +102,11 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                     pbo.add_file(file, entry.open_file().unwrap()).unwrap();
                 }
             }
-            for header in ctx.config().headers() {
+            for header in ctx.config().properties() {
                 pbo.add_extension(header.0, header.1.clone());
             }
             if let Some(config) = addon.config() {
-                for header in config.headers() {
+                for header in config.properties() {
                     pbo.add_extension(header.0, header.1.clone());
                 }
             }

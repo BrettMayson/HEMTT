@@ -216,7 +216,7 @@ fn generate_hashes<I: Seek + Read>(
 
     hasher.update(hash1.as_bytes());
     hasher.update(pbo.hash_filenames()?);
-    if let Some(prefix) = pbo.extensions().get("prefix") {
+    if let Some(prefix) = pbo.properties().get("prefix") {
         hasher.update(prefix.as_bytes());
         if !prefix.ends_with('\\') {
             hasher.update(b"\\");
@@ -227,7 +227,7 @@ fn generate_hashes<I: Seek + Read>(
     let mut hasher = Sha1::new();
     hasher.update(pbo.hash_files(version)?);
     hasher.update(pbo.hash_filenames()?);
-    if let Some(prefix) = pbo.extensions().get("prefix") {
+    if let Some(prefix) = pbo.properties().get("prefix") {
         hasher.update(prefix.as_bytes());
         if !prefix.ends_with('\\') {
             hasher.update(b"\\");

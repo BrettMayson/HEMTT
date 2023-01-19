@@ -9,7 +9,7 @@ pub enum Mime {
     /// A compressed entry used by VBS
     Enco,
     #[default]
-    /// A blank entry, use to denote the end of the extensions section
+    /// A blank entry, use to denote the end of the properties section
     Blank,
 }
 

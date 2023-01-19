@@ -55,7 +55,7 @@ fn ace_weather_cba6f72c() {
             )
             .unwrap();
     }
-    for ext in pbo.extensions() {
+    for ext in pbo.properties() {
         new_pbo.add_extension(ext.0, ext.1);
     }
     let mut new_pbo_bin = std::io::Cursor::new(Vec::new());

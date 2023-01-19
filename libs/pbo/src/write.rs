@@ -12,7 +12,7 @@ use crate::{error::Error, model::Header, WritePbo};
 #[derive(Default)]
 /// A PBO file that can be written to
 pub struct WritablePbo<I: Seek + Read> {
-    extensions: IndexMap<String, String>,
+    properties: IndexMap<String, String>,
     files: HashMap<String, (I, Header)>,
 }
 
@@ -21,7 +21,7 @@ impl<I: Seek + Read> WritablePbo<I> {
     /// Create a new PBO
     pub fn new() -> Self {
         Self {
-            extensions: IndexMap::new(),
+            properties: IndexMap::new(),
             files: HashMap::new(),
         }
     }
@@ -99,25 +99,25 @@ impl<I: Seek + Read> WritablePbo<I> {
         key: K,
         value: V,
     ) -> Option<String> {
-        self.extensions
+        self.properties
             .insert(key.into(), value.into().trim_matches('\\').to_string())
     }
 
     /// Remove an extension from the PBO
     pub fn remove_extension(&mut self, key: &str) -> Option<String> {
-        self.extensions.remove(key)
+        self.properties.remove(key)
     }
 
     #[must_use]
     /// Get an extension from the PBO
     pub fn extension(&self, key: &str) -> Option<&String> {
-        self.extensions.get(key)
+        self.properties.get(key)
     }
 
     #[must_use]
-    /// Get all extensions from the PBO
-    pub const fn extensions(&self) -> &IndexMap<String, String> {
-        &self.extensions
+    /// Get all properties from the PBO
+    pub const fn properties(&self) -> &IndexMap<String, String> {
+        &self.properties
     }
 
     /// Write the PBO to a file
@@ -127,9 +127,9 @@ impl<I: Seek + Read> WritablePbo<I> {
     ///
     /// # Panics
     /// if a file does not exist but a header is present
-    pub fn write<O: Write>(&mut self, output: &mut O, extensions: bool) -> Result<(), Error> {
+    pub fn write<O: Write>(&mut self, output: &mut O, properties: bool) -> Result<(), Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-        if extensions {
+        if properties {
             Header::ext().write_pbo(&mut headers)?;
 
             if let Some(prefix) = self.extension("prefix") {
@@ -137,7 +137,7 @@ impl<I: Seek + Read> WritablePbo<I> {
                 headers.write_cstring(prefix)?;
             }
 
-            for (key, value) in &self.extensions {
+            for (key, value) in &self.properties {
                 if key == "prefix" {
                     continue;
                 }

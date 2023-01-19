@@ -14,7 +14,7 @@ use crate::{
 
 /// An existing PBO file that can be read from
 pub struct ReadablePbo<I: Seek + Read> {
-    extensions: IndexMap<String, String>,
+    properties: IndexMap<String, String>,
     headers: Vec<Header>,
     checksum: Checksum,
     input: I,
@@ -27,7 +27,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     /// # Errors
     /// if the file cannot be read
     pub fn from(mut input: I) -> Result<Self, Error> {
-        let mut extensions = IndexMap::new();
+        let mut properties = IndexMap::new();
         let mut headers = Vec::new();
         let mut blob_start = 0;
         loop {
@@ -42,7 +42,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
                     }
                     let value = input.read_cstring()?;
                     blob_start += value.len() as u64 + 1;
-                    extensions.insert(key, value);
+                    properties.insert(key, value);
                 }
             } else if header.filename().is_empty() {
                 break;
@@ -61,7 +61,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
             return Err(Error::UnexpectedDataAfterChecksum);
         }
         Ok(Self {
-            extensions,
+            properties,
             headers,
             checksum,
             input,
@@ -76,9 +76,9 @@ impl<I: Seek + Read> ReadablePbo<I> {
             .find(|h| h.filename() == name.replace('/', "\\"))
     }
 
-    /// Get the PBO's extensions
-    pub const fn extensions(&self) -> &IndexMap<String, String> {
-        &self.extensions
+    /// Get the PBO's properties
+    pub const fn properties(&self) -> &IndexMap<String, String> {
+        &self.properties
     }
 
     /// Get the PBO's stored checksum
@@ -156,12 +156,12 @@ impl<I: Seek + Read> ReadablePbo<I> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         Header::ext().write_pbo(&mut headers)?;
 
-        if let Some(prefix) = self.extensions.get("prefix") {
+        if let Some(prefix) = self.properties.get("prefix") {
             headers.write_cstring(b"prefix")?;
             headers.write_cstring(prefix)?;
         }
 
-        for (key, value) in &self.extensions {
+        for (key, value) in &self.properties {
             if key == "prefix" {
                 continue;
             }
