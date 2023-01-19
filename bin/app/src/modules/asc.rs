@@ -58,9 +58,15 @@ impl Module for ArmaScriptCompiler {
                         continue;
                     }
                     let tokens = preprocess_file(entry.as_str(), &resolver)?;
-                    let mut f = File::create(tmp_addon.join(entry.filename()))?;
+                    let source = tmp_addon.join(
+                        entry
+                            .as_str()
+                            .trim_start_matches(&format!("/{}/", addon.folder())),
+                    );
+                    let _ = create_dir_all(source.parent().unwrap());
+                    let mut f = File::create(source)?;
                     for t in tokens {
-                        f.write_all(t.to_string().as_bytes())?;
+                        f.write_all(t.to_source().as_bytes())?;
                     }
                     files.push(
                         entry
