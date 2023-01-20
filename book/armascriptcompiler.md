@@ -10,8 +10,8 @@ ArmaScriptCompiler requires no configuration and works out of the box.
 [asc]
 enabled = false # Default: true
 exclude = [
-    "\\example.sqf",
-    "settings\\gui.sqf",
+    "/example.sqf",
+    "settings/gui.sqf",
 ]
 ```
 

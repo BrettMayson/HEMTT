@@ -42,8 +42,26 @@ impl Module for ArmaScriptCompiler {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
-        create_dir_all(ctx.tmp().join("asc"))?;
         create_dir_all(ctx.tmp().join("asc").join("output"))?;
+        Ok(())
+    }
+
+    fn check(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+        if !ctx.config().asc().enabled() {
+            return Ok(());
+        }
+        for exclude in ctx.config().asc().exclude() {
+            if exclude.contains('*') {
+                return Err(hemtt_bin_error::Error::ASC(
+                    "wildcards are not supported".to_string(),
+                ));
+            }
+            if exclude.contains('\\') {
+                return Err(hemtt_bin_error::Error::ASC(
+                    "backslashes are not supported, use forward slashes".to_string(),
+                ));
+            }
+        }
         Ok(())
     }
 
@@ -67,6 +85,15 @@ impl Module for ArmaScriptCompiler {
                 let entry = entry?;
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
+                        continue;
+                    }
+                    if ctx
+                        .config()
+                        .asc()
+                        .exclude()
+                        .iter()
+                        .any(|e| entry.as_str().contains(e))
+                    {
                         continue;
                     }
                     let tokens = preprocess_file(entry.as_str(), &resolver)?;
@@ -97,7 +124,7 @@ impl Module for ArmaScriptCompiler {
             config.add_include_dir(include.display().to_string());
         }
         for exclude in ctx.config().asc().exclude() {
-            config.add_exclude(exclude.to_string());
+            config.add_exclude(exclude);
         }
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
@@ -176,8 +203,8 @@ impl ASCConfig {
         self.include_dirs.push(dir);
     }
 
-    pub fn add_exclude(&mut self, dir: String) {
-        self.exclude_list.push(dir);
+    pub fn add_exclude(&mut self, dir: &str) {
+        self.exclude_list.push(dir.replace('/', "\\"));
     }
 
     pub fn set_worker_threads(&mut self, threads: usize) {

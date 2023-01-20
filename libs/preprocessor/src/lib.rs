@@ -523,8 +523,13 @@ where
         return Err(Error::UnexpectedEOF);
     }
     let mut depth = 0;
+    let mut quote = false;
     while let Some(token) = tokenstream.peek() {
         match token.symbol() {
+            Symbol::DoubleQuote => {
+                quote = !quote;
+                arg.push(tokenstream.next().unwrap());
+            }
             Symbol::Comma => {
                 tokenstream.next();
                 while let Symbol::Whitespace(_) = arg.last().unwrap().symbol() {
@@ -554,6 +559,10 @@ where
                 arg.push(tokenstream.next().unwrap());
             }
             Symbol::Word(word) => {
+                if quote {
+                    arg.push(tokenstream.next().unwrap());
+                    continue;
+                }
                 if let Some((_source, definition)) = context.get(word, token) {
                     let token = token.clone();
                     tokenstream.next();
