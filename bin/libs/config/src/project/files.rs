@@ -13,13 +13,23 @@ pub struct Options {
 impl Options {
     #[must_use]
     pub fn include(&self) -> Vec<String> {
-        let mut files = self.include.clone();
+        let mut files = self
+            .include
+            .iter()
+            .map(|i| {
+                if i.starts_with('/') {
+                    i.to_string()
+                } else {
+                    format!("/{i}")
+                }
+            })
+            .collect::<Vec<_>>();
         for default in [
-            "mod.cpp",
-            "meta.cpp",
-            "LICENSE",
-            "logo_ca.paa",
-            "logo_co.paa",
+            "/mod.cpp",
+            "/meta.cpp",
+            "/LICENSE",
+            "/logo_ca.paa",
+            "/logo_co.paa",
         ]
         .iter()
         .map(std::string::ToString::to_string)

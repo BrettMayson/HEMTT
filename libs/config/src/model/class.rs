@@ -61,7 +61,8 @@ impl Class {
 impl Parse for Class {
     fn parse(
         options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -82,32 +83,36 @@ impl Parse for Class {
                 });
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(from.clone()),
+            });
         };
         // get name
         whitespace::skip(tokens);
-        let name = Ident::parse(options, tokens)?;
+        let name = Ident::parse(options, tokens, from)?;
         // Check for : and parent
-        whitespace::skip(tokens);
+        let last = whitespace::skip(tokens);
         let parent = if let Some(token) = tokens.peek() {
             if token.symbol() == &Symbol::Colon {
                 tokens.next();
-                whitespace::skip(tokens);
-                Some(Ident::parse(options, tokens)?)
+                let last = whitespace::skip(tokens).unwrap_or_else(|| from.clone());
+                Some(Ident::parse(options, tokens, &last)?)
             } else {
                 None
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(last.unwrap_or_else(|| from.clone())),
+            });
         };
         // read children
-        whitespace::skip_newline(tokens);
+        let last = whitespace::skip_newline(tokens);
         if let Some(token) = tokens.peek() {
             if token.symbol() == &Symbol::Semicolon {
                 return Ok(Self::External { name });
             }
         }
-        let children = Children::parse(options, tokens)?;
+        let children = Children::parse(options, tokens, &last.unwrap_or_else(|| from.clone()))?;
         Ok(Self::Local {
             name,
             parent,
@@ -236,7 +241,8 @@ pub struct Children(pub Properties);
 impl Parse for Children {
     fn parse(
         options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -249,9 +255,11 @@ impl Parse for Children {
                 });
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(from.clone()),
+            });
         }
-        let children = Properties::parse(options, tokens)?;
+        let children = Properties::parse(options, tokens, from)?;
         if let Some(token) = tokens.next() {
             if token.symbol() != &Symbol::RightBrace {
                 return Err(Error::UnexpectedToken {
@@ -260,7 +268,9 @@ impl Parse for Children {
                 });
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(from.clone()),
+            });
         }
         Ok(Self(children))
     }
@@ -270,9 +280,11 @@ impl Parse for Children {
 pub struct Properties(pub Vec<(String, Property)>);
 
 impl Parse for Properties {
+    #[allow(clippy::too_many_lines)]
     fn parse(
         options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -286,10 +298,14 @@ impl Parse for Properties {
                         if ident == "class" {
                             None
                         } else {
-                            Some(Ident::parse(options, tokens)?)
+                            let token = token.clone();
+                            Some(Ident::parse(options, tokens, &token)?)
                         }
                     }
-                    Symbol::Digit(_) => Some(Ident::parse(options, tokens)?),
+                    Symbol::Digit(_) => {
+                        let token = token.clone();
+                        Some(Ident::parse(options, tokens, &token)?)
+                    }
                     Symbol::RightBrace | Symbol::Eoi => break,
                     Symbol::Whitespace(_) | Symbol::Newline | Symbol::Comment(_) => {
                         tokens.next();
@@ -301,19 +317,27 @@ impl Parse for Properties {
                         })
                     }
                 },
-                None => return Err(Error::UnexpectedEOF),
+                None => {
+                    return Err(Error::UnexpectedEOF {
+                        token: Box::new(from.clone()),
+                    })
+                }
             };
             whitespace::skip(tokens);
             'read_ident: {
                 match ident {
                     None => {
-                        let class = Class::parse(options, tokens)?;
+                        let class = Class::parse(options, tokens, from)?;
                         entries.push((class.name().to_string(), Property::Class(class)));
                     }
                     Some(ident) => {
                         if ident.to_string() == "delete" {
-                            whitespace::skip(tokens);
-                            let ident = Ident::parse(options, tokens)?;
+                            let last = whitespace::skip(tokens);
+                            let ident = Ident::parse(
+                                options,
+                                tokens,
+                                &last.unwrap_or_else(|| from.clone()),
+                            )?;
                             entries.push((ident.to_string(), Property::Delete(ident)));
                             break 'read_ident;
                         }
@@ -344,15 +368,15 @@ impl Parse for Properties {
                             });
                         }
                         tokens.next();
-                        whitespace::skip(tokens);
+                        let last = whitespace::skip(tokens);
                         let entry = if array_expand {
-                            let array = Array::parse(options, tokens)?;
+                            let array = Array::parse(options, tokens, from)?;
                             Entry::Array(Array {
                                 elements: array.elements,
                                 expand: true,
                             })
                         } else {
-                            Entry::parse(options, tokens)?
+                            Entry::parse(options, tokens, &last.unwrap_or_else(|| from.clone()))?
                         };
                         entries.push((ident.to_string(), Property::Entry(entry)));
                     }
@@ -443,6 +467,7 @@ impl Rapify for Property {
 
 #[cfg(test)]
 mod tests {
+    use hemtt_tokens::Token;
     use peekmore::PeekMore;
 
     use crate::{
@@ -467,7 +492,12 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekmore();
-        let children = Children::parse(&crate::Options::default(), &mut tokens).unwrap();
+        let children = Children::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
         assert_eq!(
             children.0 .0,
             vec![
@@ -533,7 +563,7 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekmore();
-        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap() else {
+        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens, &Token::builtin(None)).unwrap() else {
             panic!("Expected local class");
         };
         assert_eq!(name.to_string(), "HEMTT");
@@ -565,7 +595,7 @@ mod tests {
         .unwrap()
         .into_iter()
         .peekmore();
-        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap() else {
+        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens, &Token::builtin(None)).unwrap() else {
             panic!("Expected local class");
         };
         assert_eq!(name.to_string(), "HEMTT");
@@ -598,7 +628,7 @@ class HEMTT: DOUBLES(hello,world)
         .unwrap()
         .into_iter()
         .peekmore();
-        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens).unwrap() else {
+        let Class::Local {name, parent, children} = super::Class::parse(&crate::Options::default(), &mut tokens, &Token::builtin(None)).unwrap() else {
             panic!("Expected local class");
         };
         assert_eq!(name.to_string(), "HEMTT");

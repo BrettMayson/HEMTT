@@ -21,6 +21,7 @@ impl Parse for Ident {
     fn parse(
         _options: &Options,
         tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        _from: &Token,
     ) -> Result<Self, crate::error::Error>
     where
         Self: Sized,

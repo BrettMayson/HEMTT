@@ -1,4 +1,4 @@
-use hemtt_tokens::{whitespace, Symbol};
+use hemtt_tokens::{whitespace, Symbol, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{error::Error, rapify::Rapify, Options};
@@ -31,24 +31,37 @@ pub enum Entry {
 impl Parse for Entry {
     fn parse(
         options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        whitespace::skip_newline(tokens);
+        let last = whitespace::skip_newline(tokens);
         if let Some(token) = tokens.peek() {
             match token.symbol() {
                 Symbol::LeftBrace => {
-                    let array = Self::Array(Array::parse(options, tokens)?);
+                    let array = Self::Array(Array::parse(
+                        options,
+                        tokens,
+                        &last.unwrap_or_else(|| from.clone()),
+                    )?);
                     return Ok(array);
                 }
                 Symbol::DoubleQuote => {
-                    let string = Self::Str(Str::parse(options, tokens)?);
+                    let string = Self::Str(Str::parse(
+                        options,
+                        tokens,
+                        &last.unwrap_or_else(|| from.clone()),
+                    )?);
                     return Ok(string);
                 }
                 Symbol::Digit(_) | Symbol::Dash => {
-                    let number = Self::Number(Number::parse(options, tokens)?);
+                    let number = Self::Number(Number::parse(
+                        options,
+                        tokens,
+                        &last.unwrap_or_else(|| from.clone()),
+                    )?);
                     return Ok(number);
                 }
                 Symbol::Newline => {
@@ -59,7 +72,7 @@ impl Parse for Entry {
                 }
                 Symbol::Whitespace(_) => {
                     tokens.next();
-                    return Self::parse(options, tokens);
+                    return Self::parse(options, tokens, &last.unwrap_or_else(|| from.clone()));
                 }
                 _ => {
                     return Err(Error::UnexpectedToken {
@@ -122,7 +135,7 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekmore();
-        let entry = Entry::parse(&Options::default(), &mut tokens).unwrap();
+        let entry = Entry::parse(&Options::default(), &mut tokens, &Token::builtin(None)).unwrap();
         assert_eq!(entry, Entry::Str(Str("test".to_string())));
     }
 
@@ -133,7 +146,9 @@ mod tests {
                 .unwrap()
                 .into_iter()
                 .peekmore();
-            let number = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
+            let number =
+                super::Entry::parse(&Options::default(), &mut tokens, &Token::builtin(None))
+                    .unwrap();
             assert_eq!(number, super::Entry::Number(Number::Int32(source)));
         }
     }
@@ -145,7 +160,9 @@ mod tests {
                 .unwrap()
                 .into_iter()
                 .peekmore();
-            let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
+            let array =
+                super::Entry::parse(&Options::default(), &mut tokens, &Token::builtin(None))
+                    .unwrap();
             assert_eq!(
                 array,
                 super::Entry::Array(Array {
@@ -163,7 +180,9 @@ mod tests {
                 .unwrap()
                 .into_iter()
                 .peekmore();
-            let array = super::Entry::parse(&Options::default(), &mut tokens).unwrap();
+            let array =
+                super::Entry::parse(&Options::default(), &mut tokens, &Token::builtin(None))
+                    .unwrap();
             assert_eq!(
                 array,
                 super::Entry::Array(Array {
@@ -185,9 +204,19 @@ mod tests {
                 .unwrap()
                 .into_iter()
                 .peekmore();
-            assert!(super::Entry::parse(&Options::default(), &mut tokens.clone()).is_err());
+            assert!(super::Entry::parse(
+                &Options::default(),
+                &mut tokens.clone(),
+                &Token::builtin(None)
+            )
+            .is_err());
             assert_eq!(
-                super::Entry::parse(&Options::from_preset(Preset::Hemtt), &mut tokens).unwrap(),
+                super::Entry::parse(
+                    &Options::from_preset(Preset::Hemtt),
+                    &mut tokens,
+                    &Token::builtin(None)
+                )
+                .unwrap(),
                 super::Entry::Array(Array {
                     expand: false,
                     elements: vec![

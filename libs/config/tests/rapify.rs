@@ -23,6 +23,7 @@ fn rapify() {
             let rapified = Config::parse(
                 &hemtt_config::Options::default(),
                 &mut tokens.into_iter().peekmore(),
+                &hemtt_tokens::Token::builtin(None),
             )
             .unwrap();
             let mut output = Vec::new();

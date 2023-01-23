@@ -1,4 +1,4 @@
-use hemtt_tokens::Symbol;
+use hemtt_tokens::{Symbol, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{
@@ -16,7 +16,8 @@ pub struct Str(pub String);
 impl Parse for Str {
     fn parse(
         _options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -29,7 +30,9 @@ impl Parse for Str {
                 });
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(from.clone()),
+            });
         }
         let mut string = String::new();
         loop {
@@ -59,7 +62,9 @@ impl Parse for Str {
                     }
                 }
             } else {
-                return Err(Error::UnexpectedEOF);
+                return Err(Error::UnexpectedEOF {
+                    token: Box::new(from.clone()),
+                });
             }
         }
         Ok(Self(string))
@@ -87,6 +92,7 @@ impl Rapify for Str {
 
 #[cfg(test)]
 mod tests {
+    use hemtt_tokens::Token;
     use peekmore::PeekMore;
 
     use crate::model::Parse;
@@ -97,7 +103,12 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekmore();
-        let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
+        let string = super::Str::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
         assert_eq!(string, super::Str("test".to_string()));
     }
 
@@ -107,7 +118,12 @@ mod tests {
             .unwrap()
             .into_iter()
             .peekmore();
-        let string = super::Str::parse(&crate::Options::default(), &mut tokens).unwrap();
+        let string = super::Str::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
         assert_eq!(string, super::Str(r#"test is "cool""#.to_string()));
     }
 }

@@ -102,7 +102,11 @@ print("Set version to " + HEMTT_PROJECT_VERSION);
 
 ### Real
 
-`*_release` phases have a real file system. This means that the files are actually written to disk. Be careful when modifying files, as you can modify the project files.
+`*_release` phases have a real file system. This means that the files are actually written to disk.
+
+```admonish danger
+Be careful when modifying files while using the real file system, as you can destructively modify the project files. It is recommended to use the virtual file system whenever possible, and commit the changes to the project files prior to testing hooks.
+```
 
 When using the real file system, two additional constants are available. `HEMTT_DIRECTORY` is the root of the project, and `HEMTT_OUTPUT` is the root of the build output.
 

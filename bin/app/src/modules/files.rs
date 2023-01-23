@@ -34,9 +34,7 @@ impl Module for Files {
                     continue;
                 }
 
-                let relative = entry.filename().trim_start_matches('/').to_string();
-
-                if !glob::Pattern::new(&file)?.matches(&relative) {
+                if !glob::Pattern::new(&file)?.matches(entry.as_str()) {
                     continue;
                 }
 
@@ -47,7 +45,7 @@ impl Module for Files {
                     create_dir_all(&d)?;
                 }
 
-                d.push(relative);
+                d.push(entry.as_str().trim_start_matches('/'));
                 println!("Copying `{:#?}` => {:#?}", entry.as_str(), d);
                 std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?).unwrap();
             }

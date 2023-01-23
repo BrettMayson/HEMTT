@@ -9,6 +9,7 @@ hemtt-error = { path = "../../../libs/error" }
 
 hemtt-config = { path = "../../../libs/config" }
 hemtt-preprocessor = { path = "../../../libs/preprocessor" }
+hemtt-tokens = { path = "../../../libs/tokens" }
 
 clap = { workspace = true }
 peekmore = "1.0.0"

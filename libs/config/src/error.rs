@@ -4,7 +4,7 @@ use hemtt_tokens::{Symbol, Token};
 #[derive(thiserror::Error, Debug)]
 /// Error type for the config parser
 pub enum Error {
-    #[error("Expected `{expected:?}`, found `{token:?}`,")]
+    #[error("Expected `{expected:?}`, found `{token:?}`")]
     /// Expected a different token in the current context
     UnexpectedToken {
         /// The token that was found
@@ -12,16 +12,19 @@ pub enum Error {
         /// The token that was expected
         expected: Vec<Symbol>,
     },
-    #[error("Unexpected EOF")]
+    #[error("Unexpected EOF at `{token:?}`")]
     /// Unexpected end of file
-    UnexpectedEOF,
-    #[error("Expected `{{ident}}`, found `{token:?}`, ")]
+    UnexpectedEOF {
+        /// The token that was found
+        token: Box<Token>,
+    },
+    #[error("Expected `{{ident}}`, found `{token:?}`")]
     /// Expected an identifier in the current context
     ExpectedIdent {
         /// The token that was found
         token: Box<Token>,
     },
-    #[error("Expected `{{number}}`, found `{token:?}`, ")]
+    #[error("Expected `{{number}}`, found `{token:?}`")]
     /// Expected a number in the current context
     ExpectedNumber {
         /// The token that was found
@@ -49,7 +52,9 @@ impl PrettyError for Error {
                     expected = expected
                 )
             }
-            Self::UnexpectedEOF => "Unexpected EOF".to_string(),
+            Self::UnexpectedEOF { token } => {
+                format!("Unexpected EOF near `{token:?}`,")
+            }
             Self::ExpectedIdent { token } => {
                 format!(
                     "Expected `{{ident}}`, found `{symbol:?}`,",
@@ -116,8 +121,9 @@ impl PrettyError for Error {
         let mut parent = match self {
             Self::ExpectedIdent { token }
             | Self::UnexpectedToken { token, expected: _ }
-            | Self::ExpectedNumber { token } => token.parent(),
-            _ => &None,
+            | Self::ExpectedNumber { token }
+            | Self::UnexpectedEOF { token } => token.parent(),
+            Self::Io(_) => &None,
         };
         let mut trace = Vec::new();
         while let Some(p) = parent {

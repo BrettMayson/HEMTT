@@ -1,6 +1,6 @@
 use std::iter::Sum;
 
-use hemtt_tokens::{whitespace, Symbol};
+use hemtt_tokens::{whitespace, Symbol, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{
@@ -27,7 +27,8 @@ pub struct Array {
 impl Parse for Array {
     fn parse(
         options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = hemtt_tokens::Token>>,
+        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        from: &Token,
     ) -> Result<Self, Error>
     where
         Self: Sized,
@@ -40,12 +41,14 @@ impl Parse for Array {
                 });
             }
         } else {
-            return Err(Error::UnexpectedEOF);
+            return Err(Error::UnexpectedEOF {
+                token: Box::new(from.clone()),
+            });
         }
         let mut elements = Vec::new();
         let mut first = true;
         loop {
-            whitespace::skip_newline(tokens);
+            let last = whitespace::skip_newline(tokens);
             if let Some(token) = tokens.peek() {
                 if token.symbol() == &Symbol::RightBrace {
                     if first || options.array_allow_trailing_comma() {
@@ -58,12 +61,14 @@ impl Parse for Array {
                     });
                 }
             } else {
-                return Err(Error::UnexpectedEOF);
+                return Err(Error::UnexpectedEOF {
+                    token: Box::new(last.unwrap_or_else(|| from.clone())),
+                });
             }
-            let entry = Entry::parse(options, tokens)?;
+            let entry = Entry::parse(options, tokens, from)?;
             elements.push(entry);
             first = false;
-            whitespace::skip_newline(tokens);
+            let last = whitespace::skip_newline(tokens);
             if let Some(token) = tokens.next() {
                 if token.symbol() == &Symbol::RightBrace {
                     break;
@@ -74,7 +79,9 @@ impl Parse for Array {
                     });
                 }
             } else {
-                return Err(Error::UnexpectedEOF);
+                return Err(Error::UnexpectedEOF {
+                    token: Box::new(last.unwrap_or_else(|| from.clone())),
+                });
             }
         }
         whitespace::skip_newline(tokens);

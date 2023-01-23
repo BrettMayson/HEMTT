@@ -61,6 +61,7 @@ pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Resul
     let rapified = Config::parse(
         ctx.config().hemtt().config(),
         &mut tokens.into_iter().peekmore(),
+        &Token::builtin(None),
     )?;
     println!("parsed {}", path.as_str());
     let out = if path.filename() == "config.cpp" {

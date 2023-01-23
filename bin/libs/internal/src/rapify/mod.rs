@@ -47,6 +47,7 @@ fn run(source: &Path, dest: &PathBuf) -> Result<(), AppError> {
     let rapified = Config::parse(
         &hemtt_config::Options::default(),
         &mut tokens.into_iter().peekmore(),
+        &hemtt_tokens::Token::builtin(None),
     )?;
     let mut output = Vec::new();
     rapified.rapify(&mut output, 0).unwrap();

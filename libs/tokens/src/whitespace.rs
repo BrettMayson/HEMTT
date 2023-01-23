@@ -26,14 +26,15 @@ impl ToString for Whitespace {
 }
 
 /// Skip through whitespace
-pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
+pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
+    let mut last = None;
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() {
-            input.next();
+            last = input.next();
         } else if token.symbol() == &Symbol::Slash {
             if let Some(next_token) = input.peek_forward(1) {
                 if next_token.symbol() == &Symbol::Slash {
-                    skip_comment(input);
+                    last = skip_comment(input);
                 } else {
                     break;
                 }
@@ -44,17 +45,19 @@ pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
             break;
         }
     }
+    last
 }
 
 /// Skip through whitespace and newlines
-pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
+pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
+    let mut last = None;
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() || token.symbol().is_newline() {
-            input.next();
+            last = input.next();
         } else if token.symbol() == &Symbol::Slash {
             if let Some(next_token) = input.peek_forward(1) {
                 if next_token.symbol() == &Symbol::Slash {
-                    skip_comment(input);
+                    last = skip_comment(input);
                 } else {
                     break;
                 }
@@ -65,17 +68,19 @@ pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
             break;
         }
     }
+    last
 }
 
 /// Skip through a comment until a newline is found
 /// Assumes the slashes are peeked but not consumed
-pub fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) {
+pub fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
     input.next();
-    input.next();
+    let mut last = input.next();
     while let Some(token) = input.peek() {
         if token.symbol() == &Symbol::Newline {
             break;
         }
-        input.next();
+        last = input.next();
     }
+    last
 }
