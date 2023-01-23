@@ -29,13 +29,23 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             if path.is_empty() {
                 continue;
             }
-            zip.add_directory(path, options)?;
+            zip.add_directory(
+                format!("@{}/{}", ctx.config().prefix(), path.replace('\\', "/")),
+                options,
+            )?;
             continue;
         }
         let name = path
             .strip_prefix(ctx.out_folder())
             .expect("We are in the HEMTT folder, the prefix should always exist");
-        zip.start_file(name.display().to_string(), options)?;
+        zip.start_file(
+            format!(
+                "@{}/{}",
+                ctx.config().prefix(),
+                name.display().to_string().replace('\\', "/")
+            ),
+            options,
+        )?;
         std::io::copy(&mut std::fs::File::open(path)?, &mut zip)?;
     }
     zip.finish()?;
