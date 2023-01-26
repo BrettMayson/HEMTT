@@ -82,10 +82,7 @@ impl Module for ArmaScriptCompiler {
             #[cfg(target_os = "linux")]
             {
                 use std::os::unix::fs::PermissionsExt;
-                let metadata = f.metadata()?;
-                let mut permissions = metadata.permissions();
-                permissions.set_mode(0o744);
-                std::fs::set_permissions(out, permissions)?;
+                std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
             }
         }
         let resolver = VfsResolver::new(ctx)?;
