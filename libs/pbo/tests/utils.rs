@@ -6,14 +6,14 @@ pub fn pbo(
     file: File,
     file_count: usize,
     sorted: bool,
-    extension_count: usize,
+    property_count: usize,
     version: &str,
     prefix: &str,
     checksum: Checksum,
 ) -> ReadablePbo<File> {
     let mut pbo = ReadablePbo::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
-    assert_eq!(pbo.properties().len(), extension_count);
+    assert_eq!(pbo.properties().len(), property_count);
     assert_eq!(pbo.is_sorted().is_ok(), sorted);
     assert_eq!(pbo.properties().get("version"), Some(&version.to_string()));
     assert_eq!(pbo.properties().get("prefix"), Some(&prefix.to_string()));

@@ -2,7 +2,7 @@
 /// A PBO file header
 pub enum Mime {
     /// The version of the PBO
-    /// Always the first extension
+    /// Always the first header
     Vers,
     /// A compressed entry
     Cprs,

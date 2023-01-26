@@ -1,7 +1,7 @@
 # Version Configuration
 
 HEMTT uses the project version as part of the signing authority.
-It is also included as an extension in built PBOs.
+It is also included as an property in built PBOs.
 
 No `[version]` configuration is required if you use macros in your `script_version.hpp` file.
 

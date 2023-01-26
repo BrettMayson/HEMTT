@@ -93,8 +93,8 @@ impl<I: Seek + Read> WritablePbo<I> {
         sorted
     }
 
-    /// Add an extension to the PBO
-    pub fn add_extension<K: Into<String>, V: Into<String>>(
+    /// Add an property to the PBO
+    pub fn add_property<K: Into<String>, V: Into<String>>(
         &mut self,
         key: K,
         value: V,
@@ -103,14 +103,14 @@ impl<I: Seek + Read> WritablePbo<I> {
             .insert(key.into(), value.into().trim_matches('\\').to_string())
     }
 
-    /// Remove an extension from the PBO
-    pub fn remove_extension(&mut self, key: &str) -> Option<String> {
+    /// Remove an property from the PBO
+    pub fn remove_property(&mut self, key: &str) -> Option<String> {
         self.properties.remove(key)
     }
 
     #[must_use]
-    /// Get an extension from the PBO
-    pub fn extension(&self, key: &str) -> Option<&String> {
+    /// Get an property from the PBO
+    pub fn property(&self, key: &str) -> Option<&String> {
         self.properties.get(key)
     }
 
@@ -130,9 +130,9 @@ impl<I: Seek + Read> WritablePbo<I> {
     pub fn write<O: Write>(&mut self, output: &mut O, properties: bool) -> Result<(), Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         if properties {
-            Header::ext().write_pbo(&mut headers)?;
+            Header::property().write_pbo(&mut headers)?;
 
-            if let Some(prefix) = self.extension("prefix") {
+            if let Some(prefix) = self.property("prefix") {
                 headers.write_cstring(b"prefix")?;
                 headers.write_cstring(prefix)?;
             }

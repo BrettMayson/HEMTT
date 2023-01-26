@@ -154,7 +154,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     /// if a file does not exist, but a header for it does
     pub fn gen_checksum(&mut self) -> Result<Checksum, Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-        Header::ext().write_pbo(&mut headers)?;
+        Header::property().write_pbo(&mut headers)?;
 
         if let Some(prefix) = self.properties.get("prefix") {
             headers.write_cstring(b"prefix")?;

@@ -29,8 +29,8 @@ impl Header {
     }
 
     #[must_use]
-    /// Create a new header for an extension
-    pub fn ext() -> Self {
+    /// Create a new header for an property
+    pub fn property() -> Self {
         Self {
             filename: String::new(),
             mime: Mime::Vers,

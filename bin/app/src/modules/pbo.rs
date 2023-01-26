@@ -53,7 +53,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                 target_pbo.display()
             );
 
-            pbo.add_extension("hemtt", crate::VERSION.to_string());
+            pbo.add_property("hemtt", crate::VERSION.to_string());
 
             'entries: for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
@@ -90,8 +90,8 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                             &entry.read_to_string().unwrap(),
                             ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
                         )?;
-                        pbo.add_extension("prefix", prefix.into_inner());
-                        pbo.add_extension("version", ctx.config().version().get()?.to_string());
+                        pbo.add_property("prefix", prefix.into_inner());
+                        pbo.add_property("version", ctx.config().version().get()?.to_string());
                         continue;
                     }
 
@@ -103,11 +103,11 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                 }
             }
             for header in ctx.config().properties() {
-                pbo.add_extension(header.0, header.1.clone());
+                pbo.add_property(header.0, header.1.clone());
             }
             if let Some(config) = addon.config() {
                 for header in config.properties() {
-                    pbo.add_extension(header.0, header.1.clone());
+                    pbo.add_property(header.0, header.1.clone());
                 }
             }
             pbo.write(&mut File::create(target_pbo)?, true)?;
