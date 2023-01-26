@@ -3,8 +3,8 @@
 
 //! HEMTT - Arma 3 Signing
 
-// Parts of the following code is derivative work of the code from the armake2 project by KoffeinFlummi, 
-// which is licensed GPLv2. This code therefore is also licensed under the terms 
+// Parts of the following code is derivative work of the code from the armake2 project by KoffeinFlummi,
+// which is licensed GPLv2. This code therefore is also licensed under the terms
 // of the GNU Public License, verison 2.
 
 // The original code can be found here:
