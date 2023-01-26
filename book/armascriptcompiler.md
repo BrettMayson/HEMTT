@@ -1,7 +1,7 @@
 # ArmaScriptCompiler
 
 ```admonish danger
-Embeded ArmaScriptCompiler is currently disabled by default due to a privacy issue in the ArmaScriptCompiler. You will need to enable it manually in your `hemtt.toml` file if you wish to use it. Not that output will include the full path of HEMTT's temporary directory, including your username.
+Embeded ArmaScriptCompiler is currently disabled by default due to a privacy issue in ArmaScriptCompiler. You will need to enable it manually in your `hemtt.toml` file if you wish to use it. Note that output will include the full path of HEMTT's temporary directory, including your username.
 
 Alternatively you can run ASC before HEMTT as part of your CI workflow.
 ```

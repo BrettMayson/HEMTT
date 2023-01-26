@@ -16,9 +16,12 @@ pub enum Error {
         /// The [`Token`] stack trace
         trace: Vec<Token>,
     },
-    #[error("Unexpected EOF")]
+    #[error("Unexpected EOF at `{token:?}`")]
     /// Unexpected end of file
-    UnexpectedEOF,
+    UnexpectedEOF {
+        /// The token that was found
+        token: Box<Token>,
+    },
     #[error("Expected `{{ident}}`, found `{token:?}`, ")]
     /// Expected an identifier, found something else
     ExpectedIdent {
@@ -141,7 +144,9 @@ impl PrettyError for Error {
                     expected = expected
                 )
             }
-            Self::UnexpectedEOF => "Unexpected EOF".to_string(),
+            Self::UnexpectedEOF { token } => {
+                format!("Unexpected EOF near `{token:?}`,")
+            }
             Self::ExpectedIdent { token, trace: _ } => {
                 format!(
                     "Expected `{{ident}}`, found `{symbol:?}`,",
