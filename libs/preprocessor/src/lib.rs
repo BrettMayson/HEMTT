@@ -117,21 +117,21 @@ fn directive_preprocess<R>(
 where
     R: Resolver,
 {
-    if let Some(token) = tokenstream.peek() {
-        match token.symbol() {
-            Symbol::Directive => {}
-            _ => {
-                return Err(Error::UnexpectedToken {
-                    token: Box::new(token.clone()),
-                    expected: vec![Symbol::Directive],
-                    trace: context.trace(),
-                })
-            }
-        }
-    } else {
+    let Some(token) = tokenstream.peek() else {
         return Err(Error::UnexpectedEOF {
             token: Box::new(from),
         });
+    };
+    let token = token.clone();
+    match token.symbol() {
+        Symbol::Directive => {}
+        _ => {
+            return Err(Error::UnexpectedToken {
+                token: Box::new(token.clone()),
+                expected: vec![Symbol::Directive],
+                trace: context.trace(),
+            })
+        }
     }
     let mut output = Vec::new();
     tokenstream.next();
@@ -226,10 +226,12 @@ where
                 _ => {}
             }
         }
-    } else {
+    } else if !allow_quote {
         return Err(Error::UnexpectedEOF {
             token: Box::new(from),
         });
+    } else {
+        output.push(token);
     }
     Ok(output)
 }
