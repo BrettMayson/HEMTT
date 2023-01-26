@@ -1,12 +1,15 @@
 use std::{
     fs::{create_dir_all, File},
-    io::{Read, Write},
+    io::{BufReader, BufWriter, Read, Write},
     process::Command,
+    sync::{Arc, RwLock},
 };
 
 use hemtt_preprocessor::preprocess_file;
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rust_embed::RustEmbed;
 use serde::Serialize;
+use time::Instant;
 
 use super::{preprocessor::VfsResolver, Module};
 
@@ -65,6 +68,7 @@ impl Module for ArmaScriptCompiler {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
         if !ctx.config().asc().enabled() {
             return Ok(());
@@ -84,10 +88,12 @@ impl Module for ArmaScriptCompiler {
         }
         let resolver = VfsResolver::new(ctx)?;
         let sqf_ext = Some(String::from("sqf"));
-        let mut files = Vec::new();
+        let files = Arc::new(RwLock::new(Vec::new()));
+        let start = Instant::now();
         for addon in ctx.addons() {
             let tmp_addon = tmp.join("source").join(addon.folder());
             create_dir_all(&tmp_addon)?;
+            let mut entries = Vec::new();
             for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
                 let entry = entry?;
                 if entry.is_file()? {
@@ -103,27 +109,42 @@ impl Module for ArmaScriptCompiler {
                     {
                         continue;
                     }
+                    entries.push(entry);
+                }
+            }
+            entries
+                .par_iter()
+                .map(|entry| {
                     let tokens = preprocess_file(entry.as_str(), &resolver)?;
                     let source = tmp_addon.join(
                         entry
                             .as_str()
                             .trim_start_matches(&format!("/{}/", addon.folder())),
                     );
-                    let _ = create_dir_all(source.parent().unwrap());
-                    let mut f = File::create(source)?;
-                    for t in tokens {
-                        f.write_all(t.to_source().as_bytes())?;
+                    let parent = source.parent().unwrap();
+                    if !parent.exists() {
+                        std::mem::drop(create_dir_all(parent));
                     }
-                    files.push(
+                    let mut f = File::create(source)?;
+                    let mut write = BufWriter::new(&mut f);
+                    for t in tokens {
+                        std::io::copy(&mut BufReader::new(t.to_source().as_bytes()), &mut write)?;
+                    }
+                    files.write().unwrap().push(
                         entry
                             .as_str()
                             .to_string()
                             .trim_start_matches('/')
                             .to_string(),
                     );
-                }
-            }
+                    Ok(())
+                })
+                .collect::<Result<_, hemtt_bin_error::Error>>()?;
         }
+        println!(
+            "ASC Preprocess took {:?}",
+            start.elapsed().whole_milliseconds()
+        );
         config.add_input_dir(tmp.join("source").display().to_string());
         config.set_output_dir(tmp.join("output").display().to_string());
         let include = tmp.join("source").join("include");
@@ -153,7 +174,8 @@ impl Module for ArmaScriptCompiler {
                 .to_string()
                 .trim_start_matches(&tmp.ancestors().last().unwrap().display().to_string()),
         );
-        for file in files {
+        let files = files.read().unwrap();
+        for file in &*files {
             let file = format!("{file}c");
             let from = tmp_output.join(&file);
             let to = ctx.vfs().join(&file)?;

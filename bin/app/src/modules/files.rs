@@ -34,7 +34,6 @@ impl Module for Files {
                     continue;
                 }
 
-                println!("Checking `{:#?}` against `{:#?}`", entry.as_str(), file);
                 if !glob::Pattern::new(&file)?.matches_with(entry.as_str(), glob_options) {
                     continue;
                 }
@@ -44,9 +43,9 @@ impl Module for Files {
                 d.push(entry.as_str().trim_start_matches('/'));
                 let folder = d.parent().unwrap();
                 if !folder.exists() {
-                    let _ = create_dir_all(folder);
+                    std::mem::drop(create_dir_all(folder));
                 }
-                println!("Copying `{:#?}` => {:#?}", entry.as_str(), d);
+                println!("Copying `{:#?}` => {d:#?}", entry.as_str());
                 std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?).unwrap();
             }
         }
