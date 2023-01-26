@@ -29,3 +29,9 @@ Verbosity level, can be specified multiple times.
 hemtt ... -v # Debug
 hemtt ... -vv # Trace
 ```
+
+When running inside a CI platform like GitHub Actions, the output will always be set to trace.
+
+```admonish note
+The full log can also be found at `.hemttout/latest.log` after each build
+```
