@@ -76,7 +76,8 @@ impl Module for ArmaScriptCompiler {
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
-            let mut f = File::create(tmp.join(file))?;
+            let out = tmp.join(file);
+            let mut f = File::create(&out)?;
             f.write_all(&Distributables::get(file).unwrap().data)?;
             #[cfg(target_os = "linux")]
             {
@@ -84,6 +85,7 @@ impl Module for ArmaScriptCompiler {
                 let metadata = f.metadata()?;
                 let mut permissions = metadata.permissions();
                 permissions.set_mode(0o744);
+                std::fs::set_permissions(out, permissions)?;
             }
         }
         let resolver = VfsResolver::new(ctx)?;
@@ -174,8 +176,7 @@ impl Module for ArmaScriptCompiler {
                 .to_string()
                 .trim_start_matches(&tmp.ancestors().last().unwrap().display().to_string()),
         );
-        let files = files.read().unwrap();
-        for file in &*files {
+        for file in &*files.read().unwrap() {
             let file = format!("{file}c");
             let from = tmp_output.join(&file);
             let to = ctx.vfs().join(&file)?;

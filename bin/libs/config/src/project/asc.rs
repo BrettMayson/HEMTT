@@ -11,7 +11,7 @@ pub struct Options {
 impl Options {
     #[must_use]
     pub fn enabled(&self) -> bool {
-        self.enabled.unwrap_or(true)
+        self.enabled.unwrap_or(false)
     }
 
     #[must_use]
