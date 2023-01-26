@@ -35,28 +35,58 @@ impl Parse for Str {
             });
         }
         let mut string = String::new();
-        loop {
+        'outer: loop {
             if let Some(token) = tokens.peek() {
                 match token.symbol() {
-                    Symbol::DoubleQuote => {
+                    Symbol::DoubleQuote => 'inner: loop {
                         tokens.next();
                         if let Some(token) = tokens.peek() {
-                            if token.symbol() == &Symbol::DoubleQuote {
-                                tokens.next();
-                                string.push('"');
-                            } else {
-                                break;
+                            println!("Maybe the end but next is {token:?}");
+                            match token.symbol() {
+                                Symbol::DoubleQuote => {
+                                    tokens.next();
+                                    string.push('"');
+                                    break 'inner;
+                                }
+                                Symbol::Whitespace(_) => continue,
+                                Symbol::Escape => {
+                                    println!(
+                                        "Escape with {:?}",
+                                        tokens.peek_nth(1).unwrap().symbol()
+                                    );
+                                    if tokens.peek_nth(1).unwrap().symbol()
+                                        == &Symbol::Word(String::from("n"))
+                                    {
+                                        println!("Newline");
+                                        tokens.next();
+                                        tokens.next();
+                                        string.push('\n');
+                                        loop {
+                                            if let Some(token) = tokens.peek() {
+                                                match token.symbol() {
+                                                    Symbol::Whitespace(_) => {
+                                                        tokens.next();
+                                                        continue;
+                                                    }
+                                                    Symbol::DoubleQuote => {
+                                                        tokens.next();
+                                                        break 'inner;
+                                                    }
+                                                    _ => break 'outer,
+                                                }
+                                            }
+                                            return Err(Error::UnexpectedEOF {
+                                                token: Box::new(from.clone()),
+                                            });
+                                        }
+                                    }
+                                    break;
+                                }
+                                _ => break 'outer,
                             }
-                        } else {
-                            break;
                         }
-                    }
-                    // Symbol::Newline => {
-                    //     return Err(Error::UnexpectedToken {
-                    //         token: Box::new(token.clone()),
-                    //         expected: vec![Symbol::DoubleQuote],
-                    //     });
-                    // }
+                        break 'outer;
+                    },
                     _ => {
                         string.push_str(&tokens.next().unwrap().to_string());
                     }
@@ -125,5 +155,21 @@ mod tests {
         )
         .unwrap();
         assert_eq!(string, super::Str(r#"test is "cool""#.to_string()));
+    }
+
+    #[test]
+    // fn who_in_the_f_thought_this_was_a_good_idea() {
+    fn multiline_string() {
+        let mut tokens = hemtt_preprocessor::preprocess_string(r#""test" \n "is" \n "cool""#)
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let string = super::Str::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(string, super::Str("test\nis\ncool".to_string()));
     }
 }
