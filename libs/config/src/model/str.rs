@@ -41,7 +41,6 @@ impl Parse for Str {
                     Symbol::DoubleQuote => 'inner: loop {
                         tokens.next();
                         if let Some(token) = tokens.peek() {
-                            println!("Maybe the end but next is {token:?}");
                             match token.symbol() {
                                 Symbol::DoubleQuote => {
                                     tokens.next();
@@ -50,14 +49,9 @@ impl Parse for Str {
                                 }
                                 Symbol::Whitespace(_) => continue,
                                 Symbol::Escape => {
-                                    println!(
-                                        "Escape with {:?}",
-                                        tokens.peek_nth(1).unwrap().symbol()
-                                    );
                                     if tokens.peek_nth(1).unwrap().symbol()
                                         == &Symbol::Word(String::from("n"))
                                     {
-                                        println!("Newline");
                                         tokens.next();
                                         tokens.next();
                                         string.push('\n');

@@ -20,3 +20,12 @@ Number of threads to use, defaults to the number of CPUs.
 ```bash
 hemtt ... -t 4
 ```
+
+### -v
+
+Verbosity level, can be specified multiple times.
+
+```bash
+hemtt ... -v # Debug
+hemtt ... -vv # Trace
+```

@@ -6,6 +6,7 @@ use crate::context::Context;
 
 pub fn release(ctx: &Context) -> Result<(), Error> {
     let output = ctx.project_folder().join("releases");
+    trace!("using releases folder: {:?}", output.display());
     if !output.exists() {
         create_dir_all(&output)?;
     }
@@ -14,6 +15,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
         .with_extension("zip");
     let options = zip::write::FileOptions::default().compression_level(Some(9));
 
+    debug!("creating release at {:?}", output.display());
     let mut zip = zip::ZipWriter::new(std::fs::File::create(&output)?);
     for entry in walkdir::WalkDir::new(ctx.out_folder()) {
         let Ok(entry) = entry else {
@@ -29,27 +31,25 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             if path.is_empty() {
                 continue;
             }
-            zip.add_directory(
-                format!("@{}/{}", ctx.config().prefix(), path.replace('\\', "/")),
-                options,
-            )?;
+            let dir = format!("@{}/{}", ctx.config().prefix(), path.replace('\\', "/"));
+            debug!("zip: creating directory {:?}", dir);
+            zip.add_directory(dir, options)?;
             continue;
         }
         let name = path
             .strip_prefix(ctx.out_folder())
             .expect("We are in the HEMTT folder, the prefix should always exist");
-        zip.start_file(
-            format!(
-                "@{}/{}",
-                ctx.config().prefix(),
-                name.display().to_string().replace('\\', "/")
-            ),
-            options,
-        )?;
+        let file = format!(
+            "@{}/{}",
+            ctx.config().prefix(),
+            name.display().to_string().replace('\\', "/")
+        );
+        debug!("zip: adding file {:?}", file);
+        zip.start_file(file, options)?;
         std::io::copy(&mut std::fs::File::open(path)?, &mut zip)?;
     }
     zip.finish()?;
-    println!("Created release: {}", output.display());
+    info!("Created release: {}", output.display());
     std::fs::copy(&output, {
         let mut output = output.clone();
         output.set_file_name(format!(
@@ -57,6 +57,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             ctx.config().name(),
             ctx.config().version().get()?
         ));
+        info!("Created release: {}", output.display());
         output
     })?;
     Ok(())

@@ -61,6 +61,7 @@ impl Options {
     pub fn _get(&self) -> Result<Version, Error> {
         // Check for a defined major version
         if let Some(major) = self.major {
+            trace!("reading version from project.toml");
             let Some(minor) = self.minor else {
                 return Err(hemtt_version::Error::ExpectedMinor.into());
             };
@@ -82,9 +83,11 @@ impl Options {
 
         // Check for a path to a version macro file
         if path.exists() {
+            trace!("checking for version macro in {:?}", path);
             let content = std::fs::read_to_string(path)?;
             return Version::try_from_script_version(&content).map_err(Into::into);
         }
+        error!("could not find version macro file: {:?}", path);
 
         Err(hemtt_version::Error::UnknownVersion.into())
     }

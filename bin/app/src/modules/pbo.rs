@@ -1,7 +1,11 @@
-use std::fs::{create_dir_all, File};
+use std::{
+    fs::{create_dir_all, File},
+    sync::atomic::{AtomicI16, Ordering},
+};
 
 use hemtt_bin_error::Error;
 use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
 use crate::{addons::Location, context::Context};
@@ -16,9 +20,10 @@ pub enum Collapse {
 }
 
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
+    let counter = AtomicI16::new(0);
     ctx.addons()
         .to_vec()
-        .iter()
+        .par_iter()
         .map(|addon| {
             let mut pbo = WritablePbo::new();
             let target = ctx.out_folder();
@@ -47,8 +52,8 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                 path
             };
             create_dir_all(target_pbo.parent().unwrap())?;
-            println!(
-                "building `{}` => `{}`",
+            debug!(
+                "building {:?} => {:?}",
                 addon.folder(),
                 target_pbo.display()
             );
@@ -111,8 +116,10 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
                 }
             }
             pbo.write(&mut File::create(target_pbo)?, true)?;
+            counter.fetch_add(1, Ordering::SeqCst);
             Ok(())
         })
         .collect::<Result<Vec<_>, Error>>()?;
+    info!("Built {} PBOs", counter.load(Ordering::SeqCst));
     Ok(())
 }

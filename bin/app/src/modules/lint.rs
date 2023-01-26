@@ -1,7 +1,9 @@
+use std::sync::atomic::{AtomicI32, Ordering};
+
 use hemtt_preprocessor::preprocess_file;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use super::{preprocessor::VfsResolver, Module};
+use super::{rapifier::VfsResolver, Module};
 
 #[derive(Default)]
 pub struct Lint;
@@ -18,6 +20,7 @@ impl Module for Lint {
         if !ctx.config().lint().sqf().enabled() {
             return Ok(());
         }
+        let counter = AtomicI32::new(0);
         for addon in ctx.addons() {
             let resolver = VfsResolver::new(ctx)?;
             let sqf_ext = Some(String::from("sqf"));
@@ -44,14 +47,17 @@ impl Module for Lint {
             entries
                 .par_iter()
                 .map(|entry| {
+                    debug!("linting {:?}", entry.as_str());
                     if let Err(e) = preprocess_file(entry.as_str(), &resolver) {
                         Err(e.into())
                     } else {
+                        counter.fetch_add(1, Ordering::SeqCst);
                         Ok(())
                     }
                 })
                 .collect::<Result<_, hemtt_bin_error::Error>>()?;
         }
+        info!("Linted {} files", counter.load(Ordering::SeqCst));
         Ok(())
     }
 }

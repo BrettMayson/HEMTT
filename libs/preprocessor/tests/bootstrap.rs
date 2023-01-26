@@ -10,7 +10,7 @@ fn bootstrap() {
             let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
             let resolver = LocalResolver::new();
             println!(
-                "bootstrap `{}`",
+                "bootstrap {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
             let tokens = preprocess_file(

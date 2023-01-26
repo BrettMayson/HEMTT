@@ -17,6 +17,7 @@ impl Module for Files {
             require_literal_separator: true,
             ..Default::default()
         };
+        let mut copied = 0;
         for file in ctx.config().files().include() {
             for entry in ctx.vfs().walk_dir()? {
                 let entry = entry?;
@@ -41,10 +42,12 @@ impl Module for Files {
                 if !folder.exists() {
                     std::mem::drop(create_dir_all(folder));
                 }
-                println!("Copying `{:#?}` => {d:#?}", entry.as_str());
-                std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?).unwrap();
+                debug!("copying {:?} => {:?}", entry.as_str(), d.display());
+                std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?)?;
+                copied += 1;
             }
         }
+        info!("Copied {} files", copied);
         Ok(())
     }
 }

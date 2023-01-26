@@ -36,7 +36,7 @@ impl Module for FilePatching {
     }
 
     fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), Error> {
-        println!(
+        info!(
             "You can now use the dev folder at `.hemttout/dev` to test your mod with file-patching."
         );
         Ok(())

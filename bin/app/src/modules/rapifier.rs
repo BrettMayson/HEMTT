@@ -1,4 +1,8 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::atomic::{AtomicI16, Ordering},
+};
 
 use hemtt_bin_error::Error;
 use hemtt_config::{Config, Parse, Rapify};
@@ -14,14 +18,16 @@ use crate::context::Context;
 use super::Module;
 
 #[derive(Default)]
-pub struct Preprocessor;
+pub struct Rapifier;
 
-impl Module for Preprocessor {
+impl Module for Rapifier {
     fn name(&self) -> &'static str {
-        "Preprocessor"
+        "Rapifier"
     }
+
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx)?;
+        let counter = AtomicI16::new(0);
         // TODO map to extra error
         // TODO ^ remember what that means
         ctx.addons()
@@ -35,30 +41,31 @@ impl Module for Preprocessor {
                         if entry.filename() == "config.cpp" {
                             if let Some(config) = addon.config() {
                                 if !config.preprocess() {
-                                    println!("skiping {}", entry.as_str());
+                                    debug!("skiping {}", entry.as_str());
                                     continue;
                                 }
                             }
                         }
-                        println!("preprocessing {}", entry.as_str());
-                        preprocess(entry.clone(), ctx, &resolver)?;
+                        debug!("rapifying {}", entry.as_str());
+                        rapify(entry.clone(), ctx, &resolver)?;
+                        counter.fetch_add(1, Ordering::SeqCst);
                     }
                 }
                 Ok(())
             })
-            .collect()
+            .collect::<Result<(), Error>>()?;
+        info!("Rapified {} addon configs", counter.load(Ordering::SeqCst));
+        Ok(())
     }
 }
 
-pub fn preprocess(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
+pub fn rapify(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
     let tokens = preprocess_file(path.as_str(), resolver)?;
-    println!("parsing {}", path.as_str());
     let rapified = Config::parse(
         ctx.config().hemtt().config(),
         &mut tokens.into_iter().peekmore(),
         &Token::builtin(None),
     )?;
-    println!("parsed {}", path.as_str());
     let out = if path.filename() == "config.cpp" {
         path.parent().join("config.bin").unwrap()
     } else {

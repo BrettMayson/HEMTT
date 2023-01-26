@@ -9,7 +9,7 @@ Arguments:
 
 Options:
     -h, --help
-            Print help information (use `-h` for a summary)
+        Print help information (use `-h` for a summary)
 </code></pre>
 
 `hemtt new` is used to create a new mod. It will create a new folder with the name you provide, and create some starting files.

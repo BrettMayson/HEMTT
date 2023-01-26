@@ -37,6 +37,8 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 steamlocate = { git = "https://github.com/LovecraftianHorror/steamlocate-rs/", branch = "fully-switch-from-steamy-vdf" }
 time = "0.3.17"
+tracing = { workspace = true }
+tracing-subscriber = "0.3.16"
 vfs = { workspace = true }
 walkdir = { workspace = true }
 zip = { workspace = true }

@@ -17,7 +17,7 @@ git2 = { workspace = true }
 glob = "0.3.1"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-toml = { version = "0.5.11" }
+toml = { workspace = true }
 vfs = "0.9.0"
 walkdir = { workspace = true }
 zip = { workspace = true }

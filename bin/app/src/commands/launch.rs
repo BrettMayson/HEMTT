@@ -23,7 +23,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         return Err(Error::Arma3NotFound);
     };
 
-    println!("Arma 3 found at: {}", arma3dir.path.display());
+    debug!("Arma 3 found at: {}", arma3dir.path.display());
 
     let mut workshop = Vec::new();
 
@@ -75,8 +75,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         config.hemtt().launch().parameters().join(" ")
     )];
 
-    println!(
-        "Launching {} with: {}",
+    info!(
+        "Launching {:?} with: {:?}",
         arma3dir.path.display(),
         args.join(" ")
     );

@@ -5,7 +5,7 @@ use crate::{
     addons::Location,
     context::Context,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Lint, Preprocessor},
+    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Lint, Rapifier},
 };
 
 #[must_use]
@@ -52,6 +52,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
     let ctx = Context::new("dev")?.filter(|a, config| {
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
         {
+            debug!("ignoring optional {}", a.name());
             return false;
         }
         !config
@@ -74,12 +75,14 @@ pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
 
     executor.add_module(Box::<Lint>::default());
     executor.add_module(Box::<Hooks>::default());
-    executor.add_module(Box::<Preprocessor>::default());
+    executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if matches.get_one::<bool>("binarize") == Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
+
+    info!("Creating `dev` version");
 
     executor.init()?;
     executor.check()?;

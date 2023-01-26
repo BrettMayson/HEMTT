@@ -22,6 +22,19 @@ pub struct Context {
 
 impl Context {
     pub fn new(folder: &str) -> Result<Self, Error> {
+        let config = {
+            let path = Path::new(".hemtt").join("project.toml");
+            if !path.exists() {
+                return Err(Error::ConfigNotFound);
+            }
+            let config = Configuration::from_file(&path)?;
+            info!("Config loaded for {}", config.name());
+            info!(
+                "Version: {}",
+                config.version().get().expect("Unable to read version")
+            );
+            config
+        };
         let tmp = temp_dir().join("hemtt").join(
             std::env::current_dir()
                 .unwrap()
@@ -32,28 +45,33 @@ impl Context {
                 .unwrap()
                 .replace(['\\', '/'], "_"),
         );
+        trace!("using temporary folder: {:?}", tmp.display());
         let project_folder = std::env::current_dir().expect("Unable to get current directory");
         let hemtt_folder = project_folder.join(".hemtt");
+        trace!("using project folder: {:?}", project_folder.display());
         let out_folder = project_folder.join(".hemttout");
+        trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
         let build_folder = out_folder.join(folder);
+        trace!("using build folder: {:?}", build_folder.display());
         if build_folder.exists() {
             remove_dir_all(&build_folder)?;
         }
         create_dir_all(&build_folder)?;
         Ok(Self {
-            config: {
-                let path = Path::new(".hemtt").join("project.toml");
-                if !path.exists() {
-                    return Err(Error::ConfigNotFound);
-                }
-                Configuration::from_file(&path)?
-            },
+            config,
             vfs: OverlayFS::new(&{
                 let mut layers = vec![AltrootFS::new(MemoryFS::new().into()).into()];
                 if cfg!(target_os = "windows") {
+                    trace!("vfs overlay at root: {:?}", tmp.join("output").display());
                     layers.push(AltrootFS::new(PhysicalFS::new(tmp.join("output")).into()).into());
                 }
+                trace!(
+                    "vfs root: {:?}",
+                    std::env::current_dir()
+                        .expect("Unable to get current dir")
+                        .display()
+                );
                 layers.push(AltrootFS::new(PhysicalFS::new(".").into()).into());
                 layers
             })

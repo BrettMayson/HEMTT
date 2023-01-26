@@ -1,4 +1,9 @@
-use std::{fs::create_dir_all, path::PathBuf, process::Command};
+use std::{
+    fs::create_dir_all,
+    path::PathBuf,
+    process::Command,
+    sync::atomic::{AtomicI16, Ordering},
+};
 
 use hemtt_bin_error::Error;
 use hemtt_pbo::{prefix::FILES, Prefix};
@@ -36,8 +41,14 @@ impl Module for Binarize {
 
     fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
         if self.command.is_none() {
+            if cfg!(target_os = "linux") {
+                warn!("Binarize is not available on non-Windows platforms.");
+            } else {
+                warn!("Binarize was not found in the system registery.");
+            }
             return Ok(());
         }
+        let counter = AtomicI16::new(0);
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         for addon in ctx.addons() {
@@ -51,7 +62,7 @@ impl Module for Binarize {
                             .no_bin(&addon.folder())?
                             .contains(&PathBuf::from(entry.as_str().trim_start_matches('/')))
                         {
-                            println!("skipping binarization of {}", entry.as_str());
+                            debug!("skipping binarization of {}", entry.as_str());
                             continue;
                         }
                     }
@@ -95,7 +106,7 @@ impl Module for Binarize {
                     }
                     let tmp_sourced = tmp_sourced.unwrap();
                     let tmp_outed = tmp_outed.unwrap();
-                    println!("binarizing {}", entry.filename().trim_start_matches('/'));
+                    debug!("binarizing {}", entry.filename().trim_start_matches('/'));
                     create_dir_all(&tmp_outed)?;
                     let output = Command::new(self.command.as_ref().unwrap())
                         .args([
@@ -115,9 +126,11 @@ impl Module for Binarize {
                         "binarize failed with code {:?}",
                         output.status.code().unwrap_or(-1)
                     );
+                    counter.fetch_add(1, Ordering::SeqCst);
                 }
             }
         }
+        info!("Binarized {} files", counter.load(Ordering::SeqCst));
         Ok(())
     }
 

@@ -34,39 +34,67 @@ impl<'a> Executor<'a> {
     }
 
     pub fn init(&mut self) -> Result<(), Error> {
+        trace!("phase: init (start)");
         setup_tmp(self.ctx)?;
         for module in &mut self.modules {
+            trace!("phase: init ({}) (start)", module.name());
             module.init(self.ctx)?;
+            trace!("phase: init ({}) (done)", module.name());
         }
+        trace!("phase: init (done)");
         Ok(())
     }
 
     pub fn check(&self) -> Result<(), Error> {
+        trace!("phase: check (start)");
         for module in &self.modules {
+            trace!("phase: check ({}) (start)", module.name());
             module.check(self.ctx)?;
+            trace!("phase: check ({}) (done)", module.name());
         }
+        trace!("phase: check (done)");
         Ok(())
     }
 
     pub fn build(&self) -> Result<(), Error> {
+        trace!("phase: pre_build (start)");
         for module in &self.modules {
+            trace!("phase: pre_build ({}) (start)", module.name());
             module.pre_build(self.ctx)?;
+            trace!("phase: pre_build ({}) (done)", module.name());
         }
+        trace!("phase: pre_build (done)");
+        trace!("phase: build (start)");
         modules::pbo::build(self.ctx, self.collapse)?;
+        trace!("phase: build (done)");
+        trace!("phase: post_build (start)");
         for module in &self.modules {
+            trace!("phase: post_build ({}) (start)", module.name());
             module.post_build(self.ctx)?;
+            trace!("phase: post_build ({}) (done)", module.name());
         }
+        trace!("phase: post_build (done)");
         Ok(())
     }
 
     pub fn release(&self) -> Result<(), Error> {
+        trace!("phase: pre_release (start)");
         for module in &self.modules {
+            trace!("phase: pre_release ({}) (start)", module.name());
             module.pre_release(self.ctx)?;
+            trace!("phase: pre_release ({}) (done)", module.name());
         }
+        trace!("phase: pre_release (done)");
+        trace!("phase: release (start)");
         modules::archive::release(self.ctx)?;
+        trace!("phase: release (done)");
+        trace!("phase: post_release (start)");
         for module in &self.modules {
+            trace!("phase: post_release ({}) (start)", module.name());
             module.post_release(self.ctx)?;
+            trace!("phase: post_release ({}) (done)", module.name());
         }
+        trace!("phase: post_release (done)");
         Ok(())
     }
 }

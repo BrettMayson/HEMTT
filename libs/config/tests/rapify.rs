@@ -12,7 +12,7 @@ fn rapify() {
         let file = file.unwrap();
         if file.path().is_dir() {
             println!(
-                "rapify `{}`",
+                "rapify {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
             let tokens = preprocess_file(

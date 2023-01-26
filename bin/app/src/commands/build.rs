@@ -3,7 +3,7 @@ use hemtt_bin_error::Error;
 
 use crate::{
     executor::Executor,
-    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Lint, Preprocessor},
+    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Lint, Rapifier},
 };
 
 #[must_use]
@@ -28,13 +28,15 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<Lint>::default());
-    executor.add_module(Box::<Preprocessor>::default());
+    executor.add_module(Box::<Rapifier>::default());
     if matches.get_one::<bool>("no-binarize") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
+
+    info!("Creating `build` version");
 
     executor.init()?;
     executor.check()?;

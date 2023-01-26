@@ -34,9 +34,6 @@ impl DefinitionLibrary for Defines {
         if similar.len() > 3 {
             similar.truncate(3);
         }
-        for s in &similar {
-            println!("{} - {}", s.0, s.1);
-        }
         similar.into_iter().map(|(n, _)| n).collect::<Vec<_>>()
     }
 }

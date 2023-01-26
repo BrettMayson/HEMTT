@@ -24,10 +24,6 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.vfs().clone());
-        let mut f = ctx.vfs().join("memory.txt")?.create_file()?;
-        write!(&mut f, "please work")?;
-        println!("Created memory.txt");
-        f.flush()?;
     } else {
         scope.push_constant("HEMTT_DIRECTORY", ctx.hemtt_folder().clone());
         scope.push_constant("HEMTT_OUTPUT", ctx.out_folder().clone());
@@ -63,6 +59,7 @@ impl Hooks {
         }
         let folder = ctx.hemtt_folder().join("hooks").join(name);
         if !folder.exists() {
+            trace!("no {} hooks", name);
             return Ok(());
         }
         let scope = scope(ctx, vfs)?;
@@ -70,7 +67,7 @@ impl Hooks {
         for file in folder.read_dir()? {
             let file = file?;
             if file.file_type()?.is_file() {
-                println!("Running hook: {}", file.path().display());
+                info!("Running hook: {}", file.path().display());
                 let mut scope = scope.clone();
                 let name1 = format!(
                     "{}/{}",
@@ -79,14 +76,13 @@ impl Hooks {
                 );
                 let name2 = name1.clone();
                 engine.on_debug(move |x, src, pos| {
-                    #[allow(clippy::option_if_let_else)]
-                    match src {
-                        Some(src) => println!("[{name1}] {src}:{pos}: {x}"),
-                        None => println!("[{name1}] {pos}: {x}"),
-                    }
+                    src.map_or_else(
+                        || debug!("[{name1}] {pos}: {x}"),
+                        |src| debug!("[{name1}] {src}:{pos}: {x}"),
+                    );
                 });
                 engine.on_print(move |s| {
-                    println!("[{name2}] {s}");
+                    info!("[{name2}] {s}");
                 });
                 engine
                     .run_with_scope(&mut scope, &std::fs::read_to_string(file.path())?)
@@ -104,6 +100,9 @@ impl Module for Hooks {
 
     fn init(&mut self, ctx: &Context) -> Result<(), Error> {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
+        if !self.0 {
+            trace!("no hooks folder");
+        }
         Ok(())
     }
 

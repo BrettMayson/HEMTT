@@ -5,10 +5,14 @@ use clap::{ArgAction, ArgMatches, Command};
 use context::Context;
 use hemtt_error::AppError;
 
+#[macro_use]
+extern crate tracing;
+
 mod addons;
 mod commands;
 mod context;
 mod executor;
+mod logging;
 mod modules;
 mod utils;
 
@@ -42,13 +46,20 @@ pub fn cli() -> Command {
     {
         global = global.subcommand(commands::launch::cli());
     }
-    global.arg(
+    global = global.arg(
         clap::Arg::new("threads")
             .global(true)
             .help("Number of threads, defaults to # of CPUs")
             .action(ArgAction::Set)
             .long("threads")
             .short('t'),
+    );
+    global.arg(
+        clap::Arg::new("verbosity")
+            .global(true)
+            .help("Verbosity level")
+            .action(ArgAction::Count)
+            .short('v'),
     )
 }
 
@@ -60,12 +71,17 @@ pub fn cli() -> Command {
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
+    logging::init(matches.get_count("verbosity"));
+
+    trace!("version: {}", env!("CARGO_PKG_VERSION"));
+    trace!("platform: {}", std::env::consts::OS);
+
     if let Some(threads) = matches.get_one::<String>("threads") {
         if let Err(e) = rayon::ThreadPoolBuilder::new()
             .num_threads(threads.parse::<usize>().unwrap())
             .build_global()
         {
-            println!("Failed to initialize thread pool: {e}");
+            error!("Failed to initialize thread pool: {e}");
         }
     }
     match matches.subcommand() {

@@ -48,7 +48,7 @@ impl Module for Sign {
                     };
                     (
                         ReadablePbo::from(File::open(&target_pbo)?)?,
-                        target_pbo.with_extension(format!("{authority}.bisign")),
+                        target_pbo.with_extension(format!(".pbo.{authority}.bisign")),
                         addons_key.clone(),
                     )
                 }
@@ -79,12 +79,12 @@ impl Module for Sign {
                     target_pbo.set_extension("pbo");
                     (
                         ReadablePbo::from(File::open(&target_pbo)?)?,
-                        target_pbo.with_extension(format!("{authority}.bisign")),
+                        target_pbo.with_extension(format!(".pbo.{authority}.bisign")),
                         key,
                     )
                 }
             };
-            println!("signing `{}`", sig_location.display());
+            debug!("signing {:?}", sig_location.display());
             let sig = key.sign(&mut pbo, ctx.config().signing().version())?;
             sig.write(&mut File::create(sig_location)?)?;
             Result::<(), Error>::Ok(())

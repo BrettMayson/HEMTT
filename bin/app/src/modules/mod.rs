@@ -14,7 +14,7 @@ mod file_patching;
 mod files;
 mod lint;
 mod new;
-mod preprocessor;
+mod rapifier;
 mod sign;
 
 pub use asc::ArmaScriptCompiler;
@@ -23,7 +23,7 @@ pub use file_patching::FilePatching;
 pub use files::Files;
 pub use lint::Lint;
 pub use new::Licenses;
-pub use preprocessor::Preprocessor;
+pub use rapifier::Rapifier;
 pub use sign::Sign;
 
 pub trait Module {

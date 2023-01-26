@@ -2,7 +2,10 @@ use std::{
     fs::{create_dir_all, File},
     io::{BufReader, BufWriter, Read, Write},
     process::Command,
-    sync::{Arc, RwLock},
+    sync::{
+        atomic::{AtomicI16, Ordering},
+        Arc, RwLock,
+    },
 };
 
 use hemtt_preprocessor::preprocess_file;
@@ -11,7 +14,7 @@ use rust_embed::RustEmbed;
 use serde::Serialize;
 use time::Instant;
 
-use super::{preprocessor::VfsResolver, Module};
+use super::{rapifier::VfsResolver, Module};
 
 #[cfg(windows)]
 #[derive(RustEmbed)]
@@ -39,9 +42,12 @@ impl Module for ArmaScriptCompiler {
 
     fn init(&mut self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
         if !ctx.config().asc().enabled() {
+            trace!("disabled");
             return Ok(());
         }
-        create_dir_all(ctx.tmp().join("asc").join("output"))?;
+        let asc = ctx.tmp().join("asc");
+        trace!("using asc folder at {:?}", asc.display());
+        create_dir_all(asc.join("output"))?;
         Ok(())
     }
 
@@ -73,6 +79,7 @@ impl Module for ArmaScriptCompiler {
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
             let out = tmp.join(file);
+            trace!("unpacking {:?} to {:?}", file, out.display());
             let mut f = File::create(&out)?;
             f.write_all(&Distributables::get(file).unwrap().data)?;
             #[cfg(target_os = "linux")]
@@ -136,7 +143,7 @@ impl Module for ArmaScriptCompiler {
                 })
                 .collect::<Result<_, hemtt_bin_error::Error>>()?;
         }
-        println!(
+        debug!(
             "ASC Preprocess took {:?}",
             start.elapsed().whole_milliseconds()
         );
@@ -154,9 +161,10 @@ impl Module for ArmaScriptCompiler {
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
         let old_dir = std::env::current_dir()?;
         std::env::set_current_dir(&tmp)?;
+        let start = Instant::now();
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
         if command.status.success() {
-            println!("Compiled sqf files");
+            debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
         } else {
             return Err(hemtt_bin_error::Error::ASC(
                 String::from_utf8(command.stdout).unwrap(),
@@ -169,6 +177,7 @@ impl Module for ArmaScriptCompiler {
                 .to_string()
                 .trim_start_matches(&tmp.ancestors().last().unwrap().display().to_string()),
         );
+        let counter = AtomicI16::new(0);
         for file in &*files.read().unwrap() {
             let file = format!("{file}c");
             let from = tmp_output.join(&file);
@@ -181,7 +190,9 @@ impl Module for ArmaScriptCompiler {
             let mut data = Vec::new();
             f.read_to_end(&mut data)?;
             to.create_file()?.write_all(&data)?;
+            counter.fetch_add(1, Ordering::SeqCst);
         }
+        info!("Compiled {} sqf files", counter.load(Ordering::SeqCst));
         Ok(())
     }
 }

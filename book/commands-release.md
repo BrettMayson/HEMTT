@@ -5,11 +5,14 @@
 Usage: hemtt.exe release [OPTIONS]
 
 Options:
-  <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
-          Number of threads, defaults to # of CPUs
+    <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
+        Number of threads, defaults to # of CPUs
 
-  -h, --help
-          Print help information (use `-h` for a summary)
+    <a href="commands.md#-v">-v...</a>
+        Verbosity level
+
+    -h, --help
+        Print help information (use `-h` for a summary)
 </code>
 </pre>
 
