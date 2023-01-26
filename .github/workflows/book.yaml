@@ -24,6 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: book
+
       - name: Setup mdBook
         run: cargo install mdbook mdbook-admonish
 

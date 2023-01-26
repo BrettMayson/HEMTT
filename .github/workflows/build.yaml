@@ -29,6 +29,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: build
       - name: Compile
         uses: actions-rs/cargo@v1
         with:
