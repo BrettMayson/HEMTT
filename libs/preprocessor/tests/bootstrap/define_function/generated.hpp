@@ -1,4 +1,0 @@
-
-
-value = "Hello John";
-

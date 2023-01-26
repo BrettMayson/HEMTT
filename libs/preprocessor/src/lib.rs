@@ -498,6 +498,7 @@ fn directive_define_read_body(
     output
 }
 
+#[allow(clippy::too_many_lines)]
 fn read_args<R>(
     resolver: &R,
     context: &mut Context,
@@ -531,6 +532,10 @@ where
                 arg.push(tokenstream.next().unwrap());
             }
             Symbol::Comma => {
+                if quote {
+                    arg.push(tokenstream.next().unwrap());
+                    continue;
+                }
                 tokenstream.next();
                 while let Symbol::Whitespace(_) = arg.last().unwrap().symbol() {
                     arg.pop();
@@ -540,11 +545,19 @@ where
                 whitespace::skip(tokenstream);
             }
             Symbol::LeftParenthesis => {
+                if quote {
+                    arg.push(tokenstream.next().unwrap());
+                    continue;
+                }
                 depth += 1;
                 arg.push(tokenstream.next().unwrap());
                 whitespace::skip(tokenstream);
             }
             Symbol::RightParenthesis => {
+                if quote {
+                    arg.push(tokenstream.next().unwrap());
+                    continue;
+                }
                 if depth == 0 {
                     tokenstream.next();
                     if !arg.is_empty() {

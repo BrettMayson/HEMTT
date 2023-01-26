@@ -17,11 +17,11 @@ impl Module for Files {
     }
 
     fn post_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
-        for mut file in ctx.config().files().include() {
-            let mirror_structure = file.ends_with('/');
-            if mirror_structure {
-                file.pop();
-            };
+        let glob_options = glob::MatchOptions {
+            require_literal_separator: true,
+            ..Default::default()
+        };
+        for file in ctx.config().files().include() {
             for entry in ctx.vfs().walk_dir()? {
                 let entry = entry?;
                 if entry.is_dir()? {
@@ -34,18 +34,18 @@ impl Module for Files {
                     continue;
                 }
 
-                if !glob::Pattern::new(&file)?.matches(entry.as_str()) {
+                println!("Checking `{:#?}` against `{:#?}`", entry.as_str(), file);
+                if !glob::Pattern::new(&file)?.matches_with(entry.as_str(), glob_options) {
                     continue;
                 }
 
                 let mut d = ctx.out_folder().clone();
 
-                if mirror_structure {
-                    d.push(entry.parent().filename().trim_start_matches('/'));
-                    create_dir_all(&d)?;
-                }
-
                 d.push(entry.as_str().trim_start_matches('/'));
+                let folder = d.parent().unwrap();
+                if !folder.exists() {
+                    let _ = create_dir_all(folder);
+                }
                 println!("Copying `{:#?}` => {:#?}", entry.as_str(), d);
                 std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?).unwrap();
             }

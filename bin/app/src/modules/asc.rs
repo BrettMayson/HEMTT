@@ -74,6 +74,13 @@ impl Module for ArmaScriptCompiler {
         for file in SOURCE {
             let mut f = File::create(tmp.join(file))?;
             f.write_all(&Distributables::get(file).unwrap().data)?;
+            #[cfg(target_os = "linux")]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let metadata = f.metadata()?;
+                let mut permissions = metadata.permissions();
+                permissions.set_mode(0o744);
+            }
         }
         let resolver = VfsResolver::new(ctx)?;
         let sqf_ext = Some(String::from("sqf"));

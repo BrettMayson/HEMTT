@@ -1,4 +1,5 @@
 target/
+generated.hpp
 *.map
 *.pbo
 

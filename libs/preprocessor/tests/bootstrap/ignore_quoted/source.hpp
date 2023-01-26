@@ -6,3 +6,5 @@ CHECK(_test, "CHECK(_test) with value %1");
 
 #define PREFIX TEST
 systemChat format ["%1: %2", "PREFIX", 'PREFIX'];
+
+CHECK(_test, "CHECK(_test, ...) with value %1");
