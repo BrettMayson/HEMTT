@@ -35,7 +35,7 @@ pub fn cli() -> Command {
     #[allow(unused_mut)]
     let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .subcommand_required(true)
+        .subcommand_required(false)
         .arg_required_else_help(true)
         .subcommand(commands::new::cli())
         .subcommand(commands::dev::cli())
@@ -54,13 +54,21 @@ pub fn cli() -> Command {
             .long("threads")
             .short('t'),
     );
-    global.arg(
+    global = global.arg(
         clap::Arg::new("verbosity")
             .global(true)
             .help("Verbosity level")
             .action(ArgAction::Count)
             .short('v'),
-    )
+    );
+    global = global.arg(
+        clap::Arg::new("version")
+            .global(false)
+            .help("Print version")
+            .action(ArgAction::SetTrue)
+            .long("version"),
+    );
+    global
 }
 
 /// Run the HEMTT CLI
@@ -71,6 +79,11 @@ pub fn cli() -> Command {
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
+    if matches.get_flag("version") {
+        println!("HEMTT {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+
     logging::init(matches.get_count("verbosity"));
 
     trace!("version: {}", env!("CARGO_PKG_VERSION"));
