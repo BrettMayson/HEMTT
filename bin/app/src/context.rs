@@ -28,11 +28,7 @@ impl Context {
                 return Err(Error::ConfigNotFound);
             }
             let config = Configuration::from_file(&path)?;
-            info!("Config loaded for {}", config.name());
-            info!(
-                "Version: {}",
-                config.version().get().expect("Unable to read version")
-            );
+            info!("Config loaded for {} {}", config.name(), config.version().get().expect("Unable to read version"));
             config
         };
         let tmp = temp_dir().join("hemtt").join(
