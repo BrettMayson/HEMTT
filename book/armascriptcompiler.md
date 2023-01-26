@@ -14,7 +14,7 @@ ArmaScriptCompiler requires no configuration and works out of the box.
 
 ```toml
 [asc]
-enabled = false # Default: true
+enabled = true # Default: false
 exclude = [
     "/example.sqf",
     "settings/gui.sqf",
@@ -23,7 +23,7 @@ exclude = [
 
 ### enabled
 
-`enabled` is a boolean value that enables or disables the ArmaScriptCompiler. It is enabled by default.
+`enabled` is a boolean value that enables or disables the ArmaScriptCompiler. It is disabled by default.
 
 ### exclude
 

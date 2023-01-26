@@ -728,6 +728,7 @@ dependencies = [
  "pest_derive",
  "serde",
  "serde_json",
+ "strsim",
 ]
 
 [[package]]

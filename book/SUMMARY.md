@@ -17,6 +17,7 @@
     - [build](commands-build.md)
     - [release](commands-release.md)
 - [Hooks](hooks.md)
+- [Linting](linting.md)
 - [ArmaScriptCompiler](armascriptcompiler.md)
 
 <!-- # Modding Guide

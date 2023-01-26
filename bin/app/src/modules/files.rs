@@ -4,12 +4,8 @@ use hemtt_bin_error::Error;
 
 use super::Module;
 
+#[derive(Default)]
 pub struct Files;
-impl Files {
-    pub const fn new() -> Self {
-        Self
-    }
-}
 
 impl Module for Files {
     fn name(&self) -> &'static str {

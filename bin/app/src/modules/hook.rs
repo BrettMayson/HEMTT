@@ -47,14 +47,16 @@ fn engine(vfs: bool) -> Engine {
     engine
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Hooks(bool);
 
-impl Hooks {
-    pub const fn new() -> Self {
+impl Default for Hooks {
+    fn default() -> Self {
         Self(true)
     }
+}
 
+impl Hooks {
     pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
         if !self.0 {
             return Ok(());

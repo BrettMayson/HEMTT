@@ -67,5 +67,5 @@ impl Options {
 }
 
 const fn default_preset() -> Preset {
-    Preset::Hemtt
+    Preset::Bi
 }

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 mod asc;
 mod files;
 mod hemtt;
+mod lint;
 mod signing;
 mod version;
 
@@ -38,6 +39,9 @@ pub struct Configuration {
 
     #[serde(default)]
     asc: asc::Options,
+
+    #[serde(default)]
+    lint: lint::Options,
 }
 
 impl Configuration {
@@ -86,6 +90,11 @@ impl Configuration {
     #[must_use]
     pub const fn asc(&self) -> &asc::Options {
         &self.asc
+    }
+
+    #[must_use]
+    pub const fn lint(&self) -> &lint::Options {
+        &self.lint
     }
 
     /// Load a configuration from a file.

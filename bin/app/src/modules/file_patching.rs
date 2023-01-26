@@ -7,13 +7,8 @@ use crate::utils::create_link;
 
 use super::Module;
 
+#[derive(Default)]
 pub struct FilePatching;
-
-impl FilePatching {
-    pub const fn new() -> Self {
-        Self
-    }
-}
 
 impl Module for FilePatching {
     fn name(&self) -> &'static str {

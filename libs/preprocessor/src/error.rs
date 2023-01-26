@@ -1,7 +1,10 @@
 use hemtt_error::{make_source, thiserror, PrettyError, Source};
 use hemtt_tokens::{Symbol, Token};
 
-use crate::parse::Rule;
+use crate::{
+    defines::{Defines, DefinitionLibrary},
+    parse::Rule,
+};
 
 #[derive(thiserror::Error, Debug)]
 /// Errors that can occur during preprocessing
@@ -85,6 +88,8 @@ pub enum Error {
         got: usize,
         /// The [`Token`] stack trace
         trace: Vec<Token>,
+        /// The defines at the point of the error
+        defines: Defines,
     },
     #[error("Expected Function or Value, found Unit, `{token:?}`")]
     /// Tried to use a [`Unit`](crate::context::Definition::Unit) as a function or value
@@ -188,6 +193,7 @@ impl PrettyError for Error {
                 expected,
                 got,
                 trace: _,
+                defines: _,
             } => {
                 format!("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{symbol:?}`", symbol = token.symbol())
             }
@@ -221,7 +227,22 @@ impl PrettyError for Error {
     }
 
     fn help(&self) -> Option<String> {
-        None
+        match self {
+            Self::FunctionCallArgumentCount {
+                token,
+                expected: _,
+                got,
+                trace: _,
+                defines,
+            } => {
+                let Symbol::Word(function) = token.symbol() else {
+                    return None;
+                };
+                let did_you_mean = defines.similar_function(function, Some(*got));
+                Some(format!("Did you mean `{}`?", did_you_mean.join("`, `")))
+            }
+            _ => None,
+        }
     }
 
     fn source(&self) -> Option<Box<Source>> {

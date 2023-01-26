@@ -23,12 +23,8 @@ struct Distributables;
 #[folder = "dist/asc/linux"]
 struct Distributables;
 
+#[derive(Default)]
 pub struct ArmaScriptCompiler;
-impl ArmaScriptCompiler {
-    pub const fn new() -> Self {
-        Self
-    }
-}
 
 #[cfg(windows)]
 const SOURCE: [&str; 1] = ["asc.exe"];

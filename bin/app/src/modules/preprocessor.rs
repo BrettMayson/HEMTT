@@ -13,13 +13,8 @@ use crate::context::Context;
 
 use super::Module;
 
+#[derive(Default)]
 pub struct Preprocessor;
-
-impl Preprocessor {
-    pub const fn new() -> Self {
-        Self
-    }
-}
 
 impl Module for Preprocessor {
     fn name(&self) -> &'static str {

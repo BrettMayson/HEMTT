@@ -10,6 +10,7 @@ use hemtt_tokens::{Symbol, Token};
 use ifstate::IfState;
 
 mod context;
+mod defines;
 mod error;
 mod ifstate;
 mod map;
@@ -17,6 +18,7 @@ mod parse;
 mod resolver;
 
 pub use context::{Context, Definition, FunctionDefinition};
+pub use defines::{Defines, DefinitionLibrary};
 pub use error::Error;
 pub use map::{Mapping, Processed};
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -751,6 +753,7 @@ where
                     expected: func.parameters().len(),
                     got: args.len(),
                     trace: context.trace(),
+                    defines: context.definitions().clone(),
                 });
             }
             let mut stack = context.stack(source.clone());

@@ -6,14 +6,9 @@ use vfs::VfsFileType;
 
 use super::Module;
 
+#[derive(Default)]
 pub struct Binarize {
     command: Option<String>,
-}
-
-impl Binarize {
-    pub const fn new() -> Self {
-        Self { command: None }
-    }
 }
 
 impl Module for Binarize {

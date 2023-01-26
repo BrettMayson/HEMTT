@@ -5,7 +5,7 @@ use std::{
 
 use hemtt_tokens::{Symbol, Token};
 
-use crate::{ifstate::IfStates, Error};
+use crate::{defines::Defines, ifstate::IfStates, Error};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",
@@ -51,7 +51,7 @@ const BUILTIN: [&str; 37] = [
 /// Preprocessor context
 pub struct Context<'a> {
     ifstates: IfStates,
-    definitions: HashMap<String, (Token, Definition)>,
+    definitions: Defines,
     entry: String,
     current_file: String,
     counter: Arc<AtomicUsize>,
@@ -121,12 +121,12 @@ impl<'a> Context<'a> {
 
     #[must_use]
     /// Get the current [`Definition`]s
-    pub const fn definitions(&self) -> &HashMap<String, (Token, Definition)> {
+    pub const fn definitions(&self) -> &Defines {
         &self.definitions
     }
 
     /// Get the current [`Definition`]s mutably
-    pub fn definitions_mut(&mut self) -> &mut HashMap<String, (Token, Definition)> {
+    pub fn definitions_mut(&mut self) -> &mut Defines {
         &mut self.definitions
     }
 
