@@ -3,3 +3,4 @@ libs/**/*.hpp linguist-vendored
 libs/**/*.cpp linguist-vendored
 bin/**/*.hpp linguist-vendored
 bin/**/*.cpp linguist-vendored
+book/**/* linguist-vendored
