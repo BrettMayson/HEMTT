@@ -27,7 +27,7 @@ impl Module for FilePatching {
                         .display()
                         .to_string(),
                     &ctx.project_folder()
-                        .join(addon.folder())
+                        .join(addon.folder().replace('/', "\\"))
                         .display()
                         .to_string(),
                 )
