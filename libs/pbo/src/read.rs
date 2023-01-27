@@ -118,6 +118,21 @@ impl<I: Seek + Read> ReadablePbo<I> {
         Ok(None)
     }
 
+    /// Find the offset of a file
+    ///
+    /// # Errors
+    /// if the file cannot be read
+    pub fn file_offset(&self, name: &str) -> Result<Option<u64>, Error> {
+        let mut offset = self.blob_start;
+        for header in &self.headers {
+            if header.filename().to_lowercase() == name.replace('/', "\\").to_lowercase() {
+                return Ok(Some(offset));
+            }
+            offset += header.size() as u64;
+        }
+        Ok(None)
+    }
+
     /// Check if the files are sorted correctly
     ///
     /// # Errors
