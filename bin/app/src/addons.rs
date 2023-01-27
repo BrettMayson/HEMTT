@@ -15,7 +15,7 @@ impl Addon {
         Self {
             config: {
                 let path =
-                    PathBuf::from(format!("{}/{}", location.to_string(), name)).join("addon.toml");
+                    PathBuf::from(format!("{}/{name}", location.to_string())).join("addon.toml");
                 if path.exists() {
                     Some(Configuration::from_file(&path).unwrap())
                 } else {
@@ -69,7 +69,6 @@ impl Location {
         if !PathBuf::from(self.to_string()).exists() {
             return Ok(Vec::new());
         }
-        // TODO scope to root
         Ok(std::fs::read_dir(self.to_string())?
             .collect::<std::io::Result<Vec<DirEntry>>>()?
             .iter()

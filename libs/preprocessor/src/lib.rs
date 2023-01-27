@@ -242,7 +242,7 @@ fn directive_include_preprocess<R>(
     resolver: &R,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    import_token: Token,
+    from: Token,
 ) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -282,7 +282,7 @@ where
     }
     if tokenstream.peek().is_none() {
         return Err(Error::UnexpectedEOF {
-            token: Box::new(last.unwrap_or_else(|| import_token.clone())),
+            token: Box::new(last.unwrap_or_else(|| from.clone())),
         });
     }
     let (pathbuf, mut tokens) = {
@@ -296,7 +296,7 @@ where
         let parsed = crate::parse::parse(
             &resolved_path.display().to_string(),
             &source,
-            &Some(Box::new(import_token)),
+            &Some(Box::new(from)),
         )?;
         (resolved_path, parsed)
     };
@@ -430,7 +430,7 @@ fn directive_undef_preprocess(
 fn directive_if_preprocess(
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    token: Token,
+    from: Token,
 ) -> Result<(), Error> {
     let (ident_token, ident) = if let Some(token) = tokenstream.next() {
         match token.symbol() {
@@ -447,7 +447,7 @@ fn directive_if_preprocess(
         }
     } else {
         return Err(Error::UnexpectedEOF {
-            token: Box::new(token),
+            token: Box::new(from),
         });
     };
     if let Some((_, definition)) = context.get(&ident, &ident_token) {
@@ -478,7 +478,7 @@ fn directive_ifdef_preprocess(
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     has: bool,
-    token: Token,
+    from: Token,
 ) -> Result<(), Error> {
     let (ident_token, ident) = if let Some(token) = tokenstream.next() {
         match token.symbol() {
@@ -495,7 +495,7 @@ fn directive_ifdef_preprocess(
         }
     } else {
         return Err(Error::UnexpectedEOF {
-            token: Box::new(token),
+            token: Box::new(from),
         });
     };
     let has = context.has(&ident) == has;
@@ -533,7 +533,7 @@ fn read_args<R>(
     resolver: &R,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    token: &Token,
+    from: &Token,
 ) -> Result<Vec<Vec<Token>>, Error>
 where
     R: Resolver,
@@ -553,7 +553,7 @@ where
         }
     } else {
         return Err(Error::UnexpectedEOF {
-            token: Box::new(token.clone()),
+            token: Box::new(from.clone()),
         });
     }
     let mut depth = 0;
@@ -717,7 +717,7 @@ fn walk_definition<R>(
     resolver: &R,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    source: Token,
+    from: Token,
     definition: Definition,
 ) -> Result<Vec<Token>, Error>
 where
@@ -726,7 +726,7 @@ where
     let mut output = Vec::new();
     match definition {
         Definition::Value(tokens) => {
-            let parent = Some(Box::new(source));
+            let parent = Some(Box::new(from));
             let mut tokenstream = tokens
                 .into_iter()
                 .map(|mut t| {
@@ -746,17 +746,17 @@ where
             }
         }
         Definition::Function(func) => {
-            let args = read_args(resolver, context, tokenstream, &source)?;
+            let args = read_args(resolver, context, tokenstream, &from)?;
             if args.len() != func.parameters().len() {
                 return Err(Error::FunctionCallArgumentCount {
-                    token: Box::new(source),
+                    token: Box::new(from),
                     expected: func.parameters().len(),
                     got: args.len(),
                     trace: context.trace(),
                     defines: context.definitions().clone(),
                 });
             }
-            let mut stack = context.stack(source.clone());
+            let mut stack = context.stack(from.clone());
             for (param, arg) in func.parameters().iter().zip(args.into_iter()) {
                 let def = Definition::Value(root_preprocess(
                     resolver,
@@ -766,7 +766,7 @@ where
                 )?);
                 stack.define(param.word().unwrap().to_string(), param.clone(), def)?;
             }
-            let parent = Some(Box::new(source));
+            let parent = Some(Box::new(from));
             let mut tokenstream = func
                 .body()
                 .iter()
@@ -789,7 +789,7 @@ where
         }
         Definition::Unit => {
             return Err(Error::ExpectedFunctionOrValue {
-                token: Box::new(source),
+                token: Box::new(from),
                 trace: context.trace(),
             });
         }

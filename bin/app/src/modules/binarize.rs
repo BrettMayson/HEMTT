@@ -10,6 +10,7 @@ use hemtt_pbo::{prefix::FILES, Prefix};
 use vfs::VfsFileType;
 
 use super::Module;
+use crate::context::Context;
 
 #[derive(Default)]
 pub struct Binarize {
@@ -22,7 +23,7 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, _ctx: &crate::context::Context) -> Result<(), Error> {
+    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let path: String = hkcu
             .open_subkey("Software\\Bohemia Interactive\\binarize")?
@@ -35,11 +36,11 @@ impl Module for Binarize {
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, _ctx: &crate::context::Context) -> Result<(), Error> {
+    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
         Ok(())
     }
 
-    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         if self.command.is_none() {
             if cfg!(target_os = "linux") {
                 warn!("Binarize is not available on non-Windows platforms.");
@@ -131,10 +132,6 @@ impl Module for Binarize {
             }
         }
         info!("Binarized {} files", counter.load(Ordering::SeqCst));
-        Ok(())
-    }
-
-    fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), Error> {
         Ok(())
     }
 }

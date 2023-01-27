@@ -58,7 +58,7 @@ impl Options {
         }
     }
 
-    pub fn _get(&self) -> Result<Version, Error> {
+    fn _get(&self) -> Result<Version, Error> {
         // Check for a defined major version
         if let Some(major) = self.major {
             trace!("reading version from project.toml");

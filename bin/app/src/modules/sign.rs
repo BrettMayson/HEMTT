@@ -5,7 +5,7 @@ use hemtt_bin_error::Error;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
 
-use crate::addons::Location;
+use crate::{addons::Location, context::Context};
 
 use super::Module;
 
@@ -21,14 +21,14 @@ impl Module for Sign {
         "Sign"
     }
 
-    fn check(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn check(&self, ctx: &Context) -> Result<(), Error> {
         if ctx.config().version().git_hash().is_some() {
             Repository::open(".")?;
         }
         Ok(())
     }
 
-    fn pre_release(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
         create_dir_all(ctx.out_folder().join("keys"))?;
@@ -93,7 +93,7 @@ impl Module for Sign {
     }
 }
 
-fn get_authority(ctx: &crate::context::Context, suffix: Option<&str>) -> Result<String, Error> {
+fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Error> {
     let mut authority = format!(
         "{}_{}",
         ctx.config().signing().authority().map_or_else(

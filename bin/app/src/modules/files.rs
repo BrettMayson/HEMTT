@@ -2,6 +2,8 @@ use std::fs::create_dir_all;
 
 use hemtt_bin_error::Error;
 
+use crate::context::Context;
+
 use super::Module;
 
 #[derive(Default)]
@@ -12,7 +14,7 @@ impl Module for Files {
         "Files"
     }
 
-    fn post_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn post_build(&self, ctx: &Context) -> Result<(), Error> {
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()

@@ -4,7 +4,7 @@ use hemtt_bin_error::Error;
 #[cfg(windows)]
 pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
     use std::process::Command;
-
+    trace!("link {:?} => {:?}", link, target);
     let out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")
@@ -23,6 +23,7 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
 #[allow(clippy::module_name_repetitions)]
 #[cfg(not(windows))]
 pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
+    trace!("link {:?} => {:?}", link, target);
     std::os::unix::fs::symlink(target, link)?;
     Ok(())
 }

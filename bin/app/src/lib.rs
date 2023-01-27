@@ -16,25 +16,12 @@ mod logging;
 mod modules;
 mod utils;
 
-lazy_static::lazy_static! {
-    pub static ref VERSION: &'static str = {
-        let mut version = env!("CARGO_PKG_VERSION").to_string();
-        if let Some(v) = option_env!("GIT_HASH") {
-            version.push('-');
-            version.push_str(v);
-        }
-        if cfg!(debug_assertions) {
-            version.push_str("-debug");
-        }
-        Box::leak(Box::new(version))
-    };
-}
-
 #[must_use]
 pub fn cli() -> Command {
     #[allow(unused_mut)]
     let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
+        .version(env!("CARGO_PKG_VERSION"))
         .subcommand_required(false)
         .arg_required_else_help(true)
         .subcommand(commands::new::cli())
@@ -68,6 +55,13 @@ pub fn cli() -> Command {
             .action(ArgAction::SetTrue)
             .long("version"),
     );
+    global = global.arg(
+        clap::Arg::new("trace")
+            .global(true)
+            .help("Enable trace logging")
+            .action(ArgAction::SetTrue)
+            .long("trace"),
+    );
     global
 }
 
@@ -84,7 +78,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         return Ok(());
     }
 
-    logging::init(matches.get_count("verbosity"));
+    logging::init(matches.get_count("verbosity"), matches.get_flag("trace"));
 
     trace!("version: {}", env!("CARGO_PKG_VERSION"));
     trace!("platform: {}", std::env::consts::OS);

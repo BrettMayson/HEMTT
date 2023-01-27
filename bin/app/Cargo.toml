@@ -17,6 +17,7 @@ hemtt-pbo = { path = "../../libs/pbo" }
 hemtt-preprocessor = { path = "../../libs/preprocessor" }
 hemtt-tokens = { path = "../../libs/tokens" }
 hemtt-signing = { path = "../../libs/signing" }
+hemtt-version = { path = "../../libs/version" }
 
 ansi_term = "0.12.1"
 anyhow = "1.0.68"
@@ -27,7 +28,6 @@ dialoguer = "0.10.3"
 fs_extra = "1.2.0"
 git2 = { workspace = true }
 glob = "0.3.1"
-lazy_static = "1.4.0"
 num_cpus = "1.15.0"
 peekmore = "1.0.0"
 rayon = "1.6.1"
@@ -38,7 +38,8 @@ serde_json = { workspace = true }
 steamlocate = { git = "https://github.com/LovecraftianHorror/steamlocate-rs/", branch = "fully-switch-from-steamy-vdf" }
 time = "0.3.17"
 tracing = { workspace = true }
-tracing-subscriber = "0.3.16"
+tracing-subscriber = { version = "0.3.16", features = ["json"] }
+tracing-tracy = "0.10.2"
 vfs = { workspace = true }
 walkdir = { workspace = true }
 zip = { workspace = true }

@@ -3,7 +3,7 @@ use std::fs::create_dir_all;
 use hemtt_bin_error::Error;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::utils::create_link;
+use crate::{context::Context, utils::create_link};
 
 use super::Module;
 
@@ -15,7 +15,7 @@ impl Module for FilePatching {
         "FilePatching"
     }
 
-    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         create_dir_all(ctx.out_folder().join("addons"))?;
         ctx.addons()
             .par_iter()
@@ -35,7 +35,7 @@ impl Module for FilePatching {
             .collect::<Result<(), Error>>()
     }
 
-    fn post_build(&self, _ctx: &crate::context::Context) -> Result<(), Error> {
+    fn post_build(&self, _ctx: &Context) -> Result<(), Error> {
         info!(
             "You can now use the dev folder at `.hemttout/dev` to test your mod with file-patching."
         );

@@ -8,7 +8,7 @@ use tracing_subscriber::{
     prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
-pub fn init(verbosity: u8) {
+pub fn init(verbosity: u8, trace: bool) {
     let format = tracing_subscriber::fmt::format()
         .without_time()
         .with_target(false)
@@ -35,9 +35,16 @@ pub fn init(verbosity: u8) {
         .with_target(false)
         .with_ansi(false);
 
-    tracing_subscriber::registry()
-        .with(stdout.with_filter(filter).and_then(debug_log))
-        .init();
+    if trace {
+        tracing_subscriber::registry()
+            .with(stdout.with_filter(filter).and_then(debug_log))
+            .with(tracing_tracy::TracyLayer::new())
+            .init();
+    } else {
+        tracing_subscriber::registry()
+            .with(stdout.with_filter(filter).and_then(debug_log))
+            .init();
+    }
 }
 
 pub fn is_ci() -> bool {

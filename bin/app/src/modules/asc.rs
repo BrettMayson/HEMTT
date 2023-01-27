@@ -14,6 +14,8 @@ use rust_embed::RustEmbed;
 use serde::Serialize;
 use time::Instant;
 
+use crate::context::Context;
+
 use super::{rapifier::VfsResolver, Module};
 
 #[cfg(windows)]
@@ -40,7 +42,7 @@ impl Module for ArmaScriptCompiler {
         "ArmaScriptCompiler"
     }
 
-    fn init(&mut self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+    fn init(&mut self, ctx: &Context) -> Result<(), hemtt_bin_error::Error> {
         if !ctx.config().asc().enabled() {
             trace!("disabled");
             return Ok(());
@@ -51,7 +53,7 @@ impl Module for ArmaScriptCompiler {
         Ok(())
     }
 
-    fn check(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+    fn check(&self, ctx: &Context) -> Result<(), hemtt_bin_error::Error> {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
@@ -71,7 +73,7 @@ impl Module for ArmaScriptCompiler {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn pre_build(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<(), hemtt_bin_error::Error> {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }

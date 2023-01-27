@@ -3,6 +3,8 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use hemtt_preprocessor::preprocess_file;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
+use crate::context::Context;
+
 use super::{rapifier::VfsResolver, Module};
 
 #[derive(Default)]
@@ -13,7 +15,7 @@ impl Module for Lint {
         "sqf"
     }
 
-    fn check(&self, ctx: &crate::context::Context) -> Result<(), hemtt_bin_error::Error> {
+    fn check(&self, ctx: &Context) -> Result<(), hemtt_bin_error::Error> {
         if ctx.config().asc().enabled() {
             return Ok(());
         }
