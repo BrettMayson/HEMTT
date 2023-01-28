@@ -48,7 +48,7 @@ impl Module for Sign {
                     };
                     (
                         ReadablePbo::from(File::open(&target_pbo)?)?,
-                        target_pbo.with_extension(format!(".pbo.{authority}.bisign")),
+                        target_pbo.with_extension(format!("pbo.{authority}.bisign")),
                         addons_key.clone(),
                     )
                 }
@@ -79,7 +79,7 @@ impl Module for Sign {
                     target_pbo.set_extension("pbo");
                     (
                         ReadablePbo::from(File::open(&target_pbo)?)?,
-                        target_pbo.with_extension(format!(".pbo.{authority}.bisign")),
+                        target_pbo.with_extension(format!("pbo.{authority}.bisign")),
                         key,
                     )
                 }
