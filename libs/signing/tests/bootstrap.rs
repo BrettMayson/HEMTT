@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{fs::File, io::Write};
 
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
@@ -15,7 +15,7 @@ fn bootstrap() {
             BIPrivateKey::read(&mut File::open(file.path().join("test.biprivatekey")).unwrap())
                 .unwrap();
         let mut buffer = Vec::new();
-        private.write(&mut buffer).unwrap();
+        private.write_danger(&mut buffer).unwrap();
         assert_eq!(
             buffer,
             std::fs::read(file.path().join("test.biprivatekey")).unwrap()

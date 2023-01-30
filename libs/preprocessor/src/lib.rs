@@ -94,6 +94,11 @@ where
                     if next.symbol() == &Symbol::Slash {
                         whitespace::skip_comment(tokenstream);
                     }
+                } else {
+                    tokenstream.move_cursor_back().unwrap();
+                    if context.ifstates().reading() {
+                        output.push(tokenstream.next().unwrap());
+                    }
                 }
             }
             _ => {
@@ -705,6 +710,9 @@ where
                     if next.symbol() == &Symbol::Slash {
                         whitespace::skip_comment(tokenstream);
                     }
+                } else {
+                    tokenstream.move_cursor_back().unwrap();
+                    output.push(tokenstream.next().unwrap());
                 }
             }
             _ => output.push(tokenstream.next().unwrap()),

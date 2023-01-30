@@ -9,7 +9,7 @@ use sha1::{Digest, Sha1};
 use crate::{error::Error, public::BIPublicKey, signature::BISign};
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 /// A private key for signing PBOs
 pub struct BIPrivateKey {
     authority: String,
@@ -36,9 +36,6 @@ impl BIPrivateKey {
         let mut rng = rand::thread_rng();
         let mut rsa = RsaPrivateKey::new(&mut rng, length as usize)?;
         rsa.precompute()?;
-        // let Some(precomputed) = rsa.precomputed() else {
-        //     return Err(Error::Rsa(rsa::errors::Error::Internal));
-        // };
         let primes = rsa.primes();
         let Some(qinv) = rsa.qinv().unwrap().to_biguint() else {
             return Err(Error::Rsa(rsa::errors::Error::Internal));
@@ -180,7 +177,7 @@ impl BIPrivateKey {
     ///
     /// # Panics
     /// If the qinv sign is not `NoSign`.
-    pub fn write<O: Write>(&self, output: &mut O) -> Result<(), Error> {
+    pub fn write_danger<O: Write>(&self, output: &mut O) -> Result<(), Error> {
         output.write_cstring(&self.authority)?;
         output.write_u32::<LittleEndian>(self.length / 16 * 9 + 20)?;
         output.write_all(b"\x07\x02\x00\x00\x00\x24\x00\x00")?;

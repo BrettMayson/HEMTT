@@ -49,19 +49,22 @@ pub fn cli() -> Command {
             .short('v'),
     );
     global = global.arg(
-        clap::Arg::new("version")
-            .global(false)
-            .help("Print version")
-            .action(ArgAction::SetTrue)
-            .long("version"),
-    );
-    global = global.arg(
         clap::Arg::new("trace")
             .global(true)
             .help("Enable trace logging")
             .action(ArgAction::SetTrue)
             .long("trace"),
     );
+    #[cfg(debug_assertions)]
+    {
+        global = global.arg(
+            clap::Arg::new("in-test")
+                .global(true)
+                .help("we are in a test")
+                .action(ArgAction::SetTrue)
+                .long("in-test"),
+        );
+    }
     global
 }
 
@@ -73,12 +76,9 @@ pub fn cli() -> Command {
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
-    if matches.get_flag("version") {
-        println!("HEMTT {}", env!("CARGO_PKG_VERSION"));
-        return Ok(());
+    if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
+        logging::init(matches.get_count("verbosity"), matches.get_flag("trace"));
     }
-
-    logging::init(matches.get_count("verbosity"), matches.get_flag("trace"));
 
     trace!("version: {}", env!("CARGO_PKG_VERSION"));
     trace!("platform: {}", std::env::consts::OS);

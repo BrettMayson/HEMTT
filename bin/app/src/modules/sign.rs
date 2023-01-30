@@ -32,7 +32,7 @@ impl Module for Sign {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
         create_dir_all(ctx.out_folder().join("keys"))?;
-        addons_key.write(&mut File::create(
+        addons_key.to_public_key().write(&mut File::create(
             ctx.out_folder()
                 .join("keys")
                 .join(format!("{authority}.bikey")),
@@ -57,13 +57,12 @@ impl Module for Sign {
                         if ctx.config().hemtt().build().optional_mod_folders() {
                             let authority = get_authority(ctx, Some(&pbo_name))?;
                             let key = BIPrivateKey::generate(1024, &authority)?;
-                            let pubkey = key.to_public_key();
                             let mod_root = ctx
                                 .out_folder()
                                 .join("optionals")
                                 .join(format!("@{pbo_name}"));
                             create_dir_all(mod_root.join("keys"))?;
-                            pubkey.write(&mut File::create(
+                            key.to_public_key().write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),
                             )?)?;
                             (mod_root.join("addons").join(pbo_name), key, authority)
