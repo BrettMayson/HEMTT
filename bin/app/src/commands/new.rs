@@ -49,7 +49,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     git2::Repository::init(path)?;
 
     // Create .hemtt/project.toml
-    let mut file = std::fs::File::create(path.join(".hemtt").join("project.toml"))?;
+    let hemtt_path = path.join(".hemtt");
+    create_dir(&hemtt_path)?;
+    let mut file = std::fs::File::create(hemtt_path.join("project.toml"))?;
     file.write_all(
         format!("name = \"{full_name}\"\nauthor = \"{author}\"\nprefix = \"{prefix}\"\nmainprefix = \"{mainprefix}\"\n")
             .as_bytes(),
