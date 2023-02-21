@@ -70,7 +70,11 @@ impl From<vfs::VfsError> for Error {
 
 impl PrettyError for Error {
     fn brief(&self) -> String {
-        self.to_string()
+        match self {
+            Self::Preprocessor(e) => e.brief(),
+            Self::Config(e) => e.brief(),
+            _ => self.to_string(),
+        }
     }
 
     fn details(&self) -> Option<String> {
