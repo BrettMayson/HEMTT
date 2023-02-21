@@ -90,10 +90,11 @@ where
                 tokenstream.next();
             }
             Symbol::Slash => {
-                if let Some(next) = tokenstream.peek_forward(1) {
-                    if next.symbol() == &Symbol::Slash {
-                        whitespace::skip_comment(tokenstream);
-                    }
+                if matches!(
+                    tokenstream.peek_forward(1).map(Token::symbol),
+                    Some(Symbol::Slash)
+                ) {
+                    whitespace::skip_comment(tokenstream);
                 } else {
                     tokenstream.move_cursor_back().unwrap();
                     if context.ifstates().reading() {
@@ -706,10 +707,11 @@ where
                 )?);
             }
             Symbol::Slash => {
-                if let Some(next) = tokenstream.peek_forward(1) {
-                    if next.symbol() == &Symbol::Slash {
-                        whitespace::skip_comment(tokenstream);
-                    }
+                if matches!(
+                    tokenstream.peek_forward(1).map(Token::symbol),
+                    Some(Symbol::Slash)
+                ) {
+                    whitespace::skip_comment(tokenstream);
                 } else {
                     tokenstream.move_cursor_back().unwrap();
                     output.push(tokenstream.next().unwrap());
