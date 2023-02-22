@@ -357,7 +357,7 @@ where
         match (token.symbol(), skipped) {
             (Symbol::LeftParenthesis, false) => {
                 let token = token.clone();
-                let args = read_args(resolver, context, tokenstream, &token)?;
+                let args = read_args(resolver, context, tokenstream, &token, false)?;
                 whitespace::skip(tokenstream);
                 if args.iter().any(|arg| arg.len() != 1) {
                     return Err(Error::DefineMultiTokenArgument {
@@ -540,6 +540,7 @@ fn read_args<R>(
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: &Token,
+    recursive: bool,
 ) -> Result<Vec<Vec<Token>>, Error>
 where
     R: Resolver,
@@ -615,24 +616,27 @@ where
                     arg.push(tokenstream.next().unwrap());
                     continue;
                 }
-                if let Some((_source, definition)) = context.get(word, token) {
-                    let token = token.clone();
-                    tokenstream.next();
-                    if definition.is_function()
-                        && tokenstream.peek().unwrap().symbol() != &Symbol::LeftParenthesis
-                    {
+                if recursive {
+                    if let Some((_source, definition)) = context.get(word, token) {
+                        let token = token.clone();
+                        tokenstream.next();
+                        if definition.is_function()
+                            && tokenstream.peek().unwrap().symbol() != &Symbol::LeftParenthesis
+                        {
+                            arg.push(tokenstream.next().unwrap());
+                            continue;
+                        }
+                        arg.append(&mut walk_definition(
+                            resolver,
+                            context,
+                            tokenstream,
+                            token,
+                            definition,
+                        )?);
                         continue;
                     }
-                    arg.append(&mut walk_definition(
-                        resolver,
-                        context,
-                        tokenstream,
-                        token,
-                        definition,
-                    )?);
-                } else {
-                    arg.push(tokenstream.next().unwrap());
                 }
+                arg.push(tokenstream.next().unwrap());
             }
             Symbol::Newline => {
                 let builtin = Token::builtin(Some(Box::new(token.clone())));
@@ -756,7 +760,7 @@ where
             }
         }
         Definition::Function(func) => {
-            let args = read_args(resolver, context, tokenstream, &from)?;
+            let args = read_args(resolver, context, tokenstream, &from, true)?;
             if args.len() != func.parameters().len() {
                 return Err(Error::FunctionCallArgumentCount {
                     token: Box::new(from),

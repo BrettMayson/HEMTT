@@ -48,7 +48,7 @@ impl Options {
             let repo = Repository::open(".")?;
             let rev = repo.revparse_single("HEAD")?;
             let id = rev.id().to_string();
-            version.set_build(format!("-{}", &id[0..length as usize]));
+            version.set_build(&id[0..length as usize]);
         };
 
         unsafe {
