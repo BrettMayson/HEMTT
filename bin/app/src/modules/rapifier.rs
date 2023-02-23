@@ -35,21 +35,25 @@ impl Module for Rapifier {
             .map(|addon| {
                 for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
                     let entry = entry?;
-                    if entry.metadata()?.file_type == VfsFileType::File
-                        && can_preprocess(entry.as_str())
+
+                    if !(entry.metadata()?.file_type == VfsFileType::File
+                        && can_preprocess(entry.as_str()))
                     {
-                        if entry.filename() == "config.cpp" {
-                            if let Some(config) = addon.config() {
-                                if !config.preprocess() {
-                                    debug!("skiping {}", entry.as_str());
-                                    continue;
-                                }
+                        continue;
+                    }
+
+                    if entry.filename().to_lowercase() == "config.cpp" {
+                        if let Some(config) = addon.config() {
+                            if !config.preprocess() {
+                                debug!("skiping {}", entry.as_str());
+                                continue;
                             }
                         }
-                        debug!("rapifying {}", entry.as_str());
-                        rapify(entry.clone(), ctx, &resolver)?;
-                        counter.fetch_add(1, Ordering::SeqCst);
                     }
+
+                    debug!("rapifying {}", entry.as_str());
+                    rapify(entry.clone(), ctx, &resolver)?;
+                    counter.fetch_add(1, Ordering::SeqCst);
                 }
                 Ok(())
             })
@@ -66,8 +70,9 @@ pub fn rapify(path: VfsPath, ctx: &Context, resolver: &VfsResolver) -> Result<()
         &mut tokens.into_iter().peekmore(),
         &Token::builtin(None),
     )?;
-    let out = if path.filename() == "config.cpp" {
-        path.parent().join("config.bin").unwrap()
+    let out = if path.filename().to_lowercase() == "config.cpp" {
+        let filename = path.filename().replace(".cpp", ".bin");
+        path.parent().join(filename).unwrap()
     } else {
         path
     };
