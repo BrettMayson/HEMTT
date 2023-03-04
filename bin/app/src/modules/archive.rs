@@ -11,7 +11,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
         create_dir_all(&output)?;
     }
     let output = output
-        .join(format!("{}-latest", ctx.config().name()))
+        .join(format!("{}-latest", ctx.config().prefix()))
         .with_extension("zip");
     let options = zip::write::FileOptions::default().compression_level(Some(9));
 
@@ -54,7 +54,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
         let mut output = output.clone();
         output.set_file_name(format!(
             "{}-{}.zip",
-            ctx.config().name(),
+            ctx.config().prefix(),
             ctx.config().version().get()?
         ));
         info!("Created release: {}", output.display());
