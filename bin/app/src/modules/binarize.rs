@@ -56,7 +56,7 @@ impl Module for Binarize {
             for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File
-                    && ["rtm", "p3d"].contains(&entry.extension().unwrap_or_default().as_str())
+                    && ["rtm", "p3d", "wrp"].contains(&entry.extension().unwrap_or_default().as_str())
                 {
                     if let Some(config) = addon.config() {
                         if config
