@@ -4,23 +4,26 @@ on: [push, pull_request]
 
 jobs:
   coverage:
-    name: Tarpaulin
     runs-on: ubuntu-latest
-    container:
-      image: xd009642/tarpaulin
-      options: --security-opt seccomp=unconfined
+    name: ubuntu / stable
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v3
         with:
-          key: tarpaulin
-      - name: Generate code coverage
-        run: |
-          cargo tarpaulin --verbose --all-features --workspace --timeout 240 --out Xml
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - name: cargo install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        uses: actions-rs/cargo@v1
+        with:
+          command: generate-lockfile
+      - name: cargo llvm-cov
+        run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
