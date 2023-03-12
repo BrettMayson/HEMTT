@@ -596,7 +596,7 @@ checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
 name = "hemtt"
-version = "0.10.0-rc1"
+version = "1.0.0"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -638,7 +638,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-bin-config"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "git2",
  "glob",
@@ -656,7 +656,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-bin-error"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "git2",
  "glob",
@@ -676,7 +676,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-bin-internal"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "clap 4.1.8",
  "hemtt-config",
@@ -688,7 +688,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-bin-rhai"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "rhai",
  "serde",
@@ -698,7 +698,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-config"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "byteorder",
  "hemtt-error",
@@ -710,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-error"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "colored",
  "hemtt-tokens",
@@ -719,11 +719,11 @@ dependencies = [
 
 [[package]]
 name = "hemtt-io"
-version = "0.10.0"
+version = "1.0.0"
 
 [[package]]
 name = "hemtt-pbo"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "byteorder",
  "hemtt-error",
@@ -735,7 +735,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-preprocessor"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "criterion",
  "hemtt-error",
@@ -751,7 +751,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-signing"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "byteorder",
  "hemtt-error",
@@ -765,14 +765,14 @@ dependencies = [
 
 [[package]]
 name = "hemtt-tokens"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "peekmore",
 ]
 
 [[package]]
 name = "hemtt-version"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "hemtt-error",
  "serde",
@@ -1339,9 +1339,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.23"
+version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8856d8364d252a14d474036ea1358d63c9e6965c8e5c1885c18f73d70bff9c7b"
+checksum = "50686e0021c4136d1d453b2dfe059902278681512a34d4248435dc34b6b5c8ec"
 dependencies = [
  "proc-macro2",
 ]

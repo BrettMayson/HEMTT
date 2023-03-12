@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-bin-rhai"
 description = "HEMTT - Rhai Packages"
-version = "0.10.0"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
