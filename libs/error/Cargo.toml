@@ -7,4 +7,4 @@ edition = "2021"
 hemtt-tokens = { path = "../tokens" }
 
 colored = { workspace = true }
-thiserror = "1.0.38"
+thiserror = "1.0.39"
