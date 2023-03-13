@@ -95,11 +95,8 @@ where
                     Some(Symbol::Slash)
                 ) {
                     whitespace::skip_comment(tokenstream);
-                } else {
-                    tokenstream.move_cursor_back().unwrap();
-                    if context.ifstates().reading() {
-                        output.push(tokenstream.next().unwrap());
-                    }
+                } else if context.ifstates().reading() {
+                    output.push(tokenstream.next().unwrap());
                 }
             }
             _ => {
