@@ -37,13 +37,13 @@ jobs:
           command: build
           args: --release
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
           path: target/release/${{ matrix.exe }}
 
   mods:
-    name:  ${{ matrix.os.runner }} / ${{ matrix.name }}
+    name:  ${{ matrix.os.runner }} / ${{ matrix.mod.name }}
     runs-on: ${{ matrix.os.runner }}
     needs:
       - build
@@ -55,7 +55,7 @@ jobs:
             name: linux-x64
           - runner: windows-latest
             name: windows-x64
-        include:
+        mod:
           - name: Advanced Combat Environment
             repo: acemod/ACE3
             path: ace3
@@ -73,9 +73,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          repository: ${{ matrix.repo }}
-          path: ${{ matrix.path }}
-          ref: ${{ matrix.commit }}
+          repository: ${{ matrix.mod.repo }}
+          path: ${{ matrix.mod.path }}
+          ref: ${{ matrix.mod.commit }}
       - name: Install Linux
         if: startsWith(matrix.os.runner, 'ubuntu')
         run: |
