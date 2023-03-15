@@ -66,7 +66,7 @@ jobs:
             commit: fab121ce624b6656dd7afd2d29429aa762b28813
     steps:
       - name: Download HEMTT
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.os.name }}
           path: hemtt
