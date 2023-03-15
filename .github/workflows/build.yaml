@@ -72,9 +72,12 @@ jobs:
           repository: ${{ matrix.repo }}
           path: ${{ matrix.path }}
           ref: ${{ matrix.commit }}
+      - name: Install
+        run: |
+          cd hemtt && cp hemtt /usr/local/bin/hemtt && chmod +x /usr/local/bin/hemtt
       - name: Build
         run: |
-          cd ${{ matrix.path }} && ../hemtt/hemtt dev
+          cd ${{ matrix.path }} && hemtt dev
   release:
     name: Release
     if: startsWith(github.ref, 'refs/tags/')
