@@ -24,6 +24,7 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
 #[allow(clippy::module_name_repetitions)]
 #[cfg(not(windows))]
 pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
+    let target = target.replace('\\', "/");
     trace!("link {:?} => {:?}", link, target);
     std::os::unix::fs::symlink(target, link)?;
     Ok(())
