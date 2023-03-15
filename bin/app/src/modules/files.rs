@@ -20,34 +20,39 @@ impl Module for Files {
             ..Default::default()
         };
         let mut copied = 0;
+        let mut globs = Vec::new();
         for file in ctx.config().files().include() {
-            for entry in ctx.vfs().walk_dir()? {
-                let entry = entry?;
-                if entry.is_dir()? {
-                    continue;
-                }
-                if entry.as_str().starts_with("/.hemtt") {
-                    continue;
-                }
-                if !entry.exists()? {
-                    continue;
-                }
-
-                if !glob::Pattern::new(&file)?.matches_with(entry.as_str(), glob_options) {
-                    continue;
-                }
-
-                let mut d = ctx.out_folder().clone();
-
-                d.push(entry.as_str().trim_start_matches('/'));
-                let folder = d.parent().unwrap();
-                if !folder.exists() {
-                    std::mem::drop(create_dir_all(folder));
-                }
-                debug!("copying {:?} => {:?}", entry.as_str(), d.display());
-                std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?)?;
-                copied += 1;
+            globs.push(glob::Pattern::new(&file)?);
+        }
+        for entry in ctx.vfs().walk_dir()? {
+            let entry = entry?;
+            if entry.as_str().starts_with("/.hemtt") {
+                continue;
             }
+            if entry.is_dir()? {
+                continue;
+            }
+            if !entry.exists()? {
+                continue;
+            }
+
+            if !globs
+                .iter()
+                .any(|pat| pat.matches_with(entry.as_str(), glob_options))
+            {
+                continue;
+            }
+
+            let mut d = ctx.out_folder().clone();
+
+            d.push(entry.as_str().trim_start_matches('/'));
+            let folder = d.parent().unwrap();
+            if !folder.exists() {
+                std::mem::drop(create_dir_all(folder));
+            }
+            debug!("copying {:?} => {:?}", entry.as_str(), d.display());
+            std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?)?;
+            copied += 1;
         }
         info!("Copied {} files", copied);
         Ok(())
