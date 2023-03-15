@@ -13,7 +13,7 @@ jobs:
     name: ${{ matrix.os }} / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         toolchain: [stable, beta]
     steps:
       - uses: actions/checkout@v3
