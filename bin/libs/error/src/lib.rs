@@ -78,7 +78,11 @@ impl PrettyError for Error {
     }
 
     fn details(&self) -> Option<String> {
-        None
+        match self {
+            Self::Preprocessor(e) => e.details(),
+            Self::Config(e) => e.details(),
+            _ => None,
+        }
     }
 
     fn help(&self) -> Option<String> {

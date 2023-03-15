@@ -40,8 +40,15 @@ impl AppError {
                 DisplayStyle::Error => format!("{}: ", "error".bright_red()).bold(),
             },
             self.brief.bold(),
-            self.details.clone().unwrap_or_default(),
             self.source().unwrap_or_default(),
+            {
+                let details = self.details.clone().unwrap_or_default();
+                if details.is_empty() {
+                    String::new()
+                } else {
+                    format!("{}: {details}\n", "details".bright_blue())
+                }
+            },
             {
                 let help = self.help.clone().unwrap_or_default();
                 if help.is_empty() {
@@ -190,17 +197,21 @@ pub fn read_lines_from_file(
 /// if the file cannot be read
 pub fn make_source(token: &Token, note: String) -> Result<Source, std::io::Error> {
     Ok(Source {
-        lines: read_lines_from_file(
-            Path::new(
-                token
-                    .source()
-                    .path()
-                    .replace('\\', "/")
-                    .trim_start_matches('/'),
-            ),
-            token.source().start().1 .0,
-            token.source().end().1 .0,
-        )?,
+        lines: if token.source().path().starts_with('%') {
+            Vec::new()
+        } else {
+            read_lines_from_file(
+                Path::new(
+                    token
+                        .source()
+                        .path()
+                        .replace('\\', "/")
+                        .trim_start_matches('/'),
+                ),
+                token.source().start().1 .0,
+                token.source().end().1 .0,
+            )?
+        },
         position: token.source().clone(),
         note,
     })

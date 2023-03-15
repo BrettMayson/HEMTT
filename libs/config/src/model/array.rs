@@ -48,7 +48,8 @@ impl Parse for Array {
         let mut elements = Vec::new();
         let mut first = true;
         loop {
-            let last = whitespace::skip_newline(tokens);
+            let skipped = whitespace::skip_newline(tokens);
+            let last = skipped.last().cloned();
             if let Some(token) = tokens.peek() {
                 if token.symbol() == &Symbol::RightBrace {
                     if first || options.array_allow_trailing_comma() {
@@ -68,7 +69,8 @@ impl Parse for Array {
             let entry = Entry::parse(options, tokens, from)?;
             elements.push(entry);
             first = false;
-            let last = whitespace::skip_newline(tokens);
+            let skipped = whitespace::skip_newline(tokens);
+            let last = skipped.last().cloned();
             if let Some(token) = tokens.next() {
                 if token.symbol() == &Symbol::RightBrace {
                     break;

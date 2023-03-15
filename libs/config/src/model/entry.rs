@@ -37,7 +37,8 @@ impl Parse for Entry {
     where
         Self: Sized,
     {
-        let last = whitespace::skip_newline(tokens);
+        let skipped = whitespace::skip_newline(tokens);
+        let last = skipped.last().cloned();
         if let Some(token) = tokens.peek() {
             match token.symbol() {
                 Symbol::LeftBrace => {

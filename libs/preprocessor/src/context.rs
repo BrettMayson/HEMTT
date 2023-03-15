@@ -269,7 +269,8 @@ pub enum Definition {
     /// A value that is a list of [`Token`]s to be added at the call site
     Value(Vec<Token>),
     /// A flag that can be checked with `#ifdef`
-    Unit,
+    /// Tokens are only used for error reporting
+    Unit(Vec<Token>),
 }
 
 impl Definition {
@@ -288,7 +289,7 @@ impl Definition {
     #[must_use]
     /// Check if the definition is a flag
     pub const fn is_unit(&self) -> bool {
-        matches!(self, Self::Unit)
+        matches!(self, Self::Unit(_))
     }
 }
 

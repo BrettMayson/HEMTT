@@ -91,12 +91,18 @@ impl Parse for Class {
         whitespace::skip(tokens);
         let name = Ident::parse(options, tokens, from)?;
         // Check for : and parent
-        let last = whitespace::skip(tokens);
+        let skipped = whitespace::skip(tokens);
+        let last = skipped.last().cloned();
         let parent = if let Some(token) = tokens.peek() {
             if token.symbol() == &Symbol::Colon {
                 tokens.next();
-                let last = whitespace::skip(tokens).unwrap_or_else(|| from.clone());
-                Some(Ident::parse(options, tokens, &last)?)
+                let skipped = whitespace::skip(tokens);
+                let last = skipped.last().cloned();
+                Some(Ident::parse(
+                    options,
+                    tokens,
+                    &last.unwrap_or_else(|| from.clone()),
+                )?)
             } else {
                 None
             }
@@ -106,7 +112,8 @@ impl Parse for Class {
             });
         };
         // read children
-        let last = whitespace::skip_newline(tokens);
+        let skipped = whitespace::skip_newline(tokens);
+        let last = skipped.last().cloned();
         if let Some(token) = tokens.peek() {
             if token.symbol() == &Symbol::Semicolon {
                 return Ok(Self::External { name });
@@ -332,7 +339,8 @@ impl Parse for Properties {
                     }
                     Some(ident) => {
                         if ident.to_string() == "delete" {
-                            let last = whitespace::skip(tokens);
+                            let skipped = whitespace::skip(tokens);
+                            let last = skipped.last().cloned();
                             let ident = Ident::parse(
                                 options,
                                 tokens,
@@ -368,7 +376,8 @@ impl Parse for Properties {
                             });
                         }
                         tokens.next();
-                        let last = whitespace::skip(tokens);
+                        let skipped = whitespace::skip(tokens);
+                        let last = skipped.last().cloned();
                         let entry = if array_expand {
                             let array = Array::parse(options, tokens, from)?;
                             Entry::Array(Array {

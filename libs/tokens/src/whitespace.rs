@@ -26,15 +26,17 @@ impl ToString for Whitespace {
 }
 
 /// Skip through whitespace
-pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
-    let mut last = None;
+pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Vec<Token> {
+    let mut skipped = Vec::new();
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() {
-            last = input.next();
+            if let Some(token) = input.next() {
+                skipped.push(token);
+            }
         } else if token.symbol() == &Symbol::Slash {
             if let Some(next_token) = input.peek_forward(1) {
                 if next_token.symbol() == &Symbol::Slash {
-                    last = skip_comment(input);
+                    skipped.extend(skip_comment(input));
                 } else {
                     break;
                 }
@@ -45,19 +47,21 @@ pub fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option
             break;
         }
     }
-    last
+    skipped
 }
 
 /// Skip through whitespace and newlines
-pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
-    let mut last = None;
+pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Vec<Token> {
+    let mut skipped = Vec::new();
     while let Some(token) = input.peek() {
         if token.symbol().is_whitespace() || token.symbol().is_newline() {
-            last = input.next();
+            if let Some(token) = input.next() {
+                skipped.push(token);
+            }
         } else if token.symbol() == &Symbol::Slash {
             if let Some(next_token) = input.peek_forward(1) {
                 if next_token.symbol() == &Symbol::Slash {
-                    last = skip_comment(input);
+                    skipped.extend(skip_comment(input));
                 } else {
                     break;
                 }
@@ -68,19 +72,26 @@ pub fn skip_newline(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -
             break;
         }
     }
-    last
+    skipped
 }
 
 /// Skip through a comment until a newline is found
 /// Assumes the slashes are peeked but not consumed
-pub fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Option<Token> {
-    input.next();
-    let mut last = input.next();
+pub fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Vec<Token> {
+    let mut skipped = Vec::new();
+    if let Some(token) = input.next() {
+        skipped.push(token);
+    }
+    if let Some(token) = input.next() {
+        skipped.push(token);
+    }
     while let Some(token) = input.peek() {
         if token.symbol() == &Symbol::Newline {
             break;
         }
-        last = input.next();
+        if let Some(token) = input.next() {
+            skipped.push(token);
+        }
     }
-    last
+    skipped
 }

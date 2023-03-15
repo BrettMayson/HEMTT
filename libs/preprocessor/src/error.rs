@@ -98,6 +98,8 @@ pub enum Error {
         token: Box<Token>,
         /// The [`Token`] stack trace
         trace: Vec<Token>,
+        /// Skipped tokens of Unit
+        skipped: Vec<Token>,
     },
     #[error("`#include` was encountered while using `NoResolver`")]
     /// Tried to use `#include` with [`NoResolver`](crate::resolver::resolvers::NoResolver)
@@ -197,7 +199,7 @@ impl PrettyError for Error {
             } => {
                 format!("Function call with incorrect number of arguments, expected `{expected}` got `{got}`. `{symbol:?}`", symbol = token.symbol())
             }
-            Self::ExpectedFunctionOrValue { token, trace: _ } => {
+            Self::ExpectedFunctionOrValue { token, .. } => {
                 format!(
                     "Expected Function or Value, found Unit, `{symbol:?}`",
                     symbol = token.symbol()
@@ -223,11 +225,38 @@ impl PrettyError for Error {
     }
 
     fn details(&self) -> Option<String> {
-        None
+        match self {
+            Self::ExpectedFunctionOrValue { skipped, .. } => {
+                let empty_comment = skipped.iter().all(|t| {
+                    matches!(t.symbol(), Symbol::Comment(_))
+                        || matches!(t.symbol(), Symbol::Whitespace(_))
+                });
+                if empty_comment {
+                    Some(String::from("`#define` with only a comment is considered a Unit (flag). This differs from other preprocessors."))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 
     fn help(&self) -> Option<String> {
         match self {
+            Self::ExpectedFunctionOrValue { token, skipped, .. } => {
+                let empty_comment = skipped.iter().all(|t| {
+                    matches!(t.symbol(), Symbol::Comment(_))
+                        || matches!(t.symbol(), Symbol::Whitespace(_))
+                });
+                if empty_comment {
+                    Some(format!(
+                        "Try using `#define {} ; /* .. */`",
+                        token.symbol().output()
+                    ))
+                } else {
+                    None
+                }
+            }
             Self::FunctionCallArgumentCount {
                 token,
                 expected: _,
@@ -290,7 +319,7 @@ impl PrettyError for Error {
             } => make_source(token, format!("Expects {expected} arguments"))
                 .ok()
                 .map(Box::new),
-            Self::ExpectedFunctionOrValue { token, trace: _ } => {
+            Self::ExpectedFunctionOrValue { token, .. } => {
                 make_source(token, "expects function or value".to_string())
                     .ok()
                     .map(Box::new)

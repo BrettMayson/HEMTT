@@ -341,17 +341,15 @@ where
             token: Box::new(from),
         });
     };
-    let mut skipped = false;
-    let mut last = None;
+    let mut skipped = Vec::new();
     if let Some(token) = tokenstream.peek() {
         if let Symbol::Whitespace(_) | Symbol::Comment(_) = token.symbol() {
-            last = whitespace::skip(tokenstream);
-            skipped = true;
+            skipped = whitespace::skip(tokenstream);
         }
     }
     // check directive type
     if let Some(token) = tokenstream.peek() {
-        match (token.symbol(), skipped) {
+        match (token.symbol(), !skipped.is_empty()) {
             (Symbol::LeftParenthesis, false) => {
                 let token = token.clone();
                 let args = read_args(resolver, context, tokenstream, &token, false)?;
@@ -371,23 +369,15 @@ where
                 context.define(ident, ident_token, Definition::Function(def))?;
             }
             (Symbol::Newline, _) => {
-                context.define(ident, ident_token, Definition::Unit)?;
+                context.define(ident, ident_token, Definition::Unit(skipped))?;
             }
             (_, _) => {
                 let val = directive_define_read_body(tokenstream);
                 context.define(ident, ident_token, Definition::Value(val))?;
-                // return Err(Error::UnexpectedToken {
-                //     token: Box::new(token.clone()),
-                //     expected: vec![
-                //         Symbol::LeftParenthesis,
-                //         Symbol::Whitespace(Whitespace::Space),
-                //         Symbol::Whitespace(Whitespace::Tab),
-                //         Symbol::Escape,
-                //     ],
-                // });
             }
         }
     } else {
+        let last = skipped.last().cloned();
         return Err(Error::UnexpectedEOF {
             token: Box::new(last.unwrap_or_else(|| from.clone())),
         });
@@ -614,7 +604,7 @@ where
                     continue;
                 }
                 if recursive {
-                    if let Some((_source, definition)) = context.get(word, token) {
+                    if let Some((source, definition)) = context.get(word, token) {
                         let token = token.clone();
                         tokenstream.next();
                         if definition.is_function()
@@ -623,6 +613,7 @@ where
                             arg.push(tokenstream.next().unwrap());
                             continue;
                         }
+                        context.push(source);
                         arg.append(&mut walk_definition(
                             resolver,
                             context,
@@ -630,6 +621,7 @@ where
                             token,
                             definition,
                         )?);
+                        context.pop();
                         continue;
                     }
                 }
@@ -673,8 +665,9 @@ where
         }
         match token.symbol() {
             Symbol::Word(word) => {
-                if let Some((_source, definition)) = context.get(word, token) {
+                if let Some((source, definition)) = context.get(word, token) {
                     let token = token.clone();
+                    context.push(source);
                     tokenstream.next();
                     output.append(&mut walk_definition(
                         resolver,
@@ -683,6 +676,7 @@ where
                         token,
                         definition,
                     )?);
+                    context.pop();
                 } else {
                     output.push(tokenstream.next().unwrap());
                 }
@@ -798,10 +792,11 @@ where
                 )?);
             }
         }
-        Definition::Unit => {
+        Definition::Unit(skipped) => {
             return Err(Error::ExpectedFunctionOrValue {
                 token: Box::new(from),
                 trace: context.trace(),
+                skipped,
             });
         }
     }
@@ -813,7 +808,7 @@ fn eat_newline(
     context: &mut Context,
     from: &Token,
 ) -> Result<(), Error> {
-    let last = whitespace::skip(tokenstream);
+    let skipped = whitespace::skip(tokenstream);
     if let Some(token) = tokenstream.peek() {
         if matches!(token.symbol(), Symbol::Newline) {
             tokenstream.next();
@@ -825,6 +820,7 @@ fn eat_newline(
             });
         }
     } else {
+        let last = skipped.last().cloned();
         return Err(Error::UnexpectedEOF {
             token: Box::new(last.unwrap_or_else(|| from.clone())),
         });
