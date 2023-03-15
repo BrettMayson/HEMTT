@@ -97,6 +97,14 @@ jobs:
           name: windows-x64
           path: release
 
+      - name: Zip Linux x64
+        run: |
+          cd release && zip linux-x64.zip hemtt && rm hemtt
+
+      - name: Zip Windows x64
+        run: |
+          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
