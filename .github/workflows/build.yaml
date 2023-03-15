@@ -86,4 +86,4 @@ jobs:
           cd hemtt && copy hemtt.exe C:\Windows\System32\hemtt.exe
       - name: Run `hemtt dev`
         run: |
-          cd ${{ matrix.path }} && hemtt dev
+          cd ${{ matrix.mod.path }} && hemtt dev
