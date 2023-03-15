@@ -72,8 +72,12 @@ pub struct LaunchOptions {
     workshop: Vec<String>,
 
     #[serde(default)]
-    // Extra launch parameters
+    /// Extra launch parameters
     parameters: Vec<String>,
+
+    #[serde(default)]
+    /// Binary to launch, defaults to `arma3_x64.exe`
+    executable: Option<String>,
 }
 
 impl LaunchOptions {
@@ -85,6 +89,19 @@ impl LaunchOptions {
     #[must_use]
     pub fn parameters(&self) -> &[String] {
         &self.parameters
+    }
+
+    #[must_use]
+    pub fn executable(&self) -> String {
+        let executable = self
+            .executable
+            .clone()
+            .unwrap_or_else(|| "arma3_x64".to_owned());
+        if cfg!(target_os = "windows") {
+            format!("{executable}.exe")
+        } else {
+            executable
+        }
     }
 }
 

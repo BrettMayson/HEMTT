@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use clap::{ArgMatches, Command};
 use hemtt_bin_config::project::Configuration;
@@ -11,7 +11,15 @@ use super::dev;
 
 #[must_use]
 pub fn cli() -> Command {
-    dev::add_args(Command::new("launch").about("Launch Arma 3 with your mod and dependencies."))
+    dev::add_args(
+        Command::new("launch")
+            .about("Launch Arma 3 with your mod and dependencies.")
+            .arg(
+                clap::Arg::new("executable")
+                    .short('e')
+                    .help("Executable to launch, defaults to `arma3_x64.exe`"),
+            ),
+    )
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
@@ -83,7 +91,19 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     std::process::Command::new({
         let mut path = arma3dir.path;
-        path.push("arma3_x64.exe");
+        if let Some(exe) = matches.get_one::<String>("executable") {
+            let exe = PathBuf::from(exe);
+            if exe.is_absolute() {
+                path = exe;
+            } else {
+                path.push(exe);
+            }
+            if cfg!(windows) {
+                path.set_extension("exe");
+            }
+        } else {
+            path.push(config.hemtt().launch().executable());
+        }
         path.display().to_string()
     })
     .args(args)

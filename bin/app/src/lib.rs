@@ -28,11 +28,8 @@ pub fn cli() -> Command {
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
         .subcommand(commands::release::cli())
-        .subcommand(hemtt_bin_internal::cli().name("internal"));
-    #[cfg(windows)]
-    {
-        global = global.subcommand(commands::launch::cli());
-    }
+        .subcommand(hemtt_bin_internal::cli().name("internal"))
+        .subcommand(commands::launch::cli());
     global = global.arg(
         clap::Arg::new("threads")
             .global(true)
@@ -106,7 +103,6 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
             commands::release::execute(matches).map_err(std::convert::Into::into)
         }
         Some(("internal", matches)) => hemtt_bin_internal::execute(matches),
-        #[cfg(windows)]
         Some(("launch", matches)) => {
             commands::launch::execute(matches).map_err(std::convert::Into::into)
         }

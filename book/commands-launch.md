@@ -5,6 +5,9 @@
 Usage: hemtt.exe launch [OPTIONS]
 
 Options:
+    <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
+        Arma 3 executable to launch
+
     <a href="commands-dev.md#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
 
@@ -47,6 +50,7 @@ parameters = [
     "-debug",
     "-filePatching",
 ]
+executable = "arma3" # Default: "arma3_x64"
 ```
 
 
@@ -57,3 +61,18 @@ A list of workshop IDs to launch with your mod. These are not subscribed to, and
 ### parameters
 
 A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters) to pass to the Arma 3 executable.
+
+### executable
+
+The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x64`. Do not include the `.exe` extension, it will be added automatically on Windows. Only paths relative to the Arma 3 directory are supported.
+
+## Options
+
+### -e, --executable <executable>
+
+The Arma 3 executable to launch. Overrides the `executable` option in the configuration file.
+
+```bash
+hemtt launch -e arma3profiling_x64 # Relative to the Arma 3 directory
+hemtt launch -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
+```
