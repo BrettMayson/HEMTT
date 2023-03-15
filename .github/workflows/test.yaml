@@ -12,6 +12,7 @@ jobs:
     runs-on: ${{ matrix.os.runner }}
     name: ${{ matrix.os.name }} / ${{ matrix.toolchain }}
     strategy:
+      fail-fast: false
       matrix:
         os: 
           - runner: ubuntu-latest
@@ -25,6 +26,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
+      steps:
+      - name: Install Arma 3 Tools
+        if: startsWith(matrix.os.runner, 'windows')
+        uses: arma-actions/arma3-tools@master
+        with:
+          toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Install ${{ matrix.toolchain }}
         uses: dtolnay/rust-toolchain@master
         with:
