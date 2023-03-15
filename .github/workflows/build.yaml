@@ -8,17 +8,19 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os.name }}
+    runs-on: ${{ matrix.os.runner }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux-x64
+        os: 
+          - runner: ubuntu-latest
+            name: ubuntu
+            artifact: linux-x64
             exe: hemtt
-          - os: windows-latest
-            name: windows-x64
+          - runner: windows-latest
+            name: windows
+            artifact: windows-x64
             exe: hemtt.exe
     steps:
       - uses: actions/checkout@v3
@@ -39,11 +41,11 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.name }}
-          path: target/release/${{ matrix.exe }}
+          name: ${{ matrix.os.name }}
+          path: target/release/${{ matrix.os.exe }}
 
   mods:
-    name:  ${{ matrix.os.runner }} / ${{ matrix.mod.name }}
+    name:  ${{ matrix.os.name }} / ${{ matrix.mod.name }}
     runs-on: ${{ matrix.os.runner }}
     needs:
       - build
@@ -52,9 +54,11 @@ jobs:
       matrix:
         os: 
           - runner: ubuntu-latest
-            name: linux-x64
+            name: ubuntu
+            artifact: linux-x64
           - runner: windows-latest
-            name: windows-x64
+            name: windows
+            artifact: windows-x64
         mod:
           - name: Advanced Combat Environment
             repo: acemod/ACE3
@@ -68,7 +72,7 @@ jobs:
       - name: Download HEMTT
         uses: actions/download-artifact@v3
         with:
-          name: ${{ matrix.os.name }}
+          name: ${{ matrix.os.artifact }}
           path: hemtt
       - name: Checkout
         uses: actions/checkout@v3

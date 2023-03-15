@@ -9,11 +9,17 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} / ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os.runner }}
+    name: ${{ matrix.os.name }} / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: 
+          - runner: ubuntu-latest
+            name: ubuntu
+          - runner: windows-latest
+            name: windows
+          - runner: macos-latest
+            name: macos
         toolchain: [stable, beta]
     steps:
       - uses: actions/checkout@v3
