@@ -17,9 +17,15 @@ pub fn cli() -> Command {
 
 pub fn add_args(cmd: Command) -> Command {
     cmd.arg(
-        clap::Arg::new("no-binarize")
-            .long("no-binarize")
+        clap::Arg::new("no-bin")
+            .long("no-bin")
             .help("Do not binarize the project")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        clap::Arg::new("no-rap")
+            .long("no-rap")
+            .help("Do not rapify (cpp, rvmat)")
             .action(ArgAction::SetTrue),
     )
 }
@@ -28,8 +34,10 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<Lint>::default());
-    executor.add_module(Box::<Rapifier>::default());
-    if matches.get_one::<bool>("no-binarize") != Some(&true) {
+    if matches.get_one::<bool>("no-rap") != Some(&true) {
+        executor.add_module(Box::<Rapifier>::default());
+    }
+    if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
     executor.add_module(Box::<Hooks>::default());

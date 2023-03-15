@@ -127,11 +127,11 @@ impl Module for Binarize {
                         "binarize failed with code {:?}",
                         output.status.code().unwrap_or(-1)
                     );
-                    counter.fetch_add(1, Ordering::SeqCst);
+                    counter.fetch_add(1, Ordering::Relaxed);
                 }
             }
         }
-        info!("Binarized {} files", counter.load(Ordering::SeqCst));
+        info!("Binarized {} files", counter.load(Ordering::Relaxed));
         Ok(())
     }
 }

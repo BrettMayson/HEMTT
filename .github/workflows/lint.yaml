@@ -7,24 +7,41 @@ on:
     branches: [ main ]
 
 jobs:
+  jobs:
   fmt:
     runs-on: ubuntu-latest
+    name: stable / fmt
     steps:
-      - uses: actions/checkout@v2
-      - name: rustfmt
-        run: cargo fmt -- --check
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: cargo fmt --check
+        run: cargo fmt --check
 
   clippy:
     runs-on: ubuntu-latest
+    name: ${{ matrix.toolchain }} / clippy
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable, beta]
     steps:
-      - uses: actions/checkout@v1
-      - run: rustup component add clippy
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v3
         with:
-          key: clippy
-      - uses: actions-rs/clippy-check@v1
+          submodules: true
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: clippy
+      - name: cargo clippy
+        uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
-        continue-on-error: true

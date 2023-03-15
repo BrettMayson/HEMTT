@@ -53,13 +53,13 @@ impl Module for Lint {
                     if let Err(e) = preprocess_file(entry.as_str(), &resolver) {
                         Err(e.into())
                     } else {
-                        counter.fetch_add(1, Ordering::SeqCst);
+                        counter.fetch_add(1, Ordering::Relaxed);
                         Ok(())
                     }
                 })
                 .collect::<Result<_, hemtt_bin_error::Error>>()?;
         }
-        info!("Linted {} files", counter.load(Ordering::SeqCst));
+        info!("Linted {} files", counter.load(Ordering::Relaxed));
         Ok(())
     }
 }

@@ -3,9 +3,8 @@ use hemtt_bin_error::Error;
 #[allow(clippy::module_name_repetitions)]
 #[cfg(windows)]
 pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
-    use std::{process::Command, time::Duration};
+    use std::process::Command;
     trace!("link {:?} => {:?}", link, target);
-    std::thread::sleep(Duration::from_millis(100));
     let out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")

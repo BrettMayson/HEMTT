@@ -48,13 +48,13 @@ impl Module for Rapifier {
                         }
                         debug!("rapifying {}", entry.as_str());
                         rapify(entry.clone(), ctx, &resolver)?;
-                        counter.fetch_add(1, Ordering::SeqCst);
+                        counter.fetch_add(1, Ordering::Relaxed);
                     }
                 }
                 Ok(())
             })
             .collect::<Result<(), Error>>()?;
-        info!("Rapified {} addon configs", counter.load(Ordering::SeqCst));
+        info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
         Ok(())
     }
 }

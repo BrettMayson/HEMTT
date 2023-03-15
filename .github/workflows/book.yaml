@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   deploy-book:
-    name: Build Book
+    name: Deploy Book
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -31,11 +31,11 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
         .par_iter()
         .map(|addon| {
             _build(ctx, addon, collapse, &version)?;
-            counter.fetch_add(1, Ordering::SeqCst);
+            counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
         .collect::<Result<Vec<_>, Error>>()?;
-    info!("Built {} PBOs", counter.load(Ordering::SeqCst));
+    info!("Built {} PBOs", counter.load(Ordering::Relaxed));
     Ok(())
 }
 

@@ -192,9 +192,9 @@ impl Module for ArmaScriptCompiler {
             let mut data = Vec::new();
             f.read_to_end(&mut data)?;
             to.create_file()?.write_all(&data)?;
-            counter.fetch_add(1, Ordering::SeqCst);
+            counter.fetch_add(1, Ordering::Relaxed);
         }
-        info!("Compiled {} sqf files", counter.load(Ordering::SeqCst));
+        info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(())
     }
 }

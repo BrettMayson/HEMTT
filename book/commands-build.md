@@ -6,6 +6,12 @@
 Usage: hemtt.exe build [OPTIONS]
 
 Options:
+    <a href="#--no-bin">--no-bin</a>
+        Do not binarize files
+
+    <a href="#--no-rapify">--no-rap</a>
+        Do not rapify files
+
     <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
@@ -33,3 +39,13 @@ optional_mod_folders = false # Default: true
 ### optional_mod_folders
 
 By default, `hemtt build` will create separate mods for each optional mod folder.
+
+## Options
+
+### --no-bin
+
+Do not binarize any files. They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext` will still be rapified.
+
+### --no-rap
+
+Do not rapify any files. They will be copied directly into the PBO.
