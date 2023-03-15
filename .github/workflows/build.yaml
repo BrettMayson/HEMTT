@@ -37,7 +37,7 @@ jobs:
           command: build
           args: --release
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
           path: target/release/${{ matrix.exe }}
