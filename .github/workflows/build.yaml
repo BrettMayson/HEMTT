@@ -21,7 +21,7 @@ jobs:
             name: windows-x64
             exe: hemtt.exe
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -66,12 +66,12 @@ jobs:
             commit: fab121ce624b6656dd7afd2d29429aa762b28813
     steps:
       - name: Download HEMTT
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.os.name }}
           path: hemtt
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ matrix.repo }}
           path: ${{ matrix.path }}
