@@ -41,7 +41,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.os.name }}
+          name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
 
   mods:
