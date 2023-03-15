@@ -88,7 +88,7 @@ jobs:
         if: startsWith(matrix.os.runner, 'windows')
         run: |
           cd hemtt && copy hemtt.exe C:\Windows\System32\hemtt.exe
-      - name: `hemtt dev` on ${{ matrix.mod.name }}
+      - name: Run `hemtt dev` on ${{ matrix.mod.name }}
         run: |
           cd ${{ matrix.mod.path }} && hemtt dev
       - name: Install Arma 3 Tools
@@ -96,6 +96,6 @@ jobs:
         uses: arma-actions/arma3-tools@master
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
-      - name: `hemtt build` on ${{ matrix.mod.name }}
+      - name: Run `hemtt build` on ${{ matrix.mod.name }}
         run: |
           cd ${{ matrix.mod.path }} && hemtt build
