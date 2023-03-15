@@ -21,7 +21,7 @@ jobs:
             name: windows-x64
             exe: hemtt.exe
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -71,7 +71,7 @@ jobs:
           name: ${{ matrix.os.name }}
           path: hemtt
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ matrix.repo }}
           path: ${{ matrix.path }}
