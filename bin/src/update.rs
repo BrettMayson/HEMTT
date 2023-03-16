@@ -34,9 +34,8 @@ pub fn check() -> Result<Option<String>, Error> {
         let mut file = std::fs::File::create(&tmp_latest)?;
         file.write_all(release.tag_name.as_bytes())?;
     }
-    // let current = env!("CARGO_PKG_VERSION");
-    let current = "v0.9.0".to_string();
-    let Ok(current) = semver::Version::parse(&current[1..]) else {
+    let current = env!("CARGO_PKG_VERSION");
+    let Ok(current) = semver::Version::parse(current) else {
         return Err(Error::Update(String::from("Failed to parse current version")));
     };
     let mut file = std::fs::File::open(&tmp_latest)?;
