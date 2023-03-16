@@ -5,6 +5,15 @@
 Usage: hemtt.exe release [OPTIONS]
 
 Options:
+    <a href="#--no-sign">--no-sign</a>
+        Do not sign the PBOs
+
+    <a href="commands-build.md#--no-bin">--no-bin</a>
+        Do not binarize files
+
+    <a href="commands-build.md#--no-rapify">--no-rap</a>
+        Do not rapify files
+
     <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
@@ -27,3 +36,22 @@ It will create two zip archives in the `releases` folder:
 ## Configuration
 
 `hemtt release` is built the same way as [`hemtt build`](commands-build.md), and will use its configuration.
+
+```toml
+[hemtt.release]
+sign = false # Default: true
+```
+
+### sign
+
+If `sign` is set to `false`, a `bikey` will not be created, and the PBOs will not be signed.
+
+```admonish danger
+All public releases of your mods should be signed. This will be a requirement of many communities, and is an important security feature.
+```
+
+## Options
+
+### `--no-sign`
+
+Do not sign the PBOs or create a `bikey`.

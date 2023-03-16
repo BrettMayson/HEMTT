@@ -54,7 +54,7 @@ pub fn check() -> Result<Option<String>, Error> {
 use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct Release {
+#[derive(Serialize, Deserialize)]
+struct Release {
     pub tag_name: String,
 }

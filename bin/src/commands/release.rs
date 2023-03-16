@@ -11,13 +11,20 @@ pub fn cli() -> Command {
             .about("Release the project")
             .long_about("Release your project"),
     )
+    .arg(
+        clap::Arg::new("no-sign")
+            .long("no-sign")
+            .help("Do not sign the PBOs"),
+    )
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let ctx = Context::new("release")?;
     let mut executor = Executor::new(&ctx);
 
-    executor.add_module(Box::new(Sign::new()));
+    if matches.get_one::<bool>("no-sign") != Some(&true) && ctx.config().hemtt().release().sign() {
+        executor.add_module(Box::new(Sign::new()));
+    }
 
     build::execute(matches, &mut executor)?;
 

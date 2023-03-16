@@ -123,6 +123,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     }
 }
 
+#[must_use]
 pub fn is_ci() -> bool {
     // TODO: replace with crate if a decent one comes along
     let checks = vec![

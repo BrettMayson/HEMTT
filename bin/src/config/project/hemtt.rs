@@ -15,6 +15,9 @@ pub struct Features {
     build: BuildOptions,
 
     #[serde(default)]
+    release: ReleaseOptions,
+
+    #[serde(default)]
     /// Can PBO prefixes have a leading slash?
     ///
     /// Default: false
@@ -40,6 +43,11 @@ impl Features {
     #[must_use]
     pub const fn build(&self) -> &BuildOptions {
         &self.build
+    }
+
+    #[must_use]
+    pub const fn release(&self) -> &ReleaseOptions {
+        &self.release
     }
 
     #[must_use]
@@ -118,6 +126,25 @@ impl BuildOptions {
     pub const fn optional_mod_folders(&self) -> bool {
         if let Some(optional) = self.optional_mod_folders {
             optional
+        } else {
+            true
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ReleaseOptions {
+    #[serde(default)]
+    /// Should the PBOs be signed?
+    /// Default: true
+    sign: Option<bool>,
+}
+
+impl ReleaseOptions {
+    #[must_use]
+    pub const fn sign(&self) -> bool {
+        if let Some(sign) = self.sign {
+            sign
         } else {
             true
         }
