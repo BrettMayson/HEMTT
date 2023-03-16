@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["Build"]
     tags:
-    - v1.*
+      - v*
     types:
       - completed
 
