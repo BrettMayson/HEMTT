@@ -7,14 +7,14 @@ license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
 
 [dependencies]
-hemtt-error = { path = "../libs/error" }
+hemtt-error = { path = "../libs/error", version = "1.0.0" }
 
-hemtt-config = { path = "../libs/config" }
-hemtt-pbo = { path = "../libs/pbo" }
-hemtt-preprocessor = { path = "../libs/preprocessor" }
-hemtt-tokens = { path = "../libs/tokens" }
-hemtt-signing = { path = "../libs/signing" }
-hemtt-version = { path = "../libs/version" }
+hemtt-config = { path = "../libs/config", version = "1.0.0" }
+hemtt-pbo = { path = "../libs/pbo", version = "1.0.0" }
+hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
+hemtt-tokens = { path = "../libs/tokens", version = "1.0.0" }
+hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
+hemtt-version = { path = "../libs/version", version = "1.0.0" }
 
 ansi_term = "0.12.1"
 anyhow = "1.0.69"
@@ -28,19 +28,21 @@ glob = "0.3.1"
 num_cpus = "1.15.0"
 peekmore = { workspace = true }
 rayon = "1.7.0"
+reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 rhai = "1.12.0"
 rust-embed = "6.6.0"
+semver = "1.0.17"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 steamlocate = { git = "https://github.com/LovecraftianHorror/steamlocate-rs/", branch = "fully-switch-from-steamy-vdf" }
 time = "0.3.20"
+toml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.16", features = ["json"] }
 tracing-tracy = "0.10.2"
 vfs = { workspace = true }
 walkdir = { workspace = true }
 zip = { workspace = true }
-toml = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.11.0"

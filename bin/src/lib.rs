@@ -16,6 +16,7 @@ mod error;
 mod executor;
 mod logging;
 mod modules;
+mod update;
 mod utils;
 
 #[must_use]
@@ -76,6 +77,16 @@ pub fn cli() -> Command {
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
         logging::init(matches.get_count("verbosity"), matches.get_flag("trace"));
+    }
+
+    match update::check() {
+        Ok(Some(version)) => {
+            info!("HEMTT {version} is available, please update");
+        }
+        Err(e) => {
+            error!("Failed to check for updates: {e}");
+        }
+        _ => {}
     }
 
     trace!("version: {}", env!("CARGO_PKG_VERSION"));

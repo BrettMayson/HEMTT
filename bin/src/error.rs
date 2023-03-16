@@ -40,6 +40,9 @@ pub enum Error {
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
 
+    #[error("Update error: {0}")]
+    Update(String),
+
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
     #[error("Glob Error: {0}")]
