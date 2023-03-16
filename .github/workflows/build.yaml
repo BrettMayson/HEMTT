@@ -30,7 +30,7 @@ jobs:
           toolchain: stable
           override: true
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
         with:
           key: build
       - name: Compile
@@ -45,7 +45,7 @@ jobs:
           path: target/release/${{ matrix.os.exe }}
 
   mods:
-    name:  ${{ matrix.os.name }} / ${{ matrix.mod.name }}
+    name:  ${{ matrix.os.name }} / ${{ matrix.mod.repo }}
     runs-on: ${{ matrix.os.runner }}
     needs:
       - build
@@ -60,14 +60,12 @@ jobs:
             name: windows
             artifact: windows-x64
         mod:
-          - name: Advanced Combat Environment
-            repo: acemod/ACE3
-            path: ace3
+          - repo: acemod/ACE3
             commit: d87e16e87ecf2db9429b19f5ac4cf06bab7aaad6
-          - name: POTATO
-            repo: BourbonWarfare/POTATO
-            path: potato
+          - repo: BourbonWarfare/POTATO
             commit: fab121ce624b6656dd7afd2d29429aa762b28813
+          - repo: ArmaForces/Mods
+            commit: 6871517d4c2f720cea62b767eb7ec422bf712f51
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v3
@@ -78,7 +76,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ${{ matrix.mod.repo }}
-          path: ${{ matrix.mod.path }}
+          path: mod
           ref: ${{ matrix.mod.commit }}
       - name: Install Linux
         if: startsWith(matrix.os.runner, 'ubuntu')
@@ -88,14 +86,14 @@ jobs:
         if: startsWith(matrix.os.runner, 'windows')
         run: |
           cd hemtt && copy hemtt.exe C:\Windows\System32\hemtt.exe
-      - name: Run `hemtt dev` on ${{ matrix.mod.name }}
+      - name: Run `hemtt dev` on ${{ matrix.mod.repo }}
         run: |
-          cd ${{ matrix.mod.path }} && hemtt dev
+          cd mod && hemtt dev
       - name: Install Arma 3 Tools
         if: startsWith(matrix.os.runner, 'windows')
         uses: arma-actions/arma3-tools@master
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
-      - name: Run `hemtt build` on ${{ matrix.mod.name }}
+      - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         run: |
-          cd ${{ matrix.mod.path }} && hemtt build
+          cd mod && hemtt build

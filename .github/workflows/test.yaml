@@ -21,12 +21,13 @@ jobs:
             name: windows
           - runner: macos-latest
             name: macos
-        toolchain: [stable, beta]
+        toolchain: 
+          - stable
+          - beta
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      steps:
       - name: Install Arma 3 Tools
         if: startsWith(matrix.os.runner, 'windows')
         uses: arma-actions/arma3-tools@master
