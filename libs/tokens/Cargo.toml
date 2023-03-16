@@ -2,6 +2,8 @@
 name = "hemtt-tokens"
 version = "1.0.0"
 edition = "2021"
+description = "A token library for hemtt"
+license = "GPL-2.0"
 
 [dependencies]
 peekmore = { workspace = true }

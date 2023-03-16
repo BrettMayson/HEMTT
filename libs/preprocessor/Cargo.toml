@@ -2,11 +2,13 @@
 name = "hemtt-preprocessor"
 version = "1.0.0"
 edition = "2021"
+description = "A preprocessor library for hemtt"
+license = "GPL-2.0"
 
 [dependencies]
-hemtt-error = { path = "../error" }
+hemtt-error = { path = "../error", version = "1.0.0" }
 
-hemtt-tokens = { path = "../tokens" }
+hemtt-tokens = { path = "../tokens", version = "1.0.0" }
 
 peekmore = { workspace = true }
 pest = { workspace = true }

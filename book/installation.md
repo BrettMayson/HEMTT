@@ -20,10 +20,14 @@ The HEMTT executable can be placed in any directory on your system, and added to
 
 HEMTT can then be ran from any terminal with `hemtt`.
 
+## Crates
+
+If you have [Rust](https://www.rust-lang.org/) installed, you can install HEMTT from [crates.io](https://crates.io/crates/hemtt) with `cargo install hemtt`.
+
 ## Compile from Source
 
 HEMTT can be compiled from [source](https://github.com/brettmayson/HEMTT) using [Rust](https://www.rust-lang.org/).
 
 HEMTT usually requires the latest stable version of Rust, older versions may work but are not supported.
 
-You can use the `cargo install --path bin/app` command to install HEMTT while in the root of the repository.
+You can use the `cargo install --path bin` command to install HEMTT while in the root of the repository.
