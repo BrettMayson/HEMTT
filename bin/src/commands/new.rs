@@ -27,16 +27,16 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
 
     println!("Example: Advanced Banana Environment");
-    let full_name: String = Input::new().with_prompt("Project Name: ").interact_text()?;
+    let full_name: String = Input::new().with_prompt("Project Name").interact_text()?;
 
     println!("Example: ABE Team");
-    let author: String = Input::new().with_prompt("Author: ").interact_text()?;
+    let author: String = Input::new().with_prompt("Author").interact_text()?;
 
     println!("Example: abe");
-    let prefix: String = Input::new().with_prompt("Prefix: ").interact_text()?;
+    let prefix: String = Input::new().with_prompt("Prefix").interact_text()?;
 
     let mainprefix: String = Input::new()
-        .with_prompt("Main Prefix: ")
+        .with_prompt("Main Prefix")
         .with_initial_text("z")
         .interact_text()?;
 

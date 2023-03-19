@@ -2,9 +2,8 @@ name: Mods
 
 on:
   workflow_run:
-    workflows: ["Build"]
-    tags:
-      - v*
+    workflows: 
+      - Build
     types:
       - completed
 
