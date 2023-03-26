@@ -77,7 +77,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    pub fn release(&self) -> Result<(), Error> {
+    pub fn release(&self, archive: bool) -> Result<(), Error> {
         trace!("phase: pre_release (start)");
         for module in &self.modules {
             trace!("phase: pre_release ({}) (start)", module.name());
@@ -86,7 +86,9 @@ impl<'a> Executor<'a> {
         }
         trace!("phase: pre_release (done)");
         trace!("phase: release (start)");
-        modules::archive::release(self.ctx)?;
+        if archive {
+            modules::archive::release(self.ctx)?;
+        }
         trace!("phase: release (done)");
         trace!("phase: post_release (start)");
         for module in &self.modules {

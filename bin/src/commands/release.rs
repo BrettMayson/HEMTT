@@ -16,6 +16,11 @@ pub fn cli() -> Command {
             .long("no-sign")
             .help("Do not sign the PBOs"),
     )
+    .arg(
+        clap::Arg::new("no-archive")
+            .long("no-archive")
+            .help("Do not create an archive of the release"),
+    )
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
@@ -26,9 +31,15 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         executor.add_module(Box::new(Sign::new()));
     }
 
+    let archive = if matches.get_one::<bool>("no-archive") == Some(&true) {
+        false
+    } else {
+        ctx.config().hemtt().release().archive()
+    };
+
     build::execute(matches, &mut executor)?;
 
-    executor.release()?;
+    executor.release(archive)?;
 
     Ok(())
 }

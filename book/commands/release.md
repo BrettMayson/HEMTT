@@ -8,6 +8,9 @@ Options:
     <a href="#--no-sign">--no-sign</a>
         Do not sign the PBOs
 
+    <a href="#--no-archive">--no-archive</a>
+        Do not create a zip archive of the release
+
     <a href="commands-build.md#--no-bin">--no-bin</a>
         Do not binarize files
 
@@ -40,6 +43,7 @@ It will create two zip archives in the `releases` folder:
 ```toml
 [hemtt.release]
 sign = false # Default: true
+archive = false # Default: true
 ```
 
 ### sign
@@ -50,8 +54,16 @@ If `sign` is set to `false`, a `bikey` will not be created, and the PBOs will no
 All public releases of your mods should be signed. This will be a requirement of many communities, and is an important security feature.
 ```
 
+### archive
+
+If `archive` is set to `false`, a zip archive will not be created. The output will be in `.hemttout/release`.
+
 ## Options
 
 ### `--no-sign`
 
 Do not sign the PBOs or create a `bikey`.
+
+### `--no-archive`
+
+Do not create a zip archive of the release. The output will be in `.hemttout/release`.
