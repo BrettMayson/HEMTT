@@ -59,7 +59,7 @@ fn _build(
     let mut pbo = WritablePbo::new();
     let target = ctx.out_folder();
 
-    let pbo_name = addon.pbo_name(&ctx.config().folder_name());
+    let pbo_name = addon.pbo_name(ctx.config().prefix());
 
     let target_pbo = {
         let mut path = match collapse {
@@ -69,7 +69,7 @@ fn _build(
                     if ctx.config().hemtt().build().optional_mod_folders() {
                         target
                             .join("optionals")
-                            .join(format!("@{pbo_name}"))
+                            .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())))
                             .join("addons")
                             .join(pbo_name)
                     } else {
