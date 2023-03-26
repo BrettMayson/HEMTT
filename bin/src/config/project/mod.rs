@@ -98,6 +98,15 @@ impl Configuration {
         &self.lint
     }
 
+    /// The folder name to use for the release
+    /// Default: `@{prefix}`
+    pub fn folder_name(&self) -> String {
+        self.hemtt()
+            .release()
+            .folder()
+            .map_or_else(|| self.prefix().to_string(), |folder| folder)
+    }
+
     /// Load a configuration from a file.
     ///
     /// # Errors

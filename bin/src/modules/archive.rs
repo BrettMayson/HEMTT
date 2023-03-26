@@ -29,7 +29,11 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             if path.is_empty() {
                 continue;
             }
-            let dir = format!("@{}/{}", ctx.config().prefix(), path.replace('\\', "/"));
+            let dir = format!(
+                "@{}/{}",
+                ctx.config().folder_name(),
+                path.replace('\\', "/")
+            );
             debug!("zip: creating directory {:?}", dir);
             zip.add_directory(dir, options)?;
             continue;
@@ -39,7 +43,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             .expect("We are in the HEMTT folder, the prefix should always exist");
         let file = format!(
             "@{}/{}",
-            ctx.config().prefix(),
+            ctx.config().folder_name(),
             name.display().to_string().replace('\\', "/")
         );
         debug!("zip: adding file {:?}", file);

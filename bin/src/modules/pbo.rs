@@ -59,7 +59,7 @@ fn _build(
     let mut pbo = WritablePbo::new();
     let target = ctx.out_folder();
 
-    let pbo_name = addon.pbo_name(ctx.config().prefix());
+    let pbo_name = addon.pbo_name(&ctx.config().folder_name());
 
     let target_pbo = {
         let mut path = match collapse {
