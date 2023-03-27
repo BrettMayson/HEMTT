@@ -37,7 +37,7 @@ impl Module for Sign {
                 .join(format!("{authority}.bikey")),
         )?)?;
         ctx.addons().to_vec().iter().try_for_each(|addon| {
-            let pbo_name = addon.pbo_name(&ctx.config().prefix());
+            let pbo_name = addon.pbo_name(ctx.config().prefix());
             let (mut pbo, sig_location, key) = match addon.location() {
                 Location::Addons => {
                     let target_pbo = {
