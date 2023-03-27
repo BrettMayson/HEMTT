@@ -37,7 +37,7 @@ impl Module for Sign {
                 .join(format!("{authority}.bikey")),
         )?)?;
         ctx.addons().to_vec().iter().try_for_each(|addon| {
-            let pbo_name = addon.pbo_name(&ctx.config().folder_name());
+            let pbo_name = addon.pbo_name(&ctx.config().prefix());
             let (mut pbo, sig_location, key) = match addon.location() {
                 Location::Addons => {
                     let target_pbo = {
@@ -59,7 +59,7 @@ impl Module for Sign {
                             let mod_root = ctx
                                 .out_folder()
                                 .join("optionals")
-                                .join(format!("@{pbo_name}"));
+                                .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())));
                             create_dir_all(mod_root.join("keys"))?;
                             key.to_public_key().write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),
