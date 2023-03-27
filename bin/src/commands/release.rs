@@ -1,4 +1,4 @@
-use clap::{ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command};
 
 use crate::{context::Context, error::Error, executor::Executor, modules::Sign};
 
@@ -14,12 +14,14 @@ pub fn cli() -> Command {
     .arg(
         clap::Arg::new("no-sign")
             .long("no-sign")
-            .help("Do not sign the PBOs"),
+            .help("Do not sign the PBOs")
+            .action(ArgAction::SetTrue),
     )
     .arg(
         clap::Arg::new("no-archive")
             .long("no-archive")
-            .help("Do not create an archive of the release"),
+            .help("Do not create an archive of the release")
+            .action(ArgAction::SetTrue),
     )
 }
 
