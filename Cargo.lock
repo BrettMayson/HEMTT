@@ -2026,8 +2026,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "steamlocate"
-version = "2.0.0"
-source = "git+https://github.com/LovecraftianHorror/steamlocate-rs/?branch=fully-switch-from-steamy-vdf#9da0b9a13474a6710d0e980fb3737ffeb6f6f05b"
+version = "2.0.0-alpha.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b1568c4a70a26c4373fe1131ffa4eff055459631b6e40c6bc118615f2d870c3"
 dependencies = [
  "dirs",
  "keyvalues-parser",

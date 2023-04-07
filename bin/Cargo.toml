@@ -34,7 +34,7 @@ rust-embed = "6.6.0"
 semver = "1.0.17"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-steamlocate = { git = "https://github.com/LovecraftianHorror/steamlocate-rs/", branch = "fully-switch-from-steamy-vdf" }
+steamlocate = "2.0.0-alpha.0"
 time = "0.3.20"
 toml = { workspace = true }
 tracing = { workspace = true }
