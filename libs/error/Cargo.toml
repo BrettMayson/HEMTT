@@ -9,4 +9,4 @@ license = "GPL-2.0"
 hemtt-tokens = { path = "../tokens", version = "1.0.0" }
 
 colored = { workspace = true }
-thiserror = "1.0.39"
+thiserror = "1.0.40"
