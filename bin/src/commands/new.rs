@@ -8,7 +8,7 @@ use crate::{error::Error, modules::Licenses};
 
 #[must_use]
 pub fn cli() -> Command {
-    Command::new("new").about("Create a new mod").arg(
+    Command::new("new").about("Create a new project").arg(
         clap::Arg::new("name")
             .help("Name of the new mod")
             .required(true),

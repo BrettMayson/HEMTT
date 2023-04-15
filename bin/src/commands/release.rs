@@ -8,8 +8,8 @@ use super::build;
 pub fn cli() -> Command {
     build::add_args(
         Command::new("release")
-            .about("Release the project")
-            .long_about("Release your project"),
+            .about("Build the project for release")
+            .long_about("Build your project for full release, with signing and archiving."),
     )
     .arg(
         clap::Arg::new("no-sign")
