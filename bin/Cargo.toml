@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.3.0"
+version = "1.3.1-dev"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -42,6 +42,7 @@ tracing-subscriber = { version = "0.3.16", features = ["json"] }
 tracing-tracy = "0.10.2"
 vfs = { workspace = true }
 walkdir = { workspace = true }
+whoami = "1.4.0"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

@@ -33,7 +33,15 @@ impl Context {
             );
             config
         };
-        let tmp = temp_dir().join("hemtt").join(
+        let tmp = {
+            let mut tmp = temp_dir().join("hemtt");
+            // on linux add the user to the path for multiple users
+            if !cfg!(target_os = "windows") {
+                tmp = tmp.join(whoami::username());
+            }
+            tmp
+        }
+        .join(
             std::env::current_dir()
                 .unwrap()
                 .components()
