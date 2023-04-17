@@ -59,7 +59,7 @@ impl Module for Sign {
                             let mod_root = ctx
                                 .out_folder()
                                 .join("optionals")
-                                .join(format!("@{pbo_name}"));
+                                .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())));
                             create_dir_all(mod_root.join("keys"))?;
                             key.to_public_key().write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),

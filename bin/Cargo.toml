@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.2.0"
+version = "1.3.1"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -28,13 +28,13 @@ glob = "0.3.1"
 num_cpus = "1.15.0"
 peekmore = { workspace = true }
 rayon = "1.7.0"
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+reqwest = { version = "0.11.15", features = ["blocking", "json"] }
 rhai = "1.13.0"
 rust-embed = "6.6.0"
 semver = "1.0.17"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-steamlocate = { git = "https://github.com/LovecraftianHorror/steamlocate-rs/", branch = "fully-switch-from-steamy-vdf" }
+steamlocate = "2.0.0-alpha.0"
 time = "0.3.20"
 toml = { workspace = true }
 tracing = { workspace = true }
@@ -42,7 +42,8 @@ tracing-subscriber = { version = "0.3.16", features = ["json"] }
 tracing-tracy = "0.10.2"
 vfs = { workspace = true }
 walkdir = { workspace = true }
+whoami = "1.4.0"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.11.0"
+winreg = "0.50.0"

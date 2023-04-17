@@ -135,16 +135,38 @@ impl BuildOptions {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ReleaseOptions {
     #[serde(default)]
+    /// The folder name of the project
+    /// Default: `prefix`
+    folder: Option<String>,
+    #[serde(default)]
     /// Should the PBOs be signed?
     /// Default: true
     sign: Option<bool>,
+    #[serde(default)]
+    /// Create an archive of the release
+    /// Default: true
+    archive: Option<bool>,
 }
 
 impl ReleaseOptions {
     #[must_use]
+    pub fn folder(&self) -> Option<String> {
+        self.folder.clone()
+    }
+
+    #[must_use]
     pub const fn sign(&self) -> bool {
         if let Some(sign) = self.sign {
             sign
+        } else {
+            true
+        }
+    }
+
+    #[must_use]
+    pub const fn archive(&self) -> bool {
+        if let Some(archive) = self.archive {
+            archive
         } else {
             true
         }

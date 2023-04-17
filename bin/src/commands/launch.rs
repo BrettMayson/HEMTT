@@ -11,7 +11,8 @@ use super::dev;
 pub fn cli() -> Command {
     dev::add_args(
         Command::new("launch")
-            .about("Launch Arma 3 with your mod and dependencies.")
+            .about("Test your project")
+            .long_about("Builds your project in dev mode and launches Arma 3 with file patching enabled, loading your mod and any workshop mods.")
             .arg(
                 clap::Arg::new("executable")
                     .short('e')

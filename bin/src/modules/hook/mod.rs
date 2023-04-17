@@ -1,3 +1,5 @@
+use std::ffi::OsString;
+
 use ::rhai::{packages::Package, Engine, Scope};
 
 use crate::{context::Context, error::Error};
@@ -65,30 +67,36 @@ impl Hooks {
         }
         let scope = scope(ctx, vfs)?;
         let mut engine = engine(vfs);
-        for file in folder.read_dir()? {
+        let mut entries = folder.read_dir()?.collect::<Vec<_>>();
+        entries.sort_by_key(|x| {
+            x.as_ref()
+                .map_or_else(|_| OsString::new(), std::fs::DirEntry::file_name)
+        });
+        for file in entries {
             let file = file?;
-            if file.file_type()?.is_file() {
-                info!("Running hook: {}", file.path().display());
-                let mut scope = scope.clone();
-                let name1 = format!(
-                    "{}/{}",
-                    name,
-                    file.file_name().to_str().expect("Invalid file name")
-                );
-                let name2 = name1.clone();
-                engine.on_debug(move |x, src, pos| {
-                    src.map_or_else(
-                        || debug!("[{name1}] {pos}: {x}"),
-                        |src| debug!("[{name1}] {src}:{pos}: {x}"),
-                    );
-                });
-                engine.on_print(move |s| {
-                    info!("[{name2}] {s}");
-                });
-                engine
-                    .run_with_scope(&mut scope, &std::fs::read_to_string(file.path())?)
-                    .unwrap();
+            if !file.file_type()?.is_file() {
+                continue;
             }
+            info!("Running hook: {}", file.path().display());
+            let mut scope = scope.clone();
+            let name1 = format!(
+                "{}/{}",
+                name,
+                file.file_name().to_str().expect("Invalid file name")
+            );
+            let name2 = name1.clone();
+            engine.on_debug(move |x, src, pos| {
+                src.map_or_else(
+                    || debug!("[{name1}] {pos}: {x}"),
+                    |src| debug!("[{name1}] {src}:{pos}: {x}"),
+                );
+            });
+            engine.on_print(move |s| {
+                info!("[{name2}] {s}");
+            });
+            engine
+                .run_with_scope(&mut scope, &std::fs::read_to_string(file.path())?)
+                .unwrap();
         }
         Ok(())
     }

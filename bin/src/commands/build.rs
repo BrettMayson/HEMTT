@@ -10,8 +10,10 @@ use crate::{
 pub fn cli() -> Command {
     add_args(
         Command::new("build")
-            .about("Build the project")
-            .long_about("Build your project"),
+            .about("Build the project for final testing")
+            .long_about(
+                "Build your project in release mode for testing, without signing for full release.",
+            ),
     )
 }
 

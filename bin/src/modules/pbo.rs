@@ -3,6 +3,7 @@ use std::{
     sync::atomic::{AtomicI16, Ordering},
 };
 
+use git2::Repository;
 use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
 use hemtt_version::Version;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -25,12 +26,21 @@ pub enum Collapse {
 
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
     let version = ctx.config().version().get()?;
+    let git_hash = {
+        if let Ok(repo) = Repository::open(".") {
+            let rev = repo.revparse_single("HEAD")?;
+            let id = rev.id().to_string();
+            Some(id)
+        } else {
+            None
+        }
+    };
     let counter = AtomicI16::new(0);
     ctx.addons()
         .to_vec()
         .par_iter()
         .map(|addon| {
-            _build(ctx, addon, collapse, &version)?;
+            _build(ctx, addon, collapse, &version, git_hash.as_ref())?;
             counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
@@ -44,6 +54,7 @@ fn _build(
     addon: &Addon,
     collapse: Collapse,
     version: &Version,
+    git_hash: Option<&String>,
 ) -> Result<(), Error> {
     let mut pbo = WritablePbo::new();
     let target = ctx.out_folder();
@@ -58,7 +69,7 @@ fn _build(
                     if ctx.config().hemtt().build().optional_mod_folders() {
                         target
                             .join("optionals")
-                            .join(format!("@{pbo_name}"))
+                            .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())))
                             .join("addons")
                             .join(pbo_name)
                     } else {
@@ -117,7 +128,10 @@ fn _build(
                     ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
                 )?;
                 pbo.add_property("prefix", prefix.into_inner());
-                pbo.add_property("version", ctx.config().version().get()?.to_string());
+                pbo.add_property("version", version.to_string());
+                if let Some(hash) = git_hash {
+                    pbo.add_property("git", hash);
+                }
                 continue;
             }
 

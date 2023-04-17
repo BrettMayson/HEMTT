@@ -30,8 +30,8 @@ pub fn cli() -> Command {
         .subcommand(commands::new::cli())
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
-        .subcommand(commands::release::cli())
-        .subcommand(commands::launch::cli());
+        .subcommand(commands::launch::cli())
+        .subcommand(commands::release::cli());
     global = global.arg(
         clap::Arg::new("threads")
             .global(true)

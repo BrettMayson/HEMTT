@@ -12,8 +12,8 @@ use crate::{
 pub fn cli() -> Command {
     add_args(
         Command::new("dev")
-            .about("Mod Development")
-            .long_about("Build your mod for local development and testing."),
+            .about("Build the project for development")
+            .long_about("Build your project for local development and testing. It is built without binarization of .p3d and .rtm files."),
     )
 }
 

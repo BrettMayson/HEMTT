@@ -3,8 +3,12 @@
 An opinionated build system for Arma 3 mods.
 
 <a href="https://github.com/BrettMayson/HEMTT/releases">
-      <img src="https://img.shields.io/github/downloads/BrettMayson/HEMTT/total.svg?style=flat-square&label=Downloads" alt="HEMTT Downloads">
-  </a>
+    <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/brettmayson/hemtt?style=flat-square&label=Latest">
+    <img src="https://img.shields.io/github/downloads/BrettMayson/HEMTT/total.svg?style=flat-square&label=Downloads" alt="HEMTT Downloads">
+</a>
+<a href="https://app.codecov.io/gh/brettmayson/hemtt">
+    <img alt="Codecov" src="https://img.shields.io/codecov/c/github/brettmayson/hemtt?style=flat-square&label=Coverage">
+</a>
 <a href="https://acemod.org/discord">
     <img src="https://img.shields.io/badge/Discord-Join-darkviolet.svg?style=flat-square" alt="ACE3 Discord">
 </a>
