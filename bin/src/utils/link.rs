@@ -5,6 +5,8 @@ use crate::error::Error;
 pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
     use std::process::Command;
     trace!("link {:?} => {:?}", link, target);
+
+    // attempt junction
     let out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")
@@ -12,10 +14,22 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
         .arg(link)
         .arg(target)
         .output()?;
+
     if !out.status.success() {
-        return Err(Error::Link(
-            String::from_utf8_lossy(&out.stderr).to_string(),
-        ));
+        // fall-back to directory symbolic link
+        out = Command::new("cmd")
+            .arg("/C")
+            .arg("mklink")
+            .arg("/D")
+            .arg(link)
+            .arg(target)
+            .output()?;
+
+        if !out.status.success() {
+            return Err(Error::Link(
+                String::from_utf8_lossy(&out.stderr).to_string(),
+            ));
+        }
     }
     Ok(())
 }
