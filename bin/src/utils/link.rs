@@ -7,7 +7,7 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
     trace!("link {:?} => {:?}", link, target);
 
     // attempt junction
-    let out = Command::new("cmd")
+    let mut out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")
         .arg("/J")
