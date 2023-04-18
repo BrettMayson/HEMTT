@@ -13,14 +13,14 @@ members = [
 ]
 
 [workspace.dependencies]
-clap = "4.1.13"
+clap = "4.2.2"
 colored = "2.0.0"
-git2 = "0.16.1"
-peekmore = "1.2.0"
-pest = "2.5.6"
-pest_derive = "2.5.6"
-serde = { version = "1.0.158", features = ["derive"] }
-serde_json = "1.0.94"
+git2 = "0.17.1"
+peekmore = "1.2.1"
+pest = "2.5.7"
+pest_derive = "2.5.7"
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.96"
 sha-1 = "0.10.1"
 toml = "0.7.3"
 tracing = { version = "0.1.37", features = ["attributes"] }
