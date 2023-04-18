@@ -111,7 +111,15 @@ impl Module for Binarize {
                             break;
                         }
                     }
-                    let tmp_sourced = tmp_sourced.unwrap().join(entry.parent().filename());
+                    let tmp_sourced = tmp_sourced.unwrap().join(
+                        entry
+                            .as_str()
+                            .trim_start_matches('/')
+                            .trim_start_matches(&addon.folder().to_string())
+                            .trim_start_matches('/')
+                            .trim_end_matches(&entry.filename())
+                            .replace('/', "\\"),
+                    );
                     let tmp_outed = tmp_outed.unwrap();
 
                     targets.push(BinarizeTarget {
