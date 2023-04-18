@@ -28,7 +28,7 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.vfs().clone());
     } else {
-        scope.push_constant("HEMTT_DIRECTORY", ctx.hemtt_folder().clone());
+        scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
         scope.push_constant("HEMTT_OUTPUT", ctx.out_folder().clone());
     }
     Ok(scope)
