@@ -47,13 +47,6 @@ pub fn cli() -> Command {
             .action(ArgAction::Count)
             .short('v'),
     );
-    global = global.arg(
-        clap::Arg::new("trace")
-            .global(true)
-            .help("Enable trace logging")
-            .action(ArgAction::SetTrue)
-            .long("trace"),
-    );
     #[cfg(debug_assertions)]
     {
         global = global.arg(
@@ -76,7 +69,7 @@ pub fn cli() -> Command {
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
-        logging::init(matches.get_count("verbosity"), matches.get_flag("trace"));
+        logging::init(matches.get_count("verbosity"));
     }
 
     if !is_ci() {

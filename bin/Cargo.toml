@@ -17,7 +17,7 @@ hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
 hemtt-version = { path = "../libs/version", version = "1.0.0" }
 
 ansi_term = "0.12.1"
-anyhow = "1.0.70"
+anyhow = "1.0.71"
 atty = "0.2.14"
 clap = { workspace = true }
 colored = { workspace = true }
@@ -28,8 +28,8 @@ glob = "0.3.1"
 num_cpus = "1.15.0"
 peekmore = { workspace = true }
 rayon = "1.7.0"
-reqwest = { version = "0.11.16", features = ["blocking", "json"] }
-rhai = "1.13.0"
+reqwest = { version = "0.11.17", features = ["blocking", "json"] }
+rhai = "1.14.0"
 rust-embed = "6.6.1"
 semver = "1.0.17"
 serde = { workspace = true, features = ["derive"] }
@@ -38,8 +38,7 @@ steamlocate = "2.0.0-alpha.0"
 time = "0.3.20"
 toml = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.16", features = ["json"] }
-tracing-tracy = "0.10.2"
+tracing-subscriber = { version = "0.3.17", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
 whoami = "1.4.0"

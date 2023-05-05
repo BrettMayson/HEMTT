@@ -21,6 +21,7 @@ pub enum Error {
     AddonOptionalNotFound(String),
 
     #[error("Unable to create link: {0}")]
+    #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
     #[error("Arma 3 not found in Steam")]
     Arma3NotFound,

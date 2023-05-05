@@ -284,7 +284,7 @@ mod tests {
             &Token::builtin(None),
         )
         .unwrap();
-        assert_eq!(number, super::Number::Int64(0x1234_5678_90));
+        assert_eq!(number, super::Number::Int64(0x0012_3456_7890));
     }
 
     #[test]
