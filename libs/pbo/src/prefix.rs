@@ -16,7 +16,12 @@
 use crate::Error;
 
 /// Files that may be used to contain the prefix, case insensitive, convert to lowercase
-pub const FILES: [&str; 3] = ["$pboprefix$", "pboprefix.txt", "$prefix$"];
+pub const FILES: [&str; 4] = [
+    "$pboprefix$",
+    "$pboprefix$.txt",
+    "pboprefix.txt",
+    "$prefix$",
+];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// A prefix for a PBO
