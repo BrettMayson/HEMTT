@@ -3,7 +3,10 @@ use std::io::{Read, Seek, Write};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_io::{ReadExt, WriteExt};
 use hemtt_pbo::{BISignVersion, ReadablePbo};
-use rsa::{BigUint, PublicKeyParts, RsaPrivateKey};
+use rsa::{
+    traits::{PrivateKeyParts, PublicKeyParts},
+    BigUint, RsaPrivateKey,
+};
 use sha1::{Digest, Sha1};
 
 use crate::{error::Error, public::BIPublicKey, signature::BISign};

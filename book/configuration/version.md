@@ -58,7 +58,7 @@ build = 3 # Optional
 
 ## Git Hash
 
-By default, HEMTT will include the fist 8 characters of the current git hash in the version.
+By default, HEMTT will include the first 8 characters of the current git hash in the version.
 Since the git hash is enabled by default, without configuration HEMTT will require a git repository to be present.
 The git hash can be disabled by setting `version.git_hash = 0`, or configured to a different length.
 
