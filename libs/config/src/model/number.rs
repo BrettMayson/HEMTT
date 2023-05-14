@@ -143,6 +143,9 @@ impl Parse for Number {
                         }
                     }));
                 }
+                Symbol::Join => {
+                    tokens.next();
+                }
                 _ => break,
             }
         }
@@ -366,5 +369,20 @@ mod tests {
         )
         .unwrap();
         assert_eq!(number, super::Number::Float32(1e+007));
+    }
+
+    #[test]
+    fn join() {
+        let mut tokens = hemtt_preprocessor::preprocess_string("1##2")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(number, super::Number::Int32(12));
     }
 }
