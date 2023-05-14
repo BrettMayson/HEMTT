@@ -66,7 +66,7 @@ exclude = [
 
 #### include
 
-By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additon files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) can be added to the list.
+By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additional files or [glob paths](https://en.wikipedia.org/wiki/Glob_(programming)) can be added to the list.
 
 **.hemtt/project.toml**
 
@@ -83,7 +83,7 @@ include = [
 
 #### exclude
 
-By default, no files are excluded from PBOs. You can add files or [glob path](https://en.wikipedia.org/wiki/Glob_(programming)) to the list.
+By default, no files are excluded from PBOs. You can add files or [glob paths](https://en.wikipedia.org/wiki/Glob_(programming)) to the list.
 
 **.hemtt/project.toml**
 
