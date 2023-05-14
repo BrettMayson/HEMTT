@@ -125,33 +125,6 @@ impl Parse for Number {
                     }
                     tokens.next();
                     decimal_place = 1;
-                    // let mut decimal = 0;
-                    // let mut decimal_place = 0;
-                    // let mut current_token = tokens.next().unwrap();
-                    // while let Some(token) = tokens.peek() {
-                    //     match token.symbol() {
-                    //         Symbol::Digit(digit) => {
-                    //             decimal = decimal * 10 + *digit as i64;
-                    //             decimal_place += 1;
-                    //             current_token = tokens.next().unwrap();
-                    //         }
-                    //     }
-                    // }
-                    // if decimal_place == 0 {
-                    //     return Err(Error::UnexpectedToken {
-                    //         token: Box::new(current_token),
-                    //         expected: vec![Symbol::Digit(0)],
-                    //     });
-                    // }
-                    // #[allow(clippy::cast_precision_loss)]
-                    // return Ok(Self::Float32({
-                    //     let val = buffer as f32 + decimal as f32 / 10f32.powi(decimal_place);
-                    //     if negative {
-                    //         -val
-                    //     } else {
-                    //         val
-                    //     }
-                    // }));
                 }
                 Symbol::Join => {
                     tokens.next();
