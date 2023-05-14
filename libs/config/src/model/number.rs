@@ -30,6 +30,8 @@ impl Parse for Number {
         let mut buffer: i64 = 0;
         let mut negative = false;
         let mut seen_digit = false;
+        let mut decimal = 0;
+        let mut decimal_place = 0;
         while let Some(token) = tokens.peek() {
             let token = token.clone();
             match token.symbol() {
@@ -47,6 +49,8 @@ impl Parse for Number {
                             return Ok(Self::Int32(buffer as i32));
                         }
                     }
+                    #[allow(clippy::cast_precision_loss)]
+                    let val = buffer as f32 + decimal as f32 / 10f32.powi(decimal_place - 1);
                     if word.to_lowercase() == "e" {
                         // 1e-1 or 1e+1
                         let mut positive = true;
@@ -73,10 +77,10 @@ impl Parse for Number {
                         }
                         #[allow(clippy::cast_precision_loss)]
                         if positive {
-                            return Ok(Self::Float32(buffer as f32 * 10_f32.powf(exp as f32)));
+                            return Ok(Self::Float32(val * 10_f32.powf(exp as f32)));
                         }
                         #[allow(clippy::cast_precision_loss)]
-                        return Ok(Self::Float32(buffer as f32 / 10_f32.powf(exp as f32)));
+                        return Ok(Self::Float32(val / 10_f32.powf(exp as f32)));
                     } else if word.to_lowercase().starts_with('e') {
                         // 1e1
                         tokens.next();
@@ -86,7 +90,7 @@ impl Parse for Number {
                             .parse::<u32>()
                             .unwrap();
                         #[allow(clippy::cast_precision_loss)]
-                        return Ok(Self::Float32(buffer as f32 * 10_f32.powf(exp as f32)));
+                        return Ok(Self::Float32(val * 10_f32.powf(exp as f32)));
                     }
                     return Err(Error::ExpectedNumber {
                         token: Box::new(token.clone()),
@@ -103,9 +107,14 @@ impl Parse for Number {
                     negative = true;
                 }
                 Symbol::Digit(digit) => {
-                    buffer = buffer * 10 + *digit as i64;
-                    tokens.next();
+                    if decimal_place == 0 {
+                        buffer = buffer * 10 + *digit as i64;
+                    } else {
+                        decimal = decimal * 10 + *digit as i64;
+                        decimal_place += 1;
+                    }
                     seen_digit = true;
+                    tokens.next();
                 }
                 Symbol::Decimal => {
                     if !seen_digit {
@@ -114,34 +123,11 @@ impl Parse for Number {
                             expected: vec![Symbol::Decimal],
                         });
                     }
-                    let mut decimal = 0;
-                    let mut decimal_place = 0;
-                    let mut current_token = tokens.next().unwrap();
-                    while let Some(token) = tokens.peek() {
-                        match token.symbol() {
-                            Symbol::Digit(digit) => {
-                                decimal = decimal * 10 + *digit as i64;
-                                decimal_place += 1;
-                                current_token = tokens.next().unwrap();
-                            }
-                            _ => break,
-                        }
-                    }
-                    if decimal_place == 0 {
-                        return Err(Error::UnexpectedToken {
-                            token: Box::new(current_token),
-                            expected: vec![Symbol::Digit(0)],
-                        });
-                    }
-                    #[allow(clippy::cast_precision_loss)]
-                    return Ok(Self::Float32({
-                        let val = buffer as f32 + decimal as f32 / 10f32.powi(decimal_place);
-                        if negative {
-                            -val
-                        } else {
-                            val
-                        }
-                    }));
+                    tokens.next();
+                    decimal_place = 1;
+                }
+                Symbol::Join => {
+                    tokens.next();
                 }
                 _ => break,
             }
@@ -149,7 +135,12 @@ impl Parse for Number {
         if negative {
             buffer = -buffer;
         }
-        if buffer > i64::from(i32::MAX) {
+        if decimal_place > 1 {
+            #[allow(clippy::cast_precision_loss)]
+            Ok(Self::Float32(
+                buffer as f32 + decimal as f32 / 10f32.powi(decimal_place - 1),
+            ))
+        } else if buffer > i64::from(i32::MAX) {
             Ok(Self::Int64(buffer))
         } else {
             #[allow(clippy::cast_possible_truncation)]
@@ -366,5 +357,31 @@ mod tests {
         )
         .unwrap();
         assert_eq!(number, super::Number::Float32(1e+007));
+        let mut tokens = hemtt_preprocessor::preprocess_string("2.4e9")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(number, super::Number::Float32(2.4e9));
+    }
+
+    #[test]
+    fn join() {
+        let mut tokens = hemtt_preprocessor::preprocess_string("1##2")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(number, super::Number::Int32(12));
     }
 }
