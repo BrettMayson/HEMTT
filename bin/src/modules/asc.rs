@@ -90,12 +90,16 @@ impl Module for ArmaScriptCompiler {
                 std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
             }
         }
-        let resolver = VfsResolver::new(ctx)?;
+        let resolver = VfsResolver::new(ctx);
         let sqf_ext = Some(String::from("sqf"));
         let files = Arc::new(RwLock::new(Vec::new()));
         let start = Instant::now();
+        let mut root_dirs = Vec::new();
         for addon in ctx.addons() {
-            let tmp_addon = tmp.join("source").join(addon.folder());
+            if !root_dirs.contains(&addon.prefix().main_prefix()) {
+                root_dirs.push(addon.prefix().main_prefix());
+            }
+            let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
             create_dir_all(&tmp_addon)?;
             let mut entries = Vec::new();
             for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
@@ -134,13 +138,22 @@ impl Module for ArmaScriptCompiler {
                     for t in tokens {
                         std::io::copy(&mut BufReader::new(t.to_source().as_bytes()), &mut write)?;
                     }
-                    files.write().unwrap().push(
+                    files.write().unwrap().push((
+                        format!(
+                            "{}{}",
+                            addon
+                                .prefix()
+                                .to_string()
+                                .replace('\\', "/")
+                                .trim_end_matches(&addon.folder()),
+                            entry.as_str().to_string().trim_start_matches('/'),
+                        ),
                         entry
                             .as_str()
                             .to_string()
                             .trim_start_matches('/')
                             .to_string(),
-                    );
+                    ));
                     Ok(())
                 })
                 .collect::<Result<_, Error>>()?;
@@ -149,7 +162,9 @@ impl Module for ArmaScriptCompiler {
             "ASC Preprocess took {:?}",
             start.elapsed().whole_milliseconds()
         );
-        config.add_input_dir(tmp.join("source").display().to_string());
+        for root in root_dirs {
+            config.add_input_dir(root.to_string());
+        }
         config.set_output_dir(tmp.join("output").display().to_string());
         let include = tmp.join("source").join("include");
         if include.exists() {
@@ -173,17 +188,11 @@ impl Module for ArmaScriptCompiler {
             ));
         }
         std::env::set_current_dir(old_dir)?;
-        let tmp_output = tmp.join("output").join(
-            tmp.join("source")
-                .display()
-                .to_string()
-                .trim_start_matches(&tmp.ancestors().last().unwrap().display().to_string()),
-        );
+        let tmp_output = tmp.join("output");
         let counter = AtomicI16::new(0);
-        for file in &*files.read().unwrap() {
-            let file = format!("{file}c");
-            let from = tmp_output.join(&file);
-            let to = ctx.vfs().join(&file)?;
+        for (src, dst) in &*files.read().unwrap() {
+            let from = tmp_output.join(&format!("{src}c"));
+            let to = ctx.vfs().join(&format!("{dst}c"))?;
             if !from.exists() {
                 // Likely excluded
                 continue;

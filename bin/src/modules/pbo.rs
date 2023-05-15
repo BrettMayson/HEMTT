@@ -123,11 +123,8 @@ fn _build(
             }
 
             if FILES.contains(&entry.filename().to_lowercase().as_str()) {
-                let prefix = Prefix::new(
-                    &entry.read_to_string().unwrap(),
-                    ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
-                )?;
-                pbo.add_property("prefix", prefix.into_inner());
+                let prefix = Prefix::new(&entry.read_to_string().unwrap())?;
+                pbo.add_property("prefix", prefix.to_string());
                 pbo.add_property("version", version.to_string());
                 if let Some(hash) = git_hash {
                     pbo.add_property("git", hash);

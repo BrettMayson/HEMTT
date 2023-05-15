@@ -5,7 +5,6 @@ use std::{
 };
 
 use hemtt_config::{Config, Parse, Rapify};
-use hemtt_pbo::{prefix::FILES, Prefix};
 use hemtt_preprocessor::{preprocess_file, Resolver};
 use hemtt_tokens::Token;
 use peekmore::PeekMore;
@@ -25,7 +24,7 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        let resolver = VfsResolver::new(ctx)?;
+        let resolver = VfsResolver::new(ctx);
         let counter = AtomicI16::new(0);
         // TODO map to extra error
         // TODO ^ remember what that means
@@ -91,32 +90,18 @@ pub struct VfsResolver<'a> {
 }
 
 impl<'a> VfsResolver<'a> {
-    pub fn new(ctx: &'a Context) -> Result<Self, Error> {
+    pub fn new(ctx: &'a Context) -> Self {
         let mut prefixes = HashMap::new();
         for addon in ctx.addons() {
-            // TODO fix error in vfs
-            let mut files: Vec<String> =
-                FILES.iter().map(std::string::ToString::to_string).collect();
-            files.extend(FILES.iter().map(|i| i.to_uppercase()));
-            for file in files {
-                let root = ctx.vfs().join(addon.folder()).unwrap();
-                let path = root.join(file).unwrap();
-                if path.exists().unwrap() {
-                    prefixes.insert(
-                        Prefix::new(
-                            &path.read_to_string().unwrap(),
-                            ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
-                        )?
-                        .into_inner(),
-                        root,
-                    );
-                }
-            }
+            prefixes.insert(
+                addon.prefix().to_string(),
+                ctx.vfs().join(addon.folder()).unwrap(),
+            );
         }
-        Ok(Self {
+        Self {
             vfs: ctx.vfs(),
             prefixes,
-        })
+        }
     }
 }
 

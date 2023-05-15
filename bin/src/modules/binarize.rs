@@ -5,7 +5,6 @@ use std::{
     sync::atomic::{AtomicI16, Ordering},
 };
 
-use hemtt_pbo::{prefix::FILES, Prefix};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -80,38 +79,7 @@ impl Module for Binarize {
                         continue;
                     }
 
-                    let addon_root = PathBuf::from(entry.as_str())
-                        .components()
-                        .take(3)
-                        .collect::<PathBuf>();
-                    let mut tmp_sourced = None;
-                    let mut tmp_outed = None;
-                    for file in FILES {
-                        let prefix_path = ctx
-                            .vfs()
-                            .join(
-                                addon_root
-                                    .join(file)
-                                    .to_str()
-                                    .unwrap()
-                                    .replace('\\', "/")
-                                    .trim_start_matches('/'),
-                            )
-                            .unwrap();
-                        if prefix_path.exists().unwrap() {
-                            let prefix = Prefix::new(
-                                &prefix_path.read_to_string().unwrap(),
-                                ctx.config().hemtt().pbo_prefix_allow_leading_slash(),
-                            )
-                            .unwrap()
-                            .into_inner();
-                            tmp_sourced = Some(tmp_source.join(prefix.trim_start_matches('\\')));
-                            tmp_outed =
-                                Some(tmp_out.join(entry.parent().as_str().trim_start_matches('/')));
-                            break;
-                        }
-                    }
-                    let tmp_sourced = tmp_sourced.unwrap().join(
+                    let tmp_sourced = tmp_source.join(addon.prefix().as_pathbuf()).join(
                         entry
                             .as_str()
                             .trim_start_matches('/')
@@ -120,7 +88,7 @@ impl Module for Binarize {
                             .trim_end_matches(&entry.filename())
                             .replace('/', "\\"),
                     );
-                    let tmp_outed = tmp_outed.unwrap();
+                    let tmp_outed = tmp_out.join(entry.parent().as_str().trim_start_matches('/'));
 
                     targets.push(BinarizeTarget {
                         source: tmp_sourced

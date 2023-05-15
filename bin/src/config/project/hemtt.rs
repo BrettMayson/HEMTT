@@ -16,12 +16,6 @@ pub struct Features {
 
     #[serde(default)]
     release: ReleaseOptions,
-
-    #[serde(default)]
-    /// Can PBO prefixes have a leading slash?
-    ///
-    /// Default: false
-    pbo_prefix_allow_leading_slash: Option<bool>,
 }
 
 impl Features {
@@ -48,15 +42,6 @@ impl Features {
     #[must_use]
     pub const fn release(&self) -> &ReleaseOptions {
         &self.release
-    }
-
-    #[must_use]
-    pub const fn pbo_prefix_allow_leading_slash(&self) -> bool {
-        if let Some(allow) = self.pbo_prefix_allow_leading_slash {
-            allow
-        } else {
-            false
-        }
     }
 }
 

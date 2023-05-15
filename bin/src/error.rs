@@ -19,6 +19,8 @@ pub enum Error {
     AddonLocationInvalid(String),
     #[error("Optional addon not found: {0}")]
     AddonOptionalNotFound(String),
+    #[error("Addon prefix not found: {0}")]
+    AddonPrefixMissing(String),
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
