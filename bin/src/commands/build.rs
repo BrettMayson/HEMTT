@@ -43,7 +43,10 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
         executor.add_module(Box::<Binarize>::default());
     }
     executor.add_module(Box::<Hooks>::default());
-    executor.add_module(Box::<ArmaScriptCompiler>::default());
+    #[cfg(not(target_os = "macos"))]
+    {
+        executor.add_module(Box::<ArmaScriptCompiler>::default());
+    }
     executor.add_module(Box::<Files>::default());
 
     info!("Creating `build` version");

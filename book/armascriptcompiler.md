@@ -2,6 +2,10 @@
 
 HEMTT includes a copy of the [ArmaScriptCompiler](https://github.com/dedmen/ArmaScriptCompiler). It will produce an `.sqfc` file with [SQF Bytecode](https://community.bistudio.com/wiki/SQF_Bytecode) for each `.sqf` file in your project.
 
+```admonish info
+ArmaScriptCompiler is not available on MacOS.
+```
+
 ## Configuration
 
 ArmaScriptCompiler requires no configuration and works out of the box.
