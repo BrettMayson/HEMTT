@@ -10,6 +10,7 @@ use crate::{addons::Addon, config::project::Configuration, error::Error};
 
 pub struct Context {
     config: Configuration,
+    folder: String,
     addons: Vec<Addon>,
     vfs: VfsPath,
     project_folder: PathBuf,
@@ -66,6 +67,7 @@ impl Context {
         create_dir_all(&build_folder)?;
         Ok(Self {
             config,
+            folder: folder.to_owned(),
             vfs: OverlayFS::new(&{
                 let mut layers = vec![AltrootFS::new(MemoryFS::new().into()).into()];
                 if cfg!(target_os = "windows") {
@@ -107,6 +109,10 @@ impl Context {
 
     pub const fn config(&self) -> &Configuration {
         &self.config
+    }
+
+    pub fn folder(&self) -> &str {
+        &self.folder
     }
 
     pub fn addons(&self) -> &[Addon] {

@@ -22,6 +22,9 @@ pub enum Error {
     #[error("Addon prefix not found: {0}")]
     AddonPrefixMissing(String),
 
+    #[error("Hook signaled failure: {0}")]
+    HookFatal(String),
+
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),

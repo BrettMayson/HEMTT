@@ -1,4 +1,7 @@
-use std::ffi::OsString;
+use std::{
+    ffi::OsString,
+    sync::{Arc, Mutex},
+};
 
 use ::rhai::{packages::Package, Engine, Scope};
 
@@ -80,6 +83,7 @@ impl Hooks {
             x.as_ref()
                 .map_or_else(|_| OsString::new(), std::fs::DirEntry::file_name)
         });
+        let told_to_fail = Arc::new(Mutex::new(false));
         for file in entries {
             let file = file?;
             if !file.file_type()?.is_file() {
@@ -87,24 +91,43 @@ impl Hooks {
             }
             info!("Running hook: {}", file.path().display());
             let mut scope = scope.clone();
-            let name1 = format!(
+            let name = format!(
                 "{}/{}",
                 name,
                 file.file_name().to_str().expect("Invalid file name")
             );
-            let name2 = name1.clone();
-            engine.on_debug(move |x, src, pos| {
-                src.map_or_else(
-                    || debug!("[{name1}] {pos}: {x}"),
-                    |src| debug!("[{name1}] {src}:{pos}: {x}"),
-                );
+            let inner_name = name.clone();
+            engine.on_debug(move |x, _src, _pos| {
+                debug!("[{inner_name}] {x}");
             });
+            let inner_name = name.clone();
             engine.on_print(move |s| {
-                info!("[{name2}] {s}");
+                info!("[{inner_name}] {s}");
+            });
+            let inner_name = name.clone();
+            engine.register_fn("info", move |s: &str| {
+                info!("[{inner_name}] {s}");
+            });
+            let inner_name = name.clone();
+            engine.register_fn("warn", move |s: &str| {
+                warn!("[{inner_name}] {s}");
+            });
+            let inner_name = name.clone();
+            engine.register_fn("error", move |s: &str| {
+                error!("[{inner_name}] {s}");
+            });
+            let inner_name = name.clone();
+            let inner_told_to_fail = told_to_fail.clone();
+            engine.register_fn("fatal", move |s: &str| {
+                error!("[{inner_name}] {s}");
+                *inner_told_to_fail.lock().unwrap() = true;
             });
             engine
                 .run_with_scope(&mut scope, &std::fs::read_to_string(file.path())?)
                 .unwrap();
+            if *told_to_fail.lock().unwrap() {
+                return Err(Error::HookFatal(name));
+            }
         }
         Ok(())
     }

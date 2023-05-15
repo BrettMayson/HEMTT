@@ -1,7 +1,8 @@
 let release = HEMTT_RFS.join("releases");
 let src = release.join(HEMTT.project().prefix() + "-latest.zip");
 let dst = release.join("@" + HEMTT.project().prefix() + ".zip");
-print("Moving zip to " + dst);
+debug("Moving zip to " + dst);
 if !src.move(dst) {
-    print("Failed to move " + src + " to " + dst);
+    fatal("Failed to move " + src + " to " + dst);
 }
+fatal("die for no reason")

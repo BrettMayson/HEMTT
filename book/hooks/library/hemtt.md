@@ -23,3 +23,48 @@ See more about the [Project](project.md) library.
 ```js
 HEMTT.project().version().to_string(); // "1.3.0-alpha"
 ```
+
+## `mode()`
+
+Returns the current mode of HEMTT, one of:
+
+- dev
+- launch
+- build
+- release
+
+```js
+HEMTT.mode(); // "release"
+```
+
+## `is_dev()`
+
+Returns true if the current mode is `dev`.
+
+```js
+HEMTT.is_dev(); // false
+```
+
+## `is_launch()`
+
+Returns true if the current mode is `launch`.
+
+```js
+HEMTT.is_launch(); // false
+```
+
+## `is_build()`
+
+Returns true if the current mode is `build`.
+
+```js
+HEMTT.is_build(); // false
+```
+
+## `is_release()`
+
+Returns true if the current mode is `release`.
+
+```js
+HEMTT.is_release(); // true
+```

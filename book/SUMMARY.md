@@ -19,6 +19,7 @@
 - [Hooks](hooks/index.md)
     - [Rhai Reference](hooks/rhai-reference.md)
     - [Libraries](hooks/library/index.md)
+        - [Logging](hooks/library/logging.md)
         - [HEMTT](hooks/library/hemtt.md)
         - [Project](hooks/library/project.md)
         - [File System](hooks/library/filesystem.md)

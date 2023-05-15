@@ -13,6 +13,7 @@ use super::project::RhaiProject;
 pub struct RhaiHemtt {
     version: Version,
     project: RhaiProject,
+    folder: String,
 }
 
 impl RhaiHemtt {
@@ -20,6 +21,7 @@ impl RhaiHemtt {
         Self {
             version: Version::try_from(env!("CARGO_PKG_VERSION")).unwrap(),
             project: RhaiProject::new(ctx),
+            folder: ctx.folder().to_string(),
         }
     }
 }
@@ -34,5 +36,30 @@ pub mod project_functions {
     #[rhai_fn(global, pure)]
     pub fn project(hemtt: &mut RhaiHemtt) -> RhaiProject {
         hemtt.project.clone()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn mode(hemtt: &mut RhaiHemtt) -> String {
+        hemtt.folder.clone()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn is_dev(hemtt: &mut RhaiHemtt) -> bool {
+        hemtt.folder == "dev"
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn is_launch(hemtt: &mut RhaiHemtt) -> bool {
+        hemtt.folder == "launch"
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn is_build(hemtt: &mut RhaiHemtt) -> bool {
+        hemtt.folder == "build"
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn is_release(hemtt: &mut RhaiHemtt) -> bool {
+        hemtt.folder == "release"
     }
 }
