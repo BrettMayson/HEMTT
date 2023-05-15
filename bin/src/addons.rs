@@ -26,7 +26,17 @@ impl Addon {
             },
             prefix: {
                 let mut prefix = None;
-                'search: for file in &prefix::FILES {
+                let mut files = prefix::FILES
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>();
+                files.append(
+                    &mut prefix::FILES
+                        .iter()
+                        .map(|f| f.to_uppercase())
+                        .collect::<Vec<String>>(),
+                );
+                'search: for file in &files {
                     let path = path.join(file);
                     if path.exists() {
                         let content = std::fs::read_to_string(path).unwrap();
