@@ -32,4 +32,22 @@ pub mod path_functions {
     pub fn to_string(path: &mut PathBuf) -> String {
         path.display().to_string()
     }
+
+    #[rhai_fn(global, name = "copy", pure)]
+    pub fn copy(path: &mut PathBuf, other: PathBuf) -> bool {
+        if path.is_dir() {
+            fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new()).is_ok()
+        } else {
+            std::fs::copy(path, other).is_ok()
+        }
+    }
+
+    #[rhai_fn(global, name = "move", pure)]
+    pub fn _move(path: &mut PathBuf, other: PathBuf) -> bool {
+        if path.is_dir() {
+            fs_extra::dir::move_dir(path, other, &fs_extra::dir::CopyOptions::new()).is_ok()
+        } else {
+            std::fs::rename(path, other).is_ok()
+        }
+    }
 }
