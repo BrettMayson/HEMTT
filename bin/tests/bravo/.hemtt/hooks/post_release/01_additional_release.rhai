@@ -5,4 +5,3 @@ debug("Moving zip to " + dst);
 if !src.move(dst) {
     fatal("Failed to move " + src + " to " + dst);
 }
-fatal("die for no reason")
