@@ -4,6 +4,8 @@ use ::rhai::{packages::Package, Engine, Scope};
 
 use crate::{context::Context, error::Error};
 
+use self::rhai::hemtt::RhaiHemtt;
+
 use super::Module;
 
 mod rhai;
@@ -30,7 +32,12 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     } else {
         scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
         scope.push_constant("HEMTT_OUTPUT", ctx.out_folder().clone());
+        scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
+        scope.push_constant("HEMTT_OUT", ctx.out_folder().clone());
     }
+
+    scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
+
     Ok(scope)
 }
 
@@ -38,11 +45,12 @@ fn engine(vfs: bool) -> Engine {
     let mut engine = Engine::new();
     if vfs {
         let virt = rhai::VfsPackage::new();
-        engine.register_static_module("hemtt", virt.as_shared_module());
+        engine.register_static_module("hemtt_vfs", virt.as_shared_module());
     } else {
         let real = rhai::RfsPackage::new();
-        engine.register_static_module("hemtt", real.as_shared_module());
+        engine.register_static_module("hemtt_rfs", real.as_shared_module());
     }
+    engine.register_static_module("hemtt", rhai::HEMTTPackage::new().as_shared_module());
     engine
 }
 
@@ -109,7 +117,19 @@ impl Module for Hooks {
 
     fn init(&mut self, ctx: &Context) -> Result<(), Error> {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
-        if !self.0 {
+        if self.0 {
+            for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
+                let engine = engine(phase.ends_with("build"));
+                let dir = ctx.hemtt_folder().join("hooks").join(phase);
+                if !dir.exists() {
+                    continue;
+                }
+                for hook in dir.read_dir().unwrap() {
+                    let hook = hook?;
+                    engine.compile(&std::fs::read_to_string(hook.path())?)?;
+                }
+            }
+        } else {
             trace!("no hooks folder");
         }
         Ok(())

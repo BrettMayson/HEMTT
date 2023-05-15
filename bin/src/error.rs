@@ -66,6 +66,8 @@ pub enum Error {
     Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
+    #[error("Rhai Error: {0}")]
+    Rhai(#[from] rhai::ParseError),
 }
 
 impl From<vfs::VfsError> for Error {

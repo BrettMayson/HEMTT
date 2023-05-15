@@ -32,4 +32,32 @@ pub mod path_functions {
     pub fn to_string(path: &mut VfsPath) -> String {
         path.as_str().to_string()
     }
+
+    #[rhai_fn(global, return_raw)]
+    pub fn copy(path: &mut VfsPath, other: VfsPath) -> Result<bool, Box<EvalAltResult>> {
+        let res = if path.is_dir().map_err(|e| e.to_string())? {
+            path.copy_dir(&other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        } else {
+            path.copy_file(&other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        };
+        res.map_or_else(|| Ok(true), Err)
+    }
+
+    #[rhai_fn(global, name = "move", return_raw)]
+    pub fn _move(path: &mut VfsPath, other: VfsPath) -> Result<bool, Box<EvalAltResult>> {
+        let res = if path.is_dir().map_err(|e| e.to_string())? {
+            path.move_dir(&other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        } else {
+            path.move_file(&other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        };
+        res.map_or_else(|| Ok(true), Err)
+    }
 }
