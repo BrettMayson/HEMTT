@@ -35,14 +35,6 @@ impl Prefix {
     /// # Errors
     /// If the prefix is invalid
     pub fn new(content: &str) -> Result<Self, Error> {
-        let prefix = Self::parse(content)?;
-        if prefix.0.len() <= 2 {
-            return Err(Error::InvalidPrefix(content.to_string()));
-        }
-        Ok(prefix)
-    }
-
-    fn parse(content: &str) -> Result<Self, Error> {
         let content = content.trim();
         if content.contains('/') {
             return Err(Error::InvalidPrefix(content.to_string()));
@@ -94,8 +86,8 @@ impl Prefix {
 
     #[must_use]
     /// Get the mod prefix
-    pub fn mod_prefix(&self) -> &str {
-        &self.0[1]
+    pub fn mod_prefix(&self) -> Option<&str> {
+        self.0.get(1).map(std::string::String::as_str)
     }
 
     #[must_use]
@@ -124,7 +116,7 @@ mod tests {
         let prefix = Prefix::new("z\\test\\addons\\main").unwrap();
         assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
         assert_eq!(prefix.main_prefix(), "z");
-        assert_eq!(prefix.mod_prefix(), "test");
+        assert_eq!(prefix.mod_prefix().unwrap(), "test");
         assert!(Prefix::new("z/test/addons/main").is_err());
         assert!(Prefix::new("\\z\\test\\addons\\main").is_err());
     }
@@ -134,7 +126,7 @@ mod tests {
         let prefix = Prefix::new("prefix=z\\test\\addons\\main").unwrap();
         assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
         assert_eq!(prefix.main_prefix(), "z");
-        assert_eq!(prefix.mod_prefix(), "test");
+        assert_eq!(prefix.mod_prefix().unwrap(), "test");
         assert!(Prefix::new("prefix=z/test/addons/main").is_err());
         assert!(Prefix::new("prefix=\\z\\test\\addons\\main").is_err());
     }
@@ -144,8 +136,16 @@ mod tests {
         let prefix = Prefix::new("prefix=z\\test\\addons\\main\nother=stuff").unwrap();
         assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
         assert_eq!(prefix.main_prefix(), "z");
-        assert_eq!(prefix.mod_prefix(), "test");
+        assert_eq!(prefix.mod_prefix().unwrap(), "test");
         assert!(Prefix::new("prefix=z/test/addons/main\nother=stuff").is_err());
         assert!(Prefix::new("prefix=\\z\\test\\addons\\main\nother=stuff").is_err());
+    }
+
+    #[test]
+    fn single() {
+        let prefix = Prefix::new("test").unwrap();
+        assert_eq!(prefix.to_string(), "test");
+        assert_eq!(prefix.main_prefix(), "test");
+        assert!(prefix.mod_prefix().is_none());
     }
 }
