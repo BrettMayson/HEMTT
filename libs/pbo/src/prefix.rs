@@ -13,6 +13,8 @@
 //! extra=header
 //! ```
 
+use std::path::PathBuf;
+
 use crate::Error;
 
 /// Files that may be used to contain the prefix, case insensitive, convert to lowercase
@@ -25,39 +27,37 @@ pub const FILES: [&str; 4] = [
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// A prefix for a PBO
-pub struct Prefix(String);
+pub struct Prefix(Vec<String>);
 
 impl Prefix {
     /// Read a prefix from a prefix file
     ///
     /// # Errors
     /// If the prefix is invalid
-    pub fn new(content: &str, allow_leading_slash: bool) -> Result<Self, Error> {
-        let prefix = Self::_from_prefix_file(content, allow_leading_slash)?;
-        if prefix.0.contains('/') {
-            return Err(Error::InvalidPrefix(prefix.0));
+    pub fn new(content: &str) -> Result<Self, Error> {
+        let prefix = Self::parse(content)?;
+        if prefix.0.len() <= 2 {
+            return Err(Error::InvalidPrefix(content.to_string()));
         }
         Ok(prefix)
     }
 
-    #[allow(clippy::missing_const_for_fn)]
-    #[must_use]
-    /// Get the prefix as a string
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-
-    fn _from_prefix_file(content: &str, allow_leading_slash: bool) -> Result<Self, Error> {
+    fn parse(content: &str) -> Result<Self, Error> {
         let content = content.trim();
+        if content.contains('/') {
+            return Err(Error::InvalidPrefix(content.to_string()));
+        }
         let line_count = content.lines().count();
         if line_count == 1 && !content.contains('=') {
             if content.starts_with('\\') {
-                if allow_leading_slash {
-                    return Ok(Self(content.strip_prefix('\\').unwrap().to_string()));
-                }
                 return Err(Error::InvalidPrefix(content.to_string()));
             }
-            return Ok(Self(content.to_string()));
+            return Ok(Self(
+                content
+                    .split('\\')
+                    .map(std::string::ToString::to_string)
+                    .collect(),
+            ));
         }
         for line in content.lines() {
             if let Some(split) = line.split_once('=') {
@@ -65,16 +65,53 @@ impl Prefix {
                 if key == "prefix" {
                     let content = split.1.trim();
                     if content.starts_with('\\') {
-                        if allow_leading_slash {
-                            return Ok(Self(content.strip_prefix('\\').unwrap().to_string()));
-                        }
                         return Err(Error::InvalidPrefix(content.to_string()));
                     }
-                    return Ok(Self(content.to_string()));
+                    return Ok(Self(
+                        content
+                            .split('\\')
+                            .map(std::string::ToString::to_string)
+                            .collect(),
+                    ));
                 }
             }
         }
         Err(Error::InvalidPrefix(content.to_string()))
+    }
+
+    #[allow(clippy::missing_const_for_fn)]
+    #[must_use]
+    /// Get the parts of the prefix
+    pub fn into_inner(self) -> Vec<String> {
+        self.0
+    }
+
+    #[must_use]
+    /// Get the main prefix
+    pub fn main_prefix(&self) -> &str {
+        &self.0[0]
+    }
+
+    #[must_use]
+    /// Get the mod prefix
+    pub fn mod_prefix(&self) -> &str {
+        &self.0[1]
+    }
+
+    #[must_use]
+    /// Get the prefix as a pathbuf
+    pub fn as_pathbuf(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.0[0]);
+        for part in &self.0[1..] {
+            path.push(part);
+        }
+        path
+    }
+}
+
+impl ToString for Prefix {
+    fn to_string(&self) -> String {
+        self.0.join("\\")
     }
 }
 
@@ -84,31 +121,31 @@ mod tests {
 
     #[test]
     fn just_prefix() {
-        let prefix = Prefix::new("z\\test\\addons\\main", false).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
-        assert!(Prefix::new("z/test/addons/main", false).is_err());
-        assert!(Prefix::new("\\z\\test\\addons\\main", false).is_err());
-        let prefix = Prefix::new("\\z\\test\\addons\\main", true).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
+        let prefix = Prefix::new("z\\test\\addons\\main").unwrap();
+        assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
+        assert_eq!(prefix.main_prefix(), "z");
+        assert_eq!(prefix.mod_prefix(), "test");
+        assert!(Prefix::new("z/test/addons/main").is_err());
+        assert!(Prefix::new("\\z\\test\\addons\\main").is_err());
     }
 
     #[test]
     fn with_key() {
-        let prefix = Prefix::new("prefix=z\\test\\addons\\main", false).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
-        assert!(Prefix::new("prefix=z/test/addons/main", false).is_err());
-        assert!(Prefix::new("prefix=\\z\\test\\addons\\main", false).is_err());
-        let prefix = Prefix::new("prefix=\\z\\test\\addons\\main", true).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
+        let prefix = Prefix::new("prefix=z\\test\\addons\\main").unwrap();
+        assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
+        assert_eq!(prefix.main_prefix(), "z");
+        assert_eq!(prefix.mod_prefix(), "test");
+        assert!(Prefix::new("prefix=z/test/addons/main").is_err());
+        assert!(Prefix::new("prefix=\\z\\test\\addons\\main").is_err());
     }
 
     #[test]
     fn with_keys() {
-        let prefix = Prefix::new("prefix=z\\test\\addons\\main\nother=stuff", false).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
-        assert!(Prefix::new("prefix=z/test/addons/main\nother=stuff", false).is_err());
-        assert!(Prefix::new("prefix=\\z\\test\\addons\\main\nother=stuff", false).is_err());
-        let prefix = Prefix::new("prefix=\\z\\test\\addons\\main\nother=stuff", true).unwrap();
-        assert_eq!(prefix.0, "z\\test\\addons\\main");
+        let prefix = Prefix::new("prefix=z\\test\\addons\\main\nother=stuff").unwrap();
+        assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
+        assert_eq!(prefix.main_prefix(), "z");
+        assert_eq!(prefix.mod_prefix(), "test");
+        assert!(Prefix::new("prefix=z/test/addons/main\nother=stuff").is_err());
+        assert!(Prefix::new("prefix=\\z\\test\\addons\\main\nother=stuff").is_err());
     }
 }

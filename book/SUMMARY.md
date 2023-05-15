@@ -24,12 +24,8 @@
 # Modding Guide
 
 - [Getting Started](getting-started/index.md)
-    - [Project Setup](getting-started/setup.md)
-    - [Testing](getting-started/testing.md)
-    - [Releasing](getting-started/releasing.md)
-    - [Automating with GitHub](getting-started/github.md)
-- [Project Structure](project-structure.md)
-    - [Prefixing](project-structure-prefixing.md)
-    - [Addons](project-structure-addons.md)
-    - [Optionals](project-structure-optionals.md)
--->
+- [Project Structure](project-structure/index.md)
+    - [Prefixing](project-structure/prefixing.md)
+    - [Addons](project-structure/addons.md)
+    - [Optionals](project-structure/optionals.md)
+ -->

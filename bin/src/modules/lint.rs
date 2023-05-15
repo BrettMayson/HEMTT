@@ -24,7 +24,7 @@ impl Module for Lint {
         }
         let counter = AtomicI32::new(0);
         for addon in ctx.addons() {
-            let resolver = VfsResolver::new(ctx)?;
+            let resolver = VfsResolver::new(ctx);
             let sqf_ext = Some(String::from("sqf"));
             let mut entries = Vec::new();
             for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
