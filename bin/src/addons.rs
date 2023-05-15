@@ -28,7 +28,7 @@ impl Addon {
                 let mut prefix = None;
                 let mut files = prefix::FILES
                     .iter()
-                    .map(|s| s.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<_>>();
                 files.append(
                     &mut prefix::FILES
