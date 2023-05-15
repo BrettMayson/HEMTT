@@ -88,7 +88,7 @@ Returns `true` if the path exists.
 
 ```ts
 HEMTT_VFS.join("addons").exists() // true
-HEMTT_VFS.join(".hemmt").join("project.toml").exists() // true
+HEMTT_VFS.join(".hemtt").join("project.toml").exists() // true
 ```
 
 ## `is_dir()`
@@ -97,7 +97,7 @@ Returns `true` if the path is a directory.
 
 ```ts
 HEMTT_VFS.join("addons").is_dir() // true
-HEMTT_VFS.join(".hemmt").join("project.toml").is_dir() // false
+HEMTT_VFS.join(".hemtt").join("project.toml").is_dir() // false
 ```
 
 ## `is_file()`
@@ -106,7 +106,7 @@ Returns `true` if the path is a file.
 
 ```ts
 HEMTT_VFS.join("addons").is_file() // false
-HEMTT_VFS.join(".hemmt").join("project.toml").is_file() // true
+HEMTT_VFS.join(".hemtt").join("project.toml").is_file() // true
 ```
 
 ## `copy(path)`
