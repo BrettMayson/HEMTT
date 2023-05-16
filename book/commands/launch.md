@@ -8,19 +8,19 @@ Options:
     <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
         Arma 3 executable to launch
 
-    <a href="commands-dev.md#-b---binarize">-b, --binarize</a>
+    <a href="dev.md#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
 
-    <a href="commands-dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
+    <a href="dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
         Include an optional addon folder
 
-    <a href="commands-dev.md#-o---all-optionals">-O, --all-optionals</a>
+    <a href="dev.md#-o---all-optionals">-O, --all-optionals</a>
         Include all optional addon folders
 
-    <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
+    <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
-    <a href="commands.md#-v">-v...</a>
+    <a href="index.md#-v">-v...</a>
         Verbosity level
 
     -h, --help
@@ -28,11 +28,11 @@ Options:
 </code>
 </pre>
 
-`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](commands-dev.md) command internally after a few checks, options are passed to the `dev` command.
+`hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, options are passed to the `dev` command.
 
 ## Configuration
 
-`hemtt launch` requires the [`mainprefix`](configuration.md#main-prefix) option to be set.
+`hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
 
 **.hemtt/project.toml**
 

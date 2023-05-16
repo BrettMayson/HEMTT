@@ -15,11 +15,11 @@ name = "Advanced Banana Environment"
 prefix = "abe"
 ```
 
-You can read more about these options on the [Minimum Configuration](configuration-minimum.md) page.
+You can read more about these options on the [Minimum Configuration](/configuration/minimum.md) page.
 
 ## Version
 
-HEMTT uses a custom version format based on standards in the Arma 3 community. You can read more about it on the [Version](configuration-version.md) page.
+HEMTT uses a custom version format based on standards in the Arma 3 community. You can read more about it on the [Version](/configuration/version.md) page.
 
 ## Project
 
@@ -27,7 +27,7 @@ You can additionally configure optional settings for your project.
 
 ### Main Prefix
 
-The `mainprefix` option allows you to set a the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](launch.md).
+The `mainprefix` option allows you to set a the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](/commands/launch.md).
 
 **.hemtt/project.toml**
 
