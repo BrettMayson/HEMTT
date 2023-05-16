@@ -9,10 +9,10 @@ use crate::Error;
 pub struct PreprocessorParser;
 
 /// Parse a file into tokens
-/// 
+///
 /// # Errors
 /// If the file is invalid
-/// 
+///
 /// # Panics
 /// If the file is invalid
 pub fn parse(path: &str, source: &str, parent: &Option<Box<Token>>) -> Result<Vec<Token>, Error> {
