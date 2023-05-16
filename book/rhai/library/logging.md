@@ -20,12 +20,12 @@ print("Hello World!");
 Prints a representation of the value to the console if the `--debug` flag is passed to HEMTT.
 
 ```ts
-debug(HEMTT.project().version().to_string());
+debug(HEMTT.version().to_string());
 debug(HEMTT.project().version.major());
 ```
 
 ```sh
-DEBUG [post_release/test.rhai] "1.4.0"
+DEBUG [post_release/test.rhai] "1.5.0"
 DEBUG [post_release/test.rhai] 1
 ```
 
