@@ -27,6 +27,7 @@ pub use resolver::{
     resolvers::{LocalResolver, NoResolver},
     Resolver,
 };
+pub use parse::parse;
 
 /// Preprocesses a config file.
 ///

@@ -28,7 +28,7 @@ double_quote = { "\"" }
 single_quote = { "'" }
 left_angle = { "<" }
 right_angle = { ">" }
-unicode = { SYMBOL | PUNCTUATION }
+unicode = { LETTER | MARK | NUMBER | SYMBOL | PUNCTUATION | MATH | OTHER_MATH }
 newline = { NEWLINE }
 
 space = { " " }
