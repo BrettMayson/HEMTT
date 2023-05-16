@@ -39,8 +39,8 @@ The `post_build` hook is run after all preprocessing, binarization, and packing 
 
 ### `pre_release`
 
-The `pre_release` hook is run before any release tasks. It is only run during the [hemtt release](/commands/release.md) command.
+The `pre_release` hook is run before any release tasks. It is only run during the [hemtt release](../../commands/release.md) command.
 
 ### `post_release`
 
-The `post_release` hook is run after all release tasks, and archives have been created. It is only run during the [hemtt release](/commands/release.md) command.
+The `post_release` hook is run after all release tasks, and archives have been created. It is only run during the [hemtt release](../../commands/release.md) command.
