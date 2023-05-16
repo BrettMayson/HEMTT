@@ -21,7 +21,7 @@ Returns the project information.
 See more about the [Project](project.md) library.
 
 ```js
-HEMTT.project().version().to_string(); // "1.3.0-alpha"
+HEMTT.project().version().to_string(); // "1.3.0.1052"
 ```
 
 ## `mode()`

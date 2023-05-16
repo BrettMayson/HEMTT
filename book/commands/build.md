@@ -23,7 +23,7 @@ Options:
 </code>
 </pre>
 
-`hemtt build` will build your mod into `.hemttout/build`. It will binarize all applicable files, and will not create folder links like `hemtt dev`.
+`hemtt build` will build your mod into `.hemttout/build`. It will binarize all applicable files, and will not create folder links like [`hemtt dev`](dev.md).
 
 It is intended to be used for testing your mod locally before release.
 

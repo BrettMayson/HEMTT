@@ -1,4 +1,4 @@
-# Examples
+# Hook Examples
 
 ## Renaming the release zip
 

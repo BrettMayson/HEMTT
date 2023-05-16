@@ -24,10 +24,10 @@ There are 4 phases of the build process that can be hooked into:
 
 | Hook | File System |
 | --- | --- |
-| `pre_build` | [Virtual](#virtual) |
-| `post_build` | [Virtual](#virtual) |
-| `pre_release` | [Real](#real) |
-| `post_release` | [Real](#real) |
+| `pre_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `post_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `pre_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
+| `post_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
 
 ### `pre_build`
 
@@ -39,8 +39,8 @@ The `post_build` hook is run after all preprocessing, binarization, and packing 
 
 ### `pre_release`
 
-The `pre_release` hook is run before any release tasks. It is only run during the [hemtt release](commands-release.md) command.
+The `pre_release` hook is run before any release tasks. It is only run during the [hemtt release](/commands/release.md) command.
 
 ### `post_release`
 
-The `post_release` hook is run after all release tasks, and archives have been created. It is only run during the [hemtt release](commands-release.md) command.
+The `post_release` hook is run after all release tasks, and archives have been created. It is only run during the [hemtt release](/commands/release.md) command.

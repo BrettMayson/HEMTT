@@ -31,7 +31,8 @@ pub fn cli() -> Command {
         .subcommand(commands::dev::cli())
         .subcommand(commands::build::cli())
         .subcommand(commands::launch::cli())
-        .subcommand(commands::release::cli());
+        .subcommand(commands::release::cli())
+        .subcommand(commands::script::cli());
     global = global.arg(
         clap::Arg::new("threads")
             .global(true)
@@ -111,6 +112,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         }
         Some(("launch", matches)) => {
             commands::launch::execute(matches).map_err(std::convert::Into::into)
+        }
+        Some(("script", matches)) => {
+            commands::script::execute(matches).map_err(std::convert::Into::into)
         }
         _ => unreachable!(),
     }

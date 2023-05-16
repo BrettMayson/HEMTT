@@ -11,16 +11,16 @@ Options:
     <a href="#--no-archive">--no-archive</a>
         Do not create a zip archive of the release
 
-    <a href="commands-build.md#--no-bin">--no-bin</a>
+    <a href="build.md#--no-bin">--no-bin</a>
         Do not binarize files
 
-    <a href="commands-build.md#--no-rapify">--no-rap</a>
+    <a href="build.md#--no-rapify">--no-rap</a>
         Do not rapify files
 
-    <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
+    <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
-    <a href="commands.md#-v">-v...</a>
+    <a href="index.md#-v">-v...</a>
         Verbosity level
 
     -h, --help
@@ -38,7 +38,7 @@ It will create two zip archives in the `releases` folder:
 
 ## Configuration
 
-`hemtt release` is built the same way as [`hemtt build`](commands-build.md), and will use its configuration.
+`hemtt release` is built the same way as [`hemtt build`](build.md), and will use its configuration.
 
 ```toml
 [hemtt.release]
