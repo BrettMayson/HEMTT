@@ -132,19 +132,17 @@ impl Parse for Number {
                 _ => break,
             }
         }
-        if negative {
-            buffer = -buffer;
-        }
         if decimal_place > 1 {
             #[allow(clippy::cast_precision_loss)]
             Ok(Self::Float32(
-                buffer as f32 + decimal as f32 / 10f32.powi(decimal_place - 1),
+                ((decimal as f32 / 10f32.powi(decimal_place - 1)) + buffer as f32)
+                    * if negative { -1f32 } else { 1f32 },
             ))
-        } else if buffer > i64::from(i32::MAX) {
-            Ok(Self::Int64(buffer))
+        } else if buffer > i64::from(i32::MAX) || buffer < i64::from(i32::MIN) {
+            Ok(Self::Int64(buffer * if negative { -1 } else { 1 }))
         } else {
             #[allow(clippy::cast_possible_truncation)]
-            Ok(Self::Int32(buffer as i32))
+            Ok(Self::Int32((buffer * if negative { -1 } else { 1 }) as i32))
         }
     }
 }
@@ -261,6 +259,28 @@ mod tests {
         )
         .unwrap();
         assert_eq!(number, super::Number::Float32(-1_234_567_890.123_456_789));
+        let mut tokens = hemtt_preprocessor::preprocess_string("-26.55")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(number, super::Number::Float32(-26.55));
+        let mut tokens = hemtt_preprocessor::preprocess_string("26.55")
+            .unwrap()
+            .into_iter()
+            .peekmore();
+        let number = super::Number::parse(
+            &crate::Options::default(),
+            &mut tokens,
+            &Token::builtin(None),
+        )
+        .unwrap();
+        assert_eq!(number, super::Number::Float32(26.55));
     }
 
     #[test]
