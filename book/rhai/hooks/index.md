@@ -24,10 +24,10 @@ There are 4 phases of the build process that can be hooked into:
 
 | Hook | File System |
 | --- | --- |
-| `pre_build` | [Virtual](#virtual) |
-| `post_build` | [Virtual](#virtual) |
-| `pre_release` | [Real](#real) |
-| `post_release` | [Real](#real) |
+| `pre_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `post_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `pre_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
+| `post_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
 
 ### `pre_build`
 

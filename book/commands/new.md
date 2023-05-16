@@ -2,7 +2,7 @@
 
 <pre><code>Create a new mod
 
-Usage: hemtt.exe new [OPTIONS] <name>
+Usage: hemtt.exe new [OPTIONS] &lt;name&gt;
 
 Arguments:
   &lt;name&gt;  Name of the new mod

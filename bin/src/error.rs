@@ -24,6 +24,8 @@ pub enum Error {
 
     #[error("Hook signaled failure: {0}")]
     HookFatal(String),
+    #[error("Script not found: {0}")]
+    ScriptNotFound(String),
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac

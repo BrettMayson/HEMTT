@@ -1,6 +1,10 @@
 # File System
 
-HEMTT has two file systems that can be used in hooks. The file system used depends on the phase of the build.
+HEMTT has two types file systems, which one is used depends on the context.
+
+[Scripts](../scripts.md) always use the real file system, as the run outside of the build process.
+
+[Hooks](../hooks.md) use the virtual file system during the `pre_build` and `post_build` phases, and the real file system during the `pre_release` and `post_release` phases.
 
 ## `HEMTT_VFS` - Virtual File System
 

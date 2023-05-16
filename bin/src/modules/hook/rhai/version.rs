@@ -23,22 +23,22 @@ pub mod version_functions {
     }
 
     #[rhai_fn(global, pure)]
-    pub fn major(version: &mut Version) -> u32 {
-        version.major()
+    pub fn major(version: &mut Version) -> i64 {
+        i64::from(version.major())
     }
 
     #[rhai_fn(global, pure)]
-    pub fn minor(version: &mut Version) -> u32 {
-        version.minor()
+    pub fn minor(version: &mut Version) -> i64 {
+        i64::from(version.minor())
     }
 
     #[rhai_fn(global, pure)]
-    pub fn patch(version: &mut Version) -> u32 {
-        version.patch()
+    pub fn patch(version: &mut Version) -> i64 {
+        i64::from(version.patch())
     }
 
     #[rhai_fn(global, pure)]
-    pub fn build(version: &mut Version) -> Option<u32> {
-        version.build()
+    pub fn build(version: &mut Version) -> Option<i64> {
+        version.build().map(i64::from)
     }
 }
