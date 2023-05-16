@@ -21,6 +21,7 @@ pub use context::{Context, Definition, FunctionDefinition};
 pub use defines::{Defines, DefinitionLibrary};
 pub use error::Error;
 pub use map::{Mapping, Processed};
+pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
 pub use resolver::resolvers;
 pub use resolver::{
