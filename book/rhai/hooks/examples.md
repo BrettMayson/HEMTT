@@ -8,11 +8,11 @@ We want to modify the release zip to a different name format, we need to use the
 
 ```ts
 let releases = HEMTT_RFS.join("releases");
-let src = releases.join(HEMTT.project().prefix() + "-latest.zip");
-let dst = releases.join("@" + HEMTT.project().prefix() + ".zip");
+let src = releases.join(HEMTT.project().prefix() + "-latest.zip"); // "prefix-latest.zip"
+let dst = releases.join("@" + HEMTT.project().prefix() + ".zip"); // "@prefix.zip"
 print("Moving zip to " + dst);
 if !src.move(dst) {
-    print("Failed to move " + src + " to " + dst);
+    fatal("Failed to move " + src + " to " + dst);
 }
 ```
 
