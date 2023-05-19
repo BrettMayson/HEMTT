@@ -102,7 +102,7 @@ where
             }
             _ => {
                 if context.ifstates().reading() {
-                    output.append(&mut walk_line(resolver, context, tokenstream)?);
+                    output.append(&mut walk_line(resolver, context, tokenstream, allow_quote)?);
                 } else {
                     tokenstream.next();
                 }
@@ -128,16 +128,13 @@ where
             token: Box::new(from),
         });
     };
-    let token = token.clone();
-    match token.symbol() {
-        Symbol::Directive => {}
-        _ => {
-            return Err(Error::UnexpectedToken {
-                token: Box::new(token.clone()),
-                expected: vec![Symbol::Directive],
-                trace: context.trace(),
-            })
-        }
+    let directive_token = token.clone();
+    if directive_token.symbol() != &Symbol::Directive {
+        return Err(Error::UnexpectedToken {
+            token: Box::new(directive_token),
+            expected: vec![Symbol::Directive],
+            trace: context.trace(),
+        });
     }
     let mut output = Vec::new();
     tokenstream.next();
@@ -223,21 +220,22 @@ where
                             Some(Box::new(token)),
                         ));
                     } else {
-                        return Err(Error::UnknownDirective {
-                            directive: Box::new(token),
-                            trace: context.trace(),
-                        });
+                        output.push(directive_token);
+                        output.push(token);
                     }
                 }
                 _ => {}
             }
+        } else {
+            output.push(directive_token);
+            output.push(token);
         }
     } else if !allow_quote {
         return Err(Error::UnexpectedEOF {
             token: Box::new(from),
         });
     } else {
-        output.push(token);
+        output.push(directive_token);
     }
     Ok(output)
 }
@@ -647,6 +645,8 @@ fn walk_line<R>(
     resolver: &R,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+    // Allow quotes when inside of a macro
+    allow_quote: bool,
 ) -> Result<Vec<Token>, Error>
 where
     R: Resolver,
@@ -698,7 +698,7 @@ where
                     resolver,
                     context,
                     tokenstream,
-                    true,
+                    allow_quote,
                     token,
                 )?);
             }
