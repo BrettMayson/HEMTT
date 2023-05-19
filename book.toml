@@ -15,6 +15,7 @@ default-theme = "ayu"
 preferred-dark-theme = "ayu"
 additional-css = ['./book/mdbook-admonish.css']
 site-url = "/HEMTT/"
+additional-js = ["book/time.js"]
 
 [build]
 build-dir = "target/book"

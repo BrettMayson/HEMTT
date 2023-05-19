@@ -23,6 +23,7 @@
         - [HEMTT](rhai/library/hemtt.md)
         - [Project](rhai/library/project.md)
         - [File System](rhai/library/filesystem.md)
+        - [Time](rhai/library/time.md)
     - [Hooks](rhai/hooks/index.md)
         - [Examples](rhai/hooks/examples.md)
     - [Scripts](rhai/scripts/index.md)

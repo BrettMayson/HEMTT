@@ -7,11 +7,12 @@ use ::rhai::{packages::Package, Engine, Scope};
 
 use crate::{context::Context, error::Error};
 
-use self::rhai::hemtt::RhaiHemtt;
+use self::libraries::hemtt::RhaiHemtt;
 
 use super::Module;
 
-mod rhai;
+mod libraries;
+mod time;
 
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
@@ -47,13 +48,14 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
 fn engine(vfs: bool) -> Engine {
     let mut engine = Engine::new();
     if vfs {
-        let virt = rhai::VfsPackage::new();
+        let virt = libraries::VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
     } else {
-        let real = rhai::RfsPackage::new();
+        let real = libraries::RfsPackage::new();
         engine.register_static_module("hemtt_rfs", real.as_shared_module());
     }
-    engine.register_static_module("hemtt", rhai::HEMTTPackage::new().as_shared_module());
+    engine.register_static_module("hemtt", libraries::HEMTTPackage::new().as_shared_module());
+    engine.register_fn("date", time::date);
     engine
 }
 
