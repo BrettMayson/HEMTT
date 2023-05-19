@@ -226,7 +226,7 @@ where
                 }
                 _ => {}
             }
-        } else {
+        } else if context.ifstates().reading() {
             output.push(directive_token);
             output.push(token);
         }
