@@ -296,7 +296,6 @@ impl Parse for Properties {
     where
         Self: Sized,
     {
-        // whitespace::skip(tokens);
         let mut entries = Vec::new();
         loop {
             let ident = match tokens.peek() {
@@ -321,13 +320,13 @@ impl Parse for Properties {
                     _ => {
                         return Err(Error::ExpectedIdent {
                             token: Box::new(token.clone()),
-                        })
+                        });
                     }
                 },
                 None => {
                     return Err(Error::UnexpectedEOF {
                         token: Box::new(from.clone()),
-                    })
+                    });
                 }
             };
             whitespace::skip(tokens);

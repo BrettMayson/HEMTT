@@ -2,6 +2,6 @@
 #define TEST 123
 
 class test {
-    value = #TEST;
+    value = TEST;
     value = QUOTE(TEST);
 };
