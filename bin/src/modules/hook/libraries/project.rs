@@ -28,7 +28,7 @@ impl RhaiProject {
 
 #[export_module]
 pub mod project_functions {
-    use crate::modules::hook::rhai::project::RhaiProject;
+    use crate::modules::hook::libraries::project::RhaiProject;
     use hemtt_version::Version;
 
     #[rhai_fn(global, pure)]
