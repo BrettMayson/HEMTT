@@ -40,7 +40,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new("dev")?.filter(|a, config| {
+    let ctx = Context::new("script")?.filter(|a, config| {
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
         {
             debug!("ignoring optional {}", a.name());
