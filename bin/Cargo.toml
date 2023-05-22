@@ -35,7 +35,7 @@ semver = "1.0.17"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 steamlocate = "2.0.0-alpha.0"
-time = { verison = "0.3.21", features = ["formatting"] }
+time = { version = "0.3.21", features = ["formatting"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.17", features = ["json"] }
