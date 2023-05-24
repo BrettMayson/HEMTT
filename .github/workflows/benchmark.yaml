@@ -33,4 +33,4 @@ jobs:
           gh-pages-branch: main
       - name: Push benchmark result
         if: github.event_name != 'pull_request'
-        run: git push 'https://${{ secrets.PAGES_TOKEN }}@github.com/hemtt/bench.git' main:main
+        run: git push 'https://brettmayson:${{ secrets.PAGES_TOKEN }}@github.com/hemtt/bench.git' main:main
