@@ -2,7 +2,7 @@
 
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
-Usage: hemtt.exe launch [OPTIONS]
+Usage: hemtt.exe launch [OPTIONS] -- [PASS-THROUGH OPTIONS]
 
 Options:
     <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
@@ -43,6 +43,9 @@ mainprefix = "z"
 workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
+dlcs = [
+    "Western Sahara",
+]
 parameters = [
     "-skipIntro",           # These parameters are passed to the Arma 3 executable
     "-noSplash",            # They do not need to be added to your list
@@ -53,10 +56,22 @@ parameters = [
 executable = "arma3" # Default: "arma3_x64"
 ```
 
-
 ### workshop
 
 A list of workshop IDs to launch with your mod. These are not subscribed to, and will need to be manually subscribed to in Steam.
+
+### dlcs
+
+A list of DLCs to launch with your mod. The fullname or short-code can be used.
+
+Currently supported DLCs:
+| Full Name | Short Code |
+| --- | --- |
+| Contact | enoch |
+| Global Mobilization | gm |
+| S.O.G. Prairie Fire | vn |
+| CSLA Iron Curtain | csla |
+| Western Sahara | ws |
 
 ### parameters
 
@@ -75,4 +90,12 @@ The Arma 3 executable to launch. Overrides the `executable` option in the config
 ```bash
 hemtt launch -e arma3profiling_x64 # Relative to the Arma 3 directory
 hemtt launch -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
+```
+
+## Pass-through Options
+
+Any options after `--` will be passed to the Arma 3 executable. This is useful for passing additional startup parameters.
+
+```bash
+hemtt launch -- -world=empty -window
 ```

@@ -57,7 +57,7 @@ impl TryFrom<String> for DLC {
     fn try_from(dlc: String) -> Result<Self, Self::Error> {
         Ok(
             match dlc.to_lowercase().trim_start_matches("creator dlc: ") {
-                "contact" => Self::Contact,
+                "contact" | "enoch" => Self::Contact,
                 "gm" | "global mobilization" | "global mobilization - cold war germany" => {
                     Self::GlobalMobilization
                 }
