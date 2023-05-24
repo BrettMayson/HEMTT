@@ -5,6 +5,9 @@ edition = "2021"
 description = "A preprocessor library for hemtt"
 license = "GPL-2.0"
 
+[lib]
+bench = false
+
 [dependencies]
 hemtt-error = { path = "../error", version = "1.0.0" }
 
@@ -19,7 +22,7 @@ strsim = "0.10.0"
 tracing = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = "0.5.0"
 
 [[bench]]
 name = "ace_dogtags"

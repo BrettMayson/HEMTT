@@ -6,6 +6,14 @@ edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
 
+[lib]
+bench = false
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+bench = false
+
 [dependencies]
 hemtt-error = { path = "../libs/error", version = "1.0.0" }
 
@@ -47,6 +55,3 @@ zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.50.0"
-
-[profile.bench]
-lto = true

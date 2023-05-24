@@ -5,6 +5,9 @@ edition = "2021"
 description = "An PBO library for hemtt"
 license = "GPL-2.0"
 
+[lib]
+bench = false
+
 [dependencies]
 hemtt-error = { path = "../error", version = "1.0.0" }
 

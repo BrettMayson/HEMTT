@@ -5,5 +5,8 @@ edition = "2021"
 description = "A token library for hemtt"
 license = "GPL-2.0"
 
+[lib]
+bench = false
+
 [dependencies]
 peekmore = { workspace = true }

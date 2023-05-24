@@ -4,3 +4,6 @@ version = "1.0.0"
 edition = "2021"
 description = "An IO library for hemtt"
 license = "GPL-2.0"
+
+[lib]
+bench = false

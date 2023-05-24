@@ -5,6 +5,9 @@ edition = "2021"
 description = "An error library for hemtt"
 license = "GPL-2.0"
 
+[lib]
+bench = false
+
 [dependencies]
 hemtt-tokens = { path = "../tokens", version = "1.0.0" }
 
