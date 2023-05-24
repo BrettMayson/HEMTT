@@ -17,7 +17,12 @@ pub fn cli() -> Command {
                 clap::Arg::new("executable")
                     .short('e')
                     .help("Executable to launch, defaults to `arma3_x64.exe`"),
-            ),
+            )
+            .arg(
+                clap::Arg::new("passthrough")
+                    .raw(true)
+                    .help("Passthrough additional arguments to Arma 3"),
+            )
     )
 }
 
@@ -82,11 +87,25 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         )?;
     }
 
-    let args = vec![format!(
-        "-mod=\"{}\" -skipIntro -noSplash -showScriptErrors -debug -filePatching {}",
-        workshop.join(";"),
-        config.hemtt().launch().parameters().join(" ")
-    )];
+    let mut args: Vec<String> = vec![
+        "-skipIntro",
+        "-noSplash",
+        "-showScriptErrors",
+        "-debug",
+        "-filePatching",
+    ]
+    .iter()
+    .map(std::string::ToString::to_string)
+    .collect();
+    args.append(&mut config.hemtt().launch().parameters().to_vec());
+    args.append(
+        &mut matches
+            .get_raw("passthrough")
+            .unwrap_or_default()
+            .map(|s| s.to_string_lossy().to_string())
+            .collect::<Vec<_>>(),
+    );
+    args.push(format!("-mod=\"{}\"", mods.join(";"),));
 
     info!(
         "Launching {:?} with: {:?}",
