@@ -9,6 +9,7 @@ authors = ["Brett Mayson <brett@mayson.io>"]
 [dependencies]
 hemtt-error = { path = "../libs/error", version = "1.0.0" }
 
+hemtt-arma = { path = "../libs/arma", version = "1.0.0" }
 hemtt-config = { path = "../libs/config", version = "1.0.0" }
 hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
 hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
