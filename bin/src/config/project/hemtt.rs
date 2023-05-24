@@ -1,3 +1,4 @@
+use hemtt_arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -65,6 +66,10 @@ pub struct LaunchOptions {
     workshop: Vec<String>,
 
     #[serde(default)]
+    /// DLCs that should be launched with the mod
+    dlc: Vec<DLC>,
+
+    #[serde(default)]
     /// Extra launch parameters
     parameters: Vec<String>,
 
@@ -77,6 +82,11 @@ impl LaunchOptions {
     #[must_use]
     pub fn workshop(&self) -> &[String] {
         &self.workshop
+    }
+
+    #[must_use]
+    pub fn dlc(&self) -> &[DLC] {
+        &self.dlc
     }
 
     #[must_use]

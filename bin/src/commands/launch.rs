@@ -32,9 +32,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     debug!("Arma 3 found at: {}", arma3dir.path.display());
 
-    let mut workshop = Vec::new();
+    let mut mods = Vec::new();
 
-    workshop.push({
+    mods.push({
         let mut path = std::env::current_dir()?;
         path.push(".hemttout/dev");
         path.display().to_string()
@@ -57,7 +57,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             if !mod_path.exists() {
                 return Err(Error::WorkshopModNotFound(load_mod.to_string()));
             };
-            workshop.push(mod_path.display().to_string());
+            mods.push(mod_path.display().to_string());
+        }
+    }
+
+    if !config.hemtt().launch().dlc().is_empty() {
+        for dlc in config.hemtt().launch().dlc() {
+            mods.push(dlc.to_mod().to_string());
         }
     }
 

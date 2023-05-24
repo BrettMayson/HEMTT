@@ -2,6 +2,7 @@
 members = [
     "bin",
 
+    "libs/arma",
     "libs/config",
     "libs/error",
     "libs/io",
@@ -13,7 +14,7 @@ members = [
 ]
 
 [workspace.dependencies]
-clap = "4.2.7"
+clap = "4.3.0"
 colored = "2.0.0"
 git2 = "0.17.1"
 peekmore = "1.2.1"
