@@ -16,13 +16,16 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: bench
       - run: cargo +nightly bench -- --output-format bencher | tee output.txt
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'cargo'
           output-file-path: output.txt
-          external-data-json-path: ./cache/benchmark-data.json
           gh-repository: github.com/hemtt/bench
           github-token: ${{ secrets.PAGES_TOKEN }}
           auto-push: false
