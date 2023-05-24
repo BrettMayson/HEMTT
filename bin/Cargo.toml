@@ -47,3 +47,6 @@ zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.50.0"
+
+[profile.bench]
+lto = true

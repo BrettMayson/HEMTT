@@ -26,8 +26,6 @@ impl Module for Rapifier {
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx);
         let counter = AtomicI16::new(0);
-        // TODO map to extra error
-        // TODO ^ remember what that means
         ctx.addons()
             .par_iter()
             .map(|addon| {
@@ -114,6 +112,7 @@ impl<'a> Resolver for VfsResolver<'a> {
         to: &str,
         source: Vec<Token>,
     ) -> Result<(PathBuf, String), hemtt_preprocessor::Error> {
+        trace!("find_include: {} {}", from, to);
         let path = if to.starts_with('\\') {
             let to = to.trim_start_matches('\\');
             if let Some(path) = self
