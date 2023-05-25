@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use hemtt_arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +12,7 @@ pub struct Features {
     dev: DevOptions,
 
     #[serde(default)]
-    launch: LaunchOptions,
+    launch: HashMap<String, LaunchOptions>,
 
     #[serde(default)]
     build: BuildOptions,
@@ -31,8 +33,8 @@ impl Features {
     }
 
     #[must_use]
-    pub const fn launch(&self) -> &LaunchOptions {
-        &self.launch
+    pub fn launch(&self, key: &str) -> Option<&LaunchOptions> {
+        self.launch.get(key)
     }
 
     #[must_use]

@@ -115,7 +115,7 @@ impl Configuration {
     /// file does not contain a valid configuration, an error is returned.
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
-        let config = Self::from_str(&file)?;
+        let config = Self::from_str(&file.replace("[hemtt.launch]", "[hemtt.launch.default]"))?;
 
         // Validate
         if config.prefix.is_empty() {

@@ -14,6 +14,11 @@ pub fn cli() -> Command {
             .about("Test your project")
             .long_about("Builds your project in dev mode and launches Arma 3 with file patching enabled, loading your mod and any workshop mods.")
             .arg(
+                clap::Arg::new("config")
+                    .default_value("default")
+                    .help("Launches with the specified `[hemtt.launch.<config>]` configuration"),
+            )
+            .arg(
                 clap::Arg::new("executable")
                     .short('e')
                     .help("Executable to launch, defaults to `arma3_x64.exe`"),
@@ -31,6 +36,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let Some(mainprefix) = config.mainprefix() else {
         return Err(Error::MainPrefixNotFound(String::from("Required for launch")));
     };
+
+    let launch_config = matches.get_one::<String>("config").unwrap();
+    let launch = config
+        .hemtt()
+        .launch(launch_config)
+        .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
+
     let Some(arma3dir) = SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned)) else {
         return Err(Error::Arma3NotFound);
     };
@@ -46,7 +58,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     });
 
     // climb to the workshop folder
-    if !config.hemtt().launch().workshop().is_empty() {
+    if !launch.workshop().is_empty() {
         let Some(common) = arma3dir.path.parent() else {
             return Err(Error::WorkshopNotFound);
         };
@@ -57,7 +69,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         if !workshop_folder.exists() {
             return Err(Error::WorkshopNotFound);
         };
-        for load_mod in config.hemtt().launch().workshop() {
+        for load_mod in launch.workshop() {
             let mod_path = workshop_folder.join(load_mod);
             if !mod_path.exists() {
                 return Err(Error::WorkshopModNotFound(load_mod.to_string()));
@@ -66,8 +78,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    if !config.hemtt().launch().dlc().is_empty() {
-        for dlc in config.hemtt().launch().dlc() {
+    if !launch.dlc().is_empty() {
+        for dlc in launch.dlc() {
             mods.push(dlc.to_mod().to_string());
         }
     }
@@ -97,7 +109,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     .iter()
     .map(std::string::ToString::to_string)
     .collect();
-    args.append(&mut config.hemtt().launch().parameters().to_vec());
+    args.append(&mut launch.parameters().to_vec());
     args.append(
         &mut matches
             .get_raw("passthrough")
@@ -126,7 +138,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
                 path.set_extension("exe");
             }
         } else {
-            path.push(config.hemtt().launch().executable());
+            path.push(launch.executable());
         }
         path.display().to_string()
     })

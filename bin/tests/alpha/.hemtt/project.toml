@@ -1,5 +1,6 @@
 name = "My Mod"
 prefix = "test"
+mainprefix = "y"
 
 [version]
 major = 1
@@ -9,3 +10,13 @@ git_hash = 0
 
 [asc]
 enabled = true
+
+[hemtt.launch]
+dlc = [
+    "ws"
+]
+
+[hemtt.launch.vn]
+dlc = [
+    "vn"
+]

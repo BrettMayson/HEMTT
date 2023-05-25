@@ -6,6 +6,8 @@ pub enum Error {
     ConfigNotFound,
     #[error("Invalid config: {0}")]
     ConfigInvalid(String),
+    #[error("Launch config not found: {0}")]
+    LaunchConfigNotFound(String),
 
     #[error("ASC: {0}")]
     ArmaScriptCompiler(String),
