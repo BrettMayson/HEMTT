@@ -4,7 +4,7 @@ use std::{
     sync::atomic::{AtomicI16, Ordering},
 };
 
-use hemtt_config::{Config, Parse, Rapify};
+use hemtt_config::{parse::Parse, rapify::Rapify, Config};
 use hemtt_preprocessor::{preprocess_file, Resolver};
 use hemtt_tokens::Token;
 use peekmore::PeekMore;

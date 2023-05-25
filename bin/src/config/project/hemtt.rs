@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Features {
     #[serde(default)]
-    config: hemtt_config::Options,
+    config: hemtt_config::parse::Options,
 
     #[serde(default)]
     dev: DevOptions,
@@ -23,7 +23,7 @@ pub struct Features {
 
 impl Features {
     #[must_use]
-    pub const fn config(&self) -> &hemtt_config::Options {
+    pub const fn config(&self) -> &hemtt_config::parse::Options {
         &self.config
     }
 

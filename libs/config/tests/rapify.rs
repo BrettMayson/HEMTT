@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use hemtt_config::{Config, Parse, Rapify};
+use hemtt_config::{parse::Parse, rapify::Rapify, Config};
 use hemtt_preprocessor::{preprocess_file, resolvers::LocalResolver};
 use peekmore::PeekMore;
 
@@ -21,7 +21,7 @@ fn rapify() {
             )
             .unwrap();
             let rapified = Config::parse(
-                &hemtt_config::Options::default(),
+                &hemtt_config::parse::Options::default(),
                 &mut tokens.into_iter().peekmore(),
                 &hemtt_tokens::Token::builtin(None),
             )

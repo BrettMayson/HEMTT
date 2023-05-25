@@ -23,12 +23,12 @@ pub struct Options {
     ///
     /// BI: Match a strict definition of BI's parser
     /// HEMTT: Superset of BI with some QOL improvements
-    preset: Preset,
+    pub(crate) preset: Preset,
 
     /// Can arrays have trailing commas?
     ///
     /// See [`Options::array_allow_trailing_comma`]
-    array_allow_trailing_comma: Option<bool>,
+    pub(crate) array_allow_trailing_comma: Option<bool>,
 }
 
 impl Options {

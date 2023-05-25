@@ -31,6 +31,10 @@ pub enum Error {
         token: Box<Token>,
     },
 
+    #[error("Tried to lint an invalid config")]
+    /// Tried to lint an invalid config
+    LintInvalidConfig,
+
     #[error("IO Error: {0}")]
     /// [std::io::Error]
     Io(Box<std::io::Error>),
@@ -67,6 +71,7 @@ impl PrettyError for Error {
                     symbol = token.symbol()
                 )
             }
+            Self::LintInvalidConfig => "Tried to lint an invalid config,".to_string(),
             Self::Io(e) => {
                 format!("IO Error: {e}")
             }
@@ -122,7 +127,7 @@ impl PrettyError for Error {
             | Self::UnexpectedToken { token, expected: _ }
             | Self::ExpectedNumber { token }
             | Self::UnexpectedEOF { token } => token.parent(),
-            Self::Io(_) => &None,
+            _ => &None,
         };
         let mut trace = Vec::new();
         while let Some(p) = parent {
