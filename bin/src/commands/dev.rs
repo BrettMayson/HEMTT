@@ -41,7 +41,7 @@ pub fn add_args(cmd: Command) -> Command {
     )
 }
 
-pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
+pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Context, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches
         .get_many::<String>("optional")
@@ -54,6 +54,9 @@ pub fn execute(matches: &ArgMatches) -> Result<Context, Error> {
         {
             debug!("ignoring optional {}", a.name());
             return false;
+        }
+        if launch_optionals.iter().any(|o| o == a.name()) {
+            return true;
         }
         !config
             .hemtt()

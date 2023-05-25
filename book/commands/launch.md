@@ -54,6 +54,9 @@ workshop = [
 dlcs = [
     "Western Sahara",
 ]
+optionals = [
+    "caramel",
+]
 parameters = [
     "-skipIntro",           # These parameters are passed to the Arma 3 executable
     "-noSplash",            # They do not need to be added to your list
@@ -89,6 +92,10 @@ Currently supported DLCs:
 | S.O.G. Prairie Fire | vn |
 | CSLA Iron Curtain | csla |
 | Western Sahara | ws |
+
+### optionals
+
+A list of optional addon folders to launch with your mod.
 
 ### parameters
 

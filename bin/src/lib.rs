@@ -99,7 +99,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     match matches.subcommand() {
         Some(("new", matches)) => commands::new::execute(matches).map_err(std::convert::Into::into),
         Some(("dev", matches)) => {
-            commands::dev::execute(matches)?;
+            commands::dev::execute(matches, &[])?;
             Ok(())
         }
         Some(("build", matches)) => {

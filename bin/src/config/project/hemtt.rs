@@ -72,6 +72,10 @@ pub struct LaunchOptions {
     dlc: Vec<DLC>,
 
     #[serde(default)]
+    /// Optional addons that should be built into the mod
+    optionals: Vec<String>,
+
+    #[serde(default)]
     /// Extra launch parameters
     parameters: Vec<String>,
 
@@ -89,6 +93,11 @@ impl LaunchOptions {
     #[must_use]
     pub fn dlc(&self) -> &[DLC] {
         &self.dlc
+    }
+
+    #[must_use]
+    pub fn optionals(&self) -> &[String] {
+        &self.optionals
     }
 
     #[must_use]

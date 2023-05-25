@@ -84,7 +84,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    let ctx = super::dev::execute(matches)?;
+    let ctx = super::dev::execute(matches, launch.optionals())?;
 
     let prefix_folder = arma3dir.path.join(mainprefix);
     if !prefix_folder.exists() {

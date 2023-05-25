@@ -55,7 +55,7 @@ hemtt dev -b
 Include an optional addon folder. This can be used multiple times to include multiple optional addons.
 
 ```bash
-hemtt dev -o carmel -o split
+hemtt dev -o caramel -o split
 ```
 
 ### -O, --all-optionals
