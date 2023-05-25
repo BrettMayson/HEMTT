@@ -2,7 +2,14 @@
 
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
-Usage: hemtt.exe launch [OPTIONS] -- [PASS-THROUGH OPTIONS]
+Usage: hemtt.exe launch [OPTIONS] [config]-- [-- &lt;passthrough&gt;...]
+
+Arguments:
+  [config]
+        Launches with the specified `hemtt.launch.<config>` configuration
+
+  [passthrough]...
+        Passthrough additional arguments to Arma 3
 
 Options:
     <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
@@ -39,7 +46,8 @@ Options:
 ```toml
 mainprefix = "z"
 
-[hemtt.launch]
+# Launched with `hemtt launch`
+[hemtt.launch.default]
 workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
@@ -54,6 +62,15 @@ parameters = [
     "-filePatching",
 ]
 executable = "arma3" # Default: "arma3_x64"
+
+# Launched with `hemtt launch vn`
+[hemtt.launch.vn]
+workshop = [
+    "450814997", # CBA_A3's Workshop ID
+]
+dlcs = [
+    "S.O.G. Prairie Fire",
+]
 ```
 
 ### workshop

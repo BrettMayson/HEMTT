@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.5.2"
+version = "1.6.0-RC1"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -10,7 +10,7 @@ authors = ["Brett Mayson <brett@mayson.io>"]
 bench = false
 
 [[bin]]
-name = "main"
+name = "hemtt"
 path = "src/main.rs"
 bench = false
 

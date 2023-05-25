@@ -61,7 +61,7 @@ impl TryFrom<String> for DLC {
                 "gm" | "global mobilization" | "global mobilization - cold war germany" => {
                     Self::GlobalMobilization
                 }
-                "sog" | "prairie fire" | "s.o.g. prairie fire" => Self::PrairieFire,
+                "vn" | "sog" | "prairie fire" | "s.o.g. prairie fire" => Self::PrairieFire,
                 "csla" | "iron curtain" | "csla iron curtain" => Self::IronCurtain,
                 "ws" | "western sahara" => Self::WesternSahara,
                 _ => return Err(format!("Unknown DLC: {}", dlc)),
