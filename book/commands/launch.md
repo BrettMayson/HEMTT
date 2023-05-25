@@ -85,6 +85,7 @@ A list of workshop IDs to launch with your mod. These are not subscribed to, and
 A list of DLCs to launch with your mod. The fullname or short-code can be used.
 
 Currently supported DLCs:
+
 | Full Name | Short Code |
 | --- | --- |
 | Contact | enoch |
@@ -116,9 +117,9 @@ hemtt launch -e arma3profiling_x64 # Relative to the Arma 3 directory
 hemtt launch -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
 ```
 
-## Pass-through Options
+## Passthrough Options
 
-Any options after `--` will be passed to the Arma 3 executable. This is useful for passing additional startup parameters.
+Any options after `--` will be passed to the Arma 3 executable. This is useful for passing additional [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters).
 
 ```bash
 hemtt launch -- -world=empty -window
