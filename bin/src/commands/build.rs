@@ -3,7 +3,7 @@ use clap::{ArgAction, ArgMatches, Command};
 use crate::{
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Lint, Rapifier},
+    modules::{pbo::Collapse, Binarize, Files, Hooks, Lint, Rapifier},
 };
 
 #[must_use]
@@ -45,7 +45,7 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     executor.add_module(Box::<Hooks>::default());
     #[cfg(not(target_os = "macos"))]
     {
-        executor.add_module(Box::<ArmaScriptCompiler>::default());
+        executor.add_module(Box::<crate::modules::ArmaScriptCompiler>::default());
     }
     executor.add_module(Box::<Files>::default());
 

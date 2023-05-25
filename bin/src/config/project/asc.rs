@@ -15,6 +15,7 @@ impl Options {
     }
 
     #[must_use]
+    #[cfg(not(target_os = "macos"))]
     pub const fn exclude(&self) -> &Vec<String> {
         &self.exclude
     }

@@ -6,6 +6,7 @@ pub mod pbo;
 
 pub use hook::Hooks;
 
+#[cfg(not(target_os = "macos"))]
 mod asc;
 mod binarize;
 mod file_patching;
@@ -15,6 +16,7 @@ mod new;
 mod rapifier;
 mod sign;
 
+#[cfg(not(target_os = "macos"))]
 pub use asc::ArmaScriptCompiler;
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
