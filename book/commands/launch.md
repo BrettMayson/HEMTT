@@ -51,7 +51,7 @@ mainprefix = "z"
 workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
-dlcs = [
+dlc = [
     "Western Sahara",
 ]
 optionals = [
@@ -71,7 +71,7 @@ executable = "arma3" # Default: "arma3_x64"
 workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
-dlcs = [
+dlc = [
     "S.O.G. Prairie Fire",
 ]
 ```
@@ -80,7 +80,7 @@ dlcs = [
 
 A list of workshop IDs to launch with your mod. These are not subscribed to, and will need to be manually subscribed to in Steam.
 
-### dlcs
+### dlc
 
 A list of DLCs to launch with your mod. The fullname or short-code can be used.
 
