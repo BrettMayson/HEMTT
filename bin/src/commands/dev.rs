@@ -50,13 +50,13 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
         .collect::<Vec<_>>();
 
     let ctx = Context::new("dev")?.filter(|a, config| {
+        if launch_optionals.iter().any(|o| o == a.name()) {
+            return true;
+        }
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
         {
             debug!("ignoring optional {}", a.name());
             return false;
-        }
-        if launch_optionals.iter().any(|o| o == a.name()) {
-            return true;
         }
         !config
             .hemtt()
