@@ -92,6 +92,9 @@ impl PrettyError for Error {
                     if token.symbol() == &Symbol::Escape {
                         return Some("Did you forget to place quotes around a string? Or perhaps you forgot to use Q infront of a path macro.".to_string());
                     }
+                    if token.symbol() == &Symbol::Decimal {
+                        return Some("Did you forget to put a 0 infront of a decimal? (0.5 is valid, .5 is not)".to_string(),);
+                    }
                 } else if expected == &[Symbol::Semicolon] {
                     return Some("Did you forget to place a semicolon at the end of a line? Or perhaps you are missing quotes around a string?".to_string());
                 }

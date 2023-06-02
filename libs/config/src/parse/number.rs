@@ -108,7 +108,7 @@ impl Parse for Number {
                     if !seen_digit {
                         return Err(Error::UnexpectedToken {
                             token: Box::new(token.clone()),
-                            expected: vec![Symbol::Decimal],
+                            expected: vec![Symbol::Digit(0)],
                         });
                     }
                     tokens.next();
