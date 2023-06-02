@@ -22,7 +22,7 @@ strsim = "0.10.0"
 tracing = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.5.0"
+criterion = "0.5.1"
 
 [[bench]]
 name = "ace_dogtags"

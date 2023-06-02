@@ -14,9 +14,9 @@ members = [
 ]
 
 [workspace.dependencies]
-clap = "4.3.0"
+clap = "4.3.1"
 colored = "2.0.0"
-git2 = "0.17.1"
+git2 = "0.17.2"
 peekmore = "1.2.1"
 pest = "2.6.0"
 pest_derive = "2.6.0"
