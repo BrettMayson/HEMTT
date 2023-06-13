@@ -33,8 +33,12 @@ impl Features {
     }
 
     #[must_use]
-    pub fn launch(&self, key: &str) -> Option<&LaunchOptions> {
-        self.launch.get(key)
+    pub fn launch(&self, key: &str) -> Option<LaunchOptions> {
+        let options = self.launch.get(key);
+        if options.is_none() {
+            return Some(LaunchOptions::default());
+        }
+        options.cloned()
     }
 
     #[must_use]

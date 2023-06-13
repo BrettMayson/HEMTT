@@ -12,6 +12,7 @@ mod addons;
 mod commands;
 mod config;
 mod context;
+mod controller;
 mod error;
 mod executor;
 mod logging;
@@ -32,7 +33,9 @@ pub fn cli() -> Command {
         .subcommand(commands::build::cli())
         .subcommand(commands::launch::cli())
         .subcommand(commands::release::cli())
-        .subcommand(commands::script::cli());
+        .subcommand(commands::script::cli())
+        // wip
+        .subcommand(commands::photoshoot::cli());
     global = global.arg(
         clap::Arg::new("threads")
             .global(true)
@@ -115,6 +118,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         }
         Some(("script", matches)) => {
             commands::script::execute(matches).map_err(std::convert::Into::into)
+        }
+        Some(("photoshoot", matches)) => {
+            commands::photoshoot::execute(matches).map_err(std::convert::Into::into)
         }
         _ => unreachable!(),
     }

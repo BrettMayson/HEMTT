@@ -42,6 +42,9 @@ pub enum Error {
     #[error("Main prefix not found: {0}")]
     MainPrefixNotFound(String),
 
+    #[error("Controller timeout")]
+    ControllerTimeout,
+
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
     #[error("Config error: {0}")]
@@ -76,6 +79,8 @@ pub enum Error {
     Zip(#[from] zip::result::ZipError),
     #[error("Rhai Error: {0}")]
     Rhai(#[from] rhai::ParseError),
+    #[error("Image Error: {0}")]
+    Image(#[from] image::ImageError),
 }
 
 impl From<vfs::VfsError> for Error {
