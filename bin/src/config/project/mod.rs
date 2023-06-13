@@ -11,6 +11,8 @@ mod lint;
 mod signing;
 mod version;
 
+pub use hemtt::LaunchOptions;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Configuration {
     /// The name of the project

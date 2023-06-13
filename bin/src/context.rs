@@ -17,6 +17,7 @@ pub struct Context {
     hemtt_folder: PathBuf,
     out_folder: PathBuf,
     tmp: PathBuf,
+    profile: PathBuf,
 }
 
 impl Context {
@@ -41,8 +42,9 @@ impl Context {
                 tmp = tmp.join(whoami::username());
             }
             tmp
-        }
-        .join(
+        };
+        let profile = tmp.join("profile");
+        let tmp = tmp.join(
             std::env::current_dir()
                 .unwrap()
                 .components()
@@ -89,6 +91,7 @@ impl Context {
             out_folder: build_folder,
             addons: Addon::scan()?,
             tmp,
+            profile,
         })
     }
 
@@ -141,5 +144,10 @@ impl Context {
     /// %temp%/hemtt/project
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp
+    }
+
+    /// %temp%/hemtt/profile
+    pub const fn profile(&self) -> &PathBuf {
+        &self.profile
     }
 }

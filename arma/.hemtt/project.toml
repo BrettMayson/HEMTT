@@ -1,0 +1,14 @@
+name = "HEMTT"
+author = "BrettMayson"
+prefix = "hemtt"
+mainprefix = "x"
+
+[version]
+git_hash = 0
+
+[hemtt.launch.default]
+parameters = [
+    "-profiles=C:\\Users\\brett\\AppData\\Local\\Temp\\hemtt\\profile",
+    "-cfg=C:\\Users\\brett\\AppData\\Local\\Temp\\hemtt\\profile\\arma3.cfg",
+    "-name=hemtt",
+]
