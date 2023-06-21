@@ -100,6 +100,7 @@ impl FromStr for Configuration {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum PreprocessCompatibility {
     Deprecated(bool),
     New(PreprocessConfig),
