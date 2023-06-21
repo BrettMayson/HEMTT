@@ -106,9 +106,11 @@ pub enum PreprocessCompatibility {
     New(PreprocessConfig),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PreprocessConfig {
+    #[serde(default)]
     enabled: bool,
+    #[serde(default)]
     exclude: Vec<String>,
 }
 
