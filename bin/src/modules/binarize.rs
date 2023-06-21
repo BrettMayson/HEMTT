@@ -59,6 +59,12 @@ impl Module for Binarize {
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         for addon in ctx.addons() {
+            if let Some(config) = addon.config() {
+                if !config.binarize().enabled() {
+                    debug!("binarization disabled for {}", addon.name());
+                    continue;
+                }
+            }
             for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File
@@ -66,9 +72,13 @@ impl Module for Binarize {
                 {
                     if let Some(config) = addon.config() {
                         if config
-                            .no_bin(&addon.folder())
-                            .unwrap()
-                            .contains(&PathBuf::from(entry.as_str().trim_start_matches('/')))
+                            .binarize()
+                            .exclude()
+                            .iter()
+                            .map(|file| glob::Pattern::new(file))
+                            .collect::<Result<Vec<_>, glob::PatternError>>()?
+                            .iter()
+                            .any(|pat| pat.matches(entry.as_str()))
                         {
                             debug!("skipping binarization of {}", entry.as_str());
                             continue;
@@ -79,6 +89,10 @@ impl Module for Binarize {
                     let mut buf = [0; 4];
                     entry.open_file().unwrap().read_exact(&mut buf).unwrap();
                     if buf == [0x4F, 0x4C, 0x4F, 0x44] || buf == [0x42, 0x4D, 0x54, 0x52] {
+                        debug!(
+                            "skipping binarization of already binarized {}",
+                            entry.as_str()
+                        );
                         continue;
                     }
 

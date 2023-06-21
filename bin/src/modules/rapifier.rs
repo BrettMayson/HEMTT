@@ -26,21 +26,34 @@ impl Module for Rapifier {
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         let resolver = VfsResolver::new(ctx);
         let counter = AtomicI16::new(0);
+        let glob_options = glob::MatchOptions {
+            require_literal_separator: true,
+            ..Default::default()
+        };
         ctx.addons()
             .par_iter()
             .map(|addon| {
+                let mut globs = Vec::new();
+                if let Some(config) = addon.config() {
+                    if !config.preprocess().enabled() {
+                        debug!("preprocessing disabled for {}", addon.name());
+                        return Ok(());
+                    }
+                    for file in config.preprocess().exclude() {
+                        globs.push(glob::Pattern::new(file)?);
+                    }
+                }
                 for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
                     let entry = entry?;
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
                     {
-                        if entry.filename() == "config.cpp" {
-                            if let Some(config) = addon.config() {
-                                if !config.preprocess() {
-                                    debug!("skiping {}", entry.as_str());
-                                    continue;
-                                }
-                            }
+                        if globs
+                            .iter()
+                            .any(|pat| pat.matches_with(entry.as_str(), glob_options))
+                        {
+                            debug!("skipping {}", entry.as_str());
+                            continue;
                         }
                         debug!("rapifying {}", entry.as_str());
                         rapify(entry.clone(), ctx, &resolver)?;
