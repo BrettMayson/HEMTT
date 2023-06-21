@@ -63,11 +63,13 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: acemod/ACE3
-            commit: d87e16e87ecf2db9429b19f5ac4cf06bab7aaad6
+            commit: 864d2e9eeed7028ef5194caec7948566950ebbdc
           - repo: BourbonWarfare/POTATO
-            commit: fab121ce624b6656dd7afd2d29429aa762b28813
+            commit: 902d4fd52af15143bb49bcd0dc5522af0ececf82
           - repo: ArmaForces/Mods
             commit: 6871517d4c2f720cea62b767eb7ec422bf712f51
+          - repo: Theseus-Aegis/Mods
+            commit: 445ec5fc71bbd01d57252be2794947c2bfe79988
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v3
