@@ -1,24 +1,24 @@
 const date = new Date();
 
 if (!String.prototype.padStart) {
-    String.prototype.padStart = function padStart(targetLength,padString) {
-        targetLength = targetLength>>0; //floor if number or convert non-number to 0;
+    String.prototype.padStart = function padStart(targetLength, padString) {
+        targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
         padString = String(padString || ' ');
         if (this.length > targetLength) {
             return String(this);
         }
         else {
-            targetLength = targetLength-this.length;
+            targetLength = targetLength - this.length;
             if (targetLength > padString.length) {
-                padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
+                padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
             }
-            return padString.slice(0,targetLength) + String(this);
+            return padString.slice(0, targetLength) + String(this);
         }
     };
 }
 
 if (!Number.prototype.padStart) {
-    Number.prototype.padStart = function padStart(targetLength,padString) {
+    Number.prototype.padStart = function padStart(targetLength, padString) {
         return String(this).padStart(targetLength, padString);
     };
 }

@@ -32,9 +32,7 @@ Options:
 
 It is intended to be used for releasing your mod.
 
-It will create two zip archives in the `releases` folder:
-    - `{name}-latest.zip`
-    - `{name}-{version}.zip`
+It will create two zip archives in the `releases` folder: - `{name}-latest.zip` - `{name}-{version}.zip`
 
 ## Configuration
 

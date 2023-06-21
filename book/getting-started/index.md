@@ -16,8 +16,8 @@ It's important to use a version control system when developing mods. Git is the 
 
 While any text editor will work, Visual Studio Code is the recommended editor for HEMTT. It is a powerful editor that has a lot of features that will make your life easier. It has several extensions that are great for Arma 3 modding.
 
-- [Arma 3 - Open Last RPT](https://marketplace.visualstudio.com/items?itemName=bux578.vscode-openlastrpt)
-- [SQF Language](https://marketplace.visualstudio.com/items?itemName=Armitxes.sqf)
+-   [Arma 3 - Open Last RPT](https://marketplace.visualstudio.com/items?itemName=bux578.vscode-openlastrpt)
+-   [SQF Language](https://marketplace.visualstudio.com/items?itemName=Armitxes.sqf)
 
 ### [HEMTT](https://github.com/brettmayson/HEMTT)
 

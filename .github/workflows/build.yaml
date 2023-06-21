@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     tags:
       - v*
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: 
+        os:
           - runner: ubuntu-latest
             name: ubuntu
             artifact: linux-x64
@@ -47,14 +47,14 @@ jobs:
           path: target/release/${{ matrix.os.exe }}
 
   mods:
-    name:  ${{ matrix.os.name }} / ${{ matrix.mod.repo }}
+    name: ${{ matrix.os.name }} / ${{ matrix.mod.repo }}
     runs-on: ${{ matrix.os.runner }}
     needs:
       - build
     strategy:
       fail-fast: false
       matrix:
-        os: 
+        os:
           - runner: ubuntu-latest
             name: ubuntu
             artifact: linux-x64

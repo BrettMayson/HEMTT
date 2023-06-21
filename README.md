@@ -27,17 +27,17 @@ name: Build
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup HEMTT
-        uses: arma-actions/hemtt@v1  
-      - name: Run HEMTT build
-        run: hemtt release
-      - name: Upload Release
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-mod-latest
-          path: release/my-mod-latest.zip
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup HEMTT
+              uses: arma-actions/hemtt@v1
+            - name: Run HEMTT build
+              run: hemtt release
+            - name: Upload Release
+              uses: actions/upload-artifact@v2
+              with:
+                  name: my-mod-latest
+                  path: release/my-mod-latest.zip
 ```

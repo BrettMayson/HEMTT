@@ -28,10 +28,10 @@ HEMTT.project().version().to_string(); // "1.3.0.1052"
 
 Returns the current mode of HEMTT, one of:
 
-- dev
-- launch
-- build
-- release
+-   dev
+-   launch
+-   build
+-   release
 
 ```js
 HEMTT.mode(); // "release"

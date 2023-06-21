@@ -2,7 +2,7 @@
 
 In addition to `.hemtt/project.toml`, HEMTT also supports an optional `addon.toml` in each addon folder.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 no_bin = [
@@ -24,7 +24,7 @@ iso = "14001"
 
 The `no_bin` key is an array of glob patterns that will be excluded from binarization and packed as is.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 no_bin = [
@@ -39,7 +39,7 @@ The `preprocess` key is a boolean that determines if the addon `config.cpp` shou
 
 When it is required, it is recommended to create a separate addon to house any optional config, with the minimum amount of code required to make it work. Disabling preprocessing will allow you to ship invalid config, which could cause issues for your players. It will also cause slower load times when the config is valid.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 preprocess = false # Default: true
@@ -49,7 +49,7 @@ preprocess = false # Default: true
 
 The `exclude` key is an array of glob patterns that will be excluded from the PBO.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 exclude = [
@@ -61,7 +61,7 @@ exclude = [
 
 Much like the `properties` key in `.hemtt/project.toml`, the `properties` key in `addon.toml` allows you to add custom properties to the PBO.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 [properties]

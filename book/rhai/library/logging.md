@@ -17,6 +17,7 @@ print("Hello World!");
 ```
 
 ### `debug(any)`
+
 Prints a representation of the value to the console if the `--debug` flag is passed to HEMTT.
 
 ```ts

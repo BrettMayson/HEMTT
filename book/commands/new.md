@@ -16,8 +16,8 @@ Options:
 
 It will ask for:
 
-- The full name of your mod
-- The author of your mod
-- The prefix of your mod
-- The main prefix of your mod
-- A license for your mod
+-   The full name of your mod
+-   The author of your mod
+-   The prefix of your mod
+-   The main prefix of your mod
+-   A license for your mod
