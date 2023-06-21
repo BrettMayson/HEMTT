@@ -77,7 +77,7 @@ impl Module for ArmaScriptCompiler {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
-        let out_file =
+        let mut out_file =
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
