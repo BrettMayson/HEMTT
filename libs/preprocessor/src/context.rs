@@ -197,7 +197,9 @@ impl<'a> Context<'a> {
         match ident {
             "__LINE__" => {
                 let mut root_token = token;
-                while let Some(parent) = root_token.parent() {root_token = parent}
+                while let Some(parent) = root_token.parent() {
+                    root_token = parent
+                }
 
                 Some((
                     Token::builtin(Some(Box::new(token.clone()))),
@@ -207,20 +209,25 @@ impl<'a> Context<'a> {
                         Some(Box::new(token.clone())),
                     )]),
                 ))
-            },
+            }
             "__FILE__" => {
                 let mut root_token = token;
-                while let Some(parent) = root_token.parent() {root_token = parent}
+                while let Some(parent) = root_token.parent() {
+                    root_token = parent
+                }
 
                 Some((
                     Token::builtin(Some(Box::new(token.clone()))),
                     Definition::Value(vec![Token::new(
-                        Symbol::Word(format!("\"{}\"", root_token.source().path().to_string().replace('\\', "/"))),
+                        Symbol::Word(format!(
+                            "\"{}\"",
+                            root_token.source().path().to_string().replace('\\', "/")
+                        )),
                         token.source().clone(),
                         Some(Box::new(token.clone())),
                     )]),
                 ))
-            },
+            }
             "__COUNTER__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
