@@ -43,9 +43,10 @@ jobs:
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
+
   coverage:
-    runs-on: ubuntu-latest
-    name: ubuntu / stable / coverage
+    runs-on: windows
+    name: windows / stable / coverage
     steps:
       - uses: actions/checkout@v3
         with:
