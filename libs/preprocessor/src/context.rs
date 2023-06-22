@@ -195,22 +195,32 @@ impl<'a> Context<'a> {
     /// Get a macro [`Definition`]
     pub fn get(&self, ident: &str, token: &Token) -> Option<(Token, Definition)> {
         match ident {
-            "__LINE__" => Some((
-                Token::builtin(Some(Box::new(token.clone()))),
-                Definition::Value(vec![Token::new(
-                    Symbol::Word(token.source().start().1 .0.to_string()),
-                    token.source().clone(),
-                    Some(Box::new(token.clone())),
-                )]),
-            )),
-            "__FILE__" => Some((
-                Token::builtin(Some(Box::new(token.clone()))),
-                Definition::Value(vec![Token::new(
-                    Symbol::Word(token.source().path().to_string().replace('\\', "/")),
-                    token.source().clone(),
-                    Some(Box::new(token.clone())),
-                )]),
-            )),
+            "__LINE__" => {
+                let mut root_token = token;
+                while let Some(parent) = root_token.parent() {root_token = parent}
+
+                Some((
+                    Token::builtin(Some(Box::new(token.clone()))),
+                    Definition::Value(vec![Token::new(
+                        Symbol::Word(root_token.source().start().1 .0.to_string()),
+                        token.source().clone(),
+                        Some(Box::new(token.clone())),
+                    )]),
+                ))
+            },
+            "__FILE__" => {
+                let mut root_token = token;
+                while let Some(parent) = root_token.parent() {root_token = parent}
+
+                Some((
+                    Token::builtin(Some(Box::new(token.clone()))),
+                    Definition::Value(vec![Token::new(
+                        Symbol::Word(format!("\"{}\"", root_token.source().path().to_string().replace('\\', "/"))),
+                        token.source().clone(),
+                        Some(Box::new(token.clone())),
+                    )]),
+                ))
+            },
             "__COUNTER__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
