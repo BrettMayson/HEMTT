@@ -45,7 +45,7 @@ jobs:
         run: cargo test --locked --all-features --all-targets
 
   coverage:
-    runs-on: windows
+    runs-on: windows-latest
     name: windows / stable / coverage
     steps:
       - uses: actions/checkout@v3
