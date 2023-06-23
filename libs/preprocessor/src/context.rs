@@ -198,7 +198,7 @@ impl<'a> Context<'a> {
             "__LINE__" => {
                 let mut root_token = token;
                 while let Some(parent) = root_token.parent() {
-                    root_token = parent
+                    root_token = parent;
                 }
 
                 Some((
@@ -210,24 +210,14 @@ impl<'a> Context<'a> {
                     )]),
                 ))
             }
-            "__FILE__" => {
-                let mut root_token = token;
-                while let Some(parent) = root_token.parent() {
-                    root_token = parent
-                }
-
-                Some((
-                    Token::builtin(Some(Box::new(token.clone()))),
-                    Definition::Value(vec![Token::new(
-                        Symbol::Word(format!(
-                            "\"{}\"",
-                            root_token.source().path().to_string().replace('\\', "/")
-                        )),
-                        token.source().clone(),
-                        Some(Box::new(token.clone())),
-                    )]),
-                ))
-            }
+            "__FILE__" => Some((
+                Token::builtin(Some(Box::new(token.clone()))),
+                Definition::Value(vec![Token::new(
+                    Symbol::Word(format!("\"{}\"", self.current_file.replace('\\', "/"))),
+                    token.source().clone(),
+                    Some(Box::new(token.clone())),
+                )]),
+            )),
             "__COUNTER__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
