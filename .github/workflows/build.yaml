@@ -138,7 +138,7 @@ jobs:
 
   publish-windows:
     name: Publish on Windows Package Managers
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && github.repository == 'BrettMayson/HEMTT'
     runs-on: windows-latest
     needs:
       - build
@@ -164,8 +164,10 @@ jobs:
         with:
           args: push hemtt.${{ env.VERSION }}.nupkg --source "https://push.chocolatey.org/" --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
 
-      #- uses: vedantmgoyal2009/winget-releaser@v2
-      #  with:
-      #    identifier: BrettMayson.HEMTT
-      #    installers-regex: '\.exe$' # Only .exe files
-      #    token: ${{ secrets.WINGET_TOKEN }}
+      # Requires forked winget-pkgs: https://github.com/microsoft/winget-pkgs to the same account as this project
+      - uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: BrettMayson.HEMTT
+          installers-regex: 'windows-x64.zip'
+          max-versions-to-keep: 5
+          token: ${{ secrets.WINGET_TOKEN }} # Classic Personal Access Token with [public_repo, workflow] scopes
