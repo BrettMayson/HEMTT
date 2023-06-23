@@ -159,7 +159,7 @@ jobs:
       - name: Chocolatey Pack
         uses: crazy-max/ghaction-chocolatey@v2
         with:
-          args: pack --version ${{ env.VERSION }}
+          args: pack bin\dist\hemtt.nuspec --version ${{ env.VERSION }}
 
       - name: Chocolatey Push
         uses: crazy-max/ghaction-chocolatey@v2

@@ -50,8 +50,8 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <docsUrl>https://brettmayson.github.io/HEMTT/</docsUrl>
     <!--<mailingListUrl></mailingListUrl>-->
     <bugTrackerUrl>https://github.com/BrettMayson/HEMTT/issues</bugTrackerUrl>
-    <tags>hemtt arma arma3</tags>
-    <summary>An opinionated build system for Arma 3 mods.k</summary>
+    <tags>arma arma3 hemtt</tags>
+    <summary>An opinionated build system for Arma 3 mods.</summary>
     <description>An opinionated build system for Arma 3 mods.</description>
     <!-- <releaseNotes>__REPLACE_OR_REMOVE__MarkDown_Okay</releaseNotes> -->
     <!-- =============================== -->
@@ -73,6 +73,6 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
   </metadata>
   <files>
     <!-- this section controls what actually gets packaged into the Chocolatey package -->
-    <file src="target\release\hemtt.exe" target="." />
+    <file src="..\..\target\release\hemtt.exe" target="." />
   </files>
 </package>
