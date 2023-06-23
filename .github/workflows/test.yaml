@@ -129,8 +129,8 @@ jobs:
         uses: arma-actions/arma3-tools@master
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
-      - name: Build HEMTT (Linux)
-        if: startsWith(matrix.os.runner, 'linux')
+      - name: Build HEMTT (Ubuntu)
+        if: startsWith(matrix.os.runner, 'ubuntu')
         run: |
           source <(cargo llvm-cov show-env --export-prefix)
           cargo llvm-cov clean --workspace
