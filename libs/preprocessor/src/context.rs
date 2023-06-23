@@ -213,6 +213,7 @@ impl<'a> Context<'a> {
             "__FILE__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
+                    // TODO add $PBOPREFIX$ of the current file somehow
                     Symbol::Word(format!("\"{}\"", self.current_file.replace('\\', "/"))),
                     token.source().clone(),
                     Some(Box::new(token.clone())),
