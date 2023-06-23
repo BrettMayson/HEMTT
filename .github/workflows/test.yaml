@@ -129,28 +129,15 @@ jobs:
         uses: arma-actions/arma3-tools@master
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
-      - name: Build HEMTT (Ubuntu)
-        if: startsWith(matrix.os.runner, 'ubuntu')
-        run: |
-          source <(cargo llvm-cov show-env --export-prefix)
-          cargo llvm-cov clean --workspace
-          cargo build
-      - name: Build HEMTT (Windows)
-        if: startsWith(matrix.os.runner, 'windows')
-        shell: powershell
-        run: |
-          . (cargo llvm-cov show-env --export-prefix | Out-String)
-          cargo llvm-cov clean --workspace
-          cargo build
       - name: Build ${{ matrix.mod.repo }} (dev)
         run: |
-          cd mod && ../target/llvm-cov-target/debug/hemtt dev
+          cargo llvm-cov run --locked --no-report -- dev --dir mod
       - name: Build ${{ matrix.mod.repo }} (build)
         run: |
-          cd mod && ../target/llvm-cov-target/debug/hemtt build
+          cargo llvm-cov run --locked --no-report -- build --dir mod
       - name: Build ${{ matrix.mod.repo }} (release)
         run: |
-          cd mod && ../target/llvm-cov-target/debug/hemtt release
+          cargo llvm-cov run --locked --no-report -- release --dir mod
       - name: cargo llvm-cov
         run: cargo llvm-cov report --codecov --output-path codecov.json
       - name: Upload to codecov.io
