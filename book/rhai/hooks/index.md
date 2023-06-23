@@ -7,6 +7,7 @@ Some example Rhai scripts can be found on the [Rhai Playground](https://rhai.rs/
 Hooks are stored in the `.hemtt/hooks/{phase}` folders. The `{phase}` is the name of the phase that the hook is run in. The hooks are run in alphabetical order.
 
 **Example**
+
 ```
 .hemtt
 └── hooks
@@ -22,12 +23,12 @@ Hooks are stored in the `.hemtt/hooks/{phase}` folders. The `{phase}` is the nam
 
 There are 4 phases of the build process that can be hooked into:
 
-| Hook | File System |
-| --- | --- |
-| `pre_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
-| `post_build` | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
-| `pre_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
-| `post_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system) |
+| Hook           | File System                                                      |
+| -------------- | ---------------------------------------------------------------- |
+| `pre_build`    | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `post_build`   | [Virtual](library/filesystem.md#hemtt_vfs---virtual-file-system) |
+| `pre_release`  | [Real](library/filesystem.md#hemtt_rfs---real-file-system)       |
+| `post_release` | [Real](library/filesystem.md#hemtt_rfs---real-file-system)       |
 
 ### `pre_build`
 

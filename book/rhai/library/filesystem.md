@@ -2,9 +2,9 @@
 
 HEMTT has two types file systems, which one is used depends on the context.
 
-[Scripts](../scripts.md) always use the real file system, as the run outside of the build process.
+[Scripts](../scripts/index.md) always use the real file system, as the run outside of the build process.
 
-[Hooks](../hooks.md) use the virtual file system during the `pre_build` and `post_build` phases, and the real file system during the `pre_release` and `post_release` phases.
+[Hooks](../hooks/index.md) use the virtual file system during the `pre_build` and `post_build` phases, and the real file system during the `pre_release` and `post_release` phases.
 
 ## `HEMTT_VFS` - Virtual File System
 
@@ -57,20 +57,12 @@ When using the real file system, two additional constants are available. `HEMTT_
 ```ts
 // Read the current contents of the docs/version.txt
 // file from the project source
-let version = HEMTT_RFS
-        .join("docs")
-        .join("version.txt")
-        .open_file()
-        .read();
+let version = HEMTT_RFS.join("docs").join("version.txt").open_file().read();
 // Replace the placeholder version with the actual version
 version.replace("0.0.0", HEMTT.project().version().to_string());
 // Write the new contents to the build output
 // create_file will overwrite the file if it exists
-HEMTT_OUT
-        .join("docs")
-        .join("version.txt")
-        .create_file()
-        .write(version);
+HEMTT_OUT.join("docs").join("version.txt").create_file().write(version);
 ```
 
 # Functions
@@ -82,8 +74,8 @@ All the functions below are available on both the virtual and real file systems.
 Joins the path with the given string.
 
 ```ts
-HEMTT_VFS.join("addons") // Points to ./addons in the project folder
-HEMTT_VFS.join("addons").join("main") // Points to ./addons/main in the project folder
+HEMTT_VFS.join("addons"); // Points to ./addons in the project folder
+HEMTT_VFS.join("addons").join("main"); // Points to ./addons/main in the project folder
 ```
 
 ## `exists()`
@@ -91,8 +83,8 @@ HEMTT_VFS.join("addons").join("main") // Points to ./addons/main in the project 
 Returns `true` if the path exists.
 
 ```ts
-HEMTT_VFS.join("addons").exists() // true
-HEMTT_VFS.join(".hemtt").join("project.toml").exists() // true
+HEMTT_VFS.join("addons").exists(); // true
+HEMTT_VFS.join(".hemtt").join("project.toml").exists(); // true
 ```
 
 ## `is_dir()`
@@ -100,8 +92,8 @@ HEMTT_VFS.join(".hemtt").join("project.toml").exists() // true
 Returns `true` if the path is a directory.
 
 ```ts
-HEMTT_VFS.join("addons").is_dir() // true
-HEMTT_VFS.join(".hemtt").join("project.toml").is_dir() // false
+HEMTT_VFS.join("addons").is_dir(); // true
+HEMTT_VFS.join(".hemtt").join("project.toml").is_dir(); // false
 ```
 
 ## `is_file()`
@@ -109,8 +101,8 @@ HEMTT_VFS.join(".hemtt").join("project.toml").is_dir() // false
 Returns `true` if the path is a file.
 
 ```ts
-HEMTT_VFS.join("addons").is_file() // false
-HEMTT_VFS.join(".hemtt").join("project.toml").is_file() // true
+HEMTT_VFS.join("addons").is_file(); // false
+HEMTT_VFS.join(".hemtt").join("project.toml").is_file(); // true
 ```
 
 ## `copy(path)`
@@ -118,7 +110,7 @@ HEMTT_VFS.join(".hemtt").join("project.toml").is_file() // true
 Copies the file or directory to the given path.
 
 ```ts
-HEMTT_VFS.join("docs").copy(HEMTT_OUT.join("docs")) // Copies the docs folder to the build output
+HEMTT_VFS.join("docs").copy(HEMTT_OUT.join("docs")); // Copies the docs folder to the build output
 ```
 
 ## `move(path)`
@@ -126,7 +118,7 @@ HEMTT_VFS.join("docs").copy(HEMTT_OUT.join("docs")) // Copies the docs folder to
 Moves the file or directory to the given path.
 
 ```ts
-HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")) // Moves the docs folder to the build output
+HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")); // Moves the docs folder to the build output
 ```
 
 ## `open_file()`
@@ -162,6 +154,7 @@ HEMTT_VFS.join("docs").join("readme.md").open_file().read(); // Returns a string
 ```
 
 ## `write(string)`
+
 Writes the string to the file. Can be called multiple times to append to the file.
 
 ```ts

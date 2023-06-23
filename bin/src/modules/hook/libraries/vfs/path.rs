@@ -13,17 +13,17 @@ pub mod path_functions {
         path.join(other).map_err(|e| e.to_string().into())
     }
 
-    #[rhai_fn(global, pure, get = "exists", return_raw)]
+    #[rhai_fn(global, pure, return_raw)]
     pub fn exists(path: &mut VfsPath) -> Result<bool, Box<EvalAltResult>> {
         path.exists().map_err(|e| e.to_string().into())
     }
 
-    #[rhai_fn(global, pure, get = "is_dir", return_raw)]
+    #[rhai_fn(global, pure, return_raw)]
     pub fn is_dir(path: &mut VfsPath) -> Result<bool, Box<EvalAltResult>> {
         path.is_dir().map_err(|e| e.to_string().into())
     }
 
-    #[rhai_fn(global, pure, get = "is_file", return_raw)]
+    #[rhai_fn(global, pure, return_raw)]
     pub fn is_file(path: &mut VfsPath) -> Result<bool, Box<EvalAltResult>> {
         path.is_file().map_err(|e| e.to_string().into())
     }

@@ -77,6 +77,8 @@ impl Module for ArmaScriptCompiler {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
+        let mut out_file =
+            File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
@@ -180,6 +182,8 @@ impl Module for ArmaScriptCompiler {
         std::env::set_current_dir(&tmp)?;
         let start = Instant::now();
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
+        out_file.write_all(&command.stdout)?;
+        out_file.write_all(&command.stderr)?;
         if command.status.success() {
             debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
         } else {

@@ -2,16 +2,23 @@
 
 In addition to `.hemtt/project.toml`, HEMTT also supports an optional `addon.toml` in each addon folder.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
-no_bin = [
+[binarize]
+enabled = false # Default: true
+exclude = [
     "data/*.p3d",
     "data/anim/chop.rtm",
 ]
 
-preprocess = false # Default: true
+[preprocess]
+enabled = false # Default: true
+exclude = [
+    "missions/**/description.ext",
+]
 
+[files]
 exclude = [
     "data/*.psd",
 ]
@@ -20,14 +27,16 @@ exclude = [
 iso = "14001"
 ```
 
-## no_bin
+## binarize
 
-The `no_bin` key is an array of glob patterns that will be excluded from binarization and packed as is.
+HEMTT's binarization of addons can be disabled entirely by setting `binarize.enabled` to `false`, or disabled for specific files by adding glob patterns to `binarize.exclude`.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
-no_bin = [
+[binarize]
+enabled = false # Default: true
+exclude = [
     "data/*.p3d",
     "data/anim/chop.rtm",
 ]
@@ -35,23 +44,28 @@ no_bin = [
 
 ## preprocess
 
-The `preprocess` key is a boolean that determines if the addon `config.cpp` should be preprocessed. This is not recommended, and should only be used when required, such as when using `__has_include`.
+HEMTT's preprocessing of addons can be disabled entirely by setting `preprocess.enabled` to `false`, or disabled for specific files by adding glob patterns to `preprocess.exclude`.
 
-When it is required, it is recommended to create a separate addon to house any optional config, with the minimum amount of code required to make it work. Disabling preprocessing will allow you to ship invalid config, which could cause issues for your players. It will also cause slower load times when the config is valid.
+When it is required to disable preprocessing of `config.cpp`, it is recommended to create a separate addon to house any optional config, with the minimum amount of code required to make it work. Disabling preprocessing will allow you to ship invalid config, which could cause issues for your players. It will also cause slower load times when the config is valid.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
-preprocess = false # Default: true
+[preprocess]
+enabled = false # Default: true
+exclude = [
+    "missions/**/description.ext",
+]
 ```
 
-## exclude
+## files
 
-The `exclude` key is an array of glob patterns that will be excluded from the PBO.
+`files.exclude` is an array of glob patterns that will be excluded and not packed into the PBO.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
+[files]
 exclude = [
     "data/*.psd",
 ]
@@ -61,7 +75,7 @@ exclude = [
 
 Much like the `properties` key in `.hemtt/project.toml`, the `properties` key in `addon.toml` allows you to add custom properties to the PBO.
 
-***/addons/banana/addon.toml***
+**_/addons/banana/addon.toml_**
 
 ```toml
 [properties]

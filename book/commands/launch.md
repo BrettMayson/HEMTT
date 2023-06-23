@@ -86,13 +86,13 @@ A list of DLCs to launch with your mod. The fullname or short-code can be used.
 
 Currently supported DLCs:
 
-| Full Name | Short Code |
-| --- | --- |
-| Contact | enoch |
-| Global Mobilization | gm |
-| S.O.G. Prairie Fire | vn |
-| CSLA Iron Curtain | csla |
-| Western Sahara | ws |
+| Full Name           | Short Code |
+| ------------------- | ---------- |
+| Contact             | enoch      |
+| Global Mobilization | gm         |
+| S.O.G. Prairie Fire | vn         |
+| CSLA Iron Curtain   | csla       |
+| Western Sahara      | ws         |
 
 ### optionals
 

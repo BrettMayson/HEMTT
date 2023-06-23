@@ -32,22 +32,21 @@ pub fn cli() -> Command {
         .subcommand(commands::build::cli())
         .subcommand(commands::launch::cli())
         .subcommand(commands::release::cli())
-        .subcommand(commands::script::cli());
-    global = global.arg(
-        clap::Arg::new("threads")
-            .global(true)
-            .help("Number of threads, defaults to # of CPUs")
-            .action(ArgAction::Set)
-            .long("threads")
-            .short('t'),
-    );
-    global = global.arg(
-        clap::Arg::new("verbosity")
-            .global(true)
-            .help("Verbosity level")
-            .action(ArgAction::Count)
-            .short('v'),
-    );
+        .subcommand(commands::script::cli())
+        .arg(
+            clap::Arg::new("threads")
+                .global(true)
+                .help("Number of threads, defaults to # of CPUs")
+                .action(ArgAction::Set)
+                .long("threads")
+                .short('t'),
+        ).arg(
+            clap::Arg::new("verbosity")
+                .global(true)
+                .help("Verbosity level")
+                .action(ArgAction::Count)
+                .short('v'),
+        );
     #[cfg(debug_assertions)]
     {
         global = global.arg(
@@ -56,6 +55,12 @@ pub fn cli() -> Command {
                 .help("we are in a test")
                 .action(ArgAction::SetTrue)
                 .long("in-test"),
+        ).arg(
+            clap::Arg::new("dir")
+                .global(true)
+                .help("directory to run in")
+                .action(ArgAction::Set)
+                .long("dir")
         );
     }
     global
@@ -71,6 +76,9 @@ pub fn cli() -> Command {
 pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
         logging::init(matches.get_count("verbosity"));
+    }
+    if let Some(dir) = matches.get_one::<String>("dir") {
+        std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
     if !is_ci() {

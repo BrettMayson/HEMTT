@@ -111,7 +111,7 @@ fn _build(
                 }
             }
             if let Some(config) = addon.config() {
-                for exclude in config.exclude() {
+                for exclude in config.files().exclude() {
                     if glob::Pattern::new(exclude)?.matches(
                         entry
                             .as_str()

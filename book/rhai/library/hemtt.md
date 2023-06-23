@@ -7,10 +7,10 @@ The `HEMTT` constant gives access to information and the ability to modify the b
 Returns the version of HEMTT.
 
 ```js
-HEMTT.version().to_string(); // "1.5.2"
+HEMTT.version().to_string(); // "1.7.0"
 HEMTT.version().major(); // 1
-HEMTT.version().minor(); // 5
-HEMTT.version().patch(); // 2
+HEMTT.version().minor(); // 7
+HEMTT.version().patch(); // 0
 HEMTT.version().build(); // ""
 ```
 
@@ -28,10 +28,10 @@ HEMTT.project().version().to_string(); // "1.3.0.1052"
 
 Returns the current mode of HEMTT, one of:
 
-- dev
-- launch
-- build
-- release
+-   dev
+-   launch
+-   build
+-   release
 
 ```js
 HEMTT.mode(); // "release"
