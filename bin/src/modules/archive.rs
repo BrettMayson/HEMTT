@@ -34,7 +34,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
                 ctx.config().folder_name(),
                 path.replace('\\', "/")
             );
-            debug!("zip: creating directory {:?}", dir);
+            trace!("zip: creating directory {:?}", dir);
             zip.add_directory(dir, options)?;
             continue;
         }
@@ -46,7 +46,7 @@ pub fn release(ctx: &Context) -> Result<(), Error> {
             ctx.config().folder_name(),
             name.display().to_string().replace('\\', "/")
         );
-        debug!("zip: adding file {:?}", file);
+        trace!("zip: adding file {:?}", file);
         zip.start_file(file, options)?;
         std::io::copy(&mut std::fs::File::open(path)?, &mut zip)?;
     }
