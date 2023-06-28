@@ -1,142 +1,65 @@
-use hemtt_tokens::{Symbol, Token};
-use peekmore::PeekMoreIterator;
+use chumsky::prelude::*;
 
-use crate::{Error, Str};
+use crate::Str;
 
-use super::{Options, Parse};
-
-impl Parse for Str {
-    fn parse(
-        _options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        from: &Token,
-    ) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        if let Some(token) = tokens.next() {
-            if token.symbol() != &Symbol::DoubleQuote {
-                return Err(Error::UnexpectedToken {
-                    token: Box::new(token),
-                    expected: vec![Symbol::DoubleQuote],
-                });
-            }
-        } else {
-            return Err(Error::UnexpectedEOF {
-                token: Box::new(from.clone()),
-            });
-        }
-        let mut string = String::new();
-        'outer: loop {
-            if let Some(token) = tokens.peek() {
-                match token.symbol() {
-                    Symbol::DoubleQuote => 'inner: loop {
-                        tokens.next();
-                        if let Some(token) = tokens.peek() {
-                            match token.symbol() {
-                                Symbol::DoubleQuote => {
-                                    tokens.next();
-                                    string.push('"');
-                                    break 'inner;
-                                }
-                                Symbol::Whitespace(_) => continue,
-                                Symbol::Escape => {
-                                    if tokens.peek_nth(1).unwrap().symbol()
-                                        == &Symbol::Word(String::from("n"))
-                                    {
-                                        tokens.next();
-                                        tokens.next();
-                                        string.push('\n');
-                                        loop {
-                                            if let Some(token) = tokens.peek() {
-                                                match token.symbol() {
-                                                    Symbol::Whitespace(_) => {
-                                                        tokens.next();
-                                                        continue;
-                                                    }
-                                                    Symbol::DoubleQuote => {
-                                                        tokens.next();
-                                                        break 'inner;
-                                                    }
-                                                    _ => break 'outer,
-                                                }
-                                            }
-                                            return Err(Error::UnexpectedEOF {
-                                                token: Box::new(from.clone()),
-                                            });
-                                        }
-                                    }
-                                    break;
-                                }
-                                _ => break 'outer,
-                            }
-                        }
-                        break 'outer;
-                    },
-                    _ => {
-                        string.push_str(&tokens.next().unwrap().to_string());
-                    }
-                }
-            } else {
-                return Err(Error::UnexpectedEOF {
-                    token: Box::new(from.clone()),
-                });
-            }
-        }
-        Ok(Self(string))
-    }
+pub fn string(delimiter: char) -> impl Parser<char, Str, Error = Simple<char>> {
+    let content = just(delimiter).not().or(just([delimiter; 2]).to(delimiter));
+    let segment = just(delimiter)
+        .ignore_then(content.repeated())
+        .then_ignore(just(delimiter))
+        .collect();
+    segment
+        .separated_by(just("\\n").padded())
+        .at_least(1)
+        .collect::<Vec<String>>()
+        .map_with_span(|tok, span| (tok, span))
+        .map(|(segments, span)| Str {
+            value: segments.into_iter().collect::<Vec<_>>().join("\n"),
+            span,
+        })
 }
 
 #[cfg(test)]
 mod tests {
-    use hemtt_tokens::Token;
-    use peekmore::PeekMore;
-
-    use crate::parse::Parse;
+    use super::*;
 
     #[test]
-    fn string() {
-        let mut tokens = hemtt_preprocessor::preprocess_string(r#""test""#)
-            .unwrap()
-            .into_iter()
-            .peekmore();
-        let string = super::Str::parse(
-            &super::Options::default(),
-            &mut tokens,
-            &Token::builtin(None),
-        )
-        .unwrap();
-        assert_eq!(string, super::Str("test".to_string()));
+    fn simple() {
+        assert_eq!(
+            string('"').parse("\"hello world\""),
+            Ok(Str {
+                value: "hello world".to_string(),
+                span: 0..13
+            })
+        );
     }
 
     #[test]
-    fn string_escape() {
-        let mut tokens = hemtt_preprocessor::preprocess_string(r#""test is ""cool""""#)
-            .unwrap()
-            .into_iter()
-            .peekmore();
-        let string = super::Str::parse(
-            &super::Options::default(),
-            &mut tokens,
-            &Token::builtin(None),
-        )
-        .unwrap();
-        assert_eq!(string, super::Str(r#"test is "cool""#.to_string()));
+    fn multiline() {
+        assert_eq!(
+            string('"').parse("\"hello\" \\n \"world\""),
+            Ok(Str {
+                value: "hello\nworld".to_string(),
+                span: 0..18
+            })
+        );
     }
 
     #[test]
-    // fn who_in_the_f_thought_this_was_a_good_idea() {
-    fn multiline_string() {
-        let mut tokens = hemtt_preprocessor::preprocess_string(r#""test" \n "is" \n "cool""#)
-            .unwrap()
-            .into_iter()
-            .peekmore();
-        let string = super::Str::parse(
-            &super::Options::default(),
-            &mut tokens,
-            &Token::builtin(None),
-        )
-        .unwrap();
-        assert_eq!(string, super::Str("test\nis\ncool".to_string()));
+    fn escaped() {
+        assert_eq!(
+            string('"').parse("\"hello \"\"world\"\"\""),
+            Ok(Str {
+                value: "hello \"world\"".to_string(),
+                span: 0..17
+            })
+        );
+        assert_eq!(
+            string('"').parse("\"and he said \"\"hello \"\"\"\"world\"\"\"\"\"\"\""),
+            Ok(Str {
+                value: "and he said \"hello \"\"world\"\"\"".to_string(),
+                span: 0..37
+            })
+        );
     }
 }

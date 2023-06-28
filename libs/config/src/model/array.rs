@@ -1,14 +1,22 @@
-use super::Entry;
+use std::ops::Range;
+
+use crate::{Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
 /// An array of entries
 pub struct Array {
-    /// Is the array expanding a previously defined array
-    ///
-    /// ```cpp
-    /// my_array[] += {1,2,3};
-    /// ```
-    pub expand: bool,
-    /// The elements of the array
-    pub elements: Vec<Entry>,
+    pub(crate) expand: bool,
+    pub(crate) items: Vec<Item>,
+    pub(crate) span: Range<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+/// An array value
+pub enum Item {
+    /// A string value
+    Str(Str),
+    /// A number value
+    Number(Number),
+    /// An array value
+    Array(Vec<Item>),
 }

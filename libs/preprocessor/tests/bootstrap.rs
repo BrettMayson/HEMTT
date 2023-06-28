@@ -1,4 +1,4 @@
-use hemtt_preprocessor::{preprocess_file, resolvers::LocalResolver, Processed};
+use hemtt_preprocessor::{preprocess_file, LocalResolver, Processed};
 
 const ROOT: &str = "tests/bootstrap/";
 
@@ -8,7 +8,7 @@ fn bootstrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
             let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
-            let resolver = LocalResolver::new();
+            let resolver = LocalResolver::default();
             println!(
                 "bootstrap {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
@@ -18,10 +18,8 @@ fn bootstrap() {
                 &resolver,
             )
             .unwrap();
-            let processed = Processed::from(tokens);
-            let map = processed.get_source_map(file.path().join("expected.hpp"));
+            let processed = Processed::from_tokens(&resolver, tokens);
             std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
-            std::fs::write(file.path().join("generated.hpp.map"), map).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }
     }

@@ -1,8 +1,8 @@
 use std::io::Read;
 
-use hemtt_config::{parse::Parse, rapify::Rapify, Config};
-use hemtt_preprocessor::{preprocess_file, resolvers::LocalResolver};
-use peekmore::PeekMore;
+use chumsky::Parser;
+use hemtt_config::{parse::config, rapify::Rapify};
+use hemtt_preprocessor::{preprocess_file, LocalResolver, Processed};
 
 const ROOT: &str = "tests/rapify/";
 
@@ -15,17 +15,14 @@ fn rapify() {
                 "rapify {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
+            let resolver = LocalResolver::default();
             let tokens = preprocess_file(
                 &file.path().join("source.hpp").display().to_string(),
-                &LocalResolver::new(),
+                &resolver,
             )
             .unwrap();
-            let rapified = Config::parse(
-                &hemtt_config::parse::Options::default(),
-                &mut tokens.into_iter().peekmore(),
-                &hemtt_tokens::Token::builtin(None),
-            )
-            .unwrap();
+            let processed = Processed::from_tokens(&resolver, tokens);
+            let rapified = config().parse(processed.output()).unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();
             let mut expected = Vec::new();

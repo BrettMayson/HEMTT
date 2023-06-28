@@ -7,8 +7,9 @@ mod position;
 mod symbol;
 pub mod whitespace;
 
-pub use position::Position;
 pub use symbol::Symbol;
+
+pub use self::position::Position;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A token from the tokenizer

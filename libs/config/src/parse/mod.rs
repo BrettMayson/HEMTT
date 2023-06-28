@@ -1,46 +1,177 @@
-//! Parsing of config files
+//! # Parse
 
-mod entry;
-mod ident;
-mod number;
-mod options;
-mod str;
-pub use options::{Options, Preset};
+use chumsky::prelude::*;
 
-use hemtt_tokens::Token;
-use peekmore::PeekMoreIterator;
+use crate::Config;
 
-use crate::{Children, Class, Config, Error, Ident, Properties};
+use self::property::property;
 
 mod array;
-mod class;
+// mod class;
+mod ident;
+mod number;
+mod property;
+mod str;
+mod value;
 
-/// A trait for parsing a type from a token stream
-pub trait Parse {
-    /// # Errors
-    /// if the token stream is invalid
-    fn parse(
-        options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        from: &Token,
-    ) -> Result<Self, Error>
-    where
-        Self: Sized;
+/// Parse a config file.
+pub fn config() -> impl Parser<char, Config, Error = Simple<char>> {
+    choice((
+        property()
+            .padded()
+            .repeated()
+            .delimited_by(empty(), end())
+            .map(Config),
+        end().padded().map(|_| Config(vec![])),
+    ))
 }
 
-impl Parse for Config {
-    fn parse(
-        options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        from: &Token,
-    ) -> Result<Self, Error> {
-        let properties = Properties::parse(options, tokens, from)?;
-        Ok(Self {
-            root: Class::Local {
-                children: Children(properties),
-                name: Ident::default(),
+#[cfg(test)]
+mod tests {
+    use chumsky::Parser;
+
+    use crate::{parse::config, Config};
+
+    #[test]
+    fn empty() {
+        assert_eq!(config().parse(r#""#,), Ok(Config(vec![]),));
+        assert_eq!(config().parse(r#"   "#,), Ok(Config(vec![]),));
+    }
+
+    #[test]
+    fn single_item() {
+        assert_eq!(
+            config().parse(r#"MyData = "Hello World";"#,),
+            Ok(Config(vec![crate::Property::Entry {
+                name: crate::Ident {
+                    value: "MyData".to_string(),
+                    span: 0..6,
+                },
+                value: crate::Value::Str(crate::Str {
+                    value: "Hello World".to_string(),
+                    span: 9..22,
+                }),
+            },]),)
+        );
+    }
+
+    #[test]
+    fn multiple_items() {
+        assert_eq!(
+            config().parse(r#"MyData = "Hello World"; MyOtherData = 1234;"#,),
+            Ok(Config(vec![
+                crate::Property::Entry {
+                    name: crate::Ident {
+                        value: "MyData".to_string(),
+                        span: 0..6,
+                    },
+                    value: crate::Value::Str(crate::Str {
+                        value: "Hello World".to_string(),
+                        span: 9..22,
+                    }),
+                },
+                crate::Property::Entry {
+                    name: crate::Ident {
+                        value: "MyOtherData".to_string(),
+                        span: 24..35,
+                    },
+                    value: crate::Value::Number(crate::Number::Int32 {
+                        value: 1234,
+                        span: 38..42,
+                    }),
+                },
+            ]),)
+        );
+    }
+
+    #[test]
+    fn class() {
+        assert_eq!(
+            config().parse(
+                r#"class MyClass {
+                    MyData = "Hello World";
+                    MyOtherData = 1234;
+                };"#,
+            ),
+            Ok(Config(vec![crate::Property::Class(crate::Class::Local {
+                name: crate::Ident {
+                    value: "MyClass".to_string(),
+                    span: 6..13,
+                },
                 parent: None,
-            },
-        })
+                properties: vec![
+                    crate::Property::Entry {
+                        name: crate::Ident {
+                            value: "MyData".to_string(),
+                            span: 36..42,
+                        },
+                        value: crate::Value::Str(crate::Str {
+                            value: "Hello World".to_string(),
+                            span: 45..58,
+                        }),
+                    },
+                    crate::Property::Entry {
+                        name: crate::Ident {
+                            value: "MyOtherData".to_string(),
+                            span: 80..91,
+                        },
+                        value: crate::Value::Number(crate::Number::Int32 {
+                            value: 1234,
+                            span: 94..98,
+                        }),
+                    },
+                ],
+            }),]),)
+        );
+    }
+
+    #[test]
+    fn nested_class() {
+        assert_eq!(
+            config().parse(
+                r#"class Outer {
+                    class Inner {
+                        MyData = "Hello World";
+                        MyOtherData = 1234;
+                    };
+                };"#,
+            ),
+            Ok(Config(vec![crate::Property::Class(crate::Class::Local {
+                name: crate::Ident {
+                    value: "Outer".to_string(),
+                    span: 6..11,
+                },
+                parent: None,
+                properties: vec![crate::Property::Class(crate::Class::Local {
+                    name: crate::Ident {
+                        value: "Inner".to_string(),
+                        span: 40..45,
+                    },
+                    parent: None,
+                    properties: vec![
+                        crate::Property::Entry {
+                            name: crate::Ident {
+                                value: "MyData".to_string(),
+                                span: 72..78,
+                            },
+                            value: crate::Value::Str(crate::Str {
+                                value: "Hello World".to_string(),
+                                span: 81..94
+                            }),
+                        },
+                        crate::Property::Entry {
+                            name: crate::Ident {
+                                value: "MyOtherData".to_string(),
+                                span: 120..131
+                            },
+                            value: crate::Value::Number(crate::Number::Int32 {
+                                value: 1234,
+                                span: 134..138
+                            }),
+                        },
+                    ],
+                })],
+            }),]),)
+        );
     }
 }

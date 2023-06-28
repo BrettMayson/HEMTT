@@ -1,36 +1,43 @@
-use hemtt_tokens::{Symbol, Token};
-use peekmore::PeekMoreIterator;
+use chumsky::prelude::*;
 
-use crate::{Error, Ident};
+use crate::Ident;
 
-use super::{Options, Parse};
+pub fn ident() -> impl Parser<char, Ident, Error = Simple<char>> {
+    one_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        .repeated()
+        .at_least(1)
+        .collect::<String>()
+        .map_with_span(|value, span| Ident { value, span })
+}
 
-impl Parse for Ident {
-    fn parse(
-        _options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        _from: &Token,
-    ) -> Result<Self, crate::error::Error>
-    where
-        Self: Sized,
-    {
-        let mut ident = Vec::new();
-        while let Some(token) = tokens.peek() {
-            match token.symbol() {
-                Symbol::Digit(_) | Symbol::Word(_) => {
-                    ident.push(tokens.next().unwrap());
-                }
-                Symbol::Join => {
-                    tokens.next();
-                }
-                _ => break,
-            }
-        }
-        if ident.is_empty() {
-            return Err(Error::ExpectedIdent {
-                token: Box::new(tokens.peek().unwrap().clone()),
-            });
-        }
-        Ok(Self::new(ident))
+#[cfg(test)]
+mod tests {
+    use crate::Ident;
+
+    use super::*;
+
+    #[test]
+    fn test_ident() {
+        assert_eq!(
+            ident().parse("abc"),
+            Ok(Ident {
+                value: "abc".to_string(),
+                span: 0..3,
+            })
+        );
+        assert_eq!(
+            ident().parse("abc123"),
+            Ok(Ident {
+                value: "abc123".to_string(),
+                span: 0..6,
+            })
+        );
+        assert_eq!(
+            ident().parse("abc_123"),
+            Ok(Ident {
+                value: "abc_123".to_string(),
+                span: 0..7,
+            })
+        );
     }
 }

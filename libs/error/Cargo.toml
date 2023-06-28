@@ -9,7 +9,5 @@ license = "GPL-2.0"
 bench = false
 
 [dependencies]
-hemtt-tokens = { path = "../tokens", version = "1.0.0" }
-
-colored = { workspace = true }
+ariadne = { workspace = true }
 thiserror = "1.0.40"

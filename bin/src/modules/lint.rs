@@ -3,9 +3,9 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use hemtt_preprocessor::preprocess_file;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, resolver::VfsResolver};
 
-use super::{rapifier::VfsResolver, Module};
+use super::Module;
 
 #[derive(Default)]
 pub struct Lint;

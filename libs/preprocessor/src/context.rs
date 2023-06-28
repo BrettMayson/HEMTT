@@ -3,9 +3,12 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
 };
 
-use hemtt_tokens::{Symbol, Token};
-
-use crate::{defines::Defines, ifstate::IfStates, Error};
+use crate::{
+    defines::Defines,
+    ifstate::IfStates,
+    tokens::{Symbol, Token},
+    Error,
+};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",

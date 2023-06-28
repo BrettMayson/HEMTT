@@ -1,7 +1,7 @@
-use std::path::PathBuf;
-
-use hemtt_tokens::{Symbol, Token};
-use serde::Serialize;
+use crate::{
+    tokens::{Symbol, Token},
+    Resolver,
+};
 
 /// Output of preprocessing a file
 pub struct Processed {
@@ -17,51 +17,11 @@ impl Processed {
         &self.output
     }
 
-    #[must_use]
-    /// Get the source map for the processed file
-    /// Work in progress, does not produce a valid source map yet
-    ///
-    /// # Panics
-    /// Panics if the processed file is not in the same directory as the source file
-    pub fn get_source_map(&self, processed: PathBuf) -> String {
-        #[derive(Serialize)]
-        struct Intermediate {
-            version: u8,
-            file: PathBuf,
-            sources: Vec<String>,
-            names: Vec<()>,
-            mappings: Vec<Vec<(usize, usize, usize, usize)>>,
-        }
-        serde_json::to_string(&Intermediate {
-            version: 3,
-            names: Vec::new(),
-            file: processed,
-            sources: self.sources.iter().map(|(path, _)| path.clone()).collect(),
-            mappings: {
-                self.mappings
-                    .iter()
-                    .map(|o| {
-                        o.iter()
-                            .map(|i| {
-                                (
-                                    i.processed_column,
-                                    i.source,
-                                    i.original_line,
-                                    i.original_column,
-                                )
-                            })
-                            .collect::<Vec<(usize, usize, usize, usize)>>()
-                    })
-                    .collect::<Vec<Vec<(usize, usize, usize, usize)>>>()
-            },
-        })
-        .unwrap()
-    }
-}
-
-#[allow(clippy::fallible_impl_from)] // TODO
-impl From<Vec<Token>> for Processed {
-    fn from(tokens: Vec<Token>) -> Self {
+    /// Source processed tokens for use in futher tools
+    pub fn from_tokens<R>(resolver: &R, tokens: Vec<Token>) -> Self
+    where
+        R: Resolver,
+    {
         let mut sources: Vec<(String, String)> = Vec::new();
         let mut mappings = Vec::new();
         let mut output = String::new();

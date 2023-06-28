@@ -1,4 +1,4 @@
-use hemtt_tokens::{whitespace::Whitespace, Position, Symbol, Token};
+use crate::tokens::{whitespace::Whitespace, Position, Symbol, Token};
 use pest::Parser;
 use pest_derive::Parser;
 

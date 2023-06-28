@@ -1,7 +1,6 @@
 #![deny(clippy::all, clippy::nursery)]
 #![warn(clippy::pedantic)]
 
-use hemtt_error::DisplayStyle;
 use tracing::error;
 
 fn main() {
@@ -30,7 +29,7 @@ It is always best to the include the log and a link to your project when reporti
         colored::control::set_override(false);
     }
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
-        eprintln!("{}", e.long(&DisplayStyle::Error));
+        eprint!("{e}");
         std::process::exit(1);
     }
 }

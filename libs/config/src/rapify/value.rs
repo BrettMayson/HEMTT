@@ -1,8 +1,8 @@
-use crate::Entry;
+use crate::Value;
 
 use super::Rapify;
 
-impl Rapify for Entry {
+impl Rapify for Value {
     fn rapify<O: std::io::Write>(
         &self,
         output: &mut O,

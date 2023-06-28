@@ -1,8 +1,8 @@
 use super::{Array, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
-/// A value entry in a config file
-pub enum Entry {
+/// A value in a config file
+pub enum Value {
     /// A string value
     ///
     /// ```cpp

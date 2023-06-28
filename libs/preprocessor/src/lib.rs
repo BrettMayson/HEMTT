@@ -5,8 +5,6 @@
 
 use std::path::PathBuf;
 
-use hemtt_tokens::whitespace;
-use hemtt_tokens::{Symbol, Token};
 use ifstate::IfState;
 
 mod context;
@@ -16,6 +14,7 @@ mod ifstate;
 mod map;
 mod parse;
 mod resolver;
+mod tokens;
 
 pub use context::{Context, Definition, FunctionDefinition};
 pub use defines::{Defines, DefinitionLibrary};
@@ -23,11 +22,8 @@ pub use error::Error;
 pub use map::{Mapping, Processed};
 pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
-pub use resolver::resolvers;
-pub use resolver::{
-    resolvers::{LocalResolver, NoResolver},
-    Resolver,
-};
+pub use resolver::{local::LocalResolver, none::NoResolver, Resolver};
+pub use tokens::{whitespace, Symbol, Token};
 
 /// Preprocesses a config file.
 ///

@@ -7,8 +7,18 @@
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
 mod error;
-pub use error::Error;
 mod model;
+use chumsky::{prelude::Simple, Parser};
 pub use model::*;
 pub mod parse;
 pub mod rapify;
+
+pub use error::Error;
+
+/// Parse a config file
+///
+/// # Errors
+/// If the file is invalid
+pub fn parse(input: &str) -> Result<Config, Vec<Simple<char>>> {
+    parse::config().parse(input)
+}
