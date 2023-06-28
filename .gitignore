@@ -5,3 +5,5 @@ generated.hpp
 
 .hemttout
 releases/
+
+*.nupkg

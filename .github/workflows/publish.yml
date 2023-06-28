@@ -1,0 +1,31 @@
+name: Publish
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  chocolatey:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download NuGet Package
+        uses: robinraju/release-downloader@v1.8
+        with:
+          releaseId: ${{ github.event.release.id }}
+          fileName: '*.nupkg'
+      - name: Push to Chocolatey
+        uses: crazy-max/ghaction-chocolatey@v2
+        with:
+          args: push --source "https://push.chocolatey.org/" --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
+
+  winget:
+    runs-on: windows-latest
+    steps:
+      # Requires forked winget-pkgs: https://github.com/microsoft/winget-pkgs to the same account as this project
+      - name: Submit to WinGet
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: BrettMayson.HEMTT
+          installers-regex: 'windows-x64.zip'
+          max-versions-to-keep: 5
+          token: ${{ secrets.WINGET_TOKEN }} # Classic Personal Access Token with [public_repo, workflow] scopes
