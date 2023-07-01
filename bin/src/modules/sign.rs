@@ -22,7 +22,7 @@ impl Module for Sign {
 
     fn check(&self, ctx: &Context) -> Result<(), Error> {
         if ctx.config().version().git_hash().is_some() {
-            Repository::open(".")?;
+            Repository::discover(".")?;
         }
         Ok(())
     }
