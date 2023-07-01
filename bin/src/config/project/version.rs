@@ -46,7 +46,7 @@ impl Options {
         let mut version = self._get()?;
 
         if let Some(length) = self.git_hash() {
-            let repo = Repository::open(".")?;
+            let repo = Repository::discover(".")?;
             let rev = repo.revparse_single("HEAD")?;
             let id = rev.id().to_string();
             version.set_build(&id[0..length as usize]);
