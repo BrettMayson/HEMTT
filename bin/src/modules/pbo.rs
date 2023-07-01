@@ -27,7 +27,7 @@ pub enum Collapse {
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
     let version = ctx.config().version().get()?;
     let git_hash = {
-        if let Ok(repo) = Repository::open(".") {
+        if let Ok(repo) = Repository::discover(".") {
             let rev = repo.revparse_single("HEAD")?;
             let id = rev.id().to_string();
             Some(id)
