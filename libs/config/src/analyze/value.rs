@@ -35,7 +35,6 @@ impl Analyze for Value {
                     let mut out = Vec::new();
                     let mut colors = ColorGenerator::new();
                     let a = colors.next();
-                    println!("token: {:?}", map.token());
                     let mut root = map.token();
                     let mut code = Codes::InvalidValue;
                     while let Some(parent) = root.parent() {

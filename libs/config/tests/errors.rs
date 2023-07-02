@@ -21,7 +21,6 @@ fn errors() {
             let rapified = hemtt_config::parse(&processed);
             match rapified {
                 Ok(config) => {
-                    println!("{:#?}", config.config());
                     let mut expected = Vec::new();
                     std::fs::File::open(file.path().join("stdout.ansi"))
                         .unwrap()

@@ -53,7 +53,6 @@ impl Class {
                         .iter()
                         .find(|b: &&Ident| b.value == property.name().value)
                     {
-                        println!("conflict: {:?}", property.name().value);
                         conflicts
                             .entry(b.as_str().to_string())
                             .or_insert_with(|| vec![b.clone()])

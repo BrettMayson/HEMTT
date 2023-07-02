@@ -124,7 +124,7 @@ impl Context {
         let mut prefixes = HashMap::new();
         for addon in self.addons() {
             prefixes.insert(
-                addon.prefix().to_string(),
+                format!("\\{}\\", addon.prefix().to_string()),
                 self.vfs().join(addon.folder()).unwrap(),
             );
         }

@@ -7,6 +7,7 @@ pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
         value
             .map(Item::Array)
             .or(array_value())
+            .padded()
             .separated_by(just(',').padded())
             .delimited_by(just('{'), just('}'))
     })

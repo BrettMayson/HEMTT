@@ -67,7 +67,16 @@ impl Module for Rapifier {
 
 pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
     let processed = preprocess_file(&path, resolver)?;
-    let configreport = parse(&processed).unwrap();
+    let configreport = parse(&processed);
+    if let Err(errors) = configreport {
+        for e in &errors {
+            eprintln!("{e}");
+        }
+        return Err(Error::Config(hemtt_config::Error::ConfigInvalid(
+            path.as_str().to_string(),
+        )));
+    };
+    let configreport = configreport.unwrap();
     configreport.warnings().iter().for_each(|e| {
         eprintln!("{e}");
     });

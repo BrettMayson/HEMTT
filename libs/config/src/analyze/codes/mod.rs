@@ -20,10 +20,10 @@ impl Codes {
 
     pub fn message(self) -> String {
         match self {
-            Self::InvalidValue => "a property's value could not be parsed.".to_string(),
-            Self::InvalidValueMacro => "a macro's result could not be parsed".to_string(),
-            Self::DuplicateProperty => "a property was defined more than once".to_string(),
-            Self::MissingSemicolon => "a property is missing a semicolon".to_string(),
+            Self::InvalidValue => "property's value could not be parsed.".to_string(),
+            Self::InvalidValueMacro => "macro's result could not be parsed".to_string(),
+            Self::DuplicateProperty => "property was defined more than once".to_string(),
+            Self::MissingSemicolon => "property is missing a semicolon".to_string(),
         }
     }
 
