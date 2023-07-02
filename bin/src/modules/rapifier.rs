@@ -78,10 +78,18 @@ pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), 
     };
     let configreport = configreport.unwrap();
     configreport.warnings().iter().for_each(|e| {
-        eprintln!("{e}");
+        e.generate_processed_report(&processed).map_or_else(|| if let Some(warning) = e.generate_report() {
+            eprintln!("{warning}");
+        }, |warning| {
+            eprintln!("{warning}");
+        });
     });
     configreport.errors().iter().for_each(|e| {
-        eprintln!("{e}");
+        e.generate_processed_report(&processed).map_or_else(|| if let Some(error) = e.generate_report() {
+            eprintln!("{error}");
+        }, |error| {
+            eprintln!("{error}");
+        });
     });
     if !configreport.errors().is_empty() {
         return Err(Error::Config(hemtt_config::Error::ConfigInvalid(

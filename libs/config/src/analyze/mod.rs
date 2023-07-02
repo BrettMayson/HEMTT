@@ -1,4 +1,4 @@
-use hemtt_preprocessor::Processed;
+use hemtt_error::{processed::Processed, Code};
 
 mod array;
 mod class;
@@ -14,7 +14,7 @@ pub trait Analyze {
     /// Check if the object is valid and can be rapified
     fn valid(&self) -> bool;
 
-    fn warnings(&self, processed: &Processed) -> Vec<String>;
+    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>>;
 
-    fn errors(&self, processed: &Processed) -> Vec<String>;
+    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>>;
 }

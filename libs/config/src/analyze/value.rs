@@ -1,6 +1,9 @@
-use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
+use hemtt_error::{processed::Processed, Code};
 
-use crate::{analyze::codes::Codes, Value};
+use crate::{
+    analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},
+    Value,
+};
 
 use super::Analyze;
 
@@ -10,22 +13,20 @@ impl Analyze for Value {
             Self::Str(s) => s.valid(),
             Self::Number(n) => n.valid(),
             Self::Array(a) => a.valid(),
-            Self::UnexpectedArray(_) => false,
-            Self::Invalid(_) => false,
+            Self::UnexpectedArray(_) | Self::Invalid(_) => false,
         }
     }
 
-    fn warnings(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::Str(s) => s.warnings(processed),
             Self::Number(n) => n.warnings(processed),
-            Self::Array(a) => a.warnings(processed),
-            Self::UnexpectedArray(a) => a.warnings(processed),
+            Self::Array(a) | Self::UnexpectedArray(a) => a.warnings(processed),
             Self::Invalid(_) => vec![],
         }
     }
 
-    fn errors(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::Str(s) => s.errors(processed),
             Self::Number(n) => n.errors(processed),
@@ -34,43 +35,17 @@ impl Analyze for Value {
                 // An unquoted string or otherwise invalid value
                 vec![{
                     let map = processed.original_col(invalid.start).unwrap();
-                    let mut out = Vec::new();
-                    let mut colors = ColorGenerator::new();
-                    let a = colors.next();
                     let mut root = map.token();
-                    let mut code = Codes::InvalidValue;
+                    let mut at_root = true;
                     while let Some(parent) = root.parent() {
                         root = parent;
-                        code = Codes::InvalidValueMacro;
+                        at_root = false;
                     }
-                    let mut report = Report::build(
-                        ariadne::ReportKind::Error,
-                        root.source().path_or_builtin(),
-                        root.source().start().0,
-                    )
-                    .with_code(code)
-                    .with_message(code.message())
-                    .with_label(
-                        Label::new((
-                            root.source().path_or_builtin(),
-                            root.source().start().0..root.source().end().0,
-                        ))
-                        .with_message(code.label_message())
-                        .with_color(a),
-                    )
-                    .with_help(code.help().unwrap());
-                    if code == Codes::InvalidValueMacro {
-                        report = report.with_note(format!(
-                            "The processed output was `{}`",
-                            &processed.output()[invalid.start..invalid.end].fg(a)
-                        ));
+                    if at_root {
+                        Box::new(InvalidValue::new(invalid.clone()))
+                    } else {
+                        Box::new(InvalidValueMacro::new(invalid.clone()))
                     }
-                    // .with_note("This may be valid in some other programs, learn more at https://hemtt.io/unquoted")
-                    report
-                        .finish()
-                        .write_for_stdout(sources(processed.sources()), &mut out)
-                        .unwrap();
-                    String::from_utf8(out).unwrap()
                 }]
             }
         }

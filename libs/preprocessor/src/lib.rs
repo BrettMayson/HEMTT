@@ -3,6 +3,10 @@
 
 //! HEMTT - Arma 3 Preprocessor
 
+use hemtt_error::{
+    processed::Processed,
+    tokens::{Symbol, Token},
+};
 use ifstate::IfState;
 
 mod context;
@@ -10,18 +14,14 @@ mod defines;
 mod error;
 mod ifstate;
 mod parse;
-mod processed;
 mod resolver;
-mod tokens;
 
 pub use context::{Context, Definition, FunctionDefinition};
 pub use defines::{Defines, DefinitionLibrary};
 pub use error::Error;
 pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
-pub use processed::{Mapping, Processed};
 pub use resolver::Resolver;
-pub use tokens::{whitespace, Symbol, Token};
 use vfs::VfsPath;
 
 /// Preprocesses a config file.
@@ -70,7 +70,7 @@ fn root_preprocess(
                     tokenstream.peek_forward(1).map(Token::symbol),
                     Some(Symbol::Slash)
                 ) {
-                    whitespace::skip_comment(tokenstream);
+                    skip_comment(tokenstream);
                 } else if context.ifstates().reading() {
                     output.push(tokenstream.next().unwrap());
                 }
@@ -114,7 +114,7 @@ fn directive_preprocess(
         if let Symbol::Word(command) = token.symbol() {
             match (command.as_str(), context.ifstates().reading()) {
                 ("include", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     context.push(token.clone());
                     output.append(&mut directive_include_preprocess(
                         resolver,
@@ -125,28 +125,28 @@ fn directive_preprocess(
                     context.pop();
                 }
                 ("define", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     directive_define_preprocess(resolver, context, tokenstream, token)?;
                 }
                 ("undef", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     directive_undef_preprocess(context, tokenstream, token)?;
                 }
                 ("if", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     directive_if_preprocess(context, tokenstream, token)?;
                 }
                 ("ifdef", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     directive_ifdef_preprocess(context, tokenstream, true, token)?;
                 }
                 ("ifndef", true) => {
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     directive_ifdef_preprocess(context, tokenstream, false, token)?;
                 }
                 ("ifdef" | "ifndef", false) => {
                     context.ifstates_mut().push(IfState::PassingChild);
-                    whitespace::skip(tokenstream);
+                    skip(tokenstream);
                     tokenstream.next();
                     eat_newline(tokenstream, context, &token)?;
                 }
@@ -304,7 +304,7 @@ fn directive_define_preprocess(
     let mut skipped = Vec::new();
     if let Some(token) = tokenstream.peek() {
         if let Symbol::Whitespace(_) | Symbol::Comment(_) = token.symbol() {
-            skipped = whitespace::skip(tokenstream);
+            skipped = skip(tokenstream);
         }
     }
     // check directive type
@@ -313,7 +313,7 @@ fn directive_define_preprocess(
             (Symbol::LeftParenthesis, false) => {
                 let token = token.clone();
                 let args = read_args(resolver, context, tokenstream, &token, false)?;
-                whitespace::skip(tokenstream);
+                skip(tokenstream);
                 if args.iter().any(|arg| arg.len() != 1) {
                     return Err(Error::DefineMultiTokenArgument {
                         token: Box::new(ident_token),
@@ -354,7 +354,7 @@ fn directive_undef_preprocess(
         match token.symbol() {
             Symbol::Word(ident) => {
                 context.undefine(ident, &token)?;
-                whitespace::skip(tokenstream);
+                skip(tokenstream);
                 if matches!(tokenstream.peek().unwrap().symbol(), Symbol::Newline) {
                     tokenstream.next();
                 } else {
@@ -526,7 +526,7 @@ fn read_args(
                 }
                 args.push(arg);
                 arg = Vec::new();
-                whitespace::skip(tokenstream);
+                skip(tokenstream);
             }
             Symbol::LeftParenthesis => {
                 if quote {
@@ -535,7 +535,7 @@ fn read_args(
                 }
                 depth += 1;
                 arg.push(tokenstream.next().unwrap());
-                whitespace::skip(tokenstream);
+                skip(tokenstream);
             }
             Symbol::RightParenthesis => {
                 if quote {
@@ -662,7 +662,7 @@ fn walk_line(
                     tokenstream.peek_forward(1).map(Token::symbol),
                     Some(Symbol::Slash)
                 ) {
-                    whitespace::skip_comment(tokenstream);
+                    skip_comment(tokenstream);
                 } else {
                     tokenstream.move_cursor_back().unwrap();
                     output.push(tokenstream.next().unwrap());
@@ -761,7 +761,7 @@ fn eat_newline(
     context: &mut Context,
     from: &Token,
 ) -> Result<(), Error> {
-    let skipped = whitespace::skip(tokenstream);
+    let skipped = skip(tokenstream);
     if let Some(token) = tokenstream.peek() {
         if matches!(token.symbol(), Symbol::Newline) {
             tokenstream.next();
@@ -779,4 +779,50 @@ fn eat_newline(
         });
     }
     Ok(())
+}
+
+/// Skip through whitespace
+fn skip(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Vec<Token> {
+    let mut skipped = Vec::new();
+    while let Some(token) = input.peek() {
+        if token.symbol().is_whitespace() {
+            if let Some(token) = input.next() {
+                skipped.push(token);
+            }
+        } else if token.symbol() == &Symbol::Slash {
+            if let Some(next_token) = input.peek_forward(1) {
+                if next_token.symbol() == &Symbol::Slash {
+                    skipped.extend(skip_comment(input));
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    skipped
+}
+
+/// Skip through a comment until a newline is found
+/// Assumes the slashes are peeked but not consumed
+fn skip_comment(input: &mut PeekMoreIterator<impl Iterator<Item = Token>>) -> Vec<Token> {
+    let mut skipped = Vec::new();
+    if let Some(token) = input.next() {
+        skipped.push(token);
+    }
+    if let Some(token) = input.next() {
+        skipped.push(token);
+    }
+    while let Some(token) = input.peek() {
+        if token.symbol() == &Symbol::Newline {
+            break;
+        }
+        if let Some(token) = input.next() {
+            skipped.push(token);
+        }
+    }
+    skipped
 }

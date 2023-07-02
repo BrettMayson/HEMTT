@@ -1,3 +1,5 @@
+use hemtt_error::{processed::Processed, Code};
+
 use crate::{Array, Item};
 
 use super::Analyze;
@@ -7,14 +9,14 @@ impl Analyze for Array {
         self.items.iter().all(Analyze::valid)
     }
 
-    fn warnings(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         self.items
             .iter()
             .flat_map(|i| i.warnings(processed))
             .collect::<Vec<_>>()
     }
 
-    fn errors(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         self.items
             .iter()
             .flat_map(|i| i.errors(processed))
@@ -32,7 +34,7 @@ impl Analyze for Item {
         }
     }
 
-    fn warnings(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::Str(s) => s.warnings(processed),
             Self::Number(n) => n.warnings(processed),
@@ -44,7 +46,7 @@ impl Analyze for Item {
         }
     }
 
-    fn errors(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::Str(s) => s.errors(processed),
             Self::Number(n) => n.errors(processed),

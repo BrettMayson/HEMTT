@@ -51,6 +51,7 @@ impl Position {
     }
 
     #[must_use]
+    /// Get the path of the source file or "%builtin%" if there is no path
     pub fn path_or_builtin(&self) -> String {
         self.path.as_ref().map_or_else(
             || String::from("%builtin%"),

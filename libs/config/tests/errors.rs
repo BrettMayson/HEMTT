@@ -28,16 +28,18 @@ fn errors() {
                         .unwrap();
                     // if expected.is_empty() {
                     // write
+                    let errors = config
+                        .errors()
+                        .iter()
+                        .map(|e| e.generate_processed_report(&processed).unwrap())
+                        .collect::<Vec<_>>();
                     std::fs::write(
                         file.path().join("stdout.ansi"),
-                        config.errors().join("\n").replace('\r', "").as_bytes(),
+                        errors.join("\n").replace('\r', "").as_bytes(),
                     )
                     .unwrap();
                     // }
-                    assert_eq!(
-                        config.errors().join("\n"),
-                        String::from_utf8(expected).unwrap()
-                    );
+                    assert_eq!(errors.join("\n"), String::from_utf8(expected).unwrap());
                 }
                 // Errors may occur, but they should be handled, if one is not a handler should be created
                 Err(e) => {

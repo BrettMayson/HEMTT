@@ -1,4 +1,4 @@
-use hemtt_error::{thiserror, Reportable};
+use hemtt_error::{thiserror};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -83,5 +83,3 @@ impl From<vfs::VfsError> for Error {
         Self::Vfs(Box::new(e))
     }
 }
-
-impl Reportable for Error {}

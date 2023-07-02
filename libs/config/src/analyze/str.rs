@@ -1,3 +1,5 @@
+use hemtt_error::{processed::Processed, Code};
+
 use crate::Str;
 
 use super::Analyze;
@@ -7,11 +9,11 @@ impl Analyze for Str {
         true
     }
 
-    fn warnings(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn warnings(&self, _processed: &Processed) -> Vec<Box<dyn Code>> {
         vec![]
     }
 
-    fn errors(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn errors(&self, _processed: &Processed) -> Vec<Box<dyn Code>> {
         vec![]
     }
 }

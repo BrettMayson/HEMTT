@@ -13,7 +13,7 @@ mod model;
 use analyze::Analyze;
 use ariadne::{sources, Label, Report};
 use chumsky::{prelude::Simple, Parser};
-use hemtt_preprocessor::Processed;
+use hemtt_error::{processed::Processed, Code};
 
 pub use error::Error;
 pub use model::*;
@@ -72,8 +72,8 @@ fn chumsky_to_ariadne(processed: &Processed, err: &Simple<char>) -> String {
 pub struct ConfigReport {
     config: Config,
     valid: bool,
-    warnings: Vec<String>,
-    errors: Vec<String>,
+    warnings: Vec<Box<dyn Code>>,
+    errors: Vec<Box<dyn Code>>,
 }
 
 impl ConfigReport {
@@ -91,13 +91,13 @@ impl ConfigReport {
 
     #[must_use]
     /// Get the warnings
-    pub fn warnings(&self) -> &[String] {
+    pub fn warnings(&self) -> &[Box<dyn Code>] {
         &self.warnings
     }
 
     #[must_use]
     /// Get the errors
-    pub fn errors(&self) -> &[String] {
+    pub fn errors(&self) -> &[Box<dyn Code>] {
         &self.errors
     }
 }

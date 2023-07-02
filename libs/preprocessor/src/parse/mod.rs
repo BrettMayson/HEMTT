@@ -1,4 +1,4 @@
-use crate::tokens::{whitespace::Whitespace, Position, Symbol, Token};
+use hemtt_error::tokens::{whitespace::Whitespace, Position, Symbol, Token};
 use pest::Parser;
 use pest_derive::Parser;
 use vfs::VfsPath;

@@ -11,3 +11,4 @@ bench = false
 [dependencies]
 ariadne = { workspace = true }
 thiserror = "1.0.40"
+vfs = { workspace = true }

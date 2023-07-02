@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_preprocessor::Processed;
+use hemtt_error::{processed::Processed, Code};
 
-use crate::{analyze::codes::Codes, Class, Ident};
+use crate::{Class, Ident};
 
-use super::Analyze;
+use super::{codes::ce3_duplicate_property::DuplicateProperty, Analyze};
 
 impl Analyze for Class {
     fn valid(&self) -> bool {
@@ -15,7 +14,7 @@ impl Analyze for Class {
         }
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<String> {
+    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } => properties
@@ -25,7 +24,7 @@ impl Analyze for Class {
         }
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<String> {
+    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } => {
@@ -33,7 +32,7 @@ impl Analyze for Class {
                     .iter()
                     .flat_map(|p| p.errors(processed))
                     .collect::<Vec<_>>();
-                errors.extend(self.duplicate_properties(processed));
+                errors.extend(self.duplicate_properties());
                 errors
             }
         }
@@ -41,11 +40,11 @@ impl Analyze for Class {
 }
 
 impl Class {
-    fn duplicate_properties(&self, processed: &Processed) -> Vec<String> {
+    fn duplicate_properties(&self) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } => {
-                let mut errors = Vec::new();
+                let mut errors: Vec<Box<dyn Code>> = Vec::new();
                 let mut seen = Vec::new();
                 let mut conflicts = HashMap::new();
                 for property in properties {
@@ -61,44 +60,11 @@ impl Class {
                     }
                     seen.push(property.name().clone());
                 }
-                for conflict in conflicts.values() {
-                    errors.push(duplicate_error(conflict, processed));
+                for (_, conflict) in conflicts {
+                    errors.push(Box::new(DuplicateProperty::new(conflict)));
                 }
                 errors
             }
         }
     }
-}
-
-fn duplicate_error(conflicts: &[Ident], processed: &Processed) -> String {
-    let first = conflicts.first().unwrap();
-    let first_map = processed.original_col(first.span.start).unwrap();
-    let first_file = processed.source(first_map.source()).unwrap();
-    let mut out = Vec::new();
-    let mut colors = ColorGenerator::new();
-    Report::build(
-        ariadne::ReportKind::Error,
-        first_file.0.clone(),
-        first.span.start,
-    )
-    .with_code(Codes::DuplicateProperty)
-    .with_message(Codes::DuplicateProperty.message())
-    .with_labels(conflicts.iter().map(|b| {
-        let map = processed.original_col(b.span.start).unwrap();
-        let file = processed.source(map.source()).unwrap();
-        Label::new((
-            file.0.clone(),
-            map.original_column()..(map.original_column() + b.value.len()),
-        ))
-        .with_color(colors.next())
-        .with_message(if b == first {
-            "first defined here"
-        } else {
-            "also defined here"
-        })
-    }))
-    .finish()
-    .write_for_stdout(sources(processed.sources()), &mut out)
-    .unwrap();
-    String::from_utf8(out).unwrap()
 }

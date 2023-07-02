@@ -1,4 +1,4 @@
-use crate::whitespace::Whitespace;
+use super::whitespace::Whitespace;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// The symbol of a [`Token`](crate::Token)

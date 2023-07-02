@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
+use hemtt_error::tokens::Token;
 use strsim::levenshtein;
 
-use crate::{tokens::Token, Definition};
+use crate::Definition;
 
 /// `HashMap` of all current defines
 pub type Defines = HashMap<String, (Token, Definition)>;

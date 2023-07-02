@@ -3,14 +3,10 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
 };
 
+use hemtt_error::tokens::{Symbol, Token};
 use vfs::VfsPath;
 
-use crate::{
-    defines::Defines,
-    ifstate::IfStates,
-    tokens::{Symbol, Token},
-    Error,
-};
+use crate::{defines::Defines, ifstate::IfStates, Error};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",
