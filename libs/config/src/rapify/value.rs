@@ -35,13 +35,4 @@ impl Rapify for Value {
             Self::Invalid(_) => unreachable!(),
         }
     }
-
-    fn valid(&self) -> bool {
-        match self {
-            Self::Str(s) => s.valid(),
-            Self::Number(n) => n.valid(),
-            Self::Array(a) => a.valid(),
-            Self::Invalid(_) => false,
-        }
-    }
 }

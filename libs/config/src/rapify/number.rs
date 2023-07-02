@@ -42,10 +42,6 @@ impl Rapify for Number {
             Self::Float32 { .. } => 1,
         }
     }
-
-    fn valid(&self) -> bool {
-        true
-    }
 }
 
 #[cfg(test)]

@@ -16,7 +16,6 @@ mod error;
 mod executor;
 mod logging;
 mod modules;
-mod resolver;
 mod update;
 mod utils;
 

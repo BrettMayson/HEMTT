@@ -25,17 +25,8 @@ impl Rapify for Property {
                     Class::External { .. } => 0,
                 },
                 Self::Delete(_) => 0,
+                Self::MissingSemicolon(_, _) => unreachable!(),
             }
-    }
-
-    fn valid(&self) -> bool {
-        !matches!(
-            self,
-            Self::Entry {
-                value: Value::Invalid(_),
-                ..
-            }
-        )
     }
 }
 
@@ -63,6 +54,7 @@ impl Property {
             Self::Delete(_) => {
                 vec![4]
             }
+            Self::MissingSemicolon(_, _) => unreachable!(),
         }
     }
 }

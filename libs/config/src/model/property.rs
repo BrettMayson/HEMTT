@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::{Class, Ident, Value};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14,6 +16,8 @@ pub enum Property {
     Class(Class),
     /// A class deletion
     Delete(Ident),
+    /// A property that is missing a semicolon
+    MissingSemicolon(Ident, Range<usize>),
 }
 
 impl Property {
@@ -23,6 +27,7 @@ impl Property {
         match self {
             Self::Delete(name) | Self::Entry { name, .. } => name,
             Self::Class(c) => c.name(),
+            Self::MissingSemicolon(name, _) => name,
         }
     }
 }

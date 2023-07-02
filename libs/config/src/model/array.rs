@@ -19,4 +19,6 @@ pub enum Item {
     Number(Number),
     /// An array value
     Array(Vec<Item>),
+    /// An invalid value
+    Invalid(String),
 }

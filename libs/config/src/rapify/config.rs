@@ -42,8 +42,4 @@ impl Rapify for Config {
         };
         20 + root_class.rapified_length()
     }
-
-    fn valid(&self) -> bool {
-        self.0.iter().all(Rapify::valid)
-    }
 }

@@ -7,7 +7,6 @@ use crate::Config;
 use self::property::property;
 
 mod array;
-// mod class;
 mod ident;
 mod number;
 mod property;

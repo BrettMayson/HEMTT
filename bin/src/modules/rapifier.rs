@@ -67,14 +67,30 @@ impl Module for Rapifier {
 
 pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
     let processed = preprocess_file(&path, resolver)?;
-    let rapified = parse(processed.output()).unwrap();
+    let configreport = parse(&processed).unwrap();
+    configreport.warnings().iter().for_each(|e| {
+        eprintln!("{e}");
+    });
+    configreport.errors().iter().for_each(|e| {
+        eprintln!("{e}");
+    });
+    if !configreport.errors().is_empty() {
+        return Err(Error::Config(hemtt_config::Error::ConfigInvalid(
+            path.as_str().to_string(),
+        )));
+    }
+    if !configreport.valid() {
+        return Err(Error::Config(hemtt_config::Error::ConfigInvalid(
+            path.as_str().to_string(),
+        )));
+    }
     let out = if path.filename() == "config.cpp" {
         path.parent().join("config.bin").unwrap()
     } else {
         path
     };
     let mut output = out.create_file()?;
-    rapified.rapify(&mut output, 0)?;
+    configreport.config().rapify(&mut output, 0)?;
     Ok(())
 }
 

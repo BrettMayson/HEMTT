@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_io::{compressed_int_len, WriteExt};
 
-use crate::{Class, Ident, Property};
+use crate::{analyze::Analyze, Class, Ident, Property};
 
 use super::Rapify;
 
@@ -14,7 +14,7 @@ impl Rapify for Class {
         offset: usize,
     ) -> Result<usize, std::io::Error> {
         if !self.valid() {
-            panic!("Invalid class");
+            unreachable!("Invalid class");
         }
         let mut written = 0;
         match self {
@@ -62,6 +62,7 @@ impl Rapify for Class {
                             }
                         }
                         Property::Delete(_) => continue,
+                        Property::MissingSemicolon(_, _) => unreachable!(),
                     }
                     assert_eq!(
                         written - pre_write,
@@ -111,13 +112,6 @@ impl Rapify for Class {
                         })
                         .sum::<usize>()
             }
-        }
-    }
-
-    fn valid(&self) -> bool {
-        match self {
-            Self::External { .. } => true,
-            Self::Local { properties, .. } => properties.iter().all(Rapify::valid),
         }
     }
 }

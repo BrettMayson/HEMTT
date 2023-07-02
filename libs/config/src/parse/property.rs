@@ -50,23 +50,35 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                         .ignore_then(
                             just('=')
                                 .padded()
-                                .ignore_then(super::array::array(false).map(Value::Array))
+                                .ignore_then(
+                                    super::array::array(false)
+                                        .map(Value::Array)
+                                        .padded()
+                                        .labelled("array value"),
+                                )
                                 .or(just("+=")
                                     .padded()
                                     .ignore_then(super::array::array(true).map(Value::Array))
                                     .padded()
-                                    .labelled("property value")),
+                                    .labelled("array expand value")),
                         )
                         .or(just('=').padded().ignore_then(
                             value()
+                                .recover_with(skip_until([';'], Value::Invalid))
                                 .padded()
-                                .labelled("property value")
-                                .recover_with(skip_until([';'], Value::Invalid)),
+                                .labelled("property value"),
                         )),
                 )
                 .map(|(name, value)| Property::Entry { name, value }),
         ))
-        .then_ignore(just(';').padded())
+        .then(just(';').padded().or_not())
+        .map_with_span(|(property, semi), range| {
+            if semi.is_some() {
+                property
+            } else {
+                Property::MissingSemicolon(property.name().clone(), range)
+            }
+        })
     })
 }
 

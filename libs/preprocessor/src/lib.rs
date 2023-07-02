@@ -40,7 +40,7 @@ pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
     let processed = root_preprocess(resolver, &mut context, &mut tokenstream, false)?;
-    Ok(Processed::from_tokens(resolver, processed))
+    Ok(Processed::from_tokens(processed))
 }
 
 fn root_preprocess(
