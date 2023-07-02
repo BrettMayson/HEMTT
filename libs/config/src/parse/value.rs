@@ -4,6 +4,7 @@ use crate::Value;
 
 pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
     choice((
+        super::array::array(false).map(Value::UnexpectedArray),
         super::str::string('"').map(Value::Str),
         super::number::number().map(Value::Number),
     ))

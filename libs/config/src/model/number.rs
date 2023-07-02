@@ -45,4 +45,14 @@ impl Number {
             },
         }
     }
+
+    #[must_use]
+    /// Get the range of the number
+    pub fn span(&self) -> Range<usize> {
+        match self {
+            Self::Int32 { span, .. } | Self::Int64 { span, .. } | Self::Float32 { span, .. } => {
+                span.clone()
+            }
+        }
+    }
 }

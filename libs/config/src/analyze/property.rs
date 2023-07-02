@@ -1,6 +1,7 @@
 use std::ops::Range;
 
-use ariadne::{sources, ColorGenerator, Label, Report};
+use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
+use hemtt_preprocessor::Processed;
 
 use crate::{Property, Value};
 
@@ -17,7 +18,7 @@ impl Analyze for Property {
         )
     }
 
-    fn warnings(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn warnings(&self, processed: &Processed) -> Vec<String> {
         match self {
             Self::Entry { value, .. } => value.warnings(processed),
             Self::Class(c) => c.warnings(processed),
@@ -26,9 +27,14 @@ impl Analyze for Property {
         }
     }
 
-    fn errors(&self, processed: &hemtt_preprocessor::Processed) -> Vec<String> {
+    fn errors(&self, processed: &Processed) -> Vec<String> {
         match self {
-            Self::Entry { value, .. } => value.errors(processed),
+            Self::Entry { value, .. } => {
+                let mut errors = value.errors(processed);
+                errors.extend(unexpected_array(self, processed));
+                errors.extend(expected_array(self, processed));
+                errors
+            }
             Self::Class(c) => c.errors(processed),
             Self::Delete(_) => vec![],
             Self::MissingSemicolon(_, span) => vec![missing_semicolon(span, processed)],
@@ -36,7 +42,7 @@ impl Analyze for Property {
     }
 }
 
-fn missing_semicolon(span: &Range<usize>, processed: &hemtt_preprocessor::Processed) -> String {
+fn missing_semicolon(span: &Range<usize>, processed: &Processed) -> String {
     let haystack = processed.output()[span.start..span.end]
         .chars()
         .rev()
@@ -68,4 +74,98 @@ fn missing_semicolon(span: &Range<usize>, processed: &hemtt_preprocessor::Proces
     .write_for_stdout(sources(processed.sources()), &mut out)
     .unwrap();
     String::from_utf8(out).unwrap()
+}
+
+fn unexpected_array(property: &Property, processed: &Processed) -> Vec<String> {
+    let Property::Entry { name, value: Value::UnexpectedArray(array), .. } = property else {
+        return vec![];
+    };
+    let array_start = processed.original_col(array.span.start).unwrap();
+    let array_file = processed.source(array_start.source()).unwrap();
+    let array_end = processed.original_col(array.span.end).unwrap();
+    let ident_start = processed.original_col(name.span.start).unwrap();
+    let ident_end = processed.original_col(name.span.end).unwrap();
+    let mut out = Vec::new();
+    let mut colors = ColorGenerator::new();
+    let a = colors.next();
+    let b = colors.next();
+    Report::build(
+        ariadne::ReportKind::Error,
+        array_file.0.clone(),
+        array_start.original_column(),
+    )
+    .with_code(Codes::UnexpectedArray)
+    .with_message(Codes::UnexpectedArray.message())
+    .with_label(
+        #[allow(clippy::range_plus_one)] // not supported by ariadne
+        Label::new((
+            array_file.0.clone(),
+            array_start.original_column()..array_end.original_column(),
+        ))
+        .with_message(Codes::UnexpectedArray.label_message())
+        .with_color(a),
+    )
+    .with_label(
+        Label::new((
+            array_file.0.clone(),
+            ident_start.original_column()..ident_end.original_column(),
+        ))
+        .with_message(format!(
+            "expected `{}` here",
+            format!("{}[]", name.as_str()).fg(b)
+        ))
+        .with_color(b),
+    )
+    .finish()
+    .write_for_stdout(sources(processed.sources()), &mut out)
+    .unwrap();
+    vec![String::from_utf8(out).unwrap()]
+}
+
+fn expected_array(property: &Property, processed: &Processed) -> Vec<String> {
+    let Property::Entry { name, value, expected_array } = property else {
+        return vec![];
+    };
+    if !expected_array {
+        return vec![];
+    }
+    if let Value::Array(_) = value {
+        return vec![];
+    }
+    let ident_start = processed.original_col(name.span.start).unwrap();
+    let ident_file = processed.source(ident_start.source()).unwrap();
+    let ident_end = processed.original_col(name.span.end).unwrap();
+    let value_start = processed.original_col(value.span().start).unwrap();
+    let value_end = processed.original_col(value.span().end).unwrap();
+    let mut out = Vec::new();
+    let mut colors = ColorGenerator::new();
+    let a = colors.next();
+    let b = colors.next();
+    Report::build(
+        ariadne::ReportKind::Error,
+        ident_file.0.clone(),
+        ident_start.original_column(),
+    )
+    .with_code(Codes::ExpectedArray)
+    .with_message(Codes::ExpectedArray.message())
+    .with_label(
+        Label::new((
+            ident_file.0.clone(),
+            value_start.original_column()..value_end.original_column(),
+        ))
+        .with_message(Codes::ExpectedArray.label_message())
+        .with_color(a),
+    )
+    .with_label(
+        Label::new((
+            ident_file.0.clone(),
+            (ident_end.original_column())..(ident_end.original_column() + 2),
+        ))
+        .with_message(format!("`{}` indicates an upcoming array", "[]".fg(b)))
+        .with_color(b),
+    )
+    .finish()
+    .write_for_stdout(sources(processed.sources()), &mut out)
+    .unwrap();
+    vec![String::from_utf8(out).unwrap()]
 }

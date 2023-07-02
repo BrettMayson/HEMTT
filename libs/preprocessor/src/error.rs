@@ -1,10 +1,8 @@
+use ariadne::{Label, Report, ReportKind, Source};
 use hemtt_error::thiserror;
+use tracing::error;
 
-use crate::{
-    defines::Defines,
-    parse::Rule,
-    tokens::{Symbol, Token},
-};
+use crate::{defines::Defines, parse::Rule, Symbol, Token};
 
 #[derive(thiserror::Error, Debug)]
 /// Errors that can occur during preprocessing
@@ -33,11 +31,11 @@ pub enum Error {
         /// The [`Token`] stack trace
         trace: Vec<Token>,
     },
-    #[error("Unknown directive `{directive:?}`, ")]
+    #[error("Unknown directive `{token:?}`, ")]
     /// Unknown directive
     UnknownDirective {
         /// The [`Token`] that was found
-        directive: Box<Token>,
+        token: Box<Token>,
         /// The [`Token`] stack trace
         trace: Vec<Token>,
     },
@@ -109,11 +107,11 @@ pub enum Error {
         /// The [`Token`] stack trace
         trace: Vec<Token>,
     },
-    #[error("`#include` target `{target:?}` was not found")]
+    #[error("`#include` target `{token:?}` was not found")]
     /// The [`Resolver`](crate::resolver::Resolver) could not find the target
     IncludeNotFound {
         /// The target that was not found
-        target: Vec<Token>,
+        token: Vec<Token>,
         /// The [`Token`] stack trace
         trace: Vec<Token>,
     },
@@ -143,5 +141,67 @@ impl From<pest::error::Error<Rule>> for Error {
 impl From<vfs::error::VfsError> for Error {
     fn from(e: vfs::error::VfsError) -> Self {
         Self::Vfs(Box::new(e))
+    }
+}
+
+impl Error {
+    #[must_use]
+    /// Create a user friendly report
+    pub fn report(&self) -> String {
+        let Some(token) = self.token() else {
+            return self.to_string();
+        };
+        let span = if let Self::IncludeNotFound { token, .. } = self {
+            token.first().unwrap().source().start().0..token.last().unwrap().source().end().0
+        } else {
+            token.source().start().0..token.source().end().0
+        };
+        let mut out = Vec::new();
+        if let Err(e) = Report::build(
+            ReportKind::Error,
+            token.source().path_or_builtin(),
+            span.start,
+        )
+        .with_message("no bueno")
+        .with_label(Label::new((
+            token.source().path_or_builtin(),
+            span.start..span.end,
+        )))
+        .finish()
+        .write_for_stdout(
+            (
+                token.source().path_or_builtin(),
+                Source::from(token.source().path().map_or_else(String::new, |path| {
+                    path.read_to_string().unwrap_or_default()
+                })),
+            ),
+            &mut out,
+        ) {
+            error!("while reporting: {e}");
+            return self.to_string();
+        }
+        String::from_utf8(out).unwrap_or_default()
+    }
+
+    #[must_use]
+    /// Get the [`Token`] that caused the error
+    pub fn token(&self) -> Option<&Token> {
+        match self {
+            Self::UnexpectedToken { token, .. } => Some(token.as_ref()),
+            Self::UnexpectedEOF { token, .. } => Some(token.as_ref()),
+            Self::ExpectedIdent { token, .. } => Some(token.as_ref()),
+            Self::UnknownDirective { token, .. } => Some(token.as_ref()),
+            Self::DefineMultiTokenArgument { token, .. } => Some(token.as_ref()),
+            Self::ChangeBuiltin { token, .. } => Some(token.as_ref()),
+            Self::IfUnitOrFunction { token, .. } => Some(token.as_ref()),
+            Self::IfUndefined { token, .. } => Some(token.as_ref()),
+            Self::FunctionCallArgumentCount { token, .. } => Some(token.as_ref()),
+            Self::ExpectedFunctionOrValue { token, .. } => Some(token.as_ref()),
+            Self::ResolveWithNoResolver { token, .. } => Some(token.as_ref()),
+            Self::IncludeNotFound { token, .. } => token.first(),
+            Self::Io(_) => None,
+            Self::Pest(_) => None,
+            Self::Vfs(_) => None,
+        }
     }
 }

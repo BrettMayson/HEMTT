@@ -913,6 +913,7 @@ dependencies = [
 name = "hemtt-preprocessor"
 version = "1.0.0"
 dependencies = [
+ "ariadne",
  "criterion",
  "hemtt-error",
  "peekmore",

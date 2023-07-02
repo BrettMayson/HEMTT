@@ -53,23 +53,35 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                                 .ignore_then(
                                     super::array::array(false)
                                         .map(Value::Array)
+                                        .or(value())
                                         .padded()
-                                        .labelled("array value"),
+                                        .labelled("array value")
+                                        .recover_with(skip_until([';'], Value::Invalid)),
                                 )
                                 .or(just("+=")
                                     .padded()
                                     .ignore_then(super::array::array(true).map(Value::Array))
+                                    .or(value())
                                     .padded()
-                                    .labelled("array expand value")),
-                        )
-                        .or(just('=').padded().ignore_then(
-                            value()
+                                    .labelled("array expand value"))
                                 .recover_with(skip_until([';'], Value::Invalid))
-                                .padded()
-                                .labelled("property value"),
-                        )),
+                                .map(|value| (value, true)),
+                        )
+                        .or(just('=')
+                            .padded()
+                            .ignore_then(
+                                value()
+                                    .recover_with(skip_until([';'], Value::Invalid))
+                                    .padded()
+                                    .labelled("property value"),
+                            )
+                            .map(|value| (value, false))),
                 )
-                .map(|(name, value)| Property::Entry { name, value }),
+                .map(|(name, (value, expected_array))| Property::Entry {
+                    name,
+                    value,
+                    expected_array,
+                }),
         ))
         .then(just(';').padded().or_not())
         .map_with_span(|(property, semi), range| {
@@ -114,7 +126,8 @@ mod tests {
                         }),
                     ],
                     span: 15..22,
-                })
+                }),
+                expected_array: true,
             })
         );
     }
@@ -145,7 +158,8 @@ mod tests {
                         }),
                     ],
                     span: 16..23,
-                })
+                }),
+                expected_array: true,
             })
         );
     }
@@ -163,7 +177,8 @@ mod tests {
                     expand: false,
                     items: vec![],
                     span: 15..17,
-                })
+                }),
+                expected_array: true,
             })
         );
     }
@@ -210,7 +225,8 @@ mod tests {
                         ]),
                     ],
                     span: 15..32,
-                })
+                }),
+                expected_array: true,
             })
         );
     }
@@ -276,7 +292,8 @@ mod tests {
                 value: Value::Str(Str {
                     value: "Hello, World!".to_string(),
                     span: 13..28,
-                })
+                }),
+                expected_array: false,
             })
         );
     }
@@ -293,7 +310,8 @@ mod tests {
                 value: Value::Number(crate::Number::Int32 {
                     value: 1234,
                     span: 13..17,
-                })
+                }),
+                expected_array: false,
             })
         );
     }
@@ -337,7 +355,8 @@ mod tests {
                         value: crate::Value::Number(crate::Number::Int32 {
                             value: 1,
                             span: 29..30,
-                        })
+                        }),
+                        expected_array: false,
                     }]
                 })),
                 vec![]
@@ -357,7 +376,8 @@ mod tests {
                 value: Value::Number(crate::Number::Int32 {
                     value: 1234,
                     span: 11..15,
-                })
+                }),
+                expected_array: false,
             })
         );
     }
@@ -374,7 +394,8 @@ mod tests {
                 value: Value::Number(crate::Number::Int32 {
                     value: 1234,
                     span: 25..29,
-                })
+                }),
+                expected_array: false,
             })
         );
     }

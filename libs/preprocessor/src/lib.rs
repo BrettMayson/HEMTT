@@ -261,7 +261,7 @@ fn directive_include_preprocess(
             context.current_file(),
             &path,
         ) else {
-            return Err(Error::IncludeNotFound { target: path_tokens, trace: context.trace() })
+            return Err(Error::IncludeNotFound { token: path_tokens, trace: context.trace() })
         };
         let parsed = crate::parse::parse(&resolved_path, &source, &Some(Box::new(from)))?;
         (resolved_path, parsed)

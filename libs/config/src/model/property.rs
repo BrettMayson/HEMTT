@@ -11,6 +11,8 @@ pub enum Property {
         name: Ident,
         /// The value of the property
         value: Value,
+        /// An array was expected
+        expected_array: bool,
     },
     /// A sub-class
     Class(Class),
@@ -25,9 +27,8 @@ impl Property {
     /// Get the name of the property
     pub const fn name(&self) -> &Ident {
         match self {
-            Self::Delete(name) | Self::Entry { name, .. } => name,
             Self::Class(c) => c.name(),
-            Self::MissingSemicolon(name, _) => name,
+            Self::MissingSemicolon(name, _) | Self::Delete(name) | Self::Entry { name, .. } => name,
         }
     }
 }

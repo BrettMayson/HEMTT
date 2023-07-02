@@ -18,7 +18,7 @@ impl Rapify for Property {
                     Value::Str(s) => s.rapified_length(),
                     Value::Number(n) => n.rapified_length(),
                     Value::Array(a) => a.rapified_length(),
-                    Value::Invalid(_) => unreachable!(),
+                    Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
                 },
                 Self::Class(c) => match c {
                     Class::Local { .. } => 4,
@@ -45,7 +45,7 @@ impl Property {
                         vec![2]
                     }
                 }
-                Value::Invalid(_) => unreachable!(),
+                Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
             },
             Self::Class(c) => match c {
                 Class::Local { .. } => vec![0],

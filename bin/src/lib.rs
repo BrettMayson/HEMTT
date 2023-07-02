@@ -3,7 +3,7 @@
 
 use clap::{ArgAction, ArgMatches, Command};
 use context::Context;
-use error::Error;
+pub use error::Error;
 
 #[macro_use]
 extern crate tracing;

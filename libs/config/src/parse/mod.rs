@@ -50,6 +50,7 @@ mod tests {
                     value: "Hello World".to_string(),
                     span: 9..22,
                 }),
+                expected_array: false,
             },]),)
         );
     }
@@ -68,6 +69,7 @@ mod tests {
                         value: "Hello World".to_string(),
                         span: 9..22,
                     }),
+                    expected_array: false,
                 },
                 crate::Property::Entry {
                     name: crate::Ident {
@@ -78,6 +80,7 @@ mod tests {
                         value: 1234,
                         span: 38..42,
                     }),
+                    expected_array: false,
                 },
             ]),)
         );
@@ -108,6 +111,7 @@ mod tests {
                             value: "Hello World".to_string(),
                             span: 45..58,
                         }),
+                        expected_array: false,
                     },
                     crate::Property::Entry {
                         name: crate::Ident {
@@ -118,6 +122,7 @@ mod tests {
                             value: 1234,
                             span: 94..98,
                         }),
+                        expected_array: false,
                     },
                 ],
             }),]),)
@@ -157,6 +162,7 @@ mod tests {
                                 value: "Hello World".to_string(),
                                 span: 81..94
                             }),
+                            expected_array: false,
                         },
                         crate::Property::Entry {
                             name: crate::Ident {
@@ -167,6 +173,7 @@ mod tests {
                                 value: 1234,
                                 span: 134..138
                             }),
+                            expected_array: false,
                         },
                     ],
                 })],

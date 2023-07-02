@@ -6,15 +6,19 @@ pub enum Codes {
     InvalidValueMacro,
     DuplicateProperty,
     MissingSemicolon,
+    UnexpectedArray,
+    ExpectedArray,
 }
 
 impl Codes {
     pub const fn ident(self) -> &'static str {
         match self {
-            Self::InvalidValue => "C1",
-            Self::InvalidValueMacro => "C2",
-            Self::DuplicateProperty => "C3",
-            Self::MissingSemicolon => "C4",
+            Self::InvalidValue => "CE1",
+            Self::InvalidValueMacro => "CE2",
+            Self::DuplicateProperty => "CE3",
+            Self::MissingSemicolon => "CE4",
+            Self::UnexpectedArray => "CE5",
+            Self::ExpectedArray => "CE6",
         }
     }
 
@@ -24,6 +28,8 @@ impl Codes {
             Self::InvalidValueMacro => "macro's result could not be parsed".to_string(),
             Self::DuplicateProperty => "property was defined more than once".to_string(),
             Self::MissingSemicolon => "property is missing a semicolon".to_string(),
+            Self::UnexpectedArray => "property was not expected to be an array".to_string(),
+            Self::ExpectedArray => "property was expected to be an array".to_string(),
         }
     }
 
@@ -33,6 +39,8 @@ impl Codes {
             Self::InvalidValueMacro => "invalid macro result".to_string(),
             Self::DuplicateProperty => "duplicate property".to_string(),
             Self::MissingSemicolon => "missing semicolon".to_string(),
+            Self::UnexpectedArray => "unexpected array".to_string(),
+            Self::ExpectedArray => "expected array".to_string(),
         }
     }
 
@@ -49,6 +57,8 @@ impl Codes {
             Self::MissingSemicolon => {
                 Some("add a semicolon `;` to the end of the property".to_string())
             }
+            Self::UnexpectedArray => None,
+            Self::ExpectedArray => None,
         }
     }
 }
@@ -64,10 +74,12 @@ impl TryFrom<&str> for Codes {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "C1" => Ok(Self::InvalidValue),
-            "C2" => Ok(Self::InvalidValueMacro),
-            "C3" => Ok(Self::DuplicateProperty),
-            "C4" => Ok(Self::MissingSemicolon),
+            "CE1" => Ok(Self::InvalidValue),
+            "CE2" => Ok(Self::InvalidValueMacro),
+            "CE3" => Ok(Self::DuplicateProperty),
+            "CE4" => Ok(Self::MissingSemicolon),
+            "CE5" => Ok(Self::UnexpectedArray),
+            "CE6" => Ok(Self::ExpectedArray),
             _ => Err(()),
         }
     }

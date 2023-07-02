@@ -12,7 +12,7 @@ impl Rapify for Value {
             Self::Str(s) => s.rapify(output, offset),
             Self::Number(n) => n.rapify(output, offset),
             Self::Array(a) => a.rapify(output, offset),
-            Self::Invalid(_) => unreachable!(),
+            Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }?;
         assert_eq!(written, self.rapified_length());
         Ok(written)
@@ -23,7 +23,7 @@ impl Rapify for Value {
             Self::Str(s) => s.rapified_length(),
             Self::Number(n) => n.rapified_length(),
             Self::Array(a) => a.rapified_length(),
-            Self::Invalid(_) => unreachable!(),
+            Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }
     }
 
@@ -32,7 +32,7 @@ impl Rapify for Value {
             Self::Str(s) => s.rapified_code(),
             Self::Number(n) => n.rapified_code(),
             Self::Array(a) => a.rapified_code(),
-            Self::Invalid(_) => unreachable!(),
+            Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }
     }
 }
