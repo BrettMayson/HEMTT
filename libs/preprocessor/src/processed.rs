@@ -35,15 +35,14 @@ impl Processed {
             let original_column = source.start().1 .1;
             let source = sources
                 .iter()
-                .position(|(name, _)| name == &source.path().to_string())
+                .position(|(name, _)| name == &source.path_or_builtin())
                 .map_or_else(
                     || {
-                        sources.push((source.path().to_string(), {
-                            if source.path() == "%builtin%" {
+                        sources.push((source.path_or_builtin(), {
+                            if source.path().is_none() {
                                 String::new()
                             } else {
-                                // std::fs::read_to_string(source.path()).unwrap()
-                                resolver.find_include("", source.path()).unwrap().1
+                                source.path().unwrap().read_to_string().unwrap()
                             }
                         }));
                         sources.len() - 1

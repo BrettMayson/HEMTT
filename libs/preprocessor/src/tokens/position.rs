@@ -1,3 +1,5 @@
+use vfs::VfsPath;
+
 /// Line and column of a token
 pub type LineCol = (usize, (usize, usize));
 
@@ -6,23 +8,27 @@ pub type LineCol = (usize, (usize, usize));
 pub struct Position {
     start: LineCol,
     end: LineCol,
-    path: String,
+    path: Option<VfsPath>,
 }
 
 impl Position {
     #[must_use]
     /// Create a new position
-    pub const fn new(start: LineCol, end: LineCol, path: String) -> Self {
-        Self { start, end, path }
+    pub const fn new(start: LineCol, end: LineCol, path: VfsPath) -> Self {
+        Self {
+            start,
+            end,
+            path: Some(path),
+        }
     }
 
     #[must_use]
     /// Create a new position for a built-in token
-    pub fn builtin() -> Self {
+    pub const fn builtin() -> Self {
         Self {
             start: (0, (0, 0)),
             end: (0, (0, 0)),
-            path: String::from("%builtin%"),
+            path: None,
         }
     }
 
@@ -40,7 +46,15 @@ impl Position {
 
     #[must_use]
     /// Get the path of the source file
-    pub fn path(&self) -> &str {
-        &self.path
+    pub const fn path(&self) -> Option<&VfsPath> {
+        self.path.as_ref()
+    }
+
+    #[must_use]
+    pub fn path_or_builtin(&self) -> String {
+        self.path.as_ref().map_or_else(
+            || String::from("%builtin%"),
+            |p| p.as_str().replace('\\', "/"),
+        )
     }
 }

@@ -7,7 +7,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| {
             let vfs = PhysicalFS::new("benches/").into();
             let resolver = Resolver::new(&vfs, Default::default());
-            let _ = preprocess_file("benches/ace_dogtags.hpp", &resolver).unwrap();
+            let _ = preprocess_file(&vfs.join("ace_dogtags.hpp").unwrap(), &resolver).unwrap();
         })
     });
 }

@@ -50,7 +50,7 @@ impl Module for Lint {
                 .par_iter()
                 .map(|entry| {
                     debug!("linting {:?}", entry.as_str());
-                    if let Err(e) = preprocess_file(entry.as_str(), &resolver) {
+                    if let Err(e) = preprocess_file(entry, &resolver) {
                         Err(e.into())
                     } else {
                         counter.fetch_add(1, Ordering::Relaxed);

@@ -32,7 +32,7 @@ impl Token {
 
     #[must_use]
     /// Create a new token built-in token
-    pub fn builtin(parent: Option<Box<Self>>) -> Self {
+    pub const fn builtin(parent: Option<Box<Self>>) -> Self {
         Self {
             symbol: Symbol::Void,
             source: Position::builtin(),
@@ -42,7 +42,7 @@ impl Token {
 
     #[must_use]
     /// Create a newline token
-    pub fn ending_newline(parent: Option<Box<Self>>) -> Self {
+    pub const fn ending_newline(parent: Option<Box<Self>>) -> Self {
         Self {
             symbol: Symbol::Newline,
             source: Position::builtin(),

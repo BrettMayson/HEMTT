@@ -123,6 +123,9 @@ pub enum Error {
     #[error("Pest Error: {0}")]
     /// [`pest::error::Error`]
     Pest(Box<pest::error::Error<Rule>>),
+    #[error("Vfs Error: {0}")]
+    /// [`vfs::Error`]
+    Vfs(Box<vfs::error::VfsError>),
 }
 
 impl From<std::io::Error> for Error {
@@ -134,5 +137,11 @@ impl From<std::io::Error> for Error {
 impl From<pest::error::Error<Rule>> for Error {
     fn from(e: pest::error::Error<Rule>) -> Self {
         Self::Pest(Box::new(e))
+    }
+}
+
+impl From<vfs::error::VfsError> for Error {
+    fn from(e: vfs::error::VfsError) -> Self {
+        Self::Vfs(Box::new(e))
     }
 }

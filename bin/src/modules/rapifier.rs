@@ -66,7 +66,7 @@ impl Module for Rapifier {
 }
 
 pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
-    let processed = preprocess_file(path.as_str(), resolver)?;
+    let processed = preprocess_file(&path, resolver)?;
     let rapified = parse(processed.output()).unwrap();
     let out = if path.filename() == "config.cpp" {
         path.parent().join("config.bin").unwrap()

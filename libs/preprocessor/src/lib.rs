@@ -3,8 +3,6 @@
 
 //! HEMTT - Arma 3 Preprocessor
 
-use std::{collections::HashMap, path::PathBuf};
-
 use ifstate::IfState;
 
 mod context;
@@ -24,7 +22,7 @@ use peekmore::{PeekMore, PeekMoreIterator};
 pub use processed::{Mapping, Processed};
 pub use resolver::Resolver;
 pub use tokens::{whitespace, Symbol, Token};
-use vfs::MemoryFS;
+use vfs::VfsPath;
 
 /// Preprocesses a config file.
 ///
@@ -33,36 +31,16 @@ use vfs::MemoryFS;
 ///
 /// # Panics
 /// If the files
-pub fn preprocess_file(entry: &str, resolver: &Resolver) -> Result<Processed, Error> {
-    let mut context = Context::new(entry.to_string());
-    let Some(source) = resolver.find_include(
-        entry,
-        PathBuf::from(entry).file_name().unwrap().to_str().unwrap(),
-    ) else {
-        return Err(Error::IncludeNotFound {
-            target: vec![Token::builtin(None)],
-            trace: context.trace(),
-        })
-    };
-    let mut tokens = crate::parse::parse(entry, &source.1, &None)?;
+pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed, Error> {
+    let mut context = Context::new(entry.clone());
+    let source = entry.read_to_string()?;
+    let mut tokens = crate::parse::parse(entry, &source, &None)?;
     let eoi = tokens.pop().unwrap();
     tokens.push(Token::ending_newline(None));
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
     let processed = root_preprocess(resolver, &mut context, &mut tokenstream, false)?;
     Ok(Processed::from_tokens(resolver, processed))
-}
-
-/// # Errors
-/// it can fail
-pub fn preprocess_string(source: &str) -> Result<Processed, Error> {
-    let tokens = crate::parse::parse("%anonymous%", source, &None)?;
-    let mut context = Context::new(String::from("%anonymous%"));
-    let mut tokenstream = tokens.into_iter().peekmore();
-    let binding = MemoryFS::new().into();
-    let resolver = Resolver::new(&binding, HashMap::new());
-    let processed = root_preprocess(&resolver, &mut context, &mut tokenstream, false)?;
-    Ok(Processed::from_tokens(&resolver, processed))
 }
 
 fn root_preprocess(
@@ -278,18 +256,14 @@ fn directive_include_preprocess(
             token: Box::new(last.unwrap_or_else(|| from.clone())),
         });
     }
-    let (pathbuf, mut tokens) = {
-        let Some((resolved_path, source)) = resolver.find_include(
+    let (vfs, mut tokens) = {
+        let Ok(Some((resolved_path, source))) = resolver.find_include(
             context.current_file(),
             &path,
         ) else {
             return Err(Error::IncludeNotFound { target: path_tokens, trace: context.trace() })
         };
-        let parsed = crate::parse::parse(
-            &resolved_path.display().to_string(),
-            &source,
-            &Some(Box::new(from)),
-        )?;
+        let parsed = crate::parse::parse(&resolved_path, &source, &Some(Box::new(from)))?;
         (resolved_path, parsed)
     };
     // Remove EOI token
@@ -297,7 +271,7 @@ fn directive_include_preprocess(
     tokens.push(Token::ending_newline(None));
     let mut tokenstream = tokens.into_iter().peekmore();
     let current = context.current_file().clone();
-    context.set_current_file(pathbuf.display().to_string());
+    context.set_current_file(vfs);
     let output = root_preprocess(resolver, context, &mut tokenstream, false);
     context.set_current_file(current);
     output

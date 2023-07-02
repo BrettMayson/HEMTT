@@ -11,17 +11,13 @@ fn bootstrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
             let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
-            let vfs = PhysicalFS::new(PathBuf::from(ROOT).join(file.path())).into();
+            let vfs =
+                PhysicalFS::new(PathBuf::from(ROOT).join(file.path().file_name().unwrap())).into();
             let resolver = Resolver::new(&vfs, Default::default());
-            println!(
-                "bootstrap {:?}",
-                file.path().file_name().unwrap().to_str().unwrap()
-            );
-            let processed = preprocess_file(
-                &file.path().join("source.hpp").display().to_string(),
-                &resolver,
-            )
-            .unwrap();
+            for dir in vfs.read_dir().unwrap() {
+                println!("  {:?}", dir.as_str());
+            }
+            let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver).unwrap();
             std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }

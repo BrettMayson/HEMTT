@@ -3,6 +3,8 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
 };
 
+use vfs::VfsPath;
+
 use crate::{
     defines::Defines,
     ifstate::IfStates,
@@ -55,8 +57,8 @@ const BUILTIN: [&str; 37] = [
 pub struct Context<'a> {
     ifstates: IfStates,
     definitions: Defines,
-    entry: String,
-    current_file: String,
+    entry: VfsPath,
+    current_file: VfsPath,
     counter: Arc<AtomicUsize>,
     trace: Vec<Token>,
     parent: Option<&'a Self>,
@@ -65,7 +67,7 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     #[must_use]
     /// Create a new `Context`
-    pub fn new(entry: String) -> Self {
+    pub fn new(entry: VfsPath) -> Self {
         Self {
             ifstates: IfStates::new(),
             definitions: HashMap::new(),
@@ -135,18 +137,18 @@ impl<'a> Context<'a> {
 
     #[must_use]
     /// Get the entry name
-    pub const fn entry(&self) -> &String {
+    pub const fn entry(&self) -> &VfsPath {
         &self.entry
     }
 
     #[must_use]
     /// Get the current file
-    pub const fn current_file(&self) -> &String {
+    pub const fn current_file(&self) -> &VfsPath {
         &self.current_file
     }
 
     /// Set the current file
-    pub fn set_current_file(&mut self, file: String) {
+    pub fn set_current_file(&mut self, file: VfsPath) {
         self.current_file = file;
     }
 
@@ -209,7 +211,10 @@ impl<'a> Context<'a> {
             "__FILE__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
-                    Symbol::Word(token.source().path().to_string().replace('\\', "/")),
+                    Symbol::Word(token.source().path().map_or_else(
+                        || String::from("%builtin%"),
+                        |p| p.as_str().replace('\\', "/"),
+                    )),
                     token.source().clone(),
                     Some(Box::new(token.clone())),
                 )]),

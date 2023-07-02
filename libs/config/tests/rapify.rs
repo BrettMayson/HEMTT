@@ -16,13 +16,10 @@ fn rapify() {
                 "rapify {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let vfs = PhysicalFS::new(PathBuf::from(ROOT).join(file.path())).into();
+            let vfs =
+                PhysicalFS::new(PathBuf::from(ROOT).join(file.path().file_name().unwrap())).into();
             let resolver = Resolver::new(&vfs, Default::default());
-            let processed = preprocess_file(
-                &file.path().join("source.hpp").display().to_string(),
-                &resolver,
-            )
-            .unwrap();
+            let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver).unwrap();
             let rapified = config().parse(processed.output()).unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();

@@ -1,3 +1,5 @@
+use vfs::MemoryFS;
+
 #[test]
 fn cba_special() {
     for char in [
@@ -5,6 +7,6 @@ fn cba_special() {
     ]
     .iter()
     {
-        hemtt_preprocessor::parse("special", char, &None).unwrap();
+        hemtt_preprocessor::parse(&MemoryFS::new().into(), char, &None).unwrap();
     }
 }
