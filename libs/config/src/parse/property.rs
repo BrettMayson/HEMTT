@@ -20,8 +20,8 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                 rec.labelled("class property")
                     .padded()
                     .repeated()
-                    .delimited_by(just('{'), just('}'))
                     .padded()
+                    .delimited_by(just('{'), just('}'))
                     .or_not(),
             )
             .map(|((ident, parent), properties)| {
@@ -37,7 +37,7 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
             });
         choice((
             class.map(Property::Class),
-            just("delete")
+            just("delete ")
                 .padded()
                 .ignore_then(ident().labelled("delete class name"))
                 .map(Property::Delete),

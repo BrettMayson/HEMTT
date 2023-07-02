@@ -9,7 +9,7 @@ pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
             .or(array_value())
             .padded()
             .separated_by(just(',').padded())
-            .delimited_by(just('{'), just('}'))
+            .delimited_by(just('{').padded(), just('}').padded())
     })
     .map_with_span(move |items, span| Array {
         expand,

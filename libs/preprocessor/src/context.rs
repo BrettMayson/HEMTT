@@ -9,6 +9,7 @@ use hemtt_error::{
     tokens::{Symbol, Token},
     Code,
 };
+use tracing::error;
 use vfs::VfsPath;
 
 use crate::{
@@ -178,18 +179,18 @@ impl<'a> Context<'a> {
                 trace: self.trace(),
             })));
         }
-        if !arg
-            && ident.to_case(Case::UpperSnake) != ident
-            && !ident.starts_with("IDC_")
-            && !source.source().path_or_builtin().starts_with("/include/")
-        {
-            if let Ok(mut warnings) = self.warnings.write() {
-                warnings.push(Box::new(UpperSnakeCase {
-                    token: Box::new(source.clone()),
-                    trace: self.trace(),
-                }));
-            }
-        }
+        // if !arg
+        //     && ident.to_case(Case::UpperSnake) != ident
+        //     && !ident.starts_with("IDC_")
+        //     && !source.source().path_or_builtin().starts_with("/include/")
+        // {
+        //     if let Ok(mut warnings) = self.warnings.write() {
+        //         warnings.push(Box::new(UpperSnakeCase {
+        //             token: Box::new(source.clone()),
+        //             trace: self.trace(),
+        //         }));
+        //     }
+        // }
         self.definitions.insert(ident, (source, definition));
         Ok(())
     }
@@ -292,14 +293,23 @@ impl<'a> Context<'a> {
 
     /// Add a warning
     pub fn warning(&mut self, warning: Box<dyn Code>) {
-        self.warnings.write().unwrap().push(warning);
+        self.warnings.write().map_or_else(
+            |_| {
+                error!("Failed to add warning");
+            },
+            |mut warnings| {
+                warnings.push(warning);
+            },
+        );
     }
 
     #[must_use]
     /// Get all warnings
     pub fn warnings(self) -> Option<Vec<Box<dyn Code>>> {
-        Rc::<RwLock<Vec<Box<(dyn Code)>>>>::try_unwrap(self.warnings)
-            .map_or_else(|_| None, |warnings| Some(warnings.into_inner().unwrap()))
+        Rc::<RwLock<Vec<Box<(dyn Code)>>>>::try_unwrap(self.warnings).map_or_else(
+            |_| None,
+            |warnings| warnings.into_inner().map_or_else(|_| None, Some),
+        )
     }
 }
 

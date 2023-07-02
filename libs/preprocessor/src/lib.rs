@@ -7,8 +7,9 @@ use codes::{
     pe10_function_as_value::FunctionAsValue,
     pe11_expected_funtion_or_value::ExpectedFunctionOrValue,
     pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
-    pe1_unexpected_token::UnexpectedToken, pe2_unexpected_eof::UnexpectedEOF,
-    pe3_expected_ident::ExpectedIdent, pe5_define_multitoken_argument::DefineMultiTokenArgument,
+    pe14_include_unexpected_suffix::IncludeUnexpectedSuffix, pe1_unexpected_token::UnexpectedToken,
+    pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
+    pe5_define_multitoken_argument::DefineMultiTokenArgument,
     pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
     pe9_function_call_argument_count::FunctionCallArgumentCount,
 };
@@ -238,30 +239,29 @@ fn directive_include_preprocess(
     from: Token,
 ) -> Result<Vec<Token>, Error> {
     let encased_in = match tokenstream.peek().unwrap().symbol() {
-        Symbol::DoubleQuote | Symbol::SingleQuote => tokenstream.next().unwrap().symbol().clone(),
-        Symbol::LeftAngle => {
-            tokenstream.next();
-            Symbol::RightAngle
+        Symbol::LeftAngle | Symbol::DoubleQuote | Symbol::SingleQuote => {
+            tokenstream.next().unwrap()
         }
         _ => {
             return Err(Error::Code(Box::new(IncludeNotEncased {
                 token: Box::new(tokenstream.peek().unwrap().clone()),
                 trace: context.trace(),
+                encased_in: None,
             })))
         }
     };
     let mut path = String::new();
-    let mut path_tokens = Vec::new();
+    let mut path_tokens: Vec<Token> = Vec::new();
     let mut last = None;
     while let Some(token) = tokenstream.peek() {
-        if token.symbol() == &encased_in {
+        if Some(token.symbol()) == encased_in.symbol().opposite().as_ref() {
             tokenstream.next();
             break;
         }
         if token.symbol() == &Symbol::Newline {
-            return Err(Error::Code(Box::new(UnexpectedToken {
-                token: Box::new(token.clone()),
-                expected: vec![encased_in],
+            return Err(Error::Code(Box::new(IncludeNotEncased {
+                encased_in: Some(encased_in),
+                token: Box::new(path_tokens.last().unwrap_or(token).clone()),
                 trace: context.trace(),
             })));
         }
@@ -284,6 +284,35 @@ fn directive_include_preprocess(
         let parsed = crate::parse::parse(&resolved_path, &source, &Some(Box::new(from)))?;
         (resolved_path, parsed)
     };
+    // read to end of line
+    while let Some(token) = tokenstream.peek() {
+        match token.symbol() {
+            Symbol::Whitespace(_) => {
+                tokenstream.next().unwrap();
+            }
+            Symbol::Slash => {
+                if matches!(
+                    tokenstream.peek_forward(1).map(Token::symbol),
+                    Some(Symbol::Slash)
+                ) {
+                    skip_comment(tokenstream);
+                } else {
+                    tokenstream.move_cursor_back().unwrap();
+                    tokenstream.next().unwrap();
+                }
+            }
+            Symbol::Newline => {
+                tokenstream.next().unwrap();
+                break;
+            }
+            _ => {
+                return Err(Error::Code(Box::new(IncludeUnexpectedSuffix {
+                    token: Box::new(token.clone()),
+                    trace: context.trace(),
+                })));
+            }
+        }
+    }
     // Remove EOI token
     tokens.pop().unwrap();
     tokens.push(Token::ending_newline(None));

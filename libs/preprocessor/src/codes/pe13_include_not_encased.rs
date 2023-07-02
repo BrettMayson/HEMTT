@@ -1,8 +1,5 @@
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_error::{
-    tokens::{Symbol, Token},
-    Code,
-};
+use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
 /// Unexpected token
@@ -11,6 +8,8 @@ pub struct IncludeNotEncased {
     pub(crate) token: Box<Token>,
     /// The [`Token`] stack trace
     pub(crate) trace: Vec<Token>,
+    /// The [`Symbol`] that the include is encased in
+    pub(crate) encased_in: Option<Token>,
 }
 
 impl Code for IncludeNotEncased {
@@ -37,7 +36,11 @@ impl Code for IncludeNotEncased {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
-        let span = self.token.source().start().0..self.token.source().end().0;
+        let start_token = self
+            .encased_in
+            .as_ref()
+            .map_or(*self.token.clone(), Clone::clone);
+        let span = start_token.source().start().0..self.token.source().end().0;
         if let Err(e) = Report::build(
             ReportKind::Error,
             self.token.source().path_or_builtin(),
@@ -50,7 +53,23 @@ impl Code for IncludeNotEncased {
                 .with_color(a)
                 .with_message(format!(
                     "try `{}`",
-                    format!("<{}>", self.token.symbol().output().trim()).fg(a)
+                    if self.encased_in.is_none() {
+                        format!("<{}>", self.token.symbol().output().trim())
+                    } else {
+                        format!(
+                            "{}{}",
+                            self.token.symbol().output().trim(),
+                            self.encased_in
+                                .as_ref()
+                                .unwrap()
+                                .symbol()
+                                .opposite()
+                                .unwrap()
+                                .output()
+                                .trim()
+                        )
+                    }
+                    .fg(a)
                 )),
         )
         .finish()

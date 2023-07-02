@@ -103,6 +103,23 @@ impl Symbol {
             _ => self.to_string(),
         }
     }
+
+    #[must_use]
+    /// Get the opposite symbol of a symbol
+    pub const fn opposite(&self) -> Option<Self> {
+        match self {
+            Self::LeftBrace => Some(Self::RightBrace),
+            Self::RightBrace => Some(Self::LeftBrace),
+            Self::LeftBracket => Some(Self::RightBracket),
+            Self::RightBracket => Some(Self::LeftBracket),
+            Self::LeftParenthesis => Some(Self::RightParenthesis),
+            Self::RightParenthesis => Some(Self::LeftParenthesis),
+            Self::LeftAngle => Some(Self::RightAngle),
+            Self::RightAngle => Some(Self::LeftAngle),
+            Self::DoubleQuote => Some(Self::DoubleQuote),
+            _ => None,
+        }
+    }
 }
 
 impl ToString for Symbol {
