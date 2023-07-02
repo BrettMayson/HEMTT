@@ -39,7 +39,10 @@ fn errors() {
                     )
                     .unwrap();
                     // }
-                    assert_eq!(errors.join("\n"), String::from_utf8(expected).unwrap());
+                    assert_eq!(
+                        errors.join("\n").replace('\r', ""),
+                        String::from_utf8(expected).unwrap().replace('\r', "")
+                    );
                 }
                 // Errors may occur, but they should be handled, if one is not a handler should be created
                 Err(e) => {
