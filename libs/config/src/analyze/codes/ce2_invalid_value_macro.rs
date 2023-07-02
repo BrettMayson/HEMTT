@@ -35,22 +35,26 @@ impl Code for InvalidValueMacro {
         processed: &hemtt_error::processed::Processed,
     ) -> Option<String> {
         let map = processed.original_col(self.span.start).unwrap();
-        let map_file = processed.source(map.source()).unwrap();
+        let mut token = map.token().clone();
+        while let Some(t) = token.parent() {
+            token = *t.clone();
+        }
+        let map_token = processed.original_col(token.source().start().0).unwrap();
         let invalid = &processed.output()[self.span.start..self.span.end];
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();
         Report::build(
             ariadne::ReportKind::Error,
-            map_file.0.clone(),
-            map.original_column(),
+            token.source().path_or_builtin(),
+            map_token.original_column(),
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
             Label::new((
-                map_file.0.clone(),
-                map.original_column()..map.original_column() + self.span.len(),
+                token.source().path_or_builtin(),
+                map_token.original_column()..map_token.original_column() + self.span.len(),
             ))
             .with_message(self.label_message())
             .with_color(a),
