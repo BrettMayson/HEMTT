@@ -25,6 +25,10 @@ impl Rapify for Array {
         compressed_int_len(self.items.len() as u32)
             + usize::sum(self.items.iter().map(|e| e.rapified_length() + 1))
     }
+
+    fn valid(&self) -> bool {
+        self.items.iter().all(Rapify::valid)
+    }
 }
 
 impl Rapify for Item {
@@ -63,6 +67,14 @@ impl Rapify for Item {
             Self::Str(s) => s.rapified_code(),
             Self::Number(n) => n.rapified_code(),
             Self::Array(_) => 3,
+        }
+    }
+
+    fn valid(&self) -> bool {
+        match self {
+            Self::Str(s) => s.valid(),
+            Self::Number(n) => n.valid(),
+            Self::Array(a) => a.iter().all(Rapify::valid),
         }
     }
 }

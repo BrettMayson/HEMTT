@@ -23,4 +23,7 @@ pub trait Rapify {
     fn rapified_code(&self) -> u8 {
         3
     }
+
+    /// Check if the object is valid and can be rapified
+    fn valid(&self) -> bool;
 }

@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use super::{Array, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -21,4 +23,6 @@ pub enum Value {
     /// my_array[] = {1,2,3};
     /// ```
     Array(Array),
+    /// An invalid value
+    Invalid(Range<usize>),
 }

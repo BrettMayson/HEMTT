@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     env::temp_dir,
     fs::{create_dir_all, remove_dir_all},
     path::{Path, PathBuf},
@@ -117,6 +118,17 @@ impl Context {
 
     pub fn addons(&self) -> &[Addon] {
         &self.addons
+    }
+
+    pub fn prefixes(&self) -> HashMap<String, VfsPath> {
+        let mut prefixes = HashMap::new();
+        for addon in self.addons() {
+            prefixes.insert(
+                addon.prefix().to_string(),
+                self.vfs().join(addon.folder()).unwrap(),
+            );
+        }
+        prefixes
     }
 
     pub const fn vfs(&self) -> &VfsPath {

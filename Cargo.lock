@@ -882,6 +882,7 @@ dependencies = [
  "hemtt-io",
  "hemtt-preprocessor",
  "serde",
+ "vfs",
 ]
 
 [[package]]
@@ -921,6 +922,7 @@ dependencies = [
  "serde_json",
  "strsim",
  "tracing",
+ "vfs",
 ]
 
 [[package]]

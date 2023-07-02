@@ -1,8 +1,9 @@
-use std::io::Read;
+use std::{io::Read, path::PathBuf};
 
 use chumsky::Parser;
 use hemtt_config::{parse::config, rapify::Rapify};
-use hemtt_preprocessor::{preprocess_file, LocalResolver, Processed};
+use hemtt_preprocessor::{preprocess_file, Resolver};
+use vfs::PhysicalFS;
 
 const ROOT: &str = "tests/rapify/";
 
@@ -15,13 +16,13 @@ fn rapify() {
                 "rapify {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let resolver = LocalResolver::default();
-            let tokens = preprocess_file(
+            let vfs = PhysicalFS::new(PathBuf::from(ROOT).join(file.path())).into();
+            let resolver = Resolver::new(&vfs, Default::default());
+            let processed = preprocess_file(
                 &file.path().join("source.hpp").display().to_string(),
                 &resolver,
             )
             .unwrap();
-            let processed = Processed::from_tokens(&resolver, tokens);
             let rapified = config().parse(processed.output()).unwrap();
             let mut output = Vec::new();
             rapified.rapify(&mut output, 0).unwrap();

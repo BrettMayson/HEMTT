@@ -13,6 +13,9 @@ impl Rapify for Class {
         output: &mut O,
         offset: usize,
     ) -> Result<usize, std::io::Error> {
+        if !self.valid() {
+            panic!("Invalid class");
+        }
         let mut written = 0;
         match self {
             Self::Local {
@@ -108,6 +111,13 @@ impl Rapify for Class {
                         })
                         .sum::<usize>()
             }
+        }
+    }
+
+    fn valid(&self) -> bool {
+        match self {
+            Self::External { .. } => true,
+            Self::Local { properties, .. } => properties.iter().all(Rapify::valid),
         }
     }
 }

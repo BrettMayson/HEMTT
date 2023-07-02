@@ -4,11 +4,11 @@ use std::{
 };
 
 use hemtt_config::{parse, rapify::Rapify};
-use hemtt_preprocessor::{preprocess_file, Processed};
+use hemtt_preprocessor::{preprocess_file, Resolver};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::{VfsFileType, VfsPath};
 
-use crate::{context::Context, error::Error, resolver::VfsResolver};
+use crate::{context::Context, error::Error};
 
 use super::Module;
 
@@ -21,7 +21,7 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        let resolver = VfsResolver::new(ctx);
+        let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
         let counter = AtomicI16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
@@ -65,9 +65,8 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &VfsResolver) -> Result<(), Error> {
-    let tokens = preprocess_file(path.as_str(), resolver)?;
-    let processed = Processed::from_tokens(resolver, tokens);
+pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
+    let processed = preprocess_file(path.as_str(), resolver)?;
     let rapified = parse(processed.output()).unwrap();
     let out = if path.filename() == "config.cpp" {
         path.parent().join("config.bin").unwrap()

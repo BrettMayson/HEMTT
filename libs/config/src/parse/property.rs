@@ -57,9 +57,12 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                                     .padded()
                                     .labelled("property value")),
                         )
-                        .or(just('=')
-                            .padded()
-                            .ignore_then(value().padded().labelled("property value"))),
+                        .or(just('=').padded().ignore_then(
+                            value()
+                                .padded()
+                                .labelled("property value")
+                                .recover_with(skip_until([';'], Value::Invalid)),
+                        )),
                 )
                 .map(|(name, value)| Property::Entry { name, value }),
         ))
@@ -203,9 +206,14 @@ mod tests {
     // #[test]
     // fn array_nested_missing() {
     //     assert_eq!(
-    //         property().parse("MyProperty[] = {{1,2,3},{4,5,6};"),
-    //         Ok(Property::Entry {
-    //             name: crate::Ident("MyProperty".into()),
+    //         property()
+    //             .parse_recovery("MyProperty[] = {{1,2,3},{4,5,6};")
+    //             .0,
+    //         Some(Property::Entry {
+    //             name: crate::Ident {
+    //                 value: "MyProperty".to_string(),
+    //                 span: 0..10,
+    //             },
     //             value: Value::Array(crate::Array {
     //                 expand: false,
     //                 items: vec![
@@ -237,7 +245,8 @@ mod tests {
     //                             span: 10..11
     //                         }),
     //                     ]),
-    //                 ]
+    //                 ],
+    //                 span: 15..32,
     //             })
     //         })
     //     );

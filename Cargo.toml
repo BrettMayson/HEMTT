@@ -4,6 +4,7 @@ members = [
 
     "libs/arma",
     "libs/config",
+    "libs/error",
     "libs/io",
     "libs/pbo",
     "libs/preprocessor",

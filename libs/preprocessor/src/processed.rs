@@ -18,10 +18,7 @@ impl Processed {
     }
 
     /// Source processed tokens for use in futher tools
-    pub fn from_tokens<R>(resolver: &R, tokens: Vec<Token>) -> Self
-    where
-        R: Resolver,
-    {
+    pub fn from_tokens(resolver: &Resolver, tokens: Vec<Token>) -> Self {
         let mut sources: Vec<(String, String)> = Vec::new();
         let mut mappings = Vec::new();
         let mut output = String::new();
@@ -45,7 +42,8 @@ impl Processed {
                             if source.path() == "%builtin%" {
                                 String::new()
                             } else {
-                                std::fs::read_to_string(source.path()).unwrap()
+                                // std::fs::read_to_string(source.path()).unwrap()
+                                resolver.find_include("", source.path()).unwrap().1
                             }
                         }));
                         sources.len() - 1

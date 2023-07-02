@@ -1,4 +1,7 @@
-use hemtt_preprocessor::{preprocess_file, LocalResolver, Processed};
+use std::path::PathBuf;
+
+use hemtt_preprocessor::{preprocess_file, Resolver};
+use vfs::PhysicalFS;
 
 const ROOT: &str = "tests/bootstrap/";
 
@@ -8,17 +11,17 @@ fn bootstrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
             let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
-            let resolver = LocalResolver::default();
+            let vfs = PhysicalFS::new(PathBuf::from(ROOT).join(file.path())).into();
+            let resolver = Resolver::new(&vfs, Default::default());
             println!(
                 "bootstrap {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let tokens = preprocess_file(
+            let processed = preprocess_file(
                 &file.path().join("source.hpp").display().to_string(),
                 &resolver,
             )
             .unwrap();
-            let processed = Processed::from_tokens(&resolver, tokens);
             std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }

@@ -1,9 +1,9 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use hemtt_preprocessor::preprocess_file;
+use hemtt_preprocessor::{preprocess_file, Resolver};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, resolver::VfsResolver};
+use crate::{context::Context, error::Error};
 
 use super::Module;
 
@@ -24,7 +24,7 @@ impl Module for Lint {
         }
         let counter = AtomicI32::new(0);
         for addon in ctx.addons() {
-            let resolver = VfsResolver::new(ctx);
+            let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
             let sqf_ext = Some(String::from("sqf"));
             let mut entries = Vec::new();
             for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {

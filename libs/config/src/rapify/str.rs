@@ -21,6 +21,10 @@ impl Rapify for Str {
     fn rapified_code(&self) -> u8 {
         0
     }
+
+    fn valid(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]

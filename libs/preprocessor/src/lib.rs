@@ -3,7 +3,7 @@
 
 //! HEMTT - Arma 3 Preprocessor
 
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use ifstate::IfState;
 
@@ -11,19 +11,20 @@ mod context;
 mod defines;
 mod error;
 mod ifstate;
-mod map;
 mod parse;
+mod processed;
 mod resolver;
 mod tokens;
 
 pub use context::{Context, Definition, FunctionDefinition};
 pub use defines::{Defines, DefinitionLibrary};
 pub use error::Error;
-pub use map::{Mapping, Processed};
 pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
-pub use resolver::{local::LocalResolver, none::NoResolver, Resolver};
+pub use processed::{Mapping, Processed};
+pub use resolver::Resolver;
 pub use tokens::{whitespace, Symbol, Token};
+use vfs::MemoryFS;
 
 /// Preprocesses a config file.
 ///
@@ -32,44 +33,44 @@ pub use tokens::{whitespace, Symbol, Token};
 ///
 /// # Panics
 /// If the files
-pub fn preprocess_file<R>(entry: &str, resolver: &R) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+pub fn preprocess_file(entry: &str, resolver: &Resolver) -> Result<Processed, Error> {
     let mut context = Context::new(entry.to_string());
-    let source = resolver.find_include(
-        &context,
-        PathBuf::from(entry).parent().unwrap().to_str().unwrap(),
+    let Some(source) = resolver.find_include(
         entry,
         PathBuf::from(entry).file_name().unwrap().to_str().unwrap(),
-        vec![Token::builtin(None)],
-    )?;
+    ) else {
+        return Err(Error::IncludeNotFound {
+            target: vec![Token::builtin(None)],
+            trace: context.trace(),
+        })
+    };
     let mut tokens = crate::parse::parse(entry, &source.1, &None)?;
     let eoi = tokens.pop().unwrap();
     tokens.push(Token::ending_newline(None));
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
-    root_preprocess(resolver, &mut context, &mut tokenstream, false)
+    let processed = root_preprocess(resolver, &mut context, &mut tokenstream, false)?;
+    Ok(Processed::from_tokens(resolver, processed))
 }
 
 /// # Errors
 /// it can fail
-pub fn preprocess_string(source: &str) -> Result<Vec<Token>, Error> {
+pub fn preprocess_string(source: &str) -> Result<Processed, Error> {
     let tokens = crate::parse::parse("%anonymous%", source, &None)?;
     let mut context = Context::new(String::from("%anonymous%"));
     let mut tokenstream = tokens.into_iter().peekmore();
-    root_preprocess(&NoResolver::new(), &mut context, &mut tokenstream, false)
+    let binding = MemoryFS::new().into();
+    let resolver = Resolver::new(&binding, HashMap::new());
+    let processed = root_preprocess(&resolver, &mut context, &mut tokenstream, false)?;
+    Ok(Processed::from_tokens(&resolver, processed))
 }
 
-fn root_preprocess<R>(
-    resolver: &R,
+fn root_preprocess(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     allow_quote: bool,
-) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Token>, Error> {
     let mut output = Vec::new();
     while let Some(token) = tokenstream.peek() {
         match token.symbol() {
@@ -109,16 +110,13 @@ where
 }
 
 #[allow(clippy::too_many_lines)]
-fn directive_preprocess<R>(
-    resolver: &R,
+fn directive_preprocess(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     allow_quote: bool,
     from: Token,
-) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Token>, Error> {
     let Some(token) = tokenstream.peek() else {
         return Err(Error::UnexpectedEOF {
             token: Box::new(from),
@@ -236,15 +234,12 @@ where
     Ok(output)
 }
 
-fn directive_include_preprocess<R>(
-    resolver: &R,
+fn directive_include_preprocess(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: Token,
-) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Token>, Error> {
     let encased_in = match tokenstream.peek().unwrap().symbol() {
         Symbol::DoubleQuote | Symbol::SingleQuote => tokenstream.next().unwrap().symbol().clone(),
         Symbol::LeftAngle => {
@@ -284,13 +279,12 @@ where
         });
     }
     let (pathbuf, mut tokens) = {
-        let (resolved_path, source) = resolver.find_include(
-            context,
-            context.entry(),
+        let Some((resolved_path, source)) = resolver.find_include(
             context.current_file(),
             &path,
-            path_tokens,
-        )?;
+        ) else {
+            return Err(Error::IncludeNotFound { target: path_tokens, trace: context.trace() })
+        };
         let parsed = crate::parse::parse(
             &resolved_path.display().to_string(),
             &source,
@@ -309,15 +303,12 @@ where
     output
 }
 
-fn directive_define_preprocess<R>(
-    resolver: &R,
+fn directive_define_preprocess(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: Token,
-) -> Result<(), Error>
-where
-    R: Resolver,
-{
+) -> Result<(), Error> {
     let (ident_token, ident) = if let Some(token) = tokenstream.next() {
         match token.symbol() {
             Symbol::Word(ident) => {
@@ -517,16 +508,13 @@ fn directive_define_read_body(
 }
 
 #[allow(clippy::too_many_lines)]
-fn read_args<R>(
-    resolver: &R,
+fn read_args(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: &Token,
     recursive: bool,
-) -> Result<Vec<Vec<Token>>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Vec<Token>>, Error> {
     let mut args = Vec::new();
     let mut arg: Vec<Token> = Vec::new();
     if let Some(token) = tokenstream.next() {
@@ -637,16 +625,13 @@ where
     Ok(args)
 }
 
-fn walk_line<R>(
-    resolver: &R,
+fn walk_line(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     // Allow quotes when inside of a macro
     allow_quote: bool,
-) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Token>, Error> {
     let mut output = Vec::new();
     while let Some(token) = tokenstream.peek() {
         if matches!(token.symbol(), Symbol::Newline) {
@@ -715,16 +700,13 @@ where
     Ok(output)
 }
 
-fn walk_definition<R>(
-    resolver: &R,
+fn walk_definition(
+    resolver: &Resolver,
     context: &mut Context,
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: Token,
     definition: Definition,
-) -> Result<Vec<Token>, Error>
-where
-    R: Resolver,
-{
+) -> Result<Vec<Token>, Error> {
     let mut output = Vec::new();
     match definition {
         Definition::Value(tokens) => {
