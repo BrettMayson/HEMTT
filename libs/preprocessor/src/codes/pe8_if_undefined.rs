@@ -4,6 +4,7 @@ use tracing::error;
 
 use crate::{Defines, DefinitionLibrary};
 
+#[allow(unused)]
 /// Tried to use `#if` on an undefined macro
 pub struct IfUndefined {
     /// The [`Token`] that was found

@@ -1,9 +1,10 @@
-use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind, Source};
+use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
 use crate::{Defines, DefinitionLibrary};
 
+#[allow(unused)]
 /// Tried to use `#if` on a [`Unit`](crate::context::Definition::Unit) or [`FunctionDefinition`](crate::context::Definition::Function)
 pub struct IfUnitOrFunction {
     /// The [`Token`] that was found

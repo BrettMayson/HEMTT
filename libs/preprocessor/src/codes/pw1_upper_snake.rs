@@ -8,7 +8,7 @@ pub struct UpperSnakeCase {
     /// The [`Token`] that was found
     pub(crate) token: Box<Token>,
     /// The [`Token`] stack trace
-    pub(crate) trace: Vec<Token>,
+    pub(crate) _trace: Vec<Token>,
 }
 
 impl Code for UpperSnakeCase {

@@ -1,8 +1,7 @@
-use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_error::{thiserror, Code};
 use tracing::error;
 
-use crate::{parse::Rule, Token};
+use crate::parse::Rule;
 
 #[derive(thiserror::Error, Debug)]
 /// Errors that can occur during preprocessing
@@ -46,9 +45,7 @@ impl Error {
     pub fn get_code(&self) -> Option<Box<&dyn Code>> {
         match self {
             Self::Code(c) => Some(Box::new(&**c)),
-            Self::Io(_) => todo!(),
-            Self::Pest(_) => todo!(),
-            Self::Vfs(_) => todo!(),
+            Self::Io(_) | Self::Pest(_) | Self::Vfs(_) => None,
         }
     }
 }

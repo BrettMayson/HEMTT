@@ -2,6 +2,7 @@ use ariadne::{Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// Tried to use a [`Unit`](crate::context::Definition::Unit) as a function or value
 pub struct ExpectedFunctionOrValue {
     /// The [`Token`] that was found

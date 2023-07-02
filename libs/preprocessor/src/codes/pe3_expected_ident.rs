@@ -1,5 +1,6 @@
 use hemtt_error::{tokens::Token, Code};
 
+#[allow(unused)]
 /// Expected an identifier, found something else
 pub struct ExpectedIdent {
     /// The [`Token`] that was found

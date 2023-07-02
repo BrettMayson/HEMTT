@@ -1,10 +1,8 @@
-use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_error::{
-    tokens::{Symbol, Token},
-    Code,
-};
+use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
+use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// Unexpected token
 pub struct IncludeUnexpectedSuffix {
     /// The [`Token`] that was found
@@ -34,7 +32,6 @@ impl Code for IncludeUnexpectedSuffix {
     }
 
     fn generate_report(&self) -> Option<String> {
-        println!("{:?}", self.token);
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();

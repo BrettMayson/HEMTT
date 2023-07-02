@@ -4,6 +4,7 @@ use tracing::error;
 
 use crate::{Defines, DefinitionLibrary};
 
+#[allow(unused)]
 /// Tried to call a [`FunctionDefinition`](crate::context::FunctionDefinition) with the wrong number of arguments
 pub struct FunctionCallArgumentCount {
     /// The [`Token`] that was found

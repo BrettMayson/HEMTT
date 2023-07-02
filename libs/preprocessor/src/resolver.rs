@@ -20,6 +20,10 @@ impl<'a> Resolver<'a> {
     }
 
     /// Find an include
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Vfs`] if the file fails to read
     pub fn find_include(
         &self,
         from: &VfsPath,

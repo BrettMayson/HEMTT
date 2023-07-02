@@ -3,6 +3,7 @@ use hemtt_error::{
     Code,
 };
 
+#[allow(unused)]
 /// Unexpected token
 pub struct UnexpectedToken {
     /// The [`Token`] that was found

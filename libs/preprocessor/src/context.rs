@@ -4,7 +4,6 @@ use std::{
     sync::{atomic::AtomicUsize, Arc, RwLock},
 };
 
-use convert_case::{Case, Casing};
 use hemtt_error::{
     tokens::{Symbol, Token},
     Code,
@@ -12,12 +11,7 @@ use hemtt_error::{
 use tracing::error;
 use vfs::VfsPath;
 
-use crate::{
-    codes::{pe6_change_builtin::ChangeBuiltin, pw1_upper_snake::UpperSnakeCase},
-    defines::Defines,
-    ifstate::IfStates,
-    Error,
-};
+use crate::{codes::pe6_change_builtin::ChangeBuiltin, defines::Defines, ifstate::IfStates, Error};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",
@@ -171,7 +165,7 @@ impl<'a> Context<'a> {
         ident: String,
         source: Token,
         definition: Definition,
-        arg: bool,
+        _arg: bool,
     ) -> Result<(), Error> {
         if BUILTIN.contains(&ident.as_str()) {
             return Err(Error::Code(Box::new(ChangeBuiltin {

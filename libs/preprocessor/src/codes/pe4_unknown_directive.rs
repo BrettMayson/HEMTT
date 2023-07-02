@@ -2,6 +2,7 @@ use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// Unknown directive
 pub struct UnknownDirective {
     /// The [`Token`] that was found

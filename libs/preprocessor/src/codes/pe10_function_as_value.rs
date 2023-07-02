@@ -2,6 +2,7 @@ use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// Tried to use a [`FunctionDefinition`](crate::context::FunctionDefinition) as a value
 pub struct FunctionAsValue {
     /// The [`Token`] that was found instead of `(`

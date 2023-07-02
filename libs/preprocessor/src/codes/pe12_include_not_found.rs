@@ -2,6 +2,7 @@ use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// The [`Resolver`](crate::resolver::Resolver) could not find the target
 pub struct IncludeNotFound {
     /// The target that was not found

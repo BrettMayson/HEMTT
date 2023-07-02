@@ -2,6 +2,7 @@ use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
+#[allow(unused)]
 /// Tried to create a [`FunctionDefinition`](crate::context::FunctionDefinition) that has multi-token arguments
 ///
 /// ```cpp
