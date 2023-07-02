@@ -1,4 +1,4 @@
-use hemtt_error::{thiserror};
+use hemtt_error::thiserror;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

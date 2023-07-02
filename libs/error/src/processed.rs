@@ -1,10 +1,14 @@
-use crate::tokens::{Symbol, Token};
+use crate::{
+    tokens::{Symbol, Token},
+    Code,
+};
 
 /// Output of preprocessing a file
 pub struct Processed {
     sources: Vec<(String, String)>,
     mappings: Vec<Vec<Mapping>>,
     output: String,
+    warnings: Vec<Box<dyn Code>>,
 }
 
 impl Processed {
@@ -15,7 +19,7 @@ impl Processed {
     }
 
     /// Source processed tokens for use in futher tools
-    pub fn from_tokens(tokens: Vec<Token>) -> Self {
+    pub fn from_tokens(tokens: Vec<Token>, warnings: Vec<Box<dyn Code>>) -> Self {
         let mut sources: Vec<(String, String)> = Vec::new();
         let mut mappings = Vec::new();
         let mut output = String::new();
@@ -61,6 +65,7 @@ impl Processed {
             sources,
             mappings,
             output,
+            warnings,
         }
     }
 
@@ -90,6 +95,12 @@ impl Processed {
     /// Get the files used in preprocessing
     pub fn sources(&self) -> Vec<(String, String)> {
         self.sources.clone()
+    }
+
+    #[must_use]
+    /// Get the warnings generated during preprocessing
+    pub fn warnings(&self) -> &[Box<dyn Code>] {
+        &self.warnings
     }
 }
 

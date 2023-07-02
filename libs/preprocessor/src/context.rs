@@ -1,12 +1,22 @@
 use std::{
     collections::HashMap,
-    sync::{atomic::AtomicUsize, Arc},
+    rc::Rc,
+    sync::{atomic::AtomicUsize, Arc, RwLock},
 };
 
-use hemtt_error::tokens::{Symbol, Token};
+use convert_case::{Case, Casing};
+use hemtt_error::{
+    tokens::{Symbol, Token},
+    Code,
+};
 use vfs::VfsPath;
 
-use crate::{defines::Defines, ifstate::IfStates, Error};
+use crate::{
+    codes::{pe6_change_builtin::ChangeBuiltin, pw1_upper_snake::UpperSnakeCase},
+    defines::Defines,
+    ifstate::IfStates,
+    Error,
+};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",
@@ -58,6 +68,7 @@ pub struct Context<'a> {
     counter: Arc<AtomicUsize>,
     trace: Vec<Token>,
     parent: Option<&'a Self>,
+    warnings: Rc<RwLock<Vec<Box<dyn Code>>>>,
 }
 
 impl<'a> Context<'a> {
@@ -72,6 +83,7 @@ impl<'a> Context<'a> {
             counter: Arc::new(AtomicUsize::new(0)),
             trace: Vec::new(),
             parent: None,
+            warnings: Rc::new(RwLock::new(Vec::new())),
         }
     }
 
@@ -90,6 +102,7 @@ impl<'a> Context<'a> {
                 trace
             },
             parent: Some(self),
+            warnings: self.warnings.clone(),
         }
     }
 
@@ -157,12 +170,25 @@ impl<'a> Context<'a> {
         ident: String,
         source: Token,
         definition: Definition,
+        arg: bool,
     ) -> Result<(), Error> {
         if BUILTIN.contains(&ident.as_str()) {
-            return Err(Error::ChangeBuiltin {
+            return Err(Error::Code(Box::new(ChangeBuiltin {
                 token: Box::new(source),
                 trace: self.trace(),
-            });
+            })));
+        }
+        if !arg
+            && ident.to_case(Case::UpperSnake) != ident
+            && !ident.starts_with("IDC_")
+            && !source.source().path_or_builtin().starts_with("/include/")
+        {
+            if let Ok(mut warnings) = self.warnings.write() {
+                warnings.push(Box::new(UpperSnakeCase {
+                    token: Box::new(source.clone()),
+                    trace: self.trace(),
+                }));
+            }
         }
         self.definitions.insert(ident, (source, definition));
         Ok(())
@@ -178,10 +204,10 @@ impl<'a> Context<'a> {
         source: &Token,
     ) -> Result<Option<(Token, Definition)>, Error> {
         if BUILTIN.contains(&ident) {
-            return Err(Error::ChangeBuiltin {
+            return Err(Error::Code(Box::new(ChangeBuiltin {
                 token: Box::new(source.clone()),
                 trace: self.trace(),
-            });
+            })));
         }
         Ok(self.definitions.remove(ident))
     }
@@ -263,6 +289,18 @@ impl<'a> Context<'a> {
             }
         }
     }
+
+    /// Add a warning
+    pub fn warning(&mut self, warning: Box<dyn Code>) {
+        self.warnings.write().unwrap().push(warning);
+    }
+
+    #[must_use]
+    /// Get all warnings
+    pub fn warnings(self) -> Option<Vec<Box<dyn Code>>> {
+        Rc::<RwLock<Vec<Box<(dyn Code)>>>>::try_unwrap(self.warnings)
+            .map_or_else(|_| None, |warnings| Some(warnings.into_inner().unwrap()))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -294,6 +332,15 @@ impl Definition {
     /// Check if the definition is a flag
     pub const fn is_unit(&self) -> bool {
         matches!(self, Self::Unit(_))
+    }
+
+    #[must_use]
+    /// Get the [`FunctionDefinition`] if it is one
+    pub const fn as_function(&self) -> Option<&FunctionDefinition> {
+        match self {
+            Self::Function(f) => Some(f),
+            _ => None,
+        }
     }
 }
 

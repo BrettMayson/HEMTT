@@ -3,12 +3,22 @@
 
 //! HEMTT - Arma 3 Preprocessor
 
+use codes::{
+    pe10_function_as_value::FunctionAsValue,
+    pe11_expected_funtion_or_value::ExpectedFunctionOrValue,
+    pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
+    pe1_unexpected_token::UnexpectedToken, pe2_unexpected_eof::UnexpectedEOF,
+    pe3_expected_ident::ExpectedIdent, pe5_define_multitoken_argument::DefineMultiTokenArgument,
+    pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
+    pe9_function_call_argument_count::FunctionCallArgumentCount,
+};
 use hemtt_error::{
     processed::Processed,
     tokens::{Symbol, Token},
 };
 use ifstate::IfState;
 
+pub mod codes;
 mod context;
 mod defines;
 mod error;
@@ -22,6 +32,7 @@ pub use error::Error;
 pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
 pub use resolver::Resolver;
+use tracing::warn;
 use vfs::VfsPath;
 
 /// Preprocesses a config file.
@@ -40,7 +51,14 @@ pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
     let processed = root_preprocess(resolver, &mut context, &mut tokenstream, false)?;
-    Ok(Processed::from_tokens(processed))
+    let warnings = context.warnings().map_or_else(
+        || {
+            warn!("context was not resolved");
+            Vec::new()
+        },
+        |warnings| warnings,
+    );
+    Ok(Processed::from_tokens(processed, warnings))
 }
 
 fn root_preprocess(
@@ -96,17 +114,17 @@ fn directive_preprocess(
     from: Token,
 ) -> Result<Vec<Token>, Error> {
     let Some(token) = tokenstream.peek() else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     };
     let directive_token = token.clone();
     if directive_token.symbol() != &Symbol::Directive {
-        return Err(Error::UnexpectedToken {
+        return Err(Error::Code(Box::new(UnexpectedToken {
             token: Box::new(directive_token),
             expected: vec![Symbol::Directive],
             trace: context.trace(),
-        });
+        })));
     }
     let mut output = Vec::new();
     tokenstream.next();
@@ -167,7 +185,7 @@ fn directive_preprocess(
                             Some(Box::new(token.clone())),
                         ));
                         if let Symbol::Word(word) = token.symbol() {
-                            if let Some((_source, definition)) = context.get(word, &token) {
+                            if let Some((source, definition)) = context.get(word, &token) {
                                 output.append(
                                     &mut walk_definition(
                                         resolver,
@@ -175,6 +193,7 @@ fn directive_preprocess(
                                         tokenstream,
                                         token.clone(),
                                         definition,
+                                        &source,
                                     )?
                                     .into_iter()
                                     .filter(|t| t.symbol() != &Symbol::Join)
@@ -203,9 +222,9 @@ fn directive_preprocess(
             output.push(token);
         }
     } else if !allow_quote {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     } else {
         output.push(directive_token);
     }
@@ -225,11 +244,10 @@ fn directive_include_preprocess(
             Symbol::RightAngle
         }
         _ => {
-            return Err(Error::UnexpectedToken {
+            return Err(Error::Code(Box::new(IncludeNotEncased {
                 token: Box::new(tokenstream.peek().unwrap().clone()),
-                expected: vec![Symbol::DoubleQuote, Symbol::SingleQuote, Symbol::LeftAngle],
                 trace: context.trace(),
-            })
+            })))
         }
     };
     let mut path = String::new();
@@ -241,27 +259,27 @@ fn directive_include_preprocess(
             break;
         }
         if token.symbol() == &Symbol::Newline {
-            return Err(Error::UnexpectedToken {
+            return Err(Error::Code(Box::new(UnexpectedToken {
                 token: Box::new(token.clone()),
                 expected: vec![encased_in],
                 trace: context.trace(),
-            });
+            })));
         }
         path.push_str(token.to_string().as_str());
         path_tokens.push(token.clone());
         last = tokenstream.next();
     }
     if tokenstream.peek().is_none() {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(last.unwrap_or_else(|| from.clone())),
-        });
+        })));
     }
     let (vfs, mut tokens) = {
         let Ok(Some((resolved_path, source))) = resolver.find_include(
             context.current_file(),
             &path,
         ) else {
-            return Err(Error::IncludeNotFound { token: path_tokens, trace: context.trace() })
+            return Err(Error::Code(Box::new(IncludeNotFound { token: path_tokens, trace: context.trace() })))
         };
         let parsed = crate::parse::parse(&resolved_path, &source, &Some(Box::new(from)))?;
         (resolved_path, parsed)
@@ -290,16 +308,16 @@ fn directive_define_preprocess(
                 (token, ident)
             }
             _ => {
-                return Err(Error::ExpectedIdent {
+                return Err(Error::Code(Box::new(ExpectedIdent {
                     token: Box::new(token),
                     trace: context.trace(),
-                })
+                })))
             }
         }
     } else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     };
     let mut skipped = Vec::new();
     if let Some(token) = tokenstream.peek() {
@@ -312,13 +330,14 @@ fn directive_define_preprocess(
         match (token.symbol(), !skipped.is_empty()) {
             (Symbol::LeftParenthesis, false) => {
                 let token = token.clone();
-                let args = read_args(resolver, context, tokenstream, &token, false)?;
+                let args = read_args(resolver, context, tokenstream, &token, false, &ident_token)?;
                 skip(tokenstream);
                 if args.iter().any(|arg| arg.len() != 1) {
-                    return Err(Error::DefineMultiTokenArgument {
+                    return Err(Error::Code(Box::new(DefineMultiTokenArgument {
                         token: Box::new(ident_token),
                         trace: context.trace(),
-                    });
+                        arguments: args,
+                    })));
                 }
                 let def = FunctionDefinition::new(
                     args.into_iter()
@@ -326,21 +345,21 @@ fn directive_define_preprocess(
                         .collect(),
                     directive_define_read_body(tokenstream),
                 );
-                context.define(ident, ident_token, Definition::Function(def))?;
+                context.define(ident, ident_token, Definition::Function(def), false)?;
             }
             (Symbol::Newline, _) => {
-                context.define(ident, ident_token, Definition::Unit(skipped))?;
+                context.define(ident, ident_token, Definition::Unit(skipped), false)?;
             }
             (_, _) => {
                 let val = directive_define_read_body(tokenstream);
-                context.define(ident, ident_token, Definition::Value(val))?;
+                context.define(ident, ident_token, Definition::Value(val), false)?;
             }
         }
     } else {
         let last = skipped.last().cloned();
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(last.unwrap_or_else(|| from.clone())),
-        });
+        })));
     }
     Ok(())
 }
@@ -358,24 +377,24 @@ fn directive_undef_preprocess(
                 if matches!(tokenstream.peek().unwrap().symbol(), Symbol::Newline) {
                     tokenstream.next();
                 } else {
-                    return Err(Error::UnexpectedToken {
+                    return Err(Error::Code(Box::new(UnexpectedToken {
                         token: Box::new(tokenstream.next().unwrap()),
                         expected: vec![Symbol::Newline],
                         trace: context.trace(),
-                    });
+                    })));
                 }
             }
             _ => {
-                return Err(Error::ExpectedIdent {
+                return Err(Error::Code(Box::new(ExpectedIdent {
                     token: Box::new(token.clone()),
                     trace: context.trace(),
-                })
+                })))
             }
         }
     } else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     }
     Ok(())
 }
@@ -392,16 +411,16 @@ fn directive_if_preprocess(
                 (token, ident)
             }
             _ => {
-                return Err(Error::ExpectedIdent {
+                return Err(Error::Code(Box::new(ExpectedIdent {
                     token: Box::new(token.clone()),
                     trace: context.trace(),
-                })
+                })))
             }
         }
     } else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     };
     if let Some((_, definition)) = context.get(&ident, &ident_token) {
         if let Definition::Value(tokens) = definition {
@@ -413,16 +432,18 @@ fn directive_if_preprocess(
                 IfState::PassingIf
             });
         } else {
-            return Err(Error::IfUnitOrFunction {
+            return Err(Error::Code(Box::new(IfUnitOrFunction {
                 token: Box::new(ident_token),
                 trace: context.trace(),
-            });
+                defines: context.definitions().clone(),
+            })));
         }
     } else {
-        return Err(Error::IfUndefined {
+        return Err(Error::Code(Box::new(IfUndefined {
             token: Box::new(ident_token),
             trace: context.trace(),
-        });
+            defines: context.definitions().clone(),
+        })));
     }
     eat_newline(tokenstream, context, &ident_token)
 }
@@ -440,16 +461,16 @@ fn directive_ifdef_preprocess(
                 (token, ident)
             }
             _ => {
-                return Err(Error::ExpectedIdent {
+                return Err(Error::Code(Box::new(ExpectedIdent {
                     token: Box::new(token.clone()),
                     trace: context.trace(),
-                })
+                })))
             }
         }
     } else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from),
-        });
+        })));
     };
     let has = context.has(&ident) == has;
     context.ifstates_mut().push(if has {
@@ -488,6 +509,7 @@ fn read_args(
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: &Token,
     recursive: bool,
+    source: &Token,
 ) -> Result<Vec<Vec<Token>>, Error> {
     let mut args = Vec::new();
     let mut arg: Vec<Token> = Vec::new();
@@ -495,17 +517,17 @@ fn read_args(
         match token.symbol() {
             Symbol::LeftParenthesis => {}
             _ => {
-                return Err(Error::UnexpectedToken {
+                return Err(Error::Code(Box::new(FunctionAsValue {
                     token: Box::new(token.clone()),
-                    expected: vec![Symbol::LeftParenthesis],
+                    source: Box::new(source.clone()),
                     trace: context.trace(),
-                })
+                })))
             }
         }
     } else {
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(from.clone()),
-        });
+        })));
     }
     let mut depth = 0;
     let mut quote = false;
@@ -570,13 +592,14 @@ fn read_args(
                             arg.push(tokenstream.next().unwrap());
                             continue;
                         }
-                        context.push(source);
+                        context.push(source.clone());
                         arg.append(&mut walk_definition(
                             resolver,
                             context,
                             tokenstream,
                             token,
                             definition,
+                            &source,
                         )?);
                         context.pop();
                         continue;
@@ -623,7 +646,7 @@ fn walk_line(
             Symbol::Word(word) => {
                 if let Some((source, definition)) = context.get(word, token) {
                     let token = token.clone();
-                    context.push(source);
+                    context.push(source.clone());
                     tokenstream.next();
                     output.append(&mut walk_definition(
                         resolver,
@@ -631,6 +654,7 @@ fn walk_line(
                         tokenstream,
                         token,
                         definition,
+                        &source,
                     )?);
                     context.pop();
                 } else {
@@ -680,6 +704,7 @@ fn walk_definition(
     tokenstream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     from: Token,
     definition: Definition,
+    source: &Token,
 ) -> Result<Vec<Token>, Error> {
     let mut output = Vec::new();
     match definition {
@@ -704,15 +729,15 @@ fn walk_definition(
             }
         }
         Definition::Function(func) => {
-            let args = read_args(resolver, context, tokenstream, &from, true)?;
+            let args = read_args(resolver, context, tokenstream, &from, true, source)?;
             if args.len() != func.parameters().len() {
-                return Err(Error::FunctionCallArgumentCount {
+                return Err(Error::Code(Box::new(FunctionCallArgumentCount {
                     token: Box::new(from),
                     expected: func.parameters().len(),
                     got: args.len(),
                     trace: context.trace(),
                     defines: context.definitions().clone(),
-                });
+                })));
             }
             let mut stack = context.stack(from.clone());
             for (param, arg) in func.parameters().iter().zip(args.into_iter()) {
@@ -722,7 +747,7 @@ fn walk_definition(
                     &mut arg.into_iter().peekmore(),
                     true,
                 )?);
-                stack.define(param.word().unwrap().to_string(), param.clone(), def)?;
+                stack.define(param.word().unwrap().to_string(), param.clone(), def, true)?;
             }
             let parent = Some(Box::new(from));
             let mut tokenstream = func
@@ -746,11 +771,11 @@ fn walk_definition(
             }
         }
         Definition::Unit(skipped) => {
-            return Err(Error::ExpectedFunctionOrValue {
+            return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
                 token: Box::new(from),
                 trace: context.trace(),
                 skipped,
-            });
+            })));
         }
     }
     Ok(output)
@@ -766,17 +791,17 @@ fn eat_newline(
         if matches!(token.symbol(), Symbol::Newline) {
             tokenstream.next();
         } else {
-            return Err(Error::UnexpectedToken {
+            return Err(Error::Code(Box::new(UnexpectedToken {
                 token: Box::new(token.clone()),
                 expected: vec![Symbol::Newline],
                 trace: context.trace(),
-            });
+            })));
         }
     } else {
         let last = skipped.last().cloned();
-        return Err(Error::UnexpectedEOF {
+        return Err(Error::Code(Box::new(UnexpectedEOF {
             token: Box::new(last.unwrap_or_else(|| from.clone())),
-        });
+        })));
     }
     Ok(())
 }

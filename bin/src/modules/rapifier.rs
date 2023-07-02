@@ -67,6 +67,11 @@ impl Module for Rapifier {
 
 pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
     let processed = preprocess_file(&path, resolver)?;
+    for warning in processed.warnings() {
+        if let Some(warning) = warning.generate_report() {
+            eprintln!("{warning}");
+        }
+    }
     let configreport = parse(&processed);
     if let Err(errors) = configreport {
         for e in &errors {
@@ -78,18 +83,28 @@ pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), 
     };
     let configreport = configreport.unwrap();
     configreport.warnings().iter().for_each(|e| {
-        e.generate_processed_report(&processed).map_or_else(|| if let Some(warning) = e.generate_report() {
-            eprintln!("{warning}");
-        }, |warning| {
-            eprintln!("{warning}");
-        });
+        e.generate_processed_report(&processed).map_or_else(
+            || {
+                if let Some(warning) = e.generate_report() {
+                    eprintln!("{warning}");
+                }
+            },
+            |warning| {
+                eprintln!("{warning}");
+            },
+        );
     });
     configreport.errors().iter().for_each(|e| {
-        e.generate_processed_report(&processed).map_or_else(|| if let Some(error) = e.generate_report() {
-            eprintln!("{error}");
-        }, |error| {
-            eprintln!("{error}");
-        });
+        e.generate_processed_report(&processed).map_or_else(
+            || {
+                if let Some(error) = e.generate_report() {
+                    eprintln!("{error}");
+                }
+            },
+            |error| {
+                eprintln!("{error}");
+            },
+        );
     });
     if !configreport.errors().is_empty() {
         return Err(Error::Config(hemtt_config::Error::ConfigInvalid(
