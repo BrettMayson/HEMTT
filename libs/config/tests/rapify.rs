@@ -22,7 +22,8 @@ fn rapify() {
             let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver).unwrap();
             let rapified = config().parse(processed.output()).unwrap();
             let mut output = Vec::new();
-            rapified.rapify(&mut output, 0).unwrap();
+            let written = rapified.rapify(&mut output, 0).unwrap();
+            assert_eq!(written, rapified.rapified_length());
             let mut expected = Vec::new();
             std::fs::File::open(file.path().join("expected.bin"))
                 .unwrap()

@@ -23,7 +23,7 @@ impl Rapify for Config {
         let buffer: Box<[u8]> = vec![0; root_class.rapified_length()].into_boxed_slice();
         let mut cursor = Cursor::new(buffer);
         let written = root_class.rapify(&mut cursor, 16)?;
-        // assert_eq!(written, self.root.rapified_length());
+        assert_eq!(written, root_class.rapified_length());
 
         let enum_offset = 16 + cursor.get_ref().len() as u32;
         output.write_u32::<LittleEndian>(enum_offset)?;
@@ -31,7 +31,7 @@ impl Rapify for Config {
         output.write_all(cursor.get_ref())?;
 
         output.write_all(b"\0\0\0\0")?;
-        Ok(written + 4)
+        Ok(written + 20)
     }
 
     fn rapified_length(&self) -> usize {

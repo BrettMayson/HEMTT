@@ -13,13 +13,12 @@ use crate::{Property, Value};
 
 impl Analyze for Property {
     fn valid(&self) -> bool {
-        !matches!(
-            self,
-            Self::Entry {
-                value: Value::Invalid(_),
-                ..
-            } | Self::MissingSemicolon(_, _)
-        )
+        match self {
+            Self::Entry { value, .. } => value.valid(),
+            Self::Class(c) => c.valid(),
+            Self::Delete(_) => true,
+            Self::MissingSemicolon(_, _) => false,
+        }
     }
 
     fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
