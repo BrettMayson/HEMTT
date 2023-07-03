@@ -803,6 +803,10 @@ fn walk_definition(
             return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
                 token: Box::new(from),
                 trace: context.trace(),
+                source: Box::new(source.clone()),
+                likely_function: tokenstream
+                    .peek()
+                    .map_or(false, |t| t.symbol() == &Symbol::LeftParenthesis),
                 skipped,
             })));
         }

@@ -35,9 +35,9 @@ impl Code for FunctionAsValue {
 
     fn generate_report(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
+        let a = colors.next();
         let mut out = Vec::new();
         let span = self.token.source().start().0..self.token.source().end().0;
-        let a = colors.next();
         if let Err(e) = Report::build(
             ReportKind::Error,
             self.token.source().path_or_builtin(),

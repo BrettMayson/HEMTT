@@ -1,4 +1,4 @@
-use ariadne::{Label, Report, ReportKind, Source};
+use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
 use tracing::error;
 
@@ -7,10 +7,14 @@ use tracing::error;
 pub struct ExpectedFunctionOrValue {
     /// The [`Token`] that was found
     pub(crate) token: Box<Token>,
+    /// The [`Token`] of the function
+    pub(crate) source: Box<Token>,
     /// The [`Token`] stack trace
     pub(crate) trace: Vec<Token>,
     /// Skipped tokens of Unit
     pub(crate) skipped: Vec<Token>,
+    /// Likely a function
+    pub(crate) likely_function: bool,
 }
 
 impl Code for ExpectedFunctionOrValue {
@@ -37,6 +41,8 @@ impl Code for ExpectedFunctionOrValue {
     }
 
     fn generate_report(&self) -> Option<String> {
+        let mut colors = ColorGenerator::default();
+        let a = colors.next();
         let mut out = Vec::new();
         let span = self.token.source().start().0..self.token.source().end().0;
         if let Err(e) = Report::build(
@@ -46,10 +52,23 @@ impl Code for ExpectedFunctionOrValue {
         )
         .with_code(self.ident())
         .with_message(self.message())
-        .with_label(Label::new((
-            self.token.source().path_or_builtin(),
-            span.start..span.end,
-        )))
+        .with_label(
+            Label::new((self.token.source().path_or_builtin(), span.start..span.end))
+                .with_color(a)
+                .with_message(if self.likely_function {
+                    "tried to use as a function"
+                } else {
+                    "tried to use as a value"
+                }),
+        )
+        .with_label(
+            Label::new((
+                self.source.source().path_or_builtin(),
+                self.source.source().start().0..self.source.source().end().0,
+            ))
+            .with_color(a)
+            .with_message("defined as a unit here"),
+        )
         .finish()
         .write_for_stdout(
             (
