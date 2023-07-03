@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use tracing::trace;
 use vfs::VfsPath;
 
 use crate::Error;
@@ -29,17 +28,14 @@ impl<'a> Resolver<'a> {
         from: &VfsPath,
         to: &str,
     ) -> Result<Option<(VfsPath, String)>, Error> {
-        trace!("looking for {} from {}", to, from.as_str());
         let relative = Self::relative(from, to)?;
         if relative.is_some() {
             return Ok(relative);
         }
-        trace!("checking prefixes");
         let prefix = self.prefix(to)?;
         if prefix.is_some() {
             return Ok(prefix);
         }
-        trace!("searching includes");
         let include = self.include(to)?;
         if include.is_some() {
             return Ok(include);
@@ -60,7 +56,6 @@ impl<'a> Resolver<'a> {
         for (prefix, path) in &self.prefixes {
             if to.starts_with(prefix) {
                 let path = path.join(to.strip_prefix(prefix).unwrap().replace('\\', "/"))?;
-                trace!("prefixed based file should be {}", path.as_str());
                 if !path.exists()? {
                     return Ok(None);
                 }
@@ -74,7 +69,6 @@ impl<'a> Resolver<'a> {
     fn include(&self, to: &str) -> Result<Option<(VfsPath, String)>, Error> {
         let includes = self.vfs.join("include")?;
         let path = includes.join(format!(".{}", to.replace('\\', "/")))?;
-        trace!("include based file should be {}", path.as_str());
         if !path.exists()? {
             return Ok(None);
         }

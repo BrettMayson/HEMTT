@@ -9,6 +9,7 @@ pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
             .or(array_value())
             .padded()
             .separated_by(just(',').padded())
+            .allow_trailing()
             .delimited_by(just('{').padded(), just('}').padded())
     })
     .map_with_span(move |items, span| Array {
@@ -101,6 +102,31 @@ mod tests {
                     }),
                 ],
                 span: 0..15
+            })
+        );
+    }
+
+    #[test]
+    fn trailing() {
+        assert_eq!(
+            array(false).parse("{1,2,3,}"),
+            Ok(Array {
+                expand: false,
+                items: vec![
+                    Item::Number(Number::Int32 {
+                        value: 1,
+                        span: 1..2,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 2,
+                        span: 3..4,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 3,
+                        span: 5..6,
+                    }),
+                ],
+                span: 0..8,
             })
         );
     }
