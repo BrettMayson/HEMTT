@@ -8,16 +8,16 @@ pub use error::Error;
 #[macro_use]
 extern crate tracing;
 
-mod addons;
-mod commands;
-mod config;
-mod context;
-mod error;
-mod executor;
-mod logging;
-mod modules;
-mod update;
-mod utils;
+pub mod addons;
+pub mod commands;
+pub mod config;
+pub mod context;
+pub mod error;
+pub mod executor;
+pub mod logging;
+pub mod modules;
+pub mod update;
+pub mod utils;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -114,7 +114,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             Ok(())
         }
         Some(("build", matches)) => {
-            let ctx = Context::new("build")?;
+            let ctx = Context::new(std::env::current_dir()?, "build")?;
             let mut executor = executor::Executor::new(&ctx);
             commands::build::execute(matches, &mut executor).map_err(std::convert::Into::into)
         }

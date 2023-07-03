@@ -1,5 +1,6 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_error::Code;
+use hemtt_error::{processed::Processed, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 
 use crate::{Property, Value};
 
@@ -30,10 +31,7 @@ impl Code for ExpectedArray {
         None
     }
 
-    fn generate_processed_report(
-        &self,
-        processed: &hemtt_error::processed::Processed,
-    ) -> Option<String> {
+    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let Property::Entry { name, value, expected_array } = &self.property else {
             return None;
         };
@@ -79,5 +77,40 @@ impl Code for ExpectedArray {
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let Property::Entry { value, expected_array, .. } = &self.property else {
+            return vec![];
+        };
+        if !expected_array {
+            return vec![];
+        }
+        if let Value::Array(_) = value {
+            return vec![];
+        }
+        let value_start = processed.original_col(value.span().start).unwrap();
+        let value_file = processed.source(value_start.source()).unwrap();
+        let value_end = processed.original_col(value.span().end).unwrap();
+        let Some(path) = value_file.1.0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            Diagnostic {
+                range: lsp_types::Range::new(
+                    value_start.original().to_lsp(),
+                    value_end.original().to_lsp(),
+                ),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        )]
     }
 }

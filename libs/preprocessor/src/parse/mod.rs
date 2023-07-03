@@ -1,4 +1,4 @@
-use hemtt_error::tokens::{whitespace::Whitespace, Position, Symbol, Token};
+use hemtt_error::tokens::{whitespace::Whitespace, LineCol, Position, Symbol, Token};
 use pest::Parser;
 use pest_derive::Parser;
 use vfs::VfsPath;
@@ -27,7 +27,7 @@ pub fn parse(
     let mut col = 1;
     let mut offset = 0;
     for pair in pairs {
-        let start = (offset, (line, col));
+        let start = LineCol(offset, (line, col));
         match pair.as_rule() {
             Rule::newline => {
                 line += 1;
@@ -46,8 +46,8 @@ pub fn parse(
                     tokens.push(Token::new(
                         Symbol::Newline,
                         Position::new(
-                            (offset + pair.as_str().len(), (line, col)),
-                            (offset + pair.as_str().len() + 1, (line, col + 1)),
+                            LineCol(offset + pair.as_str().len(), (line, col)),
+                            LineCol(offset + pair.as_str().len() + 1, (line, col + 1)),
                             path.clone(),
                         ),
                         parent.clone(),
@@ -59,7 +59,7 @@ pub fn parse(
             }
         }
         offset += pair.as_str().len();
-        let end = (offset, (line, col));
+        let end = LineCol(offset, (line, col));
         tokens.push(Token::new(
             Symbol::to_symbol(pair),
             Position::new(start, end, path.clone()),

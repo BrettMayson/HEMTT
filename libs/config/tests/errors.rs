@@ -18,8 +18,8 @@ fn errors() {
                 PhysicalFS::new(PathBuf::from(ROOT).join(file.path().file_name().unwrap())).into();
             let resolver = Resolver::new(&vfs, Default::default());
             let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver).unwrap();
-            let rapified = hemtt_config::parse(&processed);
-            match rapified {
+            let parsed = hemtt_config::parse(&processed);
+            match parsed {
                 Ok(config) => {
                     let mut expected = Vec::new();
                     std::fs::File::open(file.path().join("stdout.ansi"))

@@ -3,5 +3,11 @@ generated.hpp
 *.map
 *.pbo
 
+# Self Mod
 .hemttout
 releases/
+
+# VSCode Extension
+node_modules
+dist/
+*.vsix

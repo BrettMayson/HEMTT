@@ -1,11 +1,13 @@
+use vfs::VfsPath;
+
 use crate::{
-    tokens::{Symbol, Token},
+    tokens::{LineCol, Symbol, Token},
     Code,
 };
 
 /// Output of preprocessing a file
 pub struct Processed {
-    sources: Vec<(String, String)>,
+    sources: Vec<(String, (Option<VfsPath>, String))>,
     mappings: Vec<Vec<Mapping>>,
     output: String,
     warnings: Vec<Box<dyn Code>>,
@@ -20,10 +22,12 @@ impl Processed {
 
     /// Source processed tokens for use in futher tools
     pub fn from_tokens(tokens: Vec<Token>, warnings: Vec<Box<dyn Code>>) -> Self {
-        let mut sources: Vec<(String, String)> = Vec::new();
+        let mut sources: Vec<(String, (Option<VfsPath>, String))> = Vec::new();
         let mut mappings = Vec::new();
         let mut output = String::new();
         let mut mapping = Vec::new();
+        let mut line = 1;
+        let mut col = 1;
         for token in tokens {
             let source = token.source();
             let symbol = token.symbol();
@@ -31,19 +35,22 @@ impl Processed {
             if render.is_empty() {
                 continue;
             }
-            let original_column = source.start().0;
+            let original = *source.start();
             let source = sources
                 .iter()
                 .position(|(name, _)| name == &source.path_or_builtin())
                 .map_or_else(
                     || {
-                        sources.push((source.path_or_builtin(), {
-                            if source.path().is_none() {
-                                String::new()
-                            } else {
-                                source.path().unwrap().read_to_string().unwrap()
-                            }
-                        }));
+                        sources.push((
+                            source.path_or_builtin(),
+                            (source.path().cloned(), {
+                                if source.path().is_none() {
+                                    String::new()
+                                } else {
+                                    source.path().unwrap().read_to_string().unwrap()
+                                }
+                            }),
+                        ));
                         sources.len() - 1
                     },
                     |index| index,
@@ -51,15 +58,18 @@ impl Processed {
             if symbol == &Symbol::Newline {
                 mappings.push(mapping);
                 mapping = Vec::new();
+                line += 1;
+                col = 1;
             } else {
                 mapping.push(Mapping {
-                    processed_column: output.len(),
+                    processed: LineCol(output.len(), (line, col)),
                     source,
-                    original_column,
+                    original,
                     token: token.clone(),
                 });
             }
             output.push_str(render.as_str());
+            col += render.len();
         }
         Self {
             sources,
@@ -87,14 +97,18 @@ impl Processed {
 
     #[must_use]
     /// Get the file at a given index
-    pub fn source(&self, index: usize) -> Option<&(String, String)> {
+    pub fn source(&self, index: usize) -> Option<&(String, (Option<VfsPath>, String))> {
         self.sources.get(index)
     }
 
     #[must_use]
     /// Get the files used in preprocessing
     pub fn sources(&self) -> Vec<(String, String)> {
-        self.sources.clone()
+        self.sources
+            .clone()
+            .into_iter()
+            .map(|(a, (_, b))| (a, b))
+            .collect()
     }
 
     #[must_use]
@@ -108,8 +122,8 @@ impl Processed {
 /// Mapping of a processed token to its source
 pub struct Mapping {
     source: usize,
-    processed_column: usize,
-    original_column: usize,
+    processed: LineCol,
+    original: LineCol,
     token: Token,
 }
 
@@ -123,13 +137,23 @@ impl Mapping {
     #[must_use]
     /// Get the column of the processed token
     pub const fn processed_column(&self) -> usize {
-        self.processed_column
+        self.processed.0
     }
 
     #[must_use]
     /// Get the column of the original token
     pub const fn original_column(&self) -> usize {
-        self.original_column
+        self.original.0
+    }
+
+    #[must_use]
+    /// Get the processed position of the token
+    pub const fn processed(&self) -> LineCol {
+        self.processed
+    }
+
+    pub const fn original(&self) -> LineCol {
+        self.original
     }
 
     #[must_use]

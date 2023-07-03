@@ -1,0 +1,22 @@
+[package]
+name = "hemtt-language-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hemtt = { path = "../bin" }
+hemtt-error = { path = "../libs/error" }
+hemtt-config = { path = "../libs/config" }
+hemtt-preprocessor = { path = "../libs/preprocessor" }
+
+chumsky = "0.9.2"
+dashmap = "5.4.0"
+ropey = "1.6.0"
+serde = { workspace = true }
+serde_json = "1.0.99"
+tokio = { version = "1.29.1", features = ["full"] }
+tower-lsp = { version = "0.19.0", features = ["proposed"]}
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3.17", features = ["json"] }
+url = "2.4.0"
+vfs = { workspace = true }

@@ -1,7 +1,8 @@
 use std::ops::Range;
 
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_error::Code;
+use hemtt_error::{processed::Processed, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 
 pub struct InvalidValueMacro {
     span: Range<usize>,
@@ -30,16 +31,12 @@ impl Code for InvalidValueMacro {
         Some("perhaps this macro has a `Q_` variant or you need `QUOTE(..)`".to_string())
     }
 
-    fn generate_processed_report(
-        &self,
-        processed: &hemtt_error::processed::Processed,
-    ) -> Option<String> {
+    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let map = processed.original_col(self.span.start).unwrap();
         let mut token = map.token().clone();
         while let Some(t) = token.parent() {
             token = *t.clone();
         }
-        let map_token = processed.original_col(token.source().start().0).unwrap();
         let invalid = &processed.output()[self.span.start..self.span.end];
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
@@ -47,14 +44,14 @@ impl Code for InvalidValueMacro {
         Report::build(
             ariadne::ReportKind::Error,
             token.source().path_or_builtin(),
-            map_token.original_column(),
+            token.source().start().0,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
             Label::new((
                 token.source().path_or_builtin(),
-                map_token.original_column()..map_token.original_column() + self.span.len(),
+                token.source().start().0..token.source().end().0,
             ))
             .with_message(self.label_message())
             .with_color(a),
@@ -65,5 +62,33 @@ impl Code for InvalidValueMacro {
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let map = processed.original_col(self.span.start).unwrap();
+        let mut token = map.token().clone();
+        while let Some(t) = token.parent() {
+            token = *t.clone();
+        }
+        let Some(path) = token.source().path() else {
+            return vec![];
+        };
+        vec![(
+            path.clone(),
+            Diagnostic {
+                range: lsp_types::Range::new(
+                    token.source().start().to_lsp(),
+                    token.source().end().to_lsp(),
+                ),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        )]
     }
 }

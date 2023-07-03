@@ -1,5 +1,6 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_error::{tokens::Token, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
 use tracing::error;
 
 #[allow(unused)]
@@ -9,6 +10,8 @@ pub struct FunctionAsValue {
     pub(crate) token: Box<Token>,
     /// The [`Token`] of the function
     pub(crate) source: Box<Token>,
+    /// The [`Token`] that called the definition
+    pub(crate) from: Box<Token>,
     /// The [`Token`] stack trace
     pub(crate) trace: Vec<Token>,
 }
@@ -25,7 +28,7 @@ impl Code for FunctionAsValue {
     fn label_message(&self) -> String {
         format!(
             "attempted to use a function as a value `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.from.symbol().output().replace('\n', "\\n")
         )
     }
 
@@ -86,5 +89,28 @@ impl Code for FunctionAsValue {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn generate_lsp(&self) -> Option<(vfs::VfsPath, lsp_types::Diagnostic)> {
+        let Some(path) = self.from.source().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            Diagnostic {
+                range: Range {
+                    start: self.from.source().start().to_lsp(),
+                    end: self.from.source().end().to_lsp(),
+                },
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT Preprocessor")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        ))
     }
 }

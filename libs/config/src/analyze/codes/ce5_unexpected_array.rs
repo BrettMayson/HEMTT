@@ -1,5 +1,7 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
+use hemtt_error::processed::Processed;
 use hemtt_error::Code;
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 
 use crate::model::Value;
 use crate::Property;
@@ -31,10 +33,7 @@ impl Code for UnexpectedArray {
         None
     }
 
-    fn generate_processed_report(
-        &self,
-        processed: &hemtt_error::processed::Processed,
-    ) -> Option<String> {
+    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let Property::Entry { name, value: Value::UnexpectedArray(array), .. } = &self.property else {
             return None;
         };
@@ -78,5 +77,34 @@ impl Code for UnexpectedArray {
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let Property::Entry { value: Value::UnexpectedArray(array), .. } = &self.property else {
+            return vec![];
+        };
+        let array_start = processed.original_col(array.span.start).unwrap();
+        let array_file = processed.source(array_start.source()).unwrap();
+        let array_end = processed.original_col(array.span.end).unwrap();
+        let Some(path) = array_file.1.0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            Diagnostic {
+                range: lsp_types::Range::new(
+                    array_start.original().to_lsp(),
+                    array_end.original().to_lsp(),
+                ),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        )]
     }
 }

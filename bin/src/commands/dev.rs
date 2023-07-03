@@ -49,7 +49,7 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new("dev")?.filter(|a, config| {
+    let ctx = Context::new(std::env::current_dir()?, "dev")?.filter(|a, config| {
         if launch_optionals.iter().any(|o| o == a.name()) {
             return true;
         }

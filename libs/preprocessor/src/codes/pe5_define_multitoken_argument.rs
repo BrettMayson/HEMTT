@@ -1,6 +1,8 @@
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
 use tracing::error;
+use vfs::VfsPath;
 
 #[allow(unused)]
 /// Tried to create a [`FunctionDefinition`](crate::context::FunctionDefinition) that has multi-token arguments
@@ -84,5 +86,28 @@ impl Code for DefineMultiTokenArgument {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.source().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            Diagnostic {
+                range: Range {
+                    start: self.token.source().start().to_lsp(),
+                    end: self.token.source().end().to_lsp(),
+                },
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT Preprocessor")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        ))
     }
 }

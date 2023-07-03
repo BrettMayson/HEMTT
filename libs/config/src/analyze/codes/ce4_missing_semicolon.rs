@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use ariadne::{sources, ColorGenerator, Label, Report};
 use hemtt_error::{processed::Processed, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 
 pub struct MissingSemicolon {
     span: Range<usize>,
@@ -31,29 +32,26 @@ impl Code for MissingSemicolon {
     }
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
-        let haystack = processed.output()[self.span.start..self.span.end]
-            .chars()
-            .rev()
-            .collect::<String>();
-        let semicolon_index =
-            self.span.end - haystack.chars().position(|c| !c.is_whitespace()).unwrap() - 1;
-        let map = processed.original_col(semicolon_index + 1).unwrap();
-        let map_file = processed.source(map.source()).unwrap();
+        let map = processed.original_col(self.span.end - 1).unwrap();
+        let mut token = map.token().clone();
+        while let Some(t) = token.parent() {
+            token = *t.clone();
+        }
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();
         Report::build(
             ariadne::ReportKind::Error,
-            map_file.0.clone(),
-            map.original_column(),
+            token.source().path_or_builtin(),
+            token.source().start().0,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
             #[allow(clippy::range_plus_one)] // not supported by ariadne
             Label::new((
-                map_file.0.clone(),
-                map.original_column()..(map.original_column() + 1),
+                token.source().path_or_builtin(),
+                token.source().start().0..token.source().end().0 + 1,
             ))
             .with_message(self.label_message())
             .with_color(a),
@@ -63,5 +61,33 @@ impl Code for MissingSemicolon {
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let map = processed.original_col(self.span.end - 1).unwrap();
+        let mut token = map.token().clone();
+        while let Some(t) = token.parent() {
+            token = *t.clone();
+        }
+        let Some(path) = token.source().path() else {
+            return vec![];
+        };
+        vec![(
+            path.clone(),
+            Diagnostic {
+                range: lsp_types::Range::new(
+                    token.source().start().to_lsp(),
+                    token.source().end().to_lsp(),
+                ),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        )]
     }
 }

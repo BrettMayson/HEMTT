@@ -3,8 +3,10 @@ use std::fmt::Debug;
 pub mod processed;
 pub mod tokens;
 
+use lsp_types::Diagnostic;
 use processed::Processed;
 pub use thiserror;
+use vfs::VfsPath;
 
 pub trait Code: Send + Sync {
     fn ident(&self) -> &'static str;
@@ -16,6 +18,12 @@ pub trait Code: Send + Sync {
     }
     fn generate_processed_report(&self, _processed: &Processed) -> Option<String> {
         None
+    }
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        None
+    }
+    fn generate_processed_lsp(&self, _processed: &Processed) -> Vec<(VfsPath, Diagnostic)> {
+        Vec::new()
     }
 }
 

@@ -13,6 +13,7 @@ hemtt-error = { path = "../error", version = "1.0.0" }
 
 ariadne = { workspace = true }
 convert_case = "0.6.0"
+lsp-types = { workspace = true }
 peekmore = { workspace = true }
 pest = { workspace = true }
 pest_derive = { workspace = true }

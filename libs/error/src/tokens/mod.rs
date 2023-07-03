@@ -9,7 +9,7 @@ pub mod whitespace;
 
 pub use symbol::Symbol;
 
-pub use self::position::Position;
+pub use self::position::{LineCol, Position};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A token from the tokenizer

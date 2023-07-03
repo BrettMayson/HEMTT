@@ -1,14 +1,15 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
 use tracing::error;
+use vfs::VfsPath;
 
-#[allow(unused)]
 /// The [`Resolver`](crate::resolver::Resolver) could not find the target
 pub struct IncludeNotFound {
     /// The target that was not found
-    pub(crate) token: Vec<Token>,
+    pub token: Vec<Token>,
     /// The [`Token`] stack trace
-    pub(crate) trace: Vec<Token>,
+    pub trace: Vec<Token>,
 }
 
 impl Code for IncludeNotFound {
@@ -66,5 +67,28 @@ impl Code for IncludeNotFound {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.first().unwrap().source().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            Diagnostic {
+                range: Range::new(
+                    self.token.first().unwrap().source().start().to_lsp(),
+                    self.token.last().unwrap().source().end().to_lsp(),
+                ),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT Preprocessor")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        ))
     }
 }

@@ -175,7 +175,6 @@ impl Module for ArmaScriptCompiler {
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
-        let old_dir = std::env::current_dir()?;
         std::env::set_current_dir(&tmp)?;
         let start = Instant::now();
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
@@ -188,7 +187,7 @@ impl Module for ArmaScriptCompiler {
                 String::from_utf8(command.stdout).unwrap(),
             ));
         }
-        std::env::set_current_dir(old_dir)?;
+        std::env::set_current_dir(ctx.project_folder())?;
         let tmp_output = tmp.join("output");
         let counter = AtomicI16::new(0);
         for (src, dst) in &*files.read().unwrap() {

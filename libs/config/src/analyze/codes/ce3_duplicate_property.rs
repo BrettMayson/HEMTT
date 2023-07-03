@@ -1,5 +1,6 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_error::Code;
+use hemtt_error::{processed::Processed, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity};
 
 use crate::Ident;
 
@@ -30,10 +31,7 @@ impl Code for DuplicateProperty {
         None
     }
 
-    fn generate_processed_report(
-        &self,
-        processed: &hemtt_error::processed::Processed,
-    ) -> Option<String> {
+    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let first = self.conflicts.first().unwrap();
         let first_map = processed.original_col(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
@@ -64,5 +62,32 @@ impl Code for DuplicateProperty {
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let first = self.conflicts.last().unwrap();
+        let first_map = processed.original_col(first.span.start).unwrap();
+        let first_file = processed.source(first_map.source()).unwrap();
+        let Some(path) = first_file.1.0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            Diagnostic {
+                range: lsp_types::Range::new(first_map.original().to_lsp(), {
+                    let mut end = first_map.original().to_lsp();
+                    end.character += first.value.len() as u32;
+                    end
+                }),
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        )]
     }
 }

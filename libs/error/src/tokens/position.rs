@@ -1,7 +1,18 @@
+use lsp_types::Range;
 use vfs::VfsPath;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// Line and column of a token
-pub type LineCol = (usize, (usize, usize));
+pub struct LineCol(pub usize, pub (usize, usize));
+
+impl LineCol {
+    #[must_use]
+    /// Convert to an LSP [`lsp_types::Position`]
+    pub fn to_lsp(&self) -> lsp_types::Position {
+        #[allow(clippy::cast_possible_truncation)]
+        lsp_types::Position::new(self.1 .0 as u32 - 1, self.1 .1 as u32 - 1)
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// Position of a token in a source file
@@ -26,8 +37,8 @@ impl Position {
     /// Create a new position for a built-in token
     pub const fn builtin() -> Self {
         Self {
-            start: (0, (0, 0)),
-            end: (0, (0, 0)),
+            start: LineCol(0, (0, 0)),
+            end: LineCol(0, (0, 0)),
             path: None,
         }
     }
@@ -57,5 +68,11 @@ impl Position {
             || String::from("%builtin%"),
             |p| p.as_str().replace('\\', "/"),
         )
+    }
+
+    #[must_use]
+    /// Convert to an LSP [`lsp_types::Range`]
+    pub fn to_lsp(&self) -> Range {
+        Range::new(self.start.to_lsp(), self.end.to_lsp())
     }
 }

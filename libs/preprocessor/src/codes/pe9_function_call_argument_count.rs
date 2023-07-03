@@ -1,6 +1,8 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use hemtt_error::{tokens::Token, Code};
+use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
 use tracing::error;
+use vfs::VfsPath;
 
 use crate::{Defines, DefinitionLibrary};
 
@@ -33,10 +35,8 @@ impl Code for FunctionCallArgumentCount {
 
     fn label_message(&self) -> String {
         format!(
-            "function call with incorrect number of arguments, expected `{}` got `{}` `{}`",
-            self.expected,
-            self.got,
-            self.token.symbol().output().replace('\n', "\\n")
+            "incorrect argument count, expected `{}` got `{}`",
+            self.expected, self.got,
         )
     }
 
@@ -123,5 +123,28 @@ impl Code for FunctionCallArgumentCount {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.source().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            Diagnostic {
+                range: Range {
+                    start: self.token.source().start().to_lsp(),
+                    end: self.token.source().end().to_lsp(),
+                },
+                severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(NumberOrString::String(self.ident().to_string())),
+                code_description: None,
+                source: Some(String::from("HEMTT Preprocessor")),
+                message: self.label_message(),
+                related_information: None,
+                tags: None,
+                data: None,
+            },
+        ))
     }
 }

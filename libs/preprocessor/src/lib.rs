@@ -548,6 +548,7 @@ fn read_args(
             _ => {
                 return Err(Error::Code(Box::new(FunctionAsValue {
                     token: Box::new(token.clone()),
+                    from: Box::new(from.clone()),
                     source: Box::new(source.clone()),
                     trace: context.trace(),
                 })))
