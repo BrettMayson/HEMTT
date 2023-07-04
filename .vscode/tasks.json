@@ -1,35 +1,23 @@
-// See https://go.microsoft.com/fwlink/?LinkId=733558
-// for the documentation about the tasks.json format
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "npm",
-			"script": "compile",
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
-			"type": "npm",
-			"script": "watch",
-			"isBackground": true,
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build hls (Rust)",
+      "command": "cargo",
+      "args": ["build", "--bin", "hemtt-language-server"],
+      "type": "shell"
+    },
+    {
+      "type": "npm",
+      "label": "build hls (npm)",
+      "script": "compile",
+      "options": {
+        "cwd": "${workspaceRoot}/hls"
+      }
+    },
+    {
+      "label": "build hls",
+      "dependsOn": ["build hls (Rust)", "build hls (npm)"],
+    }
+  ]
 }

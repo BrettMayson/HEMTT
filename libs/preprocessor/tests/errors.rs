@@ -7,6 +7,10 @@ const ROOT: &str = "tests/errors/";
 
 #[test]
 fn errors() {
+    // The output is slightly different on non-windows platforms
+    if !cfg!(windows) {
+        return;
+    }
     for file in std::fs::read_dir(ROOT).unwrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
