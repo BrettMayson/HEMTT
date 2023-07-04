@@ -3,6 +3,8 @@ generated.hpp
 *.map
 *.pbo
 
+*.nupkg
+
 # Self Mod
 .hemttout
 releases/
@@ -11,3 +13,4 @@ releases/
 node_modules
 dist/
 *.vsix
+

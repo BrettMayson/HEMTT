@@ -2,16 +2,12 @@
 
 An opinionated build system for Arma 3 mods.
 
-<a href="https://github.com/BrettMayson/HEMTT/releases">
-    <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/brettmayson/hemtt?style=flat-square&label=Latest">
-    <img src="https://img.shields.io/github/downloads/BrettMayson/HEMTT/total.svg?style=flat-square&label=Downloads" alt="HEMTT Downloads">
-</a>
-<a href="https://app.codecov.io/gh/brettmayson/hemtt">
-    <img alt="Codecov" src="https://img.shields.io/codecov/c/github/brettmayson/hemtt?style=flat-square&label=Coverage">
-</a>
-<a href="https://acemod.org/discord">
-    <img src="https://img.shields.io/badge/Discord-Join-darkviolet.svg?style=flat-square" alt="ACE3 Discord">
-</a>
+[![GitHub Release](https://img.shields.io/github/v/release/brettmayson/hemtt?style=flat-square&label=Latest)](https://github.com/BrettMayson/HEMTT/releases)
+[![HEMTT Downloads](https://img.shields.io/github/downloads/BrettMayson/HEMTT/total.svg?style=flat-square&label=Downloads)](https://github.com/BrettMayson/HEMTT/releases)
+[![Chocolatey](https://img.shields.io/chocolatey/v/chocolatey.svg?style=flat-square&label=Chocolatey&color=darkblue)](https://community.chocolatey.org/packages/HEMTT)
+[![WinGet](https://img.shields.io/badge/WinGet-Run-lightblue.svg?style=flat-square)](https://winget.run/pkg/BrettMayson/HEMTT)
+[![Codecov](https://img.shields.io/codecov/c/github/brettmayson/hemtt?style=flat-square&label=Coverage)](https://app.codecov.io/gh/brettmayson/hemtt)
+[![ACE3 Discord](https://img.shields.io/badge/Discord-Join-darkviolet.svg?style=flat-square)](https://acemod.org/discord)
 
 [The HEMTT Book](https://brettmayson.github.io/HEMTT)
 
