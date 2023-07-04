@@ -98,6 +98,7 @@ impl Configuration {
         &self.lint
     }
 
+    #[must_use]
     /// The folder name to use for the release
     /// Default: `@{prefix}`
     pub fn folder_name(&self) -> String {

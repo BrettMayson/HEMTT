@@ -54,28 +54,34 @@ impl Addon {
         })
     }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    #[must_use]
     pub fn pbo_name(&self, prefix: &str) -> String {
         format!("{prefix}_{}", self.name)
     }
 
+    #[must_use]
     pub const fn location(&self) -> &Location {
         &self.location
     }
 
+    #[must_use]
     pub const fn prefix(&self) -> &Prefix {
         &self.prefix
     }
 
+    #[must_use]
     /// addons/foobar
     /// optionals/foobar
     pub fn folder(&self) -> String {
         format!("{}/{}", self.location.to_string(), self.name)
     }
 
+    #[must_use]
     pub const fn config(&self) -> Option<&Configuration> {
         self.config.as_ref()
     }

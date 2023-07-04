@@ -15,6 +15,7 @@ pub struct Executor<'a> {
 }
 
 impl<'a> Executor<'a> {
+    #[must_use]
     pub fn new(ctx: &'a Context) -> Self {
         Self {
             ctx,

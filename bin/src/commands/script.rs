@@ -15,6 +15,7 @@ pub fn cli() -> Command {
     )
 }
 
+#[must_use]
 pub fn add_args(cmd: Command) -> Command {
     cmd.arg(
         clap::Arg::new("optional")
