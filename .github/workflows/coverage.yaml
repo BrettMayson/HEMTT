@@ -95,13 +95,13 @@ jobs:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Build ${{ matrix.mod.repo }} (dev)
         run: |
-          cargo llvm-cov run --bin bin --locked --no-report -- dev --dir mod
+          cargo llvm-cov run --bin hemtt --locked --no-report -- dev --dir mod
       - name: Build ${{ matrix.mod.repo }} (build)
         run: |
-          cargo llvm-cov run --bin bin --locked --no-report -- build --dir mod
+          cargo llvm-cov run --bin hemtt --locked --no-report -- build --dir mod
       - name: Build ${{ matrix.mod.repo }} (release)
         run: |
-          cargo llvm-cov run --bin bin --locked --no-report -- release --dir mod
+          cargo llvm-cov run --bin hemtt --locked --no-report -- release --dir mod
       - name: cargo llvm-cov
         run: cargo llvm-cov report --lcov --output-path out.lcov
       - name: Upload to codecov.io
