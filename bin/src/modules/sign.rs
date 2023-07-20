@@ -10,6 +10,7 @@ use super::Module;
 
 pub struct Sign;
 impl Sign {
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

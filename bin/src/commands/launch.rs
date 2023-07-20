@@ -101,7 +101,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         )?;
     }
 
-    let mut args: Vec<String> = vec![
+    let mut args: Vec<String> = [
         "-skipIntro",
         "-noSplash",
         "-showScriptErrors",

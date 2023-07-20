@@ -37,7 +37,7 @@ impl Rapify for Class {
                 let mut class_bodies: Vec<Cursor<Box<[u8]>>> = Vec::new();
                 let pre_properties = written;
 
-                for property in properties.iter() {
+                for property in properties {
                     let pre_write = written;
                     let code = property.property_code();
                     output.write_all(&code)?;
