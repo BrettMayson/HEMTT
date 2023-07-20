@@ -24,7 +24,11 @@ fn errors() {
             let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver);
             match processed {
                 Ok(config) => {
-                    panic!("should have failed: {:#?}", config.output())
+                    panic!(
+                        "`{:?}` should have failed: {:#?}",
+                        file.path(),
+                        config.output()
+                    )
                 }
                 Err(e) => {
                     let mut expected = Vec::new();

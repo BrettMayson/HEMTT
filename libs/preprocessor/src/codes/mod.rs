@@ -7,6 +7,8 @@ pub mod pe11_expected_funtion_or_value;
 pub mod pe12_include_not_found;
 pub mod pe13_include_not_encased;
 pub mod pe14_include_unexpected_suffix;
+pub mod pe15_if_invalid_operator;
+pub mod pe16_if_incompatible_types;
 pub mod pe1_unexpected_token;
 pub mod pe2_unexpected_eof;
 pub mod pe3_expected_ident;

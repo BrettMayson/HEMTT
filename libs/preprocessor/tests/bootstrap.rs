@@ -18,7 +18,12 @@ fn bootstrap() {
             let vfs =
                 PhysicalFS::new(PathBuf::from(ROOT).join(file.path().file_name().unwrap())).into();
             let resolver = Resolver::new(&vfs, Default::default());
-            let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver).unwrap();
+            let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver);
+            if let Err(e) = processed {
+                println!("{}", e.get_code().unwrap().generate_report().unwrap());
+                panic!();
+            }
+            let processed = processed.unwrap();
             std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }
