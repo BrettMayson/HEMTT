@@ -851,7 +851,7 @@ fn walk_definition(
                 })));
             }
             let mut stack = context.stack(from.clone());
-            for (param, arg) in func.parameters().iter().zip(args.into_iter()) {
+            for (param, arg) in func.parameters().iter().zip(args) {
                 let def = Definition::Value(root_preprocess(
                     resolver,
                     &mut stack,

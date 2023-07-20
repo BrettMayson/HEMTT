@@ -91,46 +91,43 @@ impl Code for IfIncompatibleType {
         })
         .finish()
         .write_for_stdout(
-            sources(
-                vec![
-                    (
-                        self.operator.first().unwrap().source().path_or_builtin(),
-                        self.operator
-                            .first()
-                            .unwrap()
-                            .source()
-                            .path()
-                            .map_or_else(String::new, |path| {
-                                path.read_to_string().unwrap_or_default()
-                            }),
-                    ),
-                    (
-                        self.left.0.first().unwrap().source().path_or_builtin(),
-                        self.left
-                            .0
-                            .first()
-                            .unwrap()
-                            .source()
-                            .path()
-                            .map_or_else(String::new, |path| {
-                                path.read_to_string().unwrap_or_default()
-                            }),
-                    ),
-                    (
-                        self.right.0.first().unwrap().source().path_or_builtin(),
-                        self.right
-                            .0
-                            .first()
-                            .unwrap()
-                            .source()
-                            .path()
-                            .map_or_else(String::new, |path| {
-                                path.read_to_string().unwrap_or_default()
-                            }),
-                    ),
-                ]
-                .into_iter(),
-            ),
+            sources(vec![
+                (
+                    self.operator.first().unwrap().source().path_or_builtin(),
+                    self.operator
+                        .first()
+                        .unwrap()
+                        .source()
+                        .path()
+                        .map_or_else(String::new, |path| {
+                            path.read_to_string().unwrap_or_default()
+                        }),
+                ),
+                (
+                    self.left.0.first().unwrap().source().path_or_builtin(),
+                    self.left
+                        .0
+                        .first()
+                        .unwrap()
+                        .source()
+                        .path()
+                        .map_or_else(String::new, |path| {
+                            path.read_to_string().unwrap_or_default()
+                        }),
+                ),
+                (
+                    self.right.0.first().unwrap().source().path_or_builtin(),
+                    self.right
+                        .0
+                        .first()
+                        .unwrap()
+                        .source()
+                        .path()
+                        .map_or_else(String::new, |path| {
+                            path.read_to_string().unwrap_or_default()
+                        }),
+                ),
+            ]),
             &mut out,
         ) {
             error!("while reporting: {e}");

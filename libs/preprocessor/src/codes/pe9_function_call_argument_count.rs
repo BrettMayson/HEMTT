@@ -100,23 +100,20 @@ impl Code for FunctionCallArgumentCount {
             ));
         }
         if let Err(e) = report.finish().write_for_stdout(
-            sources(
-                vec![
-                    (
-                        self.token.source().path_or_builtin(),
-                        self.token.source().path().map_or_else(String::new, |path| {
-                            path.read_to_string().unwrap_or_default()
-                        }),
-                    ),
-                    (
-                        defined.0.source().path_or_builtin(),
-                        defined.0.source().path().map_or_else(String::new, |path| {
-                            path.read_to_string().unwrap_or_default()
-                        }),
-                    ),
-                ]
-                .into_iter(),
-            ),
+            sources(vec![
+                (
+                    self.token.source().path_or_builtin(),
+                    self.token.source().path().map_or_else(String::new, |path| {
+                        path.read_to_string().unwrap_or_default()
+                    }),
+                ),
+                (
+                    defined.0.source().path_or_builtin(),
+                    defined.0.source().path().map_or_else(String::new, |path| {
+                        path.read_to_string().unwrap_or_default()
+                    }),
+                ),
+            ]),
             &mut out,
         ) {
             error!("while reporting: {e}");

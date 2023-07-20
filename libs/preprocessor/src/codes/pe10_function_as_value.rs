@@ -63,26 +63,23 @@ impl Code for FunctionAsValue {
         )
         .finish()
         .write_for_stdout(
-            sources(
-                vec![
-                    (
-                        self.token.source().path_or_builtin(),
-                        self.token.source().path().map_or_else(String::new, |path| {
+            sources(vec![
+                (
+                    self.token.source().path_or_builtin(),
+                    self.token.source().path().map_or_else(String::new, |path| {
+                        path.read_to_string().unwrap_or_default()
+                    }),
+                ),
+                (
+                    self.source.source().path_or_builtin(),
+                    self.source
+                        .source()
+                        .path()
+                        .map_or_else(String::new, |path| {
                             path.read_to_string().unwrap_or_default()
                         }),
-                    ),
-                    (
-                        self.source.source().path_or_builtin(),
-                        self.source
-                            .source()
-                            .path()
-                            .map_or_else(String::new, |path| {
-                                path.read_to_string().unwrap_or_default()
-                            }),
-                    ),
-                ]
-                .into_iter(),
-            ),
+                ),
+            ]),
             &mut out,
         ) {
             error!("while reporting: {e}");
