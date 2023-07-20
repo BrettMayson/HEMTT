@@ -37,7 +37,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         return Err(Error::MainPrefixNotFound(String::from("Required for launch")));
     };
 
-    let launch_config = matches.get_one::<String>("config").unwrap();
+    let launch_config = matches
+        .get_one::<String>("config")
+        .expect("a config to be set");
     let launch = config
         .hemtt()
         .launch(launch_config)

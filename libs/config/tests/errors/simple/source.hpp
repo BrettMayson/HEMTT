@@ -12,4 +12,7 @@ class Test {
     class Child {
         data = "something";
     };
+    class Child {
+        data = "something";
+    };
 };

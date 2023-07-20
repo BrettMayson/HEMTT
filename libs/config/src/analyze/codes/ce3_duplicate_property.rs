@@ -40,7 +40,7 @@ impl Code for DuplicateProperty {
         Report::build(
             ariadne::ReportKind::Error,
             first_file.0.clone(),
-            first.span.start,
+            first_map.original().0,
         )
         .with_code(self.ident())
         .with_message(self.message())

@@ -13,13 +13,20 @@ pub struct Addon {
 }
 
 impl Addon {
+    /// Create a new addon
+    ///
+    /// # Errors
+    /// - [`Error::AddonPrefixMissing`] if the prefix is missing
+    /// - [`std::io::Error`] if the addon.toml file cannot be read
+    /// - [`toml::de::Error`] if the addon.toml file is invalid
+    /// - [`std::io::Error`] if the prefix file cannot be read
     pub fn new(name: String, location: Location) -> Result<Self, Error> {
         let path = PathBuf::from(location.to_string()).join(&name);
         Ok(Self {
             config: {
                 let path = path.join("addon.toml");
                 if path.exists() {
-                    Some(Configuration::from_file(&path).unwrap())
+                    Some(Configuration::from_file(&path)?)
                 } else {
                     None
                 }
@@ -39,15 +46,12 @@ impl Addon {
                 'search: for file in &files {
                     let path = path.join(file);
                     if path.exists() {
-                        let content = std::fs::read_to_string(path).unwrap();
-                        prefix = Some(Prefix::new(&content).unwrap());
+                        let content = std::fs::read_to_string(path)?;
+                        prefix = Some(Prefix::new(&content)?);
                         break 'search;
                     }
                 }
-                if prefix.is_none() {
-                    return Err(Error::AddonPrefixMissing(name));
-                }
-                prefix.unwrap()
+                prefix.ok_or_else(|| Error::AddonPrefixMissing(name.clone()))?
             },
             location,
             name,
@@ -86,6 +90,11 @@ impl Addon {
         self.config.as_ref()
     }
 
+    /// Scan for addons in both locations
+    ///
+    /// # Errors
+    /// - [`Error::AddonLocationInvalid`] if a location is invalid
+    /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
     pub fn scan() -> Result<Vec<Self>, Error> {
         let mut addons = Vec::new();
         for location in [Location::Addons, Location::Optionals] {
@@ -102,6 +111,10 @@ pub enum Location {
 }
 
 impl Location {
+    /// Scan for addons in this location
+    ///
+    /// # Errors
+    /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
     pub fn scan(self) -> Result<Vec<Addon>, Error> {
         if !PathBuf::from(self.to_string()).exists() {
             return Ok(Vec::new());
@@ -111,7 +124,15 @@ impl Location {
             .iter()
             .map(std::fs::DirEntry::path)
             .filter(|file_or_dir| file_or_dir.is_dir())
-            .map(|file| Addon::new(file.file_name().unwrap().to_str().unwrap().to_owned(), self))
+            .map(|file| {
+                let Some(name) = file.file_name() else {
+                    return Err(Error::AddonLocationInvalid(file.display().to_string()))
+                };
+                let Some(name) = name.to_str() else {
+                    return Err(Error::AddonLocationInvalid(file.display().to_string()))
+                };
+                Addon::new(name.to_string(), self)
+            })
             .collect()
     }
 }

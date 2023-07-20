@@ -20,7 +20,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         return Err(Error::NewNoInput);
     }
 
-    let name = matches.get_one::<String>("name").unwrap();
+    let name = matches
+        .get_one::<String>("name")
+        .expect("name to be set as required");
     let path = Path::new(&name);
     if path.exists() {
         return Err(Error::NewFolderExists(name.to_string()));

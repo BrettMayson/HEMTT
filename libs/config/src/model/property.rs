@@ -31,4 +31,10 @@ impl Property {
             Self::MissingSemicolon(name, _) | Self::Delete(name) | Self::Entry { name, .. } => name,
         }
     }
+
+    #[must_use]
+    /// Is the property a class
+    pub const fn is_class(&self) -> bool {
+        matches!(self, Self::Class(_))
+    }
 }

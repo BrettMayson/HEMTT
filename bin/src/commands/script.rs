@@ -61,7 +61,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    let name = matches.get_one::<String>("name").unwrap();
+    let name = matches
+        .get_one::<String>("name")
+        .expect("name to be set as required");
     Hooks::run_file(&ctx, name)?;
 
     Ok(())

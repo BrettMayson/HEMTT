@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 /// An identifier
 ///
 /// ```cpp
