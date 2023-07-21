@@ -10,6 +10,6 @@ bench = false
 
 [dependencies]
 ariadne = { workspace = true }
-thiserror = "1.0.40"
+thiserror = "1.0.43"
 vfs = { workspace = true }
 lsp-types = { workspace = true }

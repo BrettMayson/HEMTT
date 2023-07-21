@@ -1,6 +1,9 @@
-use std::{fs::create_dir, io::Write, path::Path};
+use std::{
+    fs::create_dir,
+    io::{IsTerminal, Write},
+    path::Path,
+};
 
-use atty::Stream;
 use clap::{ArgMatches, Command};
 use dialoguer::Input;
 
@@ -16,7 +19,7 @@ pub fn cli() -> Command {
 }
 
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    if !atty::is(Stream::Stdin) {
+    if !std::io::stdin().is_terminal() {
         return Err(Error::NewNoInput);
     }
 

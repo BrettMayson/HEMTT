@@ -24,10 +24,6 @@ It is always best to the include the log and a link to your project when reporti
         std::process::exit(1);
     }));
 
-    #[cfg(windows)]
-    if ansi_term::enable_ansi_support().is_err() {
-        colored::control::set_override(false);
-    }
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
