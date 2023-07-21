@@ -1,6 +1,7 @@
-use hemtt_tokens::{whitespace::Whitespace, Position, Symbol, Token};
+use hemtt_error::tokens::{whitespace::Whitespace, LineCol, Position, Symbol, Token};
 use pest::Parser;
 use pest_derive::Parser;
+use vfs::VfsPath;
 
 use crate::Error;
 
@@ -15,14 +16,18 @@ pub struct PreprocessorParser;
 ///
 /// # Panics
 /// If the file is invalid
-pub fn parse(path: &str, source: &str, parent: &Option<Box<Token>>) -> Result<Vec<Token>, Error> {
+pub fn parse(
+    path: &VfsPath,
+    source: &str,
+    parent: &Option<Box<Token>>,
+) -> Result<Vec<Token>, Error> {
     let pairs = PreprocessorParser::parse(Rule::file, source)?;
     let mut tokens = Vec::new();
     let mut line = 1;
     let mut col = 1;
     let mut offset = 0;
     for pair in pairs {
-        let start = (offset, (line, col));
+        let start = LineCol(offset, (line, col));
         match pair.as_rule() {
             Rule::newline => {
                 line += 1;
@@ -41,9 +46,9 @@ pub fn parse(path: &str, source: &str, parent: &Option<Box<Token>>) -> Result<Ve
                     tokens.push(Token::new(
                         Symbol::Newline,
                         Position::new(
-                            (offset + pair.as_str().len(), (line, col)),
-                            (offset + pair.as_str().len() + 1, (line, col + 1)),
-                            path.to_string(),
+                            LineCol(offset + pair.as_str().len(), (line, col)),
+                            LineCol(offset + pair.as_str().len() + 1, (line, col + 1)),
+                            path.clone(),
                         ),
                         parent.clone(),
                     ));
@@ -54,10 +59,10 @@ pub fn parse(path: &str, source: &str, parent: &Option<Box<Token>>) -> Result<Ve
             }
         }
         offset += pair.as_str().len();
-        let end = (offset, (line, col));
+        let end = LineCol(offset, (line, col));
         tokens.push(Token::new(
             Symbol::to_symbol(pair),
-            Position::new(start, end, path.to_string()),
+            Position::new(start, end, path.clone()),
             parent.clone(),
         ));
     }

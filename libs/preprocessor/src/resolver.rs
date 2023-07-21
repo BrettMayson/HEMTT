@@ -1,87 +1,78 @@
-use std::path::PathBuf;
+use std::collections::HashMap;
 
-use hemtt_tokens::Token;
+use vfs::VfsPath;
 
-use crate::{Context, Error};
+use crate::Error;
 
-/// A trait for resolving includes
-pub trait Resolver {
-    /// Find the path to an included file
-    ///
-    /// # Errors
-    /// [`Error::IncludeNotFound`] if the file is not found
-    fn find_include(
-        &self,
-        context: &Context,
-        root: &str,
-        from: &str,
-        to: &str,
-        source: Vec<Token>,
-    ) -> Result<(PathBuf, String), Error>;
+#[allow(clippy::module_name_repetitions)]
+/// A resolver that can find includes
+pub struct Resolver<'a> {
+    vfs: &'a VfsPath,
+    prefixes: HashMap<String, VfsPath>,
 }
 
-/// Built-in include resolvers
-pub mod resolvers {
-    use std::{
-        io::Read,
-        path::{Path, PathBuf},
-    };
-
-    use hemtt_tokens::Token;
-
-    use crate::Error;
-
-    use super::Resolver;
-
-    /// A resolver that only follows relative paths
-    pub struct LocalResolver;
-    impl LocalResolver {
-        #[must_use]
-        /// Create a new `LocalResolver`
-        pub const fn new() -> Self {
-            Self
-        }
-    }
-    impl Resolver for LocalResolver {
-        fn find_include(
-            &self,
-            _: &crate::Context,
-            _: &str,
-            from: &str,
-            to: &str,
-            _source: Vec<Token>,
-        ) -> Result<(PathBuf, String), Error> {
-            let mut path = Path::new(from).parent().unwrap().to_path_buf();
-            path.push(to);
-            let mut file = std::fs::File::open(&path)?;
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-            Ok((path, content))
-        }
+impl<'a> Resolver<'a> {
+    #[must_use]
+    /// Create a new resolver
+    pub const fn new(vfs: &'a VfsPath, prefixes: HashMap<String, VfsPath>) -> Self {
+        Self { vfs, prefixes }
     }
 
-    /// A resolver that does not resolve includes
-    pub struct NoResolver;
-    impl NoResolver {
-        #[must_use]
-        /// Create a new `NoResolver`
-        pub const fn new() -> Self {
-            Self
+    /// Find an include
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Vfs`] if the file fails to read
+    pub fn find_include(
+        &self,
+        from: &VfsPath,
+        to: &str,
+    ) -> Result<Option<(VfsPath, String)>, Error> {
+        let relative = Self::relative(from, to)?;
+        if relative.is_some() {
+            return Ok(relative);
         }
+        let prefix = self.prefix(to)?;
+        if prefix.is_some() {
+            return Ok(prefix);
+        }
+        let include = self.include(to)?;
+        if include.is_some() {
+            return Ok(include);
+        }
+        Ok(None)
     }
-    impl Resolver for NoResolver {
-        fn find_include(
-            &self,
-            context: &crate::Context,
-            _: &str,
-            _: &str,
-            _: &str,
-            source: Vec<Token>,
-        ) -> Result<(PathBuf, String), Error> {
-            Err(Error::ResolveWithNoResolver {
-                token: Box::new(source.first().unwrap().clone()),
-                trace: context.trace(),
-            })
+
+    fn relative(from: &VfsPath, to: &str) -> Result<Option<(VfsPath, String)>, Error> {
+        let path = from.parent().join(to.replace('\\', "/"))?;
+        if !path.exists()? {
+            return Ok(None);
         }
+        let contents = path.read_to_string()?;
+        Ok(Some((path, contents)))
+    }
+
+    fn prefix(&self, to: &str) -> Result<Option<(VfsPath, String)>, Error> {
+        for (prefix, path) in &self.prefixes {
+            if to.starts_with(prefix) {
+                let path = path.join(to.strip_prefix(prefix).unwrap().replace('\\', "/"))?;
+                if !path.exists()? {
+                    return Ok(None);
+                }
+                let contents = path.read_to_string()?;
+                return Ok(Some((path, contents)));
+            }
+        }
+        Ok(None)
+    }
+
+    fn include(&self, to: &str) -> Result<Option<(VfsPath, String)>, Error> {
+        let includes = self.vfs.join("include")?;
+        let path = includes.join(format!(".{}", to.replace('\\', "/")))?;
+        if !path.exists()? {
+            return Ok(None);
+        }
+        let contents = path.read_to_string()?;
+        Ok(Some((path, contents)))
     }
 }

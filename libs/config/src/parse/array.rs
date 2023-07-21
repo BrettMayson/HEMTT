@@ -1,76 +1,133 @@
-use hemtt_tokens::{whitespace, Symbol, Token};
-use peekmore::PeekMoreIterator;
+use chumsky::prelude::*;
 
-use crate::{Array, Entry, Error};
+use crate::{Array, Item};
 
-use super::{Options, Parse};
+pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
+    recursive(|value| {
+        value
+            .map(Item::Array)
+            .or(array_value())
+            .padded()
+            .separated_by(just(',').padded())
+            .allow_trailing()
+            .delimited_by(just('{').padded(), just('}').padded())
+    })
+    .map_with_span(move |items, span| Array {
+        expand,
+        items,
+        span,
+    })
+}
 
-impl Parse for Array {
-    fn parse(
-        options: &Options,
-        tokens: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        from: &Token,
-    ) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        if let Some(token) = tokens.next() {
-            if token.symbol() != &Symbol::LeftBrace {
-                return Err(Error::UnexpectedToken {
-                    token: Box::new(token),
-                    expected: vec![Symbol::LeftBrace],
-                });
-            }
-        } else {
-            return Err(Error::UnexpectedEOF {
-                token: Box::new(from.clone()),
-            });
-        }
-        let mut elements = Vec::new();
-        let mut first = true;
-        loop {
-            let skipped = whitespace::skip_newline(tokens);
-            let last = skipped.last().cloned();
-            if let Some(token) = tokens.peek() {
-                if token.symbol() == &Symbol::RightBrace {
-                    if first || options.array_allow_trailing_comma() {
-                        tokens.next();
-                        break;
-                    }
-                    return Err(Error::UnexpectedToken {
-                        token: Box::new(tokens.next().unwrap()),
-                        expected: vec![Symbol::LeftBrace, Symbol::DoubleQuote, Symbol::Digit(0)],
-                    });
-                }
-            } else {
-                return Err(Error::UnexpectedEOF {
-                    token: Box::new(last.unwrap_or_else(|| from.clone())),
-                });
-            }
-            let entry = Entry::parse(options, tokens, from)?;
-            elements.push(entry);
-            first = false;
-            let skipped = whitespace::skip_newline(tokens);
-            let last = skipped.last().cloned();
-            if let Some(token) = tokens.next() {
-                if token.symbol() == &Symbol::RightBrace {
-                    break;
-                } else if token.symbol() != &Symbol::Comma {
-                    return Err(Error::UnexpectedToken {
-                        token: Box::new(token),
-                        expected: vec![Symbol::Comma, Symbol::RightBrace],
-                    });
-                }
-            } else {
-                return Err(Error::UnexpectedEOF {
-                    token: Box::new(last.unwrap_or_else(|| from.clone())),
-                });
-            }
-        }
-        whitespace::skip_newline(tokens);
-        Ok(Self {
-            expand: false,
-            elements,
-        })
+fn array_value() -> impl Parser<char, Item, Error = Simple<char>> {
+    choice((
+        super::str::string('"').map(Item::Str),
+        super::number::number().map(Item::Number),
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Number;
+
+    use super::*;
+
+    #[test]
+    fn empty() {
+        assert_eq!(
+            array(false).parse("{}"),
+            Ok(Array {
+                expand: false,
+                items: vec![],
+                span: 0..2,
+            })
+        );
+    }
+
+    #[test]
+    fn single() {
+        assert_eq!(
+            array(false).parse("{1,2,3}"),
+            Ok(Array {
+                expand: false,
+                items: vec![
+                    Item::Number(Number::Int32 {
+                        value: 1,
+                        span: 1..2,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 2,
+                        span: 3..4,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 3,
+                        span: 5..6,
+                    }),
+                ],
+                span: 0..7,
+            })
+        );
+    }
+
+    #[test]
+    fn nested() {
+        assert_eq!(
+            array(false).parse("{{1,2},{3,4},5}"),
+            Ok(Array {
+                expand: false,
+                items: vec![
+                    Item::Array(vec![
+                        Item::Number(Number::Int32 {
+                            value: 1,
+                            span: 2..3
+                        }),
+                        Item::Number(Number::Int32 {
+                            value: 2,
+                            span: 4..5
+                        }),
+                    ]),
+                    Item::Array(vec![
+                        Item::Number(Number::Int32 {
+                            value: 3,
+                            span: 8..9
+                        }),
+                        Item::Number(Number::Int32 {
+                            value: 4,
+                            span: 10..11
+                        }),
+                    ]),
+                    Item::Number(Number::Int32 {
+                        value: 5,
+                        span: 13..14
+                    }),
+                ],
+                span: 0..15
+            })
+        );
+    }
+
+    #[test]
+    fn trailing() {
+        assert_eq!(
+            array(false).parse("{1,2,3,}"),
+            Ok(Array {
+                expand: false,
+                items: vec![
+                    Item::Number(Number::Int32 {
+                        value: 1,
+                        span: 1..2,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 2,
+                        span: 3..4,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 3,
+                        span: 5..6,
+                    }),
+                ],
+                span: 0..8,
+            })
+        );
     }
 }

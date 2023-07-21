@@ -1,11 +1,17 @@
 use std::{
     collections::HashMap,
-    sync::{atomic::AtomicUsize, Arc},
+    rc::Rc,
+    sync::{atomic::AtomicUsize, Arc, RwLock},
 };
 
-use hemtt_tokens::{Symbol, Token};
+use hemtt_error::{
+    tokens::{Symbol, Token},
+    Code,
+};
+use tracing::error;
+use vfs::VfsPath;
 
-use crate::{defines::Defines, ifstate::IfStates, Error};
+use crate::{codes::pe6_change_builtin::ChangeBuiltin, defines::Defines, ifstate::IfStates, Error};
 
 const BUILTIN: [&str; 37] = [
     "__LINE__",
@@ -52,17 +58,18 @@ const BUILTIN: [&str; 37] = [
 pub struct Context<'a> {
     ifstates: IfStates,
     definitions: Defines,
-    entry: String,
-    current_file: String,
+    entry: VfsPath,
+    current_file: VfsPath,
     counter: Arc<AtomicUsize>,
     trace: Vec<Token>,
     parent: Option<&'a Self>,
+    warnings: Rc<RwLock<Vec<Box<dyn Code>>>>,
 }
 
 impl<'a> Context<'a> {
     #[must_use]
     /// Create a new `Context`
-    pub fn new(entry: String) -> Self {
+    pub fn new(entry: VfsPath) -> Self {
         Self {
             ifstates: IfStates::new(),
             definitions: HashMap::new(),
@@ -71,6 +78,7 @@ impl<'a> Context<'a> {
             counter: Arc::new(AtomicUsize::new(0)),
             trace: Vec::new(),
             parent: None,
+            warnings: Rc::new(RwLock::new(Vec::new())),
         }
     }
 
@@ -89,6 +97,7 @@ impl<'a> Context<'a> {
                 trace
             },
             parent: Some(self),
+            warnings: self.warnings.clone(),
         }
     }
 
@@ -132,18 +141,18 @@ impl<'a> Context<'a> {
 
     #[must_use]
     /// Get the entry name
-    pub const fn entry(&self) -> &String {
+    pub const fn entry(&self) -> &VfsPath {
         &self.entry
     }
 
     #[must_use]
     /// Get the current file
-    pub const fn current_file(&self) -> &String {
+    pub const fn current_file(&self) -> &VfsPath {
         &self.current_file
     }
 
     /// Set the current file
-    pub fn set_current_file(&mut self, file: String) {
+    pub fn set_current_file(&mut self, file: VfsPath) {
         self.current_file = file;
     }
 
@@ -156,13 +165,26 @@ impl<'a> Context<'a> {
         ident: String,
         source: Token,
         definition: Definition,
+        _arg: bool,
     ) -> Result<(), Error> {
         if BUILTIN.contains(&ident.as_str()) {
-            return Err(Error::ChangeBuiltin {
+            return Err(Error::Code(Box::new(ChangeBuiltin {
                 token: Box::new(source),
                 trace: self.trace(),
-            });
+            })));
         }
+        // if !arg
+        //     && ident.to_case(Case::UpperSnake) != ident
+        //     && !ident.starts_with("IDC_")
+        //     && !source.source().path_or_builtin().starts_with("/include/")
+        // {
+        //     if let Ok(mut warnings) = self.warnings.write() {
+        //         warnings.push(Box::new(UpperSnakeCase {
+        //             token: Box::new(source.clone()),
+        //             trace: self.trace(),
+        //         }));
+        //     }
+        // }
         self.definitions.insert(ident, (source, definition));
         Ok(())
     }
@@ -177,10 +199,10 @@ impl<'a> Context<'a> {
         source: &Token,
     ) -> Result<Option<(Token, Definition)>, Error> {
         if BUILTIN.contains(&ident) {
-            return Err(Error::ChangeBuiltin {
+            return Err(Error::Code(Box::new(ChangeBuiltin {
                 token: Box::new(source.clone()),
                 trace: self.trace(),
-            });
+            })));
         }
         Ok(self.definitions.remove(ident))
     }
@@ -206,7 +228,10 @@ impl<'a> Context<'a> {
             "__FILE__" => Some((
                 Token::builtin(Some(Box::new(token.clone()))),
                 Definition::Value(vec![Token::new(
-                    Symbol::Word(token.source().path().to_string().replace('\\', "/")),
+                    Symbol::Word(token.source().path().map_or_else(
+                        || String::from("%builtin%"),
+                        |p| p.as_str().replace('\\', "/"),
+                    )),
                     token.source().clone(),
                     Some(Box::new(token.clone())),
                 )]),
@@ -259,6 +284,27 @@ impl<'a> Context<'a> {
             }
         }
     }
+
+    /// Add a warning
+    pub fn warning(&mut self, warning: Box<dyn Code>) {
+        self.warnings.write().map_or_else(
+            |_| {
+                error!("Failed to add warning");
+            },
+            |mut warnings| {
+                warnings.push(warning);
+            },
+        );
+    }
+
+    #[must_use]
+    /// Get all warnings
+    pub fn warnings(self) -> Option<Vec<Box<dyn Code>>> {
+        Rc::<RwLock<Vec<Box<(dyn Code)>>>>::try_unwrap(self.warnings).map_or_else(
+            |_| None,
+            |warnings| warnings.into_inner().map_or_else(|_| None, Some),
+        )
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -290,6 +336,15 @@ impl Definition {
     /// Check if the definition is a flag
     pub const fn is_unit(&self) -> bool {
         matches!(self, Self::Unit(_))
+    }
+
+    #[must_use]
+    /// Get the [`FunctionDefinition`] if it is one
+    pub const fn as_function(&self) -> Option<&FunctionDefinition> {
+        match self {
+            Self::Function(f) => Some(f),
+            _ => None,
+        }
     }
 }
 

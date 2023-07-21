@@ -1,10 +1,11 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
+use hemtt_io::{compressed_int_len, WriteExt};
 
-use crate::{Class, Entry, Property};
+use crate::{analyze::Analyze, Class, Ident, Property};
 
-use super::{compressed_int_len, Rapify, WriteExt};
+use super::Rapify;
 
 impl Rapify for Class {
     fn rapify<O: std::io::Write>(
@@ -12,47 +13,40 @@ impl Rapify for Class {
         output: &mut O,
         offset: usize,
     ) -> Result<usize, std::io::Error> {
+        if !self.valid() {
+            unreachable!("Invalid class");
+        }
         let mut written = 0;
-
         match self {
-            Self::External { name } => {
-                output.write_all(&[3])?;
-                output.write_cstring(&name.to_string())?;
-                written += 1;
-            }
             Self::Local {
-                name: _,
-                parent,
-                children,
+                parent, properties, ..
             } => {
                 if let Some(parent) = &parent {
-                    output.write_cstring(parent.to_string())?;
-                    written += parent.to_string().len() + 1;
+                    output.write_cstring(parent.as_str())?;
+                    written += parent.as_str().len() + 1;
                 } else {
                     written += output.write(b"\0")?;
                 }
-                written += output.write_compressed_int(children.0 .0.len() as u32)?;
+                written += output.write_compressed_int(properties.len() as u32)?;
 
-                let children_len = children
-                    .0
-                     .0
+                let properties_len = properties
                     .iter()
-                    .map(|(n, p)| n.len() + 1 + p.rapified_length())
+                    .map(|p| p.name().len() + 1 + p.rapified_length())
                     .sum::<usize>();
-                let mut class_offset = offset + written + children_len;
+                let mut class_offset = offset + written + properties_len;
                 let mut class_bodies: Vec<Cursor<Box<[u8]>>> = Vec::new();
-                let pre_children = written;
+                let pre_properties = written;
 
-                for (name, property) in &children.0 .0 {
+                for property in properties {
                     let pre_write = written;
                     let code = property.property_code();
                     output.write_all(&code)?;
                     written += code.len();
-                    output.write_cstring(name)?;
-                    written += name.len() + 1;
+                    output.write_cstring(property.name().as_str())?;
+                    written += property.name().len() + 1;
                     match property {
-                        Property::Entry(e) => {
-                            written += e.rapify(output, offset)?;
+                        Property::Entry { value, .. } => {
+                            written += value.rapify(output, offset)?;
                         }
                         Property::Class(c) => {
                             if let Self::Local { .. } = c {
@@ -68,22 +62,27 @@ impl Rapify for Class {
                             }
                         }
                         Property::Delete(_) => continue,
+                        Property::MissingSemicolon(_, _) => unreachable!(),
                     }
                     assert_eq!(
                         written - pre_write,
-                        property.rapified_length() + name.len() + 1
+                        property.rapified_length() + property.name().len() + 1
                     );
                 }
 
-                assert_eq!(written - pre_children, children_len);
+                assert_eq!(written - pre_properties, properties_len);
 
                 for cursor in class_bodies {
                     output.write_all(cursor.get_ref())?;
                     written += cursor.get_ref().len();
                 }
             }
+            Self::External { name } => {
+                output.write_all(&[3])?;
+                output.write_cstring(name.as_str())?;
+                written += 1;
+            }
         }
-
         Ok(written)
     }
 
@@ -93,18 +92,16 @@ impl Rapify for Class {
             Self::Local {
                 name: _,
                 parent,
-                children,
+                properties,
             } => {
-                let parent_length = parent.as_ref().map_or(0, |parent| parent.to_string().len());
+                let parent_length = parent.as_ref().map_or(0, Ident::len);
                 parent_length
                     + 1
-                    + compressed_int_len(children.0 .0.len() as u32)
-                    + children
-                        .0
-                         .0
+                    + compressed_int_len(properties.len() as u32)
+                    + properties
                         .iter()
-                        .map(|(n, p)| {
-                            n.len()
+                        .map(|p| {
+                            p.name().len()
                                 + 1
                                 + p.rapified_length()
                                 + match p {
@@ -116,40 +113,5 @@ impl Rapify for Class {
                         .sum::<usize>()
             }
         }
-    }
-}
-
-impl Rapify for Property {
-    fn rapify<O: std::io::Write>(
-        &self,
-        _output: &mut O,
-        _offset: usize,
-    ) -> Result<usize, std::io::Error> {
-        unreachable!()
-    }
-
-    fn rapified_length(&self) -> usize {
-        self.property_code().len()
-            + match self {
-                Self::Entry(e) => {
-                    match e {
-                        Entry::Str(s) => s.rapified_length(),
-                        Entry::Number(n) => n.rapified_length(),
-                        Entry::Array(a) => a.rapified_length(),
-                        // Entry::Array(a) => {
-                        //     compressed_int_len(a.elements.len() as u32)
-                        //         + a.elements
-                        //             .iter()
-                        //             .map(Rapify::rapified_length)
-                        //             .sum::<usize>()
-                        // }
-                    }
-                }
-                Self::Class(c) => match c {
-                    Class::Local { .. } => 4,
-                    Class::External { .. } => 0,
-                },
-                Self::Delete(_) => 0,
-            }
     }
 }

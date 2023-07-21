@@ -15,6 +15,7 @@ pub struct Executor<'a> {
 }
 
 impl<'a> Executor<'a> {
+    #[must_use]
     pub fn new(ctx: &'a Context) -> Self {
         Self {
             ctx,
@@ -109,7 +110,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     for addon in ctx.addons() {
         let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
         create_dir_all(tmp_addon.parent().unwrap())?;
-        let target = std::env::current_dir()?.join(
+        let target = ctx.project_folder().join(
             addon
                 .folder()
                 .as_str()
@@ -118,7 +119,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         );
         create_link(tmp_addon.to_str().unwrap(), target.to_str().unwrap())?;
     }
-    let include = std::env::current_dir().unwrap().join("include");
+    let include = ctx.project_folder().join("include");
     if !include.exists() {
         return Ok(());
     }

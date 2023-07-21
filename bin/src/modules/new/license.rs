@@ -5,6 +5,7 @@ use rust_embed::RustEmbed;
 pub struct Licenses;
 
 impl Licenses {
+    #[must_use]
     pub fn select(author: &str) -> Option<String> {
         let licenses = vec![
             "Arma Public License Share Alike (APL-SA)",

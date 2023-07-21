@@ -3,21 +3,21 @@
 
 use clap::{ArgAction, ArgMatches, Command};
 use context::Context;
-use hemtt_error::AppError;
+pub use error::Error;
 
 #[macro_use]
 extern crate tracing;
 
-mod addons;
-mod commands;
-mod config;
-mod context;
-mod error;
-mod executor;
-mod logging;
-mod modules;
-mod update;
-mod utils;
+pub mod addons;
+pub mod commands;
+pub mod config;
+pub mod context;
+pub mod error;
+pub mod executor;
+pub mod logging;
+pub mod modules;
+pub mod update;
+pub mod utils;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -40,7 +40,8 @@ pub fn cli() -> Command {
                 .action(ArgAction::Set)
                 .long("threads")
                 .short('t'),
-        ).arg(
+        )
+        .arg(
             clap::Arg::new("verbosity")
                 .global(true)
                 .help("Verbosity level")
@@ -49,19 +50,21 @@ pub fn cli() -> Command {
         );
     #[cfg(debug_assertions)]
     {
-        global = global.arg(
-            clap::Arg::new("in-test")
-                .global(true)
-                .help("we are in a test")
-                .action(ArgAction::SetTrue)
-                .long("in-test"),
-        ).arg(
-            clap::Arg::new("dir")
-                .global(true)
-                .help("directory to run in")
-                .action(ArgAction::Set)
-                .long("dir")
-        );
+        global = global
+            .arg(
+                clap::Arg::new("in-test")
+                    .global(true)
+                    .help("we are in a test")
+                    .action(ArgAction::SetTrue)
+                    .long("in-test"),
+            )
+            .arg(
+                clap::Arg::new("dir")
+                    .global(true)
+                    .help("directory to run in")
+                    .action(ArgAction::Set)
+                    .long("dir"),
+            );
     }
     global
 }
@@ -73,7 +76,7 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
-pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
+pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
         logging::init(matches.get_count("verbosity"));
     }
@@ -105,13 +108,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), AppError> {
         }
     }
     match matches.subcommand() {
-        Some(("new", matches)) => commands::new::execute(matches).map_err(std::convert::Into::into),
+        Some(("new", matches)) => commands::new::execute(matches),
         Some(("dev", matches)) => {
             commands::dev::execute(matches, &[])?;
             Ok(())
         }
         Some(("build", matches)) => {
-            let ctx = Context::new("build")?;
+            let ctx = Context::new(std::env::current_dir()?, "build")?;
             let mut executor = executor::Executor::new(&ctx);
             commands::build::execute(matches, &mut executor).map_err(std::convert::Into::into)
         }

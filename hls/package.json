@@ -1,0 +1,111 @@
+{
+  "name": "hemtt-language-server",
+  "description": "nano rust language server",
+  "license": "MIT",
+  "version": "1.5.0",
+  "categories": [],
+  "keywords": [
+    "language-server",
+    "tower-lsp"
+  ],
+  "repository": {
+    "url": "https://github.com/IWANABETHATGUY/tower-lsp-boilerplate"
+  },
+  "engines": {
+    "vscode": "^1.66.0"
+  },
+  "enabledApiProposals": [],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "grammars": [
+      {
+        "language": "sqf",
+        "scopeName": "sqf",
+        "path": "./languages/sqf.min.json"
+      },
+      {
+        "language": "arma-config",
+        "scopeName": "config",
+        "path": "./languages/config.min.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "sqf",
+        "aliases": [
+          "SQF",
+          "sqf",
+          "Arma SQF"
+        ],
+        "extensions": [
+          ".sqf",
+          ".sqm"
+        ],
+        "configuration": "./languages/sqf.configuration.json"
+      },
+      {
+        "id": "arma-config",
+        "aliases": [
+          "Arma Config"
+        ],
+        "extensions": [
+          ".ext",
+          ".hpp"
+        ],
+        "filenames": [
+          "config.cpp"
+        ],
+        "configuration": "./languages/config.configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "hemtt-language-server",
+      "properties": {
+        "hemtt-language-server.trace.server": {
+          "type": "string",
+          "scope": "window",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "enumDescriptions": [
+            "No traces",
+            "Error only",
+            "Full log"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint vscode-src --ext ts"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.77.0",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "@vscode/test-electron": "^2.3.0",
+    "eslint": "^8.39.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.0.1",
+    "typescript": "^4.4.3",
+    "vscode-test": "^1.4.0",
+    "vscode-uri": "^3.0.2"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.0.2"
+  }
+}

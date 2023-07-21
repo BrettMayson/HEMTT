@@ -1,13 +1,15 @@
 use std::{
+    collections::HashMap,
     env::temp_dir,
     fs::{create_dir_all, remove_dir_all},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
 use crate::{addons::Addon, config::project::Configuration, error::Error};
 
+#[derive(Debug, Clone)]
 pub struct Context {
     config: Configuration,
     folder: String,
@@ -20,9 +22,9 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(folder: &str) -> Result<Self, Error> {
+    pub fn new(root: PathBuf, folder: &str) -> Result<Self, Error> {
         let config = {
-            let path = Path::new(".hemtt").join("project.toml");
+            let path = root.join(".hemtt").join("project.toml");
             if !path.exists() {
                 return Err(Error::ConfigNotFound);
             }
@@ -43,9 +45,7 @@ impl Context {
             tmp
         }
         .join(
-            std::env::current_dir()
-                .unwrap()
-                .components()
+            root.components()
                 .skip(2)
                 .collect::<PathBuf>()
                 .to_str()
@@ -53,10 +53,9 @@ impl Context {
                 .replace(['\\', '/'], "_"),
         );
         trace!("using temporary folder: {:?}", tmp.display());
-        let project_folder = std::env::current_dir().expect("Unable to get current directory");
-        let hemtt_folder = project_folder.join(".hemtt");
-        trace!("using project folder: {:?}", project_folder.display());
-        let out_folder = project_folder.join(".hemttout");
+        let hemtt_folder = root.join(".hemtt");
+        trace!("using project folder: {:?}", root.display());
+        let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
         let build_folder = out_folder.join(folder);
@@ -84,7 +83,7 @@ impl Context {
                 layers
             })
             .into(),
-            project_folder,
+            project_folder: root,
             hemtt_folder,
             out_folder: build_folder,
             addons: Addon::scan()?,
@@ -92,6 +91,7 @@ impl Context {
         })
     }
 
+    #[must_use]
     pub fn filter<F>(self, mut filter: F) -> Self
     where
         F: FnMut(&Addon, &Configuration) -> bool,
@@ -107,37 +107,56 @@ impl Context {
         }
     }
 
+    #[must_use]
     pub const fn config(&self) -> &Configuration {
         &self.config
     }
 
+    #[must_use]
     pub fn folder(&self) -> &str {
         &self.folder
     }
 
+    #[must_use]
     pub fn addons(&self) -> &[Addon] {
         &self.addons
     }
 
+    #[must_use]
+    pub fn prefixes(&self) -> HashMap<String, VfsPath> {
+        let mut prefixes = HashMap::new();
+        for addon in self.addons() {
+            if let Ok(path) = self.vfs().join(addon.folder()) {
+                prefixes.insert(format!("\\{}\\", addon.prefix().to_string()), path);
+            }
+        }
+        prefixes
+    }
+
+    #[must_use]
     pub const fn vfs(&self) -> &VfsPath {
         &self.vfs
     }
 
+    #[must_use]
     /// The project folder
     pub const fn project_folder(&self) -> &PathBuf {
         &self.project_folder
     }
 
+    #[must_use]
     /// The .hemtt folder
     pub const fn hemtt_folder(&self) -> &PathBuf {
         &self.hemtt_folder
     }
 
+    #[must_use]
     /// The .hemttout folder
     pub const fn out_folder(&self) -> &PathBuf {
         &self.out_folder
     }
 
+    #[must_use]
     /// %temp%/hemtt/project
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp

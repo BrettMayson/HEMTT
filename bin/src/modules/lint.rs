@@ -1,11 +1,11 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use hemtt_preprocessor::preprocess_file;
+use hemtt_preprocessor::{preprocess_file, Resolver};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{context::Context, error::Error};
 
-use super::{rapifier::VfsResolver, Module};
+use super::Module;
 
 #[derive(Default)]
 pub struct Lint;
@@ -24,7 +24,7 @@ impl Module for Lint {
         }
         let counter = AtomicI32::new(0);
         for addon in ctx.addons() {
-            let resolver = VfsResolver::new(ctx);
+            let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
             let sqf_ext = Some(String::from("sqf"));
             let mut entries = Vec::new();
             for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
@@ -50,7 +50,7 @@ impl Module for Lint {
                 .par_iter()
                 .map(|entry| {
                     debug!("linting {:?}", entry.as_str());
-                    if let Err(e) = preprocess_file(entry.as_str(), &resolver) {
+                    if let Err(e) = preprocess_file(entry, &resolver) {
                         Err(e.into())
                     } else {
                         counter.fetch_add(1, Ordering::Relaxed);

@@ -15,6 +15,7 @@ pub fn cli() -> Command {
     )
 }
 
+#[must_use]
 pub fn add_args(cmd: Command) -> Command {
     cmd.arg(
         clap::Arg::new("optional")
@@ -40,7 +41,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new("script")?.filter(|a, config| {
+    let ctx = Context::new(std::env::current_dir()?, "script")?.filter(|a, config| {
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
         {
             debug!("ignoring optional {}", a.name());
@@ -60,7 +61,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    let name = matches.get_one::<String>("name").unwrap();
+    let name = matches
+        .get_one::<String>("name")
+        .expect("name to be set as required");
     Hooks::run_file(&ctx, name)?;
 
     Ok(())

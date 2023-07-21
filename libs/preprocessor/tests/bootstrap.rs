@@ -1,4 +1,7 @@
-use hemtt_preprocessor::{preprocess_file, resolvers::LocalResolver, Processed};
+use std::path::PathBuf;
+
+use hemtt_preprocessor::{preprocess_file, Resolver};
+use vfs::PhysicalFS;
 
 const ROOT: &str = "tests/bootstrap/";
 
@@ -7,21 +10,21 @@ fn bootstrap() {
     for file in std::fs::read_dir(ROOT).unwrap() {
         let file = file.unwrap();
         if file.path().is_dir() {
-            let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
-            let resolver = LocalResolver::new();
             println!(
-                "bootstrap {:?}",
+                "boostrap {:?}",
                 file.path().file_name().unwrap().to_str().unwrap()
             );
-            let tokens = preprocess_file(
-                &file.path().join("source.hpp").display().to_string(),
-                &resolver,
-            )
-            .unwrap();
-            let processed = Processed::from(tokens);
-            let map = processed.get_source_map(file.path().join("expected.hpp"));
+            let expected = std::fs::read_to_string(file.path().join("expected.hpp")).unwrap();
+            let vfs =
+                PhysicalFS::new(PathBuf::from(ROOT).join(file.path().file_name().unwrap())).into();
+            let resolver = Resolver::new(&vfs, Default::default());
+            let processed = preprocess_file(&vfs.join("source.hpp").unwrap(), &resolver);
+            if let Err(e) = processed {
+                println!("{}", e.get_code().unwrap().generate_report().unwrap());
+                panic!();
+            }
+            let processed = processed.unwrap();
             std::fs::write(file.path().join("generated.hpp"), processed.output()).unwrap();
-            std::fs::write(file.path().join("generated.hpp.map"), map).unwrap();
             assert_eq!(processed.output(), expected.replace('\r', ""));
         }
     }

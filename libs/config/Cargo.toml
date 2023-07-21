@@ -10,12 +10,15 @@ bench = false
 
 [dependencies]
 hemtt-error = { path = "../error", version = "1.0.0" }
+hemtt-io = { path = "../io", version = "1.0.0" }
+hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0" }
 
-hemtt-tokens = { path = "../tokens", version = "1.0.0" }
-
+ariadne = { workspace = true }
 byteorder = "1.4.3"
-peekmore = { workspace = true }
+chumsky = "0.9.2"
+lsp-types = { workspace = true }
 serde = { workspace = true }
+vfs = { workspace = true }
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }

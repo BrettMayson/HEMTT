@@ -3,7 +3,14 @@ generated.hpp
 *.map
 *.pbo
 
+*.nupkg
+
+# Self Mod
 .hemttout
 releases/
 
-*.nupkg
+# VSCode Extension
+node_modules
+dist/
+*.vsix
+

@@ -1,6 +1,6 @@
 use std::{
     fs::{create_dir_all, File},
-    io::{BufReader, BufWriter, Read, Write},
+    io::{Read, Write},
     process::Command,
     sync::{
         atomic::{AtomicI16, Ordering},
@@ -8,7 +8,7 @@ use std::{
     },
 };
 
-use hemtt_preprocessor::preprocess_file;
+use hemtt_preprocessor::{preprocess_file, Resolver};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rust_embed::RustEmbed;
 use serde::Serialize;
@@ -16,7 +16,7 @@ use time::Instant;
 
 use crate::{context::Context, error::Error};
 
-use super::{rapifier::VfsResolver, Module};
+use super::Module;
 
 #[cfg(windows)]
 #[derive(RustEmbed)]
@@ -77,6 +77,7 @@ impl Module for ArmaScriptCompiler {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
+        let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
         let mut out_file =
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
@@ -92,7 +93,6 @@ impl Module for ArmaScriptCompiler {
                 std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
             }
         }
-        let resolver = VfsResolver::new(ctx);
         let sqf_ext = Some(String::from("sqf"));
         let files = Arc::new(RwLock::new(Vec::new()));
         let start = Instant::now();
@@ -125,7 +125,7 @@ impl Module for ArmaScriptCompiler {
             entries
                 .par_iter()
                 .map(|entry| {
-                    let tokens = preprocess_file(entry.as_str(), &resolver)?;
+                    let processed = preprocess_file(entry, &resolver)?;
                     let source = tmp_addon.join(
                         entry
                             .as_str()
@@ -136,10 +136,7 @@ impl Module for ArmaScriptCompiler {
                         std::mem::drop(create_dir_all(parent));
                     }
                     let mut f = File::create(source)?;
-                    let mut write = BufWriter::new(&mut f);
-                    for t in tokens {
-                        std::io::copy(&mut BufReader::new(t.to_source().as_bytes()), &mut write)?;
-                    }
+                    f.write_all(processed.output().as_bytes())?;
                     files.write().unwrap().push((
                         format!(
                             "{}{}",
@@ -178,7 +175,6 @@ impl Module for ArmaScriptCompiler {
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
-        let old_dir = std::env::current_dir()?;
         std::env::set_current_dir(&tmp)?;
         let start = Instant::now();
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
@@ -191,7 +187,7 @@ impl Module for ArmaScriptCompiler {
                 String::from_utf8(command.stdout).unwrap(),
             ));
         }
-        std::env::set_current_dir(old_dir)?;
+        std::env::set_current_dir(ctx.project_folder())?;
         let tmp_output = tmp.join("output");
         let counter = AtomicI16::new(0);
         for (src, dst) in &*files.read().unwrap() {

@@ -21,12 +21,12 @@ hemtt-arma = { path = "../libs/arma", version = "1.0.0" }
 hemtt-config = { path = "../libs/config", version = "1.0.0" }
 hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
 hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
-hemtt-tokens = { path = "../libs/tokens", version = "1.0.0" }
 hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
 hemtt-version = { path = "../libs/version", version = "1.0.0" }
 
 ansi_term = "0.12.1"
 anyhow = "1.0.71"
+ariadne = { workspace = true }
 atty = "0.2.14"
 clap = { workspace = true }
 colored = { workspace = true }

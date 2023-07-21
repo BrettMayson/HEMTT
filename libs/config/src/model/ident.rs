@@ -1,6 +1,6 @@
-use hemtt_tokens::Token;
+use std::ops::Range;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 /// An identifier
 ///
 /// ```cpp
@@ -12,21 +12,29 @@ use hemtt_tokens::Token;
 ///    ...
 /// };
 /// ```
-pub struct Ident(Vec<Token>);
+pub struct Ident {
+    /// Identifier value
+    pub value: String,
+    /// Identifier span
+    pub span: Range<usize>,
+}
 
 impl Ident {
     #[must_use]
-    /// Create a new identifier
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Self(tokens)
+    /// Get the value of the identifier
+    pub fn as_str(&self) -> &str {
+        &self.value
     }
-}
 
-impl ToString for Ident {
-    fn to_string(&self) -> String {
-        self.0
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect::<String>()
+    #[must_use]
+    /// Get the length of the identifier
+    pub fn len(&self) -> usize {
+        self.value.len()
+    }
+
+    #[must_use]
+    /// Check if the identifier is empty
+    pub fn is_empty(&self) -> bool {
+        self.value.is_empty()
     }
 }

@@ -2,6 +2,8 @@
 members = [
     "bin",
 
+    "hls",
+
     "libs/arma",
     "libs/config",
     "libs/error",
@@ -9,14 +11,15 @@ members = [
     "libs/pbo",
     "libs/preprocessor",
     "libs/signing",
-    "libs/tokens",
     "libs/version",
 ]
 
 [workspace.dependencies]
+ariadne = "0.3.0"
 clap = "4.3.3"
 colored = "2.0.0"
 git2 = "0.17.2"
+lsp-types = "0.94.0"
 peekmore = "1.3.0"
 pest = "2.6.0"
 pest_derive = "2.6.0"

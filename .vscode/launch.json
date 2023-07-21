@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "extensionHost",
+      "request": "launch",
+      "name": "VSCode Extension",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}"
+      ],
+      "outFiles": [
+        "${workspaceRoot}/hls/dist/**/*.js"
+      ],
+      "preLaunchTask": "build hls",
+      "env": {
+        "SERVER_PATH": "${workspaceRoot}\\target\\debug\\hemtt-language-server"
+      },
+    }
+  ]
+}
