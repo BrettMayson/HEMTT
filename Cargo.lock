@@ -1004,7 +1004,7 @@ dependencies = [
  "byteorder",
  "hemtt-error",
  "hemtt-io",
- "indexmap 1.9.3",
+ "indexmap 2.0.0",
  "serde",
  "sha-1",
 ]
