@@ -111,6 +111,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Download Linux x64
         uses: actions/download-artifact@v3
         with:
@@ -131,10 +132,10 @@ jobs:
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
 
-      - name: Pack for Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v2
-        with:
-          args: pack bin\dist\hemtt.nuspec --version ${GITHUB_REF_NAME#v} --outputdirectory release
+    #   - name: Pack for Chocolatey
+    #     uses: crazy-max/ghaction-chocolatey@v2
+    #     with:
+    #       args: pack bin\dist\hemtt.nuspec --version ${GITHUB_REF_NAME#v} --outputdirectory release
 
       - name: Release
         uses: softprops/action-gh-release@v1
