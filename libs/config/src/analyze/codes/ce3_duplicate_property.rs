@@ -37,6 +37,7 @@ impl Code for DuplicateProperty {
         let first_file = processed.source(first_map.source()).unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
+
         Report::build(
             ariadne::ReportKind::Error,
             first_file.0.clone(),
@@ -45,11 +46,13 @@ impl Code for DuplicateProperty {
         .with_code(self.ident())
         .with_message(self.message())
         .with_labels(self.conflicts.iter().map(|b| {
-            let map = processed.original_col(b.span.start).unwrap();
-            let file = processed.source(map.source()).unwrap();
+            let map_start = processed.original_col(b.span.start).unwrap();
+            let map_end = processed.original_col(b.span.end).unwrap();
+            let token_start = map_start.token().walk_up();
+            let token_end = map_end.token().walk_up();
             Label::new((
-                file.0.clone(),
-                map.original_column()..(map.original_column() + b.value.len()),
+                token_start.source().path_or_builtin(),
+                token_start.source().start().0..token_end.source().end().0 - 1,
             ))
             .with_color(colors.next())
             .with_message(if b == first {

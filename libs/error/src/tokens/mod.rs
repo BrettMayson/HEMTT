@@ -74,6 +74,19 @@ impl Token {
     }
 
     #[must_use]
+    /// Walks up, stopping at the top or first include token
+    pub fn walk_up(&self) -> Self {
+        let mut ret = self.clone();
+        while let Some(t) = ret.parent() {
+            if &Symbol::Word("include".to_owned()) == t.symbol() {
+                break;
+            }
+            ret = *t.clone();
+        }
+        ret
+    }
+
+    #[must_use]
     /// Get the string value of a [`Symbol::Word`] token
     pub const fn word(&self) -> Option<&String> {
         if let Symbol::Word(word) = &self.symbol {
