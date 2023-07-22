@@ -134,7 +134,7 @@ jobs:
       - name: Pack for Chocolatey
         uses: crazy-max/ghaction-chocolatey@v2
         with:
-          args: pack bin\dist\hemtt.nuspec --version ${GITHUB_REF_NAME#v} --outputdirectory release
+          args: pack bin/dist/hemtt.nuspec --version ${GITHUB_REF_NAME#v} --outputdirectory release
 
       - name: Release
         uses: softprops/action-gh-release@v1
