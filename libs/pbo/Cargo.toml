@@ -13,7 +13,7 @@ hemtt-error = { path = "../error", version = "1.0.0" }
 
 hemtt-io = { path = "../io", version = "1.0.0" }
 
-byteorder = "1.4.3"
+byteorder = { workspace = true }
 indexmap = "2.0.0"
 serde = { workspace = true }
 sha-1 = { workspace = true }

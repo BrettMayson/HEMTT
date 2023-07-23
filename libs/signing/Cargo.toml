@@ -14,7 +14,7 @@ hemtt-error = { path = "../error", version = "1.0.0" }
 hemtt-io = { path = "../io", version = "1.0.0" }
 hemtt-pbo = { path = "../pbo", version = "1.0.0" }
 
-byteorder = "1.4.3"
+byteorder = { workspace = true }
 num-bigint-dig = "0.8.4"
 rand = "0.8.5"
 rsa = "0.9.2"
