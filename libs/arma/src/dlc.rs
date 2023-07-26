@@ -23,6 +23,10 @@ pub enum DLC {
     /// Creator DLC: Western Sahara
     /// https://store.steampowered.com/app/1681170/Arma_3_Creator_DLC_Western_Sahara/
     WesternSahara,
+    #[serde(rename = "spe")]
+    /// Creator DLC: Spearhead 1944
+    /// https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/
+    Spearhead1944,
 }
 
 impl DLC {
@@ -35,6 +39,7 @@ impl DLC {
             Self::PrairieFire => "vn",
             Self::IronCurtain => "csla",
             Self::WesternSahara => "ws",
+            Self::Spearhead1944 => "spe",
         }
     }
 }
@@ -47,6 +52,7 @@ impl ToString for DLC {
             Self::PrairieFire => "Creator DLC: S.O.G. Prairie Fire",
             Self::IronCurtain => "Creator DLC: CSLA Iron Curtain",
             Self::WesternSahara => "Creator DLC: Western Sahara",
+            Self::Spearhead1944 => "Creator DLC: Spearhead 1944",
         }
         .to_string()
     }
@@ -64,6 +70,7 @@ impl TryFrom<String> for DLC {
                 "vn" | "sog" | "prairie fire" | "s.o.g. prairie fire" => Self::PrairieFire,
                 "csla" | "iron curtain" | "csla iron curtain" => Self::IronCurtain,
                 "ws" | "western sahara" => Self::WesternSahara,
+                "spe" | "spearhead" | "spearhead 1944" => Self::Spearhead1944,
                 _ => return Err(format!("Unknown DLC: {}", dlc)),
             },
         )
