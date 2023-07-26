@@ -88,7 +88,7 @@ Currently supported DLCs:
 
 | Full Name           | Short Code |
 | ------------------- | ---------- |
-| Contact             | enoch      |
+| Contact             | contact    |
 | Global Mobilization | gm         |
 | S.O.G. Prairie Fire | vn         |
 | CSLA Iron Curtain   | csla       |
