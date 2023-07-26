@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize)]
 /// DLCs that require opt-in.
 pub enum DLC {
-    #[serde(rename = "enoch")]
+    #[serde(rename = "contact")]
     /// Contact
     /// https://store.steampowered.com/app/1021790/Arma_3_Contact/
     Contact,
@@ -30,7 +30,7 @@ impl DLC {
     /// Return the -mod paramater
     pub const fn to_mod(&self) -> &str {
         match self {
-            Self::Contact => "enoch",
+            Self::Contact => "contact",
             Self::GlobalMobilization => "gm",
             Self::PrairieFire => "vn",
             Self::IronCurtain => "csla",
@@ -57,7 +57,7 @@ impl TryFrom<String> for DLC {
     fn try_from(dlc: String) -> Result<Self, Self::Error> {
         Ok(
             match dlc.to_lowercase().trim_start_matches("creator dlc: ") {
-                "contact" | "enoch" => Self::Contact,
+                "contact" => Self::Contact,
                 "gm" | "global mobilization" | "global mobilization - cold war germany" => {
                     Self::GlobalMobilization
                 }
