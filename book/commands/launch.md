@@ -93,6 +93,7 @@ Currently supported DLCs:
 | S.O.G. Prairie Fire | vn         |
 | CSLA Iron Curtain   | csla       |
 | Western Sahara      | ws         |
+| Spearhead 1944      | spe        |
 
 ### optionals
 
