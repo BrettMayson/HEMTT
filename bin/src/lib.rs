@@ -40,7 +40,8 @@ pub fn cli() -> Command {
                 .action(ArgAction::Set)
                 .long("threads")
                 .short('t'),
-        ).arg(
+        )
+        .arg(
             clap::Arg::new("verbosity")
                 .global(true)
                 .help("Verbosity level")
@@ -49,19 +50,21 @@ pub fn cli() -> Command {
         );
     #[cfg(debug_assertions)]
     {
-        global = global.arg(
-            clap::Arg::new("in-test")
-                .global(true)
-                .help("we are in a test")
-                .action(ArgAction::SetTrue)
-                .long("in-test"),
-        ).arg(
-            clap::Arg::new("dir")
-                .global(true)
-                .help("directory to run in")
-                .action(ArgAction::Set)
-                .long("dir")
-        );
+        global = global
+            .arg(
+                clap::Arg::new("in-test")
+                    .global(true)
+                    .help("we are in a test")
+                    .action(ArgAction::SetTrue)
+                    .long("in-test"),
+            )
+            .arg(
+                clap::Arg::new("dir")
+                    .global(true)
+                    .help("directory to run in")
+                    .action(ArgAction::Set)
+                    .long("dir"),
+            );
     }
     global
 }
