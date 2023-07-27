@@ -1,6 +1,6 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
 use hemtt_error::{processed::Processed, Code};
-use lsp_types::{Diagnostic, DiagnosticSeverity};
+use lsp_types::Diagnostic;
 
 use crate::Ident;
 
@@ -76,21 +76,11 @@ impl Code for DuplicateProperty {
         };
         vec![(
             path,
-            Diagnostic {
-                range: lsp_types::Range::new(first_map.original().to_lsp(), {
+            self.diagnostic(lsp_types::Range::new(first_map.original().to_lsp(), {
                     let mut end = first_map.original().to_lsp();
                     end.character += first.value.len() as u32;
                     end
-                }),
-                severity: Some(DiagnosticSeverity::ERROR),
-                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
-                code_description: None,
-                source: Some(String::from("HEMTT")),
-                message: self.label_message(),
-                related_information: None,
-                tags: None,
-                data: None,
-            },
+            })),
         )]
     }
 }

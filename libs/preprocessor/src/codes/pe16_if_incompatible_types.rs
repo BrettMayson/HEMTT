@@ -1,6 +1,6 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_error::{tokens::Token, Code};
-use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
+use lsp_types::{Diagnostic, Range};
 use tracing::error;
 use vfs::VfsPath;
 
@@ -142,20 +142,10 @@ impl Code for IfIncompatibleType {
         };
         Some((
             path.clone(),
-            Diagnostic {
-                range: Range {
-                    start: self.left.0.first().unwrap().source().start().to_lsp(),
-                    end: self.right.0.last().unwrap().source().end().to_lsp(),
-                },
-                severity: Some(DiagnosticSeverity::ERROR),
-                code: Some(NumberOrString::String(self.ident().to_string())),
-                code_description: None,
-                source: Some(String::from("HEMTT Preprocessor")),
-                message: self.label_message(),
-                related_information: None,
-                tags: None,
-                data: None,
-            },
+            self.diagnostic(Range {
+                start: self.left.0.first().unwrap().source().start().to_lsp(),
+                end: self.right.0.last().unwrap().source().end().to_lsp(),
+            })
         ))
     }
 }

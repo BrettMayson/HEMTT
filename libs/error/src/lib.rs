@@ -3,7 +3,7 @@ use std::fmt::Debug;
 pub mod processed;
 pub mod tokens;
 
-use lsp_types::Diagnostic;
+use lsp_types::{Diagnostic, Range, DiagnosticSeverity};
 use processed::Processed;
 pub use thiserror;
 use vfs::VfsPath;
@@ -24,6 +24,19 @@ pub trait Code: Send + Sync {
     }
     fn generate_processed_lsp(&self, _processed: &Processed) -> Vec<(VfsPath, Diagnostic)> {
         Vec::new()
+    }
+    fn diagnostic(&self, range: Range) -> Diagnostic {
+        Diagnostic {
+            range,
+            severity: Some(DiagnosticSeverity::ERROR),
+            code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
+            code_description: None,
+            source: Some(String::from("HEMTT")),
+            message: self.label_message(),
+            related_information: None,
+            tags: None,
+            data: None,
+        }
     }
 }
 
