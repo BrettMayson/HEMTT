@@ -128,10 +128,6 @@ jobs:
         run: |
           cd release && zip linux-x64.zip hemtt && rm hemtt
 
-      - name: Zip Windows x64
-        run: |
-          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
-
       - name: Create Release Version
         run: |
           VERSION=${GITHUB_REF_NAME#v}
@@ -142,6 +138,10 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v2
         with:
           args: pack bin/dist/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
+
+      - name: Zip Windows x64
+        run: |
+          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
 
       - name: Release
         uses: softprops/action-gh-release@v1
