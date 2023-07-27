@@ -14,7 +14,11 @@ pub fn string(delimiter: char) -> impl Parser<char, Str, Error = Simple<char>> {
         .collect::<Vec<String>>()
         .map_with_span(|tok, span| (tok, span))
         .map(|(segments, span)| Str {
-            value: segments.into_iter().collect::<Vec<_>>().join("\n"),
+            value: segments
+                .into_iter()
+                .collect::<Vec<_>>()
+                .join("\n")
+                .replace("\\\n", ""),
             span,
         })
 }
@@ -59,6 +63,29 @@ mod tests {
             Ok(Str {
                 value: "and he said \"hello \"\"world\"\"\"".to_string(),
                 span: 0..37
+            })
+        );
+    }
+
+    #[test]
+    fn multiline_escape() {
+        assert_eq!(
+            string('"').parse("\"hello\\\nworld\""),
+            Ok(Str {
+                value: "helloworld".to_string(),
+                span: 0..14
+            })
+        );
+        assert_eq!(
+            string('"').parse(
+                r#""\
+                'multi';\
+                'line';\
+            ""#
+            ),
+            Ok(Str {
+                value: "                'multi';                'line';            ".to_string(),
+                span: 0..67
             })
         );
     }
