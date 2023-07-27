@@ -88,10 +88,9 @@ impl Class {
         let mut errors: Vec<Box<dyn Code>> = Vec::new();
         for a in a {
             if let Property::Class(a) = a {
-                if let Property::Class(b) = b
+                if let Some(Property::Class(b)) = b
                     .iter()
                     .find(|b| b.name().as_str() == a.name().as_str())
-                    .unwrap()
                 {
                     errors.extend(a.duplicate_inner(b));
                     continue;
