@@ -94,7 +94,7 @@ impl Code for UnexpectedArray {
             self.diagnostic(lsp_types::Range::new(
                 array_start.original().to_lsp(),
                 array_end.original().to_lsp(),
-            ))
+            )),
         )]
     }
 }

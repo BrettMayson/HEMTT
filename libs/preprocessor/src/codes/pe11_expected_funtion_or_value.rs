@@ -96,7 +96,7 @@ impl Code for ExpectedFunctionOrValue {
             self.diagnostic(Range {
                 start: self.token.source().start().to_lsp(),
                 end: self.token.source().end().to_lsp(),
-            })
+            }),
         ))
     }
 }

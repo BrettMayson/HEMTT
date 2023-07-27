@@ -90,7 +90,7 @@ impl Code for IfInvalidOperator {
             self.diagnostic(Range {
                 start: self.tokens.first().unwrap().source().start().to_lsp(),
                 end: self.tokens.last().unwrap().source().end().to_lsp(),
-            })
+            }),
         ))
     }
 }

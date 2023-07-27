@@ -100,7 +100,7 @@ impl Code for ExpectedArray {
             self.diagnostic(lsp_types::Range::new(
                 value_start.original().to_lsp(),
                 value_end.original().to_lsp(),
-            ))
+            )),
         )]
     }
 }

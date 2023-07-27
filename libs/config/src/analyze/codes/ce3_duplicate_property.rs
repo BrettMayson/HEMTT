@@ -77,9 +77,9 @@ impl Code for DuplicateProperty {
         vec![(
             path,
             self.diagnostic(lsp_types::Range::new(first_map.original().to_lsp(), {
-                    let mut end = first_map.original().to_lsp();
-                    end.character += first.value.len() as u32;
-                    end
+                let mut end = first_map.original().to_lsp();
+                end.character += first.value.len() as u32;
+                end
             })),
         )]
     }

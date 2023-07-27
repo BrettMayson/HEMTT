@@ -71,7 +71,7 @@ impl Code for MissingSemicolon {
             self.diagnostic(lsp_types::Range::new(
                 token.source().start().to_lsp(),
                 token.source().end().to_lsp(),
-            ))
+            )),
         )]
     }
 }

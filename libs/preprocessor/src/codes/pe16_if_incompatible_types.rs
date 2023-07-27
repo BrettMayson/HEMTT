@@ -145,7 +145,7 @@ impl Code for IfIncompatibleType {
             self.diagnostic(Range {
                 start: self.left.0.first().unwrap().source().start().to_lsp(),
                 end: self.right.0.last().unwrap().source().end().to_lsp(),
-            })
+            }),
         ))
     }
 }

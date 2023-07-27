@@ -78,7 +78,7 @@ impl Code for IncludeNotFound {
             self.diagnostic(Range::new(
                 self.token.first().unwrap().source().start().to_lsp(),
                 self.token.last().unwrap().source().end().to_lsp(),
-            ))
+            )),
         ))
     }
 }

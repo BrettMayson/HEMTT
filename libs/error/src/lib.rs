@@ -3,7 +3,7 @@ use std::fmt::Debug;
 pub mod processed;
 pub mod tokens;
 
-use lsp_types::{Diagnostic, Range, DiagnosticSeverity};
+use lsp_types::{Diagnostic, DiagnosticSeverity, Range};
 use processed::Processed;
 pub use thiserror;
 use vfs::VfsPath;

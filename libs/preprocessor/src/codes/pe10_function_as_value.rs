@@ -97,7 +97,7 @@ impl Code for FunctionAsValue {
             self.diagnostic(Range {
                 start: self.from.source().start().to_lsp(),
                 end: self.from.source().end().to_lsp(),
-            })
+            }),
         ))
     }
 }

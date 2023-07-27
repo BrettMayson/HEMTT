@@ -74,7 +74,7 @@ impl Code for InvalidValue {
                 let mut end = map.original().to_lsp();
                 end.character += self.span.len() as u32;
                 end
-            }))
+            })),
         )]
     }
 }
