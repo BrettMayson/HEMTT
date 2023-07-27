@@ -33,7 +33,6 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     .validate(|expr, span: Range<usize>, emit| {
         let number = Number::try_evaulation(&expr, span.clone());
         if number.is_none() {
-            println!("{expr} is not a valid math expression");
             emit(Simple::custom(
                 span,
                 format!("{expr} is not a valid math expression"),
