@@ -6,7 +6,7 @@ use super::{ident::ident, value::value};
 
 pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
     recursive(|rec| {
-        let class = just("class")
+        let class = just("class ")
             .padded()
             .ignore_then(ident().padded().labelled("class name"))
             .then(
