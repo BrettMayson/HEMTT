@@ -1,0 +1,6 @@
+[package]
+name = "hemtt-math"
+version = "1.0.0"
+edition = "2021"
+description = "A math library for hemtt"
+license = "GPL-2.0"
