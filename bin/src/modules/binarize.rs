@@ -68,7 +68,8 @@ impl Module for Binarize {
             for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
                 let entry = entry.unwrap();
                 if entry.metadata().unwrap().file_type == VfsFileType::File
-                    && ["rtm", "p3d"].contains(&entry.extension().unwrap_or_default().as_str())
+                    && ["rtm", "p3d", "wrp"]
+                        .contains(&entry.extension().unwrap_or_default().as_str())
                 {
                     if let Some(config) = addon.config() {
                         if config
@@ -88,7 +89,7 @@ impl Module for Binarize {
                     // skip OLOD & BMTR files as they are already binarized
                     let mut buf = [0; 4];
                     entry.open_file().unwrap().read_exact(&mut buf).unwrap();
-                    if buf == [0x4F, 0x4C, 0x4F, 0x44] || buf == [0x42, 0x4D, 0x54, 0x52] {
+                    if check_signature(buf) {
                         debug!(
                             "skipping binarization of already binarized {}",
                             entry.as_str()
@@ -161,4 +162,14 @@ struct BinarizeTarget {
     source: String,
     output: String,
     entry: String,
+}
+
+/// Check if the file signature indicates that it is already binarized
+fn check_signature(buf: [u8; 4]) -> bool {
+    // OLOD
+    buf == [0x4F, 0x4C, 0x4F, 0x44] ||
+    // BMTR
+    buf == [0x42, 0x4D, 0x54, 0x52] ||
+    // OPRW
+    buf == [0x4F, 0x50, 0x52, 0x57]
 }

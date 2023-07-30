@@ -2,7 +2,7 @@ use std::{ops::Range, vec};
 
 use ariadne::{sources, ColorGenerator, Label, Report};
 use hemtt_error::{processed::Processed, Code};
-use lsp_types::{Diagnostic, DiagnosticSeverity};
+use lsp_types::Diagnostic;
 
 pub struct InvalidValue {
     span: Range<usize>,
@@ -70,21 +70,11 @@ impl Code for InvalidValue {
         };
         vec![(
             path,
-            Diagnostic {
-                range: lsp_types::Range::new(map.original().to_lsp(), {
-                    let mut end = map.original().to_lsp();
-                    end.character += self.span.len() as u32;
-                    end
-                }),
-                severity: Some(DiagnosticSeverity::ERROR),
-                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
-                code_description: None,
-                source: Some(String::from("HEMTT")),
-                message: self.label_message(),
-                related_information: None,
-                tags: None,
-                data: None,
-            },
+            self.diagnostic(lsp_types::Range::new(map.original().to_lsp(), {
+                let mut end = map.original().to_lsp();
+                end.character += self.span.len() as u32;
+                end
+            })),
         )]
     }
 }

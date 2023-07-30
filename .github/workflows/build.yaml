@@ -111,6 +111,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Download Linux x64
         uses: actions/download-artifact@v3
         with:
@@ -127,9 +128,11 @@ jobs:
         run: |
           cd release && zip linux-x64.zip hemtt && rm hemtt
 
-      - name: Zip Windows x64
+      - name: Create Release Version
         run: |
-          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+          VERSION=${GITHUB_REF_NAME#v}
+          echo Version: $VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create Release Version
         run: |
@@ -141,6 +144,13 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v2
         with:
           args: pack bin/dist/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
+<<<<<<< HEAD
+=======
+
+      - name: Zip Windows x64
+        run: |
+          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+>>>>>>> edb9f7076f9a290151733a13beec043fa8cb3cf4
 
       - name: Release
         uses: softprops/action-gh-release@v1

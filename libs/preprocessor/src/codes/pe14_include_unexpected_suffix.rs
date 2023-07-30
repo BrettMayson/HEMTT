@@ -1,6 +1,6 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_error::{tokens::Token, Code};
-use lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
+use lsp_types::{Diagnostic, Range};
 use tracing::error;
 use vfs::VfsPath;
 
@@ -72,20 +72,10 @@ impl Code for IncludeUnexpectedSuffix {
         };
         Some((
             path.clone(),
-            Diagnostic {
-                range: Range {
-                    start: self.token.source().start().to_lsp(),
-                    end: self.token.source().end().to_lsp(),
-                },
-                severity: Some(DiagnosticSeverity::ERROR),
-                code: Some(NumberOrString::String(self.ident().to_string())),
-                code_description: None,
-                source: Some(String::from("HEMTT Preprocessor")),
-                message: self.label_message(),
-                related_information: None,
-                tags: None,
-                data: None,
-            },
+            self.diagnostic(Range {
+                start: self.token.source().start().to_lsp(),
+                end: self.token.source().end().to_lsp(),
+            }),
         ))
     }
 }

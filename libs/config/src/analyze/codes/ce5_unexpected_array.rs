@@ -1,7 +1,7 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
 use hemtt_error::processed::Processed;
 use hemtt_error::Code;
-use lsp_types::{Diagnostic, DiagnosticSeverity};
+use lsp_types::Diagnostic;
 
 use crate::model::Value;
 use crate::Property;
@@ -91,20 +91,10 @@ impl Code for UnexpectedArray {
         };
         vec![(
             path,
-            Diagnostic {
-                range: lsp_types::Range::new(
-                    array_start.original().to_lsp(),
-                    array_end.original().to_lsp(),
-                ),
-                severity: Some(DiagnosticSeverity::ERROR),
-                code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
-                code_description: None,
-                source: Some(String::from("HEMTT")),
-                message: self.label_message(),
-                related_information: None,
-                tags: None,
-                data: None,
-            },
+            self.diagnostic(lsp_types::Range::new(
+                array_start.original().to_lsp(),
+                array_end.original().to_lsp(),
+            )),
         )]
     }
 }

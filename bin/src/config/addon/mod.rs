@@ -129,15 +129,15 @@ impl PreprocessConfig {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BinarizeConfig {
     #[serde(default)]
-    pub enabled: bool,
+    pub enabled: Option<bool>,
     #[serde(default)]
     pub exclude: Vec<String>,
 }
 
 impl BinarizeConfig {
     #[must_use]
-    pub const fn enabled(&self) -> bool {
-        self.enabled
+    pub fn enabled(&self) -> bool {
+        self.enabled.unwrap_or(true)
     }
 
     #[must_use]

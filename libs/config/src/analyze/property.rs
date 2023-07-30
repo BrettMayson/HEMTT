@@ -65,5 +65,9 @@ fn expected_array(property: &Property) -> Vec<Box<dyn Code>> {
     if let Value::Array(_) = value {
         return vec![];
     }
+    // If we can't tell what the value is, we can't tell if it's an array or not
+    if let Value::Invalid(_) = value {
+        return vec![];
+    }
     vec![Box::new(ExpectedArray::new(property.clone()))]
 }
