@@ -8,6 +8,7 @@ members = [
     "libs/config",
     "libs/error",
     "libs/io",
+    "libs/math",
     "libs/pbo",
     "libs/preprocessor",
     "libs/signing",
