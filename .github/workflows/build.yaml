@@ -134,23 +134,14 @@ jobs:
           echo Version: $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-  
       - name: Pack for Chocolatey
         uses: crazy-max/ghaction-chocolatey@v2
         with:
           args: pack bin/dist/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
-<<<<<<< HEAD
-=======
 
       - name: Zip Windows x64
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
->>>>>>> edb9f7076f9a290151733a13beec043fa8cb3cf4
 
       - name: Release
         uses: softprops/action-gh-release@v1
