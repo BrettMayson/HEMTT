@@ -3,28 +3,26 @@ use chumsky::prelude::*;
 use crate::{Array, Item};
 
 pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
-    just('{')
-        .padded()
-        .then(just('}').padded())
-        .map_with_span(move |_, span| Array {
-            expand,
-            items: vec![],
-            span,
-        })
-        .or(recursive(|value| {
-            value
-                .map(Item::Array)
-                .or(array_value().recover_with(skip_until(['}', ','], Item::Invalid)))
-                .padded()
-                .separated_by(just(',').padded())
-                .allow_trailing()
-                .delimited_by(just('{').padded(), just('}').padded())
-        })
-        .map_with_span(move |items, span| Array {
-            expand,
-            items,
-            span,
-        }))
+    recursive(|value| {
+        value
+            .map(Item::Array)
+            .or(array_value().recover_with(skip_parser(
+                none_of("},")
+                    .padded()
+                    .repeated()
+                    .at_least(1)
+                    .map_with_span(move |_, span| Item::Invalid(span)),
+            )))
+            .padded()
+            .separated_by(just(',').padded())
+            .allow_trailing()
+            .delimited_by(just('{').padded(), just('}').padded())
+    })
+    .map_with_span(move |items, span| Array {
+        expand,
+        items,
+        span,
+    })
 }
 
 fn array_value() -> impl Parser<char, Item, Error = Simple<char>> {
@@ -117,8 +115,8 @@ mod tests {
     #[test]
     fn trailing() {
         assert_eq!(
-            array(false).parse("{1,2,3,}"),
-            Ok(Array {
+            array(false).parse_recovery("{1,2,3,}").0,
+            Some(Array {
                 expand: false,
                 items: vec![
                     Item::Number(Number::Int32 {
