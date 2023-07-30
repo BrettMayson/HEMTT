@@ -20,5 +20,5 @@ pub enum Item {
     /// An array value
     Array(Vec<Item>),
     /// An invalid value
-    Invalid(String),
+    Invalid(Range<usize>),
 }

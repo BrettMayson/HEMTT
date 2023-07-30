@@ -3,20 +3,28 @@ use chumsky::prelude::*;
 use crate::{Array, Item};
 
 pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
-    recursive(|value| {
-        value
-            .map(Item::Array)
-            .or(array_value())
-            .padded()
-            .separated_by(just(',').padded())
-            .allow_trailing()
-            .delimited_by(just('{').padded(), just('}').padded())
-    })
-    .map_with_span(move |items, span| Array {
-        expand,
-        items,
-        span,
-    })
+    just('{')
+        .padded()
+        .then(just('}').padded())
+        .map_with_span(move |_, span| Array {
+            expand,
+            items: vec![],
+            span,
+        })
+        .or(recursive(|value| {
+            value
+                .map(Item::Array)
+                .or(array_value().recover_with(skip_until(['}', ','], Item::Invalid)))
+                .padded()
+                .separated_by(just(',').padded())
+                .allow_trailing()
+                .delimited_by(just('{').padded(), just('}').padded())
+        })
+        .map_with_span(move |items, span| Array {
+            expand,
+            items,
+            span,
+        }))
 }
 
 fn array_value() -> impl Parser<char, Item, Error = Simple<char>> {
@@ -127,6 +135,32 @@ mod tests {
                     }),
                 ],
                 span: 0..8,
+            })
+        );
+    }
+
+    #[test]
+    fn invalid_item() {
+        assert_eq!(
+            array(false).parse_recovery("{1,2,three,4}").0,
+            Some(Array {
+                expand: false,
+                items: vec![
+                    Item::Number(Number::Int32 {
+                        value: 1,
+                        span: 1..2,
+                    }),
+                    Item::Number(Number::Int32 {
+                        value: 2,
+                        span: 3..4,
+                    }),
+                    Item::Invalid(5..10),
+                    Item::Number(Number::Int32 {
+                        value: 4,
+                        span: 11..12,
+                    }),
+                ],
+                span: 0..13,
             })
         );
     }
