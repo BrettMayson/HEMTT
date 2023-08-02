@@ -30,17 +30,18 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     .at_least(2)
     .collect::<String>()
     .map(|s| s.trim().to_string())
-    .validate(|expr, span: Range<usize>, emit| {
+    .try_map(|expr, span: Range<usize>| {
         let number = Number::try_evaulation(&expr, span.clone());
-        if number.is_none() {
-            emit(Simple::custom(
-                span,
-                format!("{expr} is not a valid math expression"),
-            ));
-        }
-        number
+        number.map_or_else(
+            || {
+                Err(Simple::custom(
+                    span,
+                    format!("{expr} is not a valid math expression"),
+                ))
+            },
+            Ok,
+        )
     })
-    .map(|number| number.expect("math expression should be valid"))
 }
 
 #[cfg(test)]

@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 pub fn eval(expression: &str) -> Option<f64> {
-    evaluate_postfix(&shunting_yard(expression))
+    evaluate_postfix(&shunting_yard(expression)?)
 }
 
-fn shunting_yard(expression: &str) -> Vec<Token> {
+fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
     let mut output_queue: Vec<Token> = Vec::new();
     let mut operator_stack: Vec<Token> = Vec::new();
     let operators: HashMap<char, (u8, Associativity)> = [
@@ -19,7 +19,7 @@ fn shunting_yard(expression: &str) -> Vec<Token> {
     .cloned()
     .collect();
 
-    let tokens = tokenize(expression);
+    let tokens = tokenize(expression).ok()?;
 
     for token in tokens {
         match token {
@@ -33,7 +33,7 @@ fn shunting_yard(expression: &str) -> Vec<Token> {
                                 || (associativity == &Associativity::Right
                                     && precedence < top_precedence)
                             {
-                                output_queue.push(operator_stack.pop().unwrap());
+                                output_queue.push(operator_stack.pop()?);
                                 continue;
                             }
                         }
@@ -58,7 +58,7 @@ fn shunting_yard(expression: &str) -> Vec<Token> {
         output_queue.push(operator);
     }
 
-    output_queue
+    Some(output_queue)
 }
 
 fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
@@ -68,8 +68,8 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
         match token {
             Token::Number(num) => stack.push(*num),
             Token::Operator(op) => {
-                let right = stack.pop().unwrap();
-                let left = stack.pop().unwrap();
+                let right = stack.pop()?;
+                let left = stack.pop()?;
                 let result = match op {
                     '+' => left + right,
                     '-' => left - right,
@@ -102,7 +102,7 @@ enum Associativity {
     Right,
 }
 
-fn tokenize(expression: &str) -> Vec<Token> {
+fn tokenize(expression: &str) -> Result<Vec<Token>, <f64 as FromStr>::Err> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut current_number = String::new();
 
@@ -111,7 +111,7 @@ fn tokenize(expression: &str) -> Vec<Token> {
             '0'..='9' | '.' => current_number.push(c),
             _ => {
                 if !current_number.is_empty() {
-                    tokens.push(Token::Number(current_number.parse().unwrap()));
+                    tokens.push(Token::Number(current_number.parse()?));
                     current_number.clear();
                 }
                 match c {
@@ -135,8 +135,8 @@ fn tokenize(expression: &str) -> Vec<Token> {
     }
 
     if !current_number.is_empty() {
-        tokens.push(Token::Number(current_number.parse().unwrap()));
+        tokens.push(Token::Number(current_number.parse()?));
     }
 
-    tokens
+    Ok(tokens)
 }

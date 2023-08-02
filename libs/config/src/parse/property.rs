@@ -399,4 +399,32 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn math() {
+        assert_eq!(
+            property().parse("math = 1 + 1;"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                value: Value::Number(crate::Number::Int32 {
+                    value: 2,
+                    span: 7..12,
+                }),
+                expected_array: false,
+            })
+        );
+        assert_eq!(
+            property().parse("math = 1 + one;"),
+            Ok(Property::MissingSemicolon(
+                crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                0..9,
+            ))
+        );
+    }
 }
