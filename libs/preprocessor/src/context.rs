@@ -295,6 +295,7 @@ impl<'a> Context<'a> {
             )),
             _ => {
                 if Some(ident) == self.in_macro.as_deref() {
+                    println!("skipping potential recursive macro {}", ident);
                     return None;
                 }
                 // get locally or from parent

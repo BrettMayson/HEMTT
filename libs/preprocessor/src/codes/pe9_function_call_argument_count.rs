@@ -49,6 +49,7 @@ impl Code for FunctionCallArgumentCount {
         let mut out = Vec::new();
         let span = self.token.source().start().0..self.token.source().end().0;
         let a = colors.next();
+        println!("{:?}", self.token.source());
         let defined = self
             .defines
             .get(self.token.symbol().output().trim())

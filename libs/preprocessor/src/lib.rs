@@ -33,7 +33,7 @@ pub use error::Error;
 pub use parse::parse;
 use peekmore::{PeekMore, PeekMoreIterator};
 pub use resolver::Resolver;
-use tracing::{trace, warn};
+use tracing::warn;
 use vfs::VfsPath;
 
 use crate::codes::{
@@ -49,7 +49,6 @@ use crate::codes::{
 /// # Panics
 /// If the files
 pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed, Error> {
-    trace!("preprocessing file {:?}", entry);
     let mut context = Context::new(entry.clone());
     let source = entry.read_to_string()?;
     let mut tokens = crate::parse::parse(entry, &source, &None)?;
@@ -65,7 +64,6 @@ pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed
         },
         |warnings| warnings,
     );
-    trace!("preprocessed file {:?}", entry);
     Ok(Processed::from_tokens(processed, warnings))
 }
 
@@ -698,7 +696,6 @@ fn read_args(
                 }
                 if recursive {
                     if let Some((source, definition)) = context.get(word, token) {
-                        let mut context = context.macro_read(source.clone(), word.to_string());
                         let token = token.clone();
                         tokenstream.next();
                         if definition.is_function()
@@ -710,7 +707,7 @@ fn read_args(
                         context.push(source.clone());
                         arg.append(&mut walk_definition(
                             resolver,
-                            &mut context,
+                            context,
                             tokenstream,
                             token,
                             definition,
