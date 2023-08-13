@@ -172,6 +172,12 @@ impl<'a> Context<'a> {
     }
 
     #[must_use]
+    /// Get the parent, or self if there is no parent
+    pub fn parent_or_self(&self) -> &Self {
+        self.parent.unwrap_or(self)
+    }
+
+    #[must_use]
     /// Get the current file
     pub const fn current_file(&self) -> &VfsPath {
         &self.current_file
@@ -295,7 +301,6 @@ impl<'a> Context<'a> {
             )),
             _ => {
                 if Some(ident) == self.in_macro.as_deref() {
-                    println!("skipping potential recursive macro {}", ident);
                     return None;
                 }
                 // get locally or from parent

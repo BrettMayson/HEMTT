@@ -197,11 +197,10 @@ fn directive_preprocess(
                         ));
                         if let Symbol::Word(word) = token.symbol() {
                             if let Some((source, definition)) = context.get(word, &token) {
-                                let mut context = context.macro_read(source.clone(), word.clone());
                                 output.append(
                                     &mut walk_definition(
                                         resolver,
-                                        &mut context,
+                                        context,
                                         tokenstream,
                                         token.clone(),
                                         definition,
@@ -849,7 +848,7 @@ fn walk_definition(
                     expected: func.parameters().len(),
                     got: args.len(),
                     trace: context.trace(),
-                    defines: context.definitions().clone(),
+                    defines: context.parent_or_self().definitions().clone(),
                 })));
             }
             let mut stack = context.stack(from.clone());
