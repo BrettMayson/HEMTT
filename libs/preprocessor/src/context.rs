@@ -58,6 +58,10 @@ const BUILTIN: [&str; 37] = [
 pub struct Context<'a> {
     ifstates: IfStates,
     definitions: Defines,
+    /// If the context is inside a macro definition, what is the name of the macro
+    ///
+    /// This is used to prevent recursion
+    in_macro: Option<String>,
     entry: VfsPath,
     current_file: VfsPath,
     counter: Arc<AtomicUsize>,
@@ -73,6 +77,7 @@ impl<'a> Context<'a> {
         Self {
             ifstates: IfStates::new(),
             definitions: HashMap::new(),
+            in_macro: None,
             current_file: entry.clone(),
             entry,
             counter: Arc::new(AtomicUsize::new(0)),
@@ -88,6 +93,27 @@ impl<'a> Context<'a> {
         Self {
             ifstates: self.ifstates.clone(),
             definitions: HashMap::new(),
+            in_macro: None,
+            current_file: self.current_file.clone(),
+            entry: self.entry.clone(),
+            counter: self.counter.clone(),
+            trace: {
+                let mut trace = self.trace.clone();
+                trace.push(source);
+                trace
+            },
+            parent: Some(self),
+            warnings: self.warnings.clone(),
+        }
+    }
+
+    #[must_use]
+    /// Create a new `Context` for a macro read
+    pub fn macro_read(&'a self, source: Token, name: String) -> Context<'a> {
+        Self {
+            ifstates: self.ifstates.clone(),
+            definitions: HashMap::new(),
+            in_macro: Some(name),
             current_file: self.current_file.clone(),
             entry: self.entry.clone(),
             counter: self.counter.clone(),
@@ -268,6 +294,9 @@ impl<'a> Context<'a> {
                 )]),
             )),
             _ => {
+                if Some(ident) == self.in_macro.as_deref() {
+                    return None;
+                }
                 // get locally or from parent
                 let mut context = self;
                 loop {
