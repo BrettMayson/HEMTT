@@ -1,11 +1,11 @@
-use lsp_types::Range;
-use vfs::VfsPath;
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// Line and column of a token
 pub struct LineCol(pub usize, pub (usize, usize));
 
 impl LineCol {
+    #[cfg(feature = "lsp")]
     #[must_use]
     /// Convert to an LSP [`lsp_types::Position`]
     pub fn to_lsp(&self) -> lsp_types::Position {
@@ -19,13 +19,13 @@ impl LineCol {
 pub struct Position {
     start: LineCol,
     end: LineCol,
-    path: Option<VfsPath>,
+    path: Option<PathBuf>,
 }
 
 impl Position {
     #[must_use]
     /// Create a new position
-    pub const fn new(start: LineCol, end: LineCol, path: VfsPath) -> Self {
+    pub const fn new(start: LineCol, end: LineCol, path: PathBuf) -> Self {
         Self {
             start,
             end,
@@ -57,7 +57,7 @@ impl Position {
 
     #[must_use]
     /// Get the path of the source file
-    pub const fn path(&self) -> Option<&VfsPath> {
+    pub const fn path(&self) -> Option<&PathBuf> {
         self.path.as_ref()
     }
 
@@ -66,13 +66,14 @@ impl Position {
     pub fn path_or_builtin(&self) -> String {
         self.path.as_ref().map_or_else(
             || String::from("%builtin%"),
-            |p| p.as_str().replace('\\', "/"),
+            |p| p.display().to_string().replace('\\', "/"),
         )
     }
 
+    #[cfg(feature = "lsp")]
     #[must_use]
     /// Convert to an LSP [`lsp_types::Range`]
     pub fn to_lsp(&self) -> Range {
-        Range::new(self.start.to_lsp(), self.end.to_lsp())
+        lsp_types::Range::new(self.start.to_lsp(), self.end.to_lsp())
     }
 }

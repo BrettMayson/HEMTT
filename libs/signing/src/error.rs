@@ -1,4 +1,4 @@
-use hemtt_error::thiserror;
+use hemtt_common::error::thiserror;
 
 #[derive(thiserror::Error, Debug)]
 /// Error type for the signing module

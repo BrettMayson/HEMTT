@@ -1,6 +1,6 @@
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use convert_case::{Case, Casing};
-use hemtt_error::{tokens::Token, Code};
+use hemtt_common::error::{tokens::Token, Code};
 use tracing::error;
 
 /// Unexpected token

@@ -9,7 +9,7 @@ license = "GPL-2.0"
 bench = false
 
 [dependencies]
-hemtt-error = { path = "../error", version = "1.0.0" }
+hemtt-common = { path = "../common", version = "1.0.0" }
 
 ariadne = { workspace = true }
 convert_case = "0.6.0"
@@ -25,6 +25,7 @@ vfs = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
+paste = "1.0.14"
 
 [[bench]]
 name = "ace_dogtags"

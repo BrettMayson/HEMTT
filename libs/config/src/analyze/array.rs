@@ -1,4 +1,4 @@
-use hemtt_error::{processed::Processed, tokens::Symbol, Code};
+use hemtt_common::error::{processed::Processed, tokens::Symbol, Code};
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},

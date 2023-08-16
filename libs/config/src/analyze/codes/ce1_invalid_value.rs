@@ -1,7 +1,7 @@
 use std::{ops::Range, vec};
 
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_error::{processed::Processed, Code};
+use hemtt_common::error::{processed::Processed, Code};
 use lsp_types::Diagnostic;
 
 pub struct InvalidValue {

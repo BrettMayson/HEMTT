@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use hemtt_error::{processed::Processed, Code};
+use hemtt_common::error::{processed::Processed, Code};
 
 use crate::{Class, Ident, Property};
 

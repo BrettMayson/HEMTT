@@ -1,6 +1,6 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_error::processed::Processed;
-use hemtt_error::Code;
+use hemtt_common::error::processed::Processed;
+use hemtt_common::error::Code;
 use lsp_types::Diagnostic;
 
 use crate::model::Value;

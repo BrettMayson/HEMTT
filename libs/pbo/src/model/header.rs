@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use hemtt_io::ReadExt;
+use hemtt_common::io::ReadExt;
 
 use crate::{ReadPbo, WritePbo};
 

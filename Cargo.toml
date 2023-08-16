@@ -4,15 +4,11 @@ members = [
 
     "hls",
 
-    "libs/arma",
+    "libs/common",
     "libs/config",
-    "libs/error",
-    "libs/io",
-    "libs/math",
     "libs/pbo",
     "libs/preprocessor",
     "libs/signing",
-    "libs/version",
 ]
 
 [workspace.dependencies]

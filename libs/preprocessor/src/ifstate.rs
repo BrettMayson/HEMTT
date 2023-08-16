@@ -16,19 +16,23 @@ impl IfState {
     }
 }
 
-#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Clone, Default, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct IfStates(Vec<IfState>);
 impl IfStates {
-    pub const fn new() -> Self {
-        Self(Vec::new())
-    }
-
     pub fn reading(&self) -> bool {
         self.0.is_empty() || self.0.iter().all(|f| f.reading())
     }
 
     pub fn push(&mut self, s: IfState) {
         self.0.push(s);
+    }
+
+    pub fn push_if(&mut self, state: bool) {
+        if state {
+            self.push(IfState::ReadingIf);
+        } else {
+            self.push(IfState::PassingIf);
+        }
     }
 
     pub fn pop(&mut self) -> Option<IfState> {

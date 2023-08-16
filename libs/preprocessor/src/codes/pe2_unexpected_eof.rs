@@ -1,5 +1,5 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_error::{tokens::Token, Code};
+use hemtt_common::error::{tokens::Token, Code};
 use tracing::error;
 
 /// Unexpected end of file

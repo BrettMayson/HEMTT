@@ -1,3 +1,2 @@
 
 if (serverCommandAvailable '#kick') exitWith {};
-

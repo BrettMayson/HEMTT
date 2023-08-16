@@ -1,13 +1,5 @@
 use std::fmt::Debug;
 
-pub mod processed;
-pub mod tokens;
-
-use lsp_types::{Diagnostic, DiagnosticSeverity, Range};
-use processed::Processed;
-pub use thiserror;
-use vfs::VfsPath;
-
 pub trait Code: Send + Sync {
     fn ident(&self) -> &'static str;
     fn message(&self) -> String;
@@ -16,16 +8,19 @@ pub trait Code: Send + Sync {
     fn generate_report(&self) -> Option<String> {
         None
     }
-    fn generate_processed_report(&self, _processed: &Processed) -> Option<String> {
+    fn generate_processed_report(&self, _processed: &str) -> Option<String> {
         None
     }
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+    #[cfg(feature = "lsp")]
+    fn lsp_generate(&self) -> Option<(VfsPath, Diagnostic)> {
         None
     }
-    fn generate_processed_lsp(&self, _processed: &Processed) -> Vec<(VfsPath, Diagnostic)> {
+    #[cfg(feature = "lsp")]
+    fn lsp_generate_processed(&self, _processed: &Processed) -> Vec<(VfsPath, Diagnostic)> {
         Vec::new()
     }
-    fn diagnostic(&self, range: Range) -> Diagnostic {
+    #[cfg(feature = "lsp")]
+    fn lsp_diagnostic(&self, range: Range) -> Diagnostic {
         Diagnostic {
             range,
             severity: Some(DiagnosticSeverity::ERROR),

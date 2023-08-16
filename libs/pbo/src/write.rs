@@ -3,7 +3,7 @@ use std::{
     io::{Cursor, Read, Seek, SeekFrom, Write},
 };
 
-use hemtt_io::WriteExt;
+use hemtt_common::io::WriteExt;
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 

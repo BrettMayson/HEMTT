@@ -1,5 +1,5 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_error::{
+use hemtt_common::error::{
     tokens::{Symbol, Token},
     Code,
 };

@@ -1,7 +1,7 @@
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 
 use byteorder::ReadBytesExt;
-use hemtt_io::{ReadExt, WriteExt};
+use hemtt_common::io::{ReadExt, WriteExt};
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 

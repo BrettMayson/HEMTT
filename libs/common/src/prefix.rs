@@ -15,8 +15,6 @@
 
 use std::path::PathBuf;
 
-use crate::Error;
-
 /// Files that may be used to contain the prefix, case insensitive, convert to lowercase
 pub const FILES: [&str; 4] = [
     "$pboprefix$",
@@ -105,6 +103,13 @@ impl ToString for Prefix {
     fn to_string(&self) -> String {
         self.0.join("\\")
     }
+}
+
+#[derive(thiserror::Error, Clone, Debug, PartialEq, Eq)]
+pub enum Error {
+    #[error("Invalid prefix: {0}")]
+    /// Invalid prefix
+    InvalidPrefix(String),
 }
 
 #[cfg(test)]

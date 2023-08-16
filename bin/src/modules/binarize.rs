@@ -167,7 +167,7 @@ struct BinarizeTarget {
 /// Check if the file signature indicates that it is already binarized
 fn check_signature(buf: [u8; 4]) -> bool {
     // OLOD
-    buf == [0x4F, 0x4C, 0x4F, 0x44] ||
+    buf == [0x4F, 0x44, 0x4F, 0x4C] ||
     // BMTR
     buf == [0x42, 0x4D, 0x54, 0x52] ||
     // OPRW

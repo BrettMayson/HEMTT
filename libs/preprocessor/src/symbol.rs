@@ -1,4 +1,7 @@
-use super::whitespace::Whitespace;
+// dead code from a previous hemtt version, don't feel the need to delete atm
+#![allow(dead_code)]
+
+use crate::whitespace::Whitespace;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// The symbol of a [`Token`](crate::Token)
@@ -73,14 +76,18 @@ pub enum Symbol {
 
     /// End of input
     Eoi,
-    /// Void token, not outputted
-    Void,
 }
 
 impl Symbol {
     /// Create a new [`Word`](Symbol::Word) symbol
     pub fn from_word<S: Into<String>>(word: S) -> Self {
         Self::Word(word.into())
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`Word`](Symbol::Word)
+    pub const fn is_word(&self) -> bool {
+        matches!(self, Self::Word(_))
     }
 
     #[must_use]
@@ -96,6 +103,60 @@ impl Symbol {
     }
 
     #[must_use]
+    /// Check if a symbol is [`Escape`](Symbol::Escape)
+    pub const fn is_escape(&self) -> bool {
+        matches!(&self, Self::Escape)
+    }
+
+    #[must_use]
+    /// Check if a symbol is a [`Directive`](Symbol::Directive)
+    pub const fn is_directive(&self) -> bool {
+        matches!(self, Self::Directive)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`LeftParenthesis`](Symbol::LeftParenthesis)
+    pub const fn is_left_paren(&self) -> bool {
+        matches!(self, Self::LeftParenthesis)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`RightParenthesis`](Symbol::RightParenthesis)
+    pub const fn is_right_paren(&self) -> bool {
+        matches!(self, Self::RightParenthesis)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`Comma`](Symbol::Comma)
+    pub const fn is_comma(&self) -> bool {
+        matches!(self, Self::Comma)
+    }
+
+    #[must_use]
+    /// Check if a symbol is an EOI
+    pub const fn is_eoi(&self) -> bool {
+        matches!(self, Self::Eoi)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`Comment`](Symbol::Comment)
+    pub const fn is_comment(&self) -> bool {
+        matches!(self, Self::Comment(_))
+    }
+
+    #[must_use]
+    /// Check if the symbol can be used to enclose #include paths
+    pub const fn is_include_enclosure(&self) -> bool {
+        matches!(self, Self::DoubleQuote | Self::LeftAngle)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`DoubleQuote`](Symbol::DoubleQuote)
+    pub const fn is_double_quote(&self) -> bool {
+        matches!(self, Self::DoubleQuote)
+    }
+
+    #[must_use]
     /// Get the output of a symbol
     pub fn output(&self) -> String {
         match *self {
@@ -106,7 +167,7 @@ impl Symbol {
 
     #[must_use]
     /// Get the opposite symbol of a symbol
-    pub const fn opposite(&self) -> Option<Self> {
+    pub const fn matching_enclosure(&self) -> Option<Self> {
         match self {
             Self::LeftBrace => Some(Self::RightBrace),
             Self::RightBrace => Some(Self::LeftBrace),
@@ -153,7 +214,7 @@ impl ToString for Symbol {
             Self::Unicode(s) => s.to_string(),
             Self::Newline => "\n".to_string(),
             Self::Whitespace(w) => w.to_string(),
-            Self::Eoi | Self::Void | Self::Comment(_) => String::new(),
+            Self::Eoi | Self::Comment(_) => String::new(),
         }
     }
 }

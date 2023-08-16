@@ -10,4 +10,3 @@ configFile >> 'CfgVehicles' >> typeOf _this >> ""test_fuelCargo"")} else {
 })) then {[_this, _value] call test_fnc_makeSource}";
 };
 };
-

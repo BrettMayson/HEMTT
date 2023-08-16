@@ -895,13 +895,11 @@ dependencies = [
  "fs_extra",
  "git2",
  "glob",
- "hemtt-arma",
+ "hemtt-common",
  "hemtt-config",
- "hemtt-error",
  "hemtt-pbo",
  "hemtt-preprocessor",
  "hemtt-signing",
- "hemtt-version",
  "num_cpus",
  "peekmore",
  "rayon",
@@ -924,10 +922,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "hemtt-arma"
+name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
+ "ariadne",
  "serde",
+ "thiserror",
+ "tracing",
+ "vfs",
 ]
 
 [[package]]
@@ -937,28 +939,12 @@ dependencies = [
  "ariadne",
  "byteorder",
  "chumsky",
- "hemtt-error",
- "hemtt-io",
- "hemtt-math",
+ "hemtt-common",
  "hemtt-preprocessor",
  "lsp-types",
  "serde",
  "vfs",
 ]
-
-[[package]]
-name = "hemtt-error"
-version = "1.0.0"
-dependencies = [
- "ariadne",
- "lsp-types",
- "thiserror",
- "vfs",
-]
-
-[[package]]
-name = "hemtt-io"
-version = "1.0.0"
 
 [[package]]
 name = "hemtt-language-server"
@@ -967,8 +953,8 @@ dependencies = [
  "chumsky",
  "dashmap",
  "hemtt",
+ "hemtt-common",
  "hemtt-config",
- "hemtt-error",
  "hemtt-preprocessor",
  "ropey",
  "serde",
@@ -982,16 +968,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "hemtt-math"
-version = "1.0.0"
-
-[[package]]
 name = "hemtt-pbo"
 version = "1.0.1"
 dependencies = [
  "byteorder",
- "hemtt-error",
- "hemtt-io",
+ "hemtt-common",
  "indexmap 2.0.0",
  "serde",
  "sha-1",
@@ -1004,8 +985,9 @@ dependencies = [
  "ariadne",
  "convert_case",
  "criterion",
- "hemtt-error",
+ "hemtt-common",
  "lsp-types",
+ "paste",
  "peekmore",
  "pest",
  "pest_derive",
@@ -1021,21 +1003,12 @@ name = "hemtt-signing"
 version = "1.0.0"
 dependencies = [
  "byteorder",
- "hemtt-error",
- "hemtt-io",
+ "hemtt-common",
  "hemtt-pbo",
  "num-bigint-dig",
  "rand",
  "rsa",
  "sha-1",
-]
-
-[[package]]
-name = "hemtt-version"
-version = "1.0.0"
-dependencies = [
- "hemtt-error",
- "serde",
 ]
 
 [[package]]

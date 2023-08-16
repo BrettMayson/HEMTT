@@ -1,4 +1,4 @@
-use hemtt_io::WriteExt;
+use hemtt_common::io::WriteExt;
 
 use crate::Str;
 

@@ -9,4 +9,3 @@ data = "matched greater";
 data = "matched greater 2";
 
 rank = "SERGEANT";
-

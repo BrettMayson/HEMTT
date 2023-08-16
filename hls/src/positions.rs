@@ -1,4 +1,4 @@
-use hemtt_error::tokens::LineCol;
+use hemtt_common::error::tokens::LineCol;
 use tower_lsp::lsp_types::Position;
 
 pub trait ToPosition {

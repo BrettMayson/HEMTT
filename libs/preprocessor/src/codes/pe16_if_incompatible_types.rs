@@ -1,5 +1,5 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
-use hemtt_error::{tokens::Token, Code};
+use hemtt_common::error::{tokens::Token, Code};
 use lsp_types::{Diagnostic, Range};
 use tracing::error;
 use vfs::VfsPath;
