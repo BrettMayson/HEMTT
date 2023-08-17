@@ -1,3 +1,8 @@
+#![deny(clippy::all, clippy::nursery, missing_docs)]
+#![warn(clippy::pedantic)]
+
+//! HEMTT - Common Library
+
 pub mod error;
 pub mod io;
 pub mod math;

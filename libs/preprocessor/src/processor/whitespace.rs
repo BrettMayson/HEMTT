@@ -1,6 +1,6 @@
 use peekmore::PeekMoreIterator;
 
-use crate::{token::Token, Error};
+use crate::{output::Output, token::Token, Error};
 
 use super::Processor;
 
@@ -10,7 +10,7 @@ impl Processor {
     pub(crate) fn skip_whitespace(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        mut buffer: Option<&mut Vec<Token>>,
+        mut buffer: Option<&mut Vec<Output>>,
     ) {
         while let Some(token) = stream.peek() {
             if token.symbol().is_whitespace() {
@@ -31,7 +31,7 @@ impl Processor {
     pub(crate) fn skip_to_after_newline(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        mut buffer: Option<&mut Vec<Token>>,
+        mut buffer: Option<&mut Vec<Output>>,
     ) {
         while stream.peek().is_some() {
             let token = stream.next().expect("was peeked");

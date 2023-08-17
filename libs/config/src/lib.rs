@@ -13,7 +13,8 @@ mod model;
 use analyze::Analyze;
 use ariadne::{sources, Label, Report};
 use chumsky::{prelude::Simple, Parser};
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 
 pub use error::Error;
 pub use model::*;

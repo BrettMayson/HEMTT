@@ -30,7 +30,7 @@ impl Number {
     #[must_use]
     /// Try to evaluate a number from a string
     pub fn try_evaulation(str: &str, span: Range<usize>) -> Option<Self> {
-        let value = hemtt_math::eval(str)?;
+        let value = hemtt_common::math::eval(str)?;
         // convert to int if possible
         if value.fract() == 0.0 {
             if value >= f64::from(i32::MIN) && value <= f64::from(i32::MAX) {

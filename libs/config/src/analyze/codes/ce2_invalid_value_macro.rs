@@ -1,7 +1,8 @@
 use std::ops::Range;
 
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 use lsp_types::Diagnostic;
 
 pub struct InvalidValueMacro {
@@ -61,6 +62,7 @@ impl Code for InvalidValueMacro {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let map = processed.original_col(self.span.start).unwrap();
         let token = map.token().walk_up();

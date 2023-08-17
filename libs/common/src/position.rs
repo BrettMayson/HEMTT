@@ -1,3 +1,5 @@
+//! Position of a token in a source file
+
 use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

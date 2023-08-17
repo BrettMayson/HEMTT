@@ -1,8 +1,10 @@
+use hemtt_common::position::Position;
 use hemtt_common::workspace::WorkspacePath;
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
+use crate::output::Output;
 use crate::processed::Processed;
 use crate::symbol::Symbol;
 use crate::token::Token;
@@ -32,14 +34,14 @@ impl Processor {
         let mut stream = tokens.into_iter().peekmore();
 
         processor.file(&mut stream, &mut buffer)?;
-        processor.processed.tokens = buffer;
+        processor.processed.output = buffer;
         Ok(processor.processed)
     }
 
     fn file(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         loop {
             let first = stream.peek();
@@ -53,30 +55,35 @@ impl Processor {
     fn line(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, Some(buffer));
         if self.directive(stream, buffer)? {
             return Ok(());
         }
-        self.walk(None, stream, buffer)?;
+        self.walk(None, None, stream, buffer)?;
         Ok(())
     }
 
     fn walk(
         &mut self,
+        callsite: Option<&Position>,
         in_macro: Option<&str>,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let mut in_quotes = false;
         let mut quote = None;
         while let Some(token) = stream.peek() {
-            println!("walking: {:?}", token.symbol());
             match (token.symbol(), in_quotes) {
                 (Symbol::Word(w), false) => {
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
-                        self.define_use(stream, buffer)?;
+                        let token = token.clone();
+                        self.define_use(
+                            callsite.unwrap_or_else(|| token.source()),
+                            stream,
+                            buffer,
+                        )?;
                     } else {
                         self.output(stream.next().expect("peeked above"), buffer);
                     }
@@ -85,13 +92,13 @@ impl Processor {
                     let token = stream.next().expect("peeked above");
                     if in_macro.is_some() && stream.peek().map_or(false, |t| t.symbol().is_word()) {
                         self.output(
-                            Token::new(Symbol::DoubleQuote, token.source().to_owned()),
+                            Token::new(Symbol::DoubleQuote, token.source().clone()),
                             buffer,
                         );
                         quote = Some(token.source().clone());
                         continue;
                     }
-                    self.output(stream.next().expect("peeked above"), buffer);
+                    self.output(token, buffer);
                 }
                 (Symbol::Newline, false) => {
                     self.output(stream.next().expect("peeked above"), buffer);
@@ -137,30 +144,29 @@ impl Processor {
     fn next_word(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: Option<&mut Vec<Token>>,
+        buffer: Option<&mut Vec<Output>>,
     ) -> Option<Token> {
         self.skip_whitespace(stream, buffer);
         self.current_word(stream)
     }
 
-    fn output(&mut self, token: Token, buffer: &mut Vec<Token>) {
+    fn output(&mut self, token: Token, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
-            if buffer
-                .last()
-                .map(|t| t.symbol().is_escape())
-                .unwrap_or(false)
+            if token.symbol().is_newline()
+                && buffer
+                    .last()
+                    .map_or(false, |t| t.last_symbol().map_or(false, Symbol::is_escape))
             {
                 buffer.pop();
                 return;
             }
-            println!("output: {:?}", token.symbol());
-            buffer.push(token);
+            buffer.push(Output::Direct(token));
         }
     }
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
     use peekmore::{PeekMore, PeekMoreIterator};
 
     use crate::token::Token;

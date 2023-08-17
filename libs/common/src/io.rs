@@ -1,6 +1,4 @@
-#![deny(clippy::all, clippy::nursery)]
-#![warn(clippy::pedantic)]
-#![allow(clippy::cast_possible_truncation)]
+//! IO utilities.
 
 // Parts of the following code is derivative work of the code from the armake2 project by KoffeinFlummi,
 // which is licensed GPLv2. This code therefore is also licensed under the terms
@@ -12,6 +10,7 @@
 use std::io;
 use std::io::{Read, Write};
 
+/// Read extension trait
 pub trait ReadExt: Read {
     /// Read a null-terminated string from the input.
     ///
@@ -52,6 +51,7 @@ impl<T: Read> ReadExt for T {
     }
 }
 
+/// Write extension trait
 pub trait WriteExt: Write {
     /// Writes a null-terminated string to the output.
     ///
@@ -72,6 +72,7 @@ impl<T: Write> WriteExt for T {
         Ok(())
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     fn write_compressed_int(&mut self, x: u32) -> io::Result<usize> {
         let mut temp = x;
         let mut len = 0;
@@ -89,6 +90,7 @@ impl<T: Write> WriteExt for T {
 }
 
 #[must_use]
+/// Returns the length of a compressed `u32`.
 pub const fn compressed_int_len(x: u32) -> usize {
     let mut temp = x;
     let mut len = 0;

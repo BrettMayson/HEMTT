@@ -1,9 +1,12 @@
+use hemtt_common::position::Position;
 use peekmore::{PeekMore, PeekMoreIterator};
 use tracing::{error, trace};
 
 use crate::{
+    defines::Defines,
     definition::{Definition, FunctionDefinition},
     ifstate::IfState,
+    output::Output,
     symbol::Symbol,
     token::Token,
     Error,
@@ -15,7 +18,7 @@ impl Processor {
     pub(crate) fn directive(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
         if let Some(token) = stream.peek() {
             if token.symbol().is_directive() {
@@ -34,7 +37,7 @@ impl Processor {
     pub(crate) fn directive_command(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let command = stream.next().expect("was peeked in directive()");
         let command_word = command.symbol().to_string();
@@ -44,47 +47,41 @@ impl Processor {
                 Ok(())
             }
             ("define", true) => {
-                error!("define a macro");
                 self.directive_define(stream)?;
                 Ok(())
             }
             ("undef", true) => {
-                error!("undefine a macro");
                 self.directive_undef(stream)?;
                 Ok(())
             }
             ("if", true) => {
-                error!("if");
+                self.directive_if(stream)?;
                 Ok(())
             }
-            ("ifdef", true) => {
-                trace!("ifdef");
-                self.directive_ifdef(true, stream)
-            }
-            ("ifndef", true) => {
-                trace!("ifndef");
-                self.directive_ifdef(false, stream)
-            }
+            ("ifdef", true) => self.directive_ifdef(true, stream),
+            ("ifndef", true) => self.directive_ifdef(false, stream),
             ("if" | "ifdef" | "ifndef", false) => {
-                trace!("skip if*");
                 self.ifstates.push(IfState::PassingChild);
                 self.skip_to_after_newline(stream, None);
                 Ok(())
             }
             ("else", _) => {
-                trace!("else");
                 self.ifstates.flip();
                 self.expect_nothing_to_newline(stream)?;
                 Ok(())
             }
             ("endif", _) => {
-                trace!("endif");
                 self.ifstates.pop();
                 self.expect_nothing_to_newline(stream)?;
                 Ok(())
             }
-            (_, _) => {
+            (_, true) => {
                 error!("unknown directive: {}", command_word);
+                self.skip_to_after_newline(stream, None);
+                Ok(())
+            }
+            (_, false) => {
+                self.skip_to_after_newline(stream, None);
                 Ok(())
             }
         }
@@ -93,7 +90,7 @@ impl Processor {
     pub(crate) fn directive_include(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-        buffer: &mut Vec<Token>,
+        buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, None);
         let open = stream.next().expect("was peeked in directive()");
@@ -147,7 +144,7 @@ impl Processor {
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
             _ => Definition::Value(self.define_read_body(stream)?),
         };
-        self.defines.insert(ident_string, (ident, definition));
+        self.defines.insert(&ident_string, (ident, definition));
         Ok(())
     }
 
@@ -161,6 +158,119 @@ impl Processor {
         let ident_string = ident.symbol().to_string();
         self.defines.remove(&ident_string);
         self.expect_nothing_to_newline(stream)
+    }
+
+    pub(crate) fn directive_if(
+        &mut self,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+    ) -> Result<(), Error> {
+        fn value(defines: &mut Defines, token: Token) -> Result<(Vec<Token>, bool), Error> {
+            if let Some((_, definition)) = defines.get(&token, token.source()) {
+                if let Definition::Value(tokens) = definition {
+                    return Ok((tokens, true));
+                } else {
+                    panic!("can we do some error handling please");
+                }
+            }
+            Ok((vec![token], false))
+        }
+        self.skip_whitespace(stream, None);
+        let Some(left) = stream.next() else {
+            panic!("can we do some error handling please");
+        };
+        let (left, left_defined) = value(&mut self.defines, left)?;
+        self.skip_whitespace(stream, None);
+        let mut operator = Vec::with_capacity(2);
+        let (right, right_defined) = if stream.peek().map(Token::symbol) == Some(&Symbol::Newline) {
+            if !left_defined {
+                panic!("can we do some error handling please")
+            }
+            let equals = Token::new(Symbol::Equals, Position::builtin());
+            operator = vec![equals.clone(), equals];
+            (
+                vec![Token::new(Symbol::Digit(1), Position::builtin())],
+                false,
+            )
+        } else {
+            loop {
+                let Some(token) = stream.peek() else {
+                    // return Err(Error::Code(Box::new(UnexpectedEOF {
+                    //     token: Box::new(from),
+                    // })));
+                    panic!("can we do some error handling please");
+                };
+                if matches!(token.symbol(), Symbol::Whitespace(_)) {
+                    stream.next();
+                    break;
+                }
+                operator.push(token.clone());
+                stream.next();
+            }
+            let Some(right) = stream.next() else {
+                // return Err(Error::Code(Box::new(UnexpectedEOF {
+                //     token: Box::new(from),
+                // })));
+                panic!("can we do some error handling please");
+            };
+            value(&mut self.defines, right)?
+        };
+        let operator = operator
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let left_string = left
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let right_string = right
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let read = match operator.as_str() {
+            "==" => left_string == right_string,
+            "!=" => left_string != right_string,
+            ">" | ">=" | "<" | "<=" => {
+                let left_f64 = left_string.parse::<f64>().map_err(|_| {
+                    // Error::Code(Box::new(IfIncompatibleType {
+                    //     left: (left.clone(), left_defined),
+                    //     operator: operators.clone(),
+                    //     right: (right.clone(), right_defined),
+                    //     trace: context.trace(),
+                    // }))
+                    panic!("can we do some error handling please");
+                });
+                let right_f64 = right_string.parse::<f64>().map_err(|_| {
+                    // Error::Code(Box::new(IfIncompatibleType {
+                    //     left: (left, left_defined),
+                    //     operator: operators,
+                    //     right: (right, right_defined),
+                    //     trace: context.trace(),
+                    // }))
+                    panic!("can we do some error handling please");
+                });
+                match operator.as_str() {
+                    ">" => left_f64 > right_f64,
+                    ">=" => left_f64 >= right_f64,
+                    "<" => left_f64 < right_f64,
+                    "<=" => left_f64 <= right_f64,
+                    _ => unreachable!(),
+                }
+            }
+            _ => {
+                // return Err(Error::Code(Box::new(IfInvalidOperator {
+                //     tokens: operators,
+                //     trace: context.trace(),
+                // })))
+                panic!("can we do some error handling please");
+            }
+        };
+        self.ifstates.push(if read {
+            IfState::ReadingIf
+        } else {
+            IfState::PassingIf
+        });
+        self.expect_nothing_to_newline(stream)?;
+        Ok(())
     }
 
     pub(crate) fn directive_ifdef(
@@ -192,7 +302,10 @@ mod tests {
         let mut processor = Processor::default();
         processor.directive(&mut stream, &mut Vec::new()).unwrap();
         assert_eq!(processor.defines.global().len(), 1);
-        assert_eq!(processor.defines.get("FLAG").unwrap().1, Definition::Unit);
+        assert_eq!(
+            processor.defines.get_test("FLAG").unwrap().1,
+            Definition::Unit
+        );
     }
 
     #[test]
@@ -202,7 +315,14 @@ mod tests {
         processor.directive(&mut stream, &mut Vec::new()).unwrap();
         assert_eq!(processor.defines.global().len(), 1);
         assert_eq!(
-            processor.defines.get("FLAG").unwrap().1.as_value().unwrap()[0].symbol(),
+            processor
+                .defines
+                .get_test("FLAG")
+                .unwrap()
+                .1
+                .as_value()
+                .unwrap()[0]
+                .symbol(),
             &Symbol::Digit(1)
         );
     }

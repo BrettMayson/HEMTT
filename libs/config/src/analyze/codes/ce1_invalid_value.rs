@@ -1,7 +1,8 @@
 use std::{ops::Range, vec};
 
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 use lsp_types::Diagnostic;
 
 pub struct InvalidValue {
@@ -62,6 +63,7 @@ impl Code for InvalidValue {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let map = processed.original_col(self.span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();

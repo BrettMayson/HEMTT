@@ -1,6 +1,6 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::error::{processed::Processed, Code};
-use lsp_types::Diagnostic;
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 
 use crate::{Property, Value};
 
@@ -79,6 +79,7 @@ impl Code for ExpectedArray {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let Property::Entry { value, expected_array, .. } = &self.property else {
             return vec![];

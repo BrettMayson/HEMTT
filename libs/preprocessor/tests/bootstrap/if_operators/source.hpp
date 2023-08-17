@@ -3,11 +3,11 @@
 data = "matched flag";
 #endif
 
-#if __COUNTER == 0
+#if __COUNTER__ == 0
 data = "matched 0";
 #endif
 
-#if __COUNTER != 0
+#if __COUNTER__ != 0
 data = "matched not zero";
 #else
 data = "skipped";

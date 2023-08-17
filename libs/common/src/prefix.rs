@@ -106,6 +106,7 @@ impl ToString for Prefix {
 }
 
 #[derive(thiserror::Error, Clone, Debug, PartialEq, Eq)]
+/// An error that can occur when parsing a prefix
 pub enum Error {
     #[error("Invalid prefix: {0}")]
     /// Invalid prefix

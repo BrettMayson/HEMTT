@@ -18,7 +18,7 @@ pub enum Symbol {
     /// -
     Dash,
     /// =
-    Assignment,
+    Equals,
     /// +
     Plus,
     /// {
@@ -127,6 +127,24 @@ impl Symbol {
     }
 
     #[must_use]
+    /// Check if a symbol is [`LeftAngle`](Symbol::LeftAngle)
+    pub const fn is_left_angle(&self) -> bool {
+        matches!(self, Self::LeftAngle)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`RightAngle`](Symbol::RightAngle)
+    pub const fn is_right_angle(&self) -> bool {
+        matches!(self, Self::RightAngle)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`Equals`](Symbol::Equals)
+    pub const fn is_equals(&self) -> bool {
+        matches!(self, Self::Equals)
+    }
+
+    #[must_use]
     /// Check if a symbol is [`Comma`](Symbol::Comma)
     pub const fn is_comma(&self) -> bool {
         matches!(self, Self::Comma)
@@ -191,7 +209,7 @@ impl ToString for Symbol {
             Self::Digit(d) => d.to_string(),
             Self::Underscore => "_".to_string(),
             Self::Dash => "-".to_string(),
-            Self::Assignment => "=".to_string(),
+            Self::Equals => "=".to_string(),
             Self::Plus => "+".to_string(),
             Self::LeftBrace => "{".to_string(),
             Self::RightBrace => "}".to_string(),

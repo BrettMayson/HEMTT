@@ -11,6 +11,8 @@ pub enum Definition {
     Value(Vec<Token>),
     /// A flag that can be checked with `#ifdef`
     Unit,
+    /// A macro that changes the internal state, returning nothing
+    Void,
 }
 
 impl Definition {

@@ -1,13 +1,17 @@
+use std::path::PathBuf;
+
 use criterion::{criterion_group, criterion_main, Criterion};
-use hemtt_preprocessor::{preprocess_file, Resolver};
-use vfs::PhysicalFS;
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("preprocess - ace dogtags", |b| {
         b.iter(|| {
-            let vfs = PhysicalFS::new("benches/").into();
-            let resolver = Resolver::new(&vfs, Default::default());
-            let _ = preprocess_file(&vfs.join("ace_dogtags.hpp").unwrap(), &resolver).unwrap();
+            let workspace = hemtt_common::workspace::Workspace::builder()
+                .physical(&PathBuf::from("benches"))
+                .memory()
+                .finish()
+                .unwrap();
+            let source = workspace.join("ace_dogtags.hpp").unwrap();
+            hemtt_preprocessor::Processed::new(&source).unwrap();
         })
     });
 }

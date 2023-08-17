@@ -1,6 +1,7 @@
 use std::ops::Range;
 
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 
 use super::{
     codes::{

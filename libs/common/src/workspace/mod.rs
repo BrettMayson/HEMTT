@@ -1,3 +1,5 @@
+//! A workspace (directory) containing addons and / or missions
+
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use tracing::trace;
@@ -11,6 +13,8 @@ pub use path::WorkspacePath;
 
 use crate::prefix::{Prefix, FILES};
 
+#[derive(Debug)]
+/// A workspace (directory) containing addons and / or missions
 pub struct Workspace {
     pub(crate) vfs: VfsPath,
     pub(crate) pointers: HashMap<PathBuf, VfsPath>,
@@ -19,10 +23,12 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    /// Create a new workspace builder
     pub fn builder() -> WorkspaceBuilder {
         WorkspaceBuilder::default()
     }
 
+    /// Create a new workspace from a vfs path
     pub fn create(vfs: VfsPath) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
@@ -63,22 +69,28 @@ impl Workspace {
 }
 
 #[derive(Default)]
+/// A workspace builder
 pub struct WorkspaceBuilder {
     layers: Vec<VfsPath>,
 }
 
 impl WorkspaceBuilder {
+    #[must_use]
+    /// Add a physical layer to the virtual filesystem
     pub fn physical(mut self, path: &PathBuf) -> Self {
         self.layers
             .push(AltrootFS::new(PhysicalFS::new(path).into()).into());
         self
     }
 
+    #[must_use]
+    /// Add a memory layer to the virtual filesystem
     pub fn memory(mut self) -> Self {
         self.layers.push(MemoryFS::new().into());
         self
     }
 
+    /// Finish building the workspace
     pub fn finish(self) -> Result<WorkspacePath, Error> {
         Workspace::create(OverlayFS::new(&self.layers).into())
     }

@@ -1,7 +1,8 @@
 use std::ops::Range;
 
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 use lsp_types::Diagnostic;
 
 pub struct MissingSemicolon {
@@ -60,6 +61,7 @@ impl Code for MissingSemicolon {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let map = processed.original_col(self.span.end - 1).unwrap();
         let token = map.token().walk_up();

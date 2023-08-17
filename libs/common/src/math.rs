@@ -1,5 +1,9 @@
+//! Math utilities
+
 use std::{collections::HashMap, str::FromStr};
 
+#[must_use]
+/// Evaluates a mathematical expression
 pub fn eval(expression: &str) -> Option<f64> {
     evaluate_postfix(&shunting_yard(expression)?)
 }
@@ -16,7 +20,7 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
         ('%', (2, Associativity::Left)),
     ]
     .iter()
-    .cloned()
+    .copied()
     .collect();
 
     let tokens = tokenize(expression).ok()?;
@@ -45,7 +49,7 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
             Token::LeftParenthesis => operator_stack.push(token),
             Token::RightParenthesis => {
                 while let Some(top_token) = operator_stack.pop() {
-                    if let Token::LeftParenthesis = top_token {
+                    if top_token == Token::LeftParenthesis {
                         break;
                     }
                     output_queue.push(top_token);

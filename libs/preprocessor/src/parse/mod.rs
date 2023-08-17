@@ -91,6 +91,7 @@ impl Parse for Symbol {
             Rule::single_quote => Self::SingleQuote,
             Rule::left_angle => Self::LeftAngle,
             Rule::right_angle => Self::RightAngle,
+            Rule::equals => Self::Equals,
 
             Rule::unicode => Self::Unicode(pair.as_str().to_string()),
 
@@ -99,9 +100,7 @@ impl Parse for Symbol {
             Rule::tab => Self::Whitespace(Whitespace::Tab),
             Rule::WHITESPACE => Self::to_symbol(pair.into_inner().next().unwrap()),
             Rule::COMMENT => Self::Comment(pair.as_str().to_string()),
-            Rule::EOI => Self::Eoi,
-
-            Rule::file => Self::Eoi,
+            Rule::EOI | Rule::file => Self::Eoi,
         }
     }
 }
@@ -117,7 +116,7 @@ mod tests {
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
             .unwrap()
-            .write_all("value = 1;".as_bytes())
+            .write_all(b"value = 1;")
             .unwrap();
         let tokens = crate::parse::parse(&test).unwrap();
         assert_eq!(tokens.len(), 7);

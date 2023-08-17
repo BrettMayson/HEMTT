@@ -1,5 +1,6 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_common::error::{processed::Processed, Code};
+use hemtt_common::reporting::Code;
+use hemtt_preprocessor::Processed;
 use lsp_types::Diagnostic;
 
 use crate::Ident;
@@ -67,6 +68,7 @@ impl Code for DuplicateProperty {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let first = self.conflicts.last().unwrap();
         let first_map = processed.original_col(first.span.start).unwrap();
