@@ -23,6 +23,10 @@ impl IfStates {
         Self(Vec::new())
     }
 
+    pub fn size(&self) -> usize {
+        self.0.len()
+    }
+
     pub fn reading(&self) -> bool {
         self.0.is_empty() || self.0.iter().all(|f| f.reading())
     }

@@ -57,6 +57,13 @@ pub fn preprocess_file(entry: &VfsPath, resolver: &Resolver) -> Result<Processed
     tokens.push(eoi);
     let mut tokenstream = tokens.into_iter().peekmore();
     let processed = root_preprocess(resolver, &mut context, &mut tokenstream, false)?;
+    if context.ifstates().size() != 0 {
+        warn!(
+            "#ifs not balanced [{}] in {}",
+            context.ifstates().size(),
+            entry.as_str()
+        );
+    }
     let warnings = context.warnings().map_or_else(
         || {
             warn!("context was not resolved");
