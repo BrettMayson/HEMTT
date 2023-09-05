@@ -20,7 +20,7 @@ jobs:
           - runner: windows-latest
             name: windows
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Install stable
@@ -68,11 +68,11 @@ jobs:
           - repo: Theseus-Aegis/Mods
             commit: 445ec5fc71bbd01d57252be2794947c2bfe79988
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Checkout mod
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ matrix.mod.repo }}
           path: mod
