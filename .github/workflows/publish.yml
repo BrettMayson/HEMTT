@@ -14,7 +14,7 @@ jobs:
           releaseId: ${{ github.event.release.id }}
           fileName: '*.nupkg'
       - name: Push to Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v2
+        uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: push --source "https://push.chocolatey.org/" --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
 
