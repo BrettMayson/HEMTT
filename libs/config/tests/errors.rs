@@ -57,3 +57,4 @@ fn check(dir: &str) {
 
 bootstrap!(simple);
 bootstrap!(arrays);
+bootstrap!(ce7_missing_parent);
