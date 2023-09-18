@@ -1,7 +1,5 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
-use lsp_types::Diagnostic;
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::model::Value;
 use crate::Property;
@@ -34,14 +32,19 @@ impl Code for UnexpectedArray {
     }
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
-        let Property::Entry { name, value: Value::UnexpectedArray(array), .. } = &self.property else {
+        let Property::Entry {
+            name,
+            value: Value::UnexpectedArray(array),
+            ..
+        } = &self.property
+        else {
             return None;
         };
-        let array_start = processed.original_col(array.span.start).unwrap();
+        let array_start = processed.mapping(array.span.start).unwrap();
         let array_file = processed.source(array_start.source()).unwrap();
-        let array_end = processed.original_col(array.span.end).unwrap();
-        let ident_start = processed.original_col(name.span.start).unwrap();
-        let ident_end = processed.original_col(name.span.end).unwrap();
+        let array_end = processed.mapping(array.span.end).unwrap();
+        let ident_start = processed.mapping(name.span.start).unwrap();
+        let ident_end = processed.mapping(name.span.end).unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();
@@ -81,13 +84,17 @@ impl Code for UnexpectedArray {
 
     #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let Property::Entry { value: Value::UnexpectedArray(array), .. } = &self.property else {
+        let Property::Entry {
+            value: Value::UnexpectedArray(array),
+            ..
+        } = &self.property
+        else {
             return vec![];
         };
-        let array_start = processed.original_col(array.span.start).unwrap();
+        let array_start = processed.mapping(array.span.start).unwrap();
         let array_file = processed.source(array_start.source()).unwrap();
-        let array_end = processed.original_col(array.span.end).unwrap();
-        let Some(path) = array_file.1.0.clone() else {
+        let array_end = processed.mapping(array.span.end).unwrap();
+        let Some(path) = array_file.1 .0.clone() else {
             return vec![];
         };
         vec![(

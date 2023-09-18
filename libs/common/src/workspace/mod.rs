@@ -13,7 +13,7 @@ pub use path::WorkspacePath;
 
 use crate::prefix::{Prefix, FILES};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 /// A workspace (directory) containing addons and / or missions
 pub struct Workspace {
     pub(crate) vfs: VfsPath,

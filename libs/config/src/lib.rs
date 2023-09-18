@@ -13,8 +13,7 @@ mod model;
 use analyze::Analyze;
 use ariadne::{sources, Label, Report};
 use chumsky::{prelude::Simple, Parser};
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
+use hemtt_common::reporting::{Code, Processed};
 
 pub use error::Error;
 pub use model::*;
@@ -26,7 +25,7 @@ pub mod rapify;
 /// # Errors
 /// If the file is invalid
 pub fn parse(processed: &Processed) -> Result<ConfigReport, Vec<String>> {
-    let (config, errors) = parse::config().parse_recovery(processed.output());
+    let (config, errors) = parse::config().parse_recovery(processed.as_string());
     config.map_or_else(
         || {
             Err(errors
@@ -46,7 +45,7 @@ pub fn parse(processed: &Processed) -> Result<ConfigReport, Vec<String>> {
 }
 
 fn chumsky_to_ariadne(processed: &Processed, err: &Simple<char>) -> String {
-    let map = processed.original_col(err.span().start).unwrap();
+    let map = processed.mapping(err.span().start);
     let file = processed.source(map.source()).unwrap();
     let file = file.0.clone();
     let mut out = Vec::new();

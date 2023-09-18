@@ -1,12 +1,16 @@
-use crate::{symbol::Symbol, token::Token};
+use super::{Symbol, Token};
 
 #[derive(Debug)]
+/// The output of a token
 pub enum Output {
+    /// The token did not expand
     Direct(Token),
+    /// The token expanded to a list of tokens
     Macro(Token, Vec<Self>),
 }
 
 impl Output {
+    /// Get the "source" of the token, reading for further processing
     pub fn to_source(&self) -> String {
         match self {
             Self::Direct(t) => t.to_source(),
@@ -14,6 +18,7 @@ impl Output {
         }
     }
 
+    /// Get the last symbol of the token
     pub fn last_symbol(&self) -> Option<&Symbol> {
         match self {
             Self::Direct(t) => Some(t.symbol()),

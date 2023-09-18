@@ -1,9 +1,9 @@
 // dead code from a previous hemtt version, don't feel the need to delete atm
 #![allow(dead_code)]
 
-use crate::whitespace::Whitespace;
+use super::Whitespace;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// The symbol of a [`Token`](crate::Token)
 pub enum Symbol {
     /// A word is a contiguous sequence of letters, digits, and underscores.

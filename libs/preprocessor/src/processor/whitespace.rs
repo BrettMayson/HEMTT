@@ -1,6 +1,7 @@
+use hemtt_common::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
 
-use crate::{output::Output, token::Token, Error};
+use crate::{codes::pe1_unexpected_token::UnexpectedToken, Error};
 
 use super::Processor;
 
@@ -50,7 +51,6 @@ impl Processor {
     /// Whitespace is allowed, but nothing else
     /// The stream is left after the newline
     pub(crate) fn expect_nothing_to_newline(
-        &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
         for token in stream.by_ref() {
@@ -58,7 +58,10 @@ impl Processor {
                 break;
             }
             if !token.symbol().is_whitespace() {
-                panic!("unexpected token: {:?}", token);
+                return Err(Error::Code(Box::new(UnexpectedToken {
+                    token: Box::new(token),
+                    expected: vec!["newline".to_string()],
+                })));
             }
         }
         Ok(())
@@ -67,10 +70,9 @@ impl Processor {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        processor::{tests, Processor},
-        symbol::Symbol,
-    };
+    use hemtt_common::reporting::Symbol;
+
+    use crate::processor::{tests, Processor};
 
     #[test]
     fn test_skip_whitespace_space() {
@@ -125,6 +127,6 @@ mod tests {
     fn test_expect_nothing_to_newline_whitespace() {
         let mut stream = tests::setup("  \nb");
         let mut processor = Processor::default();
-        processor.expect_nothing_to_newline(&mut stream).unwrap();
+        Processor::expect_nothing_to_newline(&mut stream).unwrap();
     }
 }

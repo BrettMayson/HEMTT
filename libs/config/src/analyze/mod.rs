@@ -1,5 +1,4 @@
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
+use hemtt_common::reporting::{Code, Processed};
 
 mod array;
 mod class;

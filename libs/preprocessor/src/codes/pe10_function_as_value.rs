@@ -1,24 +1,23 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
-use hemtt_common::error::{tokens::Token, Code};
-use lsp_types::{Diagnostic, Range};
+use hemtt_common::reporting::{Code, Token};
 use tracing::error;
 
 #[allow(unused)]
 /// Tried to use a [`FunctionDefinition`](crate::context::FunctionDefinition) as a value
 pub struct FunctionAsValue {
-    /// The [`Token`] that was found instead of `(`
+    /// The [`Token`] that was called
     pub(crate) token: Box<Token>,
     /// The [`Token`] of the function
     pub(crate) source: Box<Token>,
-    /// The [`Token`] that called the definition
-    pub(crate) from: Box<Token>,
-    /// The [`Token`] stack trace
-    pub(crate) trace: Vec<Token>,
 }
 
 impl Code for FunctionAsValue {
     fn ident(&self) -> &'static str {
         "PE10"
+    }
+
+    fn token(&self) -> Option<&Token> {
+        Some(&self.token)
     }
 
     fn message(&self) -> String {
@@ -28,7 +27,7 @@ impl Code for FunctionAsValue {
     fn label_message(&self) -> String {
         format!(
             "attempted to use a function as a value `{}`",
-            self.from.symbol().output().replace('\n', "\\n")
+            self.token.symbol().output().replace('\n', "\\n")
         )
     }
 
@@ -40,23 +39,26 @@ impl Code for FunctionAsValue {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
-        let span = self.token.source().start().0..self.token.source().end().0;
+        let span = self.token.position().start().0..self.token.position().end().0;
         if let Err(e) = Report::build(
             ReportKind::Error,
-            self.token.source().path_or_builtin(),
+            self.token.position().path().to_string(),
             span.start,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
-            Label::new((self.token.source().path_or_builtin(), span.start..span.end))
-                .with_color(a)
-                .with_message("expecting argument list here"),
+            Label::new((
+                self.token.position().path().to_string(),
+                span.start..span.end,
+            ))
+            .with_color(a)
+            .with_message("expecting arguments"),
         )
         .with_label(
             Label::new((
-                self.source.source().path_or_builtin(),
-                self.source.source().start().0..self.source.source().end().0,
+                self.source.position().path().to_string(),
+                self.source.position().start().0..self.source.position().end().0,
             ))
             .with_color(a)
             .with_message("defined as a function here"),
@@ -65,19 +67,20 @@ impl Code for FunctionAsValue {
         .write_for_stdout(
             sources(vec![
                 (
-                    self.token.source().path_or_builtin(),
-                    self.token.source().path().map_or_else(String::new, |path| {
-                        path.read_to_string().unwrap_or_default()
-                    }),
+                    self.token.position().path().to_string(),
+                    self.token
+                        .position()
+                        .path()
+                        .read_to_string()
+                        .unwrap_or_default(),
                 ),
                 (
-                    self.source.source().path_or_builtin(),
+                    self.source.position().path().to_string(),
                     self.source
-                        .source()
+                        .position()
                         .path()
-                        .map_or_else(String::new, |path| {
-                            path.read_to_string().unwrap_or_default()
-                        }),
+                        .read_to_string()
+                        .unwrap_or_default(),
                 ),
             ]),
             &mut out,
@@ -88,15 +91,16 @@ impl Code for FunctionAsValue {
         Some(String::from_utf8(out).unwrap_or_default())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_lsp(&self) -> Option<(vfs::VfsPath, Diagnostic)> {
-        let Some(path) = self.from.source().path() else {
+        let Some(path) = self.from.position().path() else {
             return None;
         };
         Some((
             path.clone(),
             self.diagnostic(Range {
-                start: self.from.source().start().to_lsp(),
-                end: self.from.source().end().to_lsp(),
+                start: self.from.position().start().to_lsp(),
+                end: self.from.position().end().to_lsp(),
             }),
         ))
     }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::{Class, Ident, Property};
 

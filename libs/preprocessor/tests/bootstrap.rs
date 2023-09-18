@@ -3,6 +3,8 @@
 // use hemtt_preprocessor::{preprocess_file, Resolver};
 // use vfs::PhysicalFS;
 
+use hemtt_preprocessor::Processor;
+
 const ROOT: &str = "tests/bootstrap/";
 
 macro_rules! bootstrap {
@@ -24,15 +26,14 @@ fn check(dir: &str) {
         .finish()
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = hemtt_preprocessor::Processed::new(&source).unwrap();
+    let processed = Processor::run(&source).unwrap();
     let expected = workspace
         .join("expected.hpp")
         .unwrap()
         .read_to_string()
         .unwrap();
-    std::fs::write(folder.join("map.hpp"), format!("{:?}", processed.output())).unwrap();
-    let processed = processed.to_source();
-    std::fs::write(folder.join("generated.hpp"), &processed).unwrap();
+    let processed = processed.as_string();
+    std::fs::write(folder.join("generated.hpp"), processed).unwrap();
     assert_eq!(processed, expected.replace('\r', ""));
 }
 

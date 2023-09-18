@@ -1,10 +1,10 @@
-use std::{io::Write, path::PathBuf, sync::Arc};
+use std::{hash::Hasher, io::Write, path::PathBuf, sync::Arc};
 
 use vfs::VfsPath;
 
 use super::{Error, Workspace};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// A path in a workspace
 pub struct WorkspacePath {
     pub(crate) path: VfsPath,
@@ -101,5 +101,17 @@ impl WorkspacePath {
     /// All the of missions in the workspace
     pub fn missions(&self) -> &[VfsPath] {
         &self.workspace.missions
+    }
+}
+
+impl std::hash::Hash for WorkspacePath {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.path.as_str().hash(state);
+    }
+}
+
+impl std::fmt::Display for WorkspacePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.path.as_str().fmt(f)
     }
 }

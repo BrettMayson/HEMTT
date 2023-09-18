@@ -34,7 +34,9 @@ pub fn cli() -> Command {
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let config = Configuration::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
-        return Err(Error::MainPrefixNotFound(String::from("Required for launch")));
+        return Err(Error::MainPrefixNotFound(String::from(
+            "Required for launch",
+        )));
     };
 
     let launch_config = matches
@@ -45,7 +47,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .launch(launch_config)
         .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
 
-    let Some(arma3dir) = SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned)) else {
+    let Some(arma3dir) =
+        SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned))
+    else {
         return Err(Error::Arma3NotFound);
     };
 

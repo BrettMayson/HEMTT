@@ -145,7 +145,9 @@ impl<I: Seek + Read> ReadablePbo<I> {
         }
         let files = self.files();
         let mut files = files.iter();
-        let Some(mut last) = files.next() else { return Ok(()) };
+        let Some(mut last) = files.next() else {
+            return Ok(());
+        };
 
         for curr in files {
             if compare(last, curr) == std::cmp::Ordering::Greater {

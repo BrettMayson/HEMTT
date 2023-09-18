@@ -1,10 +1,8 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
-use hemtt_common::error::{tokens::Token, Code};
-use lsp_types::{Diagnostic, Range};
+use hemtt_common::reporting::{Code, Token};
 use tracing::error;
-use vfs::VfsPath;
 
-use crate::{Defines, DefinitionLibrary};
+use crate::defines::Defines;
 
 #[allow(unused)]
 /// Tried to call a [`FunctionDefinition`](crate::context::FunctionDefinition) with the wrong number of arguments
@@ -15,8 +13,6 @@ pub struct FunctionCallArgumentCount {
     pub(crate) expected: usize,
     /// The number of arguments that were found
     pub(crate) got: usize,
-    /// The [`Token`] stack trace
-    pub(crate) trace: Vec<Token>,
     /// The defines at the point of the error
     pub(crate) defines: Defines,
 }
@@ -24,6 +20,10 @@ pub struct FunctionCallArgumentCount {
 impl Code for FunctionCallArgumentCount {
     fn ident(&self) -> &'static str {
         "PE9"
+    }
+
+    fn token(&self) -> Option<&Token> {
+        Some(&self.token)
     }
 
     fn message(&self) -> String {
@@ -47,11 +47,11 @@ impl Code for FunctionCallArgumentCount {
     fn generate_report(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let mut out = Vec::new();
-        let span = self.token.source().start().0..self.token.source().end().0;
+        let span = self.token.position().start().0..self.token.position().end().0;
         let a = colors.next();
         let defined = self
             .defines
-            .get(self.token.symbol().output().trim())
+            .get_readonly(self.token.symbol().output().trim())
             .unwrap();
         let func = defined.1.as_function().unwrap();
         let did_you_mean = self
@@ -59,34 +59,33 @@ impl Code for FunctionCallArgumentCount {
             .similar_function(self.token.symbol().output().trim(), Some(self.got));
         let mut report = Report::build(
             ReportKind::Error,
-            self.token.source().path_or_builtin(),
+            self.token.position().path().as_str(),
             span.start,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
-            Label::new((self.token.source().path_or_builtin(), span.start..span.end))
-                .with_color(a)
-                .with_message(format!(
-                    "called with {} argument{} here",
-                    self.got,
-                    if self.got == 1 { "" } else { "s" }
-                )),
+            Label::new((
+                self.token.position().path().to_string(),
+                span.start..span.end,
+            ))
+            .with_color(a)
+            .with_message(format!(
+                "called with {} argument{} here",
+                self.got,
+                if self.got == 1 { "" } else { "s" }
+            )),
         )
         .with_label(
             Label::new((
-                defined.0.source().path_or_builtin(),
-                defined.0.source().start().0..defined.0.source().end().0,
+                defined.0.position().path().to_string(),
+                defined.0.position().start().0..defined.0.position().end().0,
             ))
             .with_color(a)
             .with_message(format!(
                 "defined here with {} argument{}",
-                func.parameters().len(),
-                if func.parameters().len() == 1 {
-                    ""
-                } else {
-                    "s"
-                }
+                func.args().len(),
+                if func.args().len() == 1 { "" } else { "s" }
             )),
         );
         if !did_you_mean.is_empty() {
@@ -102,16 +101,21 @@ impl Code for FunctionCallArgumentCount {
         if let Err(e) = report.finish().write_for_stdout(
             sources(vec![
                 (
-                    self.token.source().path_or_builtin(),
-                    self.token.source().path().map_or_else(String::new, |path| {
-                        path.read_to_string().unwrap_or_default()
-                    }),
+                    self.token.position().path().to_string(),
+                    self.token
+                        .position()
+                        .path()
+                        .read_to_string()
+                        .unwrap_or_default(),
                 ),
                 (
-                    defined.0.source().path_or_builtin(),
-                    defined.0.source().path().map_or_else(String::new, |path| {
-                        path.read_to_string().unwrap_or_default()
-                    }),
+                    defined.0.position().path().to_string(),
+                    defined
+                        .0
+                        .position()
+                        .path()
+                        .read_to_string()
+                        .unwrap_or_default(),
                 ),
             ]),
             &mut out,
@@ -122,15 +126,16 @@ impl Code for FunctionCallArgumentCount {
         Some(String::from_utf8(out).unwrap_or_default())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.source().path() else {
+        let Some(path) = self.token.position().path() else {
             return None;
         };
         Some((
             path.clone(),
             self.diagnostic(Range {
-                start: self.token.source().start().to_lsp(),
-                end: self.token.source().end().to_lsp(),
+                start: self.token.position().start().to_lsp(),
+                end: self.token.position().end().to_lsp(),
             }),
         ))
     }

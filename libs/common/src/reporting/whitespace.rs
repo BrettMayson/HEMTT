@@ -1,6 +1,6 @@
 //! Whitespace and comments
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// Whitespace characters
 pub enum Whitespace {
     /// A space

@@ -16,9 +16,12 @@ pub enum Error {
     #[error("Pest Error: {0}")]
     /// [`pest::error::Error`]
     Pest(Box<pest::error::Error<Rule>>),
-    /// Workspace error
+    /// [`hemtt_common::workspace::Error`]
     #[error("Workspace Error: {0}")]
-    Vfs(#[from] hemtt_common::workspace::Error),
+    Workspace(#[from] hemtt_common::workspace::Error),
+    /// [`hemtt_common::reporting::Error`]
+    #[error("Reporting Error: {0}")]
+    Reporting(#[from] hemtt_common::reporting::Error),
 }
 
 impl From<std::io::Error> for Error {
@@ -40,7 +43,8 @@ impl Error {
     pub fn get_code(&self) -> Option<Box<&dyn Code>> {
         match self {
             Self::Code(c) => Some(Box::new(&**c)),
-            Self::Io(_) | Self::Pest(_) | Self::Vfs(_) => None,
+            Self::Reporting(e) => e.get_code(),
+            Self::Io(_) | Self::Pest(_) | Self::Workspace(_) => None,
         }
     }
 }

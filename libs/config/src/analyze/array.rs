@@ -1,5 +1,4 @@
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::{Processed, Symbol};
+use hemtt_common::reporting::{Code, Processed, Symbol};
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},
@@ -62,14 +61,13 @@ impl Analyze for Item {
             // An unquoted string or otherwise invalid value
             {
                 vec![{
-                    let map = processed.original_col(invalid.start).unwrap();
-                    let mut root = map.token();
+                    let mut map = processed.mappings(invalid.start).iter();
                     let mut at_root = true;
-                    while let Some(parent) = root.parent() {
-                        if parent.symbol() == &Symbol::Word("include".to_owned()) {
+                    while let Some(item) = map.next() {
+                        let token = item.token();
+                        if token.symbol() == &Symbol::Word("include".to_owned()) {
                             break;
                         }
-                        root = parent;
                         at_root = false;
                     }
                     if at_root {

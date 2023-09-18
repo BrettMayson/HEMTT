@@ -1,7 +1,6 @@
 use std::ops::Range;
 
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
+use hemtt_common::reporting::{Code, Processed};
 
 use super::{
     codes::{
@@ -50,14 +49,23 @@ fn missing_semicolon(span: &Range<usize>) -> Box<dyn Code> {
 }
 
 fn unexpected_array(property: &Property) -> Vec<Box<dyn Code>> {
-    let Property::Entry { value: Value::UnexpectedArray(_), .. } = property else {
+    let Property::Entry {
+        value: Value::UnexpectedArray(_),
+        ..
+    } = property
+    else {
         return vec![];
     };
     vec![Box::new(UnexpectedArray::new(property.clone()))]
 }
 
 fn expected_array(property: &Property) -> Vec<Box<dyn Code>> {
-    let Property::Entry { value, expected_array, .. } = property else {
+    let Property::Entry {
+        value,
+        expected_array,
+        ..
+    } = property
+    else {
         return vec![];
     };
     if !expected_array {

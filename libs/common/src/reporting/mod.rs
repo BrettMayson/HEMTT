@@ -2,8 +2,26 @@
 
 use std::fmt::Debug;
 
+mod error;
+mod output;
+mod processed;
+mod symbol;
+mod token;
+mod whitespace;
+
+pub use error::Error;
+pub use output::Output;
+pub use processed::{Mapping, Processed};
+pub use symbol::Symbol;
+pub use token::Token;
+pub use whitespace::Whitespace;
+
 /// A coded error or warning
 pub trait Code: Send + Sync {
+    /// The token of the code
+    fn token(&self) -> Option<&Token> {
+        None
+    }
     /// The code identifier
     fn ident(&self) -> &'static str;
     /// Message explaining the error
@@ -17,7 +35,7 @@ pub trait Code: Send + Sync {
         None
     }
     /// A report for the CLI, applied to the processed file
-    fn generate_processed_report(&self, _processed: &str) -> Option<String> {
+    fn generate_processed_report(&self, _processed: &Processed) -> Option<String> {
         None
     }
     #[cfg(feature = "lsp")]

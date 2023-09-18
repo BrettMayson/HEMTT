@@ -1,6 +1,5 @@
+use hemtt_common::reporting::Token;
 use peekmore::{PeekMore, PeekMoreIterator};
-
-use crate::token::Token;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A macro definition

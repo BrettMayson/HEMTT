@@ -3,7 +3,7 @@
 #![allow(missing_docs)]
 
 pub mod pe10_function_as_value;
-pub mod pe11_expected_funtion_or_value;
+pub mod pe11_expected_function_or_value;
 pub mod pe12_include_not_found;
 pub mod pe13_include_not_encased;
 pub mod pe14_include_unexpected_suffix;
@@ -18,4 +18,5 @@ pub mod pe6_change_builtin;
 pub mod pe7_if_unit_or_function;
 pub mod pe8_if_undefined;
 pub mod pe9_function_call_argument_count;
-pub mod pw1_upper_snake;
+
+pub mod pw1_redefine;

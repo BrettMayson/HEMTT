@@ -1,7 +1,5 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_common::reporting::Code;
-use hemtt_preprocessor::Processed;
-use lsp_types::Diagnostic;
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::Ident;
 
@@ -34,7 +32,7 @@ impl Code for DuplicateProperty {
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let first = self.conflicts.first().unwrap();
-        let first_map = processed.original_col(first.span.start).unwrap();
+        let first_map = processed.mapping(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
@@ -47,8 +45,8 @@ impl Code for DuplicateProperty {
         .with_code(self.ident())
         .with_message(self.message())
         .with_labels(self.conflicts.iter().map(|b| {
-            let map_start = processed.original_col(b.span.start).unwrap();
-            let map_end = processed.original_col(b.span.end).unwrap();
+            let map_start = processed.mapping(b.span.start).unwrap();
+            let map_end = processed.mapping(b.span.end).unwrap();
             let token_start = map_start.token().walk_up();
             let token_end = map_end.token().walk_up();
             Label::new((
@@ -71,9 +69,9 @@ impl Code for DuplicateProperty {
     #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let first = self.conflicts.last().unwrap();
-        let first_map = processed.original_col(first.span.start).unwrap();
+        let first_map = processed.mapping(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
-        let Some(path) = first_file.1.0.clone() else {
+        let Some(path) = first_file.1 .0.clone() else {
             return vec![];
         };
         vec![(

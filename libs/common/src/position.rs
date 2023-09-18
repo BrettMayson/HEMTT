@@ -2,7 +2,9 @@
 
 use std::path::PathBuf;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+use crate::workspace::WorkspacePath;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Line and column of a token
 pub struct LineCol(pub usize, pub (usize, usize));
 
@@ -14,35 +16,39 @@ impl LineCol {
         #[allow(clippy::cast_possible_truncation)]
         lsp_types::Position::new(self.1 .0 as u32 - 1, self.1 .1 as u32 - 1)
     }
+
+    #[must_use]
+    /// Get the line of the token
+    pub const fn line(&self) -> usize {
+        self.1 .0
+    }
+
+    #[must_use]
+    /// Get the column of the token
+    pub const fn column(&self) -> usize {
+        self.1 .1
+    }
+
+    #[must_use]
+    /// Get the offset of the token
+    pub const fn offset(&self) -> usize {
+        self.0
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// Position of a token in a source file
 pub struct Position {
     start: LineCol,
     end: LineCol,
-    path: Option<PathBuf>,
+    path: WorkspacePath,
 }
 
 impl Position {
     #[must_use]
     /// Create a new position
-    pub const fn new(start: LineCol, end: LineCol, path: PathBuf) -> Self {
-        Self {
-            start,
-            end,
-            path: Some(path),
-        }
-    }
-
-    #[must_use]
-    /// Create a new position for a built-in token
-    pub const fn builtin() -> Self {
-        Self {
-            start: LineCol(0, (0, 0)),
-            end: LineCol(0, (0, 0)),
-            path: None,
-        }
+    pub const fn new(start: LineCol, end: LineCol, path: WorkspacePath) -> Self {
+        Self { start, end, path }
     }
 
     #[must_use]
@@ -59,17 +65,8 @@ impl Position {
 
     #[must_use]
     /// Get the path of the source file
-    pub const fn path(&self) -> Option<&PathBuf> {
-        self.path.as_ref()
-    }
-
-    #[must_use]
-    /// Get the path of the source file or "%builtin%" if there is no path
-    pub fn path_or_builtin(&self) -> String {
-        self.path.as_ref().map_or_else(
-            || String::from("%builtin%"),
-            |p| p.display().to_string().replace('\\', "/"),
-        )
+    pub const fn path(&self) -> &WorkspacePath {
+        &self.path
     }
 
     #[cfg(feature = "lsp")]

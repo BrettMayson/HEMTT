@@ -1,14 +1,13 @@
-use std::path::PathBuf;
-
 use hemtt_common::{
     position::{LineCol, Position},
+    reporting::{Symbol, Token, Whitespace},
     workspace::WorkspacePath,
 };
 
 use pest::Parser;
 use pest_derive::Parser;
 
-use crate::{symbol::Symbol, token::Token, whitespace::Whitespace, Error};
+use crate::Error;
 
 #[derive(Parser)]
 #[grammar = "parse/config.pest"]
@@ -50,7 +49,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
                         Position::new(
                             LineCol(offset + pair.as_str().len(), (line, col)),
                             LineCol(offset + pair.as_str().len() + 1, (line, col + 1)),
-                            PathBuf::from(path.as_str()),
+                            path.clone(),
                         ),
                     ));
                 }
@@ -63,7 +62,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
         let end = LineCol(offset, (line, col));
         tokens.push(Token::new(
             Symbol::to_symbol(pair),
-            Position::new(start, end, PathBuf::from(path.as_str())),
+            Position::new(start, end, path.clone()),
         ));
     }
     Ok(tokens)

@@ -1,8 +1,8 @@
-use hemtt_common::position::Position;
+use crate::position::Position;
 
-use crate::symbol::Symbol;
+use super::Symbol;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// A token from the tokenizer
 pub struct Token {
     symbol: Symbol,
@@ -17,15 +17,6 @@ impl Token {
     }
 
     #[must_use]
-    /// Create a newline token
-    pub const fn ending_newline() -> Self {
-        Self {
-            symbol: Symbol::Newline,
-            source: Position::builtin(),
-        }
-    }
-
-    #[must_use]
     /// Get the [`Symbol`] of the token
     pub const fn symbol(&self) -> &Symbol {
         &self.symbol
@@ -33,7 +24,7 @@ impl Token {
 
     #[must_use]
     /// Get the [`Position`] of the token
-    pub const fn source(&self) -> &Position {
+    pub const fn position(&self) -> &Position {
         &self.source
     }
 

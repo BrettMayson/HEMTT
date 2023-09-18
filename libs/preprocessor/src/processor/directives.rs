@@ -1,14 +1,20 @@
-use hemtt_common::position::Position;
+use hemtt_common::reporting::{Output, Symbol, Token};
 use peekmore::{PeekMore, PeekMoreIterator};
-use tracing::{error, trace};
+use tracing::error;
 
 use crate::{
+    codes::{
+        pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
+        pe14_include_unexpected_suffix::IncludeUnexpectedSuffix,
+        pe15_if_invalid_operator::IfInvalidOperator,
+        pe16_if_incompatible_types::IfIncompatibleType, pe2_unexpected_eof::UnexpectedEOF,
+        pe3_expected_ident::ExpectedIdent, pe4_unknown_directive::UnknownDirective,
+        pe6_change_builtin::ChangeBuiltin, pe7_if_unit_or_function::IfUnitOrFunction,
+        pe8_if_undefined::IfUndefined, pw1_redefine::RedefineMacro,
+    },
     defines::Defines,
     definition::{Definition, FunctionDefinition},
     ifstate::IfState,
-    output::Output,
-    symbol::Symbol,
-    token::Token,
     Error,
 };
 
@@ -67,19 +73,17 @@ impl Processor {
             }
             ("else", _) => {
                 self.ifstates.flip();
-                self.expect_nothing_to_newline(stream)?;
+                Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
             ("endif", _) => {
                 self.ifstates.pop();
-                self.expect_nothing_to_newline(stream)?;
+                Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
-            (_, true) => {
-                error!("unknown directive: {}", command_word);
-                self.skip_to_after_newline(stream, None);
-                Ok(())
-            }
+            (_, true) => Err(Error::Code(Box::new(UnknownDirective {
+                token: Box::new(command),
+            }))),
             (_, false) => {
                 self.skip_to_after_newline(stream, None);
                 Ok(())
@@ -95,26 +99,56 @@ impl Processor {
         self.skip_whitespace(stream, None);
         let open = stream.next().expect("was peeked in directive()");
         if !open.symbol().is_include_enclosure() {
-            panic!("you can't use {:?} for include", open.symbol());
+            return Err(Error::Code(Box::new(IncludeNotEncased {
+                encased_in: if open.symbol().is_word() {
+                    None
+                } else {
+                    Some(open.clone())
+                },
+                token: Box::new(open),
+            })));
         }
         let close = open
             .symbol()
             .matching_enclosure()
             .expect("is_include_enclosure should always have a matching_enclosure");
-        let mut path = String::new();
+        let mut path = Vec::new();
         for token in stream.by_ref() {
-            if token.symbol() == &close {
+            let symbol = token.symbol();
+            if symbol == &close {
                 break;
             }
-            path.push_str(token.to_string().as_str());
+            if symbol.is_newline() {
+                return Err(Error::Code(Box::new(IncludeNotEncased {
+                    token: Box::new(token),
+                    encased_in: Some(open),
+                })));
+            }
+            if symbol.is_eoi() {
+                return Err(Error::Code(Box::new(UnexpectedEOF {
+                    token: Box::new(token),
+                })));
+            }
+            path.push(token);
+        }
+
+        if let Err(Error::Code(code)) = Self::expect_nothing_to_newline(stream) {
+            if let Some(token) = code.token() {
+                return Err(Error::Code(Box::new(IncludeUnexpectedSuffix {
+                    token: Box::new(token.clone()),
+                })));
+            }
+            return Err(Error::Code(code));
         }
 
         let current = self
             .files
             .last()
             .expect("root file should always be present");
-        let Ok(Some(path)) = current.locate(&path) else {
-            panic!("can we do some error handling please");
+        let Ok(Some(path)) =
+            current.locate(&path.iter().map(ToString::to_string).collect::<String>())
+        else {
+            return Err(Error::Code(Box::new(IncludeNotFound { token: path })));
         };
         let tokens = crate::parse::parse(&path)?;
         let mut stream = tokens.into_iter().peekmore();
@@ -125,25 +159,38 @@ impl Processor {
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
-        let Some(ident) = self.next_word(stream, None) else {
-            panic!("can we do some error handling please");
-        };
+        let ident = self.next_word(stream, None)?;
+        if !ident.symbol().is_word() {
+            return Err(Error::Code(Box::new(ExpectedIdent {
+                token: Box::new(ident),
+            })));
+        }
         let ident_string = ident.symbol().to_string();
         let Some(next) = stream.peek() else {
-            panic!("can we do some error handling please");
+            return Err(Error::Code(Box::new(UnexpectedEOF {
+                token: Box::new(Token::new(Symbol::Eoi, ident.position().clone())),
+            })));
         };
-        if self.defines.contains_key(&ident_string) {
-            error!("redefining macro: {}", ident_string);
+        if Defines::is_builtin(&ident_string) {
+            return Err(Error::Code(Box::new(ChangeBuiltin {
+                token: Box::new(ident),
+            })));
         }
-        self.defines.remove(&ident_string);
+        if let Some((original, _)) = self.defines.remove(&ident_string) {
+            self.warnings.push(Box::new(RedefineMacro {
+                token: Box::new(ident.clone()),
+                original: Box::new(original),
+            }));
+        }
         let definition = match next.symbol() {
             Symbol::LeftParenthesis => Definition::Function(FunctionDefinition::new(
-                self.define_read_args(stream)?,
-                self.define_read_body(stream)?,
+                Self::define_read_args(stream)?,
+                self.define_read_body(stream),
             )),
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
-            _ => Definition::Value(self.define_read_body(stream)?),
+            _ => Definition::Value(self.define_read_body(stream)),
         };
+        self.usage.insert(ident.position().clone(), Vec::new());
         self.defines.insert(&ident_string, (ident, definition));
         Ok(())
     }
@@ -152,69 +199,79 @@ impl Processor {
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
-        let Some(ident) = self.next_word(stream, None) else {
-            panic!("can we do some error handling please");
-        };
+        let ident = self.next_word(stream, None)?;
+        if !ident.symbol().is_word() {
+            return Err(Error::Code(Box::new(ExpectedIdent {
+                token: Box::new(ident),
+            })));
+        }
         let ident_string = ident.symbol().to_string();
         self.defines.remove(&ident_string);
-        self.expect_nothing_to_newline(stream)
+        Self::expect_nothing_to_newline(stream)
     }
 
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
         fn value(defines: &mut Defines, token: Token) -> Result<(Vec<Token>, bool), Error> {
-            if let Some((_, definition)) = defines.get(&token, token.source()) {
+            if let Some((_, definition)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
-                } else {
-                    panic!("can we do some error handling please");
                 }
+                return Err(Error::Code(Box::new(IfUnitOrFunction {
+                    token: Box::new(token),
+                    defines: defines.clone(),
+                })));
             }
             Ok((vec![token], false))
         }
-        self.skip_whitespace(stream, None);
-        let Some(left) = stream.next() else {
-            panic!("can we do some error handling please");
-        };
+        let left = self.next_word(stream, None)?;
         let (left, left_defined) = value(&mut self.defines, left)?;
         self.skip_whitespace(stream, None);
-        let mut operator = Vec::with_capacity(2);
+        let mut operators = Vec::with_capacity(2);
         let (right, right_defined) = if stream.peek().map(Token::symbol) == Some(&Symbol::Newline) {
+            let pos = stream.peek().unwrap().position().clone();
             if !left_defined {
-                panic!("can we do some error handling please")
+                return Err(Error::Code(Box::new(IfUndefined {
+                    token: Box::new(left[0].clone()),
+                    defines: self.defines.clone(),
+                })));
             }
-            let equals = Token::new(Symbol::Equals, Position::builtin());
-            operator = vec![equals.clone(), equals];
-            (
-                vec![Token::new(Symbol::Digit(1), Position::builtin())],
-                false,
-            )
+            let equals = Token::new(Symbol::Equals, pos.clone());
+            operators = vec![equals.clone(), equals];
+            (vec![Token::new(Symbol::Digit(1), pos)], false)
         } else {
             loop {
                 let Some(token) = stream.peek() else {
-                    // return Err(Error::Code(Box::new(UnexpectedEOF {
-                    //     token: Box::new(from),
-                    // })));
-                    panic!("can we do some error handling please");
+                    return Err(Error::Code(Box::new(UnexpectedEOF {
+                        token: Box::new(
+                            left.last()
+                                .expect("left should exists at this point")
+                                .clone(),
+                        ),
+                    })));
                 };
                 if matches!(token.symbol(), Symbol::Whitespace(_)) {
                     stream.next();
                     break;
                 }
-                operator.push(token.clone());
+                operators.push(token.clone());
                 stream.next();
             }
             let Some(right) = stream.next() else {
-                // return Err(Error::Code(Box::new(UnexpectedEOF {
-                //     token: Box::new(from),
-                // })));
-                panic!("can we do some error handling please");
+                return Err(Error::Code(Box::new(UnexpectedEOF {
+                    token: Box::new(
+                        left.last()
+                            .expect("left should exists at this point")
+                            .clone(),
+                    ),
+                })));
             };
             value(&mut self.defines, right)?
         };
-        let operator = operator
+        let operator = operators
             .iter()
             .map(std::string::ToString::to_string)
             .collect::<String>();
@@ -231,23 +288,19 @@ impl Processor {
             "!=" => left_string != right_string,
             ">" | ">=" | "<" | "<=" => {
                 let left_f64 = left_string.parse::<f64>().map_err(|_| {
-                    // Error::Code(Box::new(IfIncompatibleType {
-                    //     left: (left.clone(), left_defined),
-                    //     operator: operators.clone(),
-                    //     right: (right.clone(), right_defined),
-                    //     trace: context.trace(),
-                    // }))
-                    panic!("can we do some error handling please");
-                });
+                    Error::Code(Box::new(IfIncompatibleType {
+                        left: (left.clone(), left_defined),
+                        operator: operators.clone(),
+                        right: (right.clone(), right_defined),
+                    }))
+                })?;
                 let right_f64 = right_string.parse::<f64>().map_err(|_| {
-                    // Error::Code(Box::new(IfIncompatibleType {
-                    //     left: (left, left_defined),
-                    //     operator: operators,
-                    //     right: (right, right_defined),
-                    //     trace: context.trace(),
-                    // }))
-                    panic!("can we do some error handling please");
-                });
+                    Error::Code(Box::new(IfIncompatibleType {
+                        left: (left, left_defined),
+                        operator: operators,
+                        right: (right, right_defined),
+                    }))
+                })?;
                 match operator.as_str() {
                     ">" => left_f64 > right_f64,
                     ">=" => left_f64 >= right_f64,
@@ -257,11 +310,9 @@ impl Processor {
                 }
             }
             _ => {
-                // return Err(Error::Code(Box::new(IfInvalidOperator {
-                //     tokens: operators,
-                //     trace: context.trace(),
-                // })))
-                panic!("can we do some error handling please");
+                return Err(Error::Code(Box::new(IfInvalidOperator {
+                    tokens: operators,
+                })))
             }
         };
         self.ifstates.push(if read {
@@ -269,7 +320,7 @@ impl Processor {
         } else {
             IfState::PassingIf
         });
-        self.expect_nothing_to_newline(stream)?;
+        Self::expect_nothing_to_newline(stream)?;
         Ok(())
     }
 
@@ -278,22 +329,26 @@ impl Processor {
         outcome: bool,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
-        let Some(ident) = self.next_word(stream, None) else {
-            panic!("can we do some error handling please");
-        };
+        let ident = self.next_word(stream, None)?;
+        if !ident.symbol().is_word() {
+            return Err(Error::Code(Box::new(ExpectedIdent {
+                token: Box::new(ident),
+            })));
+        }
         let ident_string = ident.symbol().to_string();
         self.ifstates
             .push_if(self.defines.contains_key(&ident_string) == outcome);
-        self.expect_nothing_to_newline(stream)
+        Self::expect_nothing_to_newline(stream)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use hemtt_common::reporting::Symbol;
+
     use crate::{
         definition::Definition,
         processor::{tests, Processor},
-        symbol::Symbol,
     };
 
     #[test]

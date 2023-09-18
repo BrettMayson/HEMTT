@@ -1,9 +1,21 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, sync::Arc};
 
-use hemtt_common::position::Position;
+use hemtt_common::{
+    position::Position,
+    reporting::{Output, Symbol, Token},
+};
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::{definition::Definition, output::Output, symbol::Symbol, token::Token, Error};
+use crate::{
+    codes::{
+        pe10_function_as_value::FunctionAsValue,
+        pe11_expected_function_or_value::ExpectedFunctionOrValue,
+        pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
+        pe9_function_call_argument_count::FunctionCallArgumentCount,
+    },
+    definition::Definition,
+    Error,
+};
 
 use super::Processor;
 
@@ -83,7 +95,6 @@ impl Processor {
     ///
     /// The stream is left after the closing parenthesis
     pub(crate) fn define_read_args(
-        &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<Vec<Token>, Error> {
         if !stream
@@ -92,21 +103,33 @@ impl Processor {
             .symbol()
             .is_left_paren()
         {
-            panic!("expected left parenthesis");
+            panic!(
+                "define_read_args called without left parenthesis as first token, found {:?}",
+                stream.peek().expect("peeked above").symbol()
+            );
         }
-        let mut need_comma = false;
-        let mut args = Vec::new();
+        let mut args: Vec<Token> = Vec::new();
+        let mut comma_next = false;
         while let Some(token) = stream.peek() {
             let symbol = token.symbol();
             if symbol.is_word() {
-                if need_comma {
-                    panic!("expected comma");
+                if comma_next {
+                    return Err(Error::Code(Box::new(DefineMissingComma {
+                        current: Box::new(stream.next().expect("peeked above")),
+                        previous: Box::new(args.last().expect("peeked above").clone()),
+                    })));
                 }
                 args.push(stream.next().expect("peeked above"));
-                need_comma = true;
+                comma_next = true;
             } else if symbol.is_comma() {
-                need_comma = false;
+                if !comma_next {
+                    return Err(Error::Code(Box::new(UnexpectedToken {
+                        token: Box::new(stream.next().expect("peeked above")),
+                        expected: vec!["{variable}".to_string()],
+                    })));
+                }
                 stream.next();
+                comma_next = false;
                 continue;
             } else if symbol.is_right_paren() {
                 stream.next();
@@ -114,7 +137,10 @@ impl Processor {
             } else if symbol.is_whitespace() {
                 stream.next();
             } else {
-                panic!("expected word or comma");
+                return Err(Error::Code(Box::new(UnexpectedToken {
+                    token: Box::new(stream.next().expect("peeked above")),
+                    expected: vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
+                })));
             }
         }
         Ok(args)
@@ -128,7 +154,7 @@ impl Processor {
     pub(crate) fn define_read_body(
         &mut self,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    ) -> Result<Vec<Token>, Error> {
+    ) -> Vec<Token> {
         self.skip_whitespace(stream, None);
         let mut body = Vec::new();
         for token in stream.by_ref() {
@@ -141,14 +167,14 @@ impl Processor {
                     // remove the backslash
                     body.pop();
                 } else {
-                    return Ok(body);
+                    return body;
                 }
             }
             if !symbol.is_eoi() {
                 body.push(token);
             }
         }
-        Ok(body)
+        body
     }
 
     /// A define was used
@@ -162,40 +188,31 @@ impl Processor {
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
-        let Some(ident) = self.current_word(stream) else {
-            panic!("expected ident for call");
-        };
+        let ident = Self::current_word(stream)?;
         let ident_string = ident.to_string();
-        let Some((_source, body)) = self.defines.get(&ident, callsite) else {
+        let Some((source, body)) = self.defines.get_with_gen(&ident, Some(callsite)) else {
             panic!("unknown macro, caller should check");
         };
         match body {
             Definition::Function(function) => {
                 let Some(args) = self.call_read_args(callsite, stream)? else {
-                    buffer.push(Output::Direct(ident));
-                    return Ok(());
+                    return Err(Error::Code(Box::new(FunctionAsValue {
+                        token: Box::new(ident.clone()),
+                        source: Box::new(source.clone()),
+                    })));
                 };
                 if args.len() != function.args().len() {
-                    for arg in &args {
-                        println!(
-                            "- {}",
-                            arg.iter()
-                                .map(std::string::ToString::to_string)
-                                .collect::<String>()
-                        );
-                    }
-                    panic!(
-                        "wrong number of arguments ({}) for {} at {:?} from {:?}",
-                        args.len(),
-                        ident_string,
-                        ident.source().start(),
-                        callsite,
-                    );
+                    return Err(Error::Code(Box::new(FunctionCallArgumentCount {
+                        token: Box::new(ident.clone()),
+                        expected: function.args().len(),
+                        got: args.len(),
+                        defines: self.defines.clone(),
+                    })));
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
                     arg_defines.insert(
-                        Rc::from(arg.to_string().as_str()),
+                        Arc::from(arg.to_string().as_str()),
                         (arg.clone(), Definition::Value(value)),
                     );
                 }
@@ -207,9 +224,8 @@ impl Processor {
                     &mut function.stream(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident, layer));
+                buffer.push(Output::Macro(ident.clone(), layer));
                 self.defines.pop();
-                Ok(())
             }
             Definition::Value(body) => {
                 let mut layer = Vec::new();
@@ -219,31 +235,47 @@ impl Processor {
                     &mut body.into_iter().peekmore(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident, layer));
-                Ok(())
+                buffer.push(Output::Macro(ident.clone(), layer));
             }
-            Definition::Void => Ok(()),
-            Definition::Unit => panic!("unit macro used as value / function"),
-        }
+            Definition::Void => return Ok(()),
+            Definition::Unit => {
+                return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
+                    token: Box::new(ident.clone()),
+                    source: Box::new(source.clone()),
+                    likely_function: stream
+                        .peek()
+                        .expect("peeked by caller")
+                        .symbol()
+                        .is_left_paren(),
+                })))
+            }
+        };
+        self.usage.get_mut(source.position()).map_or_else(
+            || {
+                // println!("missing {:?}", ident.position());
+            },
+            |usage| {
+                usage.push(ident.position().clone());
+            },
+        );
+        self.declarations
+            .insert(ident.position().clone(), source.position().clone());
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use hemtt_common::position::Position;
+    use hemtt_common::reporting::{Symbol, Whitespace};
 
-    use crate::{
-        processor::{tests, Processor},
-        symbol::Symbol,
-        whitespace::Whitespace,
-    };
+    use crate::processor::{tests, Processor};
 
     #[test]
     fn single_arg_single_word() {
         let mut stream = tests::setup("(hello)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 1);
@@ -256,7 +288,7 @@ mod tests {
         let mut stream = tests::setup("(hello world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 1);
@@ -271,7 +303,7 @@ mod tests {
         let mut stream = tests::setup("(hello,world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -286,7 +318,7 @@ mod tests {
         let mut stream = tests::setup("(hello, world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -302,7 +334,7 @@ mod tests {
         let mut stream = tests::setup("(hello world,world hello)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -321,7 +353,7 @@ mod tests {
         let mut stream = tests::setup("(hello(world),world(hello))");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -342,7 +374,7 @@ mod tests {
         let mut stream = tests::setup("(set(1,2),set(3,4))");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&Position::builtin(), &mut stream)
+            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 4);
@@ -366,7 +398,7 @@ mod tests {
     fn body_single_word() {
         let mut stream = tests::setup("hello");
         let mut processor = Processor::default();
-        let body = processor.define_read_body(&mut stream).unwrap();
+        let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 1);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
     }
@@ -375,7 +407,7 @@ mod tests {
     fn body_multi_word() {
         let mut stream = tests::setup("hello world");
         let mut processor = Processor::default();
-        let body = processor.define_read_body(&mut stream).unwrap();
+        let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 3);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
         assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));
@@ -386,7 +418,7 @@ mod tests {
     fn body_multi_line_no_escape() {
         let mut stream = tests::setup("hello\nworld");
         let mut processor = Processor::default();
-        let body = processor.define_read_body(&mut stream).unwrap();
+        let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 1);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
     }
@@ -395,7 +427,7 @@ mod tests {
     fn body_multi_line_with_escape() {
         let mut stream = tests::setup("hello \\\nworld");
         let mut processor = Processor::default();
-        let body = processor.define_read_body(&mut stream).unwrap();
+        let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 4);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
         assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));

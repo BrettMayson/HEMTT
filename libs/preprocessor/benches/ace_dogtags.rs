@@ -11,7 +11,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 .finish()
                 .unwrap();
             let source = workspace.join("ace_dogtags.hpp").unwrap();
-            hemtt_preprocessor::Processed::new(&source).unwrap();
+            hemtt_preprocessor::Processor::run(&source).unwrap();
         })
     });
 }

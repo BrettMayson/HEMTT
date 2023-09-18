@@ -22,27 +22,39 @@ pub fn check() -> Result<Option<String>, Error> {
     if need_check {
         let Ok(client) = reqwest::blocking::Client::builder()
             .user_agent("HEMTT")
-            .build() else {
+            .build()
+        else {
             return Err(Error::Update(String::from("Failed to create HTTP client")));
         };
-        let Ok(response) = client.get("https://api.github.com/repos/brettmayson/HEMTT/releases/latest").send() else {
-            return Err(Error::Update(String::from("Failed to get latest release from GitHub")));
+        let Ok(response) = client
+            .get("https://api.github.com/repos/brettmayson/HEMTT/releases/latest")
+            .send()
+        else {
+            return Err(Error::Update(String::from(
+                "Failed to get latest release from GitHub",
+            )));
         };
         let Ok(release): reqwest::Result<Release> = response.json() else {
-            return Err(Error::Update(String::from("Failed to parse latest release from GitHub")));
+            return Err(Error::Update(String::from(
+                "Failed to parse latest release from GitHub",
+            )));
         };
         let mut file = std::fs::File::create(&tmp_latest)?;
         file.write_all(release.tag_name.as_bytes())?;
     }
     let current = env!("CARGO_PKG_VERSION");
     let Ok(current) = semver::Version::parse(current) else {
-        return Err(Error::Update(String::from("Failed to parse current version")));
+        return Err(Error::Update(String::from(
+            "Failed to parse current version",
+        )));
     };
     let mut file = std::fs::File::open(&tmp_latest)?;
     let mut latest = String::new();
     file.read_to_string(&mut latest)?;
     let Ok(latest) = semver::Version::parse(&latest[1..]) else {
-        return Err(Error::Update(String::from("Failed to parse latest version")));
+        return Err(Error::Update(String::from(
+            "Failed to parse latest version",
+        )));
     };
     if latest > current {
         Ok(Some(latest.to_string()))
