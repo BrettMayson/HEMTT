@@ -49,18 +49,18 @@ impl Processed {
     ) -> Result<Self, Error> {
         fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
             let path = token.position().path().clone();
-            let content = path.read_to_string()?;
             let source = processed
                 .sources
                 .iter()
                 .position(|(s, _)| s == &path)
                 .map_or_else(
                     || {
+                        let content = path.read_to_string()?;
                         processed.sources.push((path, content));
-                        processed.sources.len() - 1
+                        Ok(processed.sources.len() - 1)
                     },
-                    |i| i,
-                );
+                    Ok,
+                ).map_err(Error::Workspace)?;
             if token.symbol().is_newline() {
                 processed.line_offsets.push(processed.processed.len());
                 processed.processed.push('\n');
