@@ -63,18 +63,18 @@ impl Processor {
                 Ok(())
             }
             ("if", true) => {
-                self.directive_if(stream)?;
+                self.directive_if(command, stream)?;
                 Ok(())
             }
-            ("ifdef", true) => self.directive_ifdef(true, stream),
-            ("ifndef", true) => self.directive_ifdef(false, stream),
+            ("ifdef", true) => self.directive_ifdef(command, true, stream),
+            ("ifndef", true) => self.directive_ifdef(command, false, stream),
             ("if" | "ifdef" | "ifndef", false) => {
-                self.ifstates.push(IfState::PassingChild);
+                self.ifstates.push(IfState::PassingChild(command));
                 self.skip_to_after_newline(stream, None);
                 Ok(())
             }
             ("else", _) => {
-                self.ifstates.flip();
+                self.ifstates.flip(command)?;
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
@@ -228,6 +228,7 @@ impl Processor {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
+        command: Token,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
         fn value(defines: &mut Defines, token: Token) -> Result<(Vec<Token>, bool), Error> {
@@ -330,17 +331,14 @@ impl Processor {
                 })))
             }
         };
-        self.ifstates.push(if read {
-            IfState::ReadingIf
-        } else {
-            IfState::PassingIf
-        });
+        self.ifstates.push_if(command, read);
         Self::expect_nothing_to_newline(stream)?;
         Ok(())
     }
 
     pub(crate) fn directive_ifdef(
         &mut self,
+        command: Token,
         outcome: bool,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
@@ -352,7 +350,7 @@ impl Processor {
         }
         let ident_string = ident.symbol().to_string();
         self.ifstates
-            .push_if(self.defines.contains_key(&ident_string) == outcome);
+            .push_if(command, self.defines.contains_key(&ident_string) == outcome);
         Self::expect_nothing_to_newline(stream)
     }
 }

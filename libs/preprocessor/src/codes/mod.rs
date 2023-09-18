@@ -9,6 +9,8 @@ pub mod pe13_include_not_encased;
 pub mod pe14_include_unexpected_suffix;
 pub mod pe15_if_invalid_operator;
 pub mod pe16_if_incompatible_types;
+pub mod pe17_double_else;
+pub mod pe18_eoi_ifstate;
 pub mod pe1_unexpected_token;
 pub mod pe2_unexpected_eof;
 pub mod pe3_expected_ident;

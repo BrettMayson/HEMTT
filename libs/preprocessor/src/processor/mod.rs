@@ -5,6 +5,7 @@ use hemtt_common::reporting::{Code, Output, Processed, Symbol, Token};
 use hemtt_common::workspace::WorkspacePath;
 use peekmore::{PeekMore, PeekMoreIterator};
 
+use crate::codes::pe18_eoi_ifstate::EoiIfState;
 use crate::codes::pe2_unexpected_eof::UnexpectedEOF;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::defines::Defines;
@@ -58,6 +59,13 @@ impl Processor {
         let mut stream = tokens.into_iter().peekmore();
 
         processor.file(&mut stream, &mut buffer)?;
+
+        if let Some(state) = processor.ifstates.pop() {
+            return Err(Error::Code(Box::new(EoiIfState {
+                token: Box::new(state.token().clone()),
+            })));
+        }
+
         Processed::new(
             buffer,
             processor.usage,

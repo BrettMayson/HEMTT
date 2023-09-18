@@ -69,3 +69,5 @@ bootstrap!(pe13_include_not_encased);
 bootstrap!(pe14_include_unexpected_suffix);
 bootstrap!(pe15_if_invalid_operator);
 bootstrap!(pe16_if_incompatible_types);
+bootstrap!(pe17_double_else);
+bootstrap!(pe18_eoi_ifstate);
