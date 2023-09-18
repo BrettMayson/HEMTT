@@ -1,6 +1,6 @@
 //! A workspace (directory) containing addons and / or missions
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, rc::Rc, sync::Arc};
 
 use tracing::trace;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
@@ -9,6 +9,7 @@ mod error;
 mod path;
 
 pub use error::Error;
+#[allow(clippy::module_name_repetitions)]
 pub use path::WorkspacePath;
 
 use crate::prefix::{Prefix, FILES};
@@ -17,7 +18,7 @@ use crate::prefix::{Prefix, FILES};
 /// A workspace (directory) containing addons and / or missions
 pub struct Workspace {
     pub(crate) vfs: VfsPath,
-    pub(crate) pointers: HashMap<PathBuf, VfsPath>,
+    pub(crate) pointers: HashMap<String, VfsPath>,
     pub(crate) addons: Vec<VfsPath>,
     pub(crate) missions: Vec<VfsPath>,
 }
@@ -30,6 +31,9 @@ impl Workspace {
     }
 
     /// Create a new workspace from a vfs path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the workspace could not be created
     pub fn create(vfs: VfsPath) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
@@ -55,9 +59,10 @@ impl Workspace {
                     if FILES.contains(&entry.filename().to_lowercase().as_str()) {
                         trace!("Prefix: {:?}", entry);
                         let prefix = Prefix::new(&entry.read_to_string()?)?;
-                        workspace
-                            .pointers
-                            .insert(prefix.as_pathbuf(), entry.parent());
+                        workspace.pointers.insert(
+                            format!("/{}", prefix.to_string().replace('\\', "/")),
+                            entry.parent(),
+                        );
                     }
                 }
             }
@@ -69,6 +74,7 @@ impl Workspace {
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 /// A workspace builder
 pub struct WorkspaceBuilder {
@@ -92,6 +98,9 @@ impl WorkspaceBuilder {
     }
 
     /// Finish building the workspace
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the workspace could not be built
     pub fn finish(self) -> Result<WorkspacePath, Error> {
         let mut layers = self.layers;
         layers.reverse();

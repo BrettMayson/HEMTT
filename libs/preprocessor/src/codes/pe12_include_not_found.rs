@@ -2,7 +2,7 @@ use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Code, Token};
 use tracing::error;
 
-/// The [`Resolver`](crate::resolver::Resolver) could not find the target
+/// An include was not found
 pub struct IncludeNotFound {
     /// The target that was not found
     pub token: Vec<Token>,

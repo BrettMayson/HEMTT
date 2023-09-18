@@ -8,6 +8,10 @@ use tracing_subscriber::{
     prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
+/// Initialize the logger
+///
+/// # Panics
+/// If the log file could not be created
 pub fn init(verbosity: u8) {
     let format = tracing_subscriber::fmt::format()
         .without_time()

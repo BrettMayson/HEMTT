@@ -1,8 +1,3 @@
-// use std::path::PathBuf;
-
-// use hemtt_preprocessor::{preprocess_file, Resolver};
-// use vfs::PhysicalFS;
-
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/bootstrap/";

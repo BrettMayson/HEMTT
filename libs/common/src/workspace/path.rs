@@ -4,6 +4,7 @@ use vfs::VfsPath;
 
 use super::{Error, Workspace};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A path in a workspace
 pub struct WorkspacePath {
@@ -19,6 +20,9 @@ impl WorkspacePath {
     }
 
     /// join a path to the workspace path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be joined
     pub fn join(&self, path: impl AsRef<str>) -> Result<Self, Error> {
         let path = self.path.join(path)?;
         Ok(Self {
@@ -28,37 +32,58 @@ impl WorkspacePath {
     }
 
     /// Create a file in the workspace
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the file could not be created
     pub fn create_file(&self) -> Result<Box<dyn Write + Send>, Error> {
         self.path.create_file().map_err(Into::into)
     }
 
     /// Create a directory in the workspace
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the directory could not be created
     pub fn create_dir(&self) -> Result<(), Error> {
         self.path.create_dir()?;
         Ok(())
     }
 
     /// Check if the path exists
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be checked
     pub fn exists(&self) -> Result<bool, Error> {
         self.path.exists().map_err(Into::into)
     }
 
     /// Check if the path is a file
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be checked
     pub fn is_file(&self) -> Result<bool, Error> {
         self.path.is_file().map_err(Into::into)
     }
 
     /// Check if the path is a directory
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be checked
     pub fn is_dir(&self) -> Result<bool, Error> {
         self.path.is_dir().map_err(Into::into)
     }
 
     /// Read the path to a string
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be read
     pub fn read_to_string(&self) -> Result<String, Error> {
         self.path.read_to_string().map_err(Into::into)
     }
 
     /// Open the file for reading
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the file could not be opened
     pub fn open_file(&self) -> Result<Box<dyn vfs::SeekAndRead + Send>, Error> {
         self.path.open_file().map_err(Into::into)
     }
@@ -84,6 +109,9 @@ impl WorkspacePath {
     /// - Relative to the current path, or absolute if the path starts with `/`
     /// - In the scanned pointers (prefix files)
     /// - In the include path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be located
     pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
         let path = path.replace('\\', "/");
         if path.starts_with('/') {
@@ -93,11 +121,24 @@ impl WorkspacePath {
                     workspace: self.workspace.clone(),
                 }));
             }
-            if let Some(path) = self.workspace.pointers.get(&PathBuf::from(path.as_str())) {
-                return Ok(Some(Self {
-                    path: path.clone(),
-                    workspace: self.workspace.clone(),
-                }));
+            if let Some((base, root)) = self
+                .workspace
+                .pointers
+                .iter()
+                .find(|(p, _)| path.starts_with(p.as_str()))
+            {
+                let path = root.join(
+                    path.strip_prefix(base)
+                        .unwrap_or(&path)
+                        .strip_prefix('/')
+                        .unwrap_or(&path),
+                )?;
+                if path.exists()? {
+                    return Ok(Some(Self {
+                        path,
+                        workspace: self.workspace.clone(),
+                    }));
+                }
             }
         }
         let path = self.path.parent().join(path)?;

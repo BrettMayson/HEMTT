@@ -38,6 +38,9 @@ pub struct Processed {
 
 impl Processed {
     /// Process the output of the preprocessor
+    ///
+    /// # Errors
+    /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
         usage: HashMap<Position, Vec<Position>>,

@@ -3,6 +3,10 @@ use std::io::Write;
 
 use crate::error::Error;
 
+/// Check if there is a newer version of HEMTT available
+///
+/// # Errors
+/// [`Error::Update`] if the update check failed
 pub fn check() -> Result<Option<String>, Error> {
     let tmp_folder = std::env::temp_dir().join("hemtt");
     if !tmp_folder.exists() {

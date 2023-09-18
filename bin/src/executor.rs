@@ -32,6 +32,10 @@ impl<'a> Executor<'a> {
         self.modules.push(module);
     }
 
+    /// Initialize the modules
+    ///
+    /// # Errors
+    /// [`Error::Workspace`] if the workspace could not be initialized
     pub fn init(&mut self) -> Result<(), Error> {
         trace!("phase: init (start)");
         setup_tmp(self.ctx)?;
@@ -44,6 +48,10 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
+    /// Execute the `check` phase
+    ///
+    /// # Errors
+    /// Any error that occurs during the `check` phase
     pub fn check(&self) -> Result<(), Error> {
         trace!("phase: check (start)");
         for module in &self.modules {
@@ -55,6 +63,10 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
+    /// Execute the `build` phase
+    ///
+    /// # Errors
+    /// Any error that occurs during the `pre_build`, `build` or `post_build` phase
     pub fn build(&self) -> Result<(), Error> {
         trace!("phase: pre_build (start)");
         for module in &self.modules {
@@ -76,6 +88,10 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
+    /// Execute the `release` phase
+    ///
+    /// # Errors
+    /// Any error that occurs during the `pre_release`, `release` or `post_release` phase
     pub fn release(&self, archive: bool) -> Result<(), Error> {
         trace!("phase: pre_release (start)");
         for module in &self.modules {
