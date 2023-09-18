@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use hemtt_common::{reporting::Code, workspace::WorkspacePath};
+use hemtt_common::workspace::WorkspacePath;
 use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 

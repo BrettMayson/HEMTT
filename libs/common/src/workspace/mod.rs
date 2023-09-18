@@ -23,6 +23,7 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    #[must_use]
     /// Create a new workspace builder
     pub fn builder() -> WorkspaceBuilder {
         WorkspaceBuilder::default()

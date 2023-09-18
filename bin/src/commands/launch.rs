@@ -31,6 +31,7 @@ pub fn cli() -> Command {
     )
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let config = Configuration::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
