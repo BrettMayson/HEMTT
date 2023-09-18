@@ -131,9 +131,9 @@ impl WorkspacePath {
             {
                 let path = root.join(
                     path.strip_prefix(base)
-                    .unwrap_or(&path)
-                    .strip_prefix('/')
-                    .unwrap_or(&path),
+                        .unwrap_or(&path)
+                        .strip_prefix('/')
+                        .unwrap_or(&path),
                 )?;
                 if path.exists()? {
                     trace!("Located with prefix pointer: {:?}", path);

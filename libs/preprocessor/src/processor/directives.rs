@@ -1,4 +1,7 @@
-use hemtt_common::reporting::{Output, Symbol, Token};
+use hemtt_common::{
+    position::Position,
+    reporting::{Output, Symbol, Token},
+};
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::{
@@ -185,10 +188,20 @@ impl Processor {
             }));
         }
         let definition = match next.symbol() {
-            Symbol::LeftParenthesis => Definition::Function(FunctionDefinition::new(
-                Self::define_read_args(stream)?,
-                self.define_read_body(stream),
-            )),
+            Symbol::LeftParenthesis => Definition::Function({
+                let args = Self::define_read_args(stream)?;
+                let body = self.define_read_body(stream);
+                let position = if body.first().is_some() {
+                    Position::new(
+                        *body.first().unwrap().position().start(),
+                        *body.last().unwrap().position().end(),
+                        ident.position().path().clone(),
+                    )
+                } else {
+                    ident.position().clone()
+                };
+                FunctionDefinition::new(position, args, body)
+            }),
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
             _ => Definition::Value(self.define_read_body(stream)),
         };

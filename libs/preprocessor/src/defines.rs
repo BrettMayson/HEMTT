@@ -113,7 +113,23 @@ impl Defines {
                 }
             }
         }
-        self.get_readonly(&ident)
+        let ret = self.get_readonly(&ident);
+        if let Some((_, Definition::Function(body))) = &ret {
+            if key.position().path() != body.position().path() {
+                return ret;
+            }
+            // starts before the definition
+            if key.position().start().1 .0 < body.position().start().1 .0 {
+                return ret;
+            }
+            // starts after the definition
+            if key.position().start().1 .0 > body.position().end().1 .0 {
+                return ret;
+            }
+            // the usage is within the definition, so we can't use it
+            return None;
+        }
+        ret
     }
 
     pub fn get_readonly(&self, key: &str) -> Option<(Token, Definition)> {

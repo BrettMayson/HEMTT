@@ -1,4 +1,4 @@
-use hemtt_common::reporting::Token;
+use hemtt_common::{position::Position, reporting::Token};
 use peekmore::{PeekMore, PeekMoreIterator};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -63,6 +63,7 @@ impl Definition {
 /// my_value = FOO(1, 2);
 /// ```
 pub struct FunctionDefinition {
+    position: Position,
     args: Vec<Token>,
     body: Vec<Token>,
 }
@@ -70,8 +71,12 @@ pub struct FunctionDefinition {
 impl FunctionDefinition {
     #[must_use]
     /// Create a new [`FunctionDefinition`]
-    pub fn new(args: Vec<Token>, body: Vec<Token>) -> Self {
-        Self { args, body }
+    pub fn new(position: Position, args: Vec<Token>, body: Vec<Token>) -> Self {
+        Self {
+            position,
+            args,
+            body,
+        }
     }
 
     #[must_use]
@@ -84,6 +89,12 @@ impl FunctionDefinition {
     /// Get the body [`Token`]s
     pub fn body(&self) -> &[Token] {
         &self.body
+    }
+
+    #[must_use]
+    /// Get the position of the definition
+    pub const fn position(&self) -> &Position {
+        &self.position
     }
 
     #[must_use]
