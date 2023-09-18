@@ -1,4 +1,4 @@
-use hemtt_common::reporting::{Code, Processed, Symbol};
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},

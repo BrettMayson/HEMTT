@@ -8,6 +8,6 @@ license = "GPL-2.0"
 [dependencies]
 ariadne = { workspace = true }
 serde = { workspace = true }
-thiserror = "1.0.44"
+thiserror = "1.0.48"
 tracing = { workspace = true }
 vfs = { workspace = true }
