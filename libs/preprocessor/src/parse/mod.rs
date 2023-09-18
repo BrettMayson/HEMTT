@@ -41,7 +41,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
             }
             Rule::COMMENT => {
                 if in_string {
-                    if pair.as_str() == "//" {
+                    if !skipping_comment {
                         tokens.push(Token::new(
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
@@ -67,8 +67,10 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
                 }
             }
             Rule::double_quote => {
-                in_string = !in_string;
-                col += 1;
+                if !skipping_comment {
+                    in_string = !in_string;
+                    col += 1;
+                }
             }
             _ => {
                 col += pair.as_str().len();

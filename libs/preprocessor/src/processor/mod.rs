@@ -84,7 +84,11 @@ impl Processor {
         if self.directive(stream, buffer)? {
             return Ok(());
         }
-        self.walk(None, None, stream, buffer)?;
+        if self.ifstates.reading() {
+            self.walk(None, None, stream, buffer)?;
+        } else {
+            self.skip_to_after_newline(stream, None);
+        }
         Ok(())
     }
 

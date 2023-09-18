@@ -54,7 +54,7 @@ impl Processor {
         stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
     ) -> Result<(), Error> {
         for token in stream.by_ref() {
-            if token.symbol().is_newline() {
+            if token.symbol().is_newline() || token.symbol().is_eoi() {
                 break;
             }
             if !token.symbol().is_whitespace() {

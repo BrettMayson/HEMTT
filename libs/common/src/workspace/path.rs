@@ -1,11 +1,12 @@
-use std::{hash::Hasher, io::Write, path::PathBuf, sync::Arc};
+use std::{hash::Hasher, io::Write, sync::Arc};
 
+use tracing::trace;
 use vfs::VfsPath;
 
 use super::{Error, Workspace};
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 /// A path in a workspace
 pub struct WorkspacePath {
     pub(crate) path: VfsPath,
@@ -142,6 +143,7 @@ impl WorkspacePath {
             }
         }
         let path = self.path.parent().join(path)?;
+        trace!("Locate with parent: {:?}", path);
         if path.exists()? {
             Ok(Some(Self {
                 path,
@@ -209,6 +211,12 @@ impl std::hash::Hash for WorkspacePath {
 }
 
 impl std::fmt::Display for WorkspacePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.path.as_str().fmt(f)
+    }
+}
+
+impl std::fmt::Debug for WorkspacePath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.path.as_str().fmt(f)
     }

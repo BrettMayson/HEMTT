@@ -152,7 +152,9 @@ impl Processor {
         let tokens = crate::parse::parse(&path)?;
         self.files.push(path);
         let mut stream = tokens.into_iter().peekmore();
-        self.file(&mut stream, buffer)
+        let ret = self.file(&mut stream, buffer);
+        self.files.pop();
+        ret
     }
 
     pub(crate) fn directive_define(
