@@ -106,6 +106,7 @@ impl Processor {
                 (Symbol::Word(w), false) => {
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();
+                        println!("lookup macro `{}` within `{}`", w, in_macro.unwrap_or(""));
                         self.define_use(
                             callsite.unwrap_or_else(|| token.position()),
                             stream,

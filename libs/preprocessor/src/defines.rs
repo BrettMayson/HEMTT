@@ -117,9 +117,6 @@ impl Defines {
     }
 
     pub fn get_readonly(&self, key: &str) -> Option<(Token, Definition)> {
-        if self.stack.iter().map(|(k, _)| k).any(|k| **k == *key) {
-            return None;
-        }
         self.stack
             .last()
             .as_ref()

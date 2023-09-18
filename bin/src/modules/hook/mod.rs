@@ -88,7 +88,13 @@ impl Hooks {
             if !file.file_type()?.is_file() {
                 continue;
             }
-            info!("Running hook: {}", file.path().display());
+            info!(
+                "Running hook: {}",
+                file.path()
+                    .display()
+                    .to_string()
+                    .trim_start_matches(&ctx.hemtt_folder().display().to_string())
+            );
             Self::run(
                 ctx,
                 format!(

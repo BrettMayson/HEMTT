@@ -117,6 +117,7 @@ impl WorkspacePath {
         let path = path.replace('\\', "/");
         if path.starts_with('/') {
             if self.workspace.vfs.join(&path)?.exists()? {
+                trace!("Located with absolute path: {:?}", path);
                 return Ok(Some(Self {
                     path: self.workspace.vfs.join(path)?,
                     workspace: self.workspace.clone(),
@@ -126,15 +127,16 @@ impl WorkspacePath {
                 .workspace
                 .pointers
                 .iter()
-                .find(|(p, _)| path.starts_with(p.as_str()))
+                .find(|(p, _)| path.starts_with(&format!("{p}/")))
             {
                 let path = root.join(
                     path.strip_prefix(base)
-                        .unwrap_or(&path)
-                        .strip_prefix('/')
-                        .unwrap_or(&path),
+                    .unwrap_or(&path)
+                    .strip_prefix('/')
+                    .unwrap_or(&path),
                 )?;
                 if path.exists()? {
+                    trace!("Located with prefix pointer: {:?}", path);
                     return Ok(Some(Self {
                         path,
                         workspace: self.workspace.clone(),
@@ -143,8 +145,8 @@ impl WorkspacePath {
             }
         }
         let path = self.path.parent().join(path)?;
-        trace!("Locate with parent: {:?}", path);
         if path.exists()? {
+            trace!("Located with parent: {:?}", path);
             Ok(Some(Self {
                 path,
                 workspace: self.workspace.clone(),
