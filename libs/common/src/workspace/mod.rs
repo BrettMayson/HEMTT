@@ -93,6 +93,8 @@ impl WorkspaceBuilder {
 
     /// Finish building the workspace
     pub fn finish(self) -> Result<WorkspacePath, Error> {
-        Workspace::create(OverlayFS::new(&self.layers).into())
+        let mut layers = self.layers;
+        layers.reverse();
+        Workspace::create(OverlayFS::new(&layers).into())
     }
 }

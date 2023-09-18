@@ -19,7 +19,6 @@ fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
         .physical(&folder)
-        .memory()
         .finish()
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
