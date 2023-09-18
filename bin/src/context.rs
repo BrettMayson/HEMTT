@@ -71,6 +71,10 @@ impl Context {
                 if cfg!(target_os = "windows") {
                     builder = builder.physical(&tmp.join("output"));
                 }
+                let include = root.join("include");
+                if include.is_dir() {
+                    builder = builder.physical(&include);
+                }
                 builder.memory().finish()?
             },
             project_folder: root,
