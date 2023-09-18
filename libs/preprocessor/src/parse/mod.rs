@@ -74,10 +74,10 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
                 col += pair.as_str().len();
             }
         }
+        offset += pair.as_str().len();
         if skipping_comment {
             continue;
         }
-        offset += pair.as_str().len();
         let end = LineCol(offset, (line, col));
         tokens.push(Token::new(
             Symbol::to_symbol(pair),

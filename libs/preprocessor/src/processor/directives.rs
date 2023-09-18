@@ -150,6 +150,7 @@ impl Processor {
             return Err(Error::Code(Box::new(IncludeNotFound { token: path })));
         };
         let tokens = crate::parse::parse(&path)?;
+        self.files.push(path);
         let mut stream = tokens.into_iter().peekmore();
         self.file(&mut stream, buffer)
     }
