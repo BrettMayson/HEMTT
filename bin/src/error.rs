@@ -1,4 +1,4 @@
-use hemtt_error::thiserror;
+use hemtt_common::error::thiserror;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -30,6 +30,9 @@ pub enum Error {
     #[error("Script not found: {0}")]
     ScriptNotFound(String),
 
+    #[error("One or more files failed linting")]
+    LintFailed,
+
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
@@ -48,8 +51,14 @@ pub enum Error {
     Config(#[from] hemtt_config::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
+    #[error("Prefix error: {0}")]
+    Prefix(#[from] hemtt_common::prefix::Error),
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
+    #[error("Version Error: {0}")]
+    Version(#[from] hemtt_common::version::Error),
+    #[error("Workspace Error: {0}")]
+    Workspace(#[from] hemtt_common::workspace::Error),
 
     #[error("Update error: {0}")]
     Update(String),
@@ -66,8 +75,6 @@ pub enum Error {
     SerdeJson(#[from] serde_json::Error),
     #[error("Toml Error: {0}")]
     Toml(#[from] toml::de::Error),
-    #[error("Version Error: {0}")]
-    Version(#[from] hemtt_version::Error),
     #[error("Vfs Error {0}")]
     Vfs(Box<vfs::VfsError>),
     #[error("Walkdir Error: {0}")]

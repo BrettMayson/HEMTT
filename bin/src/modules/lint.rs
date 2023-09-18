@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use hemtt_preprocessor::{preprocess_file, Resolver};
+use hemtt_common::workspace::WorkspacePath;
+use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{context::Context, error::Error};
@@ -24,11 +25,9 @@ impl Module for Lint {
         }
         let counter = AtomicI32::new(0);
         for addon in ctx.addons() {
-            let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
             let sqf_ext = Some(String::from("sqf"));
             let mut entries = Vec::new();
-            for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
-                let entry = entry?;
+            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
                         continue;
@@ -46,18 +45,48 @@ impl Module for Lint {
                     entries.push(entry);
                 }
             }
-            entries
+            let entry_map = |entry: &WorkspacePath| {
+                debug!("linting {:?}", entry.as_str());
+                counter.fetch_add(1, Ordering::Relaxed);
+                match Processor::run(entry) {
+                    Err(e) => Err(e.into()),
+                    Ok(processed) => Ok(processed
+                        .warnings()
+                        .iter()
+                        .filter_map(|w| w.generate_report())
+                        .collect::<Vec<String>>()),
+                }
+            };
+            let mut unique_warnings = Vec::new();
+            let failed = entries
                 .par_iter()
-                .map(|entry| {
-                    debug!("linting {:?}", entry.as_str());
-                    if let Err(e) = preprocess_file(entry, &resolver) {
-                        Err(e.into())
-                    } else {
-                        counter.fetch_add(1, Ordering::Relaxed);
-                        Ok(())
+                .map(entry_map)
+                .collect::<Vec<Result<Vec<String>, Error>>>()
+                .iter()
+                .filter(|r| {
+                    match r {
+                        Err(e) => {
+                            error!("{}", e);
+                            return true;
+                        }
+                        Ok(warnings) => {
+                            for warning in warnings {
+                                if !unique_warnings.contains(warning) {
+                                    unique_warnings.push(warning.clone());
+                                }
+                            }
+                        }
                     }
+                    false
                 })
-                .collect::<Result<_, Error>>()?;
+                .count()
+                > 0;
+            for warning in unique_warnings {
+                eprintln!("{warning}");
+            }
+            if failed {
+                return Err(Error::LintFailed);
+            }
         }
         info!("Linted {} files", counter.load(Ordering::Relaxed));
         Ok(())

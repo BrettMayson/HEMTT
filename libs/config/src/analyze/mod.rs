@@ -1,4 +1,4 @@
-use hemtt_error::{processed::Processed, Code};
+use hemtt_common::reporting::{Code, Processed};
 
 mod array;
 mod class;

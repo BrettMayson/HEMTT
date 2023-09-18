@@ -1,4 +1,4 @@
-use hemtt_error::thiserror;
+use hemtt_common::error::thiserror;
 
 #[derive(thiserror::Error, Debug)]
 /// Error type for the PBO writer/reader
@@ -16,7 +16,4 @@ pub enum Error {
     #[error("File is too large for PBO format")]
     /// File is too large for PBO format
     FileTooLarge,
-    #[error("Invalid prefix: {0}")]
-    /// Invalid prefix
-    InvalidPrefix(String),
 }

@@ -1,5 +1,5 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_error::{tokens::Token, Code};
+use hemtt_common::reporting::{Code, Token};
 use tracing::error;
 
 /// Unexpected end of file
@@ -11,6 +11,10 @@ pub struct UnexpectedEOF {
 impl Code for UnexpectedEOF {
     fn ident(&self) -> &'static str {
         "PE2"
+    }
+
+    fn token(&self) -> Option<&Token> {
+        Some(&self.token)
     }
 
     fn message(&self) -> String {
@@ -32,25 +36,29 @@ impl Code for UnexpectedEOF {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
-        let span = self.token.source().start().0..self.token.source().end().0;
+        let span = self.token.position().start().0..self.token.position().end().0;
         let report = Report::build(
             ReportKind::Error,
-            self.token.source().path_or_builtin(),
+            self.token.position().path().as_str(),
             span.start,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
-            Label::new((self.token.source().path_or_builtin(), span.start..span.end))
+            Label::new((self.token.position().path().as_str(), span.start..span.end))
                 .with_color(a)
                 .with_message("Unexpected end of file"),
         );
         if let Err(e) = report.finish().write_for_stdout(
             (
-                self.token.source().path_or_builtin(),
-                Source::from(self.token.source().path().map_or_else(String::new, |path| {
-                    path.read_to_string().unwrap_or_default()
-                })),
+                self.token.position().path().as_str(),
+                Source::from(
+                    self.token
+                        .position()
+                        .path()
+                        .read_to_string()
+                        .unwrap_or_default(),
+                ),
             ),
             &mut out,
         ) {

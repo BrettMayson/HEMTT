@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use hemtt_arma::dlc::DLC;
+use hemtt_common::arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

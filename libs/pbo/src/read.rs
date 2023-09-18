@@ -1,7 +1,7 @@
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 
 use byteorder::ReadBytesExt;
-use hemtt_io::{ReadExt, WriteExt};
+use hemtt_common::io::{ReadExt, WriteExt};
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 
@@ -145,7 +145,9 @@ impl<I: Seek + Read> ReadablePbo<I> {
         }
         let files = self.files();
         let mut files = files.iter();
-        let Some(mut last) = files.next() else { return Ok(()) };
+        let Some(mut last) = files.next() else {
+            return Ok(());
+        };
 
         for curr in files {
             if compare(last, curr) == std::cmp::Ordering::Greater {

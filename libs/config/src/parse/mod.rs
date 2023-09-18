@@ -21,7 +21,7 @@ pub fn config() -> impl Parser<char, Config, Error = Simple<char>> {
             .repeated()
             .delimited_by(empty(), end())
             .map(Config),
-        end().padded().map(|_| Config(vec![])),
+        end().padded().map(|()| Config(vec![])),
     ))
 }
 

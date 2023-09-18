@@ -65,8 +65,13 @@ impl Module for Binarize {
                     continue;
                 }
             }
-            for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
-                let entry = entry.unwrap();
+            for entry in ctx
+                .workspace()
+                .join(addon.folder())
+                .unwrap()
+                .walk_dir()
+                .unwrap()
+            {
                 if entry.metadata().unwrap().file_type == VfsFileType::File
                     && ["rtm", "p3d", "wrp"]
                         .contains(&entry.extension().unwrap_or_default().as_str())
@@ -167,7 +172,7 @@ struct BinarizeTarget {
 /// Check if the file signature indicates that it is already binarized
 fn check_signature(buf: [u8; 4]) -> bool {
     // OLOD
-    buf == [0x4F, 0x4C, 0x4F, 0x44] ||
+    buf == [0x4F, 0x44, 0x4F, 0x4C] ||
     // BMTR
     buf == [0x42, 0x4D, 0x54, 0x52] ||
     // OPRW

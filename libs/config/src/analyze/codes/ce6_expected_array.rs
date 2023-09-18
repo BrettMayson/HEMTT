@@ -1,6 +1,5 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_error::{processed::Processed, Code};
-use lsp_types::Diagnostic;
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::{Property, Value};
 
@@ -32,7 +31,12 @@ impl Code for ExpectedArray {
     }
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
-        let Property::Entry { name, value, expected_array } = &self.property else {
+        let Property::Entry {
+            name,
+            value,
+            expected_array,
+        } = &self.property
+        else {
             return None;
         };
         if !expected_array {
@@ -41,11 +45,11 @@ impl Code for ExpectedArray {
         if let Value::Array(_) = value {
             return None;
         }
-        let ident_start = processed.original_col(name.span.start).unwrap();
+        let ident_start = processed.mapping(name.span.start).unwrap();
         let ident_file = processed.source(ident_start.source()).unwrap();
-        let ident_end = processed.original_col(name.span.end).unwrap();
-        let value_start = processed.original_col(value.span().start).unwrap();
-        let value_end = processed.original_col(value.span().end).unwrap();
+        let ident_end = processed.mapping(name.span.end).unwrap();
+        let value_start = processed.mapping(value.span().start).unwrap();
+        let value_end = processed.mapping(value.span().end).unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();
@@ -79,8 +83,14 @@ impl Code for ExpectedArray {
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let Property::Entry { value, expected_array, .. } = &self.property else {
+        let Property::Entry {
+            value,
+            expected_array,
+            ..
+        } = &self.property
+        else {
             return vec![];
         };
         if !expected_array {
@@ -89,10 +99,10 @@ impl Code for ExpectedArray {
         if let Value::Array(_) = value {
             return vec![];
         }
-        let value_start = processed.original_col(value.span().start).unwrap();
+        let value_start = processed.mapping(value.span().start).unwrap();
         let value_file = processed.source(value_start.source()).unwrap();
-        let value_end = processed.original_col(value.span().end).unwrap();
-        let Some(path) = value_file.1.0.clone() else {
+        let value_end = processed.mapping(value.span().end).unwrap();
+        let Some(path) = value_file.1 .0.clone() else {
             return vec![];
         };
         vec![(

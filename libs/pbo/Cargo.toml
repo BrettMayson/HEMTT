@@ -9,9 +9,7 @@ license = "GPL-2.0"
 bench = false
 
 [dependencies]
-hemtt-error = { path = "../error", version = "1.0.0" }
-
-hemtt-io = { path = "../io", version = "1.0.0" }
+hemtt-common = { path = "../common", version = "1.0.0" }
 
 byteorder = { workspace = true }
 indexmap = "2.0.0"

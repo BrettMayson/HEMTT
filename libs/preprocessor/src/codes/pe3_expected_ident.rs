@@ -1,21 +1,21 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_error::{tokens::Token, Code};
-use lsp_types::{Diagnostic, Range};
+use hemtt_common::reporting::{Code, Token};
 use tracing::error;
-use vfs::VfsPath;
 
 #[allow(unused)]
 /// Expected an identifier, found something else
 pub struct ExpectedIdent {
     /// The [`Token`] that was found
     pub(crate) token: Box<Token>,
-    /// The [`Token`] stack trace
-    pub(crate) trace: Vec<Token>,
 }
 
 impl Code for ExpectedIdent {
     fn ident(&self) -> &'static str {
         "PE3"
+    }
+
+    fn token(&self) -> Option<&Token> {
+        Some(&self.token)
     }
 
     fn message(&self) -> String {
@@ -37,16 +37,16 @@ impl Code for ExpectedIdent {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
-        let span = self.token.source().start().0..self.token.source().end().0;
+        let span = self.token.position().start().0..self.token.position().end().0;
         let report = Report::build(
             ReportKind::Error,
-            self.token.source().path_or_builtin(),
+            self.token.position().path().as_str(),
             span.start,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
-            Label::new((self.token.source().path_or_builtin(), span.start..span.end))
+            Label::new((self.token.position().path().as_str(), span.start..span.end))
                 .with_color(a)
                 .with_message(format!(
                     "expected identifier, found `{}`",
@@ -55,10 +55,14 @@ impl Code for ExpectedIdent {
         );
         if let Err(e) = report.finish().write_for_stdout(
             (
-                self.token.source().path_or_builtin(),
-                Source::from(self.token.source().path().map_or_else(String::new, |path| {
-                    path.read_to_string().unwrap_or_default()
-                })),
+                self.token.position().path().as_str(),
+                Source::from(
+                    self.token
+                        .position()
+                        .path()
+                        .read_to_string()
+                        .unwrap_or_default(),
+                ),
             ),
             &mut out,
         ) {
@@ -68,6 +72,7 @@ impl Code for ExpectedIdent {
         Some(String::from_utf8(out).unwrap_or_default())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
         let Some(path) = self.token.source().path() else {
             return None;

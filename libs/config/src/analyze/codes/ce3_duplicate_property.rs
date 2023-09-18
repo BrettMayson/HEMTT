@@ -1,6 +1,5 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_error::{processed::Processed, Code};
-use lsp_types::Diagnostic;
+use hemtt_common::reporting::{Code, Processed};
 
 use crate::Ident;
 
@@ -33,26 +32,26 @@ impl Code for DuplicateProperty {
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let first = self.conflicts.first().unwrap();
-        let first_map = processed.original_col(first.span.start).unwrap();
+        let first_map = processed.mapping(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
 
         Report::build(
             ariadne::ReportKind::Error,
-            first_file.0.clone(),
-            first_map.original().0,
+            first_file.0.to_string(),
+            first_map.original().start().offset(),
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_labels(self.conflicts.iter().map(|b| {
-            let map_start = processed.original_col(b.span.start).unwrap();
-            let map_end = processed.original_col(b.span.end).unwrap();
-            let token_start = map_start.token().walk_up();
-            let token_end = map_end.token().walk_up();
+            let map_start = processed.mapping(b.span.start).unwrap();
+            let map_end = processed.mapping(b.span.end).unwrap();
+            let token_start = map_start.token();
+            let token_end = map_end.token();
             Label::new((
-                token_start.source().path_or_builtin(),
-                token_start.source().start().0..token_end.source().end().0 - 1,
+                token_start.position().path().to_string(),
+                token_start.position().start().0..token_end.position().end().0 - 1,
             ))
             .with_color(colors.next())
             .with_message(if b == first {
@@ -62,16 +61,17 @@ impl Code for DuplicateProperty {
             })
         }))
         .finish()
-        .write_for_stdout(sources(processed.sources()), &mut out)
+        .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
     }
 
+    #[cfg(feature = "lsp")]
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let first = self.conflicts.last().unwrap();
-        let first_map = processed.original_col(first.span.start).unwrap();
-        let first_file = processed.source(first_map.source()).unwrap();
-        let Some(path) = first_file.1.0.clone() else {
+        let first_map = processed.mapping(first.span.start).unwrap();
+        let first_file = processed.source(first_map.position()).unwrap();
+        let Some(path) = first_file.1 .0.clone() else {
             return vec![];
         };
         vec![(

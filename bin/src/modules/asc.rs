@@ -8,7 +8,7 @@ use std::{
     },
 };
 
-use hemtt_preprocessor::{preprocess_file, Resolver};
+use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rust_embed::RustEmbed;
 use serde::Serialize;
@@ -77,7 +77,6 @@ impl Module for ArmaScriptCompiler {
         if !ctx.config().asc().enabled() {
             return Ok(());
         }
-        let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
         let mut out_file =
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
@@ -104,8 +103,7 @@ impl Module for ArmaScriptCompiler {
             let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
             create_dir_all(&tmp_addon)?;
             let mut entries = Vec::new();
-            for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
-                let entry = entry?;
+            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
                         continue;
@@ -125,7 +123,7 @@ impl Module for ArmaScriptCompiler {
             entries
                 .par_iter()
                 .map(|entry| {
-                    let processed = preprocess_file(entry, &resolver)?;
+                    let processed = Processor::run(entry)?;
                     let source = tmp_addon.join(
                         entry
                             .as_str()
@@ -136,7 +134,7 @@ impl Module for ArmaScriptCompiler {
                         std::mem::drop(create_dir_all(parent));
                     }
                     let mut f = File::create(source)?;
-                    f.write_all(processed.output().as_bytes())?;
+                    f.write_all(processed.as_string().as_bytes())?;
                     files.write().unwrap().push((
                         format!(
                             "{}{}",
@@ -192,7 +190,7 @@ impl Module for ArmaScriptCompiler {
         let counter = AtomicI16::new(0);
         for (src, dst) in &*files.read().unwrap() {
             let from = tmp_output.join(&format!("{src}c"));
-            let to = ctx.vfs().join(&format!("{dst}c"))?;
+            let to = ctx.workspace().join(&format!("{dst}c"))?;
             if !from.exists() {
                 // Likely excluded
                 continue;

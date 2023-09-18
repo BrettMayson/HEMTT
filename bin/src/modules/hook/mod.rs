@@ -32,7 +32,7 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
     if vfs {
-        scope.push_constant("HEMTT_VFS", ctx.vfs().clone());
+        scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
     } else {
         scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
         scope.push_constant("HEMTT_OUTPUT", ctx.out_folder().clone());
@@ -88,7 +88,13 @@ impl Hooks {
             if !file.file_type()?.is_file() {
                 continue;
             }
-            info!("Running hook: {}", file.path().display());
+            info!(
+                "Running hook: {}",
+                file.path()
+                    .display()
+                    .to_string()
+                    .trim_start_matches(&ctx.hemtt_folder().display().to_string())
+            );
             Self::run(
                 ctx,
                 format!(

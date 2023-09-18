@@ -1,11 +1,10 @@
 use std::{
-    collections::HashMap,
     env::temp_dir,
     fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
 };
 
-use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
+use hemtt_common::workspace::{Workspace, WorkspacePath};
 
 use crate::{addons::Addon, config::project::Configuration, error::Error};
 
@@ -14,7 +13,7 @@ pub struct Context {
     config: Configuration,
     folder: String,
     addons: Vec<Addon>,
-    vfs: VfsPath,
+    workspace: WorkspacePath,
     project_folder: PathBuf,
     hemtt_folder: PathBuf,
     out_folder: PathBuf,
@@ -67,22 +66,17 @@ impl Context {
         Ok(Self {
             config,
             folder: folder.to_owned(),
-            vfs: OverlayFS::new(&{
-                let mut layers = vec![AltrootFS::new(MemoryFS::new().into()).into()];
+            workspace: {
+                let mut builder = Workspace::builder().physical(&root);
                 if cfg!(target_os = "windows") {
-                    trace!("vfs overlay at root: {:?}", tmp.join("output").display());
-                    layers.push(AltrootFS::new(PhysicalFS::new(tmp.join("output")).into()).into());
+                    builder = builder.physical(&tmp.join("output"));
                 }
-                trace!(
-                    "vfs root: {:?}",
-                    std::env::current_dir()
-                        .expect("Unable to get current dir")
-                        .display()
-                );
-                layers.push(AltrootFS::new(PhysicalFS::new(".").into()).into());
-                layers
-            })
-            .into(),
+                let include = root.join("include");
+                if include.is_dir() {
+                    builder = builder.physical(&include);
+                }
+                builder.memory().finish()?
+            },
             project_folder: root,
             hemtt_folder,
             out_folder: build_folder,
@@ -123,19 +117,13 @@ impl Context {
     }
 
     #[must_use]
-    pub fn prefixes(&self) -> HashMap<String, VfsPath> {
-        let mut prefixes = HashMap::new();
-        for addon in self.addons() {
-            if let Ok(path) = self.vfs().join(addon.folder()) {
-                prefixes.insert(format!("\\{}\\", addon.prefix().to_string()), path);
-            }
-        }
-        prefixes
+    pub fn addon(&self, name: &str) -> Option<&Addon> {
+        self.addons.iter().find(|a| a.name() == name)
     }
 
     #[must_use]
-    pub const fn vfs(&self) -> &VfsPath {
-        &self.vfs
+    pub const fn workspace(&self) -> &WorkspacePath {
+        &self.workspace
     }
 
     #[must_use]

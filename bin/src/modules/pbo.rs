@@ -4,8 +4,11 @@ use std::{
 };
 
 use git2::Repository;
-use hemtt_pbo::{prefix::FILES, Prefix, WritablePbo};
-use hemtt_version::Version;
+use hemtt_common::{
+    prefix::{Prefix, FILES},
+    version::Version,
+};
+use hemtt_pbo::WritablePbo;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -92,12 +95,9 @@ fn _build(
     pbo.add_property("hemtt", env!("CARGO_PKG_VERSION"));
     pbo.add_property("version", version.to_string());
 
-    'entries: for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
-        let entry = entry.unwrap();
-        if entry.metadata().unwrap().file_type == VfsFileType::File {
-            if entry.filename() == "config.cpp"
-                && entry.parent().join("config.bin").unwrap().exists().unwrap()
-            {
+    'entries: for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+        if entry.metadata()?.file_type == VfsFileType::File {
+            if entry.filename() == "config.cpp" && entry.parent().join("config.bin")?.exists()? {
                 continue;
             }
 
@@ -123,7 +123,7 @@ fn _build(
             }
 
             if FILES.contains(&entry.filename().to_lowercase().as_str()) {
-                let prefix = Prefix::new(&entry.read_to_string().unwrap())?;
+                let prefix = Prefix::new(&entry.read_to_string()?)?;
                 pbo.add_property("prefix", prefix.to_string());
                 pbo.add_property("version", version.to_string());
                 if let Some(hash) = git_hash {
@@ -137,7 +137,7 @@ fn _build(
                 .trim_start_matches(&format!("/{}/", addon.folder()))
                 .replace('/', "\\");
             trace!("adding file {:?}", file);
-            pbo.add_file(file, entry.open_file().unwrap()).unwrap();
+            pbo.add_file(file, entry.open_file()?)?;
         }
     }
     for header in ctx.config().properties() {

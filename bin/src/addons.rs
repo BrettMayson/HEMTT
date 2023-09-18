@@ -1,6 +1,6 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
-use hemtt_pbo::{prefix, Prefix};
+use hemtt_common::prefix::{self, Prefix};
 
 use crate::{config::addon::Configuration, error::Error};
 
@@ -126,10 +126,10 @@ impl Location {
             .filter(|file_or_dir| file_or_dir.is_dir())
             .map(|file| {
                 let Some(name) = file.file_name() else {
-                    return Err(Error::AddonLocationInvalid(file.display().to_string()))
+                    return Err(Error::AddonLocationInvalid(file.display().to_string()));
                 };
                 let Some(name) = name.to_str() else {
-                    return Err(Error::AddonLocationInvalid(file.display().to_string()))
+                    return Err(Error::AddonLocationInvalid(file.display().to_string()));
                 };
                 Addon::new(name.to_string(), self)
             })

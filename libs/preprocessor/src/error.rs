@@ -1,5 +1,6 @@
-use hemtt_error::{thiserror, Code};
 use tracing::error;
+
+use hemtt_common::{error::thiserror, reporting::Code};
 
 use crate::parse::Rule;
 
@@ -15,9 +16,12 @@ pub enum Error {
     #[error("Pest Error: {0}")]
     /// [`pest::error::Error`]
     Pest(Box<pest::error::Error<Rule>>),
-    #[error("Vfs Error: {0}")]
-    /// [`vfs::Error`]
-    Vfs(Box<vfs::error::VfsError>),
+    /// [`hemtt_common::workspace::Error`]
+    #[error("Workspace Error: {0}")]
+    Workspace(#[from] hemtt_common::workspace::Error),
+    /// [`hemtt_common::reporting::Error`]
+    #[error("Reporting Error: {0}")]
+    Reporting(#[from] hemtt_common::reporting::Error),
 }
 
 impl From<std::io::Error> for Error {
@@ -32,12 +36,6 @@ impl From<pest::error::Error<Rule>> for Error {
     }
 }
 
-impl From<vfs::error::VfsError> for Error {
-    fn from(e: vfs::error::VfsError) -> Self {
-        Self::Vfs(Box::new(e))
-    }
-}
-
 impl Error {
     #[allow(clippy::too_many_lines)]
     #[must_use]
@@ -45,7 +43,8 @@ impl Error {
     pub fn get_code(&self) -> Option<Box<&dyn Code>> {
         match self {
             Self::Code(c) => Some(Box::new(&**c)),
-            Self::Io(_) | Self::Pest(_) | Self::Vfs(_) => None,
+            Self::Reporting(e) => e.get_code(),
+            Self::Io(_) | Self::Pest(_) | Self::Workspace(_) => None,
         }
     }
 }

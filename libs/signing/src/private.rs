@@ -1,7 +1,7 @@
 use std::io::{Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use hemtt_io::{ReadExt, WriteExt};
+use hemtt_common::io::{ReadExt, WriteExt};
 use hemtt_pbo::{BISignVersion, ReadablePbo};
 use rsa::{
     traits::{PrivateKeyParts, PublicKeyParts},

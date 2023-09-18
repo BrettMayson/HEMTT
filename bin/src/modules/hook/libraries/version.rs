@@ -5,7 +5,7 @@ use rhai::plugin::{
 
 #[export_module]
 pub mod version_functions {
-    use hemtt_version::Version;
+    use hemtt_common::version::Version;
 
     #[rhai_fn(global, pure)]
     pub fn to_string(version: &mut Version) -> String {

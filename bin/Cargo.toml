@@ -15,16 +15,14 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
-hemtt-error = { path = "../libs/error", version = "1.0.0" }
+hemtt-common = { path = "../libs/common", version = "1.0.0" }
 
-hemtt-arma = { path = "../libs/arma", version = "1.0.0" }
 hemtt-config = { path = "../libs/config", version = "1.0.0" }
 hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
 hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
 hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
-hemtt-version = { path = "../libs/version", version = "1.0.0" }
 
-anyhow = "1.0.72"
+anyhow = "1.0.75"
 ariadne = { workspace = true }
 clap = { workspace = true }
 dialoguer = "0.10.4"
@@ -35,14 +33,14 @@ glob = "0.3.1"
 num_cpus = "1.16.0"
 peekmore = { workspace = true }
 rayon = "1.7.0"
-reqwest = { version = "0.11.18", features = ["blocking", "json"] }
-rhai = "1.15.1"
-rust-embed = "6.8.1"
+reqwest = { version = "0.11.20", features = ["blocking", "json"] }
+rhai = "1.16.1"
+rust-embed = "8.0.0"
 semver = "1.0.18"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 steamlocate = "2.0.0-alpha.0"
-time = { version = "0.3.25", features = ["formatting"] }
+time = { version = "0.3.28", features = ["formatting"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.17", features = ["json"] }
@@ -52,4 +50,4 @@ whoami = "1.4.1"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.50.0"
+winreg = "0.51.0"

@@ -1,6 +1,6 @@
 use std::iter::Sum;
 
-use hemtt_io::{compressed_int_len, WriteExt};
+use hemtt_common::io::{compressed_int_len, WriteExt};
 
 use crate::{Array, Item};
 

@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use hemtt_io::WriteExt;
+use hemtt_common::io::WriteExt;
 use rsa::BigUint;
 
 use crate::Error;

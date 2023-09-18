@@ -1,37 +1,30 @@
 file = _{ SOI ~ (
-    word | alpha | digit | underscore | dash | assignment | plus | left_brace | right_brace | left_bracket | right_bracket |
-    left_parentheses | right_parentheses | colon | semicolon | join | directive | escape | slash | comma | decimal |
-    double_quote | single_quote | left_angle | right_angle | unicode | newline
+    word | alpha | digit | underscore |
+    left_parentheses | right_parentheses | join |
+    directive | escape | comma | double_quote |
+    single_quote | left_angle | right_angle |
+    equals | unicode | newline
 )* ~ EOI }
 word = ${ ( underscore | alpha ) ~ ( alpha | digit | underscore )* }
 alpha = { LETTER }
 digit = { ASCII_DIGIT }
 underscore = { "_" }
-dash = { "-" }
-assignment = { "=" }
-plus = { "+" }
-left_brace = { "{" }
-right_brace = { "}" }
-left_bracket = { "[" }
-right_bracket = { "]" }
 left_parentheses = { "(" }
 right_parentheses = { ")" }
-colon = { ":" }
-semicolon = { ";" }
 join = { "##" }
 directive = { "#" }
-escape = { "\\" }
-slash = { "/" }
 comma = { "," }
-decimal = { "." }
+escape = { "\\" }
 double_quote = { "\"" }
 single_quote = { "'" }
 left_angle = { "<" }
 right_angle = { ">" }
+equals = { "=" }
 unicode = { LETTER | MARK | NUMBER | SYMBOL | PUNCTUATION | MATH | OTHER_MATH }
 newline = { NEWLINE }
 
 space = { " " }
 tab = { "\t" }
+
 WHITESPACE = ${ space | tab }
-COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
+COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | "//" }

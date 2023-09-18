@@ -1,0 +1,61 @@
+use std::io::Read;
+
+use hemtt_preprocessor::Processor;
+
+const ROOT: &str = "tests/warnings/";
+
+macro_rules! bootstrap {
+    ($dir:ident) => {
+        paste::paste! {
+            #[test]
+            fn [<bootstrap_ $dir>]() {
+                check(stringify!($dir));
+            }
+        }
+    };
+}
+
+fn check(dir: &str) {
+    let folder = std::path::PathBuf::from(ROOT).join(dir);
+    let workspace = hemtt_common::workspace::Workspace::builder()
+        .physical(&folder)
+        .finish()
+        .unwrap();
+    let source = workspace.join("source.hpp").unwrap();
+    let processed = Processor::run(&source);
+    match processed {
+        Ok(config) => {
+            let mut expected = Vec::new();
+            std::fs::File::open(folder.join("stderr.ansi"))
+                .unwrap()
+                .read_to_end(&mut expected)
+                .unwrap();
+            let warning = config
+                .warnings()
+                .first()
+                .unwrap()
+                .generate_report()
+                .unwrap();
+            if expected.is_empty() {
+                std::fs::write(
+                    folder.join("stderr.ansi"),
+                    warning.replace('\r', "").as_bytes(),
+                )
+                .unwrap();
+            }
+            assert_eq!(
+                warning.replace('\r', "").replace(r"\u{1b}[38;5;201m─\u{1b}[0m\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m ", r"\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m"),
+                String::from_utf8(expected).unwrap().replace('\r', "")
+            );
+        }
+        Err(e) => {
+            panic!(
+                "`{:?}` should have succeeded: {:#?}",
+                folder,
+                e.get_code().unwrap().generate_report().unwrap()
+            )
+        }
+    }
+}
+
+bootstrap!(pw1_redefine);
