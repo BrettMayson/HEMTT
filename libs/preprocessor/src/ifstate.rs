@@ -62,7 +62,6 @@ impl IfStates {
 
     pub fn flip(&mut self, token: Token) -> Result<(), Error> {
         if let Some(previous) = self.did_else.take() {
-            println!("stack: {:#?}", self.stack);
             return Err(Error::Code(Box::new(DoubleElse {
                 token: Box::new(token),
                 previous: Box::new(previous),
