@@ -1,54 +1,90 @@
-#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+use hemtt_common::reporting::Token;
+
+use crate::{codes::pe17_double_else::DoubleElse, Error};
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum IfState {
-    ReadingIf,
-    PassingIf,
-    ReadingElse,
-    PassingElse,
-    PassingChild,
+    ReadingIf(Token),
+    PassingIf(Token),
+    ReadingElse(Token),
+    PassingElse(Token),
+    PassingChild(Token),
 }
 
 impl IfState {
-    pub const fn reading(self) -> bool {
+    pub const fn reading(&self) -> bool {
         match self {
-            Self::ReadingIf | Self::ReadingElse => true,
-            Self::PassingIf | Self::PassingElse | Self::PassingChild => false,
+            Self::ReadingIf(_) | Self::ReadingElse(_) => true,
+            Self::PassingIf(_) | Self::PassingElse(_) | Self::PassingChild(_) => false,
+        }
+    }
+
+    pub const fn token(&self) -> &Token {
+        match self {
+            Self::ReadingIf(t)
+            | Self::PassingIf(t)
+            | Self::ReadingElse(t)
+            | Self::PassingElse(t)
+            | Self::PassingChild(t) => t,
         }
     }
 }
 
-#[derive(Clone, Default, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct IfStates(Vec<IfState>);
+#[derive(Clone, Default, Debug, Eq, PartialEq)]
+pub struct IfStates {
+    stack: Vec<IfState>,
+    did_else: Option<Token>,
+}
+
 impl IfStates {
     pub fn reading(&self) -> bool {
-        self.0.is_empty() || self.0.iter().all(|f| f.reading())
+        self.stack.is_empty() || self.stack.iter().all(IfState::reading)
     }
 
     pub fn push(&mut self, s: IfState) {
-        self.0.push(s);
+        self.did_else = None;
+        self.stack.push(s);
     }
 
-    pub fn push_if(&mut self, state: bool) {
+    pub fn push_if(&mut self, token: Token, state: bool) {
+        self.did_else = None;
         if state {
-            self.push(IfState::ReadingIf);
+            self.push(IfState::ReadingIf(token));
         } else {
-            self.push(IfState::PassingIf);
+            self.push(IfState::PassingIf(token));
         }
     }
 
     pub fn pop(&mut self) -> Option<IfState> {
-        self.0.pop()
+        self.did_else = None;
+        self.stack.pop()
     }
 
-    pub fn flip(&mut self) {
-        if self.0.iter().take(self.0.len() - 1).all(|f| f.reading()) {
+    pub fn flip(&mut self, token: Token) -> Result<(), Error> {
+        if let Some(previous) = self.did_else.take() {
+            println!("stack: {:#?}", self.stack);
+            return Err(Error::Code(Box::new(DoubleElse {
+                token: Box::new(token),
+                previous: Box::new(previous),
+                if_token: Box::new(self.stack.last().unwrap().token().clone()),
+            })));
+        }
+        if self
+            .stack
+            .iter()
+            .take(self.stack.len() - 1)
+            .all(IfState::reading)
+        {
             if let Some(new) = match self.pop() {
-                Some(IfState::PassingChild) => Some(IfState::PassingChild),
-                Some(IfState::PassingIf) => Some(IfState::ReadingElse),
-                Some(IfState::ReadingIf) => Some(IfState::PassingElse),
-                Some(IfState::PassingElse | IfState::ReadingElse) | None => None,
+                Some(IfState::PassingChild(t)) => Some(IfState::PassingChild(t)),
+                Some(IfState::PassingIf(t)) => Some(IfState::ReadingElse(t)),
+                Some(IfState::ReadingIf(t)) => Some(IfState::PassingElse(t)),
+                Some(IfState::PassingElse(_) | IfState::ReadingElse(_)) | None => None,
             } {
                 self.push(new);
             }
         }
+        self.did_else = Some(token);
+        Ok(())
     }
 }
