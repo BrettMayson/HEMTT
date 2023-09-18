@@ -57,7 +57,8 @@ impl Module for Lint {
                         .collect::<Vec<String>>()),
                 }
             };
-            if entries
+            let mut unique_warnings = Vec::new();
+            let failed = entries
                 .par_iter()
                 .map(entry_map)
                 .collect::<Vec<Result<Vec<String>, Error>>>()
@@ -70,15 +71,20 @@ impl Module for Lint {
                         }
                         Ok(warnings) => {
                             for warning in warnings {
-                                println!("{warning}");
+                                if !unique_warnings.contains(warning) {
+                                    unique_warnings.push(warning.clone());
+                                }
                             }
                         }
                     }
                     false
                 })
                 .count()
-                > 0
-            {
+                > 0;
+            for warning in unique_warnings {
+                eprintln!("{warning}");
+            }
+            if failed {
                 return Err(Error::LintFailed);
             }
         }

@@ -38,6 +38,12 @@ pub struct Processor {
 }
 
 impl Processor {
+    #[must_use]
+    /// Returns the defines
+    pub const fn defines(&self) -> &Defines {
+        &self.defines
+    }
+
     /// Preprocess a file
     ///
     /// # Errors

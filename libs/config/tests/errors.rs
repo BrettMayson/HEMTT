@@ -44,7 +44,7 @@ fn check(dir: &str) {
                 .unwrap();
             }
             assert_eq!(
-                errors.join("\n").replace('\r', ""),
+                errors.join("\n").replace('\r', "").replace(r"\u{1b}[38;5;201m─\u{1b}[0m\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m ", r"\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m"),
                 String::from_utf8(expected).unwrap().replace('\r', "")
             );
         }

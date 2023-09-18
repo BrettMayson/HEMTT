@@ -1,6 +1,6 @@
 //! A workspace (directory) containing addons and / or missions
 
-use std::{collections::HashMap, path::PathBuf, rc::Rc, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use tracing::trace;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};

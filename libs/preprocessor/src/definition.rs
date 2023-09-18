@@ -52,6 +52,7 @@ impl Definition {
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// A function definition
 ///
