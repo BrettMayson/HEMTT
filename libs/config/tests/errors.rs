@@ -57,3 +57,4 @@ fn check(dir: &str) {
 
 bootstrap!(simple);
 bootstrap!(arrays);
+bootstrap!(pe7_missing_parent);

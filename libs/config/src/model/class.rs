@@ -47,4 +47,13 @@ impl Class {
             Self::External { name } | Self::Local { name, .. } => name,
         }
     }
+
+    #[must_use]
+    /// Get the parent of the class
+    pub const fn parent(&self) -> Option<&Ident> {
+        match self {
+            Self::External { .. } => None,
+            Self::Local { parent, .. } => parent.as_ref(),
+        }
+    }
 }

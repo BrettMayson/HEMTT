@@ -60,7 +60,8 @@ impl Processed {
                         Ok(processed.sources.len() - 1)
                     },
                     Ok,
-                ).map_err(Error::Workspace)?;
+                )
+                .map_err(Error::Workspace)?;
             if token.symbol().is_newline() {
                 processed.line_offsets.push(processed.processed.len());
                 processed.processed.push('\n');
