@@ -5,7 +5,7 @@
 class Test {
     data = something;
     path = PATHTO(thing);
-    data = "something"
+    data = "nosemi"
     class data {
         data = "something";
     };

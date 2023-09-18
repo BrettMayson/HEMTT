@@ -27,4 +27,4 @@ space = { " " }
 tab = { "\t" }
 
 WHITESPACE = ${ space | tab }
-COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE) }
+COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | "//" }

@@ -25,38 +25,57 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
     let pairs = PreprocessorParser::parse(Rule::file, &source)?;
     let mut tokens = Vec::new();
     let mut line = 1;
-    let mut col = 1;
+    let mut col = 0;
     let mut offset = 0;
+    let mut in_string = false;
+    let mut skipping_comment = false;
     for pair in pairs {
         let start = LineCol(offset, (line, col));
         match pair.as_rule() {
             Rule::newline => {
+                if skipping_comment {
+                    skipping_comment = false;
+                }
                 line += 1;
-                col = 1;
+                col = 0;
             }
             Rule::COMMENT => {
-                let lines = pair.as_str().split('\n').collect::<Vec<_>>();
-                let count = lines.len() - 1;
-                line += count;
-                if count > 0 {
-                    col = lines.last().unwrap().len() + 1;
+                if in_string {
+                    if pair.as_str() == "//" {
+                        tokens.push(Token::new(
+                            Symbol::Word(pair.as_str().to_string()),
+                            Position::new(
+                                start,
+                                LineCol(start.0 + 2, (start.1 .0 + 2, start.1 .1 + 2)),
+                                path.clone(),
+                            ),
+                        ));
+                    }
                 } else {
-                    col = 1;
+                    let lines = pair.as_str().split('\n').collect::<Vec<_>>();
+                    let count = lines.len() - 1;
+                    line += count;
+                    if count > 0 {
+                        col = lines.last().unwrap().len() + 1;
+                    } else {
+                        col = 0;
+                    }
+                    if pair.as_str() == "//" {
+                        // skip to end of line
+                        skipping_comment = true;
+                    }
                 }
-                if pair.as_str().starts_with("//") {
-                    tokens.push(Token::new(
-                        Symbol::Newline,
-                        Position::new(
-                            LineCol(offset + pair.as_str().len(), (line, col)),
-                            LineCol(offset + pair.as_str().len() + 1, (line, col + 1)),
-                            path.clone(),
-                        ),
-                    ));
-                }
+            }
+            Rule::double_quote => {
+                in_string = !in_string;
+                col += 1;
             }
             _ => {
                 col += pair.as_str().len();
             }
+        }
+        if skipping_comment {
+            continue;
         }
         offset += pair.as_str().len();
         let end = LineCol(offset, (line, col));

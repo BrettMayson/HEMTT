@@ -3,10 +3,11 @@ use std::{
     sync::atomic::{AtomicI16, Ordering},
 };
 
+use hemtt_common::workspace::WorkspacePath;
 use hemtt_config::{parse, rapify::Rapify};
-use hemtt_preprocessor::{preprocess_file, Resolver};
+use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use vfs::{VfsFileType, VfsPath};
+use vfs::VfsFileType;
 
 use crate::{context::Context, error::Error};
 
@@ -21,7 +22,6 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        let resolver = Resolver::new(ctx.vfs(), ctx.prefixes());
         let counter = AtomicI16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
@@ -40,8 +40,7 @@ impl Module for Rapifier {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
-                for entry in ctx.vfs().join(addon.folder())?.walk_dir()? {
-                    let entry = entry?;
+                for entry in ctx.workspace().join(&addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
                     {
@@ -53,7 +52,7 @@ impl Module for Rapifier {
                             continue;
                         }
                         debug!("rapifying {}", entry.as_str());
-                        rapify(entry.clone(), ctx, &resolver)?;
+                        rapify(entry.clone(), ctx)?;
                         counter.fetch_add(1, Ordering::Relaxed);
                     }
                 }
@@ -65,8 +64,8 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: VfsPath, _ctx: &Context, resolver: &Resolver) -> Result<(), Error> {
-    let processed = preprocess_file(&path, resolver)?;
+pub fn rapify(path: WorkspacePath, _ctx: &Context) -> Result<(), Error> {
+    let processed = Processor::run(&path)?;
     for warning in processed.warnings() {
         if let Some(warning) = warning.generate_report() {
             eprintln!("{warning}");

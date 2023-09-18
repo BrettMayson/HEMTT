@@ -117,10 +117,8 @@ impl Defines {
     }
 
     pub fn get_readonly(&self, key: &str) -> Option<(Token, Definition)> {
-        if let Some(last) = self.stack.last() {
-            if *last.0 == *key {
-                return None;
-            }
+        if self.stack.iter().map(|(k, _)| k).any(|k| **k == *key) {
+            return None;
         }
         self.stack
             .last()

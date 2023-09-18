@@ -191,7 +191,8 @@ impl Processor {
         let ident = Self::current_word(stream)?;
         let ident_string = ident.to_string();
         let Some((source, body)) = self.defines.get_with_gen(&ident, Some(callsite)) else {
-            panic!("unknown macro, caller should check");
+            buffer.push(Output::Direct(ident.clone()));
+            return Ok(());
         };
         match body {
             Definition::Function(function) => {

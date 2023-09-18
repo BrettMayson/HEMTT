@@ -32,22 +32,22 @@ impl Code for InvalidValueMacro {
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let map = processed.mapping(self.span.start).unwrap();
-        let token = map.token().walk_up();
-        let invalid = &processed.output()[self.span.start..self.span.end];
+        let token = map.token();
+        let invalid = &processed.as_string()[self.span.start..self.span.end];
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();
         Report::build(
             ariadne::ReportKind::Error,
-            token.source().path_or_builtin(),
-            token.source().start().0,
+            token.position().path().as_str(),
+            token.position().start().0,
         )
         .with_code(self.ident())
         .with_message(self.message())
         .with_label(
             Label::new((
-                token.source().path_or_builtin(),
-                token.source().start().0..token.source().end().0,
+                token.position().path().to_string(),
+                token.position().start().0..token.position().end().0,
             ))
             .with_message(self.label_message())
             .with_color(a),
@@ -55,7 +55,7 @@ impl Code for InvalidValueMacro {
         .with_help(self.help().unwrap())
         .with_note(format!("The processed output was `{}`", invalid.fg(a)))
         .finish()
-        .write_for_stdout(sources(processed.sources()), &mut out)
+        .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
     }
@@ -64,14 +64,14 @@ impl Code for InvalidValueMacro {
     fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
         let map = processed.mapping(self.span.start).unwrap();
         let token = map.token().walk_up();
-        let Some(path) = token.source().path() else {
+        let Some(path) = token.position().path() else {
             return vec![];
         };
         vec![(
             path.clone(),
             self.diagnostic(lsp_types::Range::new(
-                token.source().start().to_lsp(),
-                token.source().end().to_lsp(),
+                token.position().start().to_lsp(),
+                token.position().end().to_lsp(),
             )),
         )]
     }

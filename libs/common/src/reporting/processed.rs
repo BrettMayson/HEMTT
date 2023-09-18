@@ -61,9 +61,18 @@ impl Processed {
             if token.symbol().is_newline() {
                 processed.line_offsets.push(processed.processed.len());
                 processed.processed.push('\n');
-                processed.line += 1;
-                processed.col = 1;
-                processed.total += 1;
+                processed.mappings.push(Mapping {
+                    processed: (LineCol(processed.total, (processed.line, processed.col)), {
+                        processed.line += 1;
+                        processed.col = 0;
+                        processed.total += 1;
+                        LineCol(processed.total, (processed.line, processed.col))
+                    }),
+                    source,
+                    original: token.position().clone(),
+                    token,
+                    was_macro: false,
+                });
             } else {
                 let str = token.to_source();
                 if str.is_empty() {
@@ -82,6 +91,7 @@ impl Processed {
                     source,
                     original: token.position().clone(),
                     token,
+                    was_macro: false,
                 });
             }
             Ok(())
@@ -119,6 +129,7 @@ impl Processed {
                             source,
                             original: root.position().clone(),
                             token: root,
+                            was_macro: true,
                         });
                     }
                 }
@@ -155,12 +166,27 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get a source by index
+    pub fn source(&self, index: usize) -> Option<&(WorkspacePath, String)> {
+        self.sources.get(index)
+    }
+
+    #[must_use]
+    /// Get the sources for arianne
+    pub fn sources_adrianne(&self) -> Vec<(String, String)> {
+        self.sources
+            .iter()
+            .map(|(path, content)| (path.to_string(), content.clone()))
+            .collect()
+    }
+
+    #[must_use]
     /// Get the tree mapping at a position in the stringified output
     pub fn mappings(&self, offset: usize) -> Vec<&Mapping> {
         self.mappings
             .iter()
             .filter(|map| {
-                map.processed_start().offset() < offset && map.processed_end().offset() >= offset
+                map.processed_start().offset() <= offset && map.processed_end().offset() > offset
             })
             .collect()
     }
@@ -185,6 +211,7 @@ pub struct Mapping {
     processed: (LineCol, LineCol),
     original: Position,
     token: Token,
+    was_macro: bool,
 }
 
 impl Mapping {
@@ -222,5 +249,11 @@ impl Mapping {
     /// Get the original token
     pub const fn token(&self) -> &Token {
         &self.token
+    }
+
+    #[must_use]
+    /// Get whether the token came from a macro
+    pub const fn was_macro(&self) -> bool {
+        self.was_macro
     }
 }

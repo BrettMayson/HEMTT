@@ -26,7 +26,11 @@ fn check(dir: &str) {
         .finish()
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(&source);
+    if let Err(e) = processed {
+        panic!("{}", e.get_code().unwrap().generate_report().unwrap());
+    }
+    let processed = processed.unwrap();
     let expected = workspace
         .join("expected.hpp")
         .unwrap()
@@ -37,6 +41,7 @@ fn check(dir: &str) {
     assert_eq!(processed, expected.replace('\r', ""));
 }
 
+bootstrap!(ace_main);
 bootstrap!(cba_is_admin);
 bootstrap!(cba_multiline);
 bootstrap!(comment_edgecase);

@@ -1,5 +1,4 @@
 
-
 if (42 == 42) then {
 	systemChat "The answer to life, the universe, and everything is 42";
 } else {

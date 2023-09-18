@@ -1,7 +1,7 @@
 use std::{mem::MaybeUninit, path::Path};
 
 use git2::Repository;
-use hemtt_version::Version;
+use hemtt_common::version::Version;
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
@@ -64,10 +64,10 @@ impl Options {
         if let Some(major) = self.major {
             trace!("reading version from project.toml");
             let Some(minor) = self.minor else {
-                return Err(hemtt_version::Error::ExpectedMinor.into());
+                return Err(hemtt_common::version::Error::ExpectedMinor.into());
             };
             let Some(patch) = self.patch else {
-                return Err(hemtt_version::Error::ExpectedPatch.into());
+                return Err(hemtt_common::version::Error::ExpectedPatch.into());
             };
             return Ok(Version::new(major, minor, patch, self.build));
         }
@@ -90,7 +90,7 @@ impl Options {
         }
         error!("could not find version macro file: {:?}", path);
 
-        Err(hemtt_version::Error::UnknownVersion.into())
+        Err(hemtt_common::version::Error::UnknownVersion.into())
     }
 
     #[must_use]

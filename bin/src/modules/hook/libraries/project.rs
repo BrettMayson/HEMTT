@@ -1,4 +1,4 @@
-use hemtt_version::Version;
+use hemtt_common::version::Version;
 use rhai::plugin::{
     export_module, Dynamic, FnAccess, FnNamespace, Module, NativeCallContext, PluginFunction,
     RhaiResult, TypeId,
@@ -29,7 +29,6 @@ impl RhaiProject {
 #[export_module]
 pub mod project_functions {
     use crate::modules::hook::libraries::project::RhaiProject;
-    use hemtt_version::Version;
 
     #[rhai_fn(global, pure)]
     pub fn name(project: &mut RhaiProject) -> String {

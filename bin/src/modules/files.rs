@@ -22,8 +22,7 @@ impl Module for Files {
         for file in ctx.config().files().include() {
             globs.push(glob::Pattern::new(&file)?);
         }
-        for entry in ctx.vfs().walk_dir()? {
-            let entry = entry?;
+        for entry in ctx.workspace().walk_dir()? {
             if entry.as_str().starts_with("/.hemtt") {
                 continue;
             }

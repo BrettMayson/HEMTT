@@ -3,6 +3,7 @@
 
 //! HEMTT - Common Library
 
+pub mod arma;
 pub mod error;
 pub mod io;
 pub mod math;

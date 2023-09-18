@@ -1,3 +1,5 @@
+//! Information about Arma 3 DLCs
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize)]
@@ -71,18 +73,18 @@ impl TryFrom<String> for DLC {
                 "csla" | "iron curtain" | "csla iron curtain" => Self::IronCurtain,
                 "ws" | "western sahara" => Self::WesternSahara,
                 "spe" | "spearhead" | "spearhead 1944" => Self::Spearhead1944,
-                _ => return Err(format!("Unknown DLC: {}", dlc)),
+                _ => return Err(format!("Unknown DLC: {dlc}")),
             },
         )
     }
 }
 
 impl<'de> Deserialize<'de> for DLC {
-    fn deserialize<D>(deserializer: D) -> Result<DLC, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        DLC::try_from(s).map_err(serde::de::Error::custom)
+        Self::try_from(s).map_err(serde::de::Error::custom)
     }
 }

@@ -185,6 +185,26 @@ impl Processor {
         Self::current_word(stream)
     }
 
+    /// Skips whitespace, returning the next value and consuming it from the stream
+    ///
+    /// # Errors
+    /// - [`UnexpectedEOF`]: If the stream is at the end of the file
+    fn next_value(
+        &mut self,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        buffer: Option<&mut Vec<Output>>,
+    ) -> Result<Token, Error> {
+        self.skip_whitespace(stream, buffer);
+        if let Some(token) = stream.peek() {
+            if token.symbol().is_eoi() {
+                return Err(Error::Code(Box::new(UnexpectedEOF {
+                    token: Box::new(token.clone()),
+                })));
+            }
+        }
+        Ok(stream.next().expect("just checked"))
+    }
+
     fn output(&mut self, token: Token, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
             if token.symbol().is_newline()

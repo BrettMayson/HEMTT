@@ -65,8 +65,13 @@ impl Module for Binarize {
                     continue;
                 }
             }
-            for entry in ctx.vfs().join(addon.folder()).unwrap().walk_dir().unwrap() {
-                let entry = entry.unwrap();
+            for entry in ctx
+                .workspace()
+                .join(addon.folder())
+                .unwrap()
+                .walk_dir()
+                .unwrap()
+            {
                 if entry.metadata().unwrap().file_type == VfsFileType::File
                     && ["rtm", "p3d", "wrp"]
                         .contains(&entry.extension().unwrap_or_default().as_str())

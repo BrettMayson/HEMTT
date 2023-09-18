@@ -126,7 +126,6 @@ mod tests {
     #[test]
     fn test_expect_nothing_to_newline_whitespace() {
         let mut stream = tests::setup("  \nb");
-        let mut processor = Processor::default();
         Processor::expect_nothing_to_newline(&mut stream).unwrap();
     }
 }

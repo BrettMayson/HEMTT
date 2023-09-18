@@ -1,6 +1,5 @@
 use hemtt_common::reporting::{Output, Symbol, Token};
 use peekmore::{PeekMore, PeekMoreIterator};
-use tracing::error;
 
 use crate::{
     codes::{
@@ -227,7 +226,7 @@ impl Processor {
             }
             Ok((vec![token], false))
         }
-        let left = self.next_word(stream, None)?;
+        let left = self.next_value(stream, None)?;
         let (left, left_defined) = value(&mut self.defines, left)?;
         self.skip_whitespace(stream, None);
         let mut operators = Vec::with_capacity(2);

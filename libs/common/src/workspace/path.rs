@@ -12,8 +12,14 @@ pub struct WorkspacePath {
 }
 
 impl WorkspacePath {
+    #[must_use]
+    /// Returns the underlying [`VfsPath`]
+    pub const fn vfs(&self) -> &VfsPath {
+        &self.path
+    }
+
     /// join a path to the workspace path
-    pub fn join(&self, path: &str) -> Result<Self, Error> {
+    pub fn join(&self, path: impl AsRef<str>) -> Result<Self, Error> {
         let path = self.path.join(path)?;
         Ok(Self {
             path,
@@ -52,10 +58,24 @@ impl WorkspacePath {
         self.path.read_to_string().map_err(Into::into)
     }
 
+    /// Open the file for reading
+    pub fn open_file(&self) -> Result<Box<dyn vfs::SeekAndRead + Send>, Error> {
+        self.path.open_file().map_err(Into::into)
+    }
+
     #[must_use]
     /// Get the path as a [`str`]
     pub fn as_str(&self) -> &str {
         self.path.as_str()
+    }
+
+    #[must_use]
+    /// Get the parent of the path
+    pub fn parent(&self) -> Self {
+        Self {
+            path: self.path.parent(),
+            workspace: self.workspace.clone(),
+        }
     }
 
     /// Locate a path in the workspace
@@ -101,6 +121,43 @@ impl WorkspacePath {
     /// All the of missions in the workspace
     pub fn missions(&self) -> &[VfsPath] {
         &self.workspace.missions
+    }
+
+    /// Walk the workspace
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the workspace could not be walked
+    #[allow(clippy::missing_panics_doc)]
+    pub fn walk_dir(&self) -> Result<Vec<Self>, Error> {
+        Ok(self
+            .path
+            .walk_dir()?
+            .filter(std::result::Result::is_ok)
+            .map(move |p| Self {
+                path: p.expect("filtered"),
+                workspace: self.workspace.clone(),
+            })
+            .collect())
+    }
+
+    /// Return the metadata for the path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the metadata could not be read
+    pub fn metadata(&self) -> Result<vfs::VfsMetadata, Error> {
+        self.path.metadata().map_err(Into::into)
+    }
+
+    #[must_use]
+    /// Retruns the file name of the path
+    pub fn filename(&self) -> String {
+        self.path.filename()
+    }
+
+    #[must_use]
+    /// Returns the extension of the path
+    pub fn extension(&self) -> Option<String> {
+        self.path.extension()
     }
 }
 

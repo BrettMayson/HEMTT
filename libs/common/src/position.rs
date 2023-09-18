@@ -1,7 +1,5 @@
 //! Position of a token in a source file
 
-use std::path::PathBuf;
-
 use crate::workspace::WorkspacePath;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -46,6 +46,9 @@ pub fn parse(processed: &Processed) -> Result<ConfigReport, Vec<String>> {
 
 fn chumsky_to_ariadne(processed: &Processed, err: &Simple<char>) -> String {
     let map = processed.mapping(err.span().start);
+    let Some(map) = map else {
+        return format!("{:?}: {}", err.span(), err);
+    };
     let file = processed.source(map.source()).unwrap();
     let file = file.0.clone();
     let mut out = Vec::new();

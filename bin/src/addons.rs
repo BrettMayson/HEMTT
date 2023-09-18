@@ -1,6 +1,6 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
-use hemtt_pbo::{prefix, Prefix};
+use hemtt_common::prefix::{self, Prefix};
 
 use crate::{config::addon::Configuration, error::Error};
 

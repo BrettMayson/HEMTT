@@ -34,19 +34,13 @@ impl Analyze for Value {
             Self::Invalid(invalid) => {
                 // An unquoted string or otherwise invalid value
                 vec![{
-                    let mut map = processed.mappings(invalid.start).iter();
-                    let mut at_root = true;
-                    while let Some(item) = map.next() {
-                        let token = item.token();
-                        if token.symbol() == &Symbol::Word("include".to_owned()) {
-                            break;
-                        }
-                        at_root = false;
-                    }
-                    if at_root {
-                        Box::new(InvalidValue::new(invalid.clone()))
-                    } else {
+                    if processed
+                        .mapping(invalid.start)
+                        .is_some_and(hemtt_common::reporting::Mapping::was_macro)
+                    {
                         Box::new(InvalidValueMacro::new(invalid.clone()))
+                    } else {
+                        Box::new(InvalidValue::new(invalid.clone()))
                     }
                 }]
             }
