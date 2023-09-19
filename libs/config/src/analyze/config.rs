@@ -89,10 +89,10 @@ fn external_missing_warn(
                     parent,
                     properties,
                 } => {
-                    let name = name.value.to_lowercase();
+                    let name_lower = name.value.to_lowercase();
                     if let Some(parent) = parent {
                         let parent_lower = parent.value.to_lowercase();
-                        if parent_lower != name {
+                        if parent_lower != name_lower {
                             if let Some(parent_class) = defined.get(&parent_lower) {
                                 if parent_class.name().value != parent.value {
                                     warnings.push(Box::new(ParentCase::new(
@@ -101,9 +101,11 @@ fn external_missing_warn(
                                     )));
                                 }
                             }
+                        } else if parent.value != name.value {
+                            warnings.push(Box::new(ParentCase::new(c.clone(), c.clone())));
                         }
                     }
-                    defined.insert(name, c.clone());
+                    defined.insert(name_lower, c.clone());
                     warnings.extend(external_missing_warn(properties, defined));
                 }
             }
