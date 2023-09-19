@@ -2,10 +2,13 @@ use std::collections::{HashMap, HashSet};
 
 use hemtt_common::reporting::{Code, Processed};
 
-use crate::{Class, Config, Property};
+use crate::{Class, Config, Ident, Property};
 
 use super::{
-    codes::{ce7_missing_parent::MissingParent, cw1_parent_case::ParentCase},
+    codes::{
+        ce3_duplicate_property::DuplicateProperty, ce7_missing_parent::MissingParent,
+        cw1_parent_case::ParentCase,
+    },
     Analyze,
 };
 
@@ -33,6 +36,7 @@ impl Analyze for Config {
             .collect::<Vec<_>>();
         let mut defined = HashSet::new();
         errors.extend(external_missing_error(&self.0, &mut defined));
+        errors.extend(duplicate_properties(&self.0));
         errors
     }
 }
@@ -112,4 +116,43 @@ fn external_missing_warn(
         }
     }
     warnings
+}
+
+fn duplicate_properties(properties: &[Property]) -> Vec<Box<dyn Code>> {
+    let mut seen: HashMap<String, Vec<Ident>> = HashMap::new();
+    duplicate_properties_inner("", properties, &mut seen);
+    let mut errors: Vec<Box<dyn Code>> = Vec::new();
+    for (_, idents) in seen {
+        if idents.len() > 1 {
+            errors.push(Box::new(DuplicateProperty::new(idents)));
+        }
+    }
+    errors
+}
+
+fn duplicate_properties_inner(
+    scope: &str,
+    properties: &[Property],
+    seen: &mut HashMap<String, Vec<Ident>>,
+) {
+    for property in properties {
+        match property {
+            Property::Class(Class::Local {
+                name, properties, ..
+            }) => {
+                duplicate_properties_inner(
+                    &format!("{}.{}", scope, name.value.to_lowercase()),
+                    properties,
+                    seen,
+                );
+            }
+            Property::Entry { name, .. } => {
+                let entry = seen
+                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .or_default();
+                entry.push(name.clone());
+            }
+            _ => (),
+        }
+    }
 }
