@@ -4,6 +4,8 @@
 
 Returns the project version.
 
+`.build()` will return `0` if the build number is not set.
+
 ```ts
 HEMTT.project().version().to_string(); // "1.3.0.1052"
 HEMTT.project().version().to_string_short(); // "1.3.0"
