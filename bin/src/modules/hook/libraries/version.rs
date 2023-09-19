@@ -38,7 +38,7 @@ pub mod version_functions {
     }
 
     #[rhai_fn(global, pure)]
-    pub fn build(version: &mut Version) -> Option<i64> {
-        version.build().map(i64::from)
+    pub fn build(version: &mut Version) -> i64 {
+        version.build().map(i64::from).unwrap_or_default()
     }
 }
