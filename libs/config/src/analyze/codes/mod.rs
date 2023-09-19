@@ -5,3 +5,5 @@ pub mod ce4_missing_semicolon;
 pub mod ce5_unexpected_array;
 pub mod ce6_expected_array;
 pub mod ce7_missing_parent;
+
+pub mod cw1_parent_case;
