@@ -28,11 +28,13 @@ impl Context {
                 return Err(Error::ConfigNotFound);
             }
             let config = Configuration::from_file(&path)?;
-            info!(
-                "Config loaded for {} {}",
-                config.name(),
-                config.version().get().expect("Unable to read version")
-            );
+            let version = config.version().get();
+            if let Err(Error::Git(_)) = version {
+                error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
+                println!("\n[version]\ngit_hash = 0\n");
+                std::process::exit(1);
+            };
+            info!("Config loaded for {} {}", config.name(), version?,);
             config
         };
         let tmp = {

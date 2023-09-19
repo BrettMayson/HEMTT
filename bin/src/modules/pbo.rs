@@ -30,13 +30,12 @@ pub enum Collapse {
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
     let version = ctx.config().version().get()?;
     let git_hash = {
-        if let Ok(repo) = Repository::discover(".") {
-            let rev = repo.revparse_single("HEAD")?;
-            let id = rev.id().to_string();
-            Some(id)
-        } else {
-            None
-        }
+        Repository::discover(".").map_or(None, |repo| {
+            repo.revparse_single("HEAD").map_or(None, |rev| {
+                let id = rev.id().to_string();
+                Some(id)
+            })
+        })
     };
     let counter = AtomicI16::new(0);
     ctx.addons()
