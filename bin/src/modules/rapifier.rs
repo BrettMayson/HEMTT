@@ -28,7 +28,7 @@ impl Module for Rapifier {
             require_literal_separator: true,
             ..Default::default()
         };
-        let messages = ctx
+        let results = ctx
             .addons()
             .par_iter()
             .map(|addon| {
@@ -36,13 +36,14 @@ impl Module for Rapifier {
                 if let Some(config) = addon.config() {
                     if !config.preprocess().enabled() {
                         debug!("preprocessing disabled for {}", addon.name());
-                        return Ok(vec![]);
+                        return Ok((vec![], Ok(())));
                     }
                     for file in config.preprocess().exclude() {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
                 let mut messages = Vec::new();
+                let mut res = Ok(());
                 for entry in ctx.workspace().join(&addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
@@ -56,17 +57,22 @@ impl Module for Rapifier {
                         }
                         debug!("rapifying {}", entry.as_str());
                         let (new_messages, result) = rapify(entry.clone(), ctx);
-                        result?;
                         messages.extend(new_messages);
                         counter.fetch_add(1, Ordering::Relaxed);
+                        if let Err(e) = result {
+                            res = Err(e);
+                        }
                     }
                 }
-                Ok(messages)
+                Ok((messages, res))
             })
-            .collect::<Result<Vec<Vec<String>>, Error>>()?;
-        let messages = messages.into_iter().flatten().collect::<HashSet<_>>();
+            .collect::<Result<Vec<(Vec<String>, Result<(), Error>)>, Error>>()?;
+        let messages = results.iter().flat_map(|(v, _)| v).collect::<HashSet<_>>();
         for message in messages {
             eprintln!("{message}");
+        }
+        for (_, result) in results {
+            result?;
         }
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
         Ok(())
