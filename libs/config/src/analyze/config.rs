@@ -100,11 +100,6 @@ fn external_missing_warn(
                                         parent_class.clone(),
                                     )));
                                 }
-                            } else {
-                                warnings.push(Box::new(ParentCase::new(
-                                    c.clone(),
-                                    defined.get(&parent_lower).unwrap().clone(),
-                                )));
                             }
                         }
                     }
