@@ -37,14 +37,10 @@ fn check(dir: &str) {
                 .generate_report()
                 .unwrap();
             if expected.is_empty() {
-                std::fs::write(
-                    folder.join("stderr.ansi"),
-                    warning.replace('\r', "").as_bytes(),
-                )
-                .unwrap();
+                std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
             }
             assert_eq!(
-                warning.replace('\r', "").replace(r"\u{1b}[38;5;201m─\u{1b}[0m\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m ", r"\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m"),
+                warning.replace('\r', ""),
                 String::from_utf8(expected).unwrap().replace('\r', "")
             );
         }

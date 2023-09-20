@@ -39,14 +39,10 @@ fn check(dir: &str) {
                 .unwrap();
             let error = e.get_code().unwrap().generate_report().unwrap();
             if expected.is_empty() {
-                std::fs::write(
-                    folder.join("stderr.ansi"),
-                    error.replace('\r', "").as_bytes(),
-                )
-                .unwrap();
+                std::fs::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
             }
             assert_eq!(
-                error.replace('\r', "").replace(r"\u{1b}[38;5;201m─\u{1b}[0m\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m ", r"\u{1b}[38;5;201m┬\u{1b}[0m  \n \u{1b}[38;5;240m  │\u{1b}[0m"),
+                error.replace('\r', ""),
                 String::from_utf8(expected).unwrap().replace('\r', "")
             );
         }

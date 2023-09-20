@@ -78,7 +78,10 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be read
     pub fn read_to_string(&self) -> Result<String, Error> {
-        self.path.read_to_string().map_err(Into::into)
+        self.path
+            .read_to_string()
+            .map(|s| s.replace('\r', ""))
+            .map_err(Into::into)
     }
 
     /// Open the file for reading
