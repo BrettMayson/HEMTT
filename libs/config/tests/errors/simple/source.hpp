@@ -3,16 +3,16 @@
 #define QPATHTO(x) QUOTE(PATHTO(x))
 
 class Test {
-    data = something;
+    outer = something;
     path = PATHTO(thing);
-    data = "nosemi"
-    class data {
-        data = "something";
+    outer = "nosemi"
+    class outer {
+        inner = "something";
     };
     class Child {
-        data = "something";
+        inner = "something";
     };
     class Child {
-        data = "something";
+        inner = "something";
     };
 };

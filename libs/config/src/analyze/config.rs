@@ -119,12 +119,14 @@ fn external_missing_warn(
 }
 
 fn duplicate_properties(properties: &[Property]) -> Vec<Box<dyn Code>> {
-    let mut seen: HashMap<String, Vec<Ident>> = HashMap::new();
+    let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
     duplicate_properties_inner("", properties, &mut seen);
     let mut errors: Vec<Box<dyn Code>> = Vec::new();
     for (_, idents) in seen {
-        if idents.len() > 1 {
-            errors.push(Box::new(DuplicateProperty::new(idents)));
+        if idents.len() > 1 && !idents.iter().all(|(class, _)| *class) {
+            errors.push(Box::new(DuplicateProperty::new(
+                idents.into_iter().map(|(_, i)| i).collect(),
+            )));
         }
     }
     errors
@@ -133,7 +135,7 @@ fn duplicate_properties(properties: &[Property]) -> Vec<Box<dyn Code>> {
 fn duplicate_properties_inner(
     scope: &str,
     properties: &[Property],
-    seen: &mut HashMap<String, Vec<Ident>>,
+    seen: &mut HashMap<String, Vec<(bool, Ident)>>,
 ) {
     for property in properties {
         match property {
@@ -145,12 +147,16 @@ fn duplicate_properties_inner(
                     properties,
                     seen,
                 );
-            }
-            Property::Entry { name, .. } => {
                 let entry = seen
                     .entry(format!("{}.{}", scope, name.value.to_lowercase()))
                     .or_default();
-                entry.push(name.clone());
+                entry.push((true, name.clone()));
+            }
+            Property::Entry { name, .. } | Property::MissingSemicolon(name, _) => {
+                let entry = seen
+                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .or_default();
+                entry.push((false, name.clone()));
             }
             _ => (),
         }
