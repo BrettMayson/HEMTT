@@ -63,6 +63,8 @@ parameters = [
     "-showScriptErrors",    # You can add additional parameters here
     "-debug",
     "-filePatching",
+    "C:\\Users\\myUser\\Documents\\Arma 3 - Other Profiles\\ProfileName\\missions\\test.Stratis\\mission.sqm", 
+                            # Launch into existing Editor Mission - note: \\ needed 
 ]
 executable = "arma3" # Default: "arma3_x64"
 
