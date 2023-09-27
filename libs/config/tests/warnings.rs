@@ -2,7 +2,7 @@ use std::io::Read;
 
 use hemtt_preprocessor::Processor;
 
-const ROOT: &str = "tests/errors/";
+const ROOT: &str = "tests/warnings/";
 
 macro_rules! bootstrap {
     ($dir:ident) => {
@@ -31,35 +31,28 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let errors = config
-                .errors()
+            let warnings = config
+                .warnings()
                 .iter()
                 .map(|e| e.generate_processed_report(&processed).unwrap())
                 .collect::<Vec<_>>();
             if expected.is_empty() {
                 std::fs::write(
                     folder.join("stdout.ansi"),
-                    errors.join("\n").replace('\r', "").as_bytes(),
+                    warnings.join("\n").replace('\r', "").as_bytes(),
                 )
                 .unwrap();
             }
             assert_eq!(
-                errors.join("\n").replace('\r', ""),
+                warnings.join("\n").replace('\r', ""),
                 String::from_utf8(expected).unwrap().replace('\r', "")
             );
         }
-        // Errors may occur, but they should be handled, if one is not a handler should be created
+        // warnings may occur, but they should be handled, if one is not a handler should be created
         Err(e) => {
             panic!("{:#?}", e)
         }
     }
 }
 
-bootstrap!(ce1_invalid_value);
-bootstrap!(ce2_invalid_value_macro);
-bootstrap!(ce3_duplicate_property_separate);
-bootstrap!(ce3_duplicate_property_shadow_property);
-bootstrap!(ce4_missing_semicolon);
-bootstrap!(ce5_unexpected_array);
-bootstrap!(ce6_expected_array);
-bootstrap!(ce7_missing_parent);
+bootstrap!(cw1_parent_case);

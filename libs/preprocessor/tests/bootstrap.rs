@@ -30,8 +30,8 @@ fn check(dir: &str) {
         .unwrap()
         .read_to_string()
         .unwrap();
-    let processed = processed.as_string();
-    std::fs::write(folder.join("generated.hpp"), processed).unwrap();
+    let processed = processed.as_string().replace('\r', "");
+    std::fs::write(folder.join("generated.hpp"), &processed).unwrap();
     assert_eq!(processed, expected.replace('\r', ""));
 }
 

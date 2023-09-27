@@ -2,10 +2,13 @@ use std::collections::{HashMap, HashSet};
 
 use hemtt_common::reporting::{Code, Processed};
 
-use crate::{Class, Config, Property};
+use crate::{Class, Config, Ident, Property};
 
 use super::{
-    codes::{ce7_missing_parent::MissingParent, cw1_parent_case::ParentCase},
+    codes::{
+        ce3_duplicate_property::DuplicateProperty, ce7_missing_parent::MissingParent,
+        cw1_parent_case::ParentCase,
+    },
     Analyze,
 };
 
@@ -21,7 +24,7 @@ impl Analyze for Config {
             .flat_map(|p| p.warnings(processed))
             .collect::<Vec<_>>();
         let mut defined = HashMap::new();
-        warnings.extend(external_missing_warn(&self.0, &mut defined));
+        warnings.extend(external_parent_case_warn(&self.0, &mut defined));
         warnings
     }
 
@@ -33,6 +36,7 @@ impl Analyze for Config {
             .collect::<Vec<_>>();
         let mut defined = HashSet::new();
         errors.extend(external_missing_error(&self.0, &mut defined));
+        errors.extend(duplicate_properties(&self.0));
         errors
     }
 }
@@ -72,7 +76,7 @@ fn external_missing_error(
     errors
 }
 
-fn external_missing_warn(
+fn external_parent_case_warn(
     properties: &[Property],
     defined: &mut HashMap<String, Class>,
 ) -> Vec<Box<dyn Code>> {
@@ -106,10 +110,55 @@ fn external_missing_warn(
                         }
                     }
                     defined.insert(name_lower, c.clone());
-                    warnings.extend(external_missing_warn(properties, defined));
+                    warnings.extend(external_parent_case_warn(properties, defined));
                 }
             }
         }
     }
     warnings
+}
+
+fn duplicate_properties(properties: &[Property]) -> Vec<Box<dyn Code>> {
+    let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
+    duplicate_properties_inner("", properties, &mut seen);
+    let mut errors: Vec<Box<dyn Code>> = Vec::new();
+    for (_, idents) in seen {
+        if idents.len() > 1 && !idents.iter().all(|(class, _)| *class) {
+            errors.push(Box::new(DuplicateProperty::new(
+                idents.into_iter().map(|(_, i)| i).collect(),
+            )));
+        }
+    }
+    errors
+}
+
+fn duplicate_properties_inner(
+    scope: &str,
+    properties: &[Property],
+    seen: &mut HashMap<String, Vec<(bool, Ident)>>,
+) {
+    for property in properties {
+        match property {
+            Property::Class(Class::Local {
+                name, properties, ..
+            }) => {
+                duplicate_properties_inner(
+                    &format!("{}.{}", scope, name.value.to_lowercase()),
+                    properties,
+                    seen,
+                );
+                let entry = seen
+                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .or_default();
+                entry.push((true, name.clone()));
+            }
+            Property::Entry { name, .. } | Property::MissingSemicolon(name, _) => {
+                let entry = seen
+                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .or_default();
+                entry.push((false, name.clone()));
+            }
+            _ => (),
+        }
+    }
 }
