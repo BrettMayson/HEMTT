@@ -28,7 +28,7 @@ impl Context {
                 return Err(Error::ConfigNotFound);
             }
             let config = Configuration::from_file(&path)?;
-            let version = config.version().get();
+            let version = config.version().get(None);
             if let Err(Error::Git(_)) = version {
                 error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
                 println!("\n[version]\ngit_hash = 0\n");
