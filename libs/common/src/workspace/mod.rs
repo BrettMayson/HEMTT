@@ -46,6 +46,9 @@ impl Workspace {
             if entry.is_dir()? {
                 continue;
             }
+            if entry.as_str().contains(".hemtt") {
+                continue;
+            }
             match entry.filename().to_lowercase().as_str() {
                 "config.cpp" => {
                     trace!("config.cpp: {:?}", entry);
