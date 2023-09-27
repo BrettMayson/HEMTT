@@ -25,6 +25,9 @@ pub struct Options {
     git_hash: Option<u8>,
 }
 
+static mut VERSION: MaybeUninit<Version> = MaybeUninit::uninit();
+static mut INIT: bool = false;
+
 impl Options {
     /// Get the version of the project
     ///
@@ -33,9 +36,6 @@ impl Options {
     /// Returns an error if the version is not a valid semver version
     /// or a points to a file that does not contain a valid version macro
     pub fn get(&self) -> Result<Version, Error> {
-        static mut VERSION: MaybeUninit<Version> = MaybeUninit::uninit();
-        static mut INIT: bool = false;
-
         // Check for a cached version
         unsafe {
             if INIT {
@@ -56,6 +56,14 @@ impl Options {
             VERSION = MaybeUninit::new(version);
             INIT = true;
             return Ok(VERSION.assume_init_ref().clone());
+        }
+    }
+
+    /// Invalidate the cached version
+    #[allow(clippy::unused_self)]
+    pub fn invalidate(&self) {
+        unsafe {
+            INIT = false;
         }
     }
 

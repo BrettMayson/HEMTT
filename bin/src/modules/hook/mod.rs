@@ -105,6 +105,7 @@ impl Hooks {
                 &std::fs::read_to_string(file.path())?,
                 vfs,
             )?;
+            ctx.config().version().invalidate();
         }
         Ok(())
     }
@@ -115,12 +116,14 @@ impl Hooks {
         if !path.exists() {
             return Err(Error::ScriptNotFound(name.to_owned()));
         }
-        Self::run(
+        let res = Self::run(
             ctx,
             name.to_string(),
             &std::fs::read_to_string(path)?,
             false,
-        )
+        );
+        ctx.config().version().invalidate();
+        res
     }
 
     fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<(), Error> {
