@@ -24,7 +24,7 @@ impl Analyze for Config {
             .flat_map(|p| p.warnings(processed))
             .collect::<Vec<_>>();
         let mut defined = HashMap::new();
-        warnings.extend(external_missing_warn(&self.0, &mut defined));
+        warnings.extend(external_parent_case_warn(&self.0, &mut defined));
         warnings
     }
 
@@ -76,7 +76,7 @@ fn external_missing_error(
     errors
 }
 
-fn external_missing_warn(
+fn external_parent_case_warn(
     properties: &[Property],
     defined: &mut HashMap<String, Class>,
 ) -> Vec<Box<dyn Code>> {
@@ -110,7 +110,7 @@ fn external_missing_warn(
                         }
                     }
                     defined.insert(name_lower, c.clone());
-                    warnings.extend(external_missing_warn(properties, defined));
+                    warnings.extend(external_parent_case_warn(properties, defined));
                 }
             }
         }
