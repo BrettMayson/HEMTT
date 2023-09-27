@@ -45,7 +45,7 @@ fn check(dir: &str) {
             }
             assert_eq!(
                 errors.join("\n").replace('\r', ""),
-                String::from_utf8(expected).unwrap()
+                String::from_utf8(expected).unwrap().replace('\r', "")
             );
         }
         // Errors may occur, but they should be handled, if one is not a handler should be created
