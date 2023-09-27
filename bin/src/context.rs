@@ -21,6 +21,16 @@ pub struct Context {
 }
 
 impl Context {
+    /// Create a new context
+    ///
+    /// # Errors
+    /// [`Error::ConfigNotFound`] if the project.toml is not found
+    /// [`Error::Io`] if the temporary folder fails to be created
+    /// [`Error::Git`] if the git hash is invalid
+    /// [`Error::Version`] if the version is invalid
+    ///
+    /// # Panics
+    /// If the project folder is not a valid [`OsStr`] (UTF-8)
     pub fn new(root: PathBuf, folder: &str) -> Result<Self, Error> {
         let config = {
             let path = root.join(".hemtt").join("project.toml");
@@ -42,7 +52,7 @@ impl Context {
                 .skip(2)
                 .collect::<PathBuf>()
                 .to_str()
-                .unwrap()
+                .expect("valid utf-8")
                 .replace(['\\', '/'], "_"),
         );
         trace!("using temporary folder: {:?}", tmp.display());

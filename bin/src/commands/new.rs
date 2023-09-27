@@ -18,6 +18,13 @@ pub fn cli() -> Command {
     )
 }
 
+/// Execute the new command
+///
+/// # Errors
+/// [`Error`] depending on the modules
+///
+/// # Panics
+/// If a name is not provided, but this is usually handled by clap
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if !std::io::stdin().is_terminal() {
         return Err(Error::NewNoInput);

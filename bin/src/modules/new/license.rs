@@ -6,6 +6,10 @@ pub struct Licenses;
 
 impl Licenses {
     #[must_use]
+    /// Has the user select a license
+    ///
+    /// # Panics
+    /// If there is a problem with dialoguer
     pub fn select(author: &str) -> Option<String> {
         let licenses = vec![
             "Arma Public License Share Alike (APL-SA)",

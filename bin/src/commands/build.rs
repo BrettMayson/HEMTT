@@ -33,6 +33,10 @@ pub fn add_args(cmd: Command) -> Command {
     )
 }
 
+/// Execute the build command
+///
+/// # Errors
+/// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Error> {
     executor.collapse(Collapse::No);
 

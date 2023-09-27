@@ -14,6 +14,10 @@ use super::Module;
 mod libraries;
 mod time;
 
+/// Creates a sccope for a Rhai script
+///
+/// # Errors
+/// [`Error::Version`] if the version is not a valid semver version
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     scope.push_constant("HEMTT_VERSION", env!("CARGO_PKG_VERSION"));
@@ -69,6 +73,15 @@ impl Default for Hooks {
 }
 
 impl Hooks {
+    /// Run a folder of hooks
+    ///
+    /// # Errors
+    /// [`Error::ScriptNotFound`] if the script does not exist
+    /// [`Error::HookFatal`] if the script calls `fatal`
+    /// [`Error::Rhai`] if the script is invalid
+    ///
+    /// # Panics
+    /// If a file path is not a valid [`OsStr`] (UTF-8)
     pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
         if !self.0 {
             return Ok(());
@@ -110,6 +123,15 @@ impl Hooks {
         Ok(())
     }
 
+    /// Run a script
+    ///
+    /// # Errors
+    /// [`Error::ScriptNotFound`] if the script does not exist
+    /// [`Error::HookFatal`] if the script calls `fatal`
+    /// [`Error::Rhai`] if the script is invalid
+    ///
+    /// # Panics
+    /// If a file path is not a valid [`OsStr`] (UTF-8)
     pub fn run_file(ctx: &Context, name: &str) -> Result<(), Error> {
         let mut path = ctx.hemtt_folder().join("scripts").join(name);
         path.set_extension("rhai");

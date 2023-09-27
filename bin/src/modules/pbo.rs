@@ -27,6 +27,14 @@ pub enum Collapse {
     No,
 }
 
+/// Builds the PBOs
+///
+/// # Errors
+/// [`Error`] depending on the modules
+/// [`Error::Io`] if the PBO fails to write
+/// [`Error::Version`] if the version is invalid
+/// [`Error::Git`] if the git hash is invalid
+/// [`Error::Pbo`] if the PBO fails to write
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
     let version = ctx.config().version().get(ctx.workspace().vfs())?;
     let git_hash = {

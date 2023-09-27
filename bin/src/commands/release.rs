@@ -25,6 +25,10 @@ pub fn cli() -> Command {
     )
 }
 
+/// Execute the release command
+///
+/// # Errors
+/// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let ctx = Context::new(std::env::current_dir()?, "release")?;
     let mut executor = Executor::new(&ctx);

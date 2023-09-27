@@ -36,6 +36,101 @@ pub struct Processed {
     warnings: Vec<Box<dyn Code>>,
 }
 
+fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
+    let path = token.position().path().clone();
+    let source = processed
+        .sources
+        .iter()
+        .position(|(s, _)| s == &path)
+        .map_or_else(
+            || {
+                let content = path.read_to_string()?;
+                processed.sources.push((path, content));
+                Ok(processed.sources.len() - 1)
+            },
+            Ok,
+        )
+        .map_err(Error::Workspace)?;
+    if token.symbol().is_newline() {
+        processed.line_offsets.push(processed.processed.len());
+        processed.processed.push('\n');
+        processed.mappings.push(Mapping {
+            processed: (LineCol(processed.total, (processed.line, processed.col)), {
+                processed.line += 1;
+                processed.col = 0;
+                processed.total += 1;
+                LineCol(processed.total, (processed.line, processed.col))
+            }),
+            source,
+            original: token.position().clone(),
+            token,
+            was_macro: false,
+        });
+    } else {
+        let str = token.to_source();
+        if str.is_empty() {
+            return Ok(());
+        }
+        processed.mappings.push(Mapping {
+            processed: (LineCol(processed.total, (processed.line, processed.col)), {
+                processed.col += str.len();
+                processed.total += str.len();
+                processed.processed.push_str(&str);
+                LineCol(
+                    processed.total + str.len(),
+                    (processed.line, processed.col + str.len()),
+                )
+            }),
+            source,
+            original: token.position().clone(),
+            token,
+            was_macro: false,
+        });
+    }
+    Ok(())
+}
+
+fn append_output(processed: &mut Processed, output: Vec<Output>) -> Result<(), Error> {
+    for o in output {
+        match o {
+            Output::Direct(t) => {
+                append_token(processed, t)?;
+            }
+            Output::Macro(root, o) => {
+                let start = processed.total;
+                let line = processed.line;
+                let col = processed.col;
+                append_output(processed, o)?;
+                let end = processed.total;
+                let path = root.position().path().clone();
+                let content = path.read_to_string()?;
+                let source = processed
+                    .sources
+                    .iter()
+                    .position(|(s, _)| s.as_str() == path.as_str())
+                    .map_or_else(
+                        || {
+                            processed.sources.push((path, content));
+                            processed.sources.len() - 1
+                        },
+                        |i| i,
+                    );
+                processed.mappings.push(Mapping {
+                    processed: (
+                        LineCol(start, (line, col)),
+                        LineCol(end, (processed.line, processed.col)),
+                    ),
+                    source,
+                    original: root.position().clone(),
+                    token: root,
+                    was_macro: true,
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
 impl Processed {
     /// Process the output of the preprocessor
     ///
@@ -47,99 +142,6 @@ impl Processed {
         declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
     ) -> Result<Self, Error> {
-        fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
-            let path = token.position().path().clone();
-            let source = processed
-                .sources
-                .iter()
-                .position(|(s, _)| s == &path)
-                .map_or_else(
-                    || {
-                        let content = path.read_to_string()?;
-                        processed.sources.push((path, content));
-                        Ok(processed.sources.len() - 1)
-                    },
-                    Ok,
-                )
-                .map_err(Error::Workspace)?;
-            if token.symbol().is_newline() {
-                processed.line_offsets.push(processed.processed.len());
-                processed.processed.push('\n');
-                processed.mappings.push(Mapping {
-                    processed: (LineCol(processed.total, (processed.line, processed.col)), {
-                        processed.line += 1;
-                        processed.col = 0;
-                        processed.total += 1;
-                        LineCol(processed.total, (processed.line, processed.col))
-                    }),
-                    source,
-                    original: token.position().clone(),
-                    token,
-                    was_macro: false,
-                });
-            } else {
-                let str = token.to_source();
-                if str.is_empty() {
-                    return Ok(());
-                }
-                processed.mappings.push(Mapping {
-                    processed: (LineCol(processed.total, (processed.line, processed.col)), {
-                        processed.col += str.len();
-                        processed.total += str.len();
-                        processed.processed.push_str(&str);
-                        LineCol(
-                            processed.total + str.len(),
-                            (processed.line, processed.col + str.len()),
-                        )
-                    }),
-                    source,
-                    original: token.position().clone(),
-                    token,
-                    was_macro: false,
-                });
-            }
-            Ok(())
-        }
-        fn append_output(processed: &mut Processed, output: Vec<Output>) -> Result<(), Error> {
-            for o in output {
-                match o {
-                    Output::Direct(t) => {
-                        append_token(processed, t)?;
-                    }
-                    Output::Macro(root, o) => {
-                        let start = processed.total;
-                        let line = processed.line;
-                        let col = processed.col;
-                        append_output(processed, o)?;
-                        let end = processed.total;
-                        let path = root.position().path().clone();
-                        let content = path.read_to_string()?;
-                        let source = processed
-                            .sources
-                            .iter()
-                            .position(|(s, _)| s.as_str() == path.as_str())
-                            .map_or_else(
-                                || {
-                                    processed.sources.push((path, content));
-                                    processed.sources.len() - 1
-                                },
-                                |i| i,
-                            );
-                        processed.mappings.push(Mapping {
-                            processed: (
-                                LineCol(start, (line, col)),
-                                LineCol(end, (processed.line, processed.col)),
-                            ),
-                            source,
-                            original: root.position().clone(),
-                            token: root,
-                            was_macro: true,
-                        });
-                    }
-                }
-            }
-            Ok(())
-        }
         let mut processed = Self {
             declarations,
             usage,

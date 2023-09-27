@@ -32,6 +32,10 @@ pub fn cli() -> Command {
 }
 
 #[allow(clippy::too_many_lines)]
+/// Execute the launch command
+///
+/// # Errors
+/// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let config = Configuration::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
@@ -42,10 +46,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     let launch_config = matches
         .get_one::<String>("config")
-        .expect("a config to be set");
+        .map_or_else(|| String::from("default"), std::string::ToString::to_string);
     let launch = config
         .hemtt()
-        .launch(launch_config)
+        .launch(&launch_config)
         .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
 
     let Some(arma3dir) =

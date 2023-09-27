@@ -42,6 +42,10 @@ pub fn add_args(cmd: Command) -> Command {
     )
 }
 
+/// Execute the dev command
+///
+/// # Errors
+/// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Context, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches

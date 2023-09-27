@@ -1,4 +1,4 @@
-use std::{mem::MaybeUninit, path::Path};
+use std::mem::MaybeUninit;
 
 use git2::Repository;
 use hemtt_common::version::Version;

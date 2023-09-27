@@ -33,6 +33,13 @@ pub fn add_args(cmd: Command) -> Command {
     )
 }
 
+/// Execute the script command
+///
+/// # Errors
+/// [`Error`] depending on the modules
+///
+/// # Panics
+/// If a name is not provided, but this is usually handled by clap
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches

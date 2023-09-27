@@ -2,6 +2,16 @@ use std::fs::create_dir_all;
 
 use crate::{context::Context, error::Error};
 
+/// Creates the release zips
+///
+/// # Errors
+/// [`Error`] depending on the modules
+/// [`Error::Zip`] if the zip fails to create
+/// [`Error::Io`] if the zip fails to write
+/// [`Error::Version`] if the version is invalid
+///
+/// # Panics
+/// If we are somehow not in the HEMTT folder
 pub fn release(ctx: &Context) -> Result<(), Error> {
     let output = ctx.project_folder().join("releases");
     trace!("using releases folder: {:?}", output.display());
