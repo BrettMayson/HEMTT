@@ -831,6 +831,7 @@ dependencies = [
  "reqwest",
  "rhai",
  "rust-embed",
+ "rustversion",
  "semver",
  "serde",
  "serde_json",
@@ -1857,6 +1858,12 @@ dependencies = [
  "linux-raw-sys",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "rustversion"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ffc183a10b4478d04cbbbfc96d0873219d962dd5accaff2ffbd4ceb7df837f4"
 
 [[package]]
 name = "ryu"

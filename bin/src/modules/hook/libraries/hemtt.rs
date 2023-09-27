@@ -28,36 +28,43 @@ impl RhaiHemtt {
 
 #[export_module]
 pub mod project_functions {
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn version(hemtt: &mut RhaiHemtt) -> Version {
         hemtt.version.clone()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn project(hemtt: &mut RhaiHemtt) -> RhaiProject {
         hemtt.project.clone()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn mode(hemtt: &mut RhaiHemtt) -> String {
         hemtt.folder.clone()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_dev(hemtt: &mut RhaiHemtt) -> bool {
         hemtt.folder == "dev"
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_launch(hemtt: &mut RhaiHemtt) -> bool {
         hemtt.folder == "launch"
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_build(hemtt: &mut RhaiHemtt) -> bool {
         hemtt.folder == "build"
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_release(hemtt: &mut RhaiHemtt) -> bool {
         hemtt.folder == "release"

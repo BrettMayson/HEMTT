@@ -8,26 +8,31 @@ use rhai::plugin::{
 pub mod path_functions {
     use std::path::PathBuf;
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn join(path: &mut PathBuf, other: &str) -> PathBuf {
         path.join(other)
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn exists(path: &mut PathBuf) -> bool {
         path.exists()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_dir(path: &mut PathBuf) -> bool {
         path.is_dir()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn is_file(path: &mut PathBuf) -> bool {
         path.is_file()
     }
 
+    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, name = "to_string", name = "to_debug", pure)]
     pub fn to_string(path: &mut PathBuf) -> String {
         path.display().to_string()
