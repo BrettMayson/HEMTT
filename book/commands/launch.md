@@ -63,6 +63,7 @@ parameters = [
     "-showScriptErrors",    # You can add additional parameters here
     "-debug",
     "-filePatching",
+    "Path\\To\\mission.sqm", # Launch into existing Editor Mission - \\ needed
 ]
 executable = "arma3" # Default: "arma3_x64"
 
