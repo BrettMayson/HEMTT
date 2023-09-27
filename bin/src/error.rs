@@ -63,6 +63,8 @@ pub enum Error {
     #[error("Update error: {0}")]
     Update(String),
 
+    #[error("Dialoguer Error: {0}")]
+    Dialoguer(#[from] dialoguer::Error),
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
     #[error("Glob Error: {0}")]
