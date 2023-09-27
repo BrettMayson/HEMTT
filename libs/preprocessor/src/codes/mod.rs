@@ -22,3 +22,4 @@ pub mod pe8_if_undefined;
 pub mod pe9_function_call_argument_count;
 
 pub mod pw1_redefine;
+pub mod pw2_invalid_config_case;
