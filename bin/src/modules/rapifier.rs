@@ -142,7 +142,7 @@ pub fn rapify(path: WorkspacePath, _ctx: &Context) -> (Vec<String>, Result<(), E
             ))),
         );
     }
-    let out = if path.filename() == "config.cpp" {
+    let out = if path.filename().to_lowercase() == "config.cpp" {
         path.parent().join("config.bin").unwrap()
     } else {
         path

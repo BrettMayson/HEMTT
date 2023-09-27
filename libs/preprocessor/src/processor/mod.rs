@@ -8,6 +8,7 @@ use peekmore::{PeekMore, PeekMoreIterator};
 use crate::codes::pe18_eoi_ifstate::EoiIfState;
 use crate::codes::pe2_unexpected_eof::UnexpectedEOF;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
+use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
 use crate::Error;
@@ -64,6 +65,12 @@ impl Processor {
             return Err(Error::Code(Box::new(EoiIfState {
                 token: Box::new(state.token().clone()),
             })));
+        }
+
+        if path.filename() == "Config.cpp" {
+            processor
+                .warnings
+                .push(Box::new(InvalidConfigCase { path: path.clone() }));
         }
 
         Processed::new(
