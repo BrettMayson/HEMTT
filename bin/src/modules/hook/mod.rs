@@ -17,7 +17,7 @@ mod time;
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     scope.push_constant("HEMTT_VERSION", env!("CARGO_PKG_VERSION"));
-    let version = ctx.config().version().get(Some(ctx.workspace().vfs()))?;
+    let version = ctx.config().version().get(ctx.workspace().vfs())?;
     scope.push_constant("HEMTT_PROJECT_VERSION", version.to_string());
     scope.push_constant("HEMTT_PROJECT_VERSION_MAJOR", version.major());
     scope.push_constant("HEMTT_PROJECT_VERSION_MINOR", version.minor());

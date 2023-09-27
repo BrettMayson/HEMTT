@@ -27,15 +27,7 @@ impl Context {
             if !path.exists() {
                 return Err(Error::ConfigNotFound);
             }
-            let config = Configuration::from_file(&path)?;
-            let version = config.version().get(None);
-            if let Err(Error::Git(_)) = version {
-                error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
-                println!("\n[version]\ngit_hash = 0\n");
-                std::process::exit(1);
-            };
-            info!("Config loaded for {} {}", config.name(), version?,);
-            config
+            Configuration::from_file(&path)?
         };
         let tmp = {
             let mut tmp = temp_dir().join("hemtt");
@@ -65,20 +57,30 @@ impl Context {
             remove_dir_all(&build_folder)?;
         }
         create_dir_all(&build_folder)?;
+        let workspace = {
+            let mut builder = Workspace::builder().physical(&root);
+            if cfg!(target_os = "windows") {
+                builder = builder.physical(&tmp.join("output"));
+            }
+            let include = root.join("include");
+            if include.is_dir() {
+                builder = builder.physical(&include);
+            }
+            builder.memory().finish()?
+        };
+        {
+            let version = config.version().get(workspace.vfs());
+            if let Err(Error::Git(_)) = version {
+                error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
+                println!("\n[version]\ngit_hash = 0\n");
+                std::process::exit(1);
+            };
+            info!("Config loaded for {} {}", config.name(), version?,);
+        }
         Ok(Self {
             config,
             folder: folder.to_owned(),
-            workspace: {
-                let mut builder = Workspace::builder().physical(&root);
-                if cfg!(target_os = "windows") {
-                    builder = builder.physical(&tmp.join("output"));
-                }
-                let include = root.join("include");
-                if include.is_dir() {
-                    builder = builder.physical(&include);
-                }
-                builder.memory().finish()?
-            },
+            workspace,
             project_folder: root,
             hemtt_folder,
             out_folder: build_folder,

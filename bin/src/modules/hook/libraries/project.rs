@@ -20,11 +20,7 @@ impl RhaiProject {
         Self {
             name: ctx.config().name().to_string(),
             prefix: ctx.config().prefix().to_string(),
-            version: ctx
-                .config()
-                .version()
-                .get(Some(ctx.workspace().vfs()))
-                .unwrap(),
+            version: ctx.config().version().get(ctx.workspace().vfs()).unwrap(),
             // addons: ctx.addons().to_vec(),
         }
     }

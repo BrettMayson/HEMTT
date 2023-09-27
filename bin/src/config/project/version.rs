@@ -36,7 +36,7 @@ impl Options {
     ///
     /// Returns an error if the version is not a valid semver version
     /// or a points to a file that does not contain a valid version macro
-    pub fn get(&self, vfs: Option<&VfsPath>) -> Result<Version, Error> {
+    pub fn get(&self, vfs: &VfsPath) -> Result<Version, Error> {
         // Check for a cached version
         unsafe {
             if INIT {
@@ -68,7 +68,7 @@ impl Options {
         }
     }
 
-    fn _get(&self, vfs: Option<&VfsPath>) -> Result<Version, Error> {
+    fn _get(&self, vfs: &VfsPath) -> Result<Version, Error> {
         // Check for a defined major version
         if let Some(major) = self.major {
             trace!("reading version from project.toml");
@@ -89,16 +89,12 @@ impl Options {
         } else {
             version.replace('\\', "/")
         };
-        let path = Path::new(&binding);
+        let path = vfs.join(binding)?;
 
         // Check for a path to a version macro file
-        if path.exists() {
+        if path.exists()? {
             trace!("checking for version macro in {:?}", path);
-            let content = if let Some(vfs) = vfs {
-                vfs.join(&binding)?.read_to_string()?
-            } else {
-                std::fs::read_to_string(path)?
-            };
+            let content = path.read_to_string()?;
             return Version::try_from_script_version(&content).map_err(Into::into);
         }
         error!("could not find version macro file: {:?}", path);
