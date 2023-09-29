@@ -113,8 +113,9 @@ impl Module for ArmaScriptCompiler {
                         .asc()
                         .exclude()
                         .iter()
-                        .any(|e| entry.as_str().contains(e))
+                        .any(|e| entry.as_str().to_ascii_lowercase().contains(&e.to_ascii_lowercase()))
                     {
+                        debug!("asc excluded {}", entry);
                         continue;
                     }
                     entries.push(entry);
@@ -193,6 +194,7 @@ impl Module for ArmaScriptCompiler {
             let to = ctx.workspace().join(&format!("{dst}c"))?;
             if !from.exists() {
                 // Likely excluded
+                debug!("asc didn't process {}", src);
                 continue;
             }
             let mut f = File::open(from)?;
