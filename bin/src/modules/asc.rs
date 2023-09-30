@@ -169,7 +169,7 @@ impl Module for ArmaScriptCompiler {
             config.add_include_dir(include.display().to_string());
         }
         for exclude in ctx.config().asc().exclude() {
-            config.add_exclude(exclude);
+        //     config.add_exclude(exclude); // not needed because we only demacro sqf that aren't in exclude
         }
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
@@ -179,6 +179,9 @@ impl Module for ArmaScriptCompiler {
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
         out_file.write_all(&command.stdout)?;
         out_file.write_all(&command.stderr)?;
+        if String::from_utf8(command.stdout.clone()).unwrap().contains("Parse Error") {
+            warn!("ASC 'Parse Error' - check .hemttout/asc.log");
+        }
         if command.status.success() {
             debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
         } else {
@@ -193,7 +196,7 @@ impl Module for ArmaScriptCompiler {
             let from = tmp_output.join(&format!("{src}c"));
             let to = ctx.workspace().join(&format!("{dst}c"))?;
             if !from.exists() {
-                // Likely excluded
+                // sqf that have parse errors OR just empty//no-code
                 debug!("asc didn't process {}", src);
                 continue;
             }
