@@ -167,9 +167,6 @@ impl Module for ArmaScriptCompiler {
         if include.exists() {
             config.add_include_dir(include.display().to_string());
         }
-        for exclude in ctx.config().asc().exclude() {
-            //     config.add_exclude(exclude); // not needed because we only demacro sqf that aren't in exclude
-        }
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
