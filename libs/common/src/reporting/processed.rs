@@ -36,7 +36,11 @@ pub struct Processed {
     warnings: Vec<Box<dyn Code>>,
 }
 
-fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
+fn append_token(
+    processed: &mut Processed,
+    string_stack: &mut Vec<char>,
+    token: Token,
+) -> Result<(), Error> {
     let path = token.position().path().clone();
     let source = processed
         .sources
@@ -51,6 +55,25 @@ fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
             Ok,
         )
         .map_err(Error::Workspace)?;
+    if token.symbol().is_double_quote() {
+        if string_stack.is_empty() {
+            string_stack.push('"');
+        } else if string_stack.last().unwrap() == &'"' {
+            string_stack.pop();
+        } else {
+            string_stack.push('"');
+        }
+    } else if token.symbol().is_single_quote() {
+        if string_stack.is_empty() {
+            string_stack.push('\'');
+        } else if string_stack.last().unwrap() == &'\''
+            && token.position().start().0 != token.position().end().0
+        {
+            string_stack.pop();
+        } else {
+            string_stack.push('\'');
+        }
+    }
     if token.symbol().is_newline() {
         processed.line_offsets.push(processed.processed.len());
         processed.processed.push('\n');
@@ -69,6 +92,9 @@ fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
     } else {
         let str = token.to_source();
         if str.is_empty() {
+            return Ok(());
+        }
+        if str == "##" && string_stack.is_empty() {
             return Ok(());
         }
         processed.mappings.push(Mapping {
@@ -90,17 +116,21 @@ fn append_token(processed: &mut Processed, token: Token) -> Result<(), Error> {
     Ok(())
 }
 
-fn append_output(processed: &mut Processed, output: Vec<Output>) -> Result<(), Error> {
+fn append_output(
+    processed: &mut Processed,
+    string_stack: &mut Vec<char>,
+    output: Vec<Output>,
+) -> Result<(), Error> {
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processed, t)?;
+                append_token(processed, string_stack, t)?;
             }
             Output::Macro(root, o) => {
                 let start = processed.total;
                 let line = processed.line;
                 let col = processed.col;
-                append_output(processed, o)?;
+                append_output(processed, string_stack, o)?;
                 let end = processed.total;
                 let path = root.position().path().clone();
                 let content = path.read_to_string()?;
@@ -148,7 +178,8 @@ impl Processed {
             warnings,
             ..Default::default()
         };
-        append_output(&mut processed, output)?;
+        let mut string_stack = Vec::new();
+        append_output(&mut processed, &mut string_stack, output)?;
         Ok(processed)
     }
 

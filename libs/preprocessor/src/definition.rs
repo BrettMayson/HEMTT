@@ -101,6 +101,10 @@ impl FunctionDefinition {
     #[must_use]
     /// Get the body as a stream
     pub fn stream(&self) -> PeekMoreIterator<impl Iterator<Item = Token>> {
-        self.body.clone().into_iter().peekmore()
+        self.body
+            .clone()
+            .into_iter()
+            .filter(|t| !t.symbol().is_join())
+            .peekmore()
     }
 }

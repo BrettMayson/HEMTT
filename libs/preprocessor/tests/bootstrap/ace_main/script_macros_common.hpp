@@ -352,7 +352,7 @@ Parameters:
     TITLE - Title of error message <STRING>
     MESSAGE -  Body of error message <STRING>
 
-Example:
+Example:`
     (begin example)
         ERROR_WITH_TITLE("Value not found","Value of frog not found in config ...yada...yada...");
     (end)

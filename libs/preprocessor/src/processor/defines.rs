@@ -230,6 +230,7 @@ impl Processor {
             }
             Definition::Value(body) => {
                 let mut layer = Vec::new();
+                let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
                 self.walk(
                     Some(callsite),
                     Some(&ident_string),
