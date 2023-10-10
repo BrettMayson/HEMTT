@@ -228,6 +228,7 @@ impl Processor {
                 buffer.push(Output::Macro(ident.clone(), layer));
                 self.defines.pop();
             }
+            #[allow(clippy::needless_collect)] // causes recursion at runtime otherwise
             Definition::Value(body) => {
                 let mut layer = Vec::new();
                 let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
