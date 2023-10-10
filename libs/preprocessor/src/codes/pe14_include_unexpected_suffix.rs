@@ -25,7 +25,7 @@ impl Code for IncludeUnexpectedSuffix {
     fn label_message(&self) -> String {
         format!(
             "unexpected tokens after include `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 

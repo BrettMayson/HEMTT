@@ -27,7 +27,7 @@ impl Code for FunctionAsValue {
     fn label_message(&self) -> String {
         format!(
             "attempted to use a function as a value `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 

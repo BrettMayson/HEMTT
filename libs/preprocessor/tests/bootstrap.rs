@@ -61,6 +61,7 @@ bootstrap!(ignore_quoted);
 bootstrap!(include);
 bootstrap!(include_empty);
 bootstrap!(join_digit);
+bootstrap!(join_ignore);
 bootstrap!(name_collision);
 bootstrap!(procedural_texture);
 bootstrap!(quote);

@@ -175,12 +175,15 @@ impl Symbol {
     }
 
     #[must_use]
-    /// Get the output of a symbol
-    pub fn output(&self) -> String {
-        match *self {
-            Self::Join => String::new(),
-            _ => self.to_string(),
-        }
+    /// Check if a symbol is [`SingleQuote`](Symbol::SingleQuote)
+    pub const fn is_single_quote(&self) -> bool {
+        matches!(self, Self::SingleQuote)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`Join`](Symbol::Join)
+    pub const fn is_join(&self) -> bool {
+        matches!(self, Self::Join)
     }
 
     #[must_use]

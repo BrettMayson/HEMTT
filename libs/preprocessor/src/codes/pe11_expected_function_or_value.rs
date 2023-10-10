@@ -29,14 +29,14 @@ impl Code for ExpectedFunctionOrValue {
     fn label_message(&self) -> String {
         format!(
             "expected function or value, found unit `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
     fn help(&self) -> Option<String> {
         Some(format!(
             "expected function or value, found unit `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         ))
     }
 

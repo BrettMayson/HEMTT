@@ -10,15 +10,7 @@ pub enum Output {
 }
 
 impl Output {
-    /// Get the "source" of the token, reading for further processing
-    pub fn to_source(&self) -> String {
-        match self {
-            Self::Direct(t) => t.to_source(),
-            Self::Macro(_, t) => t.iter().map(Self::to_source).collect::<String>(),
-        }
-    }
-
-    /// Get the last symbol of the token
+    /// Get the last symbol of the output
     pub fn last_symbol(&self) -> Option<&Symbol> {
         match self {
             Self::Direct(t) => Some(t.symbol()),

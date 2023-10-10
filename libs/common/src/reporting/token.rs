@@ -31,11 +31,7 @@ impl Token {
     #[must_use]
     /// For writing to a file for later parsing
     pub fn to_source(&self) -> String {
-        if self.symbol == Symbol::Join {
-            String::new()
-        } else {
-            self.symbol.to_string()
-        }
+        self.symbol.to_string()
     }
 }
 

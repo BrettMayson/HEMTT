@@ -54,7 +54,7 @@ impl Code for IncludeNotEncased {
                 .with_message(if self.encased_in.is_none() {
                     format!(
                         "try {}",
-                        format!("<{}>", self.token.symbol().output().trim()).fg(a)
+                        format!("<{}>", self.token.symbol().to_string().trim()).fg(a)
                     )
                 } else {
                     format!(
@@ -65,7 +65,7 @@ impl Code for IncludeNotEncased {
                             .symbol()
                             .matching_enclosure()
                             .unwrap()
-                            .output()
+                            .to_string()
                             .trim()
                             .fg(a)
                     )
