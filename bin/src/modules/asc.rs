@@ -108,13 +108,12 @@ impl Module for ArmaScriptCompiler {
                     if entry.extension() != sqf_ext {
                         continue;
                     }
-                    if ctx
-                        .config()
-                        .asc()
-                        .exclude()
-                        .iter()
-                        .any(|e| entry.as_str().to_ascii_lowercase().contains(&e.to_ascii_lowercase()))
-                    {
+                    if ctx.config().asc().exclude().iter().any(|e| {
+                        entry
+                            .as_str()
+                            .to_ascii_lowercase()
+                            .contains(&e.to_ascii_lowercase())
+                    }) {
                         debug!("asc excluded {}", entry);
                         continue;
                     }
@@ -169,7 +168,7 @@ impl Module for ArmaScriptCompiler {
             config.add_include_dir(include.display().to_string());
         }
         for exclude in ctx.config().asc().exclude() {
-        //     config.add_exclude(exclude); // not needed because we only demacro sqf that aren't in exclude
+            //     config.add_exclude(exclude); // not needed because we only demacro sqf that aren't in exclude
         }
         config.set_worker_threads(num_cpus::get());
         let mut f = File::create(tmp.join("sqfc.json"))?;
@@ -179,7 +178,10 @@ impl Module for ArmaScriptCompiler {
         let command = Command::new(tmp.join(SOURCE[0])).output()?;
         out_file.write_all(&command.stdout)?;
         out_file.write_all(&command.stderr)?;
-        if String::from_utf8(command.stdout.clone()).unwrap().contains("Parse Error") {
+        if String::from_utf8(command.stdout.clone())
+            .unwrap()
+            .contains("Parse Error")
+        {
             warn!("ASC 'Parse Error' - check .hemttout/asc.log");
         }
         if command.status.success() {
