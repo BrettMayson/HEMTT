@@ -29,7 +29,7 @@ impl Code for IfUndefined {
     fn label_message(&self) -> String {
         format!(
             "attempted to use `#if` on an undefined macro `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
@@ -44,7 +44,7 @@ impl Code for IfUndefined {
         let span = self.token.position().start().0..self.token.position().end().0;
         let did_you_mean = self
             .defines
-            .similar_values(self.token.symbol().output().trim());
+            .similar_values(self.token.symbol().to_string().trim());
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),

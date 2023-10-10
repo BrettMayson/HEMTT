@@ -27,7 +27,7 @@ impl Code for UnexpectedToken {
     fn label_message(&self) -> String {
         format!(
             "unexpected token `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 

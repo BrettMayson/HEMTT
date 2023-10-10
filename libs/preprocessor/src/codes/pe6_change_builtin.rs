@@ -25,7 +25,7 @@ impl Code for ChangeBuiltin {
     fn label_message(&self) -> String {
         format!(
             "built-in macro `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
@@ -50,7 +50,7 @@ impl Code for ChangeBuiltin {
                 .with_color(a)
                 .with_message(format!(
                     "built-in macro `{}`",
-                    self.token.symbol().output().trim().fg(a)
+                    self.token.symbol().to_string().trim().fg(a)
                 )),
         )
         .finish()

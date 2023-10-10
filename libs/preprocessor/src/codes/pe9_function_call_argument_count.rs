@@ -51,12 +51,12 @@ impl Code for FunctionCallArgumentCount {
         let a = colors.next();
         let defined = self
             .defines
-            .get_readonly(self.token.symbol().output().trim())
+            .get_readonly(self.token.symbol().to_string().trim())
             .unwrap();
         let func = defined.1.as_function().unwrap();
         let did_you_mean = self
             .defines
-            .similar_function(self.token.symbol().output().trim(), Some(self.got));
+            .similar_function(self.token.symbol().to_string().trim(), Some(self.got));
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),

@@ -24,7 +24,7 @@ impl Code for UnexpectedEOF {
     fn label_message(&self) -> String {
         format!(
             "Unexpected end of file `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 

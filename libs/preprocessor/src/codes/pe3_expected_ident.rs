@@ -25,7 +25,7 @@ impl Code for ExpectedIdent {
     fn label_message(&self) -> String {
         format!(
             "expected identifier, found `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
@@ -50,7 +50,7 @@ impl Code for ExpectedIdent {
                 .with_color(a)
                 .with_message(format!(
                     "expected identifier, found `{}`",
-                    self.token.symbol().output().replace('\n', "\\n")
+                    self.token.symbol().to_string().replace('\n', "\\n")
                 )),
         );
         if let Err(e) = report.finish().write_for_stdout(

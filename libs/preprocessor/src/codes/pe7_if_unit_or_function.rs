@@ -29,7 +29,7 @@ impl Code for IfUnitOrFunction {
     fn label_message(&self) -> String {
         format!(
             "attempted to use `#if` on a unit or function macro `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
@@ -44,7 +44,7 @@ impl Code for IfUnitOrFunction {
         let span = self.token.position().start().0..self.token.position().end().0;
         let did_you_mean = self
             .defines
-            .similar_values(self.token.symbol().output().trim());
+            .similar_values(self.token.symbol().to_string().trim());
         let defined = self
             .defines
             .get_readonly(&self.token.symbol().to_string())
@@ -86,7 +86,7 @@ impl Code for IfUnitOrFunction {
         if did_you_mean.is_empty() {
             report = report.with_help(format!(
                 "did you mean `#ifdef {}`",
-                self.token.symbol().output().fg(a)
+                self.token.symbol().to_string().fg(a)
             ));
         } else {
             report = report.with_help(format!(

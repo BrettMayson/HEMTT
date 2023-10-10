@@ -27,7 +27,7 @@ impl Code for RedefineMacro {
     fn label_message(&self) -> String {
         format!(
             "redefining macro `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 

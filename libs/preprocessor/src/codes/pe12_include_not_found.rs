@@ -22,7 +22,7 @@ impl Code for IncludeNotFound {
             "include not found `{}`",
             self.token
                 .iter()
-                .map(|t| t.symbol().output())
+                .map(|t| t.symbol().to_string())
                 .collect::<String>()
                 .replace('\n', "\\n")
         )

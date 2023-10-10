@@ -31,7 +31,7 @@ impl Code for DefineMissingComma {
     fn label_message(&self) -> String {
         format!(
             "define arguments missing comma `{}`",
-            self.current.symbol().output().replace('\n', "\\n")
+            self.current.symbol().to_string().replace('\n', "\\n")
         )
     }
 

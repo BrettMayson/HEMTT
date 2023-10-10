@@ -187,15 +187,6 @@ impl Symbol {
     }
 
     #[must_use]
-    /// Get the output of a symbol
-    pub fn output(&self) -> String {
-        match *self {
-            // Self::Join => String::new(),
-            _ => self.to_string(),
-        }
-    }
-
-    #[must_use]
     /// Get the opposite symbol of a symbol
     pub const fn matching_enclosure(&self) -> Option<Self> {
         match self {

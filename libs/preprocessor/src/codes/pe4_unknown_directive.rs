@@ -25,7 +25,7 @@ impl Code for UnknownDirective {
     fn label_message(&self) -> String {
         format!(
             "unknown directive `{}`",
-            self.token.symbol().output().replace('\n', "\\n")
+            self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
@@ -50,7 +50,7 @@ impl Code for UnknownDirective {
                 .with_color(a)
                 .with_message(format!(
                     "unknown directive `{}`",
-                    self.token.symbol().output().trim().fg(a)
+                    self.token.symbol().to_string().trim().fg(a)
                 )),
         );
         if let Err(e) = report.finish().write_for_stdout(
