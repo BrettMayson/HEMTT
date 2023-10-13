@@ -26,23 +26,21 @@ impl RhaiProject {
     }
 }
 
+#[allow(clippy::needless_pass_by_ref_mut)]
 #[export_module]
 pub mod project_functions {
     use crate::modules::hook::libraries::project::RhaiProject;
 
-    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn name(project: &mut RhaiProject) -> String {
         project.name.clone()
     }
 
-    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn prefix(project: &mut RhaiProject) -> String {
         project.prefix.clone()
     }
 
-    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
     #[rhai_fn(global, pure)]
     pub fn version(project: &mut RhaiProject) -> Version {
         project.version.clone()

@@ -36,7 +36,7 @@ pub mod file_functions {
         std::fs::remove_file(path).map_err(|e| e.to_string().into())
     }
 
-    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
+    #[allow(clippy::needless_pass_by_ref_mut)]
     #[rhai_fn(global, return_raw)]
     pub fn read(file: &mut ReadFile) -> Result<String, Box<EvalAltResult>> {
         let mut buf = String::new();
@@ -47,7 +47,7 @@ pub mod file_functions {
             .map_err(|e| e.to_string().into())
     }
 
-    #[rustversion::attr(since(1.73), allow(clippy::needless_pass_by_ref_mut))]
+    #[allow(clippy::needless_pass_by_ref_mut)]
     #[rhai_fn(global, return_raw)]
     pub fn write(file: &mut WriteFile, data: &str) -> Result<(), Box<EvalAltResult>> {
         file.0

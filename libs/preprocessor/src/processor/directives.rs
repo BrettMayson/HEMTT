@@ -83,7 +83,7 @@ impl Processor {
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
-            ("pragma", _) => {
+            ("pragma", _) | (_, false) => {
                 // TODO: hemtt pragma
                 self.skip_to_after_newline(stream, None);
                 Ok(())
@@ -91,10 +91,6 @@ impl Processor {
             (_, true) => Err(Error::Code(Box::new(UnknownDirective {
                 token: Box::new(command),
             }))),
-            (_, false) => {
-                self.skip_to_after_newline(stream, None);
-                Ok(())
-            }
         }
     }
 

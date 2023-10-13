@@ -44,7 +44,7 @@ impl Module for Rapifier {
                 }
                 let mut messages = Vec::new();
                 let mut res = Ok(());
-                for entry in ctx.workspace().join(&addon.folder())?.walk_dir()? {
+                for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
                     {

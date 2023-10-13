@@ -211,7 +211,7 @@ impl Module for ArmaScriptCompiler {
 }
 
 #[derive(Default, Serialize)]
-struct ASCConfig {
+pub struct ASCConfig {
     #[serde(rename = "inputDirs")]
     input_dirs: Vec<String>,
     #[serde(rename = "outputDir")]
@@ -225,6 +225,7 @@ struct ASCConfig {
 }
 
 impl ASCConfig {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             input_dirs: vec![],
