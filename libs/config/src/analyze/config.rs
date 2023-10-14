@@ -1,38 +1,46 @@
 use std::collections::{HashMap, HashSet};
 
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
-use crate::{Class, Config, Ident, Property};
+use crate::{Class, Config, Ident, Item, Property, Str, Value};
 
 use super::{
     codes::{
         ce3_duplicate_property::DuplicateProperty, ce7_missing_parent::MissingParent,
-        cw1_parent_case::ParentCase,
+        cw1_parent_case::ParentCase, cw2_magwell_missing_magazine::MagwellMissingMagazine,
     },
     Analyze,
 };
 
 impl Analyze for Config {
-    fn valid(&self) -> bool {
-        self.0.iter().all(Analyze::valid)
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
+        self.0.iter().all(|p| p.valid(project))
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         let mut warnings = self
             .0
             .iter()
-            .flat_map(|p| p.warnings(processed))
+            .flat_map(|p| p.warnings(project, processed))
             .collect::<Vec<_>>();
         let mut defined = HashMap::new();
         warnings.extend(external_parent_case_warn(&self.0, &mut defined));
+        if let Some(project) = project {
+            warnings.extend(magwell_missing_magazine(project, self));
+        }
         warnings
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         let mut errors = self
             .0
             .iter()
-            .flat_map(|p| p.errors(processed))
+            .flat_map(|p| p.errors(project, processed))
             .collect::<Vec<_>>();
         let mut defined = HashSet::new();
         errors.extend(external_missing_error(&self.0, &mut defined));
@@ -161,4 +169,71 @@ fn duplicate_properties_inner(
             _ => (),
         }
     }
+}
+
+fn magwell_missing_magazine(project: &ProjectConfig, config: &Config) -> Vec<Box<dyn Code>> {
+    let mut warnings: Vec<Box<dyn Code>> = Vec::new();
+    let mut classes = Vec::new();
+    let Some(Property::Class(Class::Local {
+        properties: magwells,
+        ..
+    })) = config
+        .0
+        .iter()
+        .find(|p| p.name().value.to_lowercase() == "cfgmagazinewells")
+    else {
+        return warnings;
+    };
+    let Some(Property::Class(Class::Local {
+        properties: magazines,
+        ..
+    })) = config
+        .0
+        .iter()
+        .find(|p| p.name().value.to_lowercase() == "cfgmagazines")
+    else {
+        return warnings;
+    };
+    for property in magazines {
+        if let Property::Class(Class::Local { name, .. }) = property {
+            classes.push(name);
+        }
+    }
+    for magwell in magwells {
+        let Property::Class(Class::Local {
+            properties: addons, ..
+        }) = magwell
+        else {
+            continue;
+        };
+        for addon in addons {
+            let Property::Entry {
+                name,
+                value: Value::Array(magazines),
+                ..
+            } = addon
+            else {
+                continue;
+            };
+            for mag in &magazines.items {
+                let Item::Str(Str { value, span }) = mag else {
+                    continue;
+                };
+                if !value
+                    .to_lowercase()
+                    .starts_with(&project.prefix().to_lowercase())
+                {
+                    continue;
+                }
+                if !classes.iter().any(|c| c.value == *value) {
+                    warnings.push(Box::new(MagwellMissingMagazine::new(
+                        name.clone(),
+                        value.clone(),
+                        span.clone(),
+                    )));
+                }
+            }
+        }
+    }
+    warnings
 }

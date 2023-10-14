@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_common::io::{compressed_int_len, WriteExt};
 
-use crate::{analyze::Analyze, Class, Ident, Property};
+use crate::{Class, Ident, Property};
 
 use super::Rapify;
 
@@ -13,9 +13,6 @@ impl Rapify for Class {
         output: &mut O,
         offset: usize,
     ) -> Result<usize, std::io::Error> {
-        if !self.valid() {
-            unreachable!("Invalid class");
-        }
         let mut written = 0;
         match self {
             Self::Local {

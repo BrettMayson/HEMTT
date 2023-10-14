@@ -1,4 +1,5 @@
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},
@@ -8,29 +9,33 @@ use crate::{
 use super::Analyze;
 
 impl Analyze for Value {
-    fn valid(&self) -> bool {
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
         match self {
-            Self::Str(s) => s.valid(),
-            Self::Number(n) => n.valid(),
-            Self::Array(a) => a.valid(),
+            Self::Str(s) => s.valid(project),
+            Self::Number(n) => n.valid(project),
+            Self::Array(a) => a.valid(project),
             Self::UnexpectedArray(_) | Self::Invalid(_) => false,
         }
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         match self {
-            Self::Str(s) => s.warnings(processed),
-            Self::Number(n) => n.warnings(processed),
-            Self::Array(a) | Self::UnexpectedArray(a) => a.warnings(processed),
+            Self::Str(s) => s.warnings(project, processed),
+            Self::Number(n) => n.warnings(project, processed),
+            Self::Array(a) | Self::UnexpectedArray(a) => a.warnings(project, processed),
             Self::Invalid(_) => vec![],
         }
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
-            Self::Str(s) => s.errors(processed),
-            Self::Number(n) => n.errors(processed),
-            Self::Array(a) | Self::UnexpectedArray(a) => a.errors(processed),
+            Self::Str(s) => s.errors(project, processed),
+            Self::Number(n) => n.errors(project, processed),
+            Self::Array(a) | Self::UnexpectedArray(a) => a.errors(project, processed),
             Self::Invalid(invalid) => {
                 // An unquoted string or otherwise invalid value
                 vec![{
