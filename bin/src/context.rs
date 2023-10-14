@@ -5,12 +5,13 @@ use std::{
 };
 
 use hemtt_common::workspace::{Workspace, WorkspacePath};
+use hemtt_project::ProjectConfig;
 
-use crate::{addons::Addon, config::project::Configuration, error::Error};
+use crate::{addons::Addon, error::Error};
 
 #[derive(Debug, Clone)]
 pub struct Context {
-    config: Configuration,
+    config: ProjectConfig,
     folder: String,
     addons: Vec<Addon>,
     workspace: WorkspacePath,
@@ -37,7 +38,7 @@ impl Context {
             if !path.exists() {
                 return Err(Error::ConfigNotFound);
             }
-            Configuration::from_file(&path)?
+            ProjectConfig::from_file(&path)?
         };
         let tmp = {
             let mut tmp = temp_dir().join("hemtt");
@@ -80,12 +81,12 @@ impl Context {
         };
         {
             let version = config.version().get(workspace.vfs());
-            if let Err(Error::Git(_)) = version {
+            if let Err(hemtt_project::Error::Git(_)) = version {
                 error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
                 println!("\n[version]\ngit_hash = 0\n");
                 std::process::exit(1);
             };
-            info!("Config loaded for {} {}", config.name(), version?,);
+            info!("Config loaded for {} {}", config.name(), version?);
         }
         Ok(Self {
             config,
@@ -102,7 +103,7 @@ impl Context {
     #[must_use]
     pub fn filter<F>(self, mut filter: F) -> Self
     where
-        F: FnMut(&Addon, &Configuration) -> bool,
+        F: FnMut(&Addon, &ProjectConfig) -> bool,
     {
         let config = self.config.clone();
         Self {
@@ -116,7 +117,7 @@ impl Context {
     }
 
     #[must_use]
-    pub const fn config(&self) -> &Configuration {
+    pub const fn config(&self) -> &ProjectConfig {
         &self.config
     }
 

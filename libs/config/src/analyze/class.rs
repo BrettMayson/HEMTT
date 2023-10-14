@@ -1,33 +1,38 @@
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
 use crate::Class;
 
 use super::Analyze;
 
 impl Analyze for Class {
-    fn valid(&self) -> bool {
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
         match self {
             Self::External { .. } => true,
-            Self::Local { properties, .. } => properties.iter().all(Analyze::valid),
+            Self::Local { properties, .. } => properties.iter().all(|p| p.valid(project)),
         }
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } => properties
                 .iter()
-                .flat_map(|p| p.warnings(processed))
+                .flat_map(|p| p.warnings(project, processed))
                 .collect::<Vec<_>>(),
         }
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } => properties
                 .iter()
-                .flat_map(|p| p.errors(processed))
+                .flat_map(|p| p.errors(project, processed))
                 .collect::<Vec<_>>(),
         }
     }

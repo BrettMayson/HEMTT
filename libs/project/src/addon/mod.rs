@@ -1,11 +1,12 @@
 use std::{collections::HashMap, path::Path, str::FromStr};
 
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 use crate::error::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Configuration {
+pub struct AddonConfig {
     #[serde(default)]
     /// Preprocess config
     preprocess: Option<PreprocessCompatibility>,
@@ -30,7 +31,7 @@ pub struct Configuration {
     files: FilesConfig,
 }
 
-impl Configuration {
+impl AddonConfig {
     #[must_use]
     pub fn preprocess(&self) -> PreprocessConfig {
         match &self.preprocess {
@@ -91,7 +92,7 @@ impl Configuration {
     }
 }
 
-impl FromStr for Configuration {
+impl FromStr for AddonConfig {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {

@@ -3,6 +3,7 @@ use std::mem::MaybeUninit;
 use git2::Repository;
 use hemtt_common::version::Version;
 use serde::{Deserialize, Serialize};
+use tracing::{error, trace};
 use vfs::VfsPath;
 
 use crate::error::Error;

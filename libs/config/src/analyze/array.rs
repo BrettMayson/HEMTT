@@ -1,4 +1,5 @@
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},
@@ -8,54 +9,62 @@ use crate::{
 use super::Analyze;
 
 impl Analyze for Array {
-    fn valid(&self) -> bool {
-        self.items.iter().all(Analyze::valid)
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
+        self.items.iter().all(|p| p.valid(project))
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         self.items
             .iter()
-            .flat_map(|i| i.warnings(processed))
+            .flat_map(|i| i.warnings(project, processed))
             .collect::<Vec<_>>()
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         self.items
             .iter()
-            .flat_map(|i| i.errors(processed))
+            .flat_map(|i| i.errors(project, processed))
             .collect::<Vec<_>>()
     }
 }
 
 impl Analyze for Item {
-    fn valid(&self) -> bool {
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
         match self {
-            Self::Str(s) => s.valid(),
-            Self::Number(n) => n.valid(),
-            Self::Array(a) => a.iter().all(Analyze::valid),
+            Self::Str(s) => s.valid(project),
+            Self::Number(n) => n.valid(project),
+            Self::Array(a) => a.iter().all(|p| p.valid(project)),
             Self::Invalid(_) => false,
         }
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         match self {
-            Self::Str(s) => s.warnings(processed),
-            Self::Number(n) => n.warnings(processed),
+            Self::Str(s) => s.warnings(project, processed),
+            Self::Number(n) => n.warnings(project, processed),
             Self::Array(a) => a
                 .iter()
-                .flat_map(|i| i.warnings(processed))
+                .flat_map(|i| i.warnings(project, processed))
                 .collect::<Vec<_>>(),
             Self::Invalid(_) => vec![],
         }
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
-            Self::Str(s) => s.errors(processed),
-            Self::Number(n) => n.errors(processed),
+            Self::Str(s) => s.errors(project, processed),
+            Self::Number(n) => n.errors(project, processed),
             Self::Array(a) => a
                 .iter()
-                .flat_map(|i| i.errors(processed))
+                .flat_map(|i| i.errors(project, processed))
                 .collect::<Vec<_>>(),
             Self::Invalid(invalid) =>
             // An unquoted string or otherwise invalid value

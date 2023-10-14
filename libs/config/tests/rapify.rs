@@ -24,7 +24,7 @@ fn check(dir: &str) {
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(&processed);
+    let parsed = hemtt_config::parse(None, &processed);
     if let Err(e) = &parsed {
         println!("{:#?}", e);
         std::fs::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();

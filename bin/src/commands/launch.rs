@@ -1,9 +1,10 @@
 use std::path::{Path, PathBuf};
 
 use clap::{ArgMatches, Command};
+use hemtt_project::ProjectConfig;
 use steamlocate::SteamDir;
 
-use crate::{config::project::Configuration, error::Error, utils::create_link};
+use crate::{error::Error, utils::create_link};
 
 use super::dev;
 
@@ -37,7 +38,7 @@ pub fn cli() -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let config = Configuration::from_file(&Path::new(".hemtt").join("project.toml"))?;
+    let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
         return Err(Error::MainPrefixNotFound(String::from(
             "Required for launch",

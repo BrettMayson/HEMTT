@@ -79,7 +79,7 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: WorkspacePath, _ctx: &Context) -> (Vec<String>, Result<(), Error>) {
+pub fn rapify(path: WorkspacePath, ctx: &Context) -> (Vec<String>, Result<(), Error>) {
     let processed = match Processor::run(&path) {
         Ok(processed) => processed,
         Err(e) => {
@@ -92,7 +92,7 @@ pub fn rapify(path: WorkspacePath, _ctx: &Context) -> (Vec<String>, Result<(), E
             messages.push(warning);
         }
     }
-    let configreport = parse(&processed);
+    let configreport = parse(Some(ctx.config()), &processed);
     if let Err(errors) = configreport {
         for e in &errors {
             eprintln!("{e}");

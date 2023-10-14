@@ -1,4 +1,5 @@
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
 mod array;
 mod class;
@@ -12,9 +13,13 @@ mod value;
 /// Trait for rapifying objects
 pub trait Analyze {
     /// Check if the object is valid and can be rapified
-    fn valid(&self) -> bool;
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool;
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>>;
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>>;
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>>;
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>>;
 }
