@@ -63,9 +63,9 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: acemod/ACE3
-            commit: 864d2e9eeed7028ef5194caec7948566950ebbdc
+            commit: 8104c8f465ed561a079c2c17330dae074183c319
           - repo: BourbonWarfare/POTATO
-            commit: 902d4fd52af15143bb49bcd0dc5522af0ececf82
+            commit: e14322f6d4da4de9e8a718f5743d3e25828b5be1
           - repo: ArmaForces/Mods
             commit: 6871517d4c2f720cea62b767eb7ec422bf712f51
           - repo: Theseus-Aegis/Mods
