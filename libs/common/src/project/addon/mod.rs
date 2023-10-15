@@ -11,7 +11,7 @@ use crate::error::Error;
 pub struct AddonConfig {
     #[serde(default)]
     #[serde(alias = "preprocess")]
-    /// Preprocess config
+    /// Rapifier config
     rapify: RapifyConfig,
 
     #[serde(default)]
