@@ -15,9 +15,7 @@ impl Rapify for Config {
         output.write_all(b"\0raP")?;
         output.write_all(b"\0\0\0\0\x08\0\0\0")?;
 
-        let root_class = Class::Local {
-            name: crate::Ident::default(),
-            parent: None,
+        let root_class = Class::Root {
             properties: self.0.clone(),
         };
         let buffer: Box<[u8]> = vec![0; root_class.rapified_length()].into_boxed_slice();
@@ -31,15 +29,14 @@ impl Rapify for Config {
         output.write_all(cursor.get_ref())?;
 
         output.write_all(b"\0\0\0\0")?;
+        assert_eq!(written + 20, self.rapified_length());
         Ok(written + 20)
     }
 
     fn rapified_length(&self) -> usize {
-        let root_class = Class::Local {
-            name: crate::Ident::default(),
-            parent: None,
+        let root_class = Class::Root {
             properties: self.0.clone(),
         };
-        20 + root_class.rapified_length()
+        root_class.rapified_length() + 20 // metadata
     }
 }

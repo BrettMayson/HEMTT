@@ -57,6 +57,9 @@ fn external_missing_error(
     for property in properties {
         if let Property::Class(c) = property {
             match c {
+                Class::Root { properties } => {
+                    errors.extend(external_missing_error(properties, defined));
+                }
                 Class::External { name } => {
                     let name = name.value.to_lowercase();
                     if !defined.contains(&name) {
@@ -92,6 +95,9 @@ fn external_parent_case_warn(
     for property in properties {
         if let Property::Class(c) = property {
             match c {
+                Class::Root { .. } => {
+                    panic!("Root class should not be in the config");
+                }
                 Class::External { name } => {
                     let name = name.value.to_lowercase();
                     defined.entry(name).or_insert_with(|| c.clone());
@@ -106,7 +112,7 @@ fn external_parent_case_warn(
                         let parent_lower = parent.value.to_lowercase();
                         if parent_lower != name_lower {
                             if let Some(parent_class) = defined.get(&parent_lower) {
-                                if parent_class.name().value != parent.value {
+                                if parent_class.name().map(|p| &p.value) != Some(&parent.value) {
                                     warnings.push(Box::new(ParentCase::new(
                                         c.clone(),
                                         parent_class.clone(),
