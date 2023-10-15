@@ -7,6 +7,11 @@ use super::Ident;
 #[derive(Debug, Clone, PartialEq)]
 /// A class definition
 pub enum Class {
+    /// The root class definition
+    Root {
+        /// The children of the class
+        properties: Vec<Property>,
+    },
     /// A local class definition
     ///
     /// ```cpp
@@ -42,9 +47,10 @@ pub enum Class {
 impl Class {
     #[must_use]
     /// Get the name of the class
-    pub const fn name(&self) -> &Ident {
+    pub const fn name(&self) -> Option<&Ident> {
         match self {
-            Self::External { name } | Self::Local { name, .. } => name,
+            Self::External { name } | Self::Local { name, .. } => Some(name),
+            Self::Root { .. } => None,
         }
     }
 
@@ -52,7 +58,7 @@ impl Class {
     /// Get the parent of the class
     pub const fn parent(&self) -> Option<&Ident> {
         match self {
-            Self::External { .. } => None,
+            Self::External { .. } | Self::Root { .. } => None,
             Self::Local { parent, .. } => parent.as_ref(),
         }
     }

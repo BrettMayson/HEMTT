@@ -3,7 +3,7 @@ class thing: test {
     value = 12;
 };
 
-class thing {
+class thing2 {
     class things;
 };
 class another: thing {};

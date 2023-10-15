@@ -9,7 +9,9 @@ impl Analyze for Class {
     fn valid(&self, project: Option<&ProjectConfig>) -> bool {
         match self {
             Self::External { .. } => true,
-            Self::Local { properties, .. } => properties.iter().all(|p| p.valid(project)),
+            Self::Local { properties, .. } | Self::Root { properties, .. } => {
+                properties.iter().all(|p| p.valid(project))
+            }
         }
     }
 
@@ -20,7 +22,7 @@ impl Analyze for Class {
     ) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
-            Self::Local { properties, .. } => properties
+            Self::Local { properties, .. } | Self::Root { properties, .. } => properties
                 .iter()
                 .flat_map(|p| p.warnings(project, processed))
                 .collect::<Vec<_>>(),
@@ -30,7 +32,7 @@ impl Analyze for Class {
     fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::External { .. } => vec![],
-            Self::Local { properties, .. } => properties
+            Self::Local { properties, .. } | Self::Root { properties, .. } => properties
                 .iter()
                 .flat_map(|p| p.errors(project, processed))
                 .collect::<Vec<_>>(),

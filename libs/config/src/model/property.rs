@@ -25,9 +25,12 @@ pub enum Property {
 impl Property {
     #[must_use]
     /// Get the name of the property
-    pub const fn name(&self) -> &Ident {
+    ///
+    /// # Panics
+    /// If this is a [`Class::Root`], which should never occur
+    pub fn name(&self) -> &Ident {
         match self {
-            Self::Class(c) => c.name(),
+            Self::Class(c) => c.name().expect("root should not be a property"),
             Self::MissingSemicolon(name, _) | Self::Delete(name) | Self::Entry { name, .. } => name,
         }
     }

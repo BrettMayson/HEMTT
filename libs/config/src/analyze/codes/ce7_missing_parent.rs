@@ -39,7 +39,15 @@ impl Code for MissingParent {
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let parent = self.class.parent()?;
-        let map = processed.mapping(self.class.name().span.start).unwrap();
+        let map = processed
+            .mapping(
+                self.class
+                    .name()
+                    .expect("parent existed to create error")
+                    .span
+                    .start,
+            )
+            .unwrap();
         let token = map.token();
         let parent_map = processed.mapping(parent.span.start).unwrap();
         let parent_token = parent_map.token();

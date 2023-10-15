@@ -32,17 +32,36 @@ impl Code for ParentCase {
     fn help(&self) -> Option<String> {
         Some(format!(
             "change the parent case to match the parent definition: `{}`",
-            self.parent.name().as_str()
+            self.parent
+                .name()
+                .expect("parent existed to create error")
+                .as_str()
         ))
     }
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
         let class_parent = self.class.parent()?;
-        let map = processed.mapping(self.class.name().span.start).unwrap();
+        let map = processed
+            .mapping(
+                self.class
+                    .name()
+                    .expect("parent existed to create error")
+                    .span
+                    .start,
+            )
+            .unwrap();
         let token = map.token();
         let class_parent_map = processed.mapping(class_parent.span.start).unwrap();
         let class_parent_token = class_parent_map.token();
-        let parent_map = processed.mapping(self.parent.name().span.start).unwrap();
+        let parent_map = processed
+            .mapping(
+                self.parent
+                    .name()
+                    .expect("parent existed to create error")
+                    .span
+                    .start,
+            )
+            .unwrap();
         let parent_token = parent_map.token();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
@@ -74,7 +93,11 @@ impl Code for ParentCase {
         .with_help(format!(
             "change the {} to match the parent definition `{}`",
             "parent case".fg(color_class),
-            self.parent.name().as_str().fg(color_parent)
+            self.parent
+                .name()
+                .expect("parent existed to create error")
+                .as_str()
+                .fg(color_parent)
         ))
         .finish()
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)

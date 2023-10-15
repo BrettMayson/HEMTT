@@ -33,7 +33,13 @@ fn check(dir: &str) {
     };
     let parsed = parsed.unwrap();
     let mut expected = Vec::new();
-    std::fs::File::open(folder.join("expected.bin"))
+    let expected_path = folder.join("expected.bin");
+    if !expected_path.exists() {
+        let mut file = std::fs::File::create(&expected_path).unwrap();
+        parsed.config().rapify(&mut file, 0).unwrap();
+        panic!("expected file did not exist, created it");
+    };
+    std::fs::File::open(expected_path)
         .unwrap()
         .read_to_end(&mut expected)
         .unwrap();
@@ -41,12 +47,20 @@ fn check(dir: &str) {
     let written = parsed.config().rapify(&mut output, 0).unwrap();
     assert_eq!(written, parsed.config().rapified_length());
     assert_eq!(output, expected);
+    let vanilla_path = folder.join("cfgconvert.bin");
+    if vanilla_path.exists() {
+        let mut expected = Vec::new();
+        let mut file = std::fs::File::open(&vanilla_path).unwrap();
+        file.read_to_end(&mut expected).unwrap();
+        assert_eq!(output, expected);
+    };
 }
 
 bootstrap!(ace_main);
 bootstrap!(cba_multiline);
 bootstrap!(delete_class);
 bootstrap!(external_class);
+bootstrap!(inheritence_array_extend);
 bootstrap!(join_digit);
 bootstrap!(join_in_ident);
 bootstrap!(join);
