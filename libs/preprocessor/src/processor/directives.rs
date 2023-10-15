@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use hemtt_common::{
     position::Position,
     reporting::{Output, Symbol, Token},
@@ -25,7 +27,7 @@ use super::Processor;
 impl Processor {
     pub(crate) fn directive(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
         if let Some(token) = stream.peek() {
@@ -44,7 +46,7 @@ impl Processor {
 
     pub(crate) fn directive_command(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let command = stream.next().expect("was peeked in directive()");
@@ -89,14 +91,14 @@ impl Processor {
                 Ok(())
             }
             (_, true) => Err(Error::Code(Box::new(UnknownDirective {
-                token: Box::new(command),
+                token: Box::new(command.as_ref().clone()),
             }))),
         }
     }
 
     pub(crate) fn directive_include(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, None);
@@ -106,9 +108,9 @@ impl Processor {
                 encased_in: if open.symbol().is_word() {
                     None
                 } else {
-                    Some(open.clone())
+                    Some(open.as_ref().clone())
                 },
-                token: Box::new(open),
+                token: Box::new(open.as_ref().clone()),
             })));
         }
         let close = open
@@ -123,13 +125,13 @@ impl Processor {
             }
             if symbol.is_newline() {
                 return Err(Error::Code(Box::new(IncludeNotEncased {
-                    token: Box::new(token),
-                    encased_in: Some(open),
+                    token: Box::new(token.as_ref().clone()),
+                    encased_in: Some(open.as_ref().clone()),
                 })));
             }
             if symbol.is_eoi() {
                 return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token),
+                    token: Box::new(token.as_ref().clone()),
                 })));
             }
             path.push(token);
@@ -149,9 +151,9 @@ impl Processor {
             .last()
             .expect("root file should always be present");
         let Ok(Some(path)) =
-            current.locate(&path.iter().map(ToString::to_string).collect::<String>())
+            current.locate(&path.iter().map(|t| t.to_string()).collect::<String>())
         else {
-            return Err(Error::Code(Box::new(IncludeNotFound { token: path })));
+            return Err(Error::Code(Box::new(IncludeNotFound::new(path))));
         };
         let tokens = crate::parse::parse(&path)?;
         self.files.push(path);
@@ -163,12 +165,12 @@ impl Processor {
 
     pub(crate) fn directive_define(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
             return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident),
+                token: Box::new(ident.as_ref().clone()),
             })));
         }
         let ident_string = ident.symbol().to_string();
@@ -179,13 +181,13 @@ impl Processor {
         };
         if Defines::is_builtin(&ident_string) {
             return Err(Error::Code(Box::new(ChangeBuiltin {
-                token: Box::new(ident),
+                token: Box::new(ident.as_ref().clone()),
             })));
         }
         if let Some((original, _)) = self.defines.remove(&ident_string) {
             self.warnings.push(Box::new(RedefineMacro {
-                token: Box::new(ident.clone()),
-                original: Box::new(original),
+                token: Box::new(ident.as_ref().clone()),
+                original: Box::new(original.as_ref().clone()),
             }));
         }
         let definition = match next.symbol() {
@@ -214,12 +216,12 @@ impl Processor {
 
     pub(crate) fn directive_undef(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
             return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident),
+                token: Box::new(ident.as_ref().clone()),
             })));
         }
         let ident_string = ident.symbol().to_string();
@@ -230,18 +232,18 @@ impl Processor {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
-        command: Token,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        command: Rc<Token>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
-        fn value(defines: &mut Defines, token: Token) -> Result<(Vec<Token>, bool), Error> {
+        fn value(defines: &mut Defines, token: Rc<Token>) -> Result<(Vec<Rc<Token>>, bool), Error> {
             if let Some((_, definition)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
                 }
-                return Err(Error::Code(Box::new(IfUnitOrFunction {
-                    token: Box::new(token),
-                    defines: defines.clone(),
-                })));
+                return Err(Error::Code(Box::new(IfUnitOrFunction::new(
+                    Box::new(token.as_ref().clone()),
+                    &defines.clone(),
+                ))));
             }
             Ok((vec![token], false))
         }
@@ -249,17 +251,18 @@ impl Processor {
         let (left, left_defined) = value(&mut self.defines, left)?;
         self.skip_whitespace(stream, None);
         let mut operators = Vec::with_capacity(2);
-        let (right, right_defined) = if stream.peek().map(Token::symbol) == Some(&Symbol::Newline) {
+        let (right, right_defined) = if stream.peek().map(|t| t.symbol()) == Some(&Symbol::Newline)
+        {
             let pos = stream.peek().unwrap().position().clone();
             if !left_defined {
-                return Err(Error::Code(Box::new(IfUndefined {
-                    token: Box::new(left[0].clone()),
-                    defines: self.defines.clone(),
-                })));
+                return Err(Error::Code(Box::new(IfUndefined::new(
+                    Box::new(left[0].as_ref().clone()),
+                    &self.defines,
+                ))));
             }
-            let equals = Token::new(Symbol::Equals, pos.clone());
+            let equals = Rc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (vec![Token::new(Symbol::Digit(1), pos)], false)
+            (vec![Rc::new(Token::new(Symbol::Digit(1), pos))], false)
         } else {
             loop {
                 let Some(token) = stream.peek() else {
@@ -267,6 +270,7 @@ impl Processor {
                         token: Box::new(
                             left.last()
                                 .expect("left should exists at this point")
+                                .as_ref()
                                 .clone(),
                         ),
                     })));
@@ -283,42 +287,34 @@ impl Processor {
                     token: Box::new(
                         left.last()
                             .expect("left should exists at this point")
+                            .as_ref()
                             .clone(),
                     ),
                 })));
             };
             value(&mut self.defines, right)?
         };
-        let operator = operators
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect::<String>();
-        let left_string = left
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect::<String>();
-        let right_string = right
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect::<String>();
+        let operator = operators.iter().map(|t| t.to_string()).collect::<String>();
+        let left_string = left.iter().map(|t| t.to_string()).collect::<String>();
+        let right_string = right.iter().map(|t| t.to_string()).collect::<String>();
         let read = match operator.as_str() {
             "==" => left_string == right_string,
             "!=" => left_string != right_string,
             ">" | ">=" | "<" | "<=" => {
-                let left_f64 = left_string.parse::<f64>().map_err(|_| {
-                    Error::Code(Box::new(IfIncompatibleType {
-                        left: (left.clone(), left_defined),
-                        operator: operators.clone(),
-                        right: (right.clone(), right_defined),
-                    }))
-                })?;
-                let right_f64 = right_string.parse::<f64>().map_err(|_| {
-                    Error::Code(Box::new(IfIncompatibleType {
-                        left: (left, left_defined),
-                        operator: operators,
-                        right: (right, right_defined),
-                    }))
-                })?;
+                let Ok(left_f64) = left_string.parse::<f64>() else {
+                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                        (left, left_defined),
+                        operators,
+                        (right, right_defined),
+                    ))));
+                };
+                let Ok(right_f64) = right_string.parse::<f64>() else {
+                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                        (left, left_defined),
+                        operators,
+                        (right, right_defined),
+                    ))));
+                };
                 match operator.as_str() {
                     ">" => left_f64 > right_f64,
                     ">=" => left_f64 >= right_f64,
@@ -329,7 +325,7 @@ impl Processor {
             }
             _ => {
                 return Err(Error::Code(Box::new(IfInvalidOperator {
-                    tokens: operators,
+                    tokens: operators.iter().map(|t| t.as_ref().clone()).collect(),
                 })))
             }
         };
@@ -340,14 +336,14 @@ impl Processor {
 
     pub(crate) fn directive_ifdef(
         &mut self,
-        command: Token,
+        command: Rc<Token>,
         outcome: bool,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
             return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident),
+                token: Box::new(ident.as_ref().clone()),
             })));
         }
         let ident_string = ident.symbol().to_string();

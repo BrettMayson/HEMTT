@@ -1,12 +1,14 @@
+use std::rc::Rc;
+
 use super::{Symbol, Token};
 
 #[derive(Debug)]
 /// The output of a token
 pub enum Output {
     /// The token did not expand
-    Direct(Token),
+    Direct(Rc<Token>),
     /// The token expanded to a list of tokens
-    Macro(Token, Vec<Self>),
+    Macro(Rc<Token>, Vec<Self>),
 }
 
 impl Output {
@@ -31,7 +33,7 @@ impl ToString for Output {
     }
 }
 
-impl From<Output> for Vec<Token> {
+impl From<Output> for Vec<Rc<Token>> {
     fn from(value: Output) -> Self {
         match value {
             Output::Direct(t) => vec![t],

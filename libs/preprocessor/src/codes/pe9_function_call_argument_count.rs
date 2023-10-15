@@ -13,8 +13,40 @@ pub struct FunctionCallArgumentCount {
     pub(crate) expected: usize,
     /// The number of arguments that were found
     pub(crate) got: usize,
-    /// The defines at the point of the error
-    pub(crate) defines: Defines,
+    /// Similar defines
+    pub(crate) similar: Vec<String>,
+    /// defined
+    pub(crate) defined: (Token, Vec<Token>),
+}
+
+impl FunctionCallArgumentCount {
+    pub fn new(token: Box<Token>, expected: usize, got: usize, defines: &Defines) -> Self {
+        Self {
+            expected,
+            got,
+            similar: defines
+                .similar_values(token.symbol().to_string().trim())
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
+            defined: {
+                let (t, d) = defines
+                    .get_readonly(token.symbol().to_string().trim())
+                    .unwrap();
+                (
+                    t.as_ref().clone(),
+                    d.as_function()
+                        .unwrap()
+                        .clone()
+                        .args()
+                        .iter()
+                        .map(|a| a.as_ref().clone())
+                        .collect(),
+                )
+            },
+            token,
+        }
+    }
 }
 
 impl Code for FunctionCallArgumentCount {
@@ -49,14 +81,6 @@ impl Code for FunctionCallArgumentCount {
         let mut out = Vec::new();
         let span = self.token.position().start().0..self.token.position().end().0;
         let a = colors.next();
-        let defined = self
-            .defines
-            .get_readonly(self.token.symbol().to_string().trim())
-            .unwrap();
-        let func = defined.1.as_function().unwrap();
-        let did_you_mean = self
-            .defines
-            .similar_function(self.token.symbol().to_string().trim(), Some(self.got));
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),
@@ -78,21 +102,21 @@ impl Code for FunctionCallArgumentCount {
         )
         .with_label(
             Label::new((
-                defined.0.position().path().to_string(),
-                defined.0.position().start().0..defined.0.position().end().0,
+                self.defined.0.position().path().to_string(),
+                self.defined.0.position().start().0..self.defined.0.position().end().0,
             ))
             .with_color(a)
             .with_message(format!(
-                "defined here with {} argument{}",
-                func.args().len(),
-                if func.args().len() == 1 { "" } else { "s" }
+                "self.defined here with {} argument{}",
+                self.defined.1.len(),
+                if self.defined.1.len() == 1 { "" } else { "s" }
             )),
         );
-        if !did_you_mean.is_empty() {
+        if !self.similar.is_empty() {
             report = report.with_help(format!(
                 "did you mean `{}`",
-                did_you_mean
-                    .into_iter()
+                self.similar
+                    .iter()
                     .map(|dym| format!("{}", dym.fg(a)))
                     .collect::<Vec<_>>()
                     .join("`, `")
@@ -109,8 +133,8 @@ impl Code for FunctionCallArgumentCount {
                         .unwrap_or_default(),
                 ),
                 (
-                    defined.0.position().path().to_string(),
-                    defined
+                    self.defined.0.position().path().to_string(),
+                    self.defined
                         .0
                         .position()
                         .path()

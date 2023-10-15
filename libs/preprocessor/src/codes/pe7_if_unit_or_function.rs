@@ -4,13 +4,33 @@ use tracing::error;
 
 use crate::defines::Defines;
 
-#[allow(unused)]
 /// Tried to use `#if` on a [`Unit`](crate::context::Definition::Unit) or [`FunctionDefinition`](crate::context::Definition::Function)
 pub struct IfUnitOrFunction {
     /// The [`Token`] that was found
     pub(crate) token: Box<Token>,
-    /// The defines at the point of the error
-    pub(crate) defines: Defines,
+    /// Similar defines
+    pub(crate) similar: Vec<String>,
+    /// defined
+    pub(crate) defined: (Token, bool),
+}
+
+impl IfUnitOrFunction {
+    pub fn new(token: Box<Token>, defines: &Defines) -> Self {
+        Self {
+            similar: defines
+                .similar_values(token.symbol().to_string().trim())
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
+            defined: {
+                let (t, d) = defines
+                    .get_readonly(token.symbol().to_string().trim())
+                    .unwrap();
+                (t.as_ref().clone(), d.is_unit())
+            },
+            token,
+        }
+    }
 }
 
 impl Code for IfUnitOrFunction {
@@ -42,13 +62,6 @@ impl Code for IfUnitOrFunction {
         let a = colors.next();
         let mut out = Vec::new();
         let span = self.token.position().start().0..self.token.position().end().0;
-        let did_you_mean = self
-            .defines
-            .similar_values(self.token.symbol().to_string().trim());
-        let defined = self
-            .defines
-            .get_readonly(&self.token.symbol().to_string())
-            .unwrap();
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),
@@ -62,7 +75,7 @@ impl Code for IfUnitOrFunction {
                 span.start..span.end,
             ))
             .with_color(a)
-            .with_message(if defined.1.is_unit() {
+            .with_message(if self.defined.1 {
                 "trying to use a unit macro in an `#if`"
             } else {
                 "trying to use a function macro in an `#if`"
@@ -70,20 +83,16 @@ impl Code for IfUnitOrFunction {
         )
         .with_label(
             Label::new((
-                defined.0.position().path().to_string(),
-                defined.0.position().start().0..defined.0.position().end().0,
+                self.defined.0.position().path().to_string(),
+                self.defined.0.position().start().0..self.defined.0.position().end().0,
             ))
             .with_color(a)
             .with_message(format!(
-                "defined as a {} here",
-                if defined.1.is_unit() {
-                    "unit"
-                } else {
-                    "function"
-                }
+                "self.defined as a {} here",
+                if self.defined.1 { "unit" } else { "function" }
             )),
         );
-        if did_you_mean.is_empty() {
+        if self.similar.is_empty() {
             report = report.with_help(format!(
                 "did you mean `#ifdef {}`",
                 self.token.symbol().to_string().fg(a)
@@ -91,8 +100,8 @@ impl Code for IfUnitOrFunction {
         } else {
             report = report.with_help(format!(
                 "did you mean `{}`",
-                did_you_mean
-                    .into_iter()
+                self.similar
+                    .iter()
                     .map(|dym| format!("{}", dym.fg(a)))
                     .collect::<Vec<_>>()
                     .join("`, `")
@@ -109,8 +118,8 @@ impl Code for IfUnitOrFunction {
                         .unwrap_or_default(),
                 ),
                 (
-                    defined.0.position().path().to_string(),
-                    defined
+                    self.defined.0.position().path().to_string(),
+                    self.defined
                         .0
                         .position()
                         .path()

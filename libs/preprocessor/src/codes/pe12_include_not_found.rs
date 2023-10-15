@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Code, Token};
 use tracing::error;
@@ -6,6 +8,14 @@ use tracing::error;
 pub struct IncludeNotFound {
     /// The target that was not found
     pub token: Vec<Token>,
+}
+
+impl IncludeNotFound {
+    pub fn new(token: Vec<Rc<Token>>) -> Self {
+        Self {
+            token: token.into_iter().map(|t| t.as_ref().clone()).collect(),
+        }
+    }
 }
 
 impl Code for IncludeNotFound {

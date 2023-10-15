@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use hemtt_common::{position::Position, reporting::Token};
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -7,7 +9,7 @@ pub enum Definition {
     /// A [`FunctionDefinition`] that takes parameters
     Function(FunctionDefinition),
     /// A value that is a list of [`Token`]s to be added at the call site
-    Value(Vec<Token>),
+    Value(Vec<Rc<Token>>),
     /// A flag that can be checked with `#ifdef`
     Unit,
     /// A macro that changes the internal state, returning nothing
@@ -44,7 +46,7 @@ impl Definition {
 
     #[must_use]
     /// Get the value [`Token`]s if it is a value
-    pub fn as_value(&self) -> Option<&[Token]> {
+    pub fn as_value(&self) -> Option<&[Rc<Token>]> {
         match self {
             Self::Value(v) => Some(v),
             _ => None,
@@ -65,14 +67,14 @@ impl Definition {
 /// ```
 pub struct FunctionDefinition {
     position: Position,
-    args: Vec<Token>,
-    body: Vec<Token>,
+    args: Vec<Rc<Token>>,
+    body: Vec<Rc<Token>>,
 }
 
 impl FunctionDefinition {
     #[must_use]
     /// Create a new [`FunctionDefinition`]
-    pub fn new(position: Position, args: Vec<Token>, body: Vec<Token>) -> Self {
+    pub fn new(position: Position, args: Vec<Rc<Token>>, body: Vec<Rc<Token>>) -> Self {
         Self {
             position,
             args,
@@ -82,13 +84,13 @@ impl FunctionDefinition {
 
     #[must_use]
     /// Get the parameter [`Token`]s
-    pub fn args(&self) -> &[Token] {
+    pub fn args(&self) -> &[Rc<Token>] {
         &self.args
     }
 
     #[must_use]
     /// Get the body [`Token`]s
-    pub fn body(&self) -> &[Token] {
+    pub fn body(&self) -> &[Rc<Token>] {
         &self.body
     }
 
@@ -100,7 +102,7 @@ impl FunctionDefinition {
 
     #[must_use]
     /// Get the body as a stream
-    pub fn stream(&self) -> PeekMoreIterator<impl Iterator<Item = Token>> {
+    pub fn stream(&self) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
         self.body
             .clone()
             .into_iter()

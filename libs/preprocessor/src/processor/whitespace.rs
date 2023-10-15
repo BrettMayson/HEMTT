@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use hemtt_common::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
 
@@ -10,7 +12,7 @@ impl Processor {
     /// The stream is left after the whitespace
     pub(crate) fn skip_whitespace(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while let Some(token) = stream.peek() {
@@ -31,7 +33,7 @@ impl Processor {
     /// End of input will not cause an error
     pub(crate) fn skip_to_after_newline(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while stream.peek().is_some() {
@@ -51,7 +53,7 @@ impl Processor {
     /// Whitespace is allowed, but nothing else
     /// The stream is left after the newline
     pub(crate) fn expect_nothing_to_newline(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
         for token in stream.by_ref() {
             if token.symbol().is_newline() || token.symbol().is_eoi() {
@@ -59,7 +61,7 @@ impl Processor {
             }
             if !token.symbol().is_whitespace() {
                 return Err(Error::Code(Box::new(UnexpectedToken {
-                    token: Box::new(token),
+                    token: Box::new(token.as_ref().clone()),
                     expected: vec!["newline".to_string()],
                 })));
             }

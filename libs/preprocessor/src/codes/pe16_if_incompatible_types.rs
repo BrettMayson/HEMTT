@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Code, Token};
 use tracing::error;
@@ -11,6 +13,26 @@ pub struct IfIncompatibleType {
     pub(crate) operator: Vec<Token>,
     /// Right side of the operator
     pub(crate) right: (Vec<Token>, bool),
+}
+
+impl IfIncompatibleType {
+    pub fn new(
+        left: (Vec<Rc<Token>>, bool),
+        operator: Vec<Rc<Token>>,
+        right: (Vec<Rc<Token>>, bool),
+    ) -> Self {
+        Self {
+            left: (
+                left.0.into_iter().map(|t| t.as_ref().clone()).collect(),
+                left.1,
+            ),
+            operator: operator.into_iter().map(|t| t.as_ref().clone()).collect(),
+            right: (
+                right.0.into_iter().map(|t| t.as_ref().clone()).collect(),
+                right.1,
+            ),
+        }
+    }
 }
 
 impl Code for IfIncompatibleType {

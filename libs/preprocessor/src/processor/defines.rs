@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, rc::Rc, sync::Arc};
 
 use hemtt_common::{
     position::Position,
@@ -28,8 +28,8 @@ impl Processor {
     pub(crate) fn call_read_args(
         &mut self,
         callsite: &Position,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    ) -> Result<Option<Vec<Vec<Token>>>, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+    ) -> Result<Option<Vec<Vec<Rc<Token>>>>, Error> {
         if !stream
             .peek()
             .expect("peeked by caller")
@@ -60,7 +60,7 @@ impl Processor {
                         &mut inner
                             .into_iter()
                             .map(std::convert::Into::into)
-                            .collect::<Vec<Vec<Token>>>()
+                            .collect::<Vec<Vec<Rc<Token>>>>()
                             .concat(),
                     );
                     continue;
@@ -95,8 +95,8 @@ impl Processor {
     ///
     /// The stream is left after the closing parenthesis
     pub(crate) fn define_read_args(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    ) -> Result<Vec<Token>, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+    ) -> Result<Vec<Rc<Token>>, Error> {
         if !stream
             .next()
             .expect("peeked by caller")
@@ -108,15 +108,15 @@ impl Processor {
                 stream.peek().expect("peeked above").symbol()
             );
         }
-        let mut args: Vec<Token> = Vec::new();
+        let mut args: Vec<Rc<Token>> = Vec::new();
         let mut comma_next = false;
         while let Some(token) = stream.peek() {
             let symbol = token.symbol();
             if symbol.is_word() {
                 if comma_next {
                     return Err(Error::Code(Box::new(DefineMissingComma {
-                        current: Box::new(stream.next().expect("peeked above")),
-                        previous: Box::new(args.last().expect("peeked above").clone()),
+                        current: Box::new(stream.next().expect("peeked above").as_ref().clone()),
+                        previous: Box::new(args.last().expect("peeked above").as_ref().clone()),
                     })));
                 }
                 args.push(stream.next().expect("peeked above"));
@@ -124,7 +124,7 @@ impl Processor {
             } else if symbol.is_comma() {
                 if !comma_next {
                     return Err(Error::Code(Box::new(UnexpectedToken {
-                        token: Box::new(stream.next().expect("peeked above")),
+                        token: Box::new(stream.next().expect("peeked above").as_ref().clone()),
                         expected: vec!["{variable}".to_string()],
                     })));
                 }
@@ -138,7 +138,7 @@ impl Processor {
                 stream.next();
             } else {
                 return Err(Error::Code(Box::new(UnexpectedToken {
-                    token: Box::new(stream.next().expect("peeked above")),
+                    token: Box::new(stream.next().expect("peeked above").as_ref().clone()),
                     expected: vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
                 })));
             }
@@ -153,8 +153,8 @@ impl Processor {
     /// The stream is left at the start of the next line
     pub(crate) fn define_read_body(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    ) -> Vec<Token> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+    ) -> Vec<Rc<Token>> {
         self.skip_whitespace(stream, None);
         let mut body = Vec::new();
         for token in stream.by_ref() {
@@ -162,7 +162,7 @@ impl Processor {
             if symbol.is_newline() {
                 if body
                     .last()
-                    .map_or(false, |t: &Token| t.symbol().is_escape())
+                    .map_or(false, |t: &Rc<Token>| t.symbol().is_escape())
                 {
                     // remove the backslash
                     body.pop();
@@ -185,13 +185,13 @@ impl Processor {
     pub(crate) fn define_use(
         &mut self,
         callsite: &Position,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let ident = Self::current_word(stream)?;
         let ident_string = ident.to_string();
         let Some((source, body)) = self.defines.get_with_gen(&ident, Some(callsite)) else {
-            buffer.push(Output::Direct(ident.clone()));
+            buffer.push(Output::Direct(ident));
             return Ok(());
         };
         match body {
@@ -199,17 +199,17 @@ impl Processor {
                 let Some(args) = self.call_read_args(callsite, stream)? else {
                     #[allow(clippy::redundant_clone)] // behind hls feature flag
                     return Err(Error::Code(Box::new(FunctionAsValue {
-                        token: Box::new(ident.clone()),
-                        source: Box::new(source.clone()),
+                        token: Box::new(ident.as_ref().clone()),
+                        source: Box::new(source.as_ref().clone()),
                     })));
                 };
                 if args.len() != function.args().len() {
-                    return Err(Error::Code(Box::new(FunctionCallArgumentCount {
-                        token: Box::new(ident.clone()),
-                        expected: function.args().len(),
-                        got: args.len(),
-                        defines: self.defines.clone(),
-                    })));
+                    return Err(Error::Code(Box::new(FunctionCallArgumentCount::new(
+                        Box::new(ident.as_ref().clone()),
+                        function.args().len(),
+                        args.len(),
+                        &self.defines.clone(),
+                    ))));
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
@@ -226,7 +226,7 @@ impl Processor {
                     &mut function.stream(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident.clone(), layer));
+                buffer.push(Output::Macro(ident, layer));
                 self.defines.pop();
             }
             #[allow(clippy::needless_collect)] // causes recursion at runtime otherwise
@@ -239,14 +239,14 @@ impl Processor {
                     &mut body.into_iter().peekmore(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident.clone(), layer));
+                buffer.push(Output::Macro(ident, layer));
             }
             Definition::Void => return Ok(()),
             Definition::Unit => {
                 #[allow(clippy::redundant_clone)] // behind hls feature flag
                 return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
-                    token: Box::new(ident.clone()),
-                    source: Box::new(source.clone()),
+                    token: Box::new(ident.as_ref().clone()),
+                    source: Box::new(source.as_ref().clone()),
                     likely_function: stream
                         .peek()
                         .expect("peeked by caller")

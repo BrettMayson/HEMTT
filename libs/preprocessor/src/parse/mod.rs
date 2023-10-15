@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use hemtt_common::{
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
@@ -20,7 +22,7 @@ pub struct PreprocessorParser;
 ///
 /// # Panics
 /// If the file is invalid
-pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
+pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
     let source = path.read_to_string()?;
     let pairs = PreprocessorParser::parse(Rule::file, &source)?;
     let mut tokens = Vec::new();
@@ -42,14 +44,14 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
             Rule::COMMENT => {
                 if in_string {
                     if !skipping_comment {
-                        tokens.push(Token::new(
+                        tokens.push(Rc::new(Token::new(
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
                                 start,
                                 LineCol(start.0 + 2, (start.1 .0 + 2, start.1 .1 + 2)),
                                 path.clone(),
                             ),
-                        ));
+                        )));
                     }
                 } else {
                     let lines = pair.as_str().split('\n').collect::<Vec<_>>();
@@ -81,10 +83,10 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Token>, Error> {
             continue;
         }
         let end = LineCol(offset, (line, col));
-        tokens.push(Token::new(
+        tokens.push(Rc::new(Token::new(
             Symbol::to_symbol(pair),
             Position::new(start, end, path.clone()),
-        ));
+        )));
     }
     Ok(tokens)
 }

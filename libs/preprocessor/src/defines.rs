@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, rc::Rc, sync::Arc};
 
 use hemtt_common::{
     position::Position,
@@ -8,7 +8,7 @@ use strsim::levenshtein;
 
 use crate::definition::Definition;
 
-type InnerDefines = HashMap<Arc<str>, (Token, Definition)>;
+type InnerDefines = HashMap<Arc<str>, (Rc<Token>, Definition)>;
 
 #[derive(Clone, Default)]
 /// `HashMap` of all current defines
@@ -69,9 +69,9 @@ impl Defines {
 
     pub fn get_with_gen(
         &mut self,
-        key: &Token,
+        key: &Rc<Token>,
         site: Option<&Position>,
-    ) -> Option<(Token, Definition)> {
+    ) -> Option<(Rc<Token>, Definition)> {
         let ident = key.to_string();
         if let Some(site) = site {
             if BUILTIN_GEN.contains(&ident.as_str()) {
@@ -81,10 +81,10 @@ impl Defines {
                         self.counter += 1;
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Token::new(
+                            Definition::Value(vec![Rc::new(Token::new(
                                 Symbol::Digit(counter.into()),
                                 key.position().clone(),
-                            )]),
+                            ))]),
                         ));
                     }
                     "__COUNTER_RESET__" => {
@@ -95,8 +95,8 @@ impl Defines {
                         return Some((
                             key.clone(),
                             Definition::Value(vec![
-                                Token::new(Symbol::DoubleQuote, key.position().clone()),
-                                site.path().workspace().project().map_or_else(
+                                Rc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                                Rc::new(site.path().workspace().project().map_or_else(
                                     || {
                                         Token::new(
                                             Symbol::Word(site.path().as_str().to_string()),
@@ -113,18 +113,18 @@ impl Defines {
                                             key.position().clone(),
                                         )
                                     },
-                                ),
-                                Token::new(Symbol::DoubleQuote, key.position().clone()),
+                                )),
+                                Rc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                             ]),
                         ));
                     }
                     "__LINE__" => {
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Token::new(
+                            Definition::Value(vec![Rc::new(Token::new(
                                 Symbol::Digit(site.start().1 .0),
                                 key.position().clone(),
-                            )]),
+                            ))]),
                         ));
                     }
                     _ => unreachable!(),
@@ -150,7 +150,7 @@ impl Defines {
         ret
     }
 
-    pub fn get_readonly(&self, key: &str) -> Option<(Token, Definition)> {
+    pub fn get_readonly(&self, key: &str) -> Option<(Rc<Token>, Definition)> {
         self.stack
             .last()
             .as_ref()
@@ -160,7 +160,7 @@ impl Defines {
     }
 
     #[cfg(test)]
-    pub fn get_test(&self, key: &str) -> Option<&(Token, Definition)> {
+    pub fn get_test(&self, key: &str) -> Option<&(Rc<Token>, Definition)> {
         self.stack
             .last()
             .as_ref()
@@ -168,7 +168,11 @@ impl Defines {
             .or_else(|| self.global.get(key))
     }
 
-    pub fn insert(&mut self, key: &str, value: (Token, Definition)) -> Option<(Token, Definition)> {
+    pub fn insert(
+        &mut self,
+        key: &str,
+        value: (Rc<Token>, Definition),
+    ) -> Option<(Rc<Token>, Definition)> {
         if let Some(stack) = self.stack.last_mut() {
             stack.1.insert(Arc::from(key), value)
         } else {
@@ -176,7 +180,7 @@ impl Defines {
         }
     }
 
-    pub fn remove(&mut self, key: &str) -> Option<(Token, Definition)> {
+    pub fn remove(&mut self, key: &str) -> Option<(Rc<Token>, Definition)> {
         if let Some(scope) = self.stack.last_mut() {
             scope.1.remove(key)
         } else {

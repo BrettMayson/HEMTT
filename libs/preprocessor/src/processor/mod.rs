@@ -1,5 +1,6 @@
 #[cfg(feature = "hls")]
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use hemtt_common::position::Position;
 use hemtt_common::reporting::{Code, Output, Processed, Symbol, Token};
@@ -66,7 +67,7 @@ impl Processor {
 
         if let Some(state) = processor.ifstates.pop() {
             return Err(Error::Code(Box::new(EoiIfState {
-                token: Box::new(state.token().clone()),
+                token: Box::new(state.token().as_ref().clone()),
             })));
         }
 
@@ -89,7 +90,7 @@ impl Processor {
 
     fn file(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         loop {
@@ -103,7 +104,7 @@ impl Processor {
 
     fn line(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, Some(buffer));
@@ -122,7 +123,7 @@ impl Processor {
         &mut self,
         callsite: Option<&Position>,
         in_macro: Option<&str>,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let mut in_quotes = false;
@@ -150,7 +151,7 @@ impl Processor {
                             || token.position().start().0 < callsite.unwrap().start().0)
                     {
                         self.output(
-                            Token::new(Symbol::DoubleQuote, token.position().clone()),
+                            Rc::new(Token::new(Symbol::DoubleQuote, token.position().clone())),
                             buffer,
                         );
                         quote = Some(token.position().clone());
@@ -176,7 +177,7 @@ impl Processor {
                 }
             }
             if let Some(quote) = quote {
-                self.output(Token::new(Symbol::DoubleQuote, quote), buffer);
+                self.output(Rc::new(Token::new(Symbol::DoubleQuote, quote)), buffer);
             }
             quote = None;
         }
@@ -189,20 +190,20 @@ impl Processor {
     /// - [`UnexpectedEOF`]: If the stream is at the end of the file
     /// - [`ExpectedIdent`]: If the stream is not at a word
     fn current_word(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
-    ) -> Result<Token, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+    ) -> Result<Rc<Token>, Error> {
         if let Some(token) = stream.peek() {
             if token.symbol().is_word() {
                 return Ok(stream.next().expect("just checked"));
             }
             if token.symbol().is_eoi() {
                 return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token.clone()),
+                    token: Box::new(token.as_ref().clone()),
                 })));
             }
         }
         Err(Error::Code(Box::new(ExpectedIdent {
-            token: Box::new(stream.next().expect("just checked")),
+            token: Box::new(stream.next().expect("just checked").as_ref().clone()),
         })))
     }
 
@@ -213,9 +214,9 @@ impl Processor {
     /// - [`ExpectedIdent`]: If the stream is not at a word
     fn next_word(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: Option<&mut Vec<Output>>,
-    ) -> Result<Token, Error> {
+    ) -> Result<Rc<Token>, Error> {
         self.skip_whitespace(stream, buffer);
         Self::current_word(stream)
     }
@@ -226,21 +227,21 @@ impl Processor {
     /// - [`UnexpectedEOF`]: If the stream is at the end of the file
     fn next_value(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Token>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: Option<&mut Vec<Output>>,
-    ) -> Result<Token, Error> {
+    ) -> Result<Rc<Token>, Error> {
         self.skip_whitespace(stream, buffer);
         if let Some(token) = stream.peek() {
             if token.symbol().is_eoi() {
                 return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token.clone()),
+                    token: Box::new(token.as_ref().clone()),
                 })));
             }
         }
         Ok(stream.next().expect("just checked"))
     }
 
-    fn output(&mut self, token: Token, buffer: &mut Vec<Output>) {
+    fn output(&mut self, token: Rc<Token>, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
             if token.symbol().is_newline()
                 && buffer
@@ -258,10 +259,12 @@ impl Processor {
 
 #[cfg(test)]
 pub mod tests {
+    use std::rc::Rc;
+
     use hemtt_common::reporting::Token;
     use peekmore::{PeekMore, PeekMoreIterator};
 
-    pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Token>> {
+    pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
         let workspace = hemtt_common::workspace::Workspace::builder()
             .memory()
             .finish(None)

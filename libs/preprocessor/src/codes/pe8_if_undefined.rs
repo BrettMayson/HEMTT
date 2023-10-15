@@ -9,8 +9,21 @@ use crate::defines::Defines;
 pub struct IfUndefined {
     /// The [`Token`] that was found
     pub(crate) token: Box<Token>,
-    /// The defines at the point of the error
-    pub(crate) defines: Defines,
+    /// Similar defines
+    pub(crate) similar: Vec<String>,
+}
+
+impl IfUndefined {
+    pub fn new(token: Box<Token>, defines: &Defines) -> Self {
+        Self {
+            similar: defines
+                .similar_values(token.symbol().to_string().trim())
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
+            token,
+        }
+    }
 }
 
 impl Code for IfUndefined {
@@ -42,9 +55,6 @@ impl Code for IfUndefined {
         let a = colors.next();
         let mut out = Vec::new();
         let span = self.token.position().start().0..self.token.position().end().0;
-        let did_you_mean = self
-            .defines
-            .similar_values(self.token.symbol().to_string().trim());
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),
@@ -57,11 +67,11 @@ impl Code for IfUndefined {
                 .with_color(a)
                 .with_message("undefined macro"),
         );
-        if !did_you_mean.is_empty() {
+        if !self.similar.is_empty() {
             report = report.with_help(format!(
                 "did you mean `{}`",
-                did_you_mean
-                    .into_iter()
+                self.similar
+                    .iter()
                     .map(|dym| format!("{}", dym.fg(a)))
                     .collect::<Vec<_>>()
                     .join("`, `")

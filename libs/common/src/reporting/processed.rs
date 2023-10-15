@@ -1,5 +1,6 @@
 #[cfg(feature = "hls")]
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::{
     position::{LineCol, Position},
@@ -42,7 +43,7 @@ pub struct Processed {
 fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
-    token: Token,
+    token: Rc<Token>,
 ) -> Result<(), Error> {
     let path = token.position().path().clone();
     let source = processed
@@ -252,7 +253,7 @@ pub struct Mapping {
     source: usize,
     processed: (LineCol, LineCol),
     original: Position,
-    token: Token,
+    token: Rc<Token>,
     was_macro: bool,
 }
 
@@ -289,7 +290,7 @@ impl Mapping {
 
     #[must_use]
     /// Get the original token
-    pub const fn token(&self) -> &Token {
+    pub const fn token(&self) -> &Rc<Token> {
         &self.token
     }
 
