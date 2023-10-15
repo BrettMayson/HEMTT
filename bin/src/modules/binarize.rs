@@ -84,7 +84,13 @@ impl Module for Binarize {
                             .map(|file| glob::Pattern::new(file))
                             .collect::<Result<Vec<_>, glob::PatternError>>()?
                             .iter()
-                            .any(|pat| pat.matches(entry.as_str()))
+                            .any(|pat| {
+                                pat.matches(
+                                    entry
+                                        .as_str()
+                                        .trim_start_matches(&format!("/{}/", addon.folder())),
+                                )
+                            })
                         {
                             debug!("skipping binarization of {}", entry.as_str());
                             continue;
