@@ -6,7 +6,7 @@ mod addon;
 mod asc;
 mod error;
 mod files;
-mod hemtt;
+pub mod hemtt;
 mod lint;
 mod signing;
 mod version;

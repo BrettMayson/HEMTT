@@ -1,7 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
 
 use clap::{ArgMatches, Command};
-use hemtt_project::ProjectConfig;
+use hemtt_project::{hemtt::LaunchOptions, ProjectConfig};
 use steamlocate::SteamDir;
 
 use crate::{error::Error, utils::create_link};
@@ -51,6 +54,11 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let launch = config
         .hemtt()
         .launch(&launch_config)
+        .or(if launch_config == "default" {
+            Some(Cow::Owned(LaunchOptions::default()))
+        } else {
+            None
+        })
         .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
 
     let Some(arma3dir) =
