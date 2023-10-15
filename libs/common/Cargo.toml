@@ -15,4 +15,4 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [features]
-lsp = []
+# lsp = []
