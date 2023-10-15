@@ -13,3 +13,6 @@ thiserror = "1.0.49"
 toml = { workspace = true }
 tracing = { workspace = true }
 vfs = { workspace = true }
+
+[features]
+hls = []

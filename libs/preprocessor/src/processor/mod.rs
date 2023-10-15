@@ -1,3 +1,4 @@
+#[cfg(feature = "hls")]
 use std::collections::HashMap;
 
 use hemtt_common::position::Position;
@@ -27,10 +28,12 @@ pub struct Processor {
 
     pub(crate) token_count: usize,
 
+    #[cfg(feature = "hls")]
     /// Map of token usage to definition
     /// (token, definition)
     pub(crate) declarations: HashMap<Position, Position>,
 
+    #[cfg(feature = "hls")]
     /// Map of token definition to usage
     /// (definition, usages)
     pub(crate) usage: HashMap<Position, Vec<Position>>,
@@ -75,7 +78,9 @@ impl Processor {
 
         Processed::new(
             buffer,
+            #[cfg(feature = "hls")]
             processor.usage,
+            #[cfg(feature = "hls")]
             processor.declarations,
             processor.warnings,
         )

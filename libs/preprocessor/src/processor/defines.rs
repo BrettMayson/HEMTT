@@ -197,6 +197,7 @@ impl Processor {
         match body {
             Definition::Function(function) => {
                 let Some(args) = self.call_read_args(callsite, stream)? else {
+                    #[allow(clippy::redundant_clone)] // behind hls feature flag
                     return Err(Error::Code(Box::new(FunctionAsValue {
                         token: Box::new(ident.clone()),
                         source: Box::new(source.clone()),
@@ -242,6 +243,7 @@ impl Processor {
             }
             Definition::Void => return Ok(()),
             Definition::Unit => {
+                #[allow(clippy::redundant_clone)] // behind hls feature flag
                 return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
                     token: Box::new(ident.clone()),
                     source: Box::new(source.clone()),
@@ -250,9 +252,10 @@ impl Processor {
                         .expect("peeked by caller")
                         .symbol()
                         .is_left_paren(),
-                })))
+                })));
             }
         };
+        #[cfg(feature = "hls")]
         self.usage.get_mut(source.position()).map_or_else(
             || {
                 // println!("missing {:?}", ident.position());
@@ -261,6 +264,7 @@ impl Processor {
                 usage.push(ident.position().clone());
             },
         );
+        #[cfg(feature = "hls")]
         self.declarations
             .insert(ident.position().clone(), source.position().clone());
         Ok(())

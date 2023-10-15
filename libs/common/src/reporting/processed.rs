@@ -1,3 +1,4 @@
+#[cfg(feature = "hls")]
 use std::collections::HashMap;
 
 use crate::{
@@ -20,10 +21,12 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
+    #[cfg(feature = "hls")]
     /// Map of token usage to definition
     /// (token, definition)
     declarations: HashMap<Position, Position>,
 
+    #[cfg(feature = "hls")]
     /// Map of token definition to usage
     /// (definition, usages)
     usage: HashMap<Position, Vec<Position>>,
@@ -168,12 +171,14 @@ impl Processed {
     /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
-        usage: HashMap<Position, Vec<Position>>,
-        declarations: HashMap<Position, Position>,
+        #[cfg(feature = "hls")] usage: HashMap<Position, Vec<Position>>,
+        #[cfg(feature = "hls")] declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
     ) -> Result<Self, Error> {
         let mut processed = Self {
+            #[cfg(feature = "hls")]
             declarations,
+            #[cfg(feature = "hls")]
             usage,
             warnings,
             ..Default::default()
