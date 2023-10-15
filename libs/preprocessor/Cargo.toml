@@ -18,7 +18,6 @@ peekmore = { workspace = true }
 pest = { workspace = true }
 pest_derive = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 strsim = "0.10.0"
 tracing = { workspace = true }
 vfs = { workspace = true }
