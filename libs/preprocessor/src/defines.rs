@@ -94,10 +94,20 @@ impl Defines {
                     "__FILE__" => {
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Token::new(
-                                Symbol::Word(site.path().as_str().to_string()),
-                                key.position().clone(),
-                            )]),
+                            Definition::Value(vec![
+                                Token::new(
+                                    Symbol::DoubleQuote,
+                                    key.position().clone(),
+                                ),
+                                Token::new(
+                                    Symbol::Word(site.path().as_str().to_string()),
+                                    key.position().clone(),
+                                ),
+                                Token::new(
+                                    Symbol::DoubleQuote,
+                                    key.position().clone(),
+                                ),
+                            ]),
                         ));
                     }
                     "__LINE__" => {
