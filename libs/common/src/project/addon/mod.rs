@@ -58,6 +58,9 @@ impl AddonConfig {
     /// file does not contain a valid configuration, an error is returned.
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
+        if file.contains("preprocess = ") {
+            return Err(Error::ConfigInvalid("`preprocess = {}` is deprecated, use `[rapify] enabled = false` instead. See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.".to_string()));
+        }
         if file.contains("[preprocess]") {
             warn!("`[preprocess]` is deprecated, use `[rapify]` instead. See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.");
         }
