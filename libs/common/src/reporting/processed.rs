@@ -137,13 +137,13 @@ fn append_output(
                 append_output(processed, string_stack, o)?;
                 let end = processed.total;
                 let path = root.position().path().clone();
-                let content = path.read_to_string()?;
                 let source = processed
                     .sources
                     .iter()
                     .position(|(s, _)| s.as_str() == path.as_str())
                     .map_or_else(
                         || {
+                            let content = path.read_to_string().unwrap();
                             processed.sources.push((path, content));
                             processed.sources.len() - 1
                         },
