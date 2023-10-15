@@ -131,7 +131,7 @@ mod tests {
     fn simple() {
         let workspace = hemtt_common::workspace::Workspace::builder()
             .memory()
-            .finish()
+            .finish(None)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -146,7 +146,7 @@ mod tests {
     fn unicode() {
         let workspace = hemtt_common::workspace::Workspace::builder()
             .memory()
-            .finish()
+            .finish(None)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         let content = "² ƒ ‡ Œ Š – µ œ š ˆ ˜ € º ¨ ¬ 🤔";

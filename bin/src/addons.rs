@@ -1,7 +1,7 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
 use hemtt_common::prefix::{self, Prefix};
-use hemtt_project::AddonConfig;
+use hemtt_common::project::AddonConfig;
 
 use crate::error::Error;
 

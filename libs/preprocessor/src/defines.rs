@@ -96,9 +96,23 @@ impl Defines {
                             key.clone(),
                             Definition::Value(vec![
                                 Token::new(Symbol::DoubleQuote, key.position().clone()),
-                                Token::new(
-                                    Symbol::Word(site.path().as_str().to_string()),
-                                    key.position().clone(),
+                                site.path().workspace().project().map_or_else(
+                                    || {
+                                        Token::new(
+                                            Symbol::Word(site.path().as_str().to_string()),
+                                            key.position().clone(),
+                                        )
+                                    },
+                                    |project| {
+                                        Token::new(
+                                            Symbol::Word(format!(
+                                                "{}\\{}",
+                                                project.prefix(),
+                                                site.path().as_str()
+                                            )),
+                                            key.position().clone(),
+                                        )
+                                    },
                                 ),
                                 Token::new(Symbol::DoubleQuote, key.position().clone()),
                             ]),

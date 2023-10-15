@@ -1,15 +1,14 @@
 use std::mem::MaybeUninit;
 
 use git2::Repository;
-use hemtt_common::version::Version;
 use serde::{Deserialize, Serialize};
 use tracing::{error, trace};
 use vfs::VfsPath;
 
-use crate::error::Error;
+use crate::{error::Error, version::Version};
 
 #[allow(clippy::unsafe_derive_deserialize)]
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Options {
     #[serde(default)]
     path: Option<String>,
@@ -74,10 +73,10 @@ impl Options {
         if let Some(major) = self.major {
             trace!("reading version from project.toml");
             let Some(minor) = self.minor else {
-                return Err(hemtt_common::version::Error::ExpectedMinor.into());
+                return Err(crate::version::Error::ExpectedMinor.into());
             };
             let Some(patch) = self.patch else {
-                return Err(hemtt_common::version::Error::ExpectedPatch.into());
+                return Err(crate::version::Error::ExpectedPatch.into());
             };
             return Ok(Version::new(major, minor, patch, self.build));
         }
@@ -100,7 +99,7 @@ impl Options {
         }
         error!("could not find version macro file: {:?}", path);
 
-        Err(hemtt_common::version::Error::UnknownVersion.into())
+        Err(crate::version::Error::UnknownVersion.into())
     }
 
     #[must_use]

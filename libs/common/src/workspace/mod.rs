@@ -12,12 +12,16 @@ pub use error::Error;
 #[allow(clippy::module_name_repetitions)]
 pub use path::WorkspacePath;
 
-use crate::prefix::{Prefix, FILES};
+use crate::{
+    prefix::{Prefix, FILES},
+    project::ProjectConfig,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 /// A workspace (directory) containing addons and / or missions
 pub struct Workspace {
     pub(crate) vfs: VfsPath,
+    pub(crate) project: Option<ProjectConfig>,
     pub(crate) pointers: HashMap<String, VfsPath>,
     pub(crate) addons: Vec<VfsPath>,
     pub(crate) missions: Vec<VfsPath>,
@@ -30,13 +34,20 @@ impl Workspace {
         WorkspaceBuilder::default()
     }
 
+    #[must_use]
+    /// Returns the project config
+    pub const fn project(&self) -> Option<&ProjectConfig> {
+        self.project.as_ref()
+    }
+
     /// Create a new workspace from a vfs path
     ///
     /// # Errors
     /// [`Error::Vfs`] if the workspace could not be created
-    pub fn create(vfs: VfsPath) -> Result<WorkspacePath, Error> {
+    pub fn create(vfs: VfsPath, project: Option<ProjectConfig>) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
+            project,
             pointers: HashMap::new(),
             addons: Vec::new(),
             missions: Vec::new(),
@@ -104,9 +115,9 @@ impl WorkspaceBuilder {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the workspace could not be built
-    pub fn finish(self) -> Result<WorkspacePath, Error> {
+    pub fn finish(self, project: Option<ProjectConfig>) -> Result<WorkspacePath, Error> {
         let mut layers = self.layers;
         layers.reverse();
-        Workspace::create(OverlayFS::new(&layers).into())
+        Workspace::create(OverlayFS::new(&layers).into(), project)
     }
 }

@@ -8,7 +8,6 @@ members = [
     "libs/config",
     "libs/pbo",
     "libs/preprocessor",
-    "libs/project",
     "libs/signing",
 ]
 resolver = "2"

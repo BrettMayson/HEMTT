@@ -1,19 +1,22 @@
+//! Project configuration
+
 use std::{collections::HashMap, path::Path, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
 mod addon;
 mod asc;
-mod error;
 mod files;
 pub mod hemtt;
 mod lint;
 mod signing;
 mod version;
 
-pub use {addon::*, error::Error};
+pub use {crate::error::Error, addon::*};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::module_name_repetitions)]
+#[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
+/// Configuration for a project
 pub struct ProjectConfig {
     /// The name of the project
     name: String,
@@ -49,21 +52,25 @@ pub struct ProjectConfig {
 
 impl ProjectConfig {
     #[must_use]
+    /// Name of the project
     pub fn name(&self) -> &str {
         &self.name
     }
 
     #[must_use]
+    /// version of the project
     pub const fn version(&self) -> &version::Options {
         &self.version
     }
 
     #[must_use]
+    /// Prefix for the project
     pub fn prefix(&self) -> &str {
         &self.prefix
     }
 
     #[must_use]
+    /// Main prefix for the project
     pub const fn mainprefix(&self) -> Option<&String> {
         self.mainprefix.as_ref()
     }
@@ -81,21 +88,25 @@ impl ProjectConfig {
     }
 
     #[must_use]
+    /// Hemtt features
     pub const fn hemtt(&self) -> &hemtt::Features {
         &self.hemtt
     }
 
     #[must_use]
+    /// Signing options
     pub const fn signing(&self) -> &signing::Options {
         &self.signing
     }
 
     #[must_use]
+    /// Asc options
     pub const fn asc(&self) -> &asc::Options {
         &self.asc
     }
 
     #[must_use]
+    /// Lint options
     pub const fn lint(&self) -> &lint::Options {
         &self.lint
     }

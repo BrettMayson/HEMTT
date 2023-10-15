@@ -16,7 +16,7 @@ use chumsky::{prelude::Simple, Parser};
 use hemtt_common::reporting::{Code, Processed};
 
 pub use error::Error;
-use hemtt_project::ProjectConfig;
+use hemtt_common::project::ProjectConfig;
 pub use model::*;
 pub mod parse;
 pub mod rapify;

@@ -17,14 +17,15 @@ mod error;
 mod file;
 mod model;
 mod read;
-mod sign_version;
 mod write;
 
 pub use error::Error;
 pub use model::{Checksum, Header, Mime};
 pub use read::ReadablePbo;
-pub use sign_version::BISignVersion;
 pub use write::WritablePbo;
+
+// Re-exported from common
+pub use hemtt_common::BISignVersion;
 
 trait WritePbo {
     fn write_pbo<O: Write>(&self, output: &mut O) -> Result<(), Error>;

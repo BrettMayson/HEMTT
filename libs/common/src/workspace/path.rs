@@ -20,6 +20,12 @@ impl WorkspacePath {
         &self.path
     }
 
+    #[must_use]
+    /// Returns the workspace
+    pub fn workspace(&self) -> &Workspace {
+        &self.workspace
+    }
+
     /// join a path to the workspace path
     ///
     /// # Errors

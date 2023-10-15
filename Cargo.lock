@@ -809,7 +809,6 @@ dependencies = [
  "hemtt-config",
  "hemtt-pbo",
  "hemtt-preprocessor",
- "hemtt-project",
  "hemtt-signing",
  "num_cpus",
  "peekmore",
@@ -835,8 +834,11 @@ dependencies = [
 name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
+ "ariadne",
+ "git2",
  "serde",
  "thiserror",
+ "toml",
  "tracing",
  "vfs",
 ]
@@ -850,7 +852,6 @@ dependencies = [
  "chumsky",
  "hemtt-common",
  "hemtt-preprocessor",
- "hemtt-project",
  "lsp-types",
  "paste",
  "serde",
@@ -883,19 +884,6 @@ dependencies = [
  "pest_derive",
  "serde",
  "strsim",
- "tracing",
- "vfs",
-]
-
-[[package]]
-name = "hemtt-project"
-version = "1.0.0"
-dependencies = [
- "git2",
- "hemtt-common",
- "hemtt-pbo",
- "serde",
- "toml",
  "tracing",
  "vfs",
 ]

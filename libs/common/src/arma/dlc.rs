@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize)]
 /// DLCs that require opt-in.
 pub enum DLC {
     #[serde(rename = "contact")]

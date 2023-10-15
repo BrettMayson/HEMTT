@@ -1,5 +1,5 @@
+use hemtt_common::project::ProjectConfig;
 use hemtt_common::reporting::{Code, Processed};
-use hemtt_project::ProjectConfig;
 
 use crate::Str;
 

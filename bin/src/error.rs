@@ -52,7 +52,7 @@ pub enum Error {
     #[error("Prefix error: {0}")]
     Prefix(#[from] hemtt_common::prefix::Error),
     #[error("`a hemtt project file is invalid: {0}")]
-    Project(#[from] hemtt_project::Error),
+    Project(#[from] hemtt_common::project::Error),
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
     #[error("Version Error: {0}")]

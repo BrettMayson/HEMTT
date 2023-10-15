@@ -2,8 +2,8 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Copy, Clone, Debug, Default)]
 #[allow(clippy::module_name_repetitions)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Default)]
 /// Version of BI's signature
 pub enum BISignVersion {
     /// Version 2
@@ -82,7 +82,8 @@ impl BISignVersion {
     }
 
     #[must_use]
-    pub(crate) const fn nothing(&self) -> &str {
+    /// Get the nothing string for the version
+    pub const fn nothing(&self) -> &str {
         match self {
             Self::V2 => "nothing",
             Self::V3 => "gnihton",

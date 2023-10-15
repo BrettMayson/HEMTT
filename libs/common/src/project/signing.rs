@@ -1,7 +1,7 @@
-use hemtt_pbo::BISignVersion;
+use crate::BISignVersion;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Options {
     version: Option<BISignVersion>,
 

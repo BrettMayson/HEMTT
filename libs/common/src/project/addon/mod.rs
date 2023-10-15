@@ -5,7 +5,9 @@ use tracing::warn;
 
 use crate::error::Error;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+/// Configuration for an addon
 pub struct AddonConfig {
     #[serde(default)]
     /// Preprocess config
@@ -33,6 +35,7 @@ pub struct AddonConfig {
 
 impl AddonConfig {
     #[must_use]
+    /// Preprocess config
     pub fn preprocess(&self) -> PreprocessConfig {
         match &self.preprocess {
             Some(PreprocessCompatibility::Deprecated(enabled)) => PreprocessConfig {
@@ -48,6 +51,7 @@ impl AddonConfig {
     }
 
     #[must_use]
+    /// Binirize config
     pub fn binarize(&self) -> BinarizeConfig {
         let mut config = self.binarize.clone();
         config.exclude.append(&mut self.no_bin.clone());
@@ -102,12 +106,16 @@ impl FromStr for AddonConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
+/// Preprocess compatibility config
 pub enum PreprocessCompatibility {
+    /// Deprecated bool
     Deprecated(bool),
+    /// New config
     New(PreprocessConfig),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Preprocess config
 pub struct PreprocessConfig {
     #[serde(default)]
     enabled: bool,
@@ -117,44 +125,54 @@ pub struct PreprocessConfig {
 
 impl PreprocessConfig {
     #[must_use]
+    /// Is preprocess enabled
     pub const fn enabled(&self) -> bool {
         self.enabled
     }
 
     #[must_use]
+    /// Files to exclude from preprocess
     pub const fn exclude(&self) -> &Vec<String> {
         &self.exclude
     }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Binarize config
 pub struct BinarizeConfig {
     #[serde(default)]
+    /// Is binarize enabled
     pub enabled: Option<bool>,
     #[serde(default)]
+    /// Files to exclude from binarize
     pub exclude: Vec<String>,
 }
 
 impl BinarizeConfig {
     #[must_use]
+    /// Is binarize enabled
     pub fn enabled(&self) -> bool {
         self.enabled.unwrap_or(true)
     }
 
     #[must_use]
+    /// Files to exclude from binarize
     pub const fn exclude(&self) -> &Vec<String> {
         &self.exclude
     }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// Files config
 pub struct FilesConfig {
     #[serde(default)]
+    /// Files to exclude from the PBO
     pub exclude: Vec<String>,
 }
 
 impl FilesConfig {
     #[must_use]
+    /// Files to exclude from the PBO
     pub const fn exclude(&self) -> &Vec<String> {
         &self.exclude
     }

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 mod sqf;
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Options {
     #[serde(default)]
     sqf: sqf::Options,

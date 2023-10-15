@@ -1,9 +1,12 @@
+//! HEMTT Configuration
+
 use std::{borrow::Cow, collections::HashMap};
 
-use hemtt_common::arma::dlc::DLC;
+use crate::arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Feature specific configuration
 pub struct Features {
     #[serde(default)]
     dev: DevOptions,
@@ -20,27 +23,32 @@ pub struct Features {
 
 impl Features {
     #[must_use]
+    /// Dev options
     pub const fn dev(&self) -> &DevOptions {
         &self.dev
     }
 
     #[must_use]
+    /// Launch options
     pub fn launch(&self, key: &str) -> Option<Cow<LaunchOptions>> {
         self.launch.get(key).map(Cow::Borrowed)
     }
 
     #[must_use]
+    /// Build options
     pub const fn build(&self) -> &BuildOptions {
         &self.build
     }
 
     #[must_use]
+    /// Release options
     pub const fn release(&self) -> &ReleaseOptions {
         &self.release
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Dev specific configuration
 pub struct DevOptions {
     #[serde(default)]
     exclude: Vec<String>,
@@ -48,12 +56,14 @@ pub struct DevOptions {
 
 impl DevOptions {
     #[must_use]
+    /// Addons to exclude from dev
     pub fn exclude(&self) -> &[String] {
         &self.exclude
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Launch specific configuration
 pub struct LaunchOptions {
     #[serde(default)]
     /// Workshop mods that should be launched with the mod
@@ -78,26 +88,31 @@ pub struct LaunchOptions {
 
 impl LaunchOptions {
     #[must_use]
+    /// Workshop mods that should be launched with the mod
     pub fn workshop(&self) -> &[String] {
         &self.workshop
     }
 
     #[must_use]
+    /// DLCs that should be launched with the mod
     pub fn dlc(&self) -> &[DLC] {
         &self.dlc
     }
 
     #[must_use]
+    /// Optional addons that should be built into the mod
     pub fn optionals(&self) -> &[String] {
         &self.optionals
     }
 
     #[must_use]
+    /// Extra launch parameters
     pub fn parameters(&self) -> &[String] {
         &self.parameters
     }
 
     #[must_use]
+    /// Binary to launch, defaults to `arma3_x64.exe`
     pub fn executable(&self) -> String {
         let executable = self
             .executable
@@ -111,7 +126,8 @@ impl LaunchOptions {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Build specific configuration
 pub struct BuildOptions {
     #[serde(default)]
     /// Should optionals be built into their own mod?
@@ -121,6 +137,7 @@ pub struct BuildOptions {
 
 impl BuildOptions {
     #[must_use]
+    /// Should optionals be built into their own mod?
     pub const fn optional_mod_folders(&self) -> bool {
         if let Some(optional) = self.optional_mod_folders {
             optional
@@ -130,7 +147,8 @@ impl BuildOptions {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Release specific configuration
 pub struct ReleaseOptions {
     #[serde(default)]
     /// The folder name of the project
@@ -148,11 +166,13 @@ pub struct ReleaseOptions {
 
 impl ReleaseOptions {
     #[must_use]
+    /// The folder name of the project
     pub fn folder(&self) -> Option<String> {
         self.folder.clone()
     }
 
     #[must_use]
+    /// Should the PBOs be signed?
     pub const fn sign(&self) -> bool {
         if let Some(sign) = self.sign {
             sign
@@ -162,6 +182,7 @@ impl ReleaseOptions {
     }
 
     #[must_use]
+    /// Create an archive of the release
     pub const fn archive(&self) -> bool {
         if let Some(archive) = self.archive {
             archive

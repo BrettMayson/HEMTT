@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Options {
     #[serde(default)]
     /// Files to be included in the output folder, supports glob patterns
