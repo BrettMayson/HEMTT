@@ -6,7 +6,7 @@ macro_rules! bootstrap {
     ($dir:ident) => {
         paste::paste! {
             #[test]
-            fn [<bootstrap_ $dir>]() {
+            fn [<pre_ $dir>]() {
                 check(stringify!($dir));
             }
         }
