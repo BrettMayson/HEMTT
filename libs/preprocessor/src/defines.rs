@@ -95,18 +95,12 @@ impl Defines {
                         return Some((
                             key.clone(),
                             Definition::Value(vec![
-                                Token::new(
-                                    Symbol::DoubleQuote,
-                                    key.position().clone(),
-                                ),
+                                Token::new(Symbol::DoubleQuote, key.position().clone()),
                                 Token::new(
                                     Symbol::Word(site.path().as_str().to_string()),
                                     key.position().clone(),
                                 ),
-                                Token::new(
-                                    Symbol::DoubleQuote,
-                                    key.position().clone(),
-                                ),
+                                Token::new(Symbol::DoubleQuote, key.position().clone()),
                             ]),
                         ));
                     }
