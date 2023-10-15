@@ -62,14 +62,16 @@ jobs:
             name: windows
             artifact: windows-x64
         mod:
+          - repo: CBATeam/CBA_A3
+            commit: e48c270da63574368c7a8f553ea64a29a339d40d
           - repo: acemod/ACE3
             commit: 8104c8f465ed561a079c2c17330dae074183c319
-          - repo: BourbonWarfare/POTATO
-            commit: e14322f6d4da4de9e8a718f5743d3e25828b5be1
           - repo: ArmaForces/Mods
             commit: 6871517d4c2f720cea62b767eb7ec422bf712f51
           - repo: Theseus-Aegis/Mods
             commit: 445ec5fc71bbd01d57252be2794947c2bfe79988
+          - repo: SynixeContractors/Mod
+            commit: b767891bfc098c92bf3108d77a5cf1b5929b98e8
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v3
