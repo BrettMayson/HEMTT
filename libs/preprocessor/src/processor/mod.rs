@@ -140,7 +140,8 @@ impl Processor {
                     let token = stream.next().expect("peeked above");
                     if in_macro.is_some()
                         && stream.peek().map_or(false, |t| t.symbol().is_word())
-                        && (token.position().path() != callsite.unwrap().path() // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
+                        // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
+                        && (token.position().path() != callsite.unwrap().path()
                             || token.position().start().0 < callsite.unwrap().start().0)
                     {
                         self.output(
