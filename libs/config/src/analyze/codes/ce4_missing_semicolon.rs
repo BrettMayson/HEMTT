@@ -31,10 +31,11 @@ impl Code for MissingSemicolon {
     }
 
     fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
+        let haystack = &processed.as_string()[self.span.clone()];
         let possible_end = self.span.start
-            + processed.as_string()[self.span.clone()]
+            + haystack
                 .find(|c: char| c == '\n')
-                .unwrap();
+                .unwrap_or_else(|| haystack.rfind(|c: char| c != ' ' && c != '}').unwrap_or(0) + 1);
         let map = processed.mapping(possible_end).unwrap();
         let token = map.token();
         let mut out = Vec::new();
