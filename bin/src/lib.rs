@@ -23,7 +23,16 @@ pub fn cli() -> Command {
     #[allow(unused_mut)]
     let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .version(env!("CARGO_PKG_VERSION"))
+        .version({
+            let mut base = env!("CARGO_PKG_VERSION").to_string();
+            if option_env!("CI").is_none() {
+                base.push_str("-dev");
+            }
+            if cfg!(debug_assertions) {
+                base.push_str("-debug");
+            }
+            Box::leak(Box::new(base)).as_str()
+        })
         .subcommand_required(false)
         .arg_required_else_help(true)
         .subcommand(commands::new::cli())
