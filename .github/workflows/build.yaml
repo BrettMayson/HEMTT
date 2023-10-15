@@ -139,7 +139,7 @@ jobs:
       - name: Pack for Chocolatey
         uses: crazy-max/ghaction-chocolatey@v3
         with:
-          args: pack bin/dist/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
+          args: pack .github/choco/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
 
       - name: Zip Windows x64
         run: |
