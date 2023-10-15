@@ -107,7 +107,7 @@ impl Code for FunctionCallArgumentCount {
             ))
             .with_color(a)
             .with_message(format!(
-                "self.defined here with {} argument{}",
+                "defined here with {} argument{}",
                 self.defined.1.len(),
                 if self.defined.1.len() == 1 { "" } else { "s" }
             )),

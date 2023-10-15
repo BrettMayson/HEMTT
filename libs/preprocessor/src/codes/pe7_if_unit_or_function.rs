@@ -88,7 +88,7 @@ impl Code for IfUnitOrFunction {
             ))
             .with_color(a)
             .with_message(format!(
-                "self.defined as a {} here",
+                "defined as a {} here",
                 if self.defined.1 { "unit" } else { "function" }
             )),
         );
