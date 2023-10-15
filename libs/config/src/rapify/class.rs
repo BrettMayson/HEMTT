@@ -54,8 +54,6 @@ impl Rapify for Class {
                                 let body_size = c.rapify(&mut cursor, class_offset)?;
                                 assert_eq!(body_size, c.rapified_length());
                                 class_offset += body_size;
-                                // cursor.write_u32::<LittleEndian>(class_offset as u32 - 8 + 1)?;
-                                // written += 4;
                                 class_bodies.push(cursor);
                             }
                         }
@@ -94,7 +92,7 @@ impl Rapify for Class {
                 let parent_length = self.parent().map_or(0, Ident::len);
                 parent_length
                     + 1 // parent null terminator
-                    + 4
+                    + 4 // offset to next class
                     + compressed_int_len(properties.len() as u32)
                     + properties
                         .iter()
