@@ -16,6 +16,7 @@ use chumsky::{prelude::Simple, Parser};
 use hemtt_common::reporting::{Code, Processed};
 
 pub use error::Error;
+use hemtt_project::ProjectConfig;
 pub use model::*;
 pub mod parse;
 pub mod rapify;
@@ -24,7 +25,10 @@ pub mod rapify;
 ///
 /// # Errors
 /// If the file is invalid
-pub fn parse(processed: &Processed) -> Result<ConfigReport, Vec<String>> {
+pub fn parse(
+    project: Option<&ProjectConfig>,
+    processed: &Processed,
+) -> Result<ConfigReport, Vec<String>> {
     let (config, errors) = parse::config().parse_recovery(processed.as_string());
     config.map_or_else(
         || {
@@ -35,9 +39,9 @@ pub fn parse(processed: &Processed) -> Result<ConfigReport, Vec<String>> {
         },
         |config| {
             Ok(ConfigReport {
-                valid: config.valid(),
-                warnings: config.warnings(processed),
-                errors: config.errors(processed),
+                valid: config.valid(project),
+                warnings: config.warnings(project, processed),
+                errors: config.errors(project, processed),
                 config,
             })
         },

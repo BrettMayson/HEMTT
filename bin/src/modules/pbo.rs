@@ -1,6 +1,6 @@
 use std::{
     fs::{create_dir_all, File},
-    sync::atomic::{AtomicI16, Ordering},
+    sync::atomic::{AtomicU16, Ordering},
 };
 
 use git2::Repository;
@@ -45,7 +45,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
             })
         })
     };
-    let counter = AtomicI16::new(0);
+    let counter = AtomicU16::new(0);
     ctx.addons()
         .to_vec()
         .par_iter()

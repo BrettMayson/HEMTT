@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use hemtt_common::reporting::{Code, Processed};
+use hemtt_project::ProjectConfig;
 
 use super::{
     codes::{
@@ -12,32 +13,36 @@ use super::{
 use crate::{Property, Value};
 
 impl Analyze for Property {
-    fn valid(&self) -> bool {
+    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
         match self {
-            Self::Entry { value, .. } => value.valid(),
-            Self::Class(c) => c.valid(),
+            Self::Entry { value, .. } => value.valid(project),
+            Self::Class(c) => c.valid(project),
             Self::Delete(_) => true,
             Self::MissingSemicolon(_, _) => false,
         }
     }
 
-    fn warnings(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn warnings(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+    ) -> Vec<Box<dyn Code>> {
         match self {
-            Self::Entry { value, .. } => value.warnings(processed),
-            Self::Class(c) => c.warnings(processed),
+            Self::Entry { value, .. } => value.warnings(project, processed),
+            Self::Class(c) => c.warnings(project, processed),
             Self::Delete(_) | Self::MissingSemicolon(_, _) => vec![],
         }
     }
 
-    fn errors(&self, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
         match self {
             Self::Entry { value, .. } => {
-                let mut errors = value.errors(processed);
+                let mut errors = value.errors(project, processed);
                 errors.extend(unexpected_array(self));
                 errors.extend(expected_array(self));
                 errors
             }
-            Self::Class(c) => c.errors(processed),
+            Self::Class(c) => c.errors(project, processed),
             Self::Delete(_) => vec![],
             Self::MissingSemicolon(_, span) => vec![missing_semicolon(span)],
         }

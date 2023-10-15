@@ -1,14 +1,15 @@
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
 use hemtt_common::prefix::{self, Prefix};
+use hemtt_project::AddonConfig;
 
-use crate::{config::addon::Configuration, error::Error};
+use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Addon {
     name: String,
     location: Location,
-    config: Option<Configuration>,
+    config: Option<AddonConfig>,
     prefix: Prefix,
 }
 
@@ -26,7 +27,7 @@ impl Addon {
             config: {
                 let path = path.join("addon.toml");
                 if path.exists() {
-                    Some(Configuration::from_file(&path)?)
+                    Some(AddonConfig::from_file(&path)?)
                 } else {
                     None
                 }
@@ -86,7 +87,7 @@ impl Addon {
     }
 
     #[must_use]
-    pub const fn config(&self) -> Option<&Configuration> {
+    pub const fn config(&self) -> Option<&AddonConfig> {
         self.config.as_ref()
     }
 

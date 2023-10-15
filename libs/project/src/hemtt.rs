@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use hemtt_common::arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
@@ -25,8 +25,8 @@ impl Features {
     }
 
     #[must_use]
-    pub fn launch(&self, key: &str) -> Option<&LaunchOptions> {
-        self.launch.get(key)
+    pub fn launch(&self, key: &str) -> Option<Cow<LaunchOptions>> {
+        self.launch.get(key).map(Cow::Borrowed)
     }
 
     #[must_use]

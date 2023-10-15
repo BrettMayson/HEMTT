@@ -21,6 +21,7 @@ impl Rapify for Property {
                     Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
                 },
                 Self::Class(c) => match c {
+                    Class::Root { .. } => panic!("root should not be a property"),
                     Class::Local { .. } => 4,
                     Class::External { .. } => 0,
                 },
@@ -48,7 +49,7 @@ impl Property {
                 Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
             },
             Self::Class(c) => match c {
-                Class::Local { .. } => vec![0],
+                Class::Local { .. } | Class::Root { .. } => vec![0],
                 Class::External { .. } => vec![3],
             },
             Self::Delete(_) => {

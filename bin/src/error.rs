@@ -4,8 +4,6 @@ use hemtt_common::error::thiserror;
 pub enum Error {
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
-    #[error("Invalid config: {0}")]
-    ConfigInvalid(String),
     #[error("Launch config not found: {0}")]
     LaunchConfigNotFound(String),
 
@@ -53,6 +51,8 @@ pub enum Error {
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
     Prefix(#[from] hemtt_common::prefix::Error),
+    #[error("`a hemtt project file is invalid: {0}")]
+    Project(#[from] hemtt_project::Error),
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
     #[error("Version Error: {0}")]
@@ -75,8 +75,6 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("serde_json Error: {0}")]
     SerdeJson(#[from] serde_json::Error),
-    #[error("Toml Error: {0}")]
-    Toml(#[from] toml::de::Error),
     #[error("Vfs Error {0}")]
     Vfs(Box<vfs::VfsError>),
     #[error("Walkdir Error: {0}")]

@@ -8,7 +8,7 @@ macro_rules! bootstrap {
     ($dir:ident) => {
         paste::paste! {
             #[test]
-            fn [<bootstrap_ $dir>]() {
+            fn [<config_warning_ $dir>]() {
                 check(stringify!($dir));
             }
         }
@@ -23,7 +23,7 @@ fn check(dir: &str) {
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(&processed);
+    let parsed = hemtt_config::parse(None, &processed);
     match parsed {
         Ok(config) => {
             let mut expected = Vec::new();

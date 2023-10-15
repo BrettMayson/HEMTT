@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     path::PathBuf,
-    sync::atomic::{AtomicI16, Ordering},
+    sync::atomic::{AtomicU16, Ordering},
 };
 
 use hemtt_common::workspace::WorkspacePath;
@@ -23,7 +23,7 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        let counter = AtomicI16::new(0);
+        let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
@@ -44,7 +44,7 @@ impl Module for Rapifier {
                 }
                 let mut messages = Vec::new();
                 let mut res = Ok(());
-                for entry in ctx.workspace().join(&addon.folder())?.walk_dir()? {
+                for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_preprocess(entry.as_str())
                     {
@@ -79,7 +79,7 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: WorkspacePath, _ctx: &Context) -> (Vec<String>, Result<(), Error>) {
+pub fn rapify(path: WorkspacePath, ctx: &Context) -> (Vec<String>, Result<(), Error>) {
     let processed = match Processor::run(&path) {
         Ok(processed) => processed,
         Err(e) => {
@@ -92,7 +92,7 @@ pub fn rapify(path: WorkspacePath, _ctx: &Context) -> (Vec<String>, Result<(), E
             messages.push(warning);
         }
     }
-    let configreport = parse(&processed);
+    let configreport = parse(Some(ctx.config()), &processed);
     if let Err(errors) = configreport {
         for e in &errors {
             eprintln!("{e}");

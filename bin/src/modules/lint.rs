@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicU16, Ordering};
 
 use hemtt_common::workspace::WorkspacePath;
 use hemtt_preprocessor::Processor;
@@ -23,7 +23,7 @@ impl Module for Lint {
         if !ctx.config().lint().sqf().enabled() {
             return Ok(());
         }
-        let counter = AtomicI32::new(0);
+        let counter = AtomicU16::new(0);
         for addon in ctx.addons() {
             let sqf_ext = Some(String::from("sqf"));
             let mut entries = Vec::new();

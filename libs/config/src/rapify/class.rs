@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{LittleEndian, WriteBytesExt};
 use hemtt_common::io::{compressed_int_len, WriteExt};
 
-use crate::{analyze::Analyze, Class, Ident, Property};
+use crate::{Class, Ident, Property};
 
 use super::Rapify;
 
@@ -13,14 +13,10 @@ impl Rapify for Class {
         output: &mut O,
         offset: usize,
     ) -> Result<usize, std::io::Error> {
-        if !self.valid() {
-            unreachable!("Invalid class");
-        }
         let mut written = 0;
         match self {
-            Self::Local {
-                parent, properties, ..
-            } => {
+            Self::Local { properties, .. } | Self::Root { properties } => {
+                let parent = self.parent();
                 if let Some(parent) = &parent {
                     output.write_cstring(parent.as_str())?;
                     written += parent.as_str().len() + 1;
@@ -33,7 +29,7 @@ impl Rapify for Class {
                     .iter()
                     .map(|p| p.name().len() + 1 + p.rapified_length())
                     .sum::<usize>();
-                let mut class_offset = offset + written + properties_len;
+                let mut class_offset = offset + written + properties_len + 4;
                 let mut class_bodies: Vec<Cursor<Box<[u8]>>> = Vec::new();
                 let pre_properties = written;
 
@@ -72,6 +68,9 @@ impl Rapify for Class {
 
                 assert_eq!(written - pre_properties, properties_len);
 
+                output.write_u32::<LittleEndian>(class_offset as u32)?;
+                written += 4;
+
                 for cursor in class_bodies {
                     output.write_all(cursor.get_ref())?;
                     written += cursor.get_ref().len();
@@ -89,25 +88,21 @@ impl Rapify for Class {
     fn rapified_length(&self) -> usize {
         match self {
             Self::External { .. } => 0,
-            Self::Local {
-                name: _,
-                parent,
-                properties,
-            } => {
-                let parent_length = parent.as_ref().map_or(0, Ident::len);
+            Self::Local { properties, .. } | Self::Root { properties, .. } => {
+                let parent_length = self.parent().map_or(0, Ident::len);
                 parent_length
-                    + 1
+                    + 1 // parent null terminator
+                    + 4 // offset to next class
                     + compressed_int_len(properties.len() as u32)
                     + properties
                         .iter()
                         .map(|p| {
                             p.name().len()
-                                + 1
+                                + 1 // name null terminator
                                 + p.rapified_length()
                                 + match p {
                                     Property::Class(c) => c.rapified_length(),
                                     _ => 0,
-                                    // Property::Delete(i) => i.to_string().len() + 1,
                                 }
                         })
                         .sum::<usize>()

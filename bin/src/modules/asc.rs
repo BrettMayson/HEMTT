@@ -3,7 +3,7 @@ use std::{
     io::{Read, Write},
     process::Command,
     sync::{
-        atomic::{AtomicI16, Ordering},
+        atomic::{AtomicU16, Ordering},
         Arc, RwLock,
     },
 };
@@ -142,6 +142,11 @@ impl Module for ArmaScriptCompiler {
                                 .prefix()
                                 .to_string()
                                 .replace('\\', "/")
+                                .trim_end_matches(&addon.folder().replacen(
+                                    "optionals/",
+                                    "addons/",
+                                    1
+                                ))
                                 .trim_end_matches(&addon.folder()),
                             entry.as_str().to_string().trim_start_matches('/'),
                         ),
@@ -190,7 +195,7 @@ impl Module for ArmaScriptCompiler {
         }
         std::env::set_current_dir(ctx.project_folder())?;
         let tmp_output = tmp.join("output");
-        let counter = AtomicI16::new(0);
+        let counter = AtomicU16::new(0);
         for (src, dst) in &*files.read().unwrap() {
             let from = tmp_output.join(&format!("{src}c"));
             let to = ctx.workspace().join(&format!("{dst}c"))?;
@@ -211,7 +216,7 @@ impl Module for ArmaScriptCompiler {
 }
 
 #[derive(Default, Serialize)]
-struct ASCConfig {
+pub struct ASCConfig {
     #[serde(rename = "inputDirs")]
     input_dirs: Vec<String>,
     #[serde(rename = "outputDir")]
@@ -225,6 +230,7 @@ struct ASCConfig {
 }
 
 impl ASCConfig {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             input_dirs: vec![],

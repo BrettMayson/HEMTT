@@ -7,3 +7,4 @@ pub mod ce6_expected_array;
 pub mod ce7_missing_parent;
 
 pub mod cw1_parent_case;
+pub mod cw2_magwell_missing_magazine;

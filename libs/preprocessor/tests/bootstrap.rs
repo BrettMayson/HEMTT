@@ -6,7 +6,7 @@ macro_rules! bootstrap {
     ($dir:ident) => {
         paste::paste! {
             #[test]
-            fn [<bootstrap_ $dir>]() {
+            fn [<pre_ $dir>]() {
                 check(stringify!($dir));
             }
         }
@@ -41,34 +41,35 @@ bootstrap!(cba_is_admin);
 bootstrap!(cba_multiline);
 bootstrap!(comment_edgecase);
 bootstrap!(define_builtin);
-bootstrap!(define_function);
 bootstrap!(define_function_empty);
 bootstrap!(define_function_multiline);
+bootstrap!(define_function);
 bootstrap!(define_inside_else);
 bootstrap!(define_multi);
-bootstrap!(define_nested);
 bootstrap!(define_nested_nested);
+bootstrap!(define_nested);
 bootstrap!(define_single);
 bootstrap!(define_undef);
 bootstrap!(define_use_define);
 bootstrap!(define_with_dash);
+bootstrap!(hashtag_outside_macro);
 bootstrap!(if_nested);
 bootstrap!(if_operators);
 bootstrap!(if_pass);
 bootstrap!(if_read);
 bootstrap!(if_value);
 bootstrap!(ignore_quoted);
-bootstrap!(include);
 bootstrap!(include_empty);
+bootstrap!(include);
 bootstrap!(join_digit);
 bootstrap!(join_ignore);
 bootstrap!(name_collision);
 bootstrap!(procedural_texture);
-bootstrap!(quote);
 bootstrap!(quote_recursive);
+bootstrap!(quote);
 bootstrap!(redefine_external);
 bootstrap!(self_recursion);
-bootstrap!(sqf);
 bootstrap!(sqf_select);
+bootstrap!(sqf);
 bootstrap!(strings);
 bootstrap!(utf);

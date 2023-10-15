@@ -2,17 +2,19 @@ use std::{collections::HashMap, path::Path, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::Error;
-
+mod addon;
 mod asc;
+mod error;
 mod files;
-mod hemtt;
+pub mod hemtt;
 mod lint;
 mod signing;
 mod version;
 
+pub use {addon::*, error::Error};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Configuration {
+pub struct ProjectConfig {
     /// The name of the project
     name: String,
     /// Prefix for the project
@@ -45,7 +47,7 @@ pub struct Configuration {
     lint: lint::Options,
 }
 
-impl Configuration {
+impl ProjectConfig {
     #[must_use]
     pub fn name(&self) -> &str {
         &self.name
@@ -127,7 +129,7 @@ impl Configuration {
     }
 }
 
-impl FromStr for Configuration {
+impl FromStr for ProjectConfig {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {

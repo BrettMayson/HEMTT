@@ -17,7 +17,7 @@ mod rapifier;
 mod sign;
 
 #[cfg(not(target_os = "macos"))]
-pub use asc::ArmaScriptCompiler;
+pub use asc::{ASCConfig, ArmaScriptCompiler};
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;
