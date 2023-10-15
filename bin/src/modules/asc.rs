@@ -142,6 +142,7 @@ impl Module for ArmaScriptCompiler {
                                 .prefix()
                                 .to_string()
                                 .replace('\\', "/")
+                                .trim_end_matches(&addon.folder().replace("optionals/", "addons/"))
                                 .trim_end_matches(&addon.folder()),
                             entry.as_str().to_string().trim_start_matches('/'),
                         ),
