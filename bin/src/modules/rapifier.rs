@@ -34,11 +34,11 @@ impl Module for Rapifier {
             .map(|addon| {
                 let mut globs = Vec::new();
                 if let Some(config) = addon.config() {
-                    if !config.preprocess().enabled() {
-                        debug!("preprocessing disabled for {}", addon.name());
+                    if !config.rapify().enabled() {
+                        debug!("rapify disabled for {}", addon.name());
                         return Ok((vec![], Ok(())));
                     }
-                    for file in config.preprocess().exclude() {
+                    for file in config.rapify().exclude() {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
@@ -46,7 +46,7 @@ impl Module for Rapifier {
                 let mut res = Ok(());
                 for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
-                        && can_preprocess(entry.as_str())
+                        && can_rapify(entry.as_str())
                     {
                         if globs
                             .iter()
@@ -159,7 +159,7 @@ pub fn rapify(path: WorkspacePath, ctx: &Context) -> (Vec<String>, Result<(), Er
     (messages, Ok(()))
 }
 
-pub fn can_preprocess(path: &str) -> bool {
+pub fn can_rapify(path: &str) -> bool {
     let path = PathBuf::from(path);
     let name = path
         .extension()

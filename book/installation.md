@@ -6,13 +6,15 @@ The latest HEMTT release can be downloaded from the [GitHub releases page](https
 
 Builds are available for Windows and Linux.
 
-## Installation (Project Local)
+## Installation (Winget)
 
-The HEMTT executable can be placed in the root of your project, and used from there. It is strongly recommended not to add it to your version control system.
+HEMTT can be installed using [Winget](https://github.com/microsoft/winget-cli).
 
-HEMTT can then be ran from a terminal in the root of your project with `.\hemtt.exe` on Windows, or `./hemtt` on Linux.
+```powershell
+winget install hemtt
+```
 
-## Installation (Global)
+## Manual Installation (Global)
 
 HEMTT can be installed globally on your system, and used from anywhere.
 
@@ -20,9 +22,11 @@ The HEMTT executable can be placed in any directory on your system, and added to
 
 HEMTT can then be ran from any terminal with `hemtt`.
 
-## Crates
+## Manual Installation (Project Local)
 
-If you have [Rust](https://www.rust-lang.org/) installed, you can install HEMTT from [crates.io](https://crates.io/crates/hemtt) with `cargo install hemtt`.
+The HEMTT executable can be placed in the root of your project, and used from there. It is strongly recommended not to add it to your version control system.
+
+HEMTT can then be ran from a terminal in the root of your project with `.\hemtt.exe` on Windows, or `./hemtt` on Linux.
 
 ## Compile from Source
 

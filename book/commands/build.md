@@ -1,5 +1,3 @@
-# build
-
 # hemtt build
 
 <pre><code>Build your project
@@ -47,6 +45,10 @@ By default, `hemtt build` will create separate mods for each optional mod folder
 
 Do not binarize any files. They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext` will still be rapified.
 
+This can be configured per addon in [`addon.toml`](../configuration/addon.md#binarize).
+
 ### --no-rap
 
 Do not rapify any files. They will be copied directly into the PBO.
+
+This can be configured per addon in [`addon.toml`](../configuration/addon.md#rapify).

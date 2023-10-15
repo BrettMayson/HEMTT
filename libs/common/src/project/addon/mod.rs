@@ -10,12 +10,14 @@ use crate::error::Error;
 /// Configuration for an addon
 pub struct AddonConfig {
     #[serde(default)]
+    #[serde(alias = "preprocess")]
     /// Preprocess config
-    preprocess: Option<PreprocessCompatibility>,
+    rapify: RapifyConfig,
 
     #[serde(default)]
     /// A list of files to skip binarizing
     no_bin: Vec<String>,
+
     #[serde(default)]
     /// Binarze config
     binarize: BinarizeConfig,
@@ -35,19 +37,9 @@ pub struct AddonConfig {
 
 impl AddonConfig {
     #[must_use]
-    /// Preprocess config
-    pub fn preprocess(&self) -> PreprocessConfig {
-        match &self.preprocess {
-            Some(PreprocessCompatibility::Deprecated(enabled)) => PreprocessConfig {
-                enabled: *enabled,
-                exclude: Vec::new(),
-            },
-            Some(PreprocessCompatibility::New(config)) => config.clone(),
-            None => PreprocessConfig {
-                enabled: false,
-                exclude: Vec::new(),
-            },
-        }
+    /// Rapify config
+    pub const fn rapify(&self) -> &RapifyConfig {
+        &self.rapify
     }
 
     #[must_use]
@@ -66,6 +58,9 @@ impl AddonConfig {
     /// file does not contain a valid configuration, an error is returned.
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
+        if file.contains("[preprocess]") {
+            warn!("`[preprocess]` is deprecated, use `[rapify]` instead. See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.");
+        }
         let config = Self::from_str(&file);
         if let Ok(inner) = config.as_ref() {
             if !inner.exclude.is_empty() {
@@ -73,9 +68,6 @@ impl AddonConfig {
             }
             if !inner.no_bin.is_empty() {
                 warn!("`no_bin` is deprecated, use `binarize.exclude` instead. See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.");
-            }
-            if let Some(PreprocessCompatibility::Deprecated(_)) = inner.preprocess {
-                warn!("`preprocess` as a field is deprecated, use a `preprocess` object instead. See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.");
             }
         }
         config
@@ -104,30 +96,20 @@ impl FromStr for AddonConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-/// Preprocess compatibility config
-pub enum PreprocessCompatibility {
-    /// Deprecated bool
-    Deprecated(bool),
-    /// New config
-    New(PreprocessConfig),
-}
-
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 /// Preprocess config
-pub struct PreprocessConfig {
+pub struct RapifyConfig {
     #[serde(default)]
-    enabled: bool,
+    enabled: Option<bool>,
     #[serde(default)]
     exclude: Vec<String>,
 }
 
-impl PreprocessConfig {
+impl RapifyConfig {
     #[must_use]
     /// Is preprocess enabled
-    pub const fn enabled(&self) -> bool {
-        self.enabled
+    pub fn enabled(&self) -> bool {
+        self.enabled.unwrap_or(true)
     }
 
     #[must_use]

@@ -12,7 +12,7 @@ exclude = [
     "data/anim/chop.rtm",
 ]
 
-[preprocess]
+[rapify]
 enabled = false # Default: true
 exclude = [
     "missions/**/description.ext",
@@ -29,7 +29,7 @@ iso = "14001"
 
 ## binarize
 
-HEMTT's binarization of addons can be disabled entirely by setting `binarize.enabled` to `false`, or disabled for specific files by adding glob patterns to `binarize.exclude`.
+HEMTT's binarization of addons can be disabled for the addon by setting `binarize.enabled` to `false`, or disabled for specific files by adding glob patterns to `binarize.exclude`.
 
 **_/addons/banana/addon.toml_**
 
@@ -42,16 +42,16 @@ exclude = [
 ]
 ```
 
-## preprocess
+## rapify
 
-HEMTT's preprocessing of addons can be disabled entirely by setting `preprocess.enabled` to `false`, or disabled for specific files by adding glob patterns to `preprocess.exclude`.
+HEMTT's preprocessing & rapifying of addon configs can be disabled for the addon by setting `rapify.enabled` to `false`, or disabled for specific files by adding glob patterns to `rapify.exclude`.
 
-When it is required to disable preprocessing of `config.cpp`, it is recommended to create a separate addon to house any optional config, with the minimum amount of code required to make it work. Disabling preprocessing will allow you to ship invalid config, which could cause issues for your players. It will also cause slower load times when the config is valid.
+When it is required to disable preprocessing & rapifying of `config.cpp`, it is recommended to create a separate addon to house any optional config, with the minimum amount of code required to make it work. Disabling preprocessing & rapifying will allow you to ship invalid config, which could cause issues for your players. It will also cause slower load times when the config is valid.
 
 **_/addons/banana/addon.toml_**
 
 ```toml
-[preprocess]
+[rapify]
 enabled = false # Default: true
 exclude = [
     "missions/**/description.ext",
