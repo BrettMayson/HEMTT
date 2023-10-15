@@ -208,7 +208,7 @@ impl Processor {
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
             _ => Definition::Value(self.define_read_body(stream)),
         };
-        #[cfg(feature = "hls")]
+        #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
         self.defines.insert(&ident_string, (ident, definition));
         Ok(())

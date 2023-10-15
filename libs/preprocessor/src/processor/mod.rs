@@ -1,4 +1,4 @@
-#[cfg(feature = "hls")]
+#[cfg(feature = "lsp")]
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -29,12 +29,12 @@ pub struct Processor {
 
     pub(crate) token_count: usize,
 
-    #[cfg(feature = "hls")]
+    #[cfg(feature = "lsp")]
     /// Map of token usage to definition
     /// (token, definition)
     pub(crate) declarations: HashMap<Position, Position>,
 
-    #[cfg(feature = "hls")]
+    #[cfg(feature = "lsp")]
     /// Map of token definition to usage
     /// (definition, usages)
     pub(crate) usage: HashMap<Position, Vec<Position>>,
@@ -79,9 +79,9 @@ impl Processor {
 
         Processed::new(
             buffer,
-            #[cfg(feature = "hls")]
+            #[cfg(feature = "lsp")]
             processor.usage,
-            #[cfg(feature = "hls")]
+            #[cfg(feature = "lsp")]
             processor.declarations,
             processor.warnings,
         )

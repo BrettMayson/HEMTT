@@ -1,4 +1,4 @@
-#[cfg(feature = "hls")]
+#[cfg(feature = "lsp")]
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -22,12 +22,12 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
-    #[cfg(feature = "hls")]
+    #[cfg(feature = "lsp")]
     /// Map of token usage to definition
     /// (token, definition)
     declarations: HashMap<Position, Position>,
 
-    #[cfg(feature = "hls")]
+    #[cfg(feature = "lsp")]
     /// Map of token definition to usage
     /// (definition, usages)
     usage: HashMap<Position, Vec<Position>>,
@@ -172,14 +172,14 @@ impl Processed {
     /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
-        #[cfg(feature = "hls")] usage: HashMap<Position, Vec<Position>>,
-        #[cfg(feature = "hls")] declarations: HashMap<Position, Position>,
+        #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
+        #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
     ) -> Result<Self, Error> {
         let mut processed = Self {
-            #[cfg(feature = "hls")]
+            #[cfg(feature = "lsp")]
             declarations,
-            #[cfg(feature = "hls")]
+            #[cfg(feature = "lsp")]
             usage,
             warnings,
             ..Default::default()

@@ -255,7 +255,7 @@ impl Processor {
                 })));
             }
         };
-        #[cfg(feature = "hls")]
+        #[cfg(feature = "lsp")]
         self.usage.get_mut(source.position()).map_or_else(
             || {
                 // println!("missing {:?}", ident.position());
@@ -264,7 +264,7 @@ impl Processor {
                 usage.push(ident.position().clone());
             },
         );
-        #[cfg(feature = "hls")]
+        #[cfg(feature = "lsp")]
         self.declarations
             .insert(ident.position().clone(), source.position().clone());
         Ok(())
