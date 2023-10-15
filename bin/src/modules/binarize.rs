@@ -2,7 +2,7 @@ use std::{
     fs::create_dir_all,
     path::PathBuf,
     process::Command,
-    sync::atomic::{AtomicI16, Ordering},
+    sync::atomic::{AtomicU16, Ordering},
 };
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -45,17 +45,17 @@ impl Module for Binarize {
     #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
         if self.command.is_none() {
-            if cfg!(target_os = "linux") {
-                warn!("Binarize is not available on non-Windows platforms.");
-            } else {
+            if cfg!(target_os = "windows") {
                 warn!("Binarize was not found in the system registery.");
+            } else {
+                warn!("Binarize is not available on non-Windows platforms.");
             }
             return Ok(());
         }
 
-        let mut targets = Vec::new();
+        let mut targets = Vec::with_capacity(ctx.addons().len());
 
-        let counter = AtomicI16::new(0);
+        let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         for addon in ctx.addons() {

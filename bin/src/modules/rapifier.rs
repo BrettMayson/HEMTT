@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     path::PathBuf,
-    sync::atomic::{AtomicI16, Ordering},
+    sync::atomic::{AtomicU16, Ordering},
 };
 
 use hemtt_common::workspace::WorkspacePath;
@@ -23,7 +23,7 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        let counter = AtomicI16::new(0);
+        let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
