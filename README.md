@@ -4,8 +4,8 @@ An opinionated build system for Arma 3 mods.
 
 [![GitHub Release](https://img.shields.io/github/v/release/brettmayson/hemtt?style=flat-square&label=Latest)](https://github.com/BrettMayson/HEMTT/releases)
 [![HEMTT Downloads](https://img.shields.io/github/downloads/BrettMayson/HEMTT/total.svg?style=flat-square&label=Downloads)](https://github.com/BrettMayson/HEMTT/releases)
-[![Chocolatey](https://img.shields.io/chocolatey/v/chocolatey.svg?style=flat-square&label=Chocolatey&color=darkblue)](https://community.chocolatey.org/packages/HEMTT)
-[![winstall](https://img.shields.io/badge/winstall-lightblue.svg?style=flat-square)](https://winstall.app/apps/BrettMayson.HEMTT)
+[![Chocolatey](https://img.shields.io/badge/Chocolatey-lightblue.svg?style=flat-square)](https://community.chocolatey.org/packages/HEMTT)
+[![winstall](https://img.shields.io/badge/WinGet-lightblue.svg?style=flat-square)](https://winstall.app/apps/BrettMayson.HEMTT)
 [![Codecov](https://img.shields.io/codecov/c/github/brettmayson/hemtt?style=flat-square&label=Coverage)](https://app.codecov.io/gh/brettmayson/hemtt)
 [![ACE3 Discord](https://img.shields.io/badge/Discord-Join-darkviolet.svg?style=flat-square)](https://acemod.org/discord)
 
