@@ -18,6 +18,7 @@ pub struct Context {
     project_folder: PathBuf,
     hemtt_folder: PathBuf,
     out_folder: PathBuf,
+    build_folder: PathBuf,
     tmp: PathBuf,
 }
 
@@ -62,6 +63,7 @@ impl Context {
         let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
+        std::fs::File::create(out_folder.join("ci_annotation.txt"))?;
         let build_folder = out_folder.join(folder);
         trace!("using build folder: {:?}", build_folder.display());
         if build_folder.exists() {
@@ -94,7 +96,8 @@ impl Context {
             workspace,
             project_folder: root,
             hemtt_folder,
-            out_folder: build_folder,
+            out_folder,
+            build_folder,
             addons: Addon::scan()?,
             tmp,
         })
@@ -157,6 +160,12 @@ impl Context {
     /// The .hemttout folder
     pub const fn out_folder(&self) -> &PathBuf {
         &self.out_folder
+    }
+
+    #[must_use]
+    /// The .hemttout/{command} folder
+    pub const fn build_folder(&self) -> &PathBuf {
+        &self.build_folder
     }
 
     #[must_use]

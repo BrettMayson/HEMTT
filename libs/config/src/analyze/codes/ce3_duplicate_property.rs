@@ -1,5 +1,5 @@
 use ariadne::{sources, ColorGenerator, Label, Report};
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 use crate::Ident;
 
@@ -30,7 +30,7 @@ impl Code for DuplicateProperty {
         None
     }
 
-    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
+    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
         let first = self.conflicts.first().unwrap();
         let first_map = processed.mapping(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
@@ -64,6 +64,20 @@ impl Code for DuplicateProperty {
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+        let mut out = Vec::with_capacity(self.conflicts.len());
+        for conflict in &self.conflicts {
+            let map = processed.mapping(conflict.span.start).unwrap();
+            let map_file = processed.source(map.source()).unwrap();
+            out.push(self.annotation(
+                AnnotationLevel::Error,
+                map_file.0.as_str().to_string(),
+                map.original(),
+            ));
+        }
+        out
     }
 
     #[cfg(feature = "lsp")]

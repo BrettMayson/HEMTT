@@ -28,15 +28,10 @@ pub mod rapify;
 pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
-) -> Result<ConfigReport, Vec<String>> {
+) -> Result<ConfigReport, Vec<ChumskyCode>> {
     let (config, errors) = parse::config().parse_recovery(processed.as_string());
     config.map_or_else(
-        || {
-            Err(errors
-                .iter()
-                .map(|e| chumsky_to_ariadne(processed, e))
-                .collect())
-        },
+        || Err(errors.iter().map(std::convert::Into::into).collect()),
         |config| {
             Ok(ConfigReport {
                 valid: config.valid(project),
@@ -46,33 +41,6 @@ pub fn parse(
             })
         },
     )
-}
-
-fn chumsky_to_ariadne(processed: &Processed, err: &Simple<char>) -> String {
-    let map = processed.mapping(err.span().start);
-    let Some(map) = map else {
-        return format!("{:?}: {}", err.span(), err);
-    };
-    let file = processed.source(map.source()).unwrap();
-    let file = file.0.clone();
-    let mut out = Vec::new();
-    Report::build(
-        ariadne::ReportKind::Error,
-        file.clone(),
-        map.original_column(),
-    )
-    .with_message(err.to_string())
-    .with_label(
-        Label::new((
-            file,
-            map.original_column()..(map.original_column() + err.span().len()),
-        ))
-        .with_message(err.label().unwrap_or_default()),
-    )
-    .finish()
-    .write_for_stdout(sources(processed.sources()), &mut out)
-    .unwrap();
-    String::from_utf8(out).unwrap()
 }
 
 /// A parsed config file with warnings and errors
@@ -106,5 +74,68 @@ impl ConfigReport {
     /// Get the errors
     pub fn errors(&self) -> &[Box<dyn Code>] {
         &self.errors
+    }
+}
+
+#[derive(Debug, Clone)]
+/// A chumsky error
+pub struct ChumskyCode {
+    err: Simple<char>,
+}
+
+impl Code for ChumskyCode {
+    fn ident(&self) -> &'static str {
+        "CHU"
+    }
+
+    fn message(&self) -> String {
+        self.err.to_string()
+    }
+
+    fn label_message(&self) -> String {
+        self.err.to_string()
+    }
+
+    fn help(&self) -> Option<String> {
+        None
+    }
+
+    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
+        let map = processed.mapping(self.err.span().start);
+        let Some(map) = map else {
+            return Some(format!("{:?}: {}", self.err.span(), self.err));
+        };
+        let file = processed.source(map.source()).unwrap();
+        let file = file.0.clone();
+        let mut out = Vec::new();
+        Report::build(
+            ariadne::ReportKind::Error,
+            file.clone(),
+            map.original_column(),
+        )
+        .with_message(self.err.to_string())
+        .with_label(
+            Label::new((
+                file,
+                map.original_column()..(map.original_column() + self.err.span().len()),
+            ))
+            .with_message(self.err.label().unwrap_or_default()),
+        )
+        .finish()
+        .write_for_stdout(sources(processed.sources()), &mut out)
+        .unwrap();
+        Some(String::from_utf8(out).unwrap())
+    }
+}
+
+impl From<ChumskyCode> for Box<dyn Code> {
+    fn from(val: ChumskyCode) -> Self {
+        Box::new(val)
+    }
+}
+
+impl From<&Simple<char>> for ChumskyCode {
+    fn from(err: &Simple<char>) -> Self {
+        Self { err: err.clone() }
     }
 }

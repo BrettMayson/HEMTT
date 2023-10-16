@@ -1,5 +1,5 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 use crate::Class;
 
@@ -39,7 +39,7 @@ impl Code for ParentCase {
         ))
     }
 
-    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
+    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
         let class_parent = self.class.parent()?;
         let map = processed
             .mapping(
@@ -103,6 +103,18 @@ impl Code for ParentCase {
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+        let map = processed
+            .mapping(self.class.parent().unwrap().span.start)
+            .unwrap();
+        let map_file = processed.source(map.source()).unwrap();
+        vec![self.annotation(
+            AnnotationLevel::Warning,
+            map_file.0.as_str().to_string(),
+            map.original(),
+        )]
     }
 
     #[cfg(feature = "lsp")]

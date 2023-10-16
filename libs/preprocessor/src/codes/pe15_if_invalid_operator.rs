@@ -1,5 +1,5 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Code, Token};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
 #[allow(unused)]
@@ -32,7 +32,7 @@ impl Code for IfInvalidOperator {
         Some("valid operators are ==, !=, <, >, <=, >=".to_string())
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
@@ -74,6 +74,25 @@ impl Code for IfInvalidOperator {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.tokens
+                .first()
+                .unwrap()
+                .position()
+                .path()
+                .as_str()
+                .to_string(),
+            &self
+                .tokens
+                .first()
+                .unwrap()
+                .position()
+                .clone_with_end(*self.tokens.last().unwrap().position().end()),
+        )]
     }
 
     #[cfg(feature = "lsp")]

@@ -1,5 +1,5 @@
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
-use hemtt_common::reporting::{Code, Token};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
 use crate::defines::Defines;
@@ -57,11 +57,11 @@ impl Code for IfUnitOrFunction {
         None
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
-        let span = self.token.position().start().0..self.token.position().end().0;
+        let span = self.token.position().span();
         let mut report = Report::build(
             ReportKind::Error,
             self.token.position().path().as_str(),
@@ -133,6 +133,14 @@ impl Code for IfUnitOrFunction {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
     }
 
     #[cfg(feature = "lsp")]

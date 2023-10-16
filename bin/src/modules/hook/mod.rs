@@ -39,9 +39,9 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
     } else {
         scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUTPUT", ctx.out_folder().clone());
+        scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
         scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUT", ctx.out_folder().clone());
+        scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
     }
 
     scope.push_constant("HEMTT", RhaiHemtt::new(ctx));

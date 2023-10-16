@@ -22,7 +22,7 @@ fn check(dir: &str) {
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source);
     if let Err(e) = processed {
-        panic!("{}", e.get_code().unwrap().generate_report().unwrap());
+        panic!("{}", e.get_code().unwrap().report_generate().unwrap());
     }
     let processed = processed.unwrap();
     let expected = workspace

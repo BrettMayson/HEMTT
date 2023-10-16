@@ -1,5 +1,9 @@
 use ariadne::Fmt;
-use hemtt_common::{reporting::Code, workspace::WorkspacePath};
+use hemtt_common::{
+    position::{LineCol, Position},
+    reporting::{Annotation, AnnotationLevel, Code},
+    workspace::WorkspacePath,
+};
 
 #[allow(unused)]
 /// Unexpected token
@@ -31,7 +35,7 @@ impl Code for InvalidConfigCase {
         Some(format!("Rename to `{}`", self.path.as_str().to_lowercase()))
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         Some(format!(
             "{} {}\n      {}: {}",
             format!("[{}] Warning:", self.ident()).fg(ariadne::Color::Yellow),
@@ -39,5 +43,13 @@ impl Code for InvalidConfigCase {
             "Help".fg(ariadne::Color::Fixed(115)),
             self.help().expect("help should be Some")
         ))
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Warning,
+            self.path.as_str().to_string(),
+            &Position::new(LineCol::default(), LineCol::default(), self.path.clone()),
+        )]
     }
 }
