@@ -796,7 +796,7 @@ checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
 
 [[package]]
 name = "hemtt"
-version = "1.10.0"
+version = "1.9.1"
 dependencies = [
  "ariadne",
  "clap",
