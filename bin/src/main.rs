@@ -32,7 +32,7 @@ It is always best to the include the log and a link to your project when reporti
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
-                if let Some(report) = code.generate_report() {
+                if let Some(report) = code.report_generate() {
                     eprintln!("{report}");
                     std::process::exit(1);
                 }

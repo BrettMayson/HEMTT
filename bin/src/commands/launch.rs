@@ -115,7 +115,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if !link.exists() {
         create_link(
             link.display().to_string().as_str(),
-            ctx.out_folder().display().to_string().as_str(),
+            ctx.build_folder().display().to_string().as_str(),
         )?;
     }
 

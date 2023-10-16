@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use hemtt_common::reporting::Code;
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/errors/";
@@ -34,7 +35,7 @@ fn check(dir: &str) {
             let errors = config
                 .errors()
                 .iter()
-                .map(|e| e.generate_processed_report(&processed).unwrap())
+                .map(|e| e.report_generate_processed(&processed).unwrap())
                 .collect::<Vec<_>>();
             if expected.is_empty() {
                 std::fs::write(
@@ -50,7 +51,10 @@ fn check(dir: &str) {
         }
         // Errors may occur, but they should be handled, if one is not a handler should be created
         Err(e) => {
-            panic!("{:#?}", e)
+            for e in &e {
+                eprintln!("{}", e.report_generate_processed(&processed).unwrap());
+            }
+            panic!("Error parsing config");
         }
     }
 }

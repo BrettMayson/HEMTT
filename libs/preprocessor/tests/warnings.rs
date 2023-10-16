@@ -34,7 +34,7 @@ fn check(dir: &str) {
                 .warnings()
                 .first()
                 .unwrap()
-                .generate_report()
+                .report_generate()
                 .unwrap();
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
@@ -48,7 +48,7 @@ fn check(dir: &str) {
             panic!(
                 "`{:?}` should have succeeded: {:#?}",
                 folder,
-                e.get_code().unwrap().generate_report().unwrap()
+                e.get_code().unwrap().report_generate().unwrap()
             )
         }
     }

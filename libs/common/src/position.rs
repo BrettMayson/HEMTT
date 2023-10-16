@@ -1,8 +1,10 @@
 //! Position of a token in a source file
 
+use std::ops::Range;
+
 use crate::workspace::WorkspacePath;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Line and column of a token
 pub struct LineCol(pub usize, pub (usize, usize));
 
@@ -65,6 +67,22 @@ impl Position {
     /// Get the path of the source file
     pub const fn path(&self) -> &WorkspacePath {
         &self.path
+    }
+
+    #[must_use]
+    /// Get the span of the token
+    pub const fn span(&self) -> Range<usize> {
+        self.start.0..self.end.0
+    }
+
+    #[must_use]
+    /// Clone the position with a new end
+    pub fn clone_with_end(&self, end: LineCol) -> Self {
+        Self {
+            start: self.start,
+            end,
+            path: self.path.clone(),
+        }
     }
 
     #[cfg(feature = "lsp")]

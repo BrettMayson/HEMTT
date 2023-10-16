@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Code, Token};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
 /// An include was not found
@@ -42,7 +42,7 @@ impl Code for IncludeNotFound {
         None
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let mut out = Vec::new();
         let span = self.token.first().unwrap().position().start().0
@@ -71,6 +71,25 @@ impl Code for IncludeNotFound {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.token
+                .first()
+                .unwrap()
+                .position()
+                .path()
+                .as_str()
+                .to_string(),
+            &self
+                .token
+                .first()
+                .unwrap()
+                .position()
+                .clone_with_end(*self.token.last().unwrap().position().end()),
+        )]
     }
 
     #[cfg(feature = "lsp")]

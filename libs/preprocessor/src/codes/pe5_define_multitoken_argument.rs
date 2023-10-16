@@ -1,5 +1,5 @@
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Code, Token};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
 #[allow(unused)]
@@ -39,7 +39,7 @@ impl Code for DefineMissingComma {
         None
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let color_comma = colors.next();
         let color_current = colors.next();
@@ -101,6 +101,14 @@ impl Code for DefineMissingComma {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.current.position().path().as_str().to_string(),
+            self.current.position(),
+        )]
     }
 
     #[cfg(feature = "lsp")]

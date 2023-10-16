@@ -1,10 +1,15 @@
 use std::{
     collections::HashSet,
+    fs::OpenOptions,
+    io::{BufWriter, Write},
     path::PathBuf,
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_common::workspace::WorkspacePath;
+use hemtt_common::{
+    reporting::{Annotation, Code},
+    workspace::WorkspacePath,
+};
 use hemtt_config::{parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -13,6 +18,8 @@ use vfs::VfsFileType;
 use crate::{context::Context, error::Error};
 
 use super::Module;
+
+type RapifyResult = (Vec<(String, Vec<Annotation>)>, Result<(), Error>);
 
 #[derive(Default)]
 pub struct Rapifier;
@@ -66,10 +73,19 @@ impl Module for Rapifier {
                 }
                 Ok((messages, res))
             })
-            .collect::<Result<Vec<(Vec<String>, Result<(), Error>)>, Error>>()?;
+            .collect::<Result<Vec<RapifyResult>, Error>>()?;
         let messages = results.iter().flat_map(|(v, _)| v).collect::<HashSet<_>>();
-        for message in messages {
+        let mut ci_annotation = BufWriter::new(
+            OpenOptions::new()
+                .write(true)
+                .append(true)
+                .open(ctx.out_folder().join("ci_annotation.txt"))?,
+        );
+        for (message, annotations) in messages {
             eprintln!("{message}");
+            for annotation in annotations {
+                ci_annotation.write_all(annotation.line().as_bytes())?;
+            }
         }
         for (_, result) in results {
             result?;
@@ -79,7 +95,7 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: WorkspacePath, ctx: &Context) -> (Vec<String>, Result<(), Error>) {
+pub fn rapify(path: WorkspacePath, ctx: &Context) -> RapifyResult {
     let processed = match Processor::run(&path) {
         Ok(processed) => processed,
         Err(e) => {
@@ -88,42 +104,55 @@ pub fn rapify(path: WorkspacePath, ctx: &Context) -> (Vec<String>, Result<(), Er
     };
     let mut messages = Vec::new();
     for warning in processed.warnings() {
-        if let Some(warning) = warning.generate_report() {
-            messages.push(warning);
+        if let Some(content) = warning.report_generate() {
+            messages.push((content, warning.ci_generate()));
         }
     }
-    let configreport = parse(Some(ctx.config()), &processed);
-    if let Err(errors) = configreport {
-        for e in &errors {
-            eprintln!("{e}");
+    let configreport = match parse(Some(ctx.config()), &processed) {
+        Ok(configreport) => configreport,
+        Err(errors) => {
+            for e in &errors {
+                messages.push((
+                    e.report_generate_processed(&processed)
+                        .expect("chumsky requires processed"),
+                    e.ci_generate_processed(&processed),
+                ));
+            }
+            return (
+                messages,
+                Err(Error::Config(hemtt_config::Error::ConfigInvalid(
+                    path.as_str().to_string(),
+                ))),
+            );
         }
-        return (
-            messages,
-            Err(Error::Config(hemtt_config::Error::ConfigInvalid(
-                path.as_str().to_string(),
-            ))),
-        );
     };
-    let configreport = configreport.unwrap();
     configreport.warnings().iter().for_each(|e| {
-        let message = e.generate_processed_report(&processed).map_or_else(
+        let message = e.report_generate_processed(&processed).map_or_else(
             || {
-                e.generate_report()
+                e.report_generate()
                     .map_or_else(String::new, |warning| warning)
             },
             |warning| warning,
         );
         if !message.is_empty() {
-            messages.push(message);
+            messages.push((message, {
+                let mut annotations = e.ci_generate_processed(&processed);
+                annotations.extend(e.ci_generate());
+                annotations
+            }));
         }
     });
     configreport.errors().iter().for_each(|e| {
-        let message = e.generate_processed_report(&processed).map_or_else(
-            || e.generate_report().map_or_else(String::new, |error| error),
+        let message = e.report_generate_processed(&processed).map_or_else(
+            || e.report_generate().map_or_else(String::new, |error| error),
             |error| error,
         );
         if !message.is_empty() {
-            messages.push(message);
+            messages.push((message, {
+                let mut annotations = e.ci_generate_processed(&processed);
+                annotations.extend(e.ci_generate());
+                annotations
+            }));
         }
     });
     if !configreport.errors().is_empty() {

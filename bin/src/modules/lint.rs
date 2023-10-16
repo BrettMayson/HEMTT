@@ -53,7 +53,7 @@ impl Module for Lint {
                     Ok(processed) => Ok(processed
                         .warnings()
                         .iter()
-                        .filter_map(|w| w.generate_report())
+                        .filter_map(|w| w.report_generate_processed(&processed))
                         .collect::<Vec<String>>()),
                 }
             };

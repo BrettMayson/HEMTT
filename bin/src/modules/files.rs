@@ -40,7 +40,7 @@ impl Module for Files {
                 continue;
             }
 
-            let mut d = ctx.out_folder().clone();
+            let mut d = ctx.build_folder().clone();
 
             d.push(entry.as_str().trim_start_matches('/'));
             let folder = d.parent().unwrap();

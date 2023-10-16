@@ -210,6 +210,9 @@ impl Processed {
 
     #[must_use]
     /// Get a source by index
+    ///
+    /// Returns `Some((path, content))` if the index is in bounds
+    /// Returns `None` if the index is out of bounds
     pub fn source(&self, index: usize) -> Option<&(WorkspacePath, String)> {
         self.sources.get(index)
     }

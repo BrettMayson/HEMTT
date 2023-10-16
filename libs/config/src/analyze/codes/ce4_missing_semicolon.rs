@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 pub struct MissingSemicolon {
     span: Range<usize>,
@@ -30,7 +30,7 @@ impl Code for MissingSemicolon {
         Some("add a semicolon `;` to the end of the property".to_string())
     }
 
-    fn generate_processed_report(&self, processed: &Processed) -> Option<String> {
+    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
         let haystack = &processed.as_string()[self.span.clone()];
         let possible_end = self.span.start
             + haystack
@@ -65,6 +65,16 @@ impl Code for MissingSemicolon {
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
         Some(String::from_utf8(out).unwrap())
+    }
+
+    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+        let map = processed.mapping(self.span.start).unwrap();
+        let map_file = processed.source(map.source()).unwrap();
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            map_file.0.as_str().to_string(),
+            map.original(),
+        )]
     }
 
     #[cfg(feature = "lsp")]

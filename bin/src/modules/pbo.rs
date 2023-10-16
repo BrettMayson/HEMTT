@@ -67,7 +67,7 @@ fn _build(
     git_hash: Option<&String>,
 ) -> Result<(), Error> {
     let mut pbo = WritablePbo::new();
-    let target = ctx.out_folder();
+    let target = ctx.build_folder();
 
     let pbo_name = addon.pbo_name(ctx.config().prefix());
 

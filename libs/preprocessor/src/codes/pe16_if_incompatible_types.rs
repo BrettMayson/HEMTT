@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
-use hemtt_common::reporting::{Code, Token};
+use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
 #[allow(unused)]
@@ -64,7 +64,7 @@ impl Code for IfIncompatibleType {
         None
     }
 
-    fn generate_report(&self) -> Option<String> {
+    fn report_generate(&self) -> Option<String> {
         let mut colors = ColorGenerator::default();
         let mut out = Vec::new();
         let span = self.operator.first().unwrap().position().start().0
@@ -149,6 +149,27 @@ impl Code for IfIncompatibleType {
             return None;
         }
         Some(String::from_utf8(out).unwrap_or_default())
+    }
+
+    fn ci_generate(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.left
+                .0
+                .first()
+                .unwrap()
+                .position()
+                .path()
+                .as_str()
+                .to_string(),
+            &self
+                .left
+                .0
+                .first()
+                .unwrap()
+                .position()
+                .clone_with_end(*self.right.0.last().unwrap().position().end()),
+        )]
     }
 
     #[cfg(feature = "lsp")]
