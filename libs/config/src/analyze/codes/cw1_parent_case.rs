@@ -26,7 +26,7 @@ impl Code for ParentCase {
     }
 
     fn label_message(&self) -> String {
-        "class's parent does not match parent defintion case".to_string()
+        "class's parent does not match parent definition case".to_string()
     }
 
     fn help(&self) -> Option<String> {
