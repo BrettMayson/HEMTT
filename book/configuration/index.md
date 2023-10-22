@@ -61,6 +61,7 @@ include = [
 exclude = [
     "*.psd",        # By default this list is empty
     "addons/main/README.md",
+    "/.vscode/",    # This excludes a folder
 ]
 ```
 
