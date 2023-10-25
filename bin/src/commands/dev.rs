@@ -81,8 +81,8 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
 
     executor.collapse(Collapse::Yes);
 
-    executor.add_module(Box::<Lint>::default());
     executor.add_module(Box::<Hooks>::default());
+    executor.add_module(Box::<Lint>::default());
     executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
