@@ -40,6 +40,7 @@ pub fn add_args(cmd: Command) -> Command {
 pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Error> {
     executor.collapse(Collapse::No);
 
+    executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Lint>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
@@ -47,7 +48,6 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
-    executor.add_module(Box::<Hooks>::default());
     #[cfg(not(target_os = "macos"))]
     {
         executor.add_module(Box::<crate::modules::ArmaScriptCompiler>::default());
