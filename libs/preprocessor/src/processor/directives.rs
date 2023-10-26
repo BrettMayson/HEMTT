@@ -11,7 +11,8 @@ use crate::{
         pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
         pe14_include_unexpected_suffix::IncludeUnexpectedSuffix,
         pe15_if_invalid_operator::IfInvalidOperator,
-        pe16_if_incompatible_types::IfIncompatibleType, pe2_unexpected_eof::UnexpectedEOF,
+        pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
+        pe20_pragma_invalid_scope::PragmaInvalidScope, pe2_unexpected_eof::UnexpectedEOF,
         pe3_expected_ident::ExpectedIdent, pe4_unknown_directive::UnknownDirective,
         pe6_change_builtin::ChangeBuiltin, pe7_if_unit_or_function::IfUnitOrFunction,
         pe8_if_undefined::IfUndefined, pw1_redefine::RedefineMacro,
@@ -22,11 +23,15 @@ use crate::{
     Error,
 };
 
-use super::Processor;
+use super::{
+    pragma::{Pragma, Scope},
+    Processor,
+};
 
 impl Processor {
     pub(crate) fn directive(
         &mut self,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
@@ -35,7 +40,7 @@ impl Processor {
                 stream.next();
                 if let Some(command) = stream.peek() {
                     if command.symbol().is_word() {
-                        self.directive_command(stream, buffer)?;
+                        self.directive_command(pragma, stream, buffer)?;
                         return Ok(true);
                     }
                 }
@@ -46,6 +51,7 @@ impl Processor {
 
     pub(crate) fn directive_command(
         &mut self,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
@@ -53,7 +59,7 @@ impl Processor {
         let command_word = command.symbol().to_string();
         match (command_word.as_str(), self.ifstates.reading()) {
             ("include", true) => {
-                self.directive_include(stream, buffer)?;
+                self.directive_include(pragma, stream, buffer)?;
                 Ok(())
             }
             ("define", true) => {
@@ -85,8 +91,43 @@ impl Processor {
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
-            ("pragma", _) | (_, false) => {
-                // TODO: hemtt pragma
+            ("pragma", true) => {
+                if self.next_word(stream, None)?.to_string() != "hemtt" {
+                    self.skip_to_after_newline(stream, None);
+                    return Ok(());
+                }
+                let command = self.next_word(stream, None)?;
+                match command.to_string().as_str() {
+                    "suppress" => {
+                        let code = self.next_word(stream, None)?;
+                        let mut hit_end = false;
+                        let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
+                            hit_end = true;
+                            Rc::new(Token::new(
+                                Symbol::Word("line".to_string()),
+                                command.position().clone(),
+                            ))
+                        });
+                        let Ok(scope) = Scope::try_from(scope_token.to_string().as_str()) else {
+                            return Err(Error::Code(Box::new(PragmaInvalidScope {
+                                token: Box::new(scope_token.as_ref().clone()),
+                                root: pragma.root,
+                            })));
+                        };
+                        pragma.suppress(&code, scope)?;
+                        if !hit_end {
+                            Self::expect_nothing_to_newline(stream)?;
+                        };
+                    }
+                    _ => {
+                        return Err(Error::Code(Box::new(PragmaUnknown {
+                            token: Box::new(command.as_ref().clone()),
+                        })))
+                    }
+                }
+                Ok(())
+            }
+            (_, false) => {
                 self.skip_to_after_newline(stream, None);
                 Ok(())
             }
@@ -96,8 +137,10 @@ impl Processor {
         }
     }
 
+    #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn directive_include(
         &mut self,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
@@ -158,7 +201,7 @@ impl Processor {
         let tokens = crate::parse::parse(&path)?;
         self.files.push(path);
         let mut stream = tokens.into_iter().peekmore();
-        let ret = self.file(&mut stream, buffer);
+        let ret = self.file(&mut pragma.child(), &mut stream, buffer);
         self.files.pop();
         ret
     }
@@ -359,14 +402,16 @@ mod tests {
 
     use crate::{
         definition::Definition,
-        processor::{tests, Processor},
+        processor::{pragma::Pragma, tests, Processor},
     };
 
     #[test]
     fn test_directive_define_unit() {
         let mut stream = tests::setup("#define FLAG");
         let mut processor = Processor::default();
-        processor.directive(&mut stream, &mut Vec::new()).unwrap();
+        processor
+            .directive(&mut Pragma::root(), &mut stream, &mut Vec::new())
+            .unwrap();
         assert_eq!(processor.defines.global().len(), 1);
         assert_eq!(
             processor.defines.get_test("FLAG").unwrap().1,
@@ -378,7 +423,9 @@ mod tests {
     fn test_directive_define_value() {
         let mut stream = tests::setup("#define FLAG 1");
         let mut processor = Processor::default();
-        processor.directive(&mut stream, &mut Vec::new()).unwrap();
+        processor
+            .directive(&mut Pragma::root(), &mut stream, &mut Vec::new())
+            .unwrap();
         assert_eq!(processor.defines.global().len(), 1);
         assert_eq!(
             processor

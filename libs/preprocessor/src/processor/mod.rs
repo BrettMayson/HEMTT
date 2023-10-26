@@ -15,8 +15,11 @@ use crate::defines::Defines;
 use crate::ifstate::IfStates;
 use crate::Error;
 
+use self::pragma::Pragma;
+
 mod defines;
 mod directives;
+mod pragma;
 mod whitespace;
 
 #[derive(Default)]
@@ -60,10 +63,11 @@ impl Processor {
         processor.files.push(path.clone());
 
         let tokens = crate::parse::parse(path)?;
+        let mut pragma = Pragma::root();
         let mut buffer = Vec::with_capacity(tokens.len());
         let mut stream = tokens.into_iter().peekmore();
 
-        processor.file(&mut stream, &mut buffer)?;
+        processor.file(&mut pragma, &mut stream, &mut buffer)?;
 
         if let Some(state) = processor.ifstates.pop() {
             return Err(Error::Code(Box::new(EoiIfState {
@@ -90,6 +94,7 @@ impl Processor {
 
     fn file(
         &mut self,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
@@ -98,24 +103,26 @@ impl Processor {
             if first.is_none() || first.expect("just checked").symbol().is_eoi() {
                 return Ok(());
             }
-            self.line(stream, buffer)?;
+            self.line(pragma, stream, buffer)?;
         }
     }
 
     fn line(
         &mut self,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, Some(buffer));
-        if self.directive(stream, buffer)? {
+        if self.directive(pragma, stream, buffer)? {
             return Ok(());
         }
         if self.ifstates.reading() {
-            self.walk(None, None, stream, buffer)?;
+            self.walk(None, None, pragma, stream, buffer)?;
         } else {
             self.skip_to_after_newline(stream, None);
         }
+        pragma.clear_line();
         Ok(())
     }
 
@@ -123,6 +130,7 @@ impl Processor {
         &mut self,
         callsite: Option<&Position>,
         in_macro: Option<&str>,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
@@ -135,6 +143,7 @@ impl Processor {
                         let token = token.clone();
                         self.define_use(
                             callsite.unwrap_or_else(|| token.position()),
+                            pragma,
                             stream,
                             buffer,
                         )?;
