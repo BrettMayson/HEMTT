@@ -16,7 +16,7 @@ The warning code can be one of the following:
 | ---- | ----------- |
 | pw3_padded_arg | Padded argument |
 
-The scope can be one of the following:
+The scope can be one of the following, if not specified, the scope will be `line`.
 
 | Scope | Description |
 | ----- | ----------- |
