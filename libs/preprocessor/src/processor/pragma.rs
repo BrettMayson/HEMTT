@@ -2,12 +2,19 @@ use std::{collections::HashMap, rc::Rc};
 
 use hemtt_common::reporting::Token;
 
-use crate::{codes::pe21_pragma_invalid_suppress::PragmaInvalidSuppress, Error};
+use crate::{
+    codes::{
+        pe21_pragma_invalid_suppress::PragmaInvalidSuppress,
+        pe22_pragma_invalid_flag::PragmaInvalidFlag,
+    },
+    Error,
+};
 
 #[derive(Debug, Clone)]
 pub struct Pragma {
     pub(crate) root: bool,
     supress: HashMap<String, Scope>,
+    flags: HashMap<String, Scope>,
 }
 
 impl Pragma {
@@ -15,6 +22,7 @@ impl Pragma {
         Self {
             root: true,
             supress: HashMap::new(),
+            flags: HashMap::new(),
         }
     }
 
@@ -24,6 +32,15 @@ impl Pragma {
             supress: {
                 let mut map = HashMap::new();
                 for (k, v) in &self.supress {
+                    if *v as u8 == Scope::Config as u8 {
+                        map.insert(k.clone(), *v);
+                    }
+                }
+                map
+            },
+            flags: {
+                let mut map = HashMap::new();
+                for (k, v) in &self.flags {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);
                     }
@@ -54,6 +71,26 @@ impl Pragma {
             }
         }
         self.supress.insert(code, scope);
+        Ok(())
+    }
+
+    pub fn is_flagged(&self, code: &str) -> bool {
+        self.flags.contains_key(code)
+    }
+
+    pub fn flag(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
+        let code = token.symbol().to_string();
+        if !["pw3_ignore_arr"].contains(&code.as_str()) {
+            return Err(Error::Code(Box::new(PragmaInvalidFlag {
+                token: Box::new((**token).clone()),
+            })));
+        }
+        if let Some(existing) = self.flags.get(&code) {
+            if *existing as u8 > scope as u8 {
+                return Ok(());
+            }
+        }
+        self.flags.insert(code, scope);
         Ok(())
     }
 }

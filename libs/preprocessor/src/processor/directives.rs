@@ -99,25 +99,12 @@ impl Processor {
                 let command = self.next_word(stream, None)?;
                 match command.to_string().as_str() {
                     "suppress" => {
-                        let code = self.next_word(stream, None)?;
-                        let mut hit_end = false;
-                        let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
-                            hit_end = true;
-                            Rc::new(Token::new(
-                                Symbol::Word("line".to_string()),
-                                command.position().clone(),
-                            ))
-                        });
-                        let Ok(scope) = Scope::try_from(scope_token.to_string().as_str()) else {
-                            return Err(Error::Code(Box::new(PragmaInvalidScope {
-                                token: Box::new(scope_token.as_ref().clone()),
-                                root: pragma.root,
-                            })));
-                        };
+                        let (code, scope) = self.read_pragma(&command, pragma, stream)?;
                         pragma.suppress(&code, scope)?;
-                        if !hit_end {
-                            Self::expect_nothing_to_newline(stream)?;
-                        };
+                    }
+                    "flag" => {
+                        let (code, scope) = self.read_pragma(&command, pragma, stream)?;
+                        pragma.flag(&code, scope)?;
                     }
                     _ => {
                         return Err(Error::Code(Box::new(PragmaUnknown {
@@ -135,6 +122,33 @@ impl Processor {
                 token: Box::new(command.as_ref().clone()),
             }))),
         }
+    }
+
+    pub(crate) fn read_pragma(
+        &mut self,
+        command: &Rc<Token>,
+        pragma: &Pragma,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+    ) -> Result<(Rc<Token>, Scope), Error> {
+        let code = self.next_word(stream, None)?;
+        let mut hit_end = false;
+        let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
+            hit_end = true;
+            Rc::new(Token::new(
+                Symbol::Word("line".to_string()),
+                command.position().clone(),
+            ))
+        });
+        let Ok(scope) = Scope::try_from(scope_token.to_string().as_str()) else {
+            return Err(Error::Code(Box::new(PragmaInvalidScope {
+                token: Box::new(scope_token.as_ref().clone()),
+                root: pragma.root,
+            })));
+        };
+        if !hit_end {
+            Self::expect_nothing_to_newline(stream)?;
+        };
+        Ok((code, scope))
     }
 
     #[allow(clippy::needless_pass_by_ref_mut)]

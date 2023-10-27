@@ -215,7 +215,9 @@ impl Processor {
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
-                    if !pragma.is_suppressed("pw3_padded_arg") && !ident_string.starts_with("ARR_")
+                    if !pragma.is_suppressed("pw3_padded_arg")
+                        && (!pragma.is_flagged("pw3_ignore_arr")
+                            || !ident_string.starts_with("ARR_"))
                     {
                         for token in [value.first(), value.last()] {
                             if token.map_or(false, |t| t.symbol().is_whitespace()) {

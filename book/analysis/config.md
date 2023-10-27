@@ -61,6 +61,12 @@ HELLO(Jim, Bob)
 
 This would produce `Jim, meet  Bob` instead of `Jim, meet Bob`. (Note the extra space before `Bob`).
 
+By default, all macros are checked, but a flag can be set to ignore `ARR_N` macros.
+
+```cpp
+#pragma hemtt flag pw3_ignore_arr { scope = line }
+```
+
 ## Rapify Warnings
 
 ### [CW1] Parent Case Mismatch

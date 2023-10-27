@@ -5,19 +5,19 @@ use tracing::error;
 use super::similar_values;
 
 #[allow(unused)]
-/// An unknown `#pragma hemtt suppress` code
+/// An unknown `#pragma hemtt flag` code
 ///
 /// ```cpp
-/// #pragma hemtt suppress unknown
+/// #pragma hemtt flag unknown
 /// ```
-pub struct PragmaInvalidSuppress {
+pub struct PragmaInvalidFlag {
     /// The [`Token`] of the code
     pub(crate) token: Box<Token>,
 }
 
-impl Code for PragmaInvalidSuppress {
+impl Code for PragmaInvalidFlag {
     fn ident(&self) -> &'static str {
-        "PE21"
+        "PE22"
     }
 
     fn token(&self) -> Option<&Token> {
@@ -25,21 +25,15 @@ impl Code for PragmaInvalidSuppress {
     }
 
     fn message(&self) -> String {
-        format!(
-            "unknown #pragma suppress `{}`",
-            self.token.symbol().to_string(),
-        )
+        format!("unknown #pragma flag `{}`", self.token.symbol().to_string(),)
     }
 
     fn label_message(&self) -> String {
-        format!(
-            "unknown #pragma suppress `{}`",
-            self.token.symbol().to_string()
-        )
+        format!("unknown #pragma flag `{}`", self.token.symbol().to_string())
     }
 
     fn help(&self) -> Option<String> {
-        let similar = similar_values(self.token.to_string().as_str(), &["pw3_padded_arg"]);
+        let similar = similar_values(self.token.to_string().as_str(), &["pw3_ignore_arr"]);
         if similar.is_empty() {
             None
         } else {
@@ -72,7 +66,7 @@ impl Code for PragmaInvalidSuppress {
             ))
             .with_color(color_token)
             .with_message(format!(
-                "unknown #pragma suppress `{}`",
+                "unknown #pragma flag `{}`",
                 self.token.symbol().to_string().fg(color_token)
             )),
         );

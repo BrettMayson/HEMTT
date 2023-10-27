@@ -17,6 +17,7 @@ pub mod pe19_pragma_unknown;
 pub mod pe1_unexpected_token;
 pub mod pe20_pragma_invalid_scope;
 pub mod pe21_pragma_invalid_suppress;
+pub mod pe22_pragma_invalid_flag;
 pub mod pe2_unexpected_eof;
 pub mod pe3_expected_ident;
 pub mod pe4_unknown_directive;
