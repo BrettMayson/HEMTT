@@ -11,13 +11,13 @@ use crate::{
         pe10_function_as_value::FunctionAsValue,
         pe11_expected_function_or_value::ExpectedFunctionOrValue,
         pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
-        pe9_function_call_argument_count::FunctionCallArgumentCount,
+        pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
     },
     definition::Definition,
     Error,
 };
 
-use super::Processor;
+use super::{pragma::Pragma, Processor};
 
 impl Processor {
     /// Reads the arguments of a macro call
@@ -28,6 +28,7 @@ impl Processor {
     pub(crate) fn call_read_args(
         &mut self,
         callsite: &Position,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<Option<Vec<Vec<Rc<Token>>>>, Error> {
         if !stream
@@ -55,7 +56,7 @@ impl Processor {
             if let Symbol::Word(word) = symbol {
                 if self.defines.contains_key(word) {
                     let mut inner = Vec::new();
-                    self.define_use(callsite, stream, &mut inner)?;
+                    self.define_use(callsite, pragma, stream, &mut inner)?;
                     arg.append(
                         &mut inner
                             .into_iter()
@@ -185,6 +186,7 @@ impl Processor {
     pub(crate) fn define_use(
         &mut self,
         callsite: &Position,
+        pragma: &mut Pragma,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
@@ -196,7 +198,7 @@ impl Processor {
         };
         match body {
             Definition::Function(function) => {
-                let Some(args) = self.call_read_args(callsite, stream)? else {
+                let Some(args) = self.call_read_args(callsite, pragma, stream)? else {
                     #[allow(clippy::redundant_clone)] // behind hls feature flag
                     return Err(Error::Code(Box::new(FunctionAsValue {
                         token: Box::new(ident.as_ref().clone()),
@@ -213,6 +215,20 @@ impl Processor {
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
+                    if !pragma.is_suppressed("pw3_padded_arg")
+                        && (!pragma.is_flagged("pw3_ignore_arr")
+                            || !ident_string.starts_with("ARR_"))
+                    {
+                        for token in [value.first(), value.last()] {
+                            if token.map_or(false, |t| t.symbol().is_whitespace()) {
+                                self.warnings.push(Box::new(PaddedArg {
+                                    token: Box::new(
+                                        (**token.expect("token exists from map_or check")).clone(),
+                                    ),
+                                }));
+                            }
+                        }
+                    }
                     arg_defines.insert(
                         Arc::from(arg.to_string().as_str()),
                         (arg.clone(), Definition::Value(value)),
@@ -223,6 +239,7 @@ impl Processor {
                 self.walk(
                     Some(callsite),
                     Some(&ident_string),
+                    pragma,
                     &mut function.stream(),
                     &mut layer,
                 )?;
@@ -236,6 +253,7 @@ impl Processor {
                 self.walk(
                     Some(callsite),
                     Some(&ident_string),
+                    pragma,
                     &mut body.into_iter().peekmore(),
                     &mut layer,
                 )?;
@@ -275,14 +293,18 @@ impl Processor {
 mod tests {
     use hemtt_common::reporting::{Symbol, Whitespace};
 
-    use crate::processor::{tests, Processor};
+    use crate::processor::{pragma::Pragma, tests, Processor};
 
     #[test]
     fn single_arg_single_word() {
         let mut stream = tests::setup("(hello)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 1);
@@ -295,7 +317,11 @@ mod tests {
         let mut stream = tests::setup("(hello world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 1);
@@ -310,7 +336,11 @@ mod tests {
         let mut stream = tests::setup("(hello,world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -325,7 +355,11 @@ mod tests {
         let mut stream = tests::setup("(hello, world)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -341,7 +375,11 @@ mod tests {
         let mut stream = tests::setup("(hello world,world hello)");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -360,7 +398,11 @@ mod tests {
         let mut stream = tests::setup("(hello(world),world(hello))");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 2);
@@ -381,7 +423,11 @@ mod tests {
         let mut stream = tests::setup("(set(1,2),set(3,4))");
         let mut processor = Processor::default();
         let args = processor
-            .call_read_args(&stream.peek().unwrap().position().clone(), &mut stream)
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
             .unwrap()
             .unwrap();
         assert_eq!(args.len(), 4);
