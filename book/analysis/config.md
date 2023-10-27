@@ -14,7 +14,7 @@ The warning code can be one of the following:
 
 | Code | Description |
 | ---- | ----------- |
-| pw3_padded_arg | Padded argument |
+| pw3_padded_arg | Padded argument in a macro call |
 
 The scope can be one of the following, if not specified, the scope will be `line`.
 
