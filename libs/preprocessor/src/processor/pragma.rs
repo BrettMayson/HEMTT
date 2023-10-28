@@ -13,7 +13,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Pragma {
     pub(crate) root: bool,
-    supress: HashMap<String, Scope>,
+    suppress: HashMap<String, Scope>,
     flags: HashMap<String, Scope>,
 }
 
@@ -21,7 +21,7 @@ impl Pragma {
     pub fn root() -> Self {
         Self {
             root: true,
-            supress: HashMap::new(),
+            suppress: HashMap::new(),
             flags: HashMap::new(),
         }
     }
@@ -29,9 +29,9 @@ impl Pragma {
     pub fn child(&self) -> Self {
         Self {
             root: false,
-            supress: {
+            suppress: {
                 let mut map = HashMap::new();
-                for (k, v) in &self.supress {
+                for (k, v) in &self.suppress {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);
                     }
@@ -51,11 +51,11 @@ impl Pragma {
     }
 
     pub fn clear_line(&mut self) {
-        self.supress.retain(|_, v| *v as u8 > Scope::Line as u8);
+        self.suppress.retain(|_, v| *v as u8 > Scope::Line as u8);
     }
 
     pub fn is_suppressed(&self, code: &str) -> bool {
-        self.supress.contains_key(code)
+        self.suppress.contains_key(code)
     }
 
     pub fn suppress(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
@@ -65,12 +65,12 @@ impl Pragma {
                 token: Box::new((**token).clone()),
             })));
         }
-        if let Some(existing) = self.supress.get(&code) {
+        if let Some(existing) = self.suppress.get(&code) {
             if *existing as u8 > scope as u8 {
                 return Ok(());
             }
         }
-        self.supress.insert(code, scope);
+        self.suppress.insert(code, scope);
         Ok(())
     }
 

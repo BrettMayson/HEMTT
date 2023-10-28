@@ -7,7 +7,7 @@ HEMTT will provide warnings for common issues in your config, in both the prepro
 Currently, HEMTT only allows the suppression of certain preprocessor warnings. To suppress a warning, use the following structure:
 
 ```cpp
-#pragma hemtt supress { warning code } { scope = line }
+#pragma hemtt suppress { warning code } { scope = line }
 ```
 
 The warning code can be one of the following:
