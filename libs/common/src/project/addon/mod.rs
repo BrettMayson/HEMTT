@@ -30,6 +30,7 @@ pub struct AddonConfig {
     /// Files to exclude from the pbo
     /// Supports glob patterns
     exclude: Vec<String>,
+
     #[serde(default)]
     /// Files to exclude from the pbo
     files: FilesConfig,

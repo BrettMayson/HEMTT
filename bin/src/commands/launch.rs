@@ -113,10 +113,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     let link = prefix_folder.join(ctx.config().prefix());
     if !link.exists() {
-        create_link(
-            link.display().to_string().as_str(),
-            ctx.build_folder().display().to_string().as_str(),
-        )?;
+        create_link(&link, ctx.build_folder())?;
     }
 
     let mut args: Vec<String> = [
