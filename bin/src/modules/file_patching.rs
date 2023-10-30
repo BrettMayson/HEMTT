@@ -22,13 +22,8 @@ impl Module for FilePatching {
                 create_link(
                     &ctx.build_folder()
                         .join("addons")
-                        .join(addon.name().replace('/', "\\"))
-                        .display()
-                        .to_string(),
-                    &ctx.project_folder()
-                        .join(addon.folder().replace('/', "\\"))
-                        .display()
-                        .to_string(),
+                        .join(addon.name().replace('/', "\\")),
+                    &ctx.project_folder().join(addon.folder().replace('/', "\\")),
                 )
             })
             .collect::<Result<(), Error>>()

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::error::Error;
 
 #[allow(clippy::module_name_repetitions)]
@@ -7,11 +9,11 @@ use crate::error::Error;
 /// # Errors
 /// - [`Error::Link`] if the link could not be created
 /// - [`std::io::Error`] if the link command could not be executed
-pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
+pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     use std::process::Command;
-    trace!("link {:?} => {:?}", link, target);
 
     // attempt junction
+    trace!("junction link {:?} => {:?}", link, target);
     let mut out = Command::new("cmd")
         .arg("/C")
         .arg("mklink")
@@ -22,6 +24,7 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
 
     if !out.status.success() {
         // fall-back to directory symbolic link
+        trace!("directory symbolic link {:?} => {:?}", link, target);
         out = Command::new("cmd")
             .arg("/C")
             .arg("mklink")
@@ -45,9 +48,9 @@ pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
 ///
 /// # Errors
 /// - [`std::io::Error`] if the link could not be created
-pub fn create_link(link: &str, target: &str) -> Result<(), Error> {
+pub fn create_link(link: &PathBuf, target: &str) -> Result<(), Error> {
     let target = target.replace('\\', "/");
-    trace!("link {:?} => {:?}", link, target);
+    trace!("symlink {:?} => {:?}", link, target);
     std::os::unix::fs::symlink(target, link)?;
     Ok(())
 }

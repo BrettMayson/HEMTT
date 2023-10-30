@@ -133,7 +133,29 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
                 .trim_start_matches('/')
                 .replace('/', "\\"),
         );
-        create_link(tmp_addon.to_str().unwrap(), target.to_str().unwrap())?;
+        create_link(&tmp_addon, &target)?;
+    }
+    // maybe replace with config or rhai in the future?
+    let addons = ctx.project_folder().join("addons");
+    for file in std::fs::read_dir(addons)? {
+        let file = file?.path();
+        if file.is_dir() {
+            continue;
+        }
+        let tmp_file = tmp
+            .join(ctx.addons().first().unwrap().prefix().as_pathbuf())
+            .parent()
+            .unwrap()
+            .join(file.file_name().unwrap());
+        // check size of file
+        if file.metadata()?.len() > 1024 * 1024 * 10 {
+            warn!(
+                "File `{}` is larger than 10MB, this will slow builds.",
+                file.display()
+            );
+        }
+        trace!("copying `{}` to tmp for binarization", file.display());
+        std::fs::copy(&file, &tmp_file)?;
     }
     let include = ctx.project_folder().join("include");
     if !include.exists() {
@@ -148,7 +170,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
                 if prefix.is_dir() {
                     let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
                     create_dir_all(tmp_mod.parent().unwrap())?;
-                    create_link(tmp_mod.to_str().unwrap(), prefix.to_str().unwrap())?;
+                    create_link(&tmp_mod, &prefix)?;
                 }
             }
         }
