@@ -7,7 +7,7 @@ use clap::{ArgMatches, Command};
 use hemtt_common::project::{hemtt::LaunchOptions, ProjectConfig};
 use steamlocate::SteamDir;
 
-use crate::{error::Error, utils::create_link};
+use crate::{error::Error, link::create_link};
 
 use super::dev;
 

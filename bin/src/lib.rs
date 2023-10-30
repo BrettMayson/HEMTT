@@ -13,6 +13,7 @@ pub mod commands;
 pub mod context;
 pub mod error;
 pub mod executor;
+pub mod link;
 pub mod logging;
 pub mod modules;
 pub mod update;

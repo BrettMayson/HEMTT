@@ -1,7 +1,7 @@
 use std::fs::{create_dir_all, remove_dir_all};
 
 use crate::error::Error;
-use crate::utils::create_link;
+use crate::link::create_link;
 
 use crate::{
     context::Context,
@@ -147,7 +147,6 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
             .parent()
             .unwrap()
             .join(file.file_name().unwrap());
-        // check size of file
         if file.metadata()?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",

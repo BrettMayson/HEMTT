@@ -2,7 +2,7 @@ use std::fs::create_dir_all;
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, utils::create_link};
+use crate::{context::Context, error::Error, link::create_link};
 
 use super::Module;
 
