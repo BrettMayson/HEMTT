@@ -9,7 +9,7 @@ license = "GPL-2.0"
 ariadne = { workspace = true }
 git2 = { workspace = true }
 serde = { workspace = true }
-thiserror = "1.0.49"
+thiserror = "1.0.50"
 toml = { workspace = true }
 tracing = { workspace = true }
 vfs = { workspace = true }

@@ -16,5 +16,5 @@ hemtt-pbo = { path = "../pbo", version = "1.0.0" }
 byteorder = { workspace = true }
 num-bigint-dig = "0.8.4"
 rand = "0.8.5"
-rsa = "0.9.2"
+rsa = "0.9.3"
 sha-1 = { workspace = true }
