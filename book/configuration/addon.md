@@ -20,6 +20,7 @@ exclude = [
 
 [files]
 exclude = [
+    ".vscode/**/*", # Exclude all files in the .vscode folder
     "data/*.psd",
 ]
 
@@ -61,12 +62,14 @@ exclude = [
 ## files
 
 `files.exclude` is an array of glob patterns that will be excluded and not packed into the PBO.
+It is important to note that this matches against files, not folders. To exclude a folder, you must use a glob pattern that matches all files in that folder.
 
 **_/addons/banana/addon.toml_**
 
 ```toml
 [files]
 exclude = [
+    ".vscode/**/*", # Exclude all files in the .vscode folder
     "data/*.psd",
 ]
 ```
