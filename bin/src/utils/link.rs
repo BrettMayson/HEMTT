@@ -48,7 +48,7 @@ pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
 ///
 /// # Errors
 /// - [`std::io::Error`] if the link could not be created
-pub fn create_link(link: &PathBuf, target: &str) -> Result<(), Error> {
+pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     let target = target.replace('\\', "/");
     trace!("symlink {:?} => {:?}", link, target);
     std::os::unix::fs::symlink(target, link)?;
