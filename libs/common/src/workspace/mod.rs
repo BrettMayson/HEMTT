@@ -53,7 +53,10 @@ impl Workspace {
             missions: Vec::new(),
         };
         for entry in workspace.vfs.walk_dir()? {
-            let entry = entry?;
+            let Ok(entry) = entry else {
+                trace!("unknown issue with entry: {:?}", entry);
+                continue;
+            };
             if entry.is_dir()? {
                 continue;
             }
