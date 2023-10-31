@@ -143,7 +143,6 @@ impl Module for Binarize {
                 "-always",
                 "-silent",
                 "-maxProcesses=0",
-                &format!("-binPath={}", tmp_source.display().to_string()),
                 &target.source,
                 &target.output,
                 &target.entry,
