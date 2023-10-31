@@ -144,7 +144,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         }
         let tmp_file = tmp
             //.join(ctx.addons().first().unwrap().prefix().as_pathbuf())
-            .parent()
+            //.parent()
             .unwrap()
             .join(file.file_name().unwrap());
         if file.metadata()?.len() > 1024 * 1024 * 10 {
