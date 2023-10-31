@@ -7,9 +7,8 @@ use rsa::{
     traits::{PrivateKeyParts, PublicKeyParts},
     BigUint, RsaPrivateKey,
 };
-use sha1::{Digest, Sha1};
 
-use crate::{error::Error, public::BIPublicKey, signature::BISign};
+use crate::{error::Error, generate_hashes, public::BIPublicKey, signature::BISign};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
@@ -204,50 +203,4 @@ impl BIPrivateKey {
         // output.write_all(&self.d.to_bytes_le())?;
         Ok(())
     }
-}
-
-fn generate_hashes<I: Seek + Read>(
-    pbo: &mut ReadablePbo<I>,
-    version: BISignVersion,
-    length: u32,
-) -> Result<(BigUint, BigUint, BigUint), Error> {
-    let mut hasher = Sha1::new();
-    let hash1 = pbo.gen_checksum()?;
-
-    hasher.update(hash1.as_bytes());
-    hasher.update(pbo.hash_filenames()?);
-    if let Some(prefix) = pbo.properties().get("prefix") {
-        hasher.update(prefix.as_bytes());
-        if !prefix.ends_with('\\') {
-            hasher.update(b"\\");
-        }
-    }
-    let hash2 = &*hasher.finalize().to_vec();
-
-    let mut hasher = Sha1::new();
-    hasher.update(pbo.hash_files(version)?);
-    hasher.update(pbo.hash_filenames()?);
-    if let Some(prefix) = pbo.properties().get("prefix") {
-        hasher.update(prefix.as_bytes());
-        if !prefix.ends_with('\\') {
-            hasher.update(b"\\");
-        }
-    }
-    let hash3 = &*hasher.finalize().to_vec();
-
-    Ok((
-        pad_hash(hash1.as_bytes(), (length / 8) as usize),
-        pad_hash(hash2, (length / 8) as usize),
-        pad_hash(hash3, (length / 8) as usize),
-    ))
-}
-
-pub fn pad_hash(hash: &[u8], size: usize) -> BigUint {
-    let mut vec: Vec<u8> = vec![0, 1];
-    vec.resize(size - 36, 255);
-    vec.extend(b"\x00\x30\x21\x30\x09\x06\x05\x2b");
-    vec.extend(b"\x0e\x03\x02\x1a\x05\x00\x04\x14");
-    vec.extend(hash);
-
-    BigUint::from_bytes_be(&vec)
 }

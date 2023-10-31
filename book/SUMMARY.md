@@ -4,7 +4,7 @@
 
 - [Installation](installation.md)
 
-# User Guide
+# Mod Projects
 
 - [Configuration](configuration/index.md)
     - [Minimum](configuration/minimum.md)
@@ -30,6 +30,10 @@
         - [Examples](rhai/scripts/examples.md)
 - [Linting](linting.md)
 - [ArmaScriptCompiler](armascriptcompiler.md)
+
+# Utilities
+
+- [Verify](utilities/signing/verify.md)
 
 # Reference
 

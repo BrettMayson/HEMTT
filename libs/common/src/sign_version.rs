@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::{ffi::OsStr, fmt::Display, path::PathBuf};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -121,6 +121,15 @@ impl<'de> Deserialize<'de> for BISignVersion {
             _ => Err(serde::de::Error::custom(format!(
                 "Invalid BISignVersion: {v}"
             ))),
+        }
+    }
+}
+
+impl Display for BISignVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::V2 => write!(f, "V2"),
+            Self::V3 => write!(f, "V3"),
         }
     }
 }

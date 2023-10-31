@@ -1,10 +1,11 @@
-use std::io::Write;
+use std::io::{Read, Seek, Write};
 
-use byteorder::{LittleEndian, WriteBytesExt};
-use hemtt_common::io::WriteExt;
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use hemtt_common::io::{ReadExt, WriteExt};
+use hemtt_pbo::ReadablePbo;
 use rsa::BigUint;
 
-use crate::Error;
+use crate::{generate_hashes, BISign, Error};
 
 #[derive(Debug)]
 /// A public key
@@ -16,6 +17,44 @@ pub struct BIPublicKey {
 }
 
 impl BIPublicKey {
+    #[must_use]
+    /// Returns the authority of the public key
+    pub fn authority(&self) -> &str {
+        &self.authority
+    }
+
+    #[must_use]
+    /// Returns the length of the public key
+    pub const fn length(&self) -> u32 {
+        self.length
+    }
+
+    #[must_use]
+    /// Returns the exponent of the public key
+    pub const fn exponent(&self) -> &BigUint {
+        &self.exponent
+    }
+
+    #[must_use]
+    /// Returns the modulus of the public key
+    pub const fn modulus(&self) -> &BigUint {
+        &self.n
+    }
+
+    #[must_use]
+    /// Display the modules in rows of 20 characters
+    pub fn modulus_display(&self, left_pad: u8) -> String {
+        let mut out = String::new();
+        for (i, c) in self.n.to_str_radix(16).chars().enumerate() {
+            if i % 20 == 0 && i != 0 {
+                out.push('\n');
+                out.push_str(&" ".repeat(left_pad as usize));
+            }
+            out.push(c);
+        }
+        out
+    }
+
     /// Write the public key to a writer
     ///
     /// # Errors
@@ -28,6 +67,79 @@ impl BIPublicKey {
         output.write_u32::<LittleEndian>(self.length)?;
         crate::write_biguint(output, &self.exponent, 4)?;
         crate::write_biguint(output, &self.n, (self.length / 8) as usize)?;
+        Ok(())
+    }
+
+    /// Read a public key from a reader
+    ///
+    /// # Errors
+    /// If the reader fails to read
+    ///
+    /// # Panics
+    /// If the public key is invalid
+    pub fn read<I: Read>(input: &mut I) -> Result<Self, Error> {
+        let authority = input.read_cstring()?;
+        let temp = input.read_u32::<LittleEndian>()?;
+        input.read_u32::<LittleEndian>()?;
+        input.read_u32::<LittleEndian>()?;
+        input.read_u32::<LittleEndian>()?;
+        let length = input.read_u32::<LittleEndian>()?;
+        let exponent = BigUint::new(vec![input.read_u32::<LittleEndian>()?]);
+
+        assert_eq!(temp, length / 8 + 20);
+
+        let mut buffer = vec![0; (length / 8) as usize];
+        input.read_exact(&mut buffer)?;
+        let n = BigUint::from_bytes_le(&buffer);
+
+        Ok(Self {
+            authority,
+            length,
+            exponent,
+            n,
+        })
+    }
+
+    /// Verifies a signature against this public key.
+    ///
+    /// # Errors
+    /// If the signature is invalid
+    pub fn verify<I: Seek + Read>(
+        &self,
+        pbo: &mut ReadablePbo<I>,
+        signature: &BISign,
+    ) -> Result<(), Error> {
+        if self.authority != signature.authority {
+            return Err(Error::AuthorityMismatch {
+                sig: signature.authority.clone(),
+                key: self.authority.clone(),
+            });
+        }
+
+        if pbo.is_sorted().is_err() {
+            return Err(Error::InvalidFileSorting);
+        }
+
+        let (real_hash1, real_hash2, real_hash3) =
+            generate_hashes(pbo, signature.version, self.length)?;
+
+        let (signed_hash1, signed_hash2, signed_hash3) = signature.signatures_modpow();
+
+        if real_hash1 != signed_hash1 {
+            let (s, r) = super::display_hashes(&signed_hash1, &real_hash1);
+            return Err(Error::HashMismatch { sig: s, real: r });
+        }
+
+        if real_hash2 != signed_hash2 {
+            let (s, r) = super::display_hashes(&signed_hash2, &real_hash2);
+            return Err(Error::HashMismatch { sig: s, real: r });
+        }
+
+        if real_hash3 != signed_hash3 {
+            let (s, r) = super::display_hashes(&signed_hash3, &real_hash3);
+            return Err(Error::HashMismatch { sig: s, real: r });
+        }
+
         Ok(())
     }
 }

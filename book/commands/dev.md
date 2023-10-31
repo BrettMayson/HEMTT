@@ -2,7 +2,7 @@
 
 <pre><code>Build your mod for local development and testing.
 
-Usage: hemtt.exe dev [OPTIONS]
+Usage: hemtt dev [OPTIONS]
 
 Options:
     <a href="#-b---binarize">-b, --binarize</a>
@@ -14,10 +14,10 @@ Options:
     <a href="#-o---all-optionals">-O, --all-optionals</a>
         Include all optional addon folders
 
-    <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
+    <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
-    <a href="commands.md#-v">-v...</a>
+    <a href="index.md#-v">-v...</a>
         Verbosity level
 
     -h, --help

@@ -14,7 +14,7 @@
 use std::io::{Read, Write};
 
 mod error;
-mod file;
+pub mod file;
 mod model;
 mod read;
 mod write;

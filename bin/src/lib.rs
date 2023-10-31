@@ -42,6 +42,7 @@ pub fn cli() -> Command {
         .subcommand(commands::launch::cli())
         .subcommand(commands::release::cli())
         .subcommand(commands::script::cli())
+        .subcommand(commands::utils::cli())
         .arg(
             clap::Arg::new("threads")
                 .global(true)
@@ -87,7 +88,10 @@ pub fn cli() -> Command {
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
-        logging::init(matches.get_count("verbosity"));
+        logging::init(
+            matches.get_count("verbosity"),
+            matches.subcommand_name() != Some("utils"),
+        );
     }
     if let Some(dir) = matches.get_one::<String>("dir") {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
@@ -135,6 +139,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
         Some(("script", matches)) => {
             commands::script::execute(matches).map_err(std::convert::Into::into)
+        }
+        Some(("utils", matches)) => {
+            commands::utils::execute(matches).map_err(std::convert::Into::into)
         }
         _ => unreachable!(),
     }

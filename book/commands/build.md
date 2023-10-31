@@ -2,19 +2,19 @@
 
 <pre><code>Build your project
 
-Usage: hemtt.exe build [OPTIONS]
+Usage: hemtt build [OPTIONS]
 
 Options:
     <a href="#--no-bin">--no-bin</a>
         Do not binarize files
 
-    <a href="#--no-rapify">--no-rap</a>
+    <a href="#--no-rap">--no-rap</a>
         Do not rapify files
 
-    <a href="commands.md#-t---threads">-t, --threads &lt;threads&gt;</a>
+    <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 
-    <a href="commands.md#-v">-v...</a>
+    <a href="index.md#-v">-v...</a>
         Verbosity level
 
     -h, --help

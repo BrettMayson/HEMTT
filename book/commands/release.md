@@ -2,7 +2,7 @@
 
 <pre><code>Build a release version your project
 
-Usage: hemtt.exe release [OPTIONS]
+Usage: hemtt release [OPTIONS]
 
 Options:
     <a href="#--no-sign">--no-sign</a>
@@ -14,7 +14,7 @@ Options:
     <a href="build.md#--no-bin">--no-bin</a>
         Do not binarize files
 
-    <a href="build.md#--no-rapify">--no-rap</a>
+    <a href="build.md#--no-rap">--no-rap</a>
         Do not rapify files
 
     <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>

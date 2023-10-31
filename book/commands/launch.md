@@ -2,7 +2,7 @@
 
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
-Usage: hemtt.exe launch [OPTIONS] [config] [-- &lt;passthrough&gt;...]
+Usage: hemtt launch [OPTIONS] [config] [-- &lt;passthrough&gt;...]
 
 Arguments:
   [config]

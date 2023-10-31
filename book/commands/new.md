@@ -2,7 +2,7 @@
 
 <pre><code>Create a new mod
 
-Usage: hemtt.exe new [OPTIONS] &lt;name&gt;
+Usage: hemtt new [OPTIONS] &lt;name&gt;
 
 Arguments:
   &lt;name&gt;  Name of the new mod
@@ -16,8 +16,8 @@ Options:
 
 It will ask for:
 
--   The full name of your mod
--   The author of your mod
--   The prefix of your mod
--   The main prefix of your mod
--   A license for your mod
+- The full name of your mod
+- The author of your mod
+- The prefix of your mod
+- The main prefix of your mod
+- A license for your mod

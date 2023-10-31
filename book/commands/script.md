@@ -2,10 +2,10 @@
 
 <pre><code>Run a Rhai script on the project
 
-Usage: hemtt.exe script [OPTIONS] &lt;script&gt;
+Usage: hemtt script [OPTIONS] &lt;script&gt;
 
 Options:
-    <a href="commands.md#-v">-v...</a>
+    <a href="index.md#-v">-v...</a>
         Verbosity level
 
     -h, --help

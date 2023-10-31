@@ -12,7 +12,7 @@ use tracing_subscriber::{
 ///
 /// # Panics
 /// If the log file could not be created
-pub fn init(verbosity: u8) {
+pub fn init(verbosity: u8, hemttout: bool) {
     let format = tracing_subscriber::fmt::format()
         .without_time()
         .with_target(false)
@@ -30,16 +30,22 @@ pub fn init(verbosity: u8) {
         }
     };
 
-    create_dir_all(".hemttout").expect("Unable to create `.hemttout`");
-    let out_file =
-        File::create(".hemttout/latest.log").expect("Unable to create `.hemttout/latest.log`");
-    let debug_log = tracing_subscriber::fmt::layer()
-        .with_writer(Arc::new(out_file))
-        .with_thread_ids(true)
-        .with_target(false)
-        .with_ansi(false);
+    if hemttout {
+        create_dir_all(".hemttout").expect("Unable to create `.hemttout`");
+        let out_file =
+            File::create(".hemttout/latest.log").expect("Unable to create `.hemttout/latest.log`");
+        let debug_log = tracing_subscriber::fmt::layer()
+            .with_writer(Arc::new(out_file))
+            .with_thread_ids(true)
+            .with_target(false)
+            .with_ansi(false);
 
-    tracing_subscriber::registry()
-        .with(stdout.with_filter(filter).and_then(debug_log))
-        .init();
+        tracing_subscriber::registry()
+            .with(stdout.with_filter(filter).and_then(debug_log))
+            .init();
+    } else {
+        tracing_subscriber::registry()
+            .with(stdout.with_filter(filter))
+            .init();
+    }
 }

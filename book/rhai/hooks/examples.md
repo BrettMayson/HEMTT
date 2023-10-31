@@ -2,7 +2,7 @@
 
 ## Renaming the release zip
 
-We want to modify the release zip to a different name format, we need to use the real file system during the `post_release` phase. This means that the hook will only run during the [hemtt release](../commands/release.md) command.
+We want to modify the release zip to a different name format, we need to use the real file system during the `post_release` phase. This means that the hook will only run during the [hemtt release](../../commands/release.md) command.
 
 **.hemtt/hooks/post_release/rename_zip.rhai**
 
@@ -20,7 +20,7 @@ if src.is_file() { // support --no-archive
 
 ## Setting the version in a file
 
-We want to set the version of the project in the `mod.cpp` file included in our builds, we need to use the virtual file system during the `pre_build` phase. This means that the hook will run during the [hemtt build](../commands/build.md) and [hemtt release](../commands/release.md) commands.
+We want to set the version of the project in the `mod.cpp` file included in our builds, we need to use the virtual file system during the `pre_build` phase. This means that the hook will run during the [hemtt build](../../commands/build.md) and [hemtt release](../../commands/release.md) commands.
 
 Since we are using the virtual file system, the file on disk will not be modified.
 
