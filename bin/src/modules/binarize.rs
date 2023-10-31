@@ -139,9 +139,11 @@ impl Module for Binarize {
             let exe = self.command.as_ref().unwrap();
             let mut cmd = Command::new(exe);
             cmd.args([
+                "-norecurse",
                 "-always",
                 "-silent",
                 "-maxProcesses=0",
+                format!("-binPath={}", tmp_source.display().to_string()),
                 &target.source,
                 &target.output,
                 &target.entry,
