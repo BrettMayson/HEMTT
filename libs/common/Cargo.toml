@@ -6,7 +6,6 @@ description = "A library for common Hemtt functionality"
 license = "GPL-2.0"
 
 [dependencies]
-ariadne = { workspace = true }
 git2 = { workspace = true }
 serde = { workspace = true }
 thiserror = "1.0.50"

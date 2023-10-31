@@ -362,15 +362,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
-name = "convert_case"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
-dependencies = [
- "unicode-segmentation",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -793,7 +784,6 @@ dependencies = [
 name = "hemtt"
 version = "1.9.1"
 dependencies = [
- "ariadne",
  "clap",
  "dialoguer",
  "enable-ansi-support",
@@ -806,7 +796,6 @@ dependencies = [
  "hemtt-preprocessor",
  "hemtt-signing",
  "num_cpus",
- "peekmore",
  "rayon",
  "reqwest",
  "rhai",
@@ -829,7 +818,6 @@ dependencies = [
 name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
- "ariadne",
  "git2",
  "serde",
  "thiserror",
@@ -849,7 +837,6 @@ dependencies = [
  "hemtt-preprocessor",
  "lsp-types",
  "paste",
- "serde",
  "vfs",
 ]
 
@@ -869,7 +856,6 @@ name = "hemtt-preprocessor"
 version = "1.0.0"
 dependencies = [
  "ariadne",
- "convert_case",
  "criterion",
  "hemtt-common",
  "lsp-types",
@@ -877,7 +863,6 @@ dependencies = [
  "peekmore",
  "pest",
  "pest_derive",
- "serde",
  "strsim",
  "tracing",
  "vfs",
@@ -890,7 +875,6 @@ dependencies = [
  "byteorder",
  "hemtt-common",
  "hemtt-pbo",
- "num-bigint-dig",
  "rand",
  "rsa",
  "sha-1",
@@ -1273,7 +1257,6 @@ dependencies = [
  "num-iter",
  "num-traits",
  "rand",
- "serde",
  "smallvec",
  "zeroize",
 ]
@@ -1739,9 +1722,9 @@ dependencies = [
 
 [[package]]
 name = "rhai"
-version = "1.16.2"
+version = "1.16.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "206cee941730eaf90a22c84235b25193df661393688162e15551164f92f09eca"
+checksum = "e3625f343d89990133d013e39c46e350915178cf94f1bec9f49b0cbef98a3e3c"
 dependencies = [
  "ahash",
  "bitflags 2.4.1",
@@ -2449,12 +2432,6 @@ checksum = "5c5713f0fc4b5db668a2ac63cdb7bb4469d8c9fed047b1d0292cc7b0ce2ba921"
 dependencies = [
  "tinyvec",
 ]
-
-[[package]]
-name = "unicode-segmentation"
-version = "1.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
 
 [[package]]
 name = "unicode-width"

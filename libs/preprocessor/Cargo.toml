@@ -12,12 +12,10 @@ bench = false
 hemtt-common = { path = "../common", version = "1.0.0" }
 
 ariadne = { workspace = true }
-convert_case = "0.6.0"
-lsp-types = { workspace = true }
+lsp-types = { workspace = true, optional = true }
 peekmore = { workspace = true }
 pest = { workspace = true }
 pest_derive = { workspace = true }
-serde = { workspace = true }
 strsim = "0.10.0"
 tracing = { workspace = true }
 vfs = { workspace = true }
@@ -27,7 +25,7 @@ criterion = "0.5.1"
 paste = "1.0.14"
 
 [features]
-# lsp = ["hemtt-common/lsp"]
+# lsp = ["hemtt-common/lsp", "lsp-types"]
 
 [[bench]]
 name = "ace_dogtags"

@@ -17,7 +17,6 @@ ariadne = { workspace = true }
 byteorder = { workspace = true }
 chumsky = "0.9.3"
 lsp-types = { workspace = true }
-serde = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
