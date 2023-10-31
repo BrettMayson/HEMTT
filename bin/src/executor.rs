@@ -143,7 +143,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
             continue;
         }
         let tmp_file = tmp
-            .join(ctx.addons().first().unwrap().prefix().as_pathbuf())
+            //.join(ctx.addons().first().unwrap().prefix().as_pathbuf())
             .parent()
             .unwrap()
             .join(file.file_name().unwrap());
