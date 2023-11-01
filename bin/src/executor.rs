@@ -142,11 +142,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         if file.is_dir() {
             continue;
         }
-        let tmp_file = tmp
-            .join(ctx.addons().first().unwrap().prefix().as_pathbuf())
-            .parent()
-            .unwrap()
-            .join(file.file_name().unwrap());
+        let tmp_file = tmp.join(file.file_name().unwrap());
         if file.metadata()?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",
