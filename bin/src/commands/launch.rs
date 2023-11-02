@@ -82,7 +82,6 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let meta_path = std::env::current_dir()?.join("meta.cpp");
     if meta_path.exists() {
         let content = std::fs::read_to_string(meta_path)?;
-        // publishedid = 463939057;
         let regex = Regex::new(r"publishedid\s*=\s*(\d+);").unwrap();
         if let Some(id) = regex.captures(&content).map(|c| c[1].to_string()) {
             meta = Some(id);
