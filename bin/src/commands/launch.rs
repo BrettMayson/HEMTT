@@ -92,6 +92,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
 
     let mut workshop = launch.workshop().to_vec();
+    let mut dlc = launch.dlc().to_vec();
 
     for preset in launch.presets() {
         let html = std::env::current_dir()?
@@ -114,18 +115,15 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         let dlc_regex =
             Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#).unwrap();
         for id in dlc_regex.captures_iter(&html).map(|c| c[1].to_string()) {
-            let Ok(dlc) = DLC::try_from(id.clone()) else {
+            let Ok(preset_dlc) = DLC::try_from(id.clone()) else {
                 warn!(
                     "Preset {} requires DLC {}, but HEMTT does not recognize it",
                     preset, id
                 );
                 continue;
             };
-            if !launch.dlc().contains(&dlc) {
-                warn!(
-                    "Preset {} requires DLC {} but it is not enabled",
-                    preset, id
-                );
+            if !launch.dlc().contains(&preset_dlc) {
+                dlc.push(preset_dlc);
             }
         }
     }
@@ -158,7 +156,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    for dlc in launch.dlc() {
+    for dlc in dlc {
         mods.push(dlc.to_mod().to_string());
     }
 
