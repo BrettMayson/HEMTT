@@ -782,7 +782,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt"
-version = "1.9.1"
+version = "1.10.0"
 dependencies = [
  "clap",
  "dialoguer",
