@@ -74,6 +74,10 @@ pub struct LaunchOptions {
     dlc: Vec<DLC>,
 
     #[serde(default)]
+    /// HTML presets that should be launched with the mod
+    presets: Vec<String>,
+
+    #[serde(default)]
     /// Optional addons that should be built into the mod
     optionals: Vec<String>,
 
@@ -97,6 +101,12 @@ impl LaunchOptions {
     /// DLCs that should be launched with the mod
     pub fn dlc(&self) -> &[DLC] {
         &self.dlc
+    }
+
+    #[must_use]
+    /// HTML presets that should be launched with the mod
+    pub fn presets(&self) -> &[String] {
+        &self.presets
     }
 
     #[must_use]

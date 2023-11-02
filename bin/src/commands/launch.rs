@@ -5,6 +5,7 @@ use std::{
 
 use clap::{ArgMatches, Command};
 use hemtt_common::project::{hemtt::LaunchOptions, ProjectConfig};
+use regex::Regex;
 use steamlocate::SteamDir;
 
 use crate::{error::Error, link::create_link};
@@ -77,6 +78,39 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         path.display().to_string()
     });
 
+    let mut meta = None;
+    let meta_path = std::env::current_dir()?.join("meta.cpp");
+    if meta_path.exists() {
+        let content = std::fs::read_to_string(meta_path)?;
+        // publishedid = 463939057;
+        let regex = Regex::new(r"publishedid\s*=\s*(\d+);").unwrap();
+        if let Some(id) = regex.captures(&content).map(|c| c[1].to_string()) {
+            meta = Some(id);
+        }
+    }
+
+    let mut workshop = launch.workshop().to_vec();
+
+    for preset in launch.presets() {
+        let html = std::env::current_dir()?
+            .join(".hemtt/presets")
+            .join(preset)
+            .with_extension("html");
+        if !html.exists() {
+            return Err(Error::PresetNotFound(preset.to_string()));
+        }
+        let html = std::fs::read_to_string(html)?;
+        let regex = Regex::new(
+            r#"(?m)href="https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
+        )
+        .unwrap();
+        for id in regex.captures_iter(&html).map(|c| c[1].to_string()) {
+            if !workshop.contains(&id) {
+                workshop.push(id);
+            }
+        }
+    }
+
     // climb to the workshop folder
     if !launch.workshop().is_empty() {
         let Some(common) = arma3dir.path.parent() else {
@@ -89,19 +123,24 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         if !workshop_folder.exists() {
             return Err(Error::WorkshopNotFound);
         };
-        for load_mod in launch.workshop() {
-            let mod_path = workshop_folder.join(load_mod);
+        for load_mod in workshop {
+            if Some(load_mod.clone()) == meta {
+                warn!(
+                    "Skipping mod {} as it is the same as the project's meta.cpp id",
+                    load_mod
+                );
+                continue;
+            }
+            let mod_path = workshop_folder.join(&load_mod);
             if !mod_path.exists() {
-                return Err(Error::WorkshopModNotFound(load_mod.to_string()));
+                return Err(Error::WorkshopModNotFound(load_mod));
             };
             mods.push(mod_path.display().to_string());
         }
     }
 
-    if !launch.dlc().is_empty() {
-        for dlc in launch.dlc() {
-            mods.push(dlc.to_mod().to_string());
-        }
+    for dlc in launch.dlc() {
+        mods.push(dlc.to_mod().to_string());
     }
 
     let ctx = super::dev::execute(matches, launch.optionals())?;
