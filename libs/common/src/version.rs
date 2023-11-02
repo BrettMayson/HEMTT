@@ -253,6 +253,16 @@ mod tests {
     }
 
     #[test]
+    fn test_version_hemtt_local() {
+        let version = Version::try_from("1.10.1-local-debug").unwrap();
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 10);
+        assert_eq!(version.patch, 1);
+        assert_eq!(version.build, None);
+        assert_eq!(version.hash, Some("local".to_string()));
+    }
+
+    #[test]
     fn test_version_no_hash() {
         let version = Version::try_from("1.2.42.2452").unwrap();
         assert_eq!(version.major, 1);

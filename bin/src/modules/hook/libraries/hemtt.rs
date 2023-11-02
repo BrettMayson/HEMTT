@@ -19,7 +19,7 @@ pub struct RhaiHemtt {
 impl RhaiHemtt {
     pub fn new(ctx: &Context) -> Self {
         Self {
-            version: Version::try_from(env!("CARGO_PKG_VERSION")).unwrap(),
+            version: Version::try_from(env!("HEMTT_VERSION")).unwrap(),
             project: RhaiProject::new(ctx),
             folder: ctx.folder().to_string(),
         }

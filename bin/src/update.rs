@@ -8,6 +8,10 @@ use crate::error::Error;
 /// # Errors
 /// [`Error::Update`] if the update check failed
 pub fn check() -> Result<Option<String>, Error> {
+    if env!("HEMTT_VERSION").contains("-local") || env!("HEMTT_VERSION").contains("-debug") {
+        debug!("skip update check for local / debug version");
+        return Ok(None);
+    }
     let tmp_folder = std::env::temp_dir().join("hemtt");
     if !tmp_folder.exists() {
         std::fs::create_dir_all(&tmp_folder)?;
@@ -46,7 +50,7 @@ pub fn check() -> Result<Option<String>, Error> {
         let mut file = std::fs::File::create(&tmp_latest)?;
         file.write_all(release.tag_name.as_bytes())?;
     }
-    let current = env!("CARGO_PKG_VERSION");
+    let current = env!("HEMTT_VERSION");
     let Ok(current) = semver::Version::parse(current) else {
         return Err(Error::Update(String::from(
             "Failed to parse current version",

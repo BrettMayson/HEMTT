@@ -99,7 +99,7 @@ fn _build(
         target_pbo.display()
     );
 
-    pbo.add_property("hemtt", env!("CARGO_PKG_VERSION"));
+    pbo.add_property("hemtt", env!("HEMTT_VERSION"));
     pbo.add_property("version", version.to_string());
 
     'entries: for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
