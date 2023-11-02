@@ -51,6 +51,9 @@ mainprefix = "z"
 workshop = [
     "450814997", # CBA_A3's Workshop ID
 ]
+presets = [
+    "main", # .html presets from .hemtt/presets/
+]
 dlc = [
     "Western Sahara",
 ]
@@ -81,6 +84,10 @@ dlc = [
 
 A list of workshop IDs to launch with your mod. These are not subscribed to, and will need to be manually subscribed to in Steam.
 
+### presets
+
+A list of `.html` presets to launch with your mod. Exported from the Arma 3 Launcher, and kept in `.hemtt/presets/`.
+
 ### dlc
 
 A list of DLCs to launch with your mod. The fullname or short-code can be used.
@@ -110,7 +117,7 @@ The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x
 
 ## Options
 
-### -e, --executable <executable>
+### -e, --executable &lt;executable&gt;
 
 The Arma 3 executable to launch. Overrides the `executable` option in the configuration file.
 

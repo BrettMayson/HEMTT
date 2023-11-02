@@ -40,6 +40,9 @@ pub enum Error {
     WorkshopNotFound,
     #[error("Workshop mod not found: {0}")]
     WorkshopModNotFound(String),
+    #[error("Preset not found: {0}")]
+    PresetNotFound(String),
+
     #[error("Main prefix not found: {0}")]
     MainPrefixNotFound(String),
 
