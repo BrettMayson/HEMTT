@@ -31,7 +31,7 @@ impl Code for IfHasInclude {
     }
 
     fn help(&self) -> Option<String> {
-        Some(String::from("use `#pragma hemtt flag pe23_ignore_has_include` to have hemtt act as if the include was not found"))
+        Some(String::from("use `#pragma hemtt flag pe23_ignore_has_include` to have HEMTT act as if the include was not found"))
     }
 
     fn report_generate(&self) -> Option<String> {
