@@ -30,3 +30,11 @@ Returns the project prefix.
 ```ts
 HEMTT.project().prefix(); // "abe"
 ```
+
+## `mainprefix()`
+
+Returns the project main prefix, empty if not set.
+
+```ts
+HEMTT.project().mainprefix(); // "z"
+```

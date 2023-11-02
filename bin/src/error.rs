@@ -81,12 +81,21 @@ pub enum Error {
     Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
-    #[error("Rhai Error: {0}")]
-    Rhai(#[from] rhai::ParseError),
+    #[error("Rhai Parse Error: {0}")]
+    RhaiParse(#[from] rhai::ParseError),
+    #[error("Rhai Script Error: {0}")]
+    /// because of annyoing send + sync I don't care about
+    RhaiScript(String),
 }
 
 impl From<vfs::VfsError> for Error {
     fn from(e: vfs::VfsError) -> Self {
         Self::Vfs(Box::new(e))
+    }
+}
+
+impl From<Box<rhai::EvalAltResult>> for Error {
+    fn from(e: Box<rhai::EvalAltResult>) -> Self {
+        Self::RhaiScript(e.to_string())
     }
 }

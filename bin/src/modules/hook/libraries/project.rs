@@ -11,6 +11,7 @@ use crate::context::Context;
 pub struct RhaiProject {
     name: String,
     prefix: String,
+    mainprefix: String,
     version: Version,
     // addons: Vec<Addon>,
 }
@@ -20,6 +21,10 @@ impl RhaiProject {
         Self {
             name: ctx.config().name().to_string(),
             prefix: ctx.config().prefix().to_string(),
+            mainprefix: ctx
+                .config()
+                .mainprefix()
+                .map_or_else(String::new, std::string::ToString::to_string),
             version: ctx.config().version().get(ctx.workspace().vfs()).unwrap(),
             // addons: ctx.addons().to_vec(),
         }
@@ -39,6 +44,11 @@ pub mod project_functions {
     #[rhai_fn(global, pure)]
     pub fn prefix(project: &mut RhaiProject) -> String {
         project.prefix.clone()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn mainprefix(project: &mut RhaiProject) -> String {
+        project.mainprefix.clone()
     }
 
     #[rhai_fn(global, pure)]

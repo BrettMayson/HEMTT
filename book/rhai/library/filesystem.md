@@ -105,6 +105,26 @@ HEMTT_VFS.join("addons").is_file(); // false
 HEMTT_VFS.join(".hemtt").join("project.toml").is_file(); // true
 ```
 
+## `parent()`
+
+Returns the parent directory of the path.  
+Will panic if the path is root while using the real file system.  
+Will return the root path while using the virtual file system, if already at the root.
+
+```ts
+HEMTT_VFS.join("addons").parent(); // Points to ./
+HEMTT_VFS.join(".hemtt").join("project.toml").parent(); // Points to ./.hemtt
+```
+
+## `file_name()`
+
+Returns the file name of the path.
+
+```ts
+HEMTT_VFS.join("addons").file_name(); // addons
+HEMTT_VFS.join(".hemtt").join("project.toml").file_name(); // project.toml
+```
+
 ## `copy(path)`
 
 Copies the file or directory to the given path.
@@ -119,6 +139,14 @@ Moves the file or directory to the given path.
 
 ```ts
 HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")); // Moves the docs folder to the build output
+```
+
+## `list(path)`
+
+Lists the contents of the directory. If the path is a file, returns an empty array.
+
+```ts
+HEMTT_VFS.join("docs").list(); // Returns an array of paths of files and directories in the docs folder
 ```
 
 ## `open_file()`
