@@ -171,6 +171,13 @@ pub fn rapify(path: WorkspacePath, ctx: &Context) -> RapifyResult {
             ))),
         );
     }
+    if processed.no_rapify() {
+        debug!(
+            "skipping rapify for {}, as instructed by preprocessor",
+            path.as_str()
+        );
+        return (messages, Ok(()));
+    }
     let out = if path.filename().to_lowercase() == "config.cpp" {
         path.parent().join("config.bin").unwrap()
     } else {

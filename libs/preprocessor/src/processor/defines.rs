@@ -17,7 +17,10 @@ use crate::{
     Error,
 };
 
-use super::{pragma::Pragma, Processor};
+use super::{
+    pragma::{Flag, Pragma, Suppress},
+    Processor,
+};
 
 impl Processor {
     /// Reads the arguments of a macro call
@@ -215,8 +218,8 @@ impl Processor {
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
-                    if !pragma.is_suppressed("pw3_padded_arg")
-                        && (!pragma.is_flagged("pw3_ignore_arr")
+                    if !pragma.is_suppressed(&Suppress::Pw3PaddedArg)
+                        && (!pragma.is_flagged(&Flag::Pw3IgnoreArr)
                             || !ident_string.starts_with("ARR_"))
                     {
                         for token in [value.first(), value.last()] {

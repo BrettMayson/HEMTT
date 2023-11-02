@@ -2,6 +2,8 @@ use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
+use crate::processor::pragma::Suppress;
+
 use super::similar_values;
 
 #[allow(unused)]
@@ -39,7 +41,7 @@ impl Code for PragmaInvalidSuppress {
     }
 
     fn help(&self) -> Option<String> {
-        let similar = similar_values(self.token.to_string().as_str(), &["pw3_padded_arg"]);
+        let similar = similar_values(self.token.to_string().as_str(), Suppress::as_slice());
         if similar.is_empty() {
             None
         } else {

@@ -5,6 +5,7 @@ use hemtt_common::{
     reporting::{Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
+use tracing::debug;
 
 use crate::{
     codes::{
@@ -12,14 +13,16 @@ use crate::{
         pe14_include_unexpected_suffix::IncludeUnexpectedSuffix,
         pe15_if_invalid_operator::IfInvalidOperator,
         pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
-        pe20_pragma_invalid_scope::PragmaInvalidScope, pe2_unexpected_eof::UnexpectedEOF,
-        pe3_expected_ident::ExpectedIdent, pe4_unknown_directive::UnknownDirective,
-        pe6_change_builtin::ChangeBuiltin, pe7_if_unit_or_function::IfUnitOrFunction,
-        pe8_if_undefined::IfUndefined, pw1_redefine::RedefineMacro,
+        pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
+        pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
+        pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
+        pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
+        pw1_redefine::RedefineMacro,
     },
     defines::Defines,
     definition::{Definition, FunctionDefinition},
     ifstate::IfState,
+    processor::pragma::Flag,
     Error,
 };
 
@@ -71,7 +74,7 @@ impl Processor {
                 Ok(())
             }
             ("if", true) => {
-                self.directive_if(command, stream)?;
+                self.directive_if(pragma, command, stream)?;
                 Ok(())
             }
             ("ifdef", true) => self.directive_ifdef(command, true, stream),
@@ -289,6 +292,7 @@ impl Processor {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
+        pragma: &Pragma,
         command: Rc<Token>,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
@@ -305,6 +309,20 @@ impl Processor {
             Ok((vec![token], false))
         }
         let left = self.next_value(stream, None)?;
+        if &Symbol::Word(String::from("__has_include")) == left.symbol() {
+            if pragma.is_flagged(&Flag::Pe23IgnoreIfHasInclude) {
+                debug!(
+                    "ignoring __has_include due to pragma flag, this config will not be rapified"
+                );
+                self.no_rapify = true;
+                self.ifstates.push_if(command, false);
+                self.skip_to_after_newline(stream, None);
+                return Ok(());
+            }
+            return Err(Error::Code(Box::new(IfHasInclude {
+                token: Box::new(left.as_ref().clone()),
+            })));
+        }
         let (left, left_defined) = value(&mut self.defines, left)?;
         self.skip_whitespace(stream, None);
         let mut operators = Vec::with_capacity(2);

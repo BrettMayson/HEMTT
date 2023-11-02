@@ -38,6 +38,9 @@ pub struct Processed {
 
     /// Warnings
     warnings: Vec<Box<dyn Code>>,
+
+    /// The preprocessor was able to check the file, but it should not be rapified
+    no_rapify: bool,
 }
 
 fn append_token(
@@ -175,6 +178,7 @@ impl Processed {
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
+        no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
             #[cfg(feature = "lsp")]
@@ -182,6 +186,7 @@ impl Processed {
             #[cfg(feature = "lsp")]
             usage,
             warnings,
+            no_rapify,
             ..Default::default()
         };
         let mut string_stack = Vec::new();
@@ -247,6 +252,12 @@ impl Processed {
     /// Returns the warnings
     pub fn warnings(&self) -> &[Box<dyn Code>] {
         &self.warnings
+    }
+
+    #[must_use]
+    /// Returns whether the file should not be rapified
+    pub const fn no_rapify(&self) -> bool {
+        self.no_rapify
     }
 }
 
