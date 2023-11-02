@@ -44,6 +44,19 @@ impl DLC {
             Self::Spearhead1944 => "spe",
         }
     }
+
+    #[must_use]
+    /// Return the appid
+    pub const fn to_appid(&self) -> &str {
+        match self {
+            Self::Contact => "1021790",
+            Self::GlobalMobilization => "1042220",
+            Self::PrairieFire => "1227700",
+            Self::IronCurtain => "1294440",
+            Self::WesternSahara => "1681170",
+            Self::Spearhead1944 => "1175380",
+        }
+    }
 }
 
 impl ToString for DLC {
@@ -65,14 +78,17 @@ impl TryFrom<String> for DLC {
     fn try_from(dlc: String) -> Result<Self, Self::Error> {
         Ok(
             match dlc.to_lowercase().trim_start_matches("creator dlc: ") {
-                "contact" => Self::Contact,
-                "gm" | "global mobilization" | "global mobilization - cold war germany" => {
-                    Self::GlobalMobilization
+                "1021790" | "contact" => Self::Contact,
+                "1042220"
+                | "gm"
+                | "global mobilization"
+                | "global mobilization - cold war germany" => Self::GlobalMobilization,
+                "1227700" | "vn" | "sog" | "prairie fire" | "s.o.g. prairie fire" => {
+                    Self::PrairieFire
                 }
-                "vn" | "sog" | "prairie fire" | "s.o.g. prairie fire" => Self::PrairieFire,
-                "csla" | "iron curtain" | "csla iron curtain" => Self::IronCurtain,
-                "ws" | "western sahara" => Self::WesternSahara,
-                "spe" | "spearhead" | "spearhead 1944" => Self::Spearhead1944,
+                "1294440" | "csla" | "iron curtain" | "csla iron curtain" => Self::IronCurtain,
+                "1681170" | "ws" | "western sahara" => Self::WesternSahara,
+                "1175380" | "spe" | "spearhead" | "spearhead 1944" => Self::Spearhead1944,
                 _ => return Err(format!("Unknown DLC: {dlc}")),
             },
         )

@@ -4,7 +4,10 @@ use std::{
 };
 
 use clap::{ArgMatches, Command};
-use hemtt_common::project::{hemtt::LaunchOptions, ProjectConfig};
+use hemtt_common::{
+    arma::dlc::DLC,
+    project::{hemtt::LaunchOptions, ProjectConfig},
+};
 use regex::Regex;
 use steamlocate::SteamDir;
 
@@ -99,13 +102,30 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             return Err(Error::PresetNotFound(preset.to_string()));
         }
         let html = std::fs::read_to_string(html)?;
-        let regex = Regex::new(
-            r#"(?m)href="https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
+        let mod_regex = Regex::new(
+            r#"(?m)href="https?:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
         )
         .unwrap();
-        for id in regex.captures_iter(&html).map(|c| c[1].to_string()) {
+        for id in mod_regex.captures_iter(&html).map(|c| c[1].to_string()) {
             if !workshop.contains(&id) {
                 workshop.push(id);
+            }
+        }
+        let dlc_regex =
+            Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#).unwrap();
+        for id in dlc_regex.captures_iter(&html).map(|c| c[1].to_string()) {
+            let Ok(dlc) = DLC::try_from(id.clone()) else {
+                warn!(
+                    "Preset {} requires DLC {}, but HEMTT does not recognize it",
+                    preset, id
+                );
+                continue;
+            };
+            if !launch.dlc().contains(&dlc) {
+                warn!(
+                    "Preset {} requires DLC {} but it is not enabled",
+                    preset, id
+                );
             }
         }
     }
