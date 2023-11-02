@@ -6,7 +6,7 @@ use rhai::plugin::{
 #[allow(clippy::needless_pass_by_ref_mut)]
 #[export_module]
 pub mod path_functions {
-    use rhai::{EvalAltResult, Array};
+    use rhai::{Array, EvalAltResult};
     use vfs::VfsPath;
 
     #[rhai_fn(global, pure, return_raw)]

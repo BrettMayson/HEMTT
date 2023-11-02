@@ -21,10 +21,10 @@ impl RhaiProject {
         Self {
             name: ctx.config().name().to_string(),
             prefix: ctx.config().prefix().to_string(),
-            mainprefix: ctx.config().mainprefix().map_or_else(
-                String::new,
-                std::string::ToString::to_string,
-            ),
+            mainprefix: ctx
+                .config()
+                .mainprefix()
+                .map_or_else(String::new, std::string::ToString::to_string),
             version: ctx.config().version().get(ctx.workspace().vfs()).unwrap(),
             // addons: ctx.addons().to_vec(),
         }
