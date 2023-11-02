@@ -24,6 +24,17 @@ The scope can be one of the following, if not specified, the scope will be `line
 | file | Suppresses the warning for the remainder of the current file, not including includes |
 | config | Suppresses the warning for the remainder of the current config, including includes |
 
+## Preprocessor Flags
+
+HEMTT provides a few preprocessor flags to control the behavior of the preprocessor.
+
+| Flag | Description |
+| ---- | ----------- |
+| pw3_ignore_arr | Ignore padded arguments in `ARR_N` macros |
+| pe23_ignore_has_include| Assume any `#if __has_include` is false |
+
+The scope of these flags is the same as the warning suppression scope.
+
 ## Preprocessor Warnings
 
 ### [PW1] Redefine Macro

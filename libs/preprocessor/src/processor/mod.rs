@@ -19,7 +19,7 @@ use self::pragma::Pragma;
 
 mod defines;
 mod directives;
-mod pragma;
+pub mod pragma;
 mod whitespace;
 
 #[derive(Default)]
@@ -44,6 +44,9 @@ pub struct Processor {
 
     /// Warnings
     pub(crate) warnings: Vec<Box<dyn Code>>,
+
+    /// The preprocessor was able to run checks, but the output should not be rapified
+    pub(crate) no_rapify: bool,
 }
 
 impl Processor {
@@ -88,6 +91,7 @@ impl Processor {
             #[cfg(feature = "lsp")]
             processor.declarations,
             processor.warnings,
+            processor.no_rapify,
         )
         .map_err(Into::into)
     }

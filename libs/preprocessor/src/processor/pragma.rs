@@ -13,8 +13,8 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Pragma {
     pub(crate) root: bool,
-    suppress: HashMap<String, Scope>,
-    flags: HashMap<String, Scope>,
+    suppress: HashMap<Suppress, Scope>,
+    flags: HashMap<Flag, Scope>,
 }
 
 impl Pragma {
@@ -54,43 +54,43 @@ impl Pragma {
         self.suppress.retain(|_, v| *v as u8 > Scope::Line as u8);
     }
 
-    pub fn is_suppressed(&self, code: &str) -> bool {
+    pub fn is_suppressed(&self, code: &Suppress) -> bool {
         self.suppress.contains_key(code)
     }
 
     pub fn suppress(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
-        if !["pw3_padded_arg"].contains(&code.as_str()) {
+        let Ok(suppress) = Suppress::try_from(code.as_str()) else {
             return Err(Error::Code(Box::new(PragmaInvalidSuppress {
                 token: Box::new((**token).clone()),
             })));
-        }
-        if let Some(existing) = self.suppress.get(&code) {
+        };
+        if let Some(existing) = self.suppress.get(&suppress) {
             if *existing as u8 > scope as u8 {
                 return Ok(());
             }
         }
-        self.suppress.insert(code, scope);
+        self.suppress.insert(suppress, scope);
         Ok(())
     }
 
-    pub fn is_flagged(&self, code: &str) -> bool {
+    pub fn is_flagged(&self, code: &Flag) -> bool {
         self.flags.contains_key(code)
     }
 
     pub fn flag(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
-        if !["pw3_ignore_arr"].contains(&code.as_str()) {
+        let Ok(flag) = Flag::try_from(code.as_str()) else {
             return Err(Error::Code(Box::new(PragmaInvalidFlag {
                 token: Box::new((**token).clone()),
             })));
-        }
-        if let Some(existing) = self.flags.get(&code) {
+        };
+        if let Some(existing) = self.flags.get(&flag) {
             if *existing as u8 > scope as u8 {
                 return Ok(());
             }
         }
-        self.flags.insert(code, scope);
+        self.flags.insert(flag, scope);
         Ok(())
     }
 }
@@ -110,6 +110,52 @@ impl TryFrom<&str> for Scope {
             "line" => Ok(Self::Line),
             "file" => Ok(Self::File),
             "config" => Ok(Self::Config),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Flag {
+    Pw3IgnoreArr,
+    Pe23IgnoreIfHasInclude,
+}
+
+impl Flag {
+    pub const fn as_slice() -> &'static [&'static str] {
+        &["pw3_ignore_arr", "pe23_ignore_has_include"]
+    }
+}
+
+impl TryFrom<&str> for Flag {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "pw3_ignore_arr" => Ok(Self::Pw3IgnoreArr),
+            "pe23_ignore_has_include" => Ok(Self::Pe23IgnoreIfHasInclude),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Suppress {
+    Pw3PaddedArg,
+}
+
+impl Suppress {
+    pub const fn as_slice() -> &'static [&'static str] {
+        &["pw3_padded_arg"]
+    }
+}
+
+impl TryFrom<&str> for Suppress {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "pw3_padded_arg" => Ok(Self::Pw3PaddedArg),
             _ => Err(()),
         }
     }

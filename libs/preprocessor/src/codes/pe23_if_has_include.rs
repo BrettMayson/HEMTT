@@ -2,24 +2,20 @@ use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 use tracing::error;
 
-use crate::processor::pragma::Flag;
-
-use super::similar_values;
-
 #[allow(unused)]
 /// An unknown `#pragma hemtt flag` code
 ///
 /// ```cpp
 /// #pragma hemtt flag unknown
 /// ```
-pub struct PragmaInvalidFlag {
+pub struct IfHasInclude {
     /// The [`Token`] of the code
     pub(crate) token: Box<Token>,
 }
 
-impl Code for PragmaInvalidFlag {
+impl Code for IfHasInclude {
     fn ident(&self) -> &'static str {
-        "PE22"
+        "PE23"
     }
 
     fn token(&self) -> Option<&Token> {
@@ -27,27 +23,15 @@ impl Code for PragmaInvalidFlag {
     }
 
     fn message(&self) -> String {
-        format!("unknown #pragma flag `{}`", self.token.symbol().to_string(),)
+        "use of `#if __has_include`".to_string()
     }
 
     fn label_message(&self) -> String {
-        format!("unknown #pragma flag `{}`", self.token.symbol().to_string())
+        "use of `#if __has_include`".to_string()
     }
 
     fn help(&self) -> Option<String> {
-        let similar = similar_values(self.token.to_string().as_str(), Flag::as_slice());
-        if similar.is_empty() {
-            None
-        } else {
-            Some(format!(
-                "Did you mean {}?",
-                similar
-                    .iter()
-                    .map(|s| format!("`{s}`"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ))
-        }
+        Some(String::from("use `#pragma hemtt flag pe23_ignore_has_include` to have HEMTT act as if the include was not found"))
     }
 
     fn report_generate(&self) -> Option<String> {
@@ -68,7 +52,7 @@ impl Code for PragmaInvalidFlag {
             ))
             .with_color(color_token)
             .with_message(format!(
-                "unknown #pragma flag `{}`",
+                "use of `{}`",
                 self.token.symbol().to_string().fg(color_token)
             )),
         );
