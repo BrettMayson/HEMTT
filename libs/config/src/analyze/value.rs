@@ -13,6 +13,7 @@ impl Analyze for Value {
         match self {
             Self::Str(s) => s.valid(project),
             Self::Number(n) => n.valid(project),
+            Self::Expression(e) => e.valid(project),
             Self::Array(a) => a.valid(project),
             Self::UnexpectedArray(_) | Self::Invalid(_) => false,
         }
@@ -26,6 +27,7 @@ impl Analyze for Value {
         match self {
             Self::Str(s) => s.warnings(project, processed),
             Self::Number(n) => n.warnings(project, processed),
+            Self::Expression(e) => e.warnings(project, processed),
             Self::Array(a) | Self::UnexpectedArray(a) => a.warnings(project, processed),
             Self::Invalid(_) => vec![],
         }
@@ -35,6 +37,7 @@ impl Analyze for Value {
         match self {
             Self::Str(s) => s.errors(project, processed),
             Self::Number(n) => n.errors(project, processed),
+            Self::Expression(e) => e.errors(project, processed),
             Self::Array(a) | Self::UnexpectedArray(a) => a.errors(project, processed),
             Self::Invalid(invalid) => {
                 // An unquoted string or otherwise invalid value

@@ -11,6 +11,7 @@ impl Rapify for Value {
         let written = match self {
             Self::Str(s) => s.rapify(output, offset),
             Self::Number(n) => n.rapify(output, offset),
+            Self::Expression(e) => e.rapify(output, offset),
             Self::Array(a) => a.rapify(output, offset),
             Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }?;
@@ -22,6 +23,7 @@ impl Rapify for Value {
         match self {
             Self::Str(s) => s.rapified_length(),
             Self::Number(n) => n.rapified_length(),
+            Self::Expression(e) => e.rapified_length(),
             Self::Array(a) => a.rapified_length(),
             Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }
@@ -31,6 +33,7 @@ impl Rapify for Value {
         match self {
             Self::Str(s) => s.rapified_code(),
             Self::Number(n) => n.rapified_code(),
+            Self::Expression(e) => e.rapified_code(),
             Self::Array(a) => a.rapified_code(),
             Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
         }

@@ -2,10 +2,11 @@ use std::ops::Range;
 
 use chumsky::prelude::*;
 
-use crate::{Number, Value};
+use crate::{Expression, Number, Value};
 
 pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
     choice((
+        eval().map(Value::Expression),
         super::array::array(false).map(Value::UnexpectedArray),
         super::str::string('"').map(Value::Str),
         math().map(Value::Number),
@@ -44,6 +45,31 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     })
 }
 
+/// capture anything in recursive brackets
+/// (1 + 2 * (3 + 4))
+pub fn eval() -> impl Parser<char, Expression, Error = Simple<char>> {
+    just("__EVAL".to_string())
+        .ignore_then(recursive(|eval| {
+            eval.repeated()
+                .at_least(1)
+                // .collect::<String>()
+                .map(|s| format!("({})", s.join("")))
+                .delimited_by(just("(".to_string()), just(")".to_string()))
+                .or(none_of("()".to_string())
+                    .repeated()
+                    .at_least(1)
+                    .collect::<String>())
+        }))
+        .map_with_span(|expr, span| Expression {
+            value: expr
+                .strip_prefix('(')
+                .and_then(|s| s.strip_suffix(')'))
+                .expect("eval should be wrapped in brackets")
+                .to_string(),
+            span,
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{Number, Str, Value};
@@ -79,6 +105,24 @@ mod tests {
                 value: "abc\ndef".to_string(),
                 span: 0..9
             }))
+        );
+    }
+
+    #[test]
+    fn test_eval() {
+        assert_eq!(
+            eval().parse("__EVAL(1 + 2)"),
+            Ok(Expression {
+                value: "1 + 2".to_string(),
+                span: 0..13
+            })
+        );
+        assert_eq!(
+            eval().parse("__EVAL(2 * (1 + 1))"),
+            Ok(Expression {
+                value: "2 * (1 + 1)".to_string(),
+                span: 0..19
+            })
         );
     }
 

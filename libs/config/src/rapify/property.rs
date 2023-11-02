@@ -17,6 +17,7 @@ impl Rapify for Property {
                 Self::Entry { value, .. } => match value {
                     Value::Str(s) => s.rapified_length(),
                     Value::Number(n) => n.rapified_length(),
+                    Value::Expression(e) => e.rapified_length(),
                     Value::Array(a) => a.rapified_length(),
                     Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
                 },
@@ -39,6 +40,7 @@ impl Property {
             Self::Entry { value, .. } => match value {
                 Value::Str(s) => vec![1, s.rapified_code()],
                 Value::Number(n) => vec![1, n.rapified_code()],
+                Value::Expression(e) => vec![1, e.rapified_code()],
                 Value::Array(a) => {
                     if a.expand {
                         vec![5, 1, 0, 0, 0]
