@@ -31,6 +31,8 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - run: ECHO "true" >> $RELEASE
+        if: startsWith(github.ref, 'refs/tags/')
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
