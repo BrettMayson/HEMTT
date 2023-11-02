@@ -31,8 +31,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - run: ECHO "true" >> $RELEASE
-        if: startsWith(github.ref, 'refs/tags/')
+      - run: echo "RELEASE=true" >> $GITHUB_ENV
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os.name == 'ubuntu'
+      - run: echo "RELEASE=true" >> $env:GITHUB_ENV
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os.name == 'windows'
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
