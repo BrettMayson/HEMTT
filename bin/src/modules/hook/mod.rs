@@ -178,7 +178,7 @@ impl Hooks {
             error!("[{inner_name}] {s}");
             *inner_told_to_fail.lock().unwrap() = true;
         });
-        engine.run_with_scope(&mut scope, script).unwrap();
+        engine.run_with_scope(&mut scope, script)?;
         if *told_to_fail.lock().unwrap() {
             return Err(Error::HookFatal(name));
         }

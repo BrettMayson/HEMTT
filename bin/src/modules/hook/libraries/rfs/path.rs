@@ -1,5 +1,5 @@
 use rhai::plugin::{
-    export_module, mem, Dynamic, FnAccess, FnNamespace, ImmutableString, Module, NativeCallContext,
+    export_module, mem, FnAccess, FnNamespace, ImmutableString, Module, NativeCallContext,
     PluginFunction, RhaiResult, TypeId,
 };
 
@@ -8,6 +8,8 @@ use rhai::plugin::{
 #[export_module]
 pub mod path_functions {
     use std::path::PathBuf;
+
+    use rhai::Dynamic;
 
     #[rhai_fn(global, pure)]
     pub fn join(path: &mut PathBuf, other: &str) -> PathBuf {
@@ -29,9 +31,19 @@ pub mod path_functions {
         path.is_file()
     }
 
+    #[rhai_fn(global, pure)]
+    pub fn parent(path: &mut PathBuf) -> PathBuf {
+        path.parent().unwrap().to_path_buf()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn file_name(path: &mut PathBuf) -> String {
+        path.file_name().unwrap().to_str().unwrap().to_string()
+    }
+
     #[rhai_fn(global, name = "to_string", name = "to_debug", pure)]
     pub fn to_string(path: &mut PathBuf) -> String {
-        path.display().to_string()
+        path.display().to_string().replace('\\', "/")
     }
 
     #[rhai_fn(global, name = "copy", pure)]
@@ -50,5 +62,17 @@ pub mod path_functions {
         } else {
             std::fs::rename(path, other).is_ok()
         }
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn list(path: &mut PathBuf) -> rhai::Array {
+        let mut list = Vec::new();
+        if path.is_dir() {
+            for entry in std::fs::read_dir(path).expect("can't read dir") {
+                let entry = entry.expect("entry failed");
+                list.push(Dynamic::from(entry.path()));
+            }
+        }
+        list
     }
 }

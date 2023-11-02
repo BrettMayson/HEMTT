@@ -6,7 +6,7 @@ use rhai::plugin::{
 #[allow(clippy::needless_pass_by_ref_mut)]
 #[export_module]
 pub mod path_functions {
-    use rhai::EvalAltResult;
+    use rhai::{EvalAltResult, Array};
     use vfs::VfsPath;
 
     #[rhai_fn(global, pure, return_raw)]
@@ -29,9 +29,19 @@ pub mod path_functions {
         path.is_file().map_err(|e| e.to_string().into())
     }
 
+    #[rhai_fn(global, pure)]
+    pub fn parent(path: &mut VfsPath) -> VfsPath {
+        path.parent()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn file_name(path: &mut VfsPath) -> String {
+        path.filename()
+    }
+
     #[rhai_fn(global, name = "to_string", name = "to_debug", pure)]
     pub fn to_string(path: &mut VfsPath) -> String {
-        path.as_str().to_string()
+        path.as_str().to_string().replace('\\', "/")
     }
 
     #[rhai_fn(global, return_raw)]
@@ -60,5 +70,16 @@ pub mod path_functions {
                 .err()
         };
         res.map_or_else(|| Ok(true), Err)
+    }
+
+    #[rhai_fn(global, pure, return_raw)]
+    pub fn list(path: &mut VfsPath) -> Result<Array, Box<EvalAltResult>> {
+        let mut list = Vec::new();
+        if path.is_dir().map_err(|e| e.to_string())? {
+            for entry in path.read_dir().unwrap() {
+                list.push(Dynamic::from(entry));
+            }
+        }
+        Ok(list)
     }
 }
