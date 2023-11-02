@@ -1,5 +1,5 @@
 use rhai::plugin::{
-    export_module, mem, FnAccess, FnNamespace, ImmutableString, Module, NativeCallContext,
+    export_module, mem, Dynamic, FnAccess, FnNamespace, ImmutableString, Module, NativeCallContext,
     PluginFunction, RhaiResult, TypeId,
 };
 
@@ -8,8 +8,6 @@ use rhai::plugin::{
 #[export_module]
 pub mod path_functions {
     use std::path::PathBuf;
-
-    use rhai::Dynamic;
 
     #[rhai_fn(global, pure)]
     pub fn join(path: &mut PathBuf, other: &str) -> PathBuf {
