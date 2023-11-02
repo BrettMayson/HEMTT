@@ -24,18 +24,7 @@ pub fn cli() -> Command {
     #[allow(unused_mut)]
     let mut global = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .version({
-            let mut base = env!("CARGO_PKG_VERSION").to_string();
-            if option_env!("CI").is_none() {
-                base.push_str("-local");
-            } else if option_env!("RELEASE").is_none() {
-                base.push_str("-dev");
-            }
-            if cfg!(debug_assertions) {
-                base.push_str("-debug");
-            }
-            Box::leak(Box::new(base)).as_str()
-        })
+        .version(env!("HEMTT_VERSION"))
         .subcommand_required(false)
         .arg_required_else_help(true)
         .subcommand(commands::new::cli())
@@ -111,7 +100,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
 
-    trace!("version: {}", env!("CARGO_PKG_VERSION"));
+    trace!("version: {}", env!("HEMTT_VERSION"));
     trace!("platform: {}", std::env::consts::OS);
 
     if let Some(threads) = matches.get_one::<String>("threads") {
