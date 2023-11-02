@@ -33,7 +33,7 @@ mod tests {
     fn str() {
         let mut buffer = Vec::new();
         let written = Expression {
-            value: "getScreenSize".to_string(),
+            value: "getResolution".to_string(),
             span: 0..14,
         }
         .rapify(&mut buffer, 0)
@@ -41,7 +41,7 @@ mod tests {
         assert_eq!(written, 14);
         assert_eq!(
             buffer,
-            vec![103, 101, 116, 83, 99, 114, 101, 101, 110, 83, 105, 122, 101, 0]
+            vec![103, 101, 116, 82, 101, 115, 111, 108, 117, 116, 105, 111, 110, 0]
         );
     }
 }

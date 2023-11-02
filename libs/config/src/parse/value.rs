@@ -45,14 +45,11 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     })
 }
 
-/// capture anything in recursive brackets
-/// (1 + 2 * (3 + 4))
 pub fn eval() -> impl Parser<char, Expression, Error = Simple<char>> {
     just("__EVAL".to_string())
         .ignore_then(recursive(|eval| {
             eval.repeated()
                 .at_least(1)
-                // .collect::<String>()
                 .map(|s| format!("({})", s.join("")))
                 .delimited_by(just("(".to_string()), just(")".to_string()))
                 .or(none_of("()".to_string())
