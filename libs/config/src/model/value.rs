@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use super::{Array, Number, Str};
+use super::{Array, Expression, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
 /// A value in a config file
@@ -17,6 +17,9 @@ pub enum Value {
     /// my_number = 1;
     /// ```
     Number(Number),
+    /// An expression
+    /// This is ran by the game at startup
+    Expression(Expression),
     /// An array value
     ///
     /// ```cpp
@@ -41,6 +44,7 @@ impl Value {
         match self {
             Self::Str(s) => s.span.clone(),
             Self::Number(n) => n.span(),
+            Self::Expression(e) => e.span.clone(),
             Self::Array(a) | Self::UnexpectedArray(a) => a.span.clone(),
             Self::Invalid(span) => span.clone(),
         }

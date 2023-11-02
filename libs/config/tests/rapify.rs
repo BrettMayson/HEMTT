@@ -63,6 +63,7 @@ fn check(dir: &str) {
 bootstrap!(ace_main);
 bootstrap!(cba_multiline);
 bootstrap!(delete_class);
+bootstrap!(eval);
 bootstrap!(external_class);
 bootstrap!(inheritence_array_extend);
 bootstrap!(join_digit);

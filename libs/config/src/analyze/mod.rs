@@ -5,6 +5,7 @@ mod array;
 mod class;
 pub mod codes;
 mod config;
+mod expression;
 mod number;
 mod property;
 mod str;
