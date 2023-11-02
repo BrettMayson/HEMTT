@@ -96,7 +96,7 @@ This warning is emitted when a `CfgMagazineWells` entry is not found in `CfgMaga
 In this example, `abe_plantain` is not found in `CfgMagazines`, and a warning is emitted.
 
 ```admonish note title=""
-Only entries that start with the project's [prefix](../configuration/index.md#minimum-configuration). No warning will be emitted for `external_banana`.
+Only entries that start with the project's [prefix](../configuration/index.md#minimum-configuration) are checked. No warning will be emitted for `external_banana`.
 ```
 
 ```cpp

@@ -1,8 +1,8 @@
 # File System
 
-HEMTT has two types file systems, which one is used depends on the context.
+HEMTT has two types of file systems, which one is used depends on the context.
 
-[Scripts](../scripts/index.md) always use the real file system, as the run outside of the build process.
+[Scripts](../scripts/index.md) always use the real file system, as they run outside of the build process.
 
 [Hooks](../hooks/index.md) use the virtual file system during the `pre_build` and `post_build` phases, and the real file system during the `pre_release` and `post_release` phases.
 
@@ -12,7 +12,7 @@ HEMTT has two types file systems, which one is used depends on the context.
 
 This is useful for modifying files with find-and-replace, or adding files to the build output, without the need for cleaning up after the build.
 
-When using the virtual files system, the `HEMTT_VFS` constant is available. It is used as the root path.
+When using the virtual file system, the `HEMTT_VFS` constant is available. It is used as the root path.
 
 **.hemtt/project.toml**
 

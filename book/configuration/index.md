@@ -27,7 +27,7 @@ You can additionally configure optional settings for your project.
 
 ### Main Prefix
 
-The `mainprefix` option allows you to set a the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](../commands/launch.md).
+The `mainprefix` option allows you to set the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](../commands/launch.md).
 
 **.hemtt/project.toml**
 
