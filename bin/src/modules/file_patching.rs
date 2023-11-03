@@ -23,7 +23,11 @@ impl Module for FilePatching {
                     &ctx.build_folder()
                         .join("addons")
                         .join(addon.name().replace('/', "\\")),
-                    &ctx.project_folder().join(addon.folder().replace('/', "\\")),
+                    &ctx.project_folder().join(if cfg!(windows) {
+                        addon.folder().replace('/', "\\")
+                    } else {
+                        addon.folder()
+                    }),
                 )
             })
             .collect::<Result<(), Error>>()
