@@ -796,6 +796,7 @@ dependencies = [
  "hemtt-preprocessor",
  "hemtt-signing",
  "num_cpus",
+ "paste",
  "rayon",
  "regex",
  "reqwest",

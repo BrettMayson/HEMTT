@@ -103,27 +103,15 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             return Err(Error::PresetNotFound(preset.to_string()));
         }
         let html = std::fs::read_to_string(html)?;
-        let mod_regex = Regex::new(
-            r#"(?m)href="https?:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
-        )
-        .unwrap();
-        for id in mod_regex.captures_iter(&html).map(|c| c[1].to_string()) {
-            if !workshop.contains(&id) {
-                workshop.push(id);
+        let (preset_mods, preset_dlc) = read_preset(preset, &html);
+        for load_mod in preset_mods {
+            if !workshop.contains(&load_mod) {
+                workshop.push(load_mod);
             }
         }
-        let dlc_regex =
-            Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#).unwrap();
-        for id in dlc_regex.captures_iter(&html).map(|c| c[1].to_string()) {
-            let Ok(preset_dlc) = DLC::try_from(id.clone()) else {
-                warn!(
-                    "Preset {} requires DLC {}, but HEMTT does not recognize it",
-                    preset, id
-                );
-                continue;
-            };
-            if !launch.dlc().contains(&preset_dlc) {
-                dlc.push(preset_dlc);
+        for load_dlc in preset_dlc {
+            if !dlc.contains(&load_dlc) {
+                dlc.push(load_dlc);
             }
         }
     }
@@ -219,4 +207,34 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     .spawn()?;
 
     Ok(())
+}
+
+/// Read a preset file and return the mods and DLCs
+pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
+    let mut workshop = Vec::new();
+    let mut dlc = Vec::new();
+    let mod_regex = Regex::new(
+        r#"(?m)href="https?:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
+    )
+    .unwrap();
+    for id in mod_regex.captures_iter(html).map(|c| c[1].to_string()) {
+        if !workshop.contains(&id) {
+            workshop.push(id);
+        }
+    }
+    let dlc_regex =
+        Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#).unwrap();
+    for id in dlc_regex.captures_iter(html).map(|c| c[1].to_string()) {
+        let Ok(preset_dlc) = DLC::try_from(id.clone()) else {
+            warn!(
+                "Preset {} requires DLC {}, but HEMTT does not recognize it",
+                name, id
+            );
+            continue;
+        };
+        if !dlc.contains(&preset_dlc) {
+            dlc.push(preset_dlc);
+        }
+    }
+    (workshop, dlc)
 }

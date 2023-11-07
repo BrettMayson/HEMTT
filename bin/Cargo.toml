@@ -48,3 +48,6 @@ zip = { workspace = true }
 [target.'cfg(windows)'.dependencies]
 enable-ansi-support = "0.2.1"
 winreg = "0.51.0"
+
+[dev-dependencies]
+paste = "1.0.14"
