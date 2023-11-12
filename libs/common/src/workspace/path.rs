@@ -194,6 +194,21 @@ impl WorkspacePath {
             .collect())
     }
 
+    /// Read the files in a directory
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the directory could not be read
+    pub fn read_dir(&self) -> Result<Vec<Self>, Error> {
+        Ok(self
+            .path
+            .read_dir()?
+            .map(move |p| Self {
+                path: p,
+                workspace: self.workspace.clone(),
+            })
+            .collect())
+    }
+
     /// Return the metadata for the path
     ///
     /// # Errors
