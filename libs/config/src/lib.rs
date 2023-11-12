@@ -59,6 +59,12 @@ impl ConfigReport {
     }
 
     #[must_use]
+    /// Consumes the report and returns the config
+    pub fn into_config(self) -> Config {
+        self.config
+    }
+
+    #[must_use]
     /// Get the validity
     pub const fn valid(&self) -> bool {
         self.valid
