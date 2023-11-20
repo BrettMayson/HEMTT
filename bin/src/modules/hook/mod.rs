@@ -18,7 +18,7 @@ mod time;
 ///
 /// # Errors
 /// [`Error::Version`] if the version is not a valid semver version
-pub fn scope(ctx: &Context, virtual_fs: bool) -> Result<Scope, Error> {
+pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     scope.push_constant("HEMTT_VERSION", env!("HEMTT_VERSION"));
     let version = ctx.config().version().get(ctx.workspace().vfs())?;
@@ -35,7 +35,7 @@ pub fn scope(ctx: &Context, virtual_fs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_PROJECT_NAME", ctx.config().name().to_string());
     scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
-    if virtual_fs {
+    if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
     }
     scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
@@ -48,9 +48,9 @@ pub fn scope(ctx: &Context, virtual_fs: bool) -> Result<Scope, Error> {
     Ok(scope)
 }
 
-fn engine(virtual_fs: bool) -> Engine {
+fn engine(vfs: bool) -> Engine {
     let mut engine = Engine::new();
-    if virtual_fs {
+    if vfs {
         let virt = libraries::VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
     }
@@ -79,7 +79,7 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_folder(self, ctx: &Context, name: &str, virtual_fs: bool) -> Result<(), Error> {
+    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
         if !self.0 {
             return Ok(());
         }
@@ -113,7 +113,7 @@ impl Hooks {
                     file.file_name().to_str().expect("Invalid file name")
                 ),
                 &std::fs::read_to_string(file.path())?,
-                virtual_fs,
+                vfs,
             )?;
             ctx.config().version().invalidate();
         }
@@ -145,9 +145,9 @@ impl Hooks {
         res
     }
 
-    fn run(ctx: &Context, name: String, script: &str, virtual_fs: bool) -> Result<(), Error> {
-        let mut engine = engine(virtual_fs);
-        let mut scope = scope(ctx, virtual_fs)?;
+    fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<(), Error> {
+        let mut engine = engine(vfs);
+        let mut scope = scope(ctx, vfs)?;
         let told_to_fail = Arc::new(Mutex::new(false));
         let inner_name = name.clone();
         engine.on_debug(move |x, _src, _pos| {
