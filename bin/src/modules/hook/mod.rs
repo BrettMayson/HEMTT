@@ -20,21 +20,6 @@ mod time;
 /// [`Error::Version`] if the version is not a valid semver version
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
-    scope.push_constant("HEMTT_VERSION", env!("HEMTT_VERSION"));
-    let version = ctx.config().version().get(ctx.workspace().vfs())?;
-    scope.push_constant("HEMTT_PROJECT_VERSION", version.to_string());
-    scope.push_constant("HEMTT_PROJECT_VERSION_MAJOR", version.major());
-    scope.push_constant("HEMTT_PROJECT_VERSION_MINOR", version.minor());
-    scope.push_constant("HEMTT_PROJECT_VERSION_PATCH", version.patch());
-    if let Some(build) = version.build() {
-        scope.push_constant("HEMTT_PROJECT_VERSION_HASBUILD", true);
-        scope.push_constant("HEMTT_PROJECT_VERSION_BUILD", build);
-    } else {
-        scope.push_constant("HEMTT_PROJECT_VERSION_HASBUILD", false);
-    }
-    scope.push_constant("HEMTT_PROJECT_NAME", ctx.config().name().to_string());
-    scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
-    scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
     }
