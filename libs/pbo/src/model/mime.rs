@@ -37,3 +37,14 @@ impl Mime {
         }
     }
 }
+
+impl std::fmt::Display for Mime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Vers => write!(f, "Vers"),
+            Self::Cprs => write!(f, "Cprs"),
+            Self::Enco => write!(f, "Enco"),
+            Self::Blank => write!(f, "Blank"),
+        }
+    }
+}

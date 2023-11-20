@@ -8,6 +8,7 @@ pub fn cli() -> Command {
         .about("Use HEMTT standalone utils")
         .subcommand_required(false)
         .arg_required_else_help(true)
+        .subcommand(utils::inspect::cli())
         .subcommand(utils::verify::cli())
 }
 
@@ -17,6 +18,7 @@ pub fn cli() -> Command {
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     match matches.subcommand() {
+        Some(("inspect", matches)) => utils::inspect::execute(matches),
         Some(("verify", matches)) => utils::verify::execute(matches),
         _ => unreachable!(),
     }
