@@ -6,6 +6,7 @@ use std::{
 
 use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
+use hemtt_signing::{BIPublicKey, BISign};
 use term_table::{
     row::Row,
     table_cell::{Alignment, TableCell},
@@ -18,7 +19,7 @@ use crate::Error;
 pub fn cli() -> Command {
     Command::new("inspect")
         .about("Inspect an Arma file")
-        .long_about("Provides information about supported files. Supported: .pbo")
+        .long_about("Provides information about supported files. Supported: pbo, bikey, bisign")
         .arg(
             clap::Arg::new("file")
                 .help("File to inspect")
@@ -44,11 +45,11 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         "pbo" => {
             pbo(File::open(&path)?)?;
         }
-        "paa" => {
-            println!(".paa files are not supported yet");
+        "bikey" => {
+            bikey(File::open(&path)?, &path)?;
         }
-        "bin" => {
-            println!(".bin files are not supported yet");
+        "bisign" => {
+            bisign(File::open(&path)?, &path)?;
         }
         _ => {
             let mut file = File::open(&path)?;
@@ -61,12 +62,55 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
                 pbo(file)?;
                 return Ok(());
             }
+            // BiSign
+            if BISign::read(&mut file).is_ok() {
+                warn!("The file appears to be a BiSign but does not have the .bisign extension.");
+                file.seek(std::io::SeekFrom::Start(0))?;
+                bisign(file, &path)?;
+                return Ok(());
+            }
+            file.seek(std::io::SeekFrom::Start(0))?;
+            // BiPublicKey
+            if BIPublicKey::read(&mut file).is_ok() {
+                warn!("The file appears to be a BiPublicKey but does not have the .bikey extension.");
+                file.seek(std::io::SeekFrom::Start(0))?;
+                bikey(file, &path)?;
+                return Ok(());
+            }
             println!("Unsupported file type");
         }
     }
     Ok(())
 }
 
+/// Prints information about a [`BIPublicKey`] to stdout
+///
+/// # Errors
+/// [`hemtt_signing::Error`] if the file is not a valid [`BIPublicKey`]
+pub fn bikey(mut file: File, path: &PathBuf) -> Result<BIPublicKey, Error> {
+    let publickey = BIPublicKey::read(&mut file)?;
+    println!("Public Key: {path:?}");
+    println!("  - Authority: {}", publickey.authority());
+    println!("  - Length: {}", publickey.length());
+    println!("  - Exponent: {}", publickey.exponent());
+    println!("  - Modulus: {}", publickey.modulus_display(13));
+    Ok(publickey)
+}
+
+/// Prints information about a [`BISign`] to stdout
+///
+/// # Errors
+/// [`hemtt_signing::Error`] if the file is not a valid [`BISign`]
+pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
+    let signature = BISign::read(&mut file)?;
+    println!("Signature: {path:?}");
+    println!("  - Authority: {}", signature.authority());
+    println!("  - Version: {}", signature.version());
+    println!("  - Length: {}", signature.length());
+    println!("  - Exponent: {}", signature.exponent());
+    println!("  - Modulus: {}", signature.modulus_display(13));
+    Ok(signature)
+}
 fn pbo(file: File) -> Result<(), Error> {
     let mut pbo = ReadablePbo::from(file)?;
     println!("Properties");

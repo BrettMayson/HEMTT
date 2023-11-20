@@ -2,9 +2,11 @@ use std::path::PathBuf;
 
 use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
-use hemtt_signing::{BIPublicKey, BISign};
 
-use crate::Error;
+use crate::{
+    utils::inspect::{bikey, bisign},
+    Error,
+};
 
 #[must_use]
 pub fn cli() -> Command {
@@ -33,7 +35,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     debug!("Reading PBO: {:?}", &pbo_path);
     let mut pbo = ReadablePbo::from(std::fs::File::open(&pbo_path)?)?;
     debug!("Reading BIKey: {:?}", &bikey_path);
-    let publickey = BIPublicKey::read(&mut std::fs::File::open(&bikey_path)?)?;
+    let publickey = bikey(std::fs::File::open(&bikey_path)?, &bikey_path)?;
 
     let signature_path = {
         let mut pbo_path = pbo_path.clone();
@@ -41,13 +43,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         pbo_path
     };
     debug!("Reading Signature: {:?}", &signature_path);
-    let signature = BISign::read(&mut std::fs::File::open(&signature_path)?)?;
-
-    println!("Public Key: {:?}", &bikey_path);
-    println!("  - Authority: {}", publickey.authority());
-    println!("  - Length: {}", publickey.length());
-    println!("  - Exponent: {}", publickey.exponent());
-    println!("  - Modulus: {}", publickey.modulus_display(17));
+    println!();
+    let signature = bisign(std::fs::File::open(&signature_path)?, &signature_path)?;
 
     println!();
     println!("PBO: {pbo_path:?}");
@@ -70,14 +67,6 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     } else if stored != actual {
         println!("Verification Warning: PBO reports an invalid hash");
     }
-
-    println!();
-    println!("Signature: {signature_path:?}");
-    println!("  - Authority: {}", signature.authority());
-    println!("  - Version: {}", signature.version());
-    println!("  - Length: {}", signature.length());
-    println!("  - Exponent: {}", signature.exponent());
-    println!("  - Modulus: {}", signature.modulus_display(17));
 
     match publickey.verify(&mut pbo, &signature) {
         Ok(()) => println!("Verified!"),
