@@ -5,6 +5,9 @@ edition = "2021"
 description = "A library for common Hemtt functionality"
 license = "GPL-2.0"
 
+[lints]
+workspace = true
+
 [dependencies]
 git2 = { workspace = true }
 serde = { workspace = true }

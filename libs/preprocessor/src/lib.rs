@@ -1,6 +1,3 @@
-#![deny(clippy::all, clippy::nursery, missing_docs)]
-#![warn(clippy::pedantic)]
-
 //! HEMTT - Arma 3 Preprocessor
 
 mod codes;

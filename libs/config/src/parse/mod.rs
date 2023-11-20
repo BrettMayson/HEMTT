@@ -33,8 +33,8 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert_eq!(config().parse(r#""#,), Ok(Config(vec![]),));
-        assert_eq!(config().parse(r#"   "#,), Ok(Config(vec![]),));
+        assert_eq!(config().parse(r"",), Ok(Config(vec![]),));
+        assert_eq!(config().parse(r"   ",), Ok(Config(vec![]),));
     }
 
     #[test]

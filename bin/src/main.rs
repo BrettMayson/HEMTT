@@ -1,7 +1,4 @@
-#![deny(clippy::all, clippy::nursery)]
-#![warn(clippy::pedantic)]
-
-use tracing::{error, warn};
+use tracing::error;
 
 fn main() {
     std::panic::set_hook(Box::new(|panic| {
@@ -26,7 +23,7 @@ It is always best to the include the log and a link to your project when reporti
 
     #[cfg(windows)]
     if enable_ansi_support::enable_ansi_support().is_err() {
-        warn!("Failed to enable ANSI support, colored output will not work");
+        tracing::warn!("Failed to enable ANSI support, colored output will not work");
     }
 
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {

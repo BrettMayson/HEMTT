@@ -1,6 +1,3 @@
-#![deny(clippy::all, clippy::nursery, missing_docs)]
-#![warn(clippy::pedantic)]
-
 //! Versioning for Arma mods
 
 use std::fmt::{Display, Formatter};
@@ -308,12 +305,12 @@ mod tests {
 
     #[test]
     fn test_script_version() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
             #define MINOR 2
             #define PATCH 3
             #define BUILD 4
-        "#;
+        ";
         let version = Version::try_from_script_version(content).unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -325,12 +322,12 @@ mod tests {
 
     #[test]
     fn test_script_version_comment() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
             #define MINOR 2
             #define PATCHLVL 3 // some comment
             #define BUILD 4
-        "#;
+        ";
         let version = Version::try_from_script_version(content).unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -341,11 +338,11 @@ mod tests {
 
     #[test]
     fn test_script_version_no_build() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
             #define MINOR 2
             #define PATCH 3
-        "#;
+        ";
         let version = Version::try_from_script_version(content).unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -356,11 +353,11 @@ mod tests {
 
     #[test]
     fn test_script_version_invalid_component() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
             #define MINOR 2
             #define PATCHLVL a
-        "#;
+        ";
         let version = Version::try_from_script_version(content);
         assert!(version.is_err());
         assert_eq!(
@@ -371,9 +368,9 @@ mod tests {
 
     #[test]
     fn test_script_version_missing_minor() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
-        "#;
+        ";
         let version = Version::try_from_script_version(content);
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedMinor);
@@ -381,10 +378,10 @@ mod tests {
 
     #[test]
     fn test_script_version_missing_patch() {
-        let content = r#"
+        let content = r"
             #define MAJOR 1
             #define MINOR 2
-        "#;
+        ";
         let version = Version::try_from_script_version(content);
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedPatch);
@@ -392,10 +389,10 @@ mod tests {
 
     #[test]
     fn test_script_version_missing_major() {
-        let content = r#"
+        let content = r"
             #define MINOR 2
             #define PATCH 3
-        "#;
+        ";
         let version = Version::try_from_script_version(content);
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedMajor);

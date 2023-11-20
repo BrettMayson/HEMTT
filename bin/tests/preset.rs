@@ -18,9 +18,7 @@ fn preset(name: &str, mods: usize, dlc: &[DLC]) {
     let html = PathBuf::from("tests/presets")
         .join(name)
         .with_extension("html");
-    if !html.exists() {
-        panic!("Preset not found: {}", name);
-    }
+    assert!(html.exists(), "Preset not found: {name}");
     let html = std::fs::read_to_string(html).unwrap();
     let (preset_mods, preset_dlc) = read_preset(name, &html);
     assert_eq!(preset_mods.len(), mods);

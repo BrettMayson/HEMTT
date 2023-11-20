@@ -2,6 +2,9 @@ use std::{fs::File, io::Read};
 
 use hemtt_pbo::{Checksum, Header, Mime, ReadablePbo};
 
+#[must_use]
+/// # Panics
+/// Will panic if there is an issue with the test
 pub fn pbo(
     file: File,
     file_count: usize,
@@ -37,24 +40,28 @@ pub fn pbo(
 //     assert_eq!(original.checksum(), writeable.checksum().unwrap());
 // }
 
+/// # Panics
+/// Will panic if there is an issue with the test
 pub fn header(
     header: &Header,
     filename: &str,
-    method: Mime,
+    method: &Mime,
     original: u32,
     reserved: u32,
     timestamp: u32,
     size: u32,
 ) {
     assert_eq!(header.filename(), filename);
-    assert_eq!(header.mime(), &method);
+    assert_eq!(header.mime(), method);
     assert_eq!(header.original(), original);
     assert_eq!(header.reserved(), reserved);
     assert_eq!(header.timestamp(), timestamp);
     assert_eq!(header.size(), size);
 }
 
-pub fn file(pbo: &mut ReadablePbo<File>, file: &str, content: String) {
+/// # Panics
+/// Will panic if there is an issue with the test
+pub fn file(pbo: &mut ReadablePbo<File>, file: &str, content: &str) {
     let mut cursor = pbo.file(file).unwrap().unwrap();
     let mut data = String::new();
     cursor.read_to_string(&mut data).unwrap();

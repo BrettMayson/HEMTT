@@ -19,7 +19,7 @@ fn ace_weather_cba6f72c() {
     header(
         pbo.files().first().unwrap(),
         "$PBOPREFIX$.backup",
-        Mime::Blank,
+        &Mime::Blank,
         20,
         0,
         1_543_422_611,
@@ -28,7 +28,7 @@ fn ace_weather_cba6f72c() {
     header(
         pbo.header("$PBOPREFIX$.backup").unwrap(),
         "$PBOPREFIX$.backup",
-        Mime::Blank,
+        &Mime::Blank,
         20,
         0,
         1_543_422_611,
@@ -37,7 +37,7 @@ fn ace_weather_cba6f72c() {
     file(
         &mut pbo,
         "XEH_preStart.sqf",
-        "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
+        "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n",
     );
     let mut new_pbo = WritablePbo::new();
     let mut new_files = std::collections::HashMap::new();
@@ -85,7 +85,7 @@ fn ace_weather_8bd4922f() {
     header(
         pbo.files().first().unwrap(),
         "$PBOPREFIX$.backup",
-        Mime::Blank,
+        &Mime::Blank,
         20,
         0,
         1_615_389_445,
@@ -94,7 +94,7 @@ fn ace_weather_8bd4922f() {
     header(
         pbo.header("$PBOPREFIX$.backup").unwrap(),
         "$PBOPREFIX$.backup",
-        Mime::Blank,
+        &Mime::Blank,
         20,
         0,
         1_615_389_445,
@@ -103,6 +103,6 @@ fn ace_weather_8bd4922f() {
     file(
         &mut pbo,
         "XEH_preStart.sqf",
-        "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n".to_string(),
+        "#include \"script_component.hpp\"\r\n\r\n#include \"XEH_PREP.hpp\"\r\n",
     );
 }

@@ -1,6 +1,3 @@
-#![deny(clippy::all, clippy::nursery, missing_docs)]
-#![warn(clippy::pedantic)]
-
 //! HEMTT - Arma 3 Signing
 
 // Parts of the following code is derivative work of the code from the armake2 project by KoffeinFlummi,

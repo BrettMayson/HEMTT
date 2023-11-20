@@ -12,7 +12,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("preprocess - ace dogtags", |b| {
         b.iter(|| {
             hemtt_preprocessor::Processor::run(&source).unwrap();
-        })
+        });
     });
 }
 

@@ -44,6 +44,9 @@ pub fn cli() -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
+///
+/// # Panics
+/// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
@@ -210,6 +213,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 }
 
 /// Read a preset file and return the mods and DLCs
+///
+/// # Panics
+/// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
     let mut workshop = Vec::new();
     let mut dlc = Vec::new();

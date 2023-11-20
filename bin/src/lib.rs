@@ -1,6 +1,3 @@
-#![deny(clippy::all, clippy::nursery)]
-#![warn(clippy::pedantic)]
-
 use clap::{ArgAction, ArgMatches, Command};
 use context::Context;
 pub use error::Error;

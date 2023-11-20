@@ -1,5 +1,3 @@
-#![deny(clippy::all, clippy::nursery, missing_docs)]
-#![warn(clippy::pedantic)]
 #![allow(clippy::cast_possible_truncation, clippy::cast_lossless)]
 
 //! HEMTT - Arma 3 PBO Writer/Reader

@@ -8,5 +8,5 @@ pub fn main() {
     if cfg!(debug_assertions) {
         base.push_str("-debug");
     }
-    println!("cargo:rustc-env=HEMTT_VERSION={}", base);
+    println!("cargo:rustc-env=HEMTT_VERSION={base}");
 }
