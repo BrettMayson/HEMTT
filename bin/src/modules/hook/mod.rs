@@ -37,12 +37,11 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
-    } else {
-        scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
-        scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
     }
+    scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
+    scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
+    scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
+    scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
 
     scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
 
@@ -54,10 +53,8 @@ fn engine(vfs: bool) -> Engine {
     if vfs {
         let virt = libraries::VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
-    } else {
-        let real = libraries::RfsPackage::new();
-        engine.register_static_module("hemtt_rfs", real.as_shared_module());
     }
+    engine.register_static_module("hemtt_rfs", libraries::RfsPackage::new().as_shared_module());
     engine.register_static_module("hemtt", libraries::HEMTTPackage::new().as_shared_module());
     engine.register_fn("date", time::date);
     engine
@@ -195,7 +192,7 @@ impl Module for Hooks {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
         if self.0 {
             for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
-                let engine = engine(phase.ends_with("build"));
+                let engine = engine(phase != &"post_release");
                 let dir = ctx.hemtt_folder().join("hooks").join(phase);
                 if !dir.exists() {
                     continue;
@@ -220,7 +217,7 @@ impl Module for Hooks {
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre_release", false)
+        self.run_folder(ctx, "pre_release", true)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<(), Error> {
