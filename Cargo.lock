@@ -800,6 +800,7 @@ dependencies = [
  "serde",
  "serde_json",
  "steamlocate",
+ "term-table",
  "time",
  "tracing",
  "tracing-subscriber",
@@ -2137,6 +2138,17 @@ dependencies = [
  "redox_syscall",
  "rustix",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "term-table"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5e59d7fb313157de2a568be8d81e4d7f9af6e50e697702e8e00190a6566d3b8"
+dependencies = [
+ "lazy_static",
+ "regex",
+ "unicode-width",
 ]
 
 [[package]]
