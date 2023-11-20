@@ -44,22 +44,26 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let signature = BISign::read(&mut std::fs::File::open(&signature_path)?)?;
 
     println!("Public Key: {:?}", &bikey_path);
-    println!("\tAuthority: {}", publickey.authority());
-    println!("\tLength: {}", publickey.length());
-    println!("\tExponent: {}", publickey.exponent());
-    println!("\tModulus: {}", publickey.modulus_display(17));
+    println!("  - Authority: {}", publickey.authority());
+    println!("  - Length: {}", publickey.length());
+    println!("  - Exponent: {}", publickey.exponent());
+    println!("  - Modulus: {}", publickey.modulus_display(17));
 
     println!();
     println!("PBO: {pbo_path:?}");
     let stored = *pbo.checksum();
-    println!("\tStored Hash:  {stored:?}");
+    println!("  - Stored Hash:  {stored:?}");
     let actual = pbo.gen_checksum().unwrap();
-    println!("\tActual Hash:  {actual:?}");
-    println!("\tProperties");
+    println!("  - Actual Hash:  {actual:?}");
+    println!("  - Properties");
     for ext in pbo.properties() {
-        println!("\t\t{}: {}", ext.0, ext.1);
+        println!("      - {}: {}", ext.0, ext.1);
     }
-    println!("\tSize: {}", pbo_path.metadata()?.len());
+    println!("  - Size: {}", pbo_path.metadata()?.len());
+
+    if actual != stored {
+        warn!("Verification Warning: PBO has an invalid hash stored");
+    }
 
     if !pbo.properties().contains_key("prefix") {
         println!("Verification Failed: PBO is missing a prefix header");
@@ -69,45 +73,43 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
 
     println!();
     println!("Signature: {signature_path:?}");
-    println!("\tAuthority: {}", signature.authority());
-    println!("\tVersion: {}", signature.version());
-    println!("\tLength: {}", signature.length());
-    println!("\tExponent: {}", signature.exponent());
-    println!("\tModulus: {}", signature.modulus_display(17));
+    println!("  - Authority: {}", signature.authority());
+    println!("  - Version: {}", signature.version());
+    println!("  - Length: {}", signature.length());
+    println!("  - Exponent: {}", signature.exponent());
+    println!("  - Modulus: {}", signature.modulus_display(17));
 
     match publickey.verify(&mut pbo, &signature) {
         Ok(()) => println!("Verified!"),
         Err(hemtt_signing::Error::AuthorityMismatch { .. }) => {
-            println!("Verification Failed: Authority does not match");
+            error!("Verification Failed: Authority does not match");
         }
         Err(hemtt_signing::Error::HashMismatch { .. }) => {
-            println!("Verification Failed: Signature does not match");
+            error!("Verification Failed: Signature does not match");
         }
         Err(hemtt_signing::Error::UknownBISignVersion(v)) => {
-            println!("Verification Failed: Unknown BI Signature Version: {v}");
+            error!("Verification Failed: Unknown BI Signature Version: {v}");
         }
         Err(hemtt_signing::Error::Io(e)) => {
-            println!("Verification Failed: Encountered IO error: {e}");
+            error!("Verification Failed: Encountered IO error: {e}");
         }
         Err(hemtt_signing::Error::Pbo(e)) => {
-            println!("Verification Failed: Encountered PBO error: {e}");
+            error!("Verification Failed: Encountered PBO error: {e}");
         }
         Err(hemtt_signing::Error::Rsa(e)) => {
-            println!("Verification Failed: Encountered RSA error: {e}");
+            error!("Verification Failed: Encountered RSA error: {e}");
         }
         Err(hemtt_signing::Error::InvalidLength) => {
-            println!("Verification Failed: Invalid length");
+            error!("Verification Failed: Invalid length");
         }
         Err(hemtt_signing::Error::AuthorityMissing) => {
-            println!("Verification Failed: Missing authority");
+            error!("Verification Failed: Missing authority");
         }
         Err(hemtt_signing::Error::InvalidFileSorting) => {
             if pbo.properties().contains_key("Mikero") {
-                println!(
-                    "Verification Failed: Invalid file sorting. This is a bug in Mikero tools."
-                );
+                error!("Verification Failed: Invalid file sorting. This is a bug in Mikero tools.");
             } else {
-                println!("Verification Failed: Invalid file sorting");
+                error!("Verification Failed: Invalid file sorting");
             }
         }
     }

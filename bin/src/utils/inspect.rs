@@ -1,8 +1,16 @@
-use std::{fs::File, path::PathBuf, io::{Read, Seek}};
+use std::{
+    fs::File,
+    io::{Read, Seek},
+    path::PathBuf,
+};
 
 use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
-use term_table::{Table, TableStyle, table_cell::{Alignment, TableCell}, row::Row};
+use term_table::{
+    row::Row,
+    table_cell::{Alignment, TableCell},
+    Table, TableStyle,
+};
 
 use crate::Error;
 
@@ -59,7 +67,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     Ok(())
 }
 
-fn pbo(file: File)  -> Result<(), Error> {
+fn pbo(file: File) -> Result<(), Error> {
     let mut pbo = ReadablePbo::from(file)?;
     println!("Properties");
     for (key, value) in pbo.properties() {
