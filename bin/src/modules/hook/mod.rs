@@ -18,7 +18,7 @@ mod time;
 ///
 /// # Errors
 /// [`Error::Version`] if the version is not a valid semver version
-pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
+pub fn scope(ctx: &Context, virtual_fs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     scope.push_constant("HEMTT_VERSION", env!("HEMTT_VERSION"));
     let version = ctx.config().version().get(ctx.workspace().vfs())?;
@@ -35,29 +35,26 @@ pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     scope.push_constant("HEMTT_PROJECT_NAME", ctx.config().name().to_string());
     scope.push_constant("HEMTT_PROJECT_PREFIX", ctx.config().prefix().to_string());
     scope.push_constant("HEMTT_ADDONS", ctx.addons().to_vec());
-    if vfs {
+    if virtual_fs {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
-    } else {
-        scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
-        scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
-        scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
     }
+    scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
+    scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
+    scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
+    scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
 
     scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
 
     Ok(scope)
 }
 
-fn engine(vfs: bool) -> Engine {
+fn engine(virtual_fs: bool) -> Engine {
     let mut engine = Engine::new();
-    if vfs {
+    if virtual_fs {
         let virt = libraries::VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
-    } else {
-        let real = libraries::RfsPackage::new();
-        engine.register_static_module("hemtt_rfs", real.as_shared_module());
     }
+    engine.register_static_module("hemtt_rfs", libraries::RfsPackage::new().as_shared_module());
     engine.register_static_module("hemtt", libraries::HEMTTPackage::new().as_shared_module());
     engine.register_fn("date", time::date);
     engine
@@ -82,7 +79,7 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
+    pub fn run_folder(self, ctx: &Context, name: &str, virtual_fs: bool) -> Result<(), Error> {
         if !self.0 {
             return Ok(());
         }
@@ -116,7 +113,7 @@ impl Hooks {
                     file.file_name().to_str().expect("Invalid file name")
                 ),
                 &std::fs::read_to_string(file.path())?,
-                vfs,
+                virtual_fs,
             )?;
             ctx.config().version().invalidate();
         }
@@ -148,9 +145,9 @@ impl Hooks {
         res
     }
 
-    fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<(), Error> {
-        let mut engine = engine(vfs);
-        let mut scope = scope(ctx, vfs)?;
+    fn run(ctx: &Context, name: String, script: &str, virtual_fs: bool) -> Result<(), Error> {
+        let mut engine = engine(virtual_fs);
+        let mut scope = scope(ctx, virtual_fs)?;
         let told_to_fail = Arc::new(Mutex::new(false));
         let inner_name = name.clone();
         engine.on_debug(move |x, _src, _pos| {
@@ -195,7 +192,7 @@ impl Module for Hooks {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
         if self.0 {
             for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
-                let engine = engine(phase.ends_with("build"));
+                let engine = engine(phase != &"post_release");
                 let dir = ctx.hemtt_folder().join("hooks").join(phase);
                 if !dir.exists() {
                     continue;
@@ -220,7 +217,7 @@ impl Module for Hooks {
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre_release", false)
+        self.run_folder(ctx, "pre_release", true)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<(), Error> {
