@@ -72,7 +72,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             file.seek(std::io::SeekFrom::Start(0))?;
             // BiPublicKey
             if BIPublicKey::read(&mut file).is_ok() {
-                warn!("The file appears to be a BiPublicKey but does not have the .bikey extension.");
+                warn!(
+                    "The file appears to be a BiPublicKey but does not have the .bikey extension."
+                );
                 file.seek(std::io::SeekFrom::Start(0))?;
                 bikey(file, &path)?;
                 return Ok(());
@@ -111,6 +113,8 @@ pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
     println!("  - Modulus: {}", signature.modulus_display(13));
     Ok(signature)
 }
+
+/// Prints information about a [`ReadablePbo`] to stdout
 fn pbo(file: File) -> Result<(), Error> {
     let mut pbo = ReadablePbo::from(file)?;
     println!("Properties");
