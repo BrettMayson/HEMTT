@@ -49,9 +49,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     println!();
     println!("PBO: {pbo_path:?}");
     let stored = *pbo.checksum();
-    println!("  - Stored Hash:  {stored:?}");
+    println!("  - Stored SHA1 Hash:  {}", stored.hex());
     let actual = pbo.gen_checksum().unwrap();
-    println!("  - Actual Hash:  {actual:?}");
+    println!("  - Actual SHA1 Hash:  {}", actual.hex());
     println!("  - Properties");
     for ext in pbo.properties() {
         println!("      - {}: {}", ext.0, ext.1);

@@ -24,6 +24,15 @@ impl Checksum {
     pub const fn as_bytes(&self) -> &[u8; 20] {
         &self.0
     }
+
+    #[must_use]
+    pub fn hex(&self) -> String {
+        let mut out = String::new();
+        for byte in &self.0 {
+            out.push_str(&format!("{byte:02x}"));
+        }
+        out
+    }
 }
 
 impl From<Vec<u8>> for Checksum {
