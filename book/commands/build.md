@@ -11,6 +11,9 @@ Options:
     <a href="#--no-rap">--no-rap</a>
         Do not rapify files
 
+    <a href="index.md#--just">--just &lt;just&gt;</a>
+        Only build the specified addon
+
     <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 

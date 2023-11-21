@@ -1,6 +1,7 @@
 use clap::{ArgAction, ArgMatches, Command};
 
 use crate::{
+    context::{self, Context},
     error::Error,
     executor::Executor,
     modules::{pbo::Collapse, Binarize, Files, Hooks, Lint, Rapifier},
@@ -8,13 +9,13 @@ use crate::{
 
 #[must_use]
 pub fn cli() -> Command {
-    add_args(
+    add_just(add_args(
         Command::new("build")
             .about("Build the project for final testing")
             .long_about(
                 "Build your project in release mode for testing, without signing for full release.",
             ),
-    )
+    ))
 }
 
 #[must_use]
@@ -33,7 +34,51 @@ pub fn add_args(cmd: Command) -> Command {
     )
 }
 
-/// Execute the build command
+#[must_use]
+pub fn add_just(cmd: Command) -> Command {
+    cmd.arg(
+        clap::Arg::new("just")
+            .long("just")
+            .help("Only build the given addon")
+            .action(ArgAction::Append),
+    )
+}
+
+/// Execute the build command, build a new executor
+///
+/// # Errors
+/// [`Error`] depending on the modules
+pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
+    let just = matches
+        .get_many::<String>("just")
+        .unwrap_or_default()
+        .map(std::string::String::as_str)
+        .collect::<Vec<_>>();
+    let mut ctx = Context::new(
+        std::env::current_dir()?,
+        "build",
+        if just.is_empty() {
+            context::PreservePrevious::Remove
+        } else {
+            warn!("keeping previous build artifacts");
+            context::PreservePrevious::Keep
+        },
+    )?;
+    if !just.is_empty() {
+        ctx = ctx.filter(|a, _| just.contains(&a.name()));
+    }
+    let mut executor = Executor::new(&ctx);
+
+    execute(matches, &mut executor)?;
+
+    if !just.is_empty() {
+        warn!("Use of `--just` is not recommended, only use it if you know what you're doing");
+    }
+
+    Ok(())
+}
+
+/// Execute the build command, with a given executor
 ///
 /// # Errors
 /// [`Error`] depending on the modules

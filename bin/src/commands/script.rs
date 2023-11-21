@@ -48,7 +48,12 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new(std::env::current_dir()?, "script")?.filter(|a, config| {
+    let ctx = Context::new(
+        std::env::current_dir()?,
+        "script",
+        crate::context::PreservePrevious::Remove,
+    )?
+    .filter(|a, config| {
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
         {
             debug!("ignoring optional {}", a.name());

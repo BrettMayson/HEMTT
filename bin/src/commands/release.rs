@@ -30,7 +30,11 @@ pub fn cli() -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let ctx = Context::new(std::env::current_dir()?, "release")?;
+    let ctx = Context::new(
+        std::env::current_dir()?,
+        "release",
+        crate::context::PreservePrevious::Remove,
+    )?;
     let mut executor = Executor::new(&ctx);
 
     if matches.get_one::<bool>("no-sign") != Some(&true) && ctx.config().hemtt().release().sign() {

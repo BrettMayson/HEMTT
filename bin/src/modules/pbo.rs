@@ -92,7 +92,12 @@ fn _build(
         path.set_extension("pbo");
         path
     };
-    create_dir_all(target_pbo.parent().unwrap())?;
+    if target_pbo.parent().unwrap().exists() {
+        debug!("{:?} already exists", target_pbo.parent().unwrap());
+    } else {
+        debug!("creating {:?}", target_pbo.parent().unwrap());
+        create_dir_all(target_pbo.parent().unwrap())?;
+    }
     debug!(
         "building {:?} => {:?}",
         addon.folder(),

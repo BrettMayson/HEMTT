@@ -8,13 +8,15 @@ use crate::{
     modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Lint, Rapifier},
 };
 
+use super::build::add_just;
+
 #[must_use]
 pub fn cli() -> Command {
-    add_args(
+    add_just(add_args(
         Command::new("dev")
             .about("Build the project for development")
             .long_about("Build your project for local development and testing. It is built without binarization of .p3d and .rtm files."),
-    )
+    ))
 }
 
 #[must_use]
@@ -54,7 +56,26 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new(std::env::current_dir()?, "dev")?.filter(|a, config| {
+    let just = matches
+        .get_many::<String>("just")
+        .unwrap_or_default()
+        .map(std::string::String::as_str)
+        .collect::<Vec<_>>();
+
+    let ctx = Context::new(
+        std::env::current_dir()?,
+        "dev",
+        if just.is_empty() {
+            crate::context::PreservePrevious::Remove
+        } else {
+            warn!("keeping previous build artifacts");
+            crate::context::PreservePrevious::Keep
+        },
+    )?
+    .filter(|a, config| {
+        if !just.is_empty() && !just.contains(&a.name()) {
+            return false;
+        }
         if launch_optionals.iter().any(|o| o == a.name()) {
             return true;
         }
@@ -95,6 +116,10 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
     executor.init()?;
     executor.check()?;
     executor.build()?;
+
+    if !just.is_empty() {
+        warn!("Use of `--just` is not recommended, only use it if you know what you're doing");
+    }
 
     Ok(ctx)
 }
