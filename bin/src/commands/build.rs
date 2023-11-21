@@ -49,26 +49,21 @@ pub fn add_just(cmd: Command) -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
+    let just = matches
+        .get_many::<String>("just")
+        .unwrap_or_default()
+        .map(std::string::String::as_str)
+        .collect::<Vec<_>>();
     let mut ctx = Context::new(
         std::env::current_dir()?,
         "build",
-        if matches
-            .get_occurrences::<String>("just")
-            .unwrap_or_default()
-            .count()
-            == 0
-        {
+        if just.is_empty() {
             context::PreservePrevious::Remove
         } else {
             warn!("keeping previous build artifacts");
             context::PreservePrevious::Keep
         },
     )?;
-    let just = matches
-        .get_many::<String>("just")
-        .unwrap_or_default()
-        .map(std::string::String::as_str)
-        .collect::<Vec<_>>();
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name()));
     }

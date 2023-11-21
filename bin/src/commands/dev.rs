@@ -65,12 +65,7 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
     let ctx = Context::new(
         std::env::current_dir()?,
         "dev",
-        if matches
-            .get_occurrences::<String>("just")
-            .unwrap_or_default()
-            .count()
-            == 0
-        {
+        if just.is_empty() {
             crate::context::PreservePrevious::Remove
         } else {
             warn!("keeping previous build artifacts");
