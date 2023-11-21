@@ -15,7 +15,7 @@
 
 ### --just
 
-The [`build`](./build.md) and [`dev`](./dev.md) commands can be used to build a single addons. It can be used multiple times to build multiple addons.
+The [`build`](./build.md) and [`dev`](./dev.md) commands can be used to build a single addon. It can be used multiple times to build multiple addons.
 
 ```bash
 hemtt build --just myAddon
