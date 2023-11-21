@@ -12,6 +12,14 @@ use crate::error::Error;
 pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     use std::process::Command;
 
+    if link.exists() {
+        warn!(
+            "link {:?} already exists, intended to point to {:?}",
+            link, target
+        );
+        return Ok(());
+    }
+
     // attempt junction
     trace!("junction link {:?} => {:?}", link, target);
     let mut out = Command::new("cmd")
@@ -49,6 +57,13 @@ pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
 /// # Errors
 /// - [`std::io::Error`] if the link could not be created
 pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
+    if link.exists() {
+        warn!(
+            "link {:?} already exists, intended to point to {:?}",
+            link, target
+        );
+        return Ok(());
+    }
     trace!("symlink {:?} => {:?}", link, target);
     std::os::unix::fs::symlink(target, link)?;
     Ok(())

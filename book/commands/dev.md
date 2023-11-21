@@ -14,6 +14,9 @@ Options:
     <a href="#-o---all-optionals">-O, --all-optionals</a>
         Include all optional addon folders
 
+    <a href="index.md#--just">--just &lt;just&gt;</a>
+        Only build the specified addon
+
     <a href="index.md#-t---threads">-t, --threads &lt;threads&gt;</a>
         Number of threads, defaults to # of CPUs
 

@@ -1,5 +1,4 @@
 use clap::{ArgAction, ArgMatches, Command};
-use context::Context;
 pub use error::Error;
 
 #[macro_use]
@@ -115,9 +114,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             Ok(())
         }
         Some(("build", matches)) => {
-            let ctx = Context::new(std::env::current_dir()?, "build")?;
-            let mut executor = executor::Executor::new(&ctx);
-            commands::build::execute(matches, &mut executor).map_err(std::convert::Into::into)
+            commands::build::pre_execute(matches).map_err(std::convert::Into::into)
         }
         Some(("release", matches)) => {
             commands::release::execute(matches).map_err(std::convert::Into::into)

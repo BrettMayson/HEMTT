@@ -9,6 +9,15 @@ use hemtt_common::workspace::{Workspace, WorkspacePath};
 
 use crate::{addons::Addon, error::Error};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Should the current contents of .hemttout\{} be preserved
+pub enum PreservePrevious {
+    /// The contents should be removed
+    Remove,
+    /// The contents should be preserved
+    Keep,
+}
+
 #[derive(Debug, Clone)]
 pub struct Context {
     config: ProjectConfig,
@@ -33,7 +42,11 @@ impl Context {
     ///
     /// # Panics
     /// If the project folder is not a valid [`OsStr`] (UTF-8)
-    pub fn new(root: PathBuf, folder: &str) -> Result<Self, Error> {
+    pub fn new(
+        root: PathBuf,
+        folder: &str,
+        preserve_previous: PreservePrevious,
+    ) -> Result<Self, Error> {
         let config = {
             let path = root.join(".hemtt").join("project.toml");
             if !path.exists() {
@@ -66,7 +79,7 @@ impl Context {
         std::fs::File::create(out_folder.join("ci_annotation.txt"))?;
         let build_folder = out_folder.join(folder);
         trace!("using build folder: {:?}", build_folder.display());
-        if build_folder.exists() {
+        if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
             remove_dir_all(&build_folder)?;
         }
         create_dir_all(&build_folder)?;
