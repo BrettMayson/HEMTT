@@ -5,10 +5,10 @@
 Usage: hemtt utils verify [OPTIONS] &lt;pbo&gt; &lt;bikey&gt;
 
 Arguments:
-  <pbo>
+  &lt;pbo&gt;
           PBO to verify
 
-  <bikey>
+  &lt;bikey&gt;
           BIKey to verify against
 
 Options:
