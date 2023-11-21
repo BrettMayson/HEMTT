@@ -16,6 +16,10 @@ pub enum Error {
     #[error("New can only be ran in an interactive terminal")]
     NewNoInput,
 
+    #[error("Addon duplicated with different case: {0}")]
+    AddonNameDuplicate(String),
+    #[error("Addon present in addons and optionals: {0}")]
+    AddonDuplicate(String),
     #[error("Invalid addon location: {0}")]
     AddonLocationInvalid(String),
     #[error("Optional addon not found: {0}")]

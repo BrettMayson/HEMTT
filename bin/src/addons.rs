@@ -101,6 +101,25 @@ impl Addon {
         for location in [Location::Addons, Location::Optionals] {
             addons.extend(location.scan()?);
         }
+        for addon in &addons {
+            if addon.name().to_lowercase() != addon.name() {
+                warn!(
+                    "Addon name {} is not lowercase, it is highly recommended to use lowercase names",
+                    addon.name()
+                );
+            }
+            if addons.iter().any(|a| {
+                a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
+            }) {
+                return Err(Error::AddonNameDuplicate(addon.name().to_string()));
+            }
+            if addons.iter().any(|a| {
+                a.name().to_lowercase() == addon.name().to_lowercase()
+                    && a.location() != addon.location()
+            }) {
+                return Err(Error::AddonDuplicate(addon.name().to_string()));
+            }
+        }
         Ok(addons)
     }
 }

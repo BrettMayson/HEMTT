@@ -52,7 +52,7 @@ pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
     let just = matches
         .get_many::<String>("just")
         .unwrap_or_default()
-        .map(std::string::String::as_str)
+        .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
     let mut ctx = Context::new(
         std::env::current_dir()?,
@@ -65,7 +65,7 @@ pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
         },
     )?;
     if !just.is_empty() {
-        ctx = ctx.filter(|a, _| just.contains(&a.name()));
+        ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
     }
     let mut executor = Executor::new(&ctx);
 

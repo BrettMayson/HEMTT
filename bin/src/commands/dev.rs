@@ -59,7 +59,7 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
     let just = matches
         .get_many::<String>("just")
         .unwrap_or_default()
-        .map(std::string::String::as_str)
+        .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
 
     let ctx = Context::new(
@@ -73,7 +73,7 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
         },
     )?
     .filter(|a, config| {
-        if !just.is_empty() && !just.contains(&a.name()) {
+        if !just.is_empty() && !just.contains(&a.name().to_lowercase()) {
             return false;
         }
         if launch_optionals.iter().any(|o| o == a.name()) {
