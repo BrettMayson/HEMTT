@@ -23,8 +23,8 @@ hemtt build --just myAddon
 
 ```admonish danger
 It is advised to only use this on very large projects that take a long time to build.
-It is advised to only use this after running the command once without `--just` to ensure all dependencies are built.
-Anytime you run any git commands that can modify files, you should run without `--just` to ensure all dependencies are up to date.
+It is advised to only use this after running the command once without `--just` to ensure all addons are built.
+Anytime you run any git commands that can modify files, you should run without `--just` to ensure all addons are up to date.
 Before reporting any unexpected behavior, try running without `--just` first.
 ```
 
