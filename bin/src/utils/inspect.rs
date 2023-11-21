@@ -115,10 +115,10 @@ pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
 }
 
 /// Prints information about a [`ReadablePbo`] to stdout
-/// 
+///
 /// # Errors
 /// [`hemtt_pbo::Error`] if the file is not a valid [`ReadablePbo`]
-/// 
+///
 /// # Panics
 /// If the file is not a valid [`ReadablePbo`]
 pub fn pbo(file: File) -> Result<(), Error> {
