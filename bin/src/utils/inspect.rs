@@ -115,16 +115,23 @@ pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
 }
 
 /// Prints information about a [`ReadablePbo`] to stdout
-fn pbo(file: File) -> Result<(), Error> {
+///
+/// # Errors
+/// [`hemtt_pbo::Error`] if the file is not a valid [`ReadablePbo`]
+///
+/// # Panics
+/// If the file is not a valid [`ReadablePbo`]
+pub fn pbo(file: File) -> Result<(), Error> {
     let mut pbo = ReadablePbo::from(file)?;
     println!("Properties");
     for (key, value) in pbo.properties() {
         println!("  - {key}: {value}");
     }
+    println!("Checksum (SHA1)");
     let stored = *pbo.checksum();
-    println!("  - Stored Hash:  {stored:?}");
+    println!("  - Stored:  {}", stored.hex());
     let actual = pbo.gen_checksum().unwrap();
-    println!("  - Actual Hash:  {actual:?}");
+    println!("  - Actual:  {}", actual.hex());
 
     let files = pbo.files();
     println!("Files");
