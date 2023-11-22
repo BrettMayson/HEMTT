@@ -68,6 +68,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         })
         .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
 
+    trace!("launch config: {:?}", launch);
+
     let Some(arma3dir) =
         SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned))
     else {
@@ -98,6 +100,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let mut dlc = launch.dlc().to_vec();
 
     for preset in launch.presets() {
+        trace!("Loading preset: {}", preset);
         let html = std::env::current_dir()?
             .join(".hemtt/presets")
             .join(preset)
