@@ -41,6 +41,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: wasm
+        path: wasm
     - name: Move wasm
       run: | 
         mv wasm/paa.wasm libs/paa/pkg/paa.wasm
@@ -66,7 +67,11 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: wasm
-        path: libs/paa/pkg
+        path: wasm
+    - name: Move wasm
+      run: | 
+        mv wasm/paa.wasm libs/paa/pkg/paa.wasm
+        mv wasm/paa.js libs/paa/pkg/paa.js
     - name: Rename manifest
       run: mv libs/paa/manifest.chrome.json libs/paa/manifest.json && rm libs/paa/manifest.firefox.json
     - name: zip
