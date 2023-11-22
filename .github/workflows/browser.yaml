@@ -19,16 +19,15 @@ jobs:
       run: wasm-pack build libs/paa --target web
     - name: Rename
       run: |
-        mv libs/paa/pkg/hemtt_paa_bg.wasm paa.wasm
-        mv libs/paa/pkg/hemtt_paa.js paa.js
+        mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
+        mv libs/paa/pkg/hemtt_paa.js hemtt_paa.js
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
         name: wasm
         path: | 
-          paa.wasm
-          paa.js
-
+            hemtt_paa_bg.wasm
+            hemtt_paa.js
 
   firefox:
     name: Firefox
@@ -44,8 +43,8 @@ jobs:
         path: wasm
     - name: Move wasm
       run: | 
-        mv wasm/paa.wasm browser/paa.wasm
-        mv wasm/paa.js browser/paa.js
+        mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
+        mv wasm/hemtt_paa.js browser/hemtt_paa.js
     - name: Rename manifest
       run: mv browser/manifest.firefox.json browser/manifest.json && rm browser/manifest.chrome.json
     - name: zip
@@ -73,8 +72,8 @@ jobs:
         path: wasm
     - name: Move wasm
       run: | 
-        mv wasm/paa.wasm browser/paa.wasm
-        mv wasm/paa.js browser/paa.js
+        mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
+        mv wasm/hemtt_paa.js browser/hemtt_paa.js
     - name: Rename manifest
       run: mv browser/manifest.chrome.json browser/manifest.json && rm browser/manifest.firefox.json
     - name: zip

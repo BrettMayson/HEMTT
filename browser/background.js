@@ -1,4 +1,4 @@
-import init, { ImageResult } from './paa.js';
+import init, { ImageResult } from './hemtt_paa.js';
 
 async function run() {
     // Firefox linter has trouble with 'import', so import directly here

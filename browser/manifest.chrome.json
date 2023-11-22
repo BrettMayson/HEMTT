@@ -15,7 +15,7 @@
     ],
     "web_accessible_resources": [
         {
-            "resources": ["paa.wasm", "paa.js"],
+            "resources": ["hemtt_paa_bg.wasm", "hemtt_paa.js"],
             "matches": ["<all_urls>"]
         }
     ],

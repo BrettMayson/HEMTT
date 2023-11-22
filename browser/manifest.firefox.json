@@ -14,7 +14,7 @@
     ],
     "web_accessible_resources": [
         {
-            "resources": ["paa.wasm", "paa.js"],
+            "resources": ["hemtt_paa_bg.wasm", "hemtt_paa.js"],
             "matches": ["<all_urls>"]
         }
     ],
@@ -29,7 +29,7 @@
     ],
     "browser_specific_settings": {
         "gecko": {
-            "id": "{10d6a2c8-ce08-41e6-95a0-4336400419bd}"
+            "id": "brett@mayson.io"
         }
     }
 }
