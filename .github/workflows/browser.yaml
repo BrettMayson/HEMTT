@@ -16,7 +16,7 @@ jobs:
     - name: Install wasm-pack
       run: cargo install wasm-pack
     - name: Build
-      run: wasm-pack build libs/paa --target web
+      run: wasm-pack build libs/paa --target web --features wasm
     - name: Rename
       run: |
         mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
