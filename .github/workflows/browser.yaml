@@ -17,8 +17,62 @@ jobs:
       run: cargo install wasm-pack
     - name: Build
       run: wasm-pack build libs/paa --target web
+    - name: Rename
+      run: |
+        mv libs/paa/pkg/hemtt_paa_bg.wasm paa.wasm
+        mv libs/paa/pkg/hemtt_paa.js paa.js
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
+      with:
+        name: wasm
+        path: | 
+          paa.wasm
+          paa.js
+
+
+  firefox:
+    name: Firefox
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@master
+    - name: Download wasm
+      uses: actions/download-artifact@v2
+      with:
+        name: wasm
+    - name: Move wasm
+      run: | 
+        mv wasm/paa.wasm libs/paa/pkg/paa.wasm
+        mv wasm/paa.js libs/paa/pkg/paa.js
+    - name: Rename manifest
+      run: mv libs/paa/manifest.firefox.json libs/paa/manifest.json && rm libs/paa/manifest.chrome.json
+    - name: zip
+      run: zip -r firefox.zip libs/paa
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: firefox
+        path: firefox.zip
+
+  chrome:
+    name: Chrome
+    runs-on: ubuntu-latest
+    needs: build-wasm
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@master
+    - name: Download wasm
+      uses: actions/download-artifact@v2
       with:
         name: wasm
         path: libs/paa/pkg
+    - name: Rename manifest
+      run: mv libs/paa/manifest.chrome.json libs/paa/manifest.json && rm libs/paa/manifest.firefox.json
+    - name: zip
+      run: zip -r chrome.zip libs/paa
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: chrome
+        path: chrome.zip
