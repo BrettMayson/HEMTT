@@ -1,0 +1,35 @@
+{
+    "name": "PAA Viewer",
+    "version": "1.2",
+    "description": "View .paa files directly on sites like GitHub",
+    "manifest_version": 3,
+    "background": {
+        "page": "background.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://github.com/*"],
+            "js": ["sites/github.js"]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["paa.wasm", "paa.js"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; default-src 'self';"
+    },
+    "icons": {
+        "128": "icon128.png"
+    },
+    "host_permissions": [
+        "https://github.com/*"
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{10d6a2c8-ce08-41e6-95a0-4336400419bd}"
+        }
+    }
+}

@@ -12,7 +12,6 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-lzo = { path = "../lzo", version = "1.0.0", features = ["decompress"], default-features = false }
 
 js-sys = { version = "0.3.65", optional = true }

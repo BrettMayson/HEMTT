@@ -920,7 +920,6 @@ name = "hemtt-paa"
 version = "1.0.1"
 dependencies = [
  "byteorder",
- "hemtt-common",
  "hemtt-lzo",
  "image",
  "js-sys",

@@ -17,5 +17,8 @@ jobs:
       run: cargo install wasm-pack
     - name: Build
       run: wasm-pack build libs/paa --target web
-    - name: tree
-      run: tree
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: wasm
+        path: libs/paa/pkg
