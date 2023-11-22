@@ -44,12 +44,12 @@ jobs:
         path: wasm
     - name: Move wasm
       run: | 
-        mv wasm/paa.wasm libs/paa/pkg/paa.wasm
-        mv wasm/paa.js libs/paa/pkg/paa.js
+        mv wasm/paa.wasm browser/paa.wasm
+        mv wasm/paa.js browser/paa.js
     - name: Rename manifest
-      run: mv libs/paa/manifest.firefox.json libs/paa/manifest.json && rm libs/paa/manifest.chrome.json
+      run: mv browser/manifest.firefox.json browser/manifest.json && rm browser/manifest.chrome.json
     - name: zip
-      run: zip -r firefox.zip libs/paa
+      run: zip -r firefox.zip browser
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
@@ -70,12 +70,12 @@ jobs:
         path: wasm
     - name: Move wasm
       run: | 
-        mv wasm/paa.wasm libs/paa/pkg/paa.wasm
-        mv wasm/paa.js libs/paa/pkg/paa.js
+        mv wasm/paa.wasm browser/paa.wasm
+        mv wasm/paa.js browser/paa.js
     - name: Rename manifest
-      run: mv libs/paa/manifest.chrome.json libs/paa/manifest.json && rm libs/paa/manifest.firefox.json
+      run: mv browser/manifest.chrome.json browser/manifest.json && rm browser/manifest.firefox.json
     - name: zip
-      run: zip -r chrome.zip libs/paa
+      run: zip -r chrome.zip browser
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
