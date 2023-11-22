@@ -1,7 +1,7 @@
 {
-    "name": "PAA Viewer",
-    "version": "1.2",
-    "description": "View .paa files directly on sites like GitHub",
+    "name": "HEMTT",
+    "version": "1.10.2",
+    "description": "HEMTT Extension for viewing PAA files in the browser",
     "manifest_version": 3,
     "background": {
         "page": "background.html"
