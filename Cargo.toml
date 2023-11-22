@@ -6,6 +6,8 @@ members = [
 
     "libs/common",
     "libs/config",
+    "libs/lzo",
+    "libs/paa",
     "libs/pbo",
     "libs/preprocessor",
     "libs/signing",

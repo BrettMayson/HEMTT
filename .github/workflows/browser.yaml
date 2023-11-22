@@ -1,0 +1,21 @@
+name: Browser
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@master
+    - name: Install wasm-pack
+      run: cargo install wasm-pack
+    - name: Build
+      run: wasm-pack build libs/paa --target web
+    - name: tree
+      run: tree
