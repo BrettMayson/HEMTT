@@ -189,5 +189,4 @@ jobs:
         with:
           identifier: BrettMayson.HEMTT
           installers-regex: 'windows-x64.zip'
-          max-versions-to-keep: 5
           token: ${{ secrets.WINGET_TOKEN }} # Classic Personal Access Token with [public_repo, workflow] scopes
