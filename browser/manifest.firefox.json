@@ -1,0 +1,35 @@
+{
+    "name": "HEMTT",
+    "version": "1.10.2",
+    "description": "HEMTT Extension for viewing PAA files in the browser",
+    "manifest_version": 3,
+    "background": {
+        "page": "background.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://github.com/*"],
+            "js": ["sites/github.js"]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["hemtt_paa_bg.wasm", "hemtt_paa.js"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; default-src 'self';"
+    },
+    "icons": {
+        "128": "icon128.png"
+    },
+    "host_permissions": [
+        "https://github.com/*"
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "brett+hemtt@mayson.io"
+        }
+    }
+}

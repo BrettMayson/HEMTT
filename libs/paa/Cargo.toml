@@ -1,0 +1,25 @@
+[package]
+name = "hemtt-paa"
+version = "1.0.1"
+edition = "2021"
+description = "An PAA library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hemtt-lzo = { path = "../lzo", version = "1.0.0", features = ["decompress"], default-features = false }
+
+js-sys = { version = "0.3.65", optional = true }
+wasm-bindgen = { version = "0.2.88", optional = true }
+
+byteorder = { workspace = true }
+texpresso = "2.0.1"
+image = "0.24.7"
+
+[features]
+wasm = ["wasm-bindgen", "js-sys"]

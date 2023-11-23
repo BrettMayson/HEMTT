@@ -1,0 +1,17 @@
+[package]
+name = "hemtt-lzo"
+version = "1.0.1"
+edition = "2021"
+description = "An LZO library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+libc = "0.2.150"
+
+[features]
+default = ["compress", "decompress"]
+compress = []
+decompress = []
