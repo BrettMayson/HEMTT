@@ -5,7 +5,7 @@
 
 const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p.cast::<u8>();
-    (*input.offset(0isize) as i32 | *input.offset(1isize) as (i32) << 8i32) as u16
+    (*input.offset(0isize) as i32 | (*input.offset(1isize) as i32) << 8i32) as u16
 }
 
 #[no_mangle]
