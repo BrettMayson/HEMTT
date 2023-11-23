@@ -123,7 +123,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
 
     // climb to the workshop folder
-    if !launch.workshop().is_empty() {
+    if !workshop.is_empty() {
         let Some(common) = arma3dir.path.parent() else {
             return Err(Error::WorkshopNotFound);
         };
@@ -227,7 +227,10 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
     )
     .unwrap();
     for id in mod_regex.captures_iter(html).map(|c| c[1].to_string()) {
-        if !workshop.contains(&id) {
+        if workshop.contains(&id) {
+            trace!("Skipping mod {} in preset {}", id, name);
+        } else {
+            trace!("Found new mod {} in preset {}", id, name);
             workshop.push(id);
         }
     }
@@ -241,7 +244,10 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
             );
             continue;
         };
-        if !dlc.contains(&preset_dlc) {
+        if dlc.contains(&preset_dlc) {
+            trace!("Skipping DLC {} in preset {}", id, name);
+        } else {
+            trace!("Found new DLC {} in preset {}", id, name);
             dlc.push(preset_dlc);
         }
     }
