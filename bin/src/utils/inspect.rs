@@ -42,6 +42,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .to_str()
         .unwrap_or_default()
     {
+        "paa" => {
+            paa(File::open(&path)?)?;
+        }
         "pbo" => {
             pbo(File::open(&path)?)?;
         }
@@ -60,6 +63,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             if buf == b"\x00sreV\x00" {
                 warn!("The file appears to be a PBO but does not have the .pbo extension.");
                 pbo(file)?;
+                return Ok(());
+            }
+            // PAA (skip first two bytes)
+            if &buf[2..] == b"GGAT" {
+                warn!("The file appears to be a PAA but does not have the .paa extension.");
+                file.seek(std::io::SeekFrom::Start(0))?;
+                paa(file)?;
                 return Ok(());
             }
             // BiSign
@@ -168,5 +178,39 @@ pub fn pbo(file: File) -> Result<(), Error> {
     if stored != actual {
         warn!("The PBO has an invalid hash stored");
     }
+    Ok(())
+}
+
+/// Prints information about a PAA to stdout
+///
+/// # Errors
+/// [`Error::Io`] if the file is not a valid [`hemtt_paa::Paa`]
+pub fn paa(mut file: File) -> Result<(), Error> {
+    let paa = hemtt_paa::Paa::read(&mut file)?;
+    println!("PAA");
+    println!("  - Format: {}", paa.format());
+    let maps = paa.maps();
+    println!("Maps: {}", maps.len());
+    let mut table = Table::new();
+    table.style = TableStyle::thin();
+    table.add_row(Row::new(vec![
+        TableCell::new_with_alignment("Width", 1, Alignment::Center),
+        TableCell::new_with_alignment("Height", 1, Alignment::Center),
+        TableCell::new_with_alignment("Size", 1, Alignment::Center),
+        TableCell::new_with_alignment("Format", 1, Alignment::Center),
+        TableCell::new_with_alignment("Compressed", 1, Alignment::Center),
+    ]));
+    for map in maps {
+        let mut row = Row::new(vec![
+            TableCell::new_with_alignment(map.width().to_string(), 1, Alignment::Right),
+            TableCell::new_with_alignment(map.height().to_string(), 1, Alignment::Right),
+            TableCell::new_with_alignment(map.data().len().to_string(), 1, Alignment::Right),
+            TableCell::new_with_alignment(format!("{:?}", map.format()), 1, Alignment::Right),
+            TableCell::new_with_alignment(map.is_compressed(), 1, Alignment::Right),
+        ]);
+        row.has_separator = table.rows.len() == 1;
+        table.add_row(row);
+    }
+    println!("{}", table.render());
     Ok(())
 }

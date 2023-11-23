@@ -5,9 +5,9 @@ use texpresso::Format;
 
 #[derive(Debug)]
 pub struct MipMap {
-    pub width: u16,
-    pub height: u16,
-    pub data: Vec<u8>,
+    width: u16,
+    height: u16,
+    data: Vec<u8>,
     format: Format,
 }
 
@@ -28,6 +28,40 @@ impl MipMap {
             height,
             data: buffer.to_vec(),
         })
+    }
+
+    #[must_use]
+    /// Get the width of the `MipMap`
+    pub const fn width(&self) -> u16 {
+        let mut width = self.width;
+        if self.is_compressed() {
+            width -= 32768;
+        };
+        width
+    }
+
+    #[must_use]
+    /// Is the `MipMap` compressed
+    pub const fn is_compressed(&self) -> bool {
+        self.width % 32768 != self.width
+    }
+
+    #[must_use]
+    /// Get the height of the `MipMap`
+    pub const fn height(&self) -> u16 {
+        self.height
+    }
+
+    #[must_use]
+    /// Get the data of the `MipMap`
+    pub const fn data(&self) -> &Vec<u8> {
+        &self.data
+    }
+
+    #[must_use]
+    /// Get the format of the `MipMap`
+    pub const fn format(&self) -> &Format {
+        &self.format
     }
 
     #[must_use]
