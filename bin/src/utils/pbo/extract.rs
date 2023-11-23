@@ -36,6 +36,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     };
     let output = matches.get_one::<String>("output").map(PathBuf::from);
     if let Some(output) = output {
+        if output.exists() {
+            error!("Output file already exists");
+            return Ok(());
+        }
         std::io::copy(&mut file, &mut File::create(output)?)?;
     } else {
         std::io::copy(&mut file, &mut std::io::stdout())?;

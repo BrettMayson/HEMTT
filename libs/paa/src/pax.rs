@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{fmt::Display, io::Read};
 
 use texpresso::Format;
 
@@ -75,6 +75,22 @@ impl From<Format> for PaXType {
             Format::Bc2 => Self::DXT3,
             Format::Bc3 => Self::DXT5,
             _ => unimplemented!(),
+        }
+    }
+}
+
+impl Display for PaXType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DXT1 => write!(f, "DXT1"),
+            Self::DXT2 => write!(f, "DXT2"),
+            Self::DXT3 => write!(f, "DXT3"),
+            Self::DXT4 => write!(f, "DXT4"),
+            Self::DXT5 => write!(f, "DXT5"),
+            Self::RGBA4 => write!(f, "RGBA4"),
+            Self::RGBA5 => write!(f, "RGBA5"),
+            Self::RGBA8 => write!(f, "RGBA8"),
+            Self::GRAYA => write!(f, "GRAYA"),
         }
     }
 }

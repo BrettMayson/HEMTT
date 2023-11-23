@@ -857,6 +857,7 @@ dependencies = [
  "glob",
  "hemtt-common",
  "hemtt-config",
+ "hemtt-paa",
  "hemtt-pbo",
  "hemtt-preprocessor",
  "hemtt-signing",

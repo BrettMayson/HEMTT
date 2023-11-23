@@ -15,9 +15,9 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Paa {
-    pub format: PaXType,
-    pub taggs: HashMap<String, Vec<u8>>,
-    pub maps: Vec<MipMap>,
+    format: PaXType,
+    taggs: HashMap<String, Vec<u8>>,
+    maps: Vec<MipMap>,
 }
 
 impl Paa {
@@ -28,6 +28,24 @@ impl Paa {
             taggs: HashMap::new(),
             maps: Vec::new(),
         }
+    }
+
+    #[must_use]
+    /// Get the format of the Paa
+    pub const fn format(&self) -> &PaXType {
+        &self.format
+    }
+
+    #[must_use]
+    /// Get the taggs of the Paa
+    pub const fn taggs(&self) -> &HashMap<String, Vec<u8>> {
+        &self.taggs
+    }
+
+    #[must_use]
+    /// Get the maps of the Paa
+    pub const fn maps(&self) -> &Vec<MipMap> {
+        &self.maps
     }
 
     /// Read the Paa from the given input
