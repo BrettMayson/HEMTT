@@ -33,7 +33,7 @@ impl ImageResult {
         let bytes = s.to_vec();
         let paa = crate::Paa::read(Cursor::new(bytes)).unwrap();
         let mut buffer = Cursor::new(Vec::new());
-        paa.maps[0]
+        paa.maps()[0]
             .get_image()
             .write_to(&mut buffer, image::ImageFormat::Png)
             .unwrap();
