@@ -74,6 +74,7 @@ impl Module for ArmaScriptCompiler {
             entries
                 .par_iter()
                 .map(|entry| {
+                    trace!("asc compiling {}", entry);
                     let processed = Processor::run(entry)?;
                     let sqf = match hemtt_sqf::parser::run(&Database::default(), &processed) {
                         Ok(sqf) => sqf,
