@@ -23,6 +23,7 @@ fn simple(file: &str) {
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
+    println!("{:#?}", processed.as_str());
     let parsed = match hemtt_sqf::parser::run(&Database::default(), &processed) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
@@ -42,3 +43,5 @@ simple!(hello);
 simple!(get_visibility);
 simple!(semicolons);
 simple!(eventhandler);
+simple!(foreach);
+simple!(hash_select);

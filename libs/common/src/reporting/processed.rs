@@ -247,16 +247,9 @@ impl Processed {
     ///
     /// # Panics
     /// Panics if a source does not exist
-    pub fn code(&self, span: Range<usize>) -> String {
-        let mut out = String::new();
-        for map in self.mappings(span.start) {
-            let source = self.source(map.source()).expect("source exists");
-            let start = map.original().start().offset();
-            let end = map.original().end().offset();
-            let content = &source.1[start..end];
-            out.push_str(content);
-        }
-        out
+    pub const fn code(&self, span: Range<usize>) -> String {
+        // TODO
+        String::new()
     }
 
     #[must_use]

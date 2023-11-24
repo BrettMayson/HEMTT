@@ -4,7 +4,10 @@
 // Fine
 ["something", {
     if (alive player) then {
-        systemChat "You are alive";
+        allPlayers findIf { alive _x };
+        {
+            deleteVehicle _x;
+        } forEach allPlayers;
     };
 }] call CBA_fnc_addEventHandler;
 

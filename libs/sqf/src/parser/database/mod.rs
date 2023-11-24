@@ -35,7 +35,7 @@ pub const BINARY_COMMANDS_SPECIAL: &[&str] = &["or", "and", "else", "max", "min"
 
 /// Commands (operators) that are non-alpha-numeric or have special precedence.
 pub const COMMANDS_OPERATORS: &[&str] = &[
-    "!", "||", "&&", "==", "!=", ">>", ">=", "<=", ">", "<", "+", "-", "*", "/", "%", "^", ":",
+    "!", "||", "&&", "==", "!=", ">>", ">=", "<=", ">", "<", "+", "-", "*", "/", "%", "^", ":", "#",
 ];
 
 /// Contains a list of most nular, unary, and binary commands.

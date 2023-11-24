@@ -16,16 +16,14 @@ pub fn strip_comments(tokens: &mut Tokens) {
 }
 
 pub fn strip_noop(tokens: &mut Tokens) {
-    // remove semicolons that appear directly after a semicolon
-    let mut last_was_semicolon = false;
+    let mut last_flag_delete = true;
     tokens.retain(|(token, _)| {
-        let is_semicolon = matches!(
+        let delete = matches!(token, Token::Control(Control::Terminator)) && last_flag_delete;
+        last_flag_delete = matches!(
             token,
             Token::Control(Control::Terminator | Control::CurlyBracketOpen)
         );
-        let result = !(last_was_semicolon && is_semicolon);
-        last_was_semicolon = is_semicolon;
-        result
+        !delete
     });
 }
 

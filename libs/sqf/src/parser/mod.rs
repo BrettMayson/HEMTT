@@ -21,15 +21,14 @@ use hemtt_common::reporting::{Code, Processed};
 pub fn run(database: &Database, processed: &Processed) -> Result<Statements, ParserError> {
     let mut tokens = self::lexer::run(processed.as_str()).map_err(ParserError::LexingError)?;
     self::lexer::strip_comments(&mut tokens);
-    println!("pre strip noop {:?}", tokens.len());
     self::lexer::strip_noop(&mut tokens);
-    println!("post strip noop {:?}", tokens.len());
     run_for_tokens(database, processed, tokens).map_err(|e| {
         let mut errors: Vec<Box<dyn Code>> = Vec::new();
 
         for e in e {
             errors.push(Box::new(codes::spe1_unparseable::UnparseableSyntax::new(
                 e.span(),
+                format!("{e:?}"),
             )));
         }
         ParserError::ParsingError(errors)
@@ -114,7 +113,6 @@ fn statements<'a>(
                 .foldr(|(unary_command, span), expression| {
                     Expression::UnaryCommand(unary_command, Box::new(expression), span)
                 });
-            // .labelled("read unary arguments");
 
             let locate = |value: BinaryCommand, span: Range<usize>| (value, span);
 
@@ -236,7 +234,6 @@ fn apply_binary_command(
         .foldl(|expr1, ((command, location), expr2)| {
             Expression::BinaryCommand(command, Box::new(expr1), Box::new(expr2), location)
         })
-    // .labelled("read binary arguments")
 }
 
 /// Matches unary commands, including special ones
