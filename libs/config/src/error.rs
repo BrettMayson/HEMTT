@@ -4,6 +4,6 @@ use hemtt_common::error::thiserror;
 /// Error type for the signing module
 pub enum Error {
     #[error("The config file is invalid: {0}")]
-    /// An ArmA config file is invalid
+    /// An Arma config file is invalid
     ConfigInvalid(String),
 }

@@ -32,7 +32,7 @@ fn check(dir: &str) {
             .map(|e| e.report_generate_processed(&processed).unwrap())
             .collect::<Vec<_>>();
         std::fs::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();
-        std::fs::write(folder.join("processed.txt"), processed.as_string()).unwrap();
+        std::fs::write(folder.join("processed.txt"), processed.as_str()).unwrap();
         panic!("failed to parse")
     };
     let parsed = parsed.unwrap();

@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 libc = "0.2.150"
+thiserror = { workspace = true }
 
 [features]
 default = ["compress", "decompress"]

@@ -31,7 +31,7 @@ impl Code for MissingSemicolon {
     }
 
     fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
-        let haystack = &processed.as_string()[self.span.clone()];
+        let haystack = &processed.as_str()[self.span.clone()];
         let possible_end = self.span.start
             + haystack
                 .find(|c: char| c == '\n')

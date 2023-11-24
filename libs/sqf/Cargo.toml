@@ -1,0 +1,30 @@
+[package]
+name = "hemtt-sqf"
+version = "1.0.0"
+edition = "2021"
+description = "An sqf library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-lzo = { path = "../lzo", version = "1.0.0", optional = true }
+
+ariadne = { workspace = true }
+byteorder = { workspace = true, optional = true }
+chumsky = { workspace = true, optional = true}
+float-ord = "0.3.2"
+
+[features]
+default = ["compiler", "parser"]
+compiler = ["byteorder", "hemtt-lzo"]
+parser = ["chumsky"]
+
+[dev-dependencies]
+hemtt-preprocessor = { path = "../preprocessor" }
+paste = "1.0.14"

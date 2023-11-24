@@ -1,6 +1,6 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::{ops::Range, rc::Rc};
 
 use crate::{
     position::{LineCol, Position},
@@ -197,7 +197,7 @@ impl Processed {
     #[must_use]
     /// Get the output suitable for further processing
     /// Ignores certain tokens
-    pub fn as_string(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         &self.processed
     }
 
@@ -240,6 +240,23 @@ impl Processed {
                 map.processed_start().offset() <= offset && map.processed_end().offset() > offset
             })
             .collect()
+    }
+
+    #[must_use]
+    /// Get the code at a position in the stringified output
+    ///
+    /// # Panics
+    /// Panics if a source does not exist
+    pub fn code(&self, span: Range<usize>) -> String {
+        let mut out = String::new();
+        for map in self.mappings(span.start) {
+            let source = self.source(map.source()).expect("source exists");
+            let start = map.original().start().offset();
+            let end = map.original().end().offset();
+            let content = &source.1[start..end];
+            out.push_str(content);
+        }
+        out
     }
 
     #[must_use]

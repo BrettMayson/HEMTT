@@ -113,6 +113,30 @@ impl WorkspacePath {
         }
     }
 
+    /// Change the extension of the path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be changed
+    pub fn with_extension(&self, ext: &str) -> Result<Self, Error> {
+        Ok(Self {
+            path: {
+                let current = self
+                    .path
+                    .filename()
+                    .chars()
+                    .rev()
+                    .collect::<String>()
+                    .split_once('.')
+                    .map_or("", |(_, s)| s)
+                    .chars()
+                    .rev()
+                    .collect::<String>();
+                self.path.parent().join(format!("{current}.{ext}"))?
+            },
+            workspace: self.workspace.clone(),
+        })
+    }
+
     /// Locate a path in the workspace
     ///
     /// Checks in order:

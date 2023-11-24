@@ -33,7 +33,7 @@ impl Code for InvalidValueMacro {
     fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
         let map = processed.mapping(self.span.start).unwrap();
         let token = map.token();
-        let invalid = &processed.as_string()[self.span.start..self.span.end];
+        let invalid = &processed.as_str()[self.span.start..self.span.end];
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();

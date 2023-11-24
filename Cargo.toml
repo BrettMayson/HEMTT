@@ -11,12 +11,14 @@ members = [
     "libs/pbo",
     "libs/preprocessor",
     "libs/signing",
+    "libs/sqf",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 ariadne = "0.3.0"
 byteorder = "1.5.0"
+chumsky = "0.9.3"
 clap = "4.4.8"
 git2 = "0.18.1"
 lsp-types = "0.94.1"
@@ -26,6 +28,7 @@ pest_derive = "2.7.5"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 sha-1 = "0.10.1"
+thiserror = "1.0.50"
 toml = "0.8.8"
 tracing = { version = "0.1.40", features = ["attributes"] }
 vfs = "0.10.0"

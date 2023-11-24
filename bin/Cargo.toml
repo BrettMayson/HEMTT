@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.10.3"
+version = "1.10.3-sqf"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -25,6 +25,7 @@ hemtt-paa = { path = "../libs/paa", version = "1.0.0" }
 hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
 hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
 hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
+hemtt-sqf = { path = "../libs/sqf", version = "1.0.0" }
 
 clap = { workspace = true }
 dialoguer = "0.11.0"

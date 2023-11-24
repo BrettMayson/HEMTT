@@ -66,6 +66,8 @@ pub enum Error {
     Version(#[from] hemtt_common::version::Error),
     #[error("Workspace Error: {0}")]
     Workspace(#[from] hemtt_common::workspace::Error),
+    #[error("Sqf Error: {0}")]
+    Sqf(#[from] hemtt_sqf::Error),
 
     #[error("Update error: {0}")]
     Update(String),

@@ -27,7 +27,7 @@ pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
 ) -> Result<ConfigReport, Vec<ChumskyCode>> {
-    let (config, errors) = parse::config().parse_recovery(processed.as_string());
+    let (config, errors) = parse::config().parse_recovery(processed.as_str());
     config.map_or_else(
         || Err(errors.iter().map(std::convert::Into::into).collect()),
         |config| {

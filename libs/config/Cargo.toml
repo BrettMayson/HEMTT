@@ -18,7 +18,7 @@ hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0" }
 
 ariadne = { workspace = true }
 byteorder = { workspace = true }
-chumsky = "0.9.3"
+chumsky = { workspace = true }
 lsp-types = { workspace = true }
 vfs = { workspace = true }
 
