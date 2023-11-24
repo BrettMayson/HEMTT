@@ -75,7 +75,7 @@ jobs:
           - repo: Theseus-Aegis/Mods
             commit: 29a1586aab37d5dfde462a7c22edb979b7668947
           - repo: SynixeContractors/Mod
-            commit: ce73dae8dd19bf1d52195bd52faa4601f98b1e21
+            commit: dc895a0b1e28a3d7f5e43cfe95b3d325ab5d77ac
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v3
