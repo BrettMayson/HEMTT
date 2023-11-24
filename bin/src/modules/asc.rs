@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicU16, Ordering};
 
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::database::Database;
+use hemtt_sqf::parser::{database::Database, ParserError};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use time::Instant;
 
@@ -75,8 +75,19 @@ impl Module for ArmaScriptCompiler {
                 .par_iter()
                 .map(|entry| {
                     let processed = Processor::run(entry)?;
-                    let sqf = hemtt_sqf::parser::run(&Database::default(), &processed)
-                        .map_err(hemtt_sqf::Error::ParserError)?;
+                    let sqf = match hemtt_sqf::parser::run(&Database::default(), &processed) {
+                        Ok(sqf) => sqf,
+                        Err(ParserError::ParsingError(e)) => {
+                            for error in e {
+                                eprintln!(
+                                    "{}",
+                                    error.report_generate_processed(&processed).unwrap()
+                                );
+                            }
+                            return Ok(());
+                        }
+                        Err(e) => return Err(Error::Sqf(e.into())),
+                    };
                     let mut out = entry.with_extension("sqfc")?.create_file()?;
                     sqf.compile_to_writer(&processed, &mut out)?;
                     counter.fetch_add(1, Ordering::Relaxed);
