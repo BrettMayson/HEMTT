@@ -138,12 +138,12 @@ pub fn run(input: impl AsRef<str>) -> Result<Tokens, Vec<Simple<char>>> {
 }
 
 fn lexer() -> impl Parser<char, Tokens, Error = Simple<char>> {
-    comment()
+    end().padded().map(|()| vec![]).or(comment()
         .or(base())
         .map_with_span(|token, span| (token, span))
         .padded()
         .repeated()
-        .then_ignore(end())
+        .then_ignore(end()))
 }
 
 fn base() -> impl Parser<char, Token, Error = Simple<char>> {

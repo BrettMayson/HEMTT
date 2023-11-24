@@ -272,7 +272,7 @@ fn keyword(name: &'static str) -> impl Parser<Token, (), Error = Simple<Token>> 
 // TODO: `std::error::Error` implementation
 #[derive(Debug, Error)]
 pub enum ParserError {
-    #[error("lexing error")]
+    #[error("lexing error {0:?}")]
     LexingError(Vec<Simple<char>>),
     #[error("parsing error")]
     ParsingError(Vec<Box<dyn Code>>),
