@@ -8,7 +8,7 @@ pub enum Error {
     LaunchConfigNotFound(String),
 
     #[error("ASC: {0}")]
-    ArmaScriptCompiler(String),
+    SQFCompiler(String),
 
     #[error("Folder already exists: {0}")]
     NewFolderExists(String),

@@ -28,8 +28,6 @@
     - [Examples](rhai/hooks/examples.md)
   - [Scripts](rhai/scripts/index.md)
     - [Examples](rhai/scripts/examples.md)
-- [Linting](linting.md)
-- [ArmaScriptCompiler](armascriptcompiler.md)
 
 # Utilities
 

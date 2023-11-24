@@ -4,7 +4,7 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Lint, Rapifier},
+    modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
 };
 
 #[must_use]
@@ -86,11 +86,10 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<Hooks>::default());
-    executor.add_module(Box::<Lint>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::<ArmaScriptCompiler>::default());
+    executor.add_module(Box::<SQFCompiler>::default());
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }

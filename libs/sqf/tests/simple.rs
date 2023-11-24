@@ -39,9 +39,9 @@ fn simple(file: &str) {
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
 }
 
-simple!(hello);
-simple!(get_visibility);
-simple!(semicolons);
 simple!(eventhandler);
 simple!(foreach);
+simple!(get_visibility);
 simple!(hash_select);
+simple!(hello);
+simple!(semicolons);
