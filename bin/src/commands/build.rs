@@ -4,7 +4,7 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Hooks, Lint, Rapifier},
+    modules::{pbo::Collapse, ArmaScriptCompiler, Binarize, Files, Hooks, Lint, Rapifier},
 };
 
 #[must_use]
@@ -90,12 +90,9 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
+    executor.add_module(Box::<ArmaScriptCompiler>::default());
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        executor.add_module(Box::<crate::modules::ArmaScriptCompiler>::default());
     }
     executor.add_module(Box::<Files>::default());
 

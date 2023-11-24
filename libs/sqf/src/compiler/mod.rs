@@ -185,7 +185,9 @@ impl Expression {
                         location_to_source(processed, location),
                     ));
                 }
-                _ => unreachable!(),
+                Self::Code(_) | Self::String(_) | Self::Number(_) | Self::Boolean(_) => {
+                    unreachable!("constant should have been handled")
+                }
             },
         };
 

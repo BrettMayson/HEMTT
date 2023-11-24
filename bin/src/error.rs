@@ -8,7 +8,6 @@ pub enum Error {
     LaunchConfigNotFound(String),
 
     #[error("ASC: {0}")]
-    #[cfg(not(target_os = "macos"))]
     ArmaScriptCompiler(String),
 
     #[error("Folder already exists: {0}")]

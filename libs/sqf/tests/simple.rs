@@ -23,7 +23,16 @@ fn simple(file: &str) {
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_sqf::parser::run(&Database::default(), &processed).unwrap();
+    let parsed = match hemtt_sqf::parser::run(&Database::default(), &processed) {
+        Ok(sqf) => sqf,
+        Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
+            for error in e {
+                println!("{}", error.report_generate_processed(&processed).unwrap());
+            }
+            panic!("failed to parse");
+        }
+        Err(e) => panic!("{e:?}"),
+    };
     assert_ne!(parsed.content.len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
@@ -31,3 +40,5 @@ fn simple(file: &str) {
 
 simple!(hello);
 simple!(get_visibility);
+simple!(semicolons);
+simple!(eventhandler);

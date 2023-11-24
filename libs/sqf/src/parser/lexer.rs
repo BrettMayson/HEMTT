@@ -11,13 +11,22 @@ macro_rules! chain_collect {
   };
 }
 
-/// Will strip comments and macros from the given tokens list.
-pub fn strip_comments_and_macros(tokens: &mut Tokens) {
-    tokens.retain(|(token, _)| !matches!(token, Token::Comment(..) | Token::Macro(..)));
-}
-
 pub fn strip_comments(tokens: &mut Tokens) {
     tokens.retain(|(token, _)| !matches!(token, Token::Comment(..)));
+}
+
+pub fn strip_noop(tokens: &mut Tokens) {
+    // remove semicolons that appear directly after a semicolon
+    let mut last_was_semicolon = false;
+    tokens.retain(|(token, _)| {
+        let is_semicolon = matches!(
+            token,
+            Token::Control(Control::Terminator | Control::CurlyBracketOpen)
+        );
+        let result = !(last_was_semicolon && is_semicolon);
+        last_was_semicolon = is_semicolon;
+        result
+    });
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

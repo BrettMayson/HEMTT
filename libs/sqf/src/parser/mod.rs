@@ -21,6 +21,9 @@ use hemtt_common::reporting::{Code, Processed};
 pub fn run(database: &Database, processed: &Processed) -> Result<Statements, ParserError> {
     let mut tokens = self::lexer::run(processed.as_str()).map_err(ParserError::LexingError)?;
     self::lexer::strip_comments(&mut tokens);
+    println!("pre strip noop {:?}", tokens.len());
+    self::lexer::strip_noop(&mut tokens);
+    println!("post strip noop {:?}", tokens.len());
     run_for_tokens(database, processed, tokens).map_err(|e| {
         let mut errors: Vec<Box<dyn Code>> = Vec::new();
 
@@ -78,7 +81,7 @@ fn statements<'a>(
               Token::Identifier(id) if id.eq_ignore_ascii_case("false") => Expression::Boolean(false),
               Token::Identifier(id) if database.has_nular_command(&id) => {
                 Expression::NularCommand(NularCommand { name: id }, span)
-              }
+              },
             };
 
             let array_open = just(Token::Control(Control::SquareBracketOpen));

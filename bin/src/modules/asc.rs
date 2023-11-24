@@ -84,6 +84,7 @@ impl Module for ArmaScriptCompiler {
                                     "{}",
                                     error.report_generate_processed(&processed).unwrap()
                                 );
+                                panic!("asc: {}", processed.as_str());
                             }
                             return Ok(());
                         }
