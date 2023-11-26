@@ -63,11 +63,14 @@ impl Module for SQFCompiler {
                             Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF))
                         }
                     }
-                    Err(e) => {
+                    Err(ParserError::LexingError(e)) => {
                         if entry.filename().ends_with(".inc.sqf") {
                             Ok(())
                         } else {
-                            Err(Error::Sqf(e.into()))
+                            for error in e {
+                                eprintln!("{entry} {error:?}");
+                            }
+                            Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF))
                         }
                     }
                 }
