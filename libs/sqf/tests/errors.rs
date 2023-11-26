@@ -37,18 +37,12 @@ fn errors(dir: &str) {
     let errors = parsed
         .iter()
         .map(|e| e.report_generate_processed(&processed).unwrap())
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+        .join("\n");
     if expected.is_empty() {
-        std::fs::write(
-            folder.join("error.ansi"),
-            errors.join("\n").replace('\r', "").as_bytes(),
-        )
-        .unwrap();
+        std::fs::write(folder.join("error.ansi"), errors.as_bytes()).unwrap();
     }
-    assert_eq!(
-        errors.join("\n").replace('\r', ""),
-        String::from_utf8(expected).unwrap().replace('\r', "")
-    );
+    assert_eq!(errors.as_bytes(), expected);
 }
 
 errors!(spe1_unparseable);

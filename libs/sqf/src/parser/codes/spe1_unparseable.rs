@@ -5,13 +5,12 @@ use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 pub struct UnparseableSyntax {
     span: Range<usize>,
-    message: String,
 }
 
 impl UnparseableSyntax {
     #[must_use]
-    pub const fn new(span: Range<usize>, message: String) -> Self {
-        Self { span, message }
+    pub const fn new(span: Range<usize>) -> Self {
+        Self { span }
     }
 }
 
@@ -22,7 +21,7 @@ impl Code for UnparseableSyntax {
     }
 
     fn message(&self) -> String {
-        self.message.clone()
+        "unparseable syntax".to_string()
     }
 
     fn label_message(&self) -> String {

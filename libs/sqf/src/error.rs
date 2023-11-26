@@ -2,6 +2,8 @@ use hemtt_common::error::thiserror;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("One or more files are not valid SQF")]
+    InvalidSQF,
     #[error(transparent)]
     ParserError(#[from] crate::parser::ParserError),
     #[cfg(feature = "compiler")]

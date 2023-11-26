@@ -22,8 +22,8 @@ impl Module for SQFCompiler {
         let sqf_ext = Some(String::from("sqf"));
         let start = Instant::now();
         let counter = AtomicU16::new(0);
+        let mut entries = Vec::new();
         for addon in ctx.addons() {
-            let mut entries = Vec::new();
             for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
@@ -32,47 +32,47 @@ impl Module for SQFCompiler {
                     entries.push(entry);
                 }
             }
-            entries
-                .par_iter()
-                .map(|entry| {
-                    trace!("asc compiling {}", entry);
-                    let processed = Processor::run(entry)?;
-                    match hemtt_sqf::parser::run(&Database::default(), &processed) {
-                        Ok(sqf) => {
-                            let mut out = entry.with_extension("sqfc")?.create_file()?;
-                            sqf.compile_to_writer(&processed, &mut out)?;
-                            counter.fetch_add(1, Ordering::Relaxed);
+        }
+        entries
+            .par_iter()
+            .map(|entry| {
+                trace!("asc compiling {}", entry);
+                let processed = Processor::run(entry)?;
+                match hemtt_sqf::parser::run(&Database::default(), &processed) {
+                    Ok(sqf) => {
+                        let mut out = entry.with_extension("sqfc")?.create_file()?;
+                        sqf.compile_to_writer(&processed, &mut out)?;
+                        counter.fetch_add(1, Ordering::Relaxed);
+                        Ok(())
+                    }
+                    Err(ParserError::ParsingError(e)) => {
+                        if entry.filename().ends_with(".inc.sqf") {
                             Ok(())
-                        }
-                        Err(ParserError::ParsingError(e)) => {
-                            if entry.filename().ends_with(".inc.sqf") {
-                                Ok(())
-                            } else if processed.as_str().starts_with("force ")
-                                || processed.as_str().contains("\nforce ")
-                            {
-                                warn!("skipping what appears to be CBA settings file: {}", entry);
-                                Ok(())
-                            } else {
-                                for error in e {
-                                    eprintln!(
-                                        "{}",
-                                        error.report_generate_processed(&processed).unwrap()
-                                    );
-                                }
-                                panic!("asc: {}", processed.as_str());
+                        } else if processed.as_str().starts_with("force ")
+                            || processed.as_str().contains("\nforce ")
+                        {
+                            warn!("skipping what appears to be CBA settings file: {}", entry);
+                            Ok(())
+                        } else {
+                            for error in e {
+                                eprintln!(
+                                    "{}",
+                                    error.report_generate_processed(&processed).unwrap()
+                                );
                             }
-                        }
-                        Err(e) => {
-                            if entry.filename().ends_with(".inc.sqf") {
-                                Ok(())
-                            } else {
-                                Err(Error::Sqf(e.into()))
-                            }
+                            Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF))
                         }
                     }
-                })
-                .collect::<Result<_, Error>>()?;
-        }
+                    Err(e) => {
+                        if entry.filename().ends_with(".inc.sqf") {
+                            Ok(())
+                        } else {
+                            Err(Error::Sqf(e.into()))
+                        }
+                    }
+                }
+            })
+            .collect::<Result<_, Error>>()?;
         debug!(
             "ASC Preprocess took {:?}",
             start.elapsed().whole_milliseconds()

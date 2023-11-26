@@ -28,7 +28,6 @@ pub fn run(database: &Database, processed: &Processed) -> Result<Statements, Par
         for e in e {
             errors.push(Box::new(codes::spe1_unparseable::UnparseableSyntax::new(
                 e.span(),
-                format!("{e:?}"),
             )));
         }
         ParserError::ParsingError(errors)
