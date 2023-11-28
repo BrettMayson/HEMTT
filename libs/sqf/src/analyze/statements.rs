@@ -58,7 +58,11 @@ fn required_version(
     if wiki_version < usage {
         errors.push(Box::new(
             super::codes::sae1_require_version::InsufficientRequiredVersion::new(
-                command, usage_span, usage, required, *database.wiki().version(),
+                command,
+                usage_span,
+                usage,
+                required,
+                *database.wiki().version(),
             ),
         ));
     }

@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use a3_wiki::model::Version;
-use ariadne::{sources, ColorGenerator, Label, Report, Fmt};
+use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 pub struct InsufficientRequiredVersion {
@@ -89,26 +89,28 @@ impl Code for InsufficientRequiredVersion {
                     b
                 } else {
                     colors.next()
-                }), self.version.fg(a)
+                }),
+                self.version.fg(a)
             ));
         };
-        report.finish()
-        .write_for_stdout(
-            sources({
-                let mut sources = processed
-                    .sources()
-                    .iter()
-                    .map(|(p, c)| (p.to_string(), c.to_string()))
-                    .collect::<Vec<_>>();
-                sources.push((
-                    self.required.1.clone(),
-                    std::fs::read_to_string(self.required.1.trim_start_matches('/')).unwrap(),
-                ));
-                sources
-            }),
-            &mut out,
-        )
-        .unwrap();
+        report
+            .finish()
+            .write_for_stdout(
+                sources({
+                    let mut sources = processed
+                        .sources()
+                        .iter()
+                        .map(|(p, c)| (p.to_string(), c.to_string()))
+                        .collect::<Vec<_>>();
+                    sources.push((
+                        self.required.1.clone(),
+                        std::fs::read_to_string(self.required.1.trim_start_matches('/')).unwrap(),
+                    ));
+                    sources
+                }),
+                &mut out,
+            )
+            .unwrap();
         Some(String::from_utf8(out).unwrap())
     }
 
