@@ -1,9 +1,28 @@
+use std::ops::Range;
+use std::sync::{Arc, RwLock};
 use std::{fs::DirEntry, path::PathBuf, str::FromStr};
 
-use hemtt_common::prefix::{self, Prefix};
-use hemtt_common::project::AddonConfig;
+use tracing::warn;
 
-use crate::error::Error;
+use crate::{
+    prefix::{self, Prefix},
+    project::AddonConfig,
+    version::Version,
+};
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("Addon duplicated with different case: {0}")]
+    AddonNameDuplicate(String),
+    #[error("Addon present in addons and optionals: {0}")]
+    AddonDuplicate(String),
+    #[error("Invalid addon location: {0}")]
+    AddonLocationInvalid(String),
+    #[error("Optional addon not found: {0}")]
+    AddonOptionalNotFound(String),
+    #[error("Addon prefix not found: {0}")]
+    AddonPrefixMissing(String),
+}
 
 #[derive(Debug, Clone)]
 pub struct Addon {
@@ -11,6 +30,7 @@ pub struct Addon {
     location: Location,
     config: Option<AddonConfig>,
     prefix: Prefix,
+    build_data: BuildData,
 }
 
 impl Addon {
@@ -21,7 +41,7 @@ impl Addon {
     /// - [`std::io::Error`] if the addon.toml file cannot be read
     /// - [`toml::de::Error`] if the addon.toml file is invalid
     /// - [`std::io::Error`] if the prefix file cannot be read
-    pub fn new(name: String, location: Location) -> Result<Self, Error> {
+    pub fn new(name: String, location: Location) -> Result<Self, crate::error::Error> {
         let path = PathBuf::from(location.to_string()).join(&name);
         Ok(Self {
             config: {
@@ -56,6 +76,7 @@ impl Addon {
             },
             location,
             name,
+            build_data: BuildData::new(),
         })
     }
 
@@ -91,12 +112,17 @@ impl Addon {
         self.config.as_ref()
     }
 
+    #[must_use]
+    pub const fn build_data(&self) -> &BuildData {
+        &self.build_data
+    }
+
     /// Scan for addons in both locations
     ///
     /// # Errors
     /// - [`Error::AddonLocationInvalid`] if a location is invalid
     /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
-    pub fn scan() -> Result<Vec<Self>, Error> {
+    pub fn scan() -> Result<Vec<Self>, crate::error::Error> {
         let mut addons = Vec::new();
         for location in [Location::Addons, Location::Optionals] {
             addons.extend(location.scan()?);
@@ -111,13 +137,17 @@ impl Addon {
             if addons.iter().any(|a| {
                 a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
             }) {
-                return Err(Error::AddonNameDuplicate(addon.name().to_string()));
+                return Err(crate::error::Error::Addon(Error::AddonNameDuplicate(
+                    addon.name().to_string(),
+                )));
             }
             if addons.iter().any(|a| {
                 a.name().to_lowercase() == addon.name().to_lowercase()
                     && a.location() != addon.location()
             }) {
-                return Err(Error::AddonDuplicate(addon.name().to_string()));
+                return Err(crate::error::Error::Addon(Error::AddonDuplicate(
+                    addon.name().to_string(),
+                )));
             }
         }
         Ok(addons)
@@ -135,7 +165,7 @@ impl Location {
     ///
     /// # Errors
     /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
-    pub fn scan(self) -> Result<Vec<Addon>, Error> {
+    pub fn scan(self) -> Result<Vec<Addon>, crate::error::Error> {
         if !PathBuf::from(self.to_string()).exists() {
             return Ok(Vec::new());
         }
@@ -146,14 +176,18 @@ impl Location {
             .filter(|file_or_dir| file_or_dir.is_dir())
             .map(|file| {
                 let Some(name) = file.file_name() else {
-                    return Err(Error::AddonLocationInvalid(file.display().to_string()));
+                    return Err(crate::error::Error::Addon(Error::AddonLocationInvalid(
+                        file.display().to_string(),
+                    )));
                 };
                 let Some(name) = name.to_str() else {
-                    return Err(Error::AddonLocationInvalid(file.display().to_string()));
+                    return Err(crate::error::Error::Addon(Error::AddonLocationInvalid(
+                        file.display().to_string(),
+                    )));
                 };
                 Addon::new(name.to_string(), self)
             })
-            .collect()
+            .collect::<Result<Vec<Addon>, crate::error::Error>>()
     }
 }
 
@@ -176,5 +210,41 @@ impl ToString for Location {
             Self::Optionals => "optionals",
         }
         .to_string()
+    }
+}
+
+type RequiredVersion = (Version, String, Range<usize>);
+
+#[derive(Debug, Clone, Default)]
+pub struct BuildData {
+    required_version: Arc<RwLock<Option<RequiredVersion>>>,
+}
+
+impl BuildData {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            required_version: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    #[must_use]
+    /// Fetches the required version
+    ///
+    /// Does not lock, the value is only accurate at the time of calling
+    /// but it shouldn't change during normal HEMTT usage
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned
+    pub fn required_version(&self) -> Option<RequiredVersion> {
+        self.required_version.read().unwrap().clone()
+    }
+
+    /// Sets the required version
+    ///
+    /// # Panics
+    /// Panics if the lock is poisoned
+    pub fn set_required_version(&self, version: Version, file: String, line: Range<usize>) {
+        *self.required_version.write().unwrap() = Some((version, file, line));
     }
 }

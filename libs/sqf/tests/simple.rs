@@ -45,3 +45,4 @@ simple!(get_visibility);
 simple!(hash_select);
 simple!(hello);
 simple!(semicolons);
+simple!(dev);

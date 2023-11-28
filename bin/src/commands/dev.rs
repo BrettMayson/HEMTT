@@ -1,7 +1,7 @@
 use clap::{ArgAction, ArgMatches, Command};
+use hemtt_common::addons::Location;
 
 use crate::{
-    addons::Location,
     context::Context,
     error::Error,
     executor::Executor,
@@ -94,7 +94,9 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
 
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
-            return Err(Error::AddonOptionalNotFound(optional.to_owned()));
+            return Err(Error::Addon(
+                hemtt_common::addons::Error::AddonOptionalNotFound(optional.to_owned()),
+            ));
         }
     }
 

@@ -15,17 +15,6 @@ pub enum Error {
     #[error("New can only be ran in an interactive terminal")]
     NewNoInput,
 
-    #[error("Addon duplicated with different case: {0}")]
-    AddonNameDuplicate(String),
-    #[error("Addon present in addons and optionals: {0}")]
-    AddonDuplicate(String),
-    #[error("Invalid addon location: {0}")]
-    AddonLocationInvalid(String),
-    #[error("Optional addon not found: {0}")]
-    AddonOptionalNotFound(String),
-    #[error("Addon prefix not found: {0}")]
-    AddonPrefixMissing(String),
-
     #[error("Hook signaled failure: {0}")]
     HookFatal(String),
     #[error("Script not found: {0}")]
@@ -67,6 +56,8 @@ pub enum Error {
     Workspace(#[from] hemtt_common::workspace::Error),
     #[error("Sqf Error: {0}")]
     Sqf(#[from] hemtt_sqf::Error),
+    #[error("Addon Error: {0}")]
+    Addon(#[from] hemtt_common::addons::Error),
 
     #[error("Update error: {0}")]
     Update(String),

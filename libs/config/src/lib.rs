@@ -8,10 +8,13 @@ mod analyze;
 mod error;
 mod model;
 
-use analyze::Analyze;
+use analyze::{Analyze, CfgPatch};
 use ariadne::{sources, Label, Report};
 use chumsky::{prelude::Simple, Parser};
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_common::{
+    reporting::{Code, Processed},
+    version::Version,
+};
 
 pub use error::Error;
 use hemtt_common::project::ProjectConfig;
@@ -35,6 +38,7 @@ pub fn parse(
                 valid: config.valid(project),
                 warnings: config.warnings(project, processed),
                 errors: config.errors(project, processed),
+                patches: config.get_patches(),
                 config,
             })
         },
@@ -47,6 +51,7 @@ pub struct ConfigReport {
     valid: bool,
     warnings: Vec<Box<dyn Code>>,
     errors: Vec<Box<dyn Code>>,
+    patches: Vec<CfgPatch>,
 }
 
 impl ConfigReport {
@@ -78,6 +83,26 @@ impl ConfigReport {
     /// Get the errors
     pub fn errors(&self) -> &[Box<dyn Code>] {
         &self.errors
+    }
+
+    #[must_use]
+    /// Get the patches
+    pub fn patches(&self) -> &[CfgPatch] {
+        &self.patches
+    }
+
+    #[must_use]
+    /// Get the required version, picking the highest from all patches
+    pub fn required_version(&self) -> (Version, Option<CfgPatch>) {
+        let mut version = Version::new(0, 0, 0, None);
+        let mut patch = None;
+        for each in &self.patches {
+            if each.required_version() > &version {
+                version = each.required_version().clone();
+                patch = Some(each.clone());
+            }
+        }
+        (version, patch)
     }
 }
 

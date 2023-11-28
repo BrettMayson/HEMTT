@@ -4,7 +4,6 @@ pub use error::Error;
 #[macro_use]
 extern crate tracing;
 
-pub mod addons;
 pub mod commands;
 pub mod context;
 pub mod error;

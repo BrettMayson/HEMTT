@@ -1,7 +1,10 @@
 use std::sync::atomic::{AtomicU16, Ordering};
 
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::{database::Database, ParserError};
+use hemtt_sqf::{
+    analyze::analyze,
+    parser::{database::Database, ParserError},
+};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use time::Instant;
 
@@ -29,18 +32,30 @@ impl Module for SQFCompiler {
                     if entry.extension() != sqf_ext {
                         continue;
                     }
-                    entries.push(entry);
+                    entries.push((addon, entry));
                 }
             }
         }
+        let database = Database::default();
         entries
             .par_iter()
-            .map(|entry| {
+            .map(|(addon, entry)| {
                 trace!("asc compiling {}", entry);
                 let processed = Processor::run(entry)?;
-                match hemtt_sqf::parser::run(&Database::default(), &processed) {
+                match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;
+                        let (warnings, errors) =
+                            analyze(&sqf, Some(ctx.config()), &processed, addon, &database);
+                        for warning in warnings {
+                            warn!("{}", warning.report_generate_processed(&processed).unwrap());
+                        }
+                        if !errors.is_empty() {
+                            for error in errors {
+                                error!("{}", error.report_generate_processed(&processed).unwrap());
+                            }
+                            return Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF));
+                        }
                         sqf.compile_to_writer(&processed, &mut out)?;
                         counter.fetch_add(1, Ordering::Relaxed);
                         Ok(())

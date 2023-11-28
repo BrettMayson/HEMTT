@@ -2,9 +2,11 @@
 
 use std::collections::HashSet;
 
-pub const NULAR_COMMANDS: &[&str] = &include!("./nular_commands.jsonc");
-pub const UNARY_COMMANDS: &[&str] = &include!("./unary_commands.jsonc");
-pub const BINARY_COMMANDS: &[&str] = &include!("./binary_commands.jsonc");
+use a3_wiki::{
+    model::{Call, Version},
+    A3Wiki,
+};
+use tracing::warn;
 
 /// The list of commands that are valid nular command constants for the compiler.
 pub const NULAR_COMMANDS_CONSTANTS: &[&str] = &[
@@ -46,6 +48,7 @@ pub struct Database {
     nular_commands: HashSet<String>,
     unary_commands: HashSet<String>,
     binary_commands: HashSet<String>,
+    wiki: A3Wiki,
 }
 
 impl Database {
@@ -56,6 +59,15 @@ impl Database {
             nular_commands: HashSet::new(),
             unary_commands: HashSet::new(),
             binary_commands: HashSet::new(),
+            wiki: {
+                A3Wiki::load_git().map_or_else(
+                    |_| {
+                        warn!("Failed to load A3 wiki from git, falling back to bundled version");
+                        A3Wiki::load_dist()
+                    },
+                    |wiki| wiki,
+                )
+            },
         }
     }
 
@@ -114,18 +126,54 @@ impl Database {
     pub const fn binary_commands(&self) -> &HashSet<String> {
         &self.binary_commands
     }
+
+    #[must_use]
+    pub const fn wiki(&self) -> &A3Wiki {
+        &self.wiki
+    }
+
+    #[must_use]
+    pub fn command_version(&self, command: &str) -> Option<&Version> {
+        self.wiki
+            .commands()
+            .get(command)
+            .and_then(|c| c.since().arma_3())
+    }
 }
 
 impl Default for Database {
     fn default() -> Self {
-        let mut nular_commands = to_set(NULAR_COMMANDS);
+        let mut nular_commands = HashSet::new();
+        let mut unary_commands = HashSet::new();
+        let mut binary_commands = HashSet::new();
+
+        let wiki = A3Wiki::load_git().map_or_else(
+            |_| {
+                warn!("Failed to load A3 wiki from git, falling back to bundled version");
+                A3Wiki::load_dist()
+            },
+            |wiki| wiki,
+        );
+
+        for command in wiki.commands().values() {
+            for syntax in command.syntax() {
+                match syntax.call() {
+                    Call::Nular => {
+                        nular_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                    Call::Unary(_) => {
+                        unary_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                    Call::Binary(_, _) => {
+                        binary_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                }
+            }
+        }
+
         for &command in NULAR_COMMANDS_SPECIAL {
             nular_commands.remove(command);
         }
-
-        let unary_commands = to_set(UNARY_COMMANDS);
-
-        let mut binary_commands = to_set(BINARY_COMMANDS);
         for &command in BINARY_COMMANDS_SPECIAL {
             binary_commands.remove(command);
         }
@@ -134,6 +182,7 @@ impl Default for Database {
             nular_commands,
             unary_commands,
             binary_commands,
+            wiki,
         }
     }
 }

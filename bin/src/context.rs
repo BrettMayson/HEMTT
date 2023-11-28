@@ -4,10 +4,10 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::project::ProjectConfig;
 use hemtt_common::workspace::{Workspace, WorkspacePath};
+use hemtt_common::{addons::Addon, project::ProjectConfig};
 
-use crate::{addons::Addon, error::Error};
+use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Should the current contents of .hemttout\{} be preserved
