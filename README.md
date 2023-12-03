@@ -12,8 +12,9 @@ An opinionated build system for Arma 3 mods.
 ## Installation
 
 [![GitHub](https://img.shields.io/badge/GitHub-lightblue.svg?style=flat-square)](https://github.com/BrettMayson/HEMTT/releases)
-[![Chocolatey](https://img.shields.io/badge/Chocolatey-lightblue.svg?style=flat-square)](https://community.chocolatey.org/packages/HEMTT)
 [![winstall](https://img.shields.io/badge/WinGet-lightblue.svg?style=flat-square)](https://winstall.app/apps/BrettMayson.HEMTT)
+
+<!--[![Chocolatey](https://img.shields.io/badge/Chocolatey-lightblue.svg?style=flat-square)](https://community.chocolatey.org/packages/HEMTT)-->
 
 [Read it in the book](https://brettmayson.github.io/HEMTT/installation.html)
 
