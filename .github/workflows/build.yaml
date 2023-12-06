@@ -73,7 +73,7 @@ jobs:
           - repo: ArmaForces/Mods
             commit: b98ef8af4bdb1fdbef296209fedd036f1cc46dbd
           - repo: Theseus-Aegis/Mods
-            commit: 29a1586aab37d5dfde462a7c22edb979b7668947
+            commit: d38f09f6c64f3ed9d9f15831df44f4b42453a500
           - repo: SynixeContractors/Mod
             commit: dc895a0b1e28a3d7f5e43cfe95b3d325ab5d77ac
     steps:
