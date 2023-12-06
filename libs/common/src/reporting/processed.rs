@@ -250,7 +250,6 @@ impl Processed {
     /// # Panics
     /// Panics if a source does not exist
     pub fn code(&self, span: Range<usize>) -> String {
-        trace!("Getting code for {:?}", span);
         if self.processed.is_empty() {
             return String::new();
         }

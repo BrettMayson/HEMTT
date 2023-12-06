@@ -179,7 +179,7 @@ impl WorkspacePath {
         }
         let path = self.path.parent().join(path)?;
         if path.exists()? {
-            trace!("Located with parent: {:?}", path);
+            trace!("Located with parent: vfs {}", path.as_str());
             Ok(Some(Self {
                 path,
                 workspace: self.workspace.clone(),
