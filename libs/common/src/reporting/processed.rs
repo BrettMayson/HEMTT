@@ -2,8 +2,6 @@
 use std::collections::HashMap;
 use std::{ops::Range, rc::Rc};
 
-use tracing::trace;
-
 use crate::{
     position::{LineCol, Position},
     reporting::{Output, Token},
