@@ -2,6 +2,8 @@
 use std::collections::HashMap;
 use std::{ops::Range, rc::Rc};
 
+use tracing::trace;
+
 use crate::{
     position::{LineCol, Position},
     reporting::{Output, Token},
@@ -247,8 +249,16 @@ impl Processed {
     ///
     /// # Panics
     /// Panics if a source does not exist
-    pub fn code(&self, span: Range<usize>) -> &str {
-        &self.processed[span]
+    pub fn code(&self, span: Range<usize>) -> String {
+        trace!("Getting code for {:?}", span);
+        if self.processed.is_empty() {
+            return String::new();
+        }
+        self.processed
+            .chars()
+            .skip(span.start)
+            .take(span.end - span.start)
+            .collect::<String>()
     }
 
     #[must_use]

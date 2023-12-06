@@ -217,7 +217,7 @@ fn statements<'a>(
             .allow_trailing()
             .map_with_span(|content, span| Statements {
                 content,
-                source: processed.code(span).to_string(),
+                source: processed.code(span),
             })
     })
 }
