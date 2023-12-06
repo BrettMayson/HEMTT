@@ -9,7 +9,6 @@ use std::{
 use hemtt_common::{
     addons::Addon,
     reporting::{Annotation, Code},
-    version::Version,
     workspace::WorkspacePath,
 };
 use hemtt_config::{parse, rapify::Rapify};

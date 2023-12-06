@@ -223,13 +223,6 @@ pub fn is_valid_command(command: &str) -> bool {
     is_valid_name(command) || is_operator_command(command)
 }
 
-fn to_set(commands: &[&str]) -> HashSet<String> {
-    commands
-        .iter()
-        .map(|command| command.to_lowercase())
-        .collect()
-}
-
 fn is_in(list: &[&str], item: &str) -> bool {
     list.iter().any(|i| i.eq_ignore_ascii_case(item))
 }

@@ -17,3 +17,6 @@ dist/
 
 # Browser Extensions
 pkg/
+
+# SQF Tests
+*.sqfast

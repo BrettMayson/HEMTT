@@ -247,9 +247,8 @@ impl Processed {
     ///
     /// # Panics
     /// Panics if a source does not exist
-    pub const fn code(&self, span: Range<usize>) -> String {
-        // TODO
-        String::new()
+    pub fn code(&self, span: Range<usize>) -> &str {
+        &self.processed[span]
     }
 
     #[must_use]
