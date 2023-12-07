@@ -22,7 +22,7 @@ fn simple(file: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source, true).unwrap();
+    let processed = Processor::run(&source).unwrap();
     std::fs::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
     let parsed = match hemtt_sqf::parser::run(&Database::default(), &processed) {
         Ok(sqf) => sqf,

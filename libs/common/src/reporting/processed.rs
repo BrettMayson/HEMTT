@@ -14,8 +14,7 @@ use super::{Code, Error};
 /// A processed file
 pub struct Processed {
     sources: Vec<(WorkspacePath, String)>,
-    processed: String,
-    lines: String,
+    output: String,
 
     /// character offset for each line
     line_offsets: Vec<usize>,
@@ -48,33 +47,8 @@ fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
     token: Rc<Token>,
-    lines: &mut Option<Option<String>>,
 ) -> Result<(), Error> {
-    fn maybe_line(
-        processed: &mut Processed,
-        token: Rc<Token>,
-        path: &WorkspacePath,
-        lines: &mut Option<Option<String>>,
-    ) {
-        if let Some(inner) = lines.as_mut() {
-            let string = path.to_string();
-            if Some(&string) != inner.as_ref() {
-                let line = format!("#line {} \"{}\"\n", token.position().end().line(), &path);
-                processed.lines.push_str(&line);
-                processed
-                    .processed
-                    .push_str(" ".repeat(line.len()).as_str());
-                processed.total += line.len();
-                processed.col = 0;
-                processed.line += 1;
-                *inner = Some(string);
-            }
-        }
-    }
     let path = token.position().path().clone();
-    if processed.processed.is_empty() {
-        maybe_line(processed, token.clone(), &path, lines);
-    }
     let source = processed
         .sources
         .iter()
@@ -88,9 +62,6 @@ fn append_token(
             Ok,
         )
         .map_err(Error::Workspace)?;
-    if processed.processed.ends_with('\n') {
-        maybe_line(processed, token.clone(), &path, lines);
-    }
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');
@@ -111,9 +82,8 @@ fn append_token(
         }
     }
     if token.symbol().is_newline() {
-        processed.line_offsets.push(processed.processed.len());
-        processed.processed.push('\n');
-        processed.lines.push('\n');
+        processed.line_offsets.push(processed.output.len());
+        processed.output.push('\n');
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.line += 1;
@@ -138,8 +108,7 @@ fn append_token(
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.col += str.len();
                 processed.total += str.len();
-                processed.processed.push_str(&str);
-                processed.lines.push_str(&str);
+                processed.output.push_str(&str);
                 LineCol(
                     processed.total + str.len(),
                     (processed.line, processed.col + str.len()),
@@ -158,18 +127,17 @@ fn append_output(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
     output: Vec<Output>,
-    lines: &mut Option<Option<String>>,
 ) -> Result<(), Error> {
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processed, string_stack, t, lines)?;
+                append_token(processed, string_stack, t)?;
             }
             Output::Macro(root, o) => {
                 let start = processed.total;
                 let line = processed.line;
                 let col = processed.col;
-                append_output(processed, string_stack, o, lines)?;
+                append_output(processed, string_stack, o)?;
                 let end = processed.total;
                 let path = root.position().path().clone();
                 let source = processed
@@ -211,7 +179,6 @@ impl Processed {
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
         no_rapify: bool,
-        lines: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
             #[cfg(feature = "lsp")]
@@ -222,9 +189,8 @@ impl Processed {
             no_rapify,
             ..Default::default()
         };
-        let mut lines = if lines { Some(None) } else { None };
         let mut string_stack = Vec::new();
-        append_output(&mut processed, &mut string_stack, output, &mut lines)?;
+        append_output(&mut processed, &mut string_stack, output)?;
         Ok(processed)
     }
 
@@ -232,7 +198,7 @@ impl Processed {
     /// Get the output suitable for further processing
     /// Ignores certain tokens
     pub fn as_str(&self) -> &str {
-        &self.processed
+        &self.output
     }
 
     #[must_use]
@@ -283,12 +249,15 @@ impl Processed {
     /// Panics if a source does not exist
     pub fn code(&self, span: Range<usize>) -> String {
         if span.start != 0 {
+            tracing::warn!("span.start is not 0");
             return String::new();
         }
-        if self.lines.is_empty() {
+        if self.output.is_empty() {
+            tracing::warn!("output is empty");
             return String::new();
         }
-        self.lines
+        tracing::debug!("span: {:?}", span);
+        self.output
             .chars()
             .skip(span.start)
             .take(span.end - span.start)

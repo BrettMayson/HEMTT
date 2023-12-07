@@ -22,7 +22,7 @@ fn check(dir: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source, false);
+    let processed = Processor::run(&source);
     match processed {
         Ok(config) => {
             panic!("`{:?}` should have failed: {:#?}", folder, config.as_str())

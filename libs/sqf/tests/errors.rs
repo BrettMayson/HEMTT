@@ -23,7 +23,7 @@ fn errors(dir: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
-    let processed = Processor::run(&source, true).unwrap();
+    let processed = Processor::run(&source).unwrap();
     let ParserError::ParsingError(parsed) =
         hemtt_sqf::parser::run(&Database::default(), &processed).unwrap_err()
     else {

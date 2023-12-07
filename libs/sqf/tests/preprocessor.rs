@@ -22,7 +22,7 @@ fn preprocess(file: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source, true).unwrap();
+    let processed = Processor::run(&source).unwrap();
     std::fs::write(
         format!("tests/preprocessor/{file}.sqfp"),
         processed.as_str(),

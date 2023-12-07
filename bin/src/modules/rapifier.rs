@@ -98,7 +98,7 @@ impl Module for Rapifier {
 
 #[allow(clippy::too_many_lines)]
 pub fn rapify(addon: &Addon, path: WorkspacePath, ctx: &Context) -> RapifyResult {
-    let processed = match Processor::run(&path, false) {
+    let processed = match Processor::run(&path) {
         Ok(processed) => processed,
         Err(e) => {
             return (Vec::new(), Err(e.into()));

@@ -20,7 +20,7 @@ fn check(dir: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source, false);
+    let processed = Processor::run(&source);
     if let Err(e) = processed {
         panic!("{}", e.get_code().unwrap().report_generate().unwrap());
     }
