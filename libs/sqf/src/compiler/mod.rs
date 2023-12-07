@@ -136,8 +136,30 @@ impl Expression {
     ) -> CompileResult {
         match self.compile_constant(processed, ctx)? {
             Some(constant) => {
-                let constant_index = ctx.add_constant(constant)?;
-                instructions.push(Instruction::Push(constant_index));
+                fn push_constant(
+                    constant: Constant,
+                    instructions: &mut Vec<Instruction>,
+                    ctx: &mut Context,
+                ) -> CompileResult {
+                    if let Constant::Array(items) = constant {
+                        let len = items.len();
+                        for item in items {
+                            push_constant(item, instructions, ctx)?;
+                        }
+                        instructions.push(Instruction::MakeArray(
+                            len.try_into().unwrap(),
+                            SourceInfo {
+                                offset: 0,
+                                file_index: 0,
+                                file_line: 0,
+                            },
+                        ));
+                    } else {
+                        instructions.push(Instruction::Push(ctx.add_constant(constant)?));
+                    }
+                    Ok(())
+                }
+                push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
                 Self::Array(ref array, ref location) => {
