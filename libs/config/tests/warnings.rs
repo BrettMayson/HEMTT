@@ -23,7 +23,7 @@ fn check(dir: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(&source, false).unwrap();
     let parsed = hemtt_config::parse(None, &processed);
     match parsed {
         Ok(config) => {

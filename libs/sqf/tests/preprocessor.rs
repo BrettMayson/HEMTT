@@ -22,7 +22,12 @@ fn preprocess(file: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(&source, true).unwrap();
+    std::fs::write(
+        format!("tests/preprocessor/{file}.sqfp"),
+        processed.as_str(),
+    )
+    .unwrap();
     let parsed = hemtt_sqf::parser::run(&Database::default(), &processed).unwrap();
     assert_ne!(parsed.content.len(), 0);
     let mut buffer = Vec::new();

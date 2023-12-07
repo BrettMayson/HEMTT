@@ -20,6 +20,7 @@ use hemtt_common::reporting::{Code, Processed};
 /// [`ParserError::ParsingError`] if the input string contains invalid syntax.
 pub fn run(database: &Database, processed: &Processed) -> Result<Statements, ParserError> {
     let mut tokens = self::lexer::run(processed.as_str()).map_err(ParserError::LexingError)?;
+    self::lexer::pad_line_comments(&mut tokens);
     self::lexer::strip_comments(&mut tokens);
     self::lexer::strip_noop(&mut tokens);
     run_for_tokens(database, processed, tokens).map_err(|e| {
@@ -47,8 +48,6 @@ pub fn run_for_tokens<I>(
 where
     I: IntoIterator<Item = (Token, Range<usize>)>,
 {
-    // let source = Source::new(source.into());
-    // let eoi = source.total_len..source.total_len + 1;
     let len = processed.as_str().len();
     let statements =
         parser(database, processed).parse(Stream::from_iter(len..len + 1, input.into_iter()))?;
@@ -193,7 +192,7 @@ fn statements<'a>(
                 },
             );
 
-            base
+            select!(Token::LineComment(line) => Expression::LineComment(line)).or(base)
         });
 
         // assignment without terminator, optionally including `private`

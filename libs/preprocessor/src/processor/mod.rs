@@ -60,7 +60,7 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    pub fn run(path: &WorkspacePath) -> Result<Processed, Error> {
+    pub fn run(path: &WorkspacePath, lines: bool) -> Result<Processed, Error> {
         let mut processor = Self::default();
 
         processor.files.push(path.clone());
@@ -92,6 +92,7 @@ impl Processor {
             processor.declarations,
             processor.warnings,
             processor.no_rapify,
+            lines,
         )
         .map_err(Into::into)
     }

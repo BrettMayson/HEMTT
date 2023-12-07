@@ -20,3 +20,5 @@ pkg/
 
 # SQF Tests
 *.sqfast
+*.sqfc
+*.sqfp

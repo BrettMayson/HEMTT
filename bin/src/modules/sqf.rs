@@ -41,7 +41,7 @@ impl Module for SQFCompiler {
             .par_iter()
             .map(|(addon, entry)| {
                 trace!("asc compiling {}", entry);
-                let processed = Processor::run(entry)?;
+                let processed = Processor::run(entry, true)?;
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;

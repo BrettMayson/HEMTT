@@ -81,7 +81,7 @@ impl Statements {
 pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> SourceInfo {
     let map = processed.mapping(location.start).unwrap().original();
     SourceInfo {
-        offset: map.start().offset() as u32,
+        offset: location.start as u32,
         file_index: processed
             .sources()
             .iter()
@@ -140,6 +140,7 @@ impl Expression {
                 instructions.push(Instruction::Push(constant_index));
             }
             None => match *self {
+                Self::LineComment(_) => {}
                 Self::Array(ref array, ref location) => {
                     let array_len = array
                         .len()

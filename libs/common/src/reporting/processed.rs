@@ -47,8 +47,31 @@ fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
     token: Rc<Token>,
+    lines: &mut Option<Option<String>>,
 ) -> Result<(), Error> {
+    fn maybe_line(
+        processed: &mut Processed,
+        token: Rc<Token>,
+        path: &WorkspacePath,
+        lines: &mut Option<Option<String>>,
+    ) -> Result<(), Error> {
+        if let Some(inner) = lines.as_mut() {
+            let string = path.to_string();
+            if Some(&string) != inner.as_ref() {
+                let line = format!("#line {} \"{}\"\n", token.position().end().line(), &path);
+                processed.processed.push_str(&line);
+                processed.total += line.len();
+                processed.col = 0;
+                processed.line += 1;
+                *inner = Some(string);
+            }
+        }
+        Ok(())
+    }
     let path = token.position().path().clone();
+    if processed.processed.is_empty() {
+        maybe_line(processed, token.clone(), &path, lines)?;
+    }
     let source = processed
         .sources
         .iter()
@@ -56,7 +79,7 @@ fn append_token(
         .map_or_else(
             || {
                 let content = path.read_to_string()?;
-                processed.sources.push((path, content));
+                processed.sources.push((path.clone(), content));
                 Ok(processed.sources.len() - 1)
             },
             Ok,
@@ -84,6 +107,7 @@ fn append_token(
     if token.symbol().is_newline() {
         processed.line_offsets.push(processed.processed.len());
         processed.processed.push('\n');
+        maybe_line(processed, token.clone(), &path, lines)?;
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.line += 1;
@@ -127,17 +151,18 @@ fn append_output(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
     output: Vec<Output>,
+    lines: &mut Option<Option<String>>,
 ) -> Result<(), Error> {
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processed, string_stack, t)?;
+                append_token(processed, string_stack, t, lines)?;
             }
             Output::Macro(root, o) => {
                 let start = processed.total;
                 let line = processed.line;
                 let col = processed.col;
-                append_output(processed, string_stack, o)?;
+                append_output(processed, string_stack, o, lines)?;
                 let end = processed.total;
                 let path = root.position().path().clone();
                 let source = processed
@@ -179,6 +204,7 @@ impl Processed {
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Vec<Box<dyn Code>>,
         no_rapify: bool,
+        lines: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
             #[cfg(feature = "lsp")]
@@ -189,8 +215,9 @@ impl Processed {
             no_rapify,
             ..Default::default()
         };
+        let mut lines = if lines { Some(None) } else { None };
         let mut string_stack = Vec::new();
-        append_output(&mut processed, &mut string_stack, output)?;
+        append_output(&mut processed, &mut string_stack, output, &mut lines)?;
         Ok(processed)
     }
 
@@ -248,6 +275,9 @@ impl Processed {
     /// # Panics
     /// Panics if a source does not exist
     pub fn code(&self, span: Range<usize>) -> String {
+        if span.start != 0 {
+            return String::new();
+        }
         if self.processed.is_empty() {
             return String::new();
         }

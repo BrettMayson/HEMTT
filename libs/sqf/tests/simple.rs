@@ -22,7 +22,8 @@ fn simple(file: &str) {
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(&source, true).unwrap();
+    std::fs::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
     let parsed = match hemtt_sqf::parser::run(&Database::default(), &processed) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
@@ -36,17 +37,20 @@ fn simple(file: &str) {
     assert_ne!(parsed.content.len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
+    std::fs::write(format!("tests/simple/{file}.sqfc"), buffer).unwrap();
     std::fs::write(
         format!("tests/simple/{file}.sqfast"),
-        format!("{:#?}", parsed.content),
+        format!("{:#?}", parsed),
     )
     .unwrap();
 }
 
+simple!(dev);
 simple!(eventhandler);
 simple!(foreach);
 simple!(get_visibility);
 simple!(hash_select);
 simple!(hello);
+simple!(include);
+simple!(oneline);
 simple!(semicolons);
-simple!(dev);

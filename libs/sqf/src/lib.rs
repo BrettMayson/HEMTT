@@ -117,6 +117,7 @@ pub enum Statement {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression {
+    LineComment(String),
     Code(Statements),
     String(String),
     Number(Scalar<f32>),
