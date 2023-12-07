@@ -7,6 +7,6 @@
 {
     systemChat format ["%1", _x];
     {
-        _x setDamage 1;
+        _x setDamaage 1;
     } forEach crew _x;
 } forEach allUnits;

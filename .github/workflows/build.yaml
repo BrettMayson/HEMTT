@@ -67,13 +67,14 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: e48c270da63574368c7a8f553ea64a29a339d40d
+            commit: 92203045326d5aa8cfb0e5169d17a99e3e8fd009
           - repo: acemod/ACE3
-            commit: 65be883eea0d22644f8cfbe12485e4295dbd31fa
-          - repo: ArmaForces/Mods
-            commit: b98ef8af4bdb1fdbef296209fedd036f1cc46dbd
+            commit: 464ab0cefb5714a7d404ca7923fb1e19abd74556
+          # - repo: ArmaForces/Mods
+          - repo: jonpas/ArmaForces_Mods
+            commit: ab8530d5aa19787c2fcecd4234519dbfd43c80e2
           - repo: Theseus-Aegis/Mods
-            commit: d38f09f6c64f3ed9d9f15831df44f4b42453a500
+            commit: a1307e6a7959778930ce40d930cfb29a32901fbc
           - repo: SynixeContractors/Mod
             commit: dc895a0b1e28a3d7f5e43cfe95b3d325ab5d77ac
     steps:
