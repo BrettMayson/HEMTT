@@ -248,9 +248,6 @@ impl Processed {
     /// # Panics
     /// Panics if a source does not exist
     pub fn code(&self, span: Range<usize>) -> String {
-        if span.start != 0 {
-            return String::new();
-        }
         if self.output.is_empty() {
             return String::new();
         }
