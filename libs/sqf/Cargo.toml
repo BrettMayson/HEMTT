@@ -15,9 +15,8 @@ bench = false
 hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-lzo = { path = "../lzo", version = "1.0.0", optional = true }
 
-a3_wiki = { git = "https://github.com/brettmayson/a3_wiki" }
-
 ariadne = { workspace = true }
+arma3-wiki = "0.1.0"
 byteorder = { workspace = true, optional = true }
 chumsky = { workspace = true, optional = true}
 float-ord = "0.3.2"

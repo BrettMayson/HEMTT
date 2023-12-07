@@ -11,7 +11,7 @@ use std::ops::Range;
 
 pub use self::error::Error;
 
-use a3_wiki::model::Version;
+use arma3_wiki::model::Version;
 #[doc(no_inline)]
 pub use float_ord::FloatOrd as Scalar;
 use parser::database::Database;

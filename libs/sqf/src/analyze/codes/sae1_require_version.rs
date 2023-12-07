@@ -1,7 +1,7 @@
 use std::ops::Range;
 
-use a3_wiki::model::Version;
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
+use arma3_wiki::model::Version;
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
 
 pub struct InsufficientRequiredVersion {

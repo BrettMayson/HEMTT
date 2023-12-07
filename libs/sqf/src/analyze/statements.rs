@@ -49,7 +49,7 @@ fn required_version(
     database: &Database,
 ) -> Vec<Box<dyn Code>> {
     let mut errors: Vec<Box<dyn Code>> = Vec::new();
-    let wiki_version = a3_wiki::model::Version::new(
+    let wiki_version = arma3_wiki::model::Version::new(
         u8::try_from(required.0.major()).unwrap_or_default(),
         u8::try_from(required.0.minor()).unwrap_or_default(),
     );

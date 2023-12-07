@@ -190,7 +190,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     );
     args.push(
         mods.iter()
-            .map(|s| format!("-mod=\"{}\"", s))
+            .map(|s| format!("-mod=\"{s}\""))
             .collect::<Vec<_>>()
             .join(" "),
     );

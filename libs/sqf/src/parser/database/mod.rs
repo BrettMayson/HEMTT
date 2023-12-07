@@ -2,9 +2,9 @@
 
 use std::collections::HashSet;
 
-use a3_wiki::{
+use arma3_wiki::{
     model::{Call, Version},
-    A3Wiki,
+    Wiki,
 };
 use tracing::warn;
 
@@ -48,7 +48,7 @@ pub struct Database {
     nular_commands: HashSet<String>,
     unary_commands: HashSet<String>,
     binary_commands: HashSet<String>,
-    wiki: A3Wiki,
+    wiki: Wiki,
 }
 
 impl Database {
@@ -59,15 +59,7 @@ impl Database {
             nular_commands: HashSet::new(),
             unary_commands: HashSet::new(),
             binary_commands: HashSet::new(),
-            wiki: {
-                A3Wiki::load_git().map_or_else(
-                    |_| {
-                        warn!("Failed to load A3 wiki from git, falling back to bundled version");
-                        A3Wiki::load_dist()
-                    },
-                    |wiki| wiki,
-                )
-            },
+            wiki: load_wiki(),
         }
     }
 
@@ -128,7 +120,7 @@ impl Database {
     }
 
     #[must_use]
-    pub const fn wiki(&self) -> &A3Wiki {
+    pub const fn wiki(&self) -> &Wiki {
         &self.wiki
     }
 
@@ -147,13 +139,7 @@ impl Default for Database {
         let mut unary_commands = HashSet::new();
         let mut binary_commands = HashSet::new();
 
-        let wiki = A3Wiki::load_git().map_or_else(
-            |_| {
-                warn!("Failed to load A3 wiki from git, falling back to bundled version");
-                A3Wiki::load_dist()
-            },
-            |wiki| wiki,
-        );
+        let wiki = load_wiki();
 
         for command in wiki.commands().values() {
             for syntax in command.syntax() {
@@ -225,4 +211,19 @@ pub fn is_valid_command(command: &str) -> bool {
 
 fn is_in(list: &[&str], item: &str) -> bool {
     list.iter().any(|i| i.eq_ignore_ascii_case(item))
+}
+
+fn load_wiki() -> Wiki {
+    Wiki::load_git().map_or_else(
+        |_| {
+            warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+            Wiki::load_dist()
+        },
+        |wiki| {
+            if !wiki.updated() {
+                warn!("Failed to update Arma 3 Wiki, using previous version");
+            }
+            wiki
+        },
+    )
 }
