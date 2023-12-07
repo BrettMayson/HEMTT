@@ -12,7 +12,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// - 1.2.42-1a2b3c4d
 /// - 1.2.42.2452
 /// - 1.2.42
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct Version {
     major: u32,
     minor: u32,
@@ -158,6 +158,40 @@ impl TryFrom<&str> for Version {
     }
 }
 
+impl From<f32> for Version {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    fn from(version: f32) -> Self {
+        let integer = version as u32;
+        let decimal = (version.fract() * 100.0).round() as u32;
+        Self::new(integer, decimal, 0, None)
+    }
+}
+
+/// Compare two versions
+impl PartialOrd for Version {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if self.major != other.major {
+            return Some(self.major.cmp(&other.major));
+        }
+        if self.minor != other.minor {
+            return Some(self.minor.cmp(&other.minor));
+        }
+        if self.patch != other.patch {
+            return Some(self.patch.cmp(&other.patch));
+        }
+        if self.build.is_none() && other.build.is_none() {
+            return Some(std::cmp::Ordering::Equal);
+        }
+        if self.build.is_none() {
+            return Some(std::cmp::Ordering::Less);
+        }
+        if other.build.is_none() {
+            return Some(std::cmp::Ordering::Greater);
+        }
+        self.build.partial_cmp(&other.build)
+    }
+}
+
 impl Serialize for Version {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -230,7 +264,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_version() {
+    fn version() {
         let version = Version::try_from("1.0.0.0-d1a631b1").unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 0);
@@ -240,7 +274,7 @@ mod tests {
     }
 
     #[test]
-    fn test_version_no_build() {
+    fn version_no_build() {
         let version = Version::try_from("1.2.42-1a2b3c4d").unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -250,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn test_version_hemtt_local() {
+    fn version_hemtt_local() {
         let version = Version::try_from("1.10.1-local-debug").unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 10);
@@ -260,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn test_version_no_hash() {
+    fn version_no_hash() {
         let version = Version::try_from("1.2.42.2452").unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -270,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn test_version_no_build_no_hash() {
+    fn version_no_build_no_hash() {
         let version = Version::try_from("1.2.42").unwrap();
         assert_eq!(version.major, 1);
         assert_eq!(version.minor, 2);
@@ -280,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn test_version_invalid_component() {
+    fn version_invalid_component() {
         let version = Version::try_from("1.2.a");
         assert!(version.is_err());
         assert_eq!(
@@ -290,21 +324,21 @@ mod tests {
     }
 
     #[test]
-    fn test_version_missing_minor() {
+    fn version_missing_minor() {
         let version = Version::try_from("1");
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedMinor);
     }
 
     #[test]
-    fn test_version_missing_patch() {
+    fn version_missing_patch() {
         let version = Version::try_from("1.2");
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedPatch);
     }
 
     #[test]
-    fn test_script_version() {
+    fn script_version() {
         let content = r"
             #define MAJOR 1
             #define MINOR 2
@@ -321,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_comment() {
+    fn script_version_comment() {
         let content = r"
             #define MAJOR 1
             #define MINOR 2
@@ -337,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_no_build() {
+    fn script_version_no_build() {
         let content = r"
             #define MAJOR 1
             #define MINOR 2
@@ -352,7 +386,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_invalid_component() {
+    fn script_version_invalid_component() {
         let content = r"
             #define MAJOR 1
             #define MINOR 2
@@ -367,7 +401,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_missing_minor() {
+    fn script_version_missing_minor() {
         let content = r"
             #define MAJOR 1
         ";
@@ -377,7 +411,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_missing_patch() {
+    fn script_version_missing_patch() {
         let content = r"
             #define MAJOR 1
             #define MINOR 2
@@ -388,7 +422,7 @@ mod tests {
     }
 
     #[test]
-    fn test_script_version_missing_major() {
+    fn script_version_missing_major() {
         let content = r"
             #define MINOR 2
             #define PATCH 3
@@ -396,5 +430,36 @@ mod tests {
         let version = Version::try_from_script_version(content);
         assert!(version.is_err());
         assert_eq!(version.unwrap_err(), Error::ExpectedMajor);
+    }
+
+    #[test]
+    fn float() {
+        let version = Version::from(1.2);
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 20);
+        assert_eq!(version.patch, 0);
+        assert_eq!(version.build, None);
+        assert_eq!(version.hash, None);
+        let version = Version::from(1.16);
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 16);
+        assert_eq!(version.patch, 0);
+        assert_eq!(version.build, None);
+    }
+
+    #[test]
+    fn ordering() {
+        // Major
+        assert!(Version::from(2.0) > Version::from(1.0));
+        assert!(Version::from(1.0) < Version::from(2.0));
+        // Minor
+        assert!(Version::from(1.2) > Version::from(1.1));
+        assert!(Version::from(1.1) < Version::from(1.2));
+        // Patch
+        assert!(Version::new(1, 1, 2, None) > Version::new(1, 1, 1, None));
+        assert!(Version::new(1, 1, 1, None) < Version::new(1, 1, 2, None));
+        // Build
+        assert!(Version::new(1, 1, 1, Some(2)) > Version::new(1, 1, 1, Some(1)));
+        assert!(Version::new(1, 1, 1, Some(1)) < Version::new(1, 1, 1, Some(2)));
     }
 }

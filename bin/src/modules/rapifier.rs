@@ -7,6 +7,7 @@ use std::{
 };
 
 use hemtt_common::{
+    addons::Addon,
     reporting::{Annotation, Code},
     workspace::WorkspacePath,
 };
@@ -63,7 +64,7 @@ impl Module for Rapifier {
                             continue;
                         }
                         debug!("rapifying {}", entry.as_str());
-                        let (new_messages, result) = rapify(entry.clone(), ctx);
+                        let (new_messages, result) = rapify(addon, entry.clone(), ctx);
                         messages.extend(new_messages);
                         counter.fetch_add(1, Ordering::Relaxed);
                         if let Err(e) = result {
@@ -95,7 +96,8 @@ impl Module for Rapifier {
     }
 }
 
-pub fn rapify(path: WorkspacePath, ctx: &Context) -> RapifyResult {
+#[allow(clippy::too_many_lines)]
+pub fn rapify(addon: &Addon, path: WorkspacePath, ctx: &Context) -> RapifyResult {
     let processed = match Processor::run(&path) {
         Ok(processed) => processed,
         Err(e) => {
@@ -171,18 +173,27 @@ pub fn rapify(path: WorkspacePath, ctx: &Context) -> RapifyResult {
             ))),
         );
     }
-    if processed.no_rapify() {
-        debug!(
-            "skipping rapify for {}, as instructed by preprocessor",
-            path.as_str()
-        );
-        return (messages, Ok(()));
-    }
     let out = if path.filename().to_lowercase() == "config.cpp" {
+        let (version, cfgpatch) = configreport.required_version();
+        let mut file = path.as_str().to_string();
+        let mut span = 0..0;
+        if let Some(cfgpatch) = cfgpatch {
+            let map = processed.mapping(cfgpatch.name().span.start).unwrap();
+            file = map.original().path().as_str().to_string();
+            span = map.original().start().0..map.original().end().0;
+        }
+        addon.build_data().set_required_version(version, file, span);
         path.parent().join("config.bin").unwrap()
     } else {
         path
     };
+    if processed.no_rapify() {
+        debug!(
+            "skipping rapify for {}, as instructed by preprocessor",
+            out.as_str()
+        );
+        return (messages, Ok(()));
+    }
     let mut output = match out.create_file() {
         Ok(output) => output,
         Err(e) => {

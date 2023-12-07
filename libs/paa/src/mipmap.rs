@@ -85,7 +85,7 @@ impl MipMap {
         let mut buffer: Box<[u8]> = vec![0; img_size as usize].into_boxed_slice();
         let mut out_buffer = vec![0u8; 4 * (width_2 as usize) * (self.height as usize)];
         if compress {
-            hemtt_lzo::decompress_to_slice(data, &mut buffer);
+            let _ = hemtt_lzo::decompress_to_slice(data, &mut buffer);
             self.format.decompress(
                 &buffer,
                 usize::from(width_2),

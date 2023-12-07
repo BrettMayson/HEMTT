@@ -6,25 +6,21 @@ pub mod pbo;
 
 pub use hook::Hooks;
 
-#[cfg(not(target_os = "macos"))]
-mod asc;
 mod binarize;
 mod file_patching;
 mod files;
-mod lint;
 mod new;
 mod rapifier;
 mod sign;
+mod sqf;
 
-#[cfg(not(target_os = "macos"))]
-pub use asc::{ASCConfig, ArmaScriptCompiler};
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;
-pub use lint::Lint;
 pub use new::Licenses;
 pub use rapifier::Rapifier;
 pub use sign::Sign;
+pub use sqf::SQFCompiler;
 
 pub trait Module {
     fn name(&self) -> &'static str;

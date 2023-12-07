@@ -25,11 +25,7 @@ fn check(dir: &str) {
     let processed = Processor::run(&source);
     match processed {
         Ok(config) => {
-            panic!(
-                "`{:?}` should have failed: {:#?}",
-                folder,
-                config.as_string()
-            )
+            panic!("`{:?}` should have failed: {:#?}", folder, config.as_str())
         }
         Err(e) => {
             let mut expected = Vec::new();

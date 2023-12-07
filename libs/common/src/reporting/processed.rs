@@ -1,6 +1,6 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::{ops::Range, rc::Rc};
 
 use crate::{
     position::{LineCol, Position},
@@ -14,7 +14,7 @@ use super::{Code, Error};
 /// A processed file
 pub struct Processed {
     sources: Vec<(WorkspacePath, String)>,
-    processed: String,
+    output: String,
 
     /// character offset for each line
     line_offsets: Vec<usize>,
@@ -56,7 +56,7 @@ fn append_token(
         .map_or_else(
             || {
                 let content = path.read_to_string()?;
-                processed.sources.push((path, content));
+                processed.sources.push((path.clone(), content));
                 Ok(processed.sources.len() - 1)
             },
             Ok,
@@ -82,8 +82,8 @@ fn append_token(
         }
     }
     if token.symbol().is_newline() {
-        processed.line_offsets.push(processed.processed.len());
-        processed.processed.push('\n');
+        processed.line_offsets.push(processed.output.len());
+        processed.output.push('\n');
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.line += 1;
@@ -108,7 +108,7 @@ fn append_token(
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.col += str.len();
                 processed.total += str.len();
-                processed.processed.push_str(&str);
+                processed.output.push_str(&str);
                 LineCol(
                     processed.total + str.len(),
                     (processed.line, processed.col + str.len()),
@@ -197,8 +197,8 @@ impl Processed {
     #[must_use]
     /// Get the output suitable for further processing
     /// Ignores certain tokens
-    pub fn as_string(&self) -> &str {
-        &self.processed
+    pub fn as_str(&self) -> &str {
+        &self.output
     }
 
     #[must_use]
@@ -240,6 +240,25 @@ impl Processed {
                 map.processed_start().offset() <= offset && map.processed_end().offset() > offset
             })
             .collect()
+    }
+
+    #[must_use]
+    /// Get the code at a position in the stringified output
+    ///
+    /// # Panics
+    /// Panics if a source does not exist
+    pub fn code(&self, span: Range<usize>) -> String {
+        if span.start != 0 {
+            return String::new();
+        }
+        if self.output.is_empty() {
+            return String::new();
+        }
+        self.output
+            .chars()
+            .skip(span.start)
+            .take(span.end - span.start)
+            .collect::<String>()
     }
 
     #[must_use]

@@ -11,6 +11,10 @@ mod property;
 mod str;
 mod value;
 
+mod model;
+
+pub use model::CfgPatch;
+
 /// Trait for rapifying objects
 pub trait Analyze {
     /// Check if the object is valid and can be rapified

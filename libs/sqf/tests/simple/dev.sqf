@@ -1,0 +1,1 @@
+private _target = playerTargetLock;

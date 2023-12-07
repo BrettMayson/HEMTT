@@ -5,6 +5,7 @@ use std::{
 
 use git2::Repository;
 use hemtt_common::{
+    addons::{Addon, Location},
     prefix::{Prefix, FILES},
     version::Version,
 };
@@ -12,11 +13,7 @@ use hemtt_pbo::WritablePbo;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use crate::{
-    addons::{Addon, Location},
-    context::Context,
-    error::Error,
-};
+use crate::{context::Context, error::Error};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Should the optional and compat PBOs be collapsed into the addons folder

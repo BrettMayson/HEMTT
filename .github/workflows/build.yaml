@@ -69,13 +69,13 @@ jobs:
           - repo: CBATeam/CBA_A3
             commit: e48c270da63574368c7a8f553ea64a29a339d40d
           - repo: acemod/ACE3
-            commit: 8104c8f465ed561a079c2c17330dae074183c319
+            commit: 65be883eea0d22644f8cfbe12485e4295dbd31fa
           - repo: ArmaForces/Mods
-            commit: 6871517d4c2f720cea62b767eb7ec422bf712f51
+            commit: b98ef8af4bdb1fdbef296209fedd036f1cc46dbd
           - repo: Theseus-Aegis/Mods
-            commit: 445ec5fc71bbd01d57252be2794947c2bfe79988
+            commit: d38f09f6c64f3ed9d9f15831df44f4b42453a500
           - repo: SynixeContractors/Mod
-            commit: b767891bfc098c92bf3108d77a5cf1b5929b98e8
+            commit: dc895a0b1e28a3d7f5e43cfe95b3d325ab5d77ac
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v3

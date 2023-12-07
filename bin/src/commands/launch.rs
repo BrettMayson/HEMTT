@@ -83,7 +83,11 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     mods.push({
         let mut path = std::env::current_dir()?;
         path.push(".hemttout/dev");
-        path.display().to_string()
+        if cfg!(target_os = "linux") {
+            format!("Z:{}", path.display())
+        } else {
+            path.display().to_string()
+        }
     });
 
     let mut meta = None;
@@ -184,33 +188,41 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             .map(|s| s.to_string_lossy().to_string())
             .collect::<Vec<_>>(),
     );
-    args.push(format!("-mod=\"{}\"", mods.join(";"),));
-
-    info!(
-        "Launching {:?} with: {:?}",
-        arma3dir.path.display(),
-        args.join(" ")
+    args.push(
+        mods.iter()
+            .map(|s| format!("-mod=\"{}\"", s))
+            .collect::<Vec<_>>()
+            .join(" "),
     );
 
-    std::process::Command::new({
-        let mut path = arma3dir.path;
-        if let Some(exe) = matches.get_one::<String>("executable") {
-            let exe = PathBuf::from(exe);
-            if exe.is_absolute() {
-                path = exe;
+    if cfg!(target_os = "windows") {
+        info!(
+            "Launching {:?} with:\n  {}",
+            arma3dir.path.display(),
+            args.join("\n  ")
+        );
+        std::process::Command::new({
+            let mut path = arma3dir.path;
+            if let Some(exe) = matches.get_one::<String>("executable") {
+                let exe = PathBuf::from(exe);
+                if exe.is_absolute() {
+                    path = exe;
+                } else {
+                    path.push(exe);
+                }
+                if cfg!(windows) {
+                    path.set_extension("exe");
+                }
             } else {
-                path.push(exe);
+                path.push(launch.executable());
             }
-            if cfg!(windows) {
-                path.set_extension("exe");
-            }
-        } else {
-            path.push(launch.executable());
-        }
-        path.display().to_string()
-    })
-    .args(args)
-    .spawn()?;
+            path.display().to_string()
+        })
+        .args(args)
+        .spawn()?;
+    } else {
+        linux_launch(&arma3dir.path, &launch.executable(), &args)?;
+    }
 
     Ok(())
 }
@@ -252,4 +264,45 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
         }
     }
     (workshop, dlc)
+}
+
+fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<(), Error> {
+    // check if flatpak steam is installed
+    let flatpak = std::process::Command::new("flatpak")
+        .arg("list")
+        .arg("--app")
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"))?;
+    if flatpak {
+        warn!("A flatpak override will be created to grant access to the .hemttout directory");
+        info!("Using flatpak steam with:\n  {}", args.join("\n  "));
+        trace!("using flatpak override to grant access to the mod");
+        std::process::Command::new("flatpak")
+            .arg("override")
+            .arg("--user")
+            .arg("com.valvesoftware.Steam")
+            .arg(format!("--filesystem={}", {
+                let mut path = std::env::current_dir()?;
+                path.push(".hemttout/dev");
+                path.display().to_string()
+            }))
+            .spawn()?
+            .wait()?;
+        std::process::Command::new("flatpak")
+            .arg("run")
+            .arg("com.valvesoftware.Steam")
+            .arg("-applaunch")
+            .arg("107410")
+            .arg("-nolauncher")
+            .args(args)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()?;
+    } else {
+        info!("Using native steam with:\n  {}", args.join("\n  "));
+        std::process::Command::new(arma3dir.join(executable))
+            .args(args)
+            .spawn()?;
+    }
+    Ok(())
 }

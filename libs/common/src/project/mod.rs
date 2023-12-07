@@ -3,12 +3,11 @@
 use std::{collections::HashMap, path::Path, str::FromStr};
 
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 mod addon;
-mod asc;
 mod files;
 pub mod hemtt;
-mod lint;
 mod signing;
 mod version;
 
@@ -42,12 +41,6 @@ pub struct ProjectConfig {
 
     #[serde(default)]
     signing: signing::Options,
-
-    #[serde(default)]
-    asc: asc::Options,
-
-    #[serde(default)]
-    lint: lint::Options,
 }
 
 impl ProjectConfig {
@@ -100,18 +93,6 @@ impl ProjectConfig {
     }
 
     #[must_use]
-    /// Asc options
-    pub const fn asc(&self) -> &asc::Options {
-        &self.asc
-    }
-
-    #[must_use]
-    /// Lint options
-    pub const fn lint(&self) -> &lint::Options {
-        &self.lint
-    }
-
-    #[must_use]
     /// The folder name to use for the release
     /// Default: `@{prefix}`
     pub fn folder_name(&self) -> String {
@@ -134,6 +115,14 @@ impl ProjectConfig {
         // Validate
         if config.prefix.is_empty() {
             return Err(Error::ConfigInvalid("prefix cannot be empty".to_string()));
+        }
+
+        if file.contains("[asc]") {
+            warn!("ASC config is no longer used");
+        }
+
+        if file.contains("[lint]") {
+            warn!("lint config is no longer used");
         }
 
         Ok(config)
