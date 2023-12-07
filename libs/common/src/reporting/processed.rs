@@ -249,14 +249,11 @@ impl Processed {
     /// Panics if a source does not exist
     pub fn code(&self, span: Range<usize>) -> String {
         if span.start != 0 {
-            tracing::warn!("span.start is not 0");
             return String::new();
         }
         if self.output.is_empty() {
-            tracing::warn!("output is empty");
             return String::new();
         }
-        tracing::debug!("span: {:?}", span);
         self.output
             .chars()
             .skip(span.start)
