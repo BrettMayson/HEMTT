@@ -18,13 +18,23 @@ use parser::database::Database;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Statements {
-    pub content: Vec<Statement>,
+    content: Vec<Statement>,
     /// The source code string of this section of code.
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
-    pub source: String,
+    source: String,
 }
 
 impl Statements {
+    #[must_use]
+    pub fn content(&self) -> &[Statement] {
+        &self.content
+    }
+
+    #[must_use]
+    pub fn source(&self) -> &str {
+        &self.source
+    }
+
     #[must_use]
     /// Adds a source string to this code chunk.
     pub fn with_source(self, source: String) -> Self {

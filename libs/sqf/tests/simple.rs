@@ -34,13 +34,13 @@ fn simple(file: &str) {
         }
         Err(e) => panic!("{e:?}"),
     };
-    assert_ne!(parsed.content.len(), 0);
+    assert_ne!(parsed.content().len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
     std::fs::write(format!("tests/simple/{file}.sqfc"), buffer).unwrap();
     std::fs::write(
         format!("tests/simple/{file}.sqfast"),
-        format!("{:#?}", parsed),
+        format!("{:#?}", parsed.content()),
     )
     .unwrap();
 }

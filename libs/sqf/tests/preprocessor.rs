@@ -29,7 +29,7 @@ fn preprocess(file: &str) {
     )
     .unwrap();
     let parsed = hemtt_sqf::parser::run(&Database::default(), &processed).unwrap();
-    assert_ne!(parsed.content.len(), 0);
+    assert_ne!(parsed.content().len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
 }
