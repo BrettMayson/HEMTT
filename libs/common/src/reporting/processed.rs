@@ -243,22 +243,6 @@ impl Processed {
     }
 
     #[must_use]
-    /// Get the code at a position in the stringified output
-    ///
-    /// # Panics
-    /// Panics if a source does not exist
-    pub fn code(&self, span: Range<usize>) -> String {
-        if self.output.is_empty() {
-            return String::new();
-        }
-        self.output
-            .chars()
-            .skip(span.start)
-            .take(span.end - span.start)
-            .collect::<String>()
-    }
-
-    #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
         self.mappings(offset).last().copied()

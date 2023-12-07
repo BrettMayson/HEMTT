@@ -22,16 +22,17 @@ pub fn run(database: &Database, processed: &Processed) -> Result<Statements, Par
     let mut tokens = self::lexer::run(processed.as_str()).map_err(ParserError::LexingError)?;
     self::lexer::strip_comments(&mut tokens);
     self::lexer::strip_noop(&mut tokens);
-    run_for_tokens(database, processed, tokens).map_err(|e| {
+    let mut statements = run_for_tokens(database, processed, tokens).map_err(|e| {
         let mut errors: Vec<Box<dyn Code>> = Vec::new();
-
         for e in e {
             errors.push(Box::new(codes::spe1_unparseable::UnparseableSyntax::new(
                 e.span(),
             )));
         }
         ParserError::ParsingError(errors)
-    })
+    })?;
+    statements.source = processed.as_str().to_string();
+    Ok(statements)
 }
 
 #[allow(clippy::range_plus_one)] // chumsky problem
@@ -48,23 +49,16 @@ where
     I: IntoIterator<Item = (Token, Range<usize>)>,
 {
     let len = processed.as_str().len();
-    let statements =
-        parser(database, processed).parse(Stream::from_iter(len..len + 1, input.into_iter()))?;
+    let statements = parser(database).parse(Stream::from_iter(len..len + 1, input.into_iter()))?;
     Ok(statements)
 }
 
-fn parser<'a>(
-    database: &'a Database,
-    processed: &'a Processed,
-) -> impl Parser<Token, Statements, Error = Simple<Token>> + 'a {
-    statements(database, processed).then_ignore(end())
+fn parser(database: &Database) -> impl Parser<Token, Statements, Error = Simple<Token>> + '_ {
+    statements(database).then_ignore(end())
 }
 
 #[allow(clippy::too_many_lines)]
-fn statements<'a>(
-    database: &'a Database,
-    processed: &'a Processed,
-) -> impl Parser<Token, Statements, Error = Simple<Token>> + 'a {
+fn statements(database: &Database) -> impl Parser<Token, Statements, Error = Simple<Token>> + '_ {
     recursive(|statements| {
         let expression = recursive(|expression| {
             let value = select! { |span|
@@ -213,9 +207,9 @@ fn statements<'a>(
             .or(expression.map(Statement::Expression))
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
-            .map_with_span(|content, span| Statements {
+            .map(|content| Statements {
                 content,
-                source: processed.code(span),
+                source: String::new(),
             })
     })
 }
