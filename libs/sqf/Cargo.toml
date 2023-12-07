@@ -16,7 +16,7 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-lzo = { path = "../lzo", version = "1.0.0", optional = true }
 
 ariadne = { workspace = true }
-arma3-wiki = "0.1.0"
+arma3-wiki = "0.1.1"
 byteorder = { workspace = true, optional = true }
 chumsky = { workspace = true, optional = true}
 float-ord = "0.3.2"
