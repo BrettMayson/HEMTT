@@ -27,25 +27,8 @@ pub fn strip_noop(tokens: &mut Tokens) {
     });
 }
 
-/// insert a terminator after each line comment
-pub fn pad_line_comments(tokens: &mut Tokens) {
-    let mut new = Vec::new();
-    for (token, span) in tokens.drain(..) {
-        match token {
-            Token::LineComment(comment) => {
-                new.push((Token::LineComment(comment), span.clone()));
-                new.push((Token::Control(Control::Terminator), span));
-            }
-            token => new.push((token, span)),
-        }
-    }
-    *tokens = new;
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
-    /// A #line comment to act as an excuse of a map
-    LineComment(String),
     /// Single-line or multi-line comment.
     /// Contains the entire contents of the comment.
     Comment(String),
@@ -185,15 +168,7 @@ fn comment() -> impl Parser<char, Token, Error = Simple<char>> {
     choice((
         multi_line_comment().map(Token::Comment),
         single_line_comment().map(Token::Comment),
-        line_comment().map(Token::LineComment),
     ))
-}
-
-/// Line comments
-fn line_comment() -> impl Parser<char, String, Error = Simple<char>> {
-    just("#line")
-        .then(newline().not().repeated())
-        .map(|(prefix, comment)| chain_collect!(String: prefix.chars(), comment))
 }
 
 fn multi_line_comment() -> impl Parser<char, String, Error = Simple<char>> {

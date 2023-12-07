@@ -15,6 +15,7 @@ use super::{Code, Error};
 pub struct Processed {
     sources: Vec<(WorkspacePath, String)>,
     processed: String,
+    lines: String,
 
     /// character offset for each line
     line_offsets: Vec<usize>,
@@ -54,23 +55,25 @@ fn append_token(
         token: Rc<Token>,
         path: &WorkspacePath,
         lines: &mut Option<Option<String>>,
-    ) -> Result<(), Error> {
+    ) {
         if let Some(inner) = lines.as_mut() {
             let string = path.to_string();
             if Some(&string) != inner.as_ref() {
                 let line = format!("#line {} \"{}\"\n", token.position().end().line(), &path);
-                processed.processed.push_str(&line);
+                processed.lines.push_str(&line);
+                processed
+                    .processed
+                    .push_str(" ".repeat(line.len()).as_str());
                 processed.total += line.len();
                 processed.col = 0;
                 processed.line += 1;
                 *inner = Some(string);
             }
         }
-        Ok(())
     }
     let path = token.position().path().clone();
     if processed.processed.is_empty() {
-        maybe_line(processed, token.clone(), &path, lines)?;
+        maybe_line(processed, token.clone(), &path, lines);
     }
     let source = processed
         .sources
@@ -85,6 +88,9 @@ fn append_token(
             Ok,
         )
         .map_err(Error::Workspace)?;
+    if processed.processed.ends_with('\n') {
+        maybe_line(processed, token.clone(), &path, lines);
+    }
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');
@@ -107,7 +113,7 @@ fn append_token(
     if token.symbol().is_newline() {
         processed.line_offsets.push(processed.processed.len());
         processed.processed.push('\n');
-        maybe_line(processed, token.clone(), &path, lines)?;
+        processed.lines.push('\n');
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 processed.line += 1;
@@ -133,6 +139,7 @@ fn append_token(
                 processed.col += str.len();
                 processed.total += str.len();
                 processed.processed.push_str(&str);
+                processed.lines.push_str(&str);
                 LineCol(
                     processed.total + str.len(),
                     (processed.line, processed.col + str.len()),
@@ -278,10 +285,10 @@ impl Processed {
         if span.start != 0 {
             return String::new();
         }
-        if self.processed.is_empty() {
+        if self.lines.is_empty() {
             return String::new();
         }
-        self.processed
+        self.lines
             .chars()
             .skip(span.start)
             .take(span.end - span.start)

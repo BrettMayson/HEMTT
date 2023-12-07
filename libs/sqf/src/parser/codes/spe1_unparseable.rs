@@ -35,6 +35,11 @@ impl Code for UnparseableSyntax {
     fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
         let map = processed.mapping(self.span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();
+        std::fs::write(
+            format!("{}.sqfp", map_file.0.filename()),
+            processed.as_str(),
+        )
+        .unwrap();
         let mut out = Vec::new();
         let mut colors = ColorGenerator::new();
         let a = colors.next();

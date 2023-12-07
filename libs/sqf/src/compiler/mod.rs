@@ -140,7 +140,6 @@ impl Expression {
                 instructions.push(Instruction::Push(constant_index));
             }
             None => match *self {
-                Self::LineComment(_) => {}
                 Self::Array(ref array, ref location) => {
                     let array_len = array
                         .len()
