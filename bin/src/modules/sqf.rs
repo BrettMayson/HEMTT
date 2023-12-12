@@ -66,7 +66,7 @@ impl Module for SQFCompiler {
                         } else if processed.as_str().starts_with("force ")
                             || processed.as_str().contains("\nforce ")
                         {
-                            warn!("skipping what appears to be CBA settings file: {}", entry);
+                            warn!("skipping apparent CBA settings file: {}", entry);
                             Ok(())
                         } else {
                             for error in e {

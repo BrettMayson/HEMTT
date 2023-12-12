@@ -105,11 +105,23 @@ impl Defines {
                                     },
                                     |project| {
                                         Token::new(
-                                            Symbol::Word(format!(
-                                                "{}\\{}",
-                                                project.prefix(),
-                                                site.path().as_str()
-                                            )),
+                                            project.mainprefix().map_or_else(
+                                                || {
+                                                    Symbol::Word(format!(
+                                                        "{}\\{}",
+                                                        project.prefix(),
+                                                        site.path().as_str()
+                                                    ))
+                                                },
+                                                |mainprefix| {
+                                                    Symbol::Word(format!(
+                                                        "{}\\{}\\{}",
+                                                        mainprefix,
+                                                        project.prefix(),
+                                                        site.path().as_str()
+                                                    ))
+                                                },
+                                            ),
                                             key.position().clone(),
                                         )
                                     },
