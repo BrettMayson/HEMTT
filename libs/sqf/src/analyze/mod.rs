@@ -2,6 +2,8 @@ mod statements;
 
 pub mod codes;
 
+use std::sync::Arc;
+
 use hemtt_common::{
     addons::Addon,
     project::ProjectConfig,
@@ -10,7 +12,7 @@ use hemtt_common::{
 
 use crate::{parser::database::Database, Statements};
 
-type Codes = Vec<Box<dyn Code>>;
+type Codes = Vec<Arc<dyn Code>>;
 
 pub trait Analyze {
     /// Check if the object is valid and can be rapified

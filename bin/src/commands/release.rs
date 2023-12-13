@@ -1,6 +1,6 @@
 use clap::{ArgAction, ArgMatches, Command};
 
-use crate::{context::Context, error::Error, executor::Executor, modules::Sign};
+use crate::{context::Context, error::Error, modules::Sign, report::Report};
 
 use super::build;
 
@@ -29,27 +29,27 @@ pub fn cli() -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let ctx = Context::new(
         std::env::current_dir()?,
         "release",
         crate::context::PreservePrevious::Remove,
     )?;
-    let mut executor = Executor::new(&ctx);
+    let mut executor = build::executor(ctx, matches);
 
-    if matches.get_one::<bool>("no-sign") != Some(&true) && ctx.config().hemtt().release().sign() {
+    if matches.get_one::<bool>("no-sign") != Some(&true)
+        && executor.ctx().config().hemtt().release().sign()
+    {
         executor.add_module(Box::new(Sign::new()));
     }
 
     let archive = if matches.get_one::<bool>("no-archive") == Some(&true) {
         false
     } else {
-        ctx.config().hemtt().release().archive()
+        executor.ctx().config().hemtt().release().archive()
     };
 
-    build::execute(matches, &mut executor)?;
+    executor.release(archive);
 
-    executor.release(archive)?;
-
-    Ok(())
+    executor.run()
 }

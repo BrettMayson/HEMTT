@@ -6,12 +6,8 @@ use crate::Property;
 
 pub struct UnexpectedArray {
     property: Property,
-}
-
-impl UnexpectedArray {
-    pub const fn new(property: Property) -> Self {
-        Self { property }
-    }
+    report: Option<String>,
+    annotations: Vec<Annotation>,
 }
 
 impl Code for UnexpectedArray {
@@ -27,18 +23,60 @@ impl Code for UnexpectedArray {
         "unexpected array".to_string()
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        self.annotations.clone()
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let Property::Entry {
+            value: Value::UnexpectedArray(array),
+            ..
+        } = &self.property
+        else {
+            return vec![];
+        };
+        let array_start = processed.mapping(array.span.start).unwrap();
+        let array_file = processed.source(array_start.source()).unwrap();
+        let array_end = processed.mapping(array.span.end).unwrap();
+        let Some(path) = array_file.1 .0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            self.diagnostic(lsp_types::Range::new(
+                array_start.original().to_lsp(),
+                array_end.original().to_lsp(),
+            )),
+        )]
+    }
+}
+
+impl UnexpectedArray {
+    pub fn new(property: Property, processed: &Processed) -> Self {
+        Self {
+            property,
+            report: None,
+            annotations: vec![],
+        }
+        .report_generate_processed(processed)
+        .ci_generate_processed(processed)
+    }
+
+    fn report_generate_processed(mut self, processed: &Processed) -> Self {
         let Property::Entry {
             name,
             value: Value::UnexpectedArray(array),
             ..
         } = &self.property
         else {
-            return None;
+            panic!(
+                "UnexpectedArray::report_generate_processed called on non-UnexpectedArray property"
+            );
         };
         let array_start = processed.mapping(array.span.start).unwrap();
         let array_file = processed.source(array_start.source()).unwrap();
@@ -79,40 +117,18 @@ impl Code for UnexpectedArray {
         .finish()
         .write_for_stdout(sources(processed.sources()), &mut out)
         .unwrap();
-        Some(String::from_utf8(out).unwrap())
+        self.report = Some(String::from_utf8(out).unwrap());
+        self
     }
 
-    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed.mapping(self.property.name().span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();
-        vec![self.annotation(
+        self.annotations = vec![self.annotation(
             AnnotationLevel::Error,
             map_file.0.as_str().to_string(),
             map.original(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let Property::Entry {
-            value: Value::UnexpectedArray(array),
-            ..
-        } = &self.property
-        else {
-            return vec![];
-        };
-        let array_start = processed.mapping(array.span.start).unwrap();
-        let array_file = processed.source(array_start.source()).unwrap();
-        let array_end = processed.mapping(array.span.end).unwrap();
-        let Some(path) = array_file.1 .0.clone() else {
-            return vec![];
-        };
-        vec![(
-            path,
-            self.diagnostic(lsp_types::Range::new(
-                array_start.original().to_lsp(),
-                array_end.original().to_lsp(),
-            )),
-        )]
+        )];
+        self
     }
 }

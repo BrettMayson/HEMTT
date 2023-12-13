@@ -2,7 +2,7 @@ use std::fs::create_dir_all;
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, link::create_link};
+use crate::{context::Context, error::Error, link::create_link, report::Report};
 
 use super::Module;
 
@@ -14,7 +14,7 @@ impl Module for FilePatching {
         "FilePatching"
     }
 
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         create_dir_all(ctx.build_folder().join("addons"))?;
         ctx.addons()
             .par_iter()
@@ -30,13 +30,12 @@ impl Module for FilePatching {
                     }),
                 )
             })
-            .collect::<Result<(), Error>>()
+            .collect::<Result<(), Error>>()?;
+        Ok(Report::new())
     }
 
-    fn post_build(&self, _ctx: &Context) -> Result<(), Error> {
-        info!(
-            "You can now use the dev folder at `.hemttout/dev` to test your mod with file-patching."
-        );
-        Ok(())
+    fn post_build(&self, _ctx: &Context) -> Result<Report, Error> {
+        info!("You can use the dev folder at `.hemttout/dev` to test your mod with file-patching.");
+        Ok(Report::new())
     }
 }

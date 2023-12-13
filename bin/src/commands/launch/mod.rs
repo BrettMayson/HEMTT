@@ -1,3 +1,5 @@
+mod error;
+
 use std::{
     borrow::Cow,
     path::{Path, PathBuf},
@@ -11,7 +13,9 @@ use hemtt_common::{
 use regex::Regex;
 use steamlocate::SteamDir;
 
-use crate::{error::Error, link::create_link};
+use crate::{
+    commands::launch::error::PresetNotFound, error::Error, link::create_link, report::Report,
+};
 
 use super::dev;
 
@@ -47,13 +51,15 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let Some(mainprefix) = config.mainprefix() else {
         return Err(Error::MainPrefixNotFound(String::from(
             "Required for launch",
         )));
     };
+
+    let mut report = Report::new();
 
     let launch_config = matches
         .get_one::<String>("config")
@@ -103,14 +109,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let mut workshop = launch.workshop().to_vec();
     let mut dlc = launch.dlc().to_vec();
 
+    let presets = std::env::current_dir()?.join(".hemtt/presets");
     for preset in launch.presets() {
         trace!("Loading preset: {}", preset);
-        let html = std::env::current_dir()?
-            .join(".hemtt/presets")
-            .join(preset)
-            .with_extension("html");
+        let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            return Err(Error::PresetNotFound(preset.to_string()));
+            report.error(PresetNotFound::code(preset.to_string(), &presets)?);
+            continue;
         }
         let html = std::fs::read_to_string(html)?;
         let (preset_mods, preset_dlc) = read_preset(preset, &html);
@@ -124,6 +129,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
                 dlc.push(load_dlc);
             }
         }
+    }
+    if report.failed() {
+        return Ok(report);
     }
 
     // climb to the workshop folder
@@ -158,16 +166,18 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         mods.push(dlc.to_mod().to_string());
     }
 
-    let ctx = super::dev::execute(matches, launch.optionals())?;
+    let mut executor = super::dev::context(matches, launch.optionals())?;
+
+    report.merge(executor.run()?);
 
     let prefix_folder = arma3dir.path.join(mainprefix);
     if !prefix_folder.exists() {
         std::fs::create_dir_all(&prefix_folder)?;
     }
 
-    let link = prefix_folder.join(ctx.config().prefix());
+    let link = prefix_folder.join(executor.ctx().config().prefix());
     if !link.exists() {
-        create_link(&link, ctx.build_folder())?;
+        create_link(&link, executor.ctx().build_folder())?;
     }
 
     let mut args: Vec<String> = [
@@ -224,7 +234,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         linux_launch(&arma3dir.path, &launch.executable(), &args)?;
     }
 
-    Ok(())
+    Ok(report)
 }
 
 /// Read a preset file and return the mods and DLCs

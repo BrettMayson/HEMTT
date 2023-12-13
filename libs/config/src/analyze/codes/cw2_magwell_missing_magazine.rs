@@ -9,12 +9,9 @@ pub struct MagwellMissingMagazine {
     array: Ident,
     ident: String,
     span: Range<usize>,
-}
 
-impl MagwellMissingMagazine {
-    pub const fn new(array: Ident, ident: String, span: Range<usize>) -> Self {
-        Self { array, ident, span }
-    }
+    report: Option<String>,
+    annotations: Vec<Annotation>,
 }
 
 // TODO: maybe we could have a `did you mean` here without too much trouble?
@@ -32,11 +29,33 @@ impl Code for MagwellMissingMagazine {
         format!("no matching magazine was found: `{}`", self.ident)
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        self.annotations.clone()
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {}
+}
+
+impl MagwellMissingMagazine {
+    pub fn new(array: Ident, ident: String, span: Range<usize>, processed: &Processed) -> Self {
+        Self {
+            array,
+            ident,
+            span,
+
+            report: None,
+            annotations: vec![],
+        }
+        .report_generate_processed(processed)
+        .ci_generate_processed(processed)
+    }
+
+    fn report_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed.mapping(self.array.span.start).unwrap();
         let array_token = map.token();
         let map = processed.mapping(self.span.start).unwrap();
@@ -67,19 +86,18 @@ impl Code for MagwellMissingMagazine {
         .finish()
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
-        Some(String::from_utf8(out).unwrap())
+        self.report = Some(String::from_utf8(out).unwrap());
+        self
     }
 
-    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed.mapping(self.span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();
-        vec![self.annotation(
+        self.annotations = vec![self.annotation(
             AnnotationLevel::Warning,
             map_file.0.as_str().to_string(),
             map.original(),
-        )]
+        )];
+        self
     }
-
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {}
 }

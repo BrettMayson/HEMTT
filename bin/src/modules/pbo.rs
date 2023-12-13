@@ -13,7 +13,7 @@ use hemtt_pbo::WritablePbo;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Should the optional and compat PBOs be collapsed into the addons folder
@@ -32,7 +32,7 @@ pub enum Collapse {
 /// [`Error::Version`] if the version is invalid
 /// [`Error::Git`] if the git hash is invalid
 /// [`Error::Pbo`] if the PBO fails to write
-pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
+pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     let version = ctx.config().version().get(ctx.workspace().vfs())?;
     let git_hash = {
         Repository::discover(".").map_or(None, |repo| {
@@ -53,7 +53,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<(), Error> {
         })
         .collect::<Result<Vec<_>, Error>>()?;
     info!("Built {} PBOs", counter.load(Ordering::Relaxed));
-    Ok(())
+    Ok(Report::new())
 }
 
 fn _build(

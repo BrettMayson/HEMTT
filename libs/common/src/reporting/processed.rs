@@ -1,6 +1,6 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::{ops::Range, rc::Rc};
+use std::{rc::Rc, sync::Arc};
 
 use crate::{
     position::{LineCol, Position},
@@ -37,7 +37,7 @@ pub struct Processed {
     total: usize,
 
     /// Warnings
-    warnings: Vec<Box<dyn Code>>,
+    warnings: Vec<Arc<dyn Code>>,
 
     /// The preprocessor was able to check the file, but it should not be rapified
     no_rapify: bool,
@@ -177,7 +177,7 @@ impl Processed {
         output: Vec<Output>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
-        warnings: Vec<Box<dyn Code>>,
+        warnings: Vec<Arc<dyn Code>>,
         no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
@@ -250,7 +250,7 @@ impl Processed {
 
     #[must_use]
     /// Returns the warnings
-    pub fn warnings(&self) -> &[Box<dyn Code>] {
+    pub fn warnings(&self) -> &[Arc<dyn Code>] {
         &self.warnings
     }
 

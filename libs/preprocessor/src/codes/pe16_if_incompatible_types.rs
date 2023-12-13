@@ -2,17 +2,83 @@ use std::rc::Rc;
 
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
 
 #[allow(unused)]
 /// Unexpected token
 pub struct IfIncompatibleType {
     /// Left side of the operator
-    pub(crate) left: (Vec<Token>, bool),
+    left: (Vec<Token>, bool),
     /// Operator
-    pub(crate) operator: Vec<Token>,
+    operator: Vec<Token>,
     /// Right side of the operator
-    pub(crate) right: (Vec<Token>, bool),
+    right: (Vec<Token>, bool),
+    /// The report
+    report: Option<String>,
+}
+
+impl Code for IfIncompatibleType {
+    fn ident(&self) -> &'static str {
+        "PE15"
+    }
+
+    fn message(&self) -> String {
+        "incompatible types for operator in #if".to_string()
+    }
+
+    fn label_message(&self) -> String {
+        format!(
+            "incompatible types `{}` & `{}`",
+            self.left
+                .0
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect::<String>(),
+            self.right
+                .0
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect::<String>()
+        )
+    }
+
+    fn report(&self) -> Option<String> {
+        self.report.clone()
+    }
+
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.left
+                .0
+                .first()
+                .unwrap()
+                .position()
+                .path()
+                .as_str()
+                .to_string(),
+            &self
+                .left
+                .0
+                .first()
+                .unwrap()
+                .position()
+                .clone_with_end(*self.right.0.last().unwrap().position().end()),
+        )]
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.left.0.first().unwrap().position().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            self.diagnostic(Range {
+                start: self.left.0.first().unwrap().position().start().to_lsp(),
+                end: self.right.0.last().unwrap().position().end().to_lsp(),
+            }),
+        ))
+    }
 }
 
 impl IfIncompatibleType {
@@ -31,40 +97,12 @@ impl IfIncompatibleType {
                 right.0.into_iter().map(|t| t.as_ref().clone()).collect(),
                 right.1,
             ),
+            report: None,
         }
-    }
-}
-
-impl Code for IfIncompatibleType {
-    fn ident(&self) -> &'static str {
-        "PE15"
+        .report_generate()
     }
 
-    fn message(&self) -> String {
-        "incompatible types for operator in #if".to_string()
-    }
-
-    fn label_message(&self) -> String {
-        format!(
-            "incompatible types for operator in #if `{}` & `{}`",
-            self.left
-                .0
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<String>(),
-            self.right
-                .0
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<String>()
-        )
-    }
-
-    fn help(&self) -> Option<String> {
-        None
-    }
-
-    fn report_generate(&self) -> Option<String> {
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let mut out = Vec::new();
         let span = self.operator.first().unwrap().position().start().0
@@ -145,44 +183,9 @@ impl Code for IfIncompatibleType {
             ]),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.left
-                .0
-                .first()
-                .unwrap()
-                .position()
-                .path()
-                .as_str()
-                .to_string(),
-            &self
-                .left
-                .0
-                .first()
-                .unwrap()
-                .position()
-                .clone_with_end(*self.right.0.last().unwrap().position().end()),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.left.0.first().unwrap().position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.left.0.first().unwrap().position().start().to_lsp(),
-                end: self.right.0.last().unwrap().position().end().to_lsp(),
-            }),
-        ))
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

@@ -7,21 +7,10 @@ pub enum Error {
     #[error("Launch config not found: {0}")]
     LaunchConfigNotFound(String),
 
-    #[error("ASC: {0}")]
-    SQFCompiler(String),
-
     #[error("Folder already exists: {0}")]
     NewFolderExists(String),
     #[error("New can only be ran in an interactive terminal")]
     NewNoInput,
-
-    #[error("Hook signaled failure: {0}")]
-    HookFatal(String),
-    #[error("Script not found: {0}")]
-    ScriptNotFound(String),
-
-    #[error("One or more files failed linting")]
-    LintFailed,
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
@@ -32,9 +21,6 @@ pub enum Error {
     WorkshopNotFound,
     #[error("Workshop mod not found: {0}")]
     WorkshopModNotFound(String),
-    #[error("Preset not found: {0}")]
-    PresetNotFound(String),
-
     #[error("Main prefix not found: {0}")]
     MainPrefixNotFound(String),
 

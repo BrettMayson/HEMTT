@@ -5,12 +5,13 @@ use std::{
 
 use ::rhai::{packages::Package, Engine, Scope};
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 use self::libraries::hemtt::RhaiHemtt;
 
 use super::Module;
 
+mod error;
 mod libraries;
 mod time;
 
@@ -114,23 +115,26 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_file(ctx: &Context, name: &str) -> Result<(), Error> {
-        let mut path = ctx.hemtt_folder().join("scripts").join(name);
+    pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
+        let mut report = Report::new();
+        let scripts = ctx.hemtt_folder().join("scripts");
+        let mut path = scripts.join(name);
         path.set_extension("rhai");
         if !path.exists() {
-            return Err(Error::ScriptNotFound(name.to_owned()));
+            report.error(error::ScriptNotFound::code(
+                name.to_owned(),
+                &scripts.join("*.rhai"),
+            )?);
+            return Ok(report);
         }
-        let res = Self::run(
-            ctx,
-            name.to_string(),
-            &std::fs::read_to_string(path)?,
-            false,
-        );
+        let res = Self::run(ctx, name.to_owned(), &std::fs::read_to_string(path)?, false);
         ctx.config().version().invalidate();
         res
     }
 
-    fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<(), Error> {
+    #[allow(clippy::needless_pass_by_value)] // rhai things
+    fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<Report, Error> {
+        let mut report = Report::new();
         let mut engine = engine(vfs);
         let mut scope = scope(ctx, vfs)?;
         let told_to_fail = Arc::new(Mutex::new(false));
@@ -162,9 +166,9 @@ impl Hooks {
         });
         engine.run_with_scope(&mut scope, script)?;
         if *told_to_fail.lock().unwrap() {
-            return Err(Error::HookFatal(name));
+            report.error(error::ScriptFatal::code(name));
         }
-        Ok(())
+        Ok(report)
     }
 }
 
@@ -173,7 +177,7 @@ impl Module for Hooks {
         "Hooks"
     }
 
-    fn init(&mut self, ctx: &Context) -> Result<(), Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
         if self.0 {
             for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
@@ -190,22 +194,26 @@ impl Module for Hooks {
         } else {
             trace!("no hooks folder");
         }
-        Ok(())
+        Ok(Report::new())
     }
 
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre_build", true)
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "pre_build", true)?;
+        Ok(Report::new())
     }
 
-    fn post_build(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "post_build", true)
+    fn post_build(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "post_build", true)?;
+        Ok(Report::new())
     }
 
-    fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "pre_release", true)
+    fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "pre_release", true)?;
+        Ok(Report::new())
     }
 
-    fn post_release(&self, ctx: &Context) -> Result<(), Error> {
-        self.run_folder(ctx, "post_release", false)
+    fn post_release(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "post_release", false)?;
+        Ok(Report::new())
     }
 }

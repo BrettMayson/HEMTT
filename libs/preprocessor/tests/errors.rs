@@ -33,7 +33,7 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let error = e.get_code().unwrap().report_generate().unwrap();
+            let error = e.get_code().unwrap().report().unwrap();
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
             }

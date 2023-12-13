@@ -7,7 +7,7 @@ use std::{
 use clap::{ArgMatches, Command};
 use dialoguer::Input;
 
-use crate::{error::Error, modules::Licenses};
+use crate::{error::Error, modules::Licenses, report::Report};
 
 #[must_use]
 pub fn cli() -> Command {
@@ -25,7 +25,7 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     if !std::io::stdin().is_terminal() {
         return Err(Error::NewNoInput);
     }
@@ -78,5 +78,5 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         file.write_all(license.as_bytes())?;
     }
 
-    Ok(())
+    Ok(Report::new())
 }

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use hemtt_common::project::ProjectConfig;
 use hemtt_common::reporting::{Code, Processed};
 
@@ -23,7 +25,7 @@ impl Analyze for Value {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-    ) -> Vec<Box<dyn Code>> {
+    ) -> Vec<Arc<dyn Code>> {
         match self {
             Self::Str(s) => s.warnings(project, processed),
             Self::Number(n) => n.warnings(project, processed),
@@ -33,7 +35,7 @@ impl Analyze for Value {
         }
     }
 
-    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Arc<dyn Code>> {
         match self {
             Self::Str(s) => s.errors(project, processed),
             Self::Number(n) => n.errors(project, processed),
@@ -46,9 +48,9 @@ impl Analyze for Value {
                         .mapping(invalid.start)
                         .is_some_and(hemtt_common::reporting::Mapping::was_macro)
                     {
-                        Box::new(InvalidValueMacro::new(invalid.clone()))
+                        Arc::new(InvalidValueMacro::new(invalid.clone(), processed))
                     } else {
-                        Box::new(InvalidValue::new(invalid.clone()))
+                        Arc::new(InvalidValue::new(invalid.clone(), processed))
                     }
                 }]
             }

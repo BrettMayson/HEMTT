@@ -1,6 +1,7 @@
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
+
+use crate::Error;
 
 #[allow(unused)]
 /// Tried to create a [`FunctionDefinition`](crate::context::FunctionDefinition) that has multi-token arguments
@@ -10,9 +11,11 @@ use tracing::error;
 /// ```
 pub struct DefineMissingComma {
     /// The [`Token`] of the previous arg
-    pub(crate) previous: Box<Token>,
+    previous: Box<Token>,
     /// The [`Token`] of the current arg
-    pub(crate) current: Box<Token>,
+    current: Box<Token>,
+    /// The report
+    report: Option<String>,
 }
 
 impl Code for DefineMissingComma {
@@ -35,11 +38,48 @@ impl Code for DefineMissingComma {
         )
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate(&self) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.current.position().path().as_str().to_string(),
+            self.current.position(),
+        )]
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.position().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            self.diagnostic(Range {
+                start: self.token.position().start().to_lsp(),
+                end: self.token.position().end().to_lsp(),
+            }),
+        ))
+    }
+}
+
+impl DefineMissingComma {
+    pub fn new(current: Box<Token>, previous: Box<Token>) -> Self {
+        Self {
+            current,
+            previous,
+            report: None,
+        }
+        .report_generate()
+    }
+
+    pub fn code(current: Token, previous: Token) -> Error {
+        Error::Code(Box::new(Self::new(Box::new(current), Box::new(previous))))
+    }
+
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let color_comma = colors.next();
         let color_current = colors.next();
@@ -97,31 +137,9 @@ impl Code for DefineMissingComma {
             ),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.current.position().path().as_str().to_string(),
-            self.current.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
-        ))
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

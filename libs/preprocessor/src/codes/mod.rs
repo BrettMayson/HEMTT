@@ -2,8 +2,6 @@
 
 #![allow(missing_docs)]
 
-use strsim::levenshtein;
-
 pub mod pe10_function_as_value;
 pub mod pe11_expected_function_or_value;
 pub mod pe12_include_not_found;
@@ -31,16 +29,3 @@ pub mod pe9_function_call_argument_count;
 pub mod pw1_redefine;
 pub mod pw2_invalid_config_case;
 pub mod pw3_padded_arg;
-
-pub fn similar_values<'a>(search: &str, haystack: &'a [&str]) -> Vec<&'a str> {
-    let mut similar = haystack
-        .iter()
-        .map(|v| (v, levenshtein(v, search)))
-        .collect::<Vec<_>>();
-    similar.sort_by_key(|(_, v)| *v);
-    similar.retain(|s| s.1 <= 3);
-    if similar.len() > 3 {
-        similar.truncate(3);
-    }
-    similar.into_iter().map(|(n, _)| *n).collect::<Vec<_>>()
-}

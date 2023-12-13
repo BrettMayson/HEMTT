@@ -1,7 +1,7 @@
 use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::addons::Location;
 
-use crate::{context::Context, error::Error, modules::Hooks};
+use crate::{context::Context, error::Error, modules::Hooks, report::Report};
 
 #[must_use]
 pub fn cli() -> Command {
@@ -41,7 +41,7 @@ pub fn add_args(cmd: Command) -> Command {
 ///
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches
         .get_many::<String>("optional")
@@ -81,5 +81,5 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .expect("name to be set as required");
     Hooks::run_file(&ctx, name)?;
 
-    Ok(())
+    Ok(Report::new())
 }

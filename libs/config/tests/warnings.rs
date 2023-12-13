@@ -1,6 +1,5 @@
 use std::io::Read;
 
-use hemtt_common::reporting::Code;
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/warnings/";
@@ -35,7 +34,7 @@ fn check(dir: &str) {
             let warnings = config
                 .warnings()
                 .iter()
-                .map(|e| e.report_generate_processed(&processed).unwrap())
+                .map(|e| e.report().unwrap())
                 .collect::<Vec<_>>();
             if expected.is_empty() {
                 std::fs::write(
@@ -52,7 +51,7 @@ fn check(dir: &str) {
         // warnings may occur, but they should be handled, if one is not a handler should be created
         Err(e) => {
             for e in &e {
-                eprintln!("{}", e.report_generate_processed(&processed).unwrap());
+                eprintln!("{}", e.report().unwrap());
             }
             panic!("Error parsing config");
         }

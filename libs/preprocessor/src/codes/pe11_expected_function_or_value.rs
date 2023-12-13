@@ -1,16 +1,19 @@
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
+
+use crate::Error;
 
 #[allow(unused)]
 /// Tried to use a [`Unit`](crate::context::Definition::Unit) as a function or value
 pub struct ExpectedFunctionOrValue {
     /// The [`Token`] that was found
-    pub(crate) token: Box<Token>,
+    token: Box<Token>,
     /// The [`Token`] of the function
-    pub(crate) source: Box<Token>,
+    source: Box<Token>,
     /// Likely a function
-    pub(crate) likely_function: bool,
+    likely_function: bool,
+    /// The report
+    report: Option<String>,
 }
 
 impl Code for ExpectedFunctionOrValue {
@@ -28,19 +31,58 @@ impl Code for ExpectedFunctionOrValue {
 
     fn label_message(&self) -> String {
         format!(
-            "expected function or value, found unit `{}`",
+            "found unit `{}`",
             self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
 
-    fn help(&self) -> Option<String> {
-        Some(format!(
-            "expected function or value, found unit `{}`",
-            self.token.symbol().to_string().replace('\n', "\\n")
-        ))
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate(&self) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.position().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            self.diagnostic(Range {
+                start: self.token.position().start().to_lsp(),
+                end: self.token.position().end().to_lsp(),
+            }),
+        ))
+    }
+}
+
+impl ExpectedFunctionOrValue {
+    pub fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
+        Self {
+            token,
+            source,
+            likely_function,
+            report: None,
+        }
+        .report_generate()
+    }
+
+    pub fn code(token: Token, source: Token, likely_function: bool) -> Error {
+        Error::Code(Box::new(Self::new(
+            Box::new(token),
+            Box::new(source),
+            likely_function,
+        )))
+    }
+
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let a = colors.next();
         let mut out = Vec::new();
@@ -83,31 +125,9 @@ impl Code for ExpectedFunctionOrValue {
             ),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
-        ))
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

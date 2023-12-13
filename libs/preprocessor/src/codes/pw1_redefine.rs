@@ -1,14 +1,15 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
 
 #[allow(unused)]
 /// Unexpected token
 pub struct RedefineMacro {
     /// The [`Token`] that was defined
-    pub(crate) token: Box<Token>,
+    token: Box<Token>,
     /// The original [`Token`] that was defined
-    pub(crate) original: Box<Token>,
+    original: Box<Token>,
+    /// The report
+    report: Option<String>,
 }
 
 impl Code for RedefineMacro {
@@ -31,11 +32,30 @@ impl Code for RedefineMacro {
         )
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate(&self) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Warning,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
+    }
+}
+
+impl RedefineMacro {
+    pub fn new(token: Box<Token>, original: Box<Token>) -> Self {
+        Self {
+            token,
+            original,
+            report: None,
+        }
+        .report_generate()
+    }
+
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let color_token = colors.next();
         let color_original = colors.next();
@@ -87,18 +107,10 @@ impl Code for RedefineMacro {
             ]),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
 
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Warning,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }
