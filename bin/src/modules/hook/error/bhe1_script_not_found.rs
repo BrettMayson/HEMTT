@@ -7,17 +7,18 @@ use hemtt_common::{
 
 use crate::Error;
 
-pub struct PresetNotFound {
-    name: String,
+pub struct ScriptNotFound {
+    script: String,
     similar: Vec<String>,
 }
-impl Code for PresetNotFound {
+
+impl Code for ScriptNotFound {
     fn ident(&self) -> &'static str {
-        "BCLE1"
+        "BHE1"
     }
 
     fn message(&self) -> String {
-        format!("Preset `{}` not found.", self.name)
+        format!("Script not found: {}", self.script)
     }
 
     fn help(&self) -> Option<String> {
@@ -33,13 +34,13 @@ impl Code for PresetNotFound {
     }
 
     fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        vec![]
+        Vec::new()
     }
 }
 
-impl PresetNotFound {
-    pub fn code(name: String, path: &Path) -> Result<Arc<dyn Code>, Error> {
-        let presets = path
+impl ScriptNotFound {
+    pub fn code(script: String, path: &Path) -> Result<Arc<dyn Code>, Error> {
+        let scripts = path
             .read_dir()?
             .filter_map(|x| {
                 x.ok().and_then(|x| {
@@ -53,8 +54,8 @@ impl PresetNotFound {
             .collect::<Vec<String>>();
         Ok(Arc::new(Self {
             similar: similar_values(
-                &name,
-                &presets
+                &script,
+                &scripts
                     .iter()
                     .map(std::string::String::as_str)
                     .collect::<Vec<&str>>(),
@@ -62,7 +63,7 @@ impl PresetNotFound {
             .iter()
             .map(std::string::ToString::to_string)
             .collect(),
-            name,
+            script,
         }))
     }
 }

@@ -1,7 +1,9 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+
+use crate::Error;
 
 /// An include was not found
 pub struct IncludeNotFound {
@@ -76,6 +78,10 @@ impl IncludeNotFound {
             report: None,
         }
         .report_generate()
+    }
+
+    pub fn code(token: Vec<Rc<Token>>) -> Error {
+        Error::Code(Arc::new(Self::new(token)))
     }
 
     fn report_generate(mut self) -> Self {

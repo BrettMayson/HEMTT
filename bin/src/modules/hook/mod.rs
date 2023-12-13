@@ -7,7 +7,13 @@ use ::rhai::{packages::Package, Engine, Scope};
 
 use crate::{context::Context, error::Error, report::Report};
 
-use self::libraries::hemtt::RhaiHemtt;
+use self::{
+    error::{
+        bhe1_script_not_found::ScriptNotFound, bhe2_script_fatal::ScriptFatal,
+        bhe3_parse_error::RhaiParseError, bhe4_runtime_error::RuntimeError,
+    },
+    libraries::hemtt::RhaiHemtt,
+};
 
 use super::Module;
 
@@ -121,7 +127,7 @@ impl Hooks {
         let mut path = scripts.join(name);
         path.set_extension("rhai");
         if !path.exists() {
-            report.error(error::ScriptNotFound::code(
+            report.error(ScriptNotFound::code(
                 name.to_owned(),
                 &scripts.join("*.rhai"),
             )?);
@@ -164,9 +170,12 @@ impl Hooks {
             error!("[{inner_name}] {s}");
             *inner_told_to_fail.lock().unwrap() = true;
         });
-        engine.run_with_scope(&mut scope, script)?;
+        if let Err(e) = engine.run_with_scope(&mut scope, script) {
+            report.error(RuntimeError::code(name, &e));
+            return Ok(report);
+        }
         if *told_to_fail.lock().unwrap() {
-            report.error(error::ScriptFatal::code(name));
+            report.error(ScriptFatal::code(name));
         }
         Ok(report)
     }
@@ -178,6 +187,7 @@ impl Module for Hooks {
     }
 
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
         self.0 = ctx.hemtt_folder().join("hooks").exists();
         if self.0 {
             for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
@@ -188,13 +198,19 @@ impl Module for Hooks {
                 }
                 for hook in dir.read_dir().unwrap() {
                     let hook = hook?;
-                    engine.compile(&std::fs::read_to_string(hook.path())?)?;
+                    if let Err(e) = engine.compile(&std::fs::read_to_string(hook.path())?) {
+                        report.error(RhaiParseError::code(
+                            hook.path().display().to_string(),
+                            e.0,
+                            e.1,
+                        ));
+                    }
                 }
             }
         } else {
             trace!("no hooks folder");
         }
-        Ok(Report::new())
+        Ok(report)
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {

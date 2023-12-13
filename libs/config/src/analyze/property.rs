@@ -14,15 +14,6 @@ use super::{
 use crate::{Property, Value};
 
 impl Analyze for Property {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        match self {
-            Self::Entry { value, .. } => value.valid(project),
-            Self::Class(c) => c.valid(project),
-            Self::Delete(_) => true,
-            Self::MissingSemicolon(_, _) => false,
-        }
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,

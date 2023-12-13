@@ -15,10 +15,6 @@ use super::{
 };
 
 impl Analyze for Config {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        self.0.iter().all(|p| p.valid(project))
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,

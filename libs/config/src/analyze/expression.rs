@@ -8,10 +8,6 @@ use crate::Expression;
 use super::Analyze;
 
 impl Analyze for Expression {
-    fn valid(&self, _: Option<&ProjectConfig>) -> bool {
-        true
-    }
-
     fn warnings(&self, _: Option<&ProjectConfig>, _processed: &Processed) -> Vec<Arc<dyn Code>> {
         vec![]
     }

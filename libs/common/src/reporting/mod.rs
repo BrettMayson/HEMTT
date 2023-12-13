@@ -2,7 +2,6 @@
 
 use std::fmt::{Debug, Display};
 
-mod error;
 mod output;
 mod processed;
 mod symbol;
@@ -10,7 +9,6 @@ mod token;
 mod whitespace;
 
 use ariadne::{Color, Fmt, ReportKind};
-pub use error::Error;
 pub use output::Output;
 pub use processed::{Mapping, Processed};
 pub use symbol::Symbol;

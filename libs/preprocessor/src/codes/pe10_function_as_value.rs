@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -72,7 +74,7 @@ impl FunctionAsValue {
     }
 
     pub fn code(token: Token, source: Token) -> Error {
-        Error::Code(Box::new(Self::new(Box::new(token), Box::new(source))))
+        Error::Code(Arc::new(Self::new(Box::new(token), Box::new(source))))
     }
 
     fn report_generate(mut self) -> Self {

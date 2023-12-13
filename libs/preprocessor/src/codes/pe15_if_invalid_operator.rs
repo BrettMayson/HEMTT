@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -82,7 +84,7 @@ impl IfInvalidOperator {
     }
 
     pub fn code(tokens: Vec<Token>) -> Error {
-        Error::Code(Box::new(Self::new(tokens)))
+        Error::Code(Arc::new(Self::new(tokens)))
     }
 
     fn report_generate(mut self) -> Self {

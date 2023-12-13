@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -75,7 +77,7 @@ impl ExpectedFunctionOrValue {
     }
 
     pub fn code(token: Token, source: Token, likely_function: bool) -> Error {
-        Error::Code(Box::new(Self::new(
+        Error::Code(Arc::new(Self::new(
             Box::new(token),
             Box::new(source),
             likely_function,

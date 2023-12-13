@@ -5,10 +5,10 @@ use std::{rc::Rc, sync::Arc};
 use crate::{
     position::{LineCol, Position},
     reporting::{Output, Token},
-    workspace::WorkspacePath,
+    workspace::{Error, WorkspacePath},
 };
 
-use super::{Code, Error};
+use super::Code;
 
 #[derive(Debug, Default)]
 /// A processed file
@@ -57,11 +57,10 @@ fn append_token(
             || {
                 let content = path.read_to_string()?;
                 processed.sources.push((path.clone(), content));
-                Ok(processed.sources.len() - 1)
+                Ok::<usize, Error>(processed.sources.len() - 1)
             },
             Ok,
-        )
-        .map_err(Error::Workspace)?;
+        )?;
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');

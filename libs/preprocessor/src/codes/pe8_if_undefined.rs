@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
-use crate::defines::Defines;
+use crate::{defines::Defines, Error};
 
 #[allow(unused)]
 /// Tried to use `#if` on an undefined macro
@@ -73,6 +75,10 @@ impl IfUndefined {
             report: None,
         }
         .report_generate()
+    }
+
+    pub fn code(token: Token, defines: &Defines) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), defines)))
     }
 
     fn report_generate(mut self) -> Self {

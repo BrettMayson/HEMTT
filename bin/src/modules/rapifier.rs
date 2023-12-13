@@ -85,6 +85,10 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     let mut report = Report::new();
     let processed = match Processor::run(path) {
         Ok(processed) => processed,
+        Err(hemtt_preprocessor::Error::Code(e)) => {
+            report.error(e);
+            return Ok(report);
+        }
         Err(e) => {
             return Err(e.into());
         }
@@ -107,7 +111,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     configreport.errors().iter().for_each(|e| {
         report.error(e.clone());
     });
-    if !configreport.valid() || !configreport.errors().is_empty() {
+    if !configreport.errors().is_empty() {
         return Ok(report);
     }
     let out = if path.filename().to_lowercase() == "config.cpp" {

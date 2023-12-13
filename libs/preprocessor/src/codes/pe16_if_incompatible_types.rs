@@ -1,7 +1,9 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+
+use crate::Error;
 
 #[allow(unused)]
 /// Unexpected token
@@ -100,6 +102,14 @@ impl IfIncompatibleType {
             report: None,
         }
         .report_generate()
+    }
+
+    pub fn code(
+        left: (Vec<Rc<Token>>, bool),
+        operator: Vec<Rc<Token>>,
+        right: (Vec<Rc<Token>>, bool),
+    ) -> Error {
+        Error::Code(Arc::new(Self::new(left, operator, right)))
     }
 
     fn report_generate(mut self) -> Self {

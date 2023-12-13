@@ -19,9 +19,6 @@ pub use model::CfgPatch;
 
 /// Trait for rapifying objects
 pub trait Analyze {
-    /// Check if the object is valid and can be rapified
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool;
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,

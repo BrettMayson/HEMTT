@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
-use crate::defines::Defines;
+use crate::{defines::Defines, Error};
 
 /// Tried to use `#if` on a [`Unit`](crate::context::Definition::Unit) or [`FunctionDefinition`](crate::context::Definition::Function)
 pub struct IfUnitOrFunction {
@@ -80,6 +82,10 @@ impl IfUnitOrFunction {
             report: None,
         }
         .report_generate()
+    }
+
+    pub fn code(token: Token, defines: &Defines) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), defines)))
     }
 
     fn report_generate(mut self) -> Self {

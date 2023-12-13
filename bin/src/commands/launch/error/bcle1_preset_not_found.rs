@@ -7,17 +7,18 @@ use hemtt_common::{
 
 use crate::Error;
 
-pub struct ScriptNotFound {
-    script: String,
+pub struct PresetNotFound {
+    name: String,
     similar: Vec<String>,
 }
-impl Code for ScriptNotFound {
+
+impl Code for PresetNotFound {
     fn ident(&self) -> &'static str {
-        "BHE1"
+        "BCLE1"
     }
 
     fn message(&self) -> String {
-        format!("Script not found: {}", self.script)
+        format!("Preset `{}` not found.", self.name)
     }
 
     fn help(&self) -> Option<String> {
@@ -33,12 +34,13 @@ impl Code for ScriptNotFound {
     }
 
     fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
+        vec![]
     }
 }
-impl ScriptNotFound {
-    pub fn code(script: String, path: &Path) -> Result<Arc<dyn Code>, Error> {
-        let scripts = path
+
+impl PresetNotFound {
+    pub fn code(name: String, path: &Path) -> Result<Arc<dyn Code>, Error> {
+        let presets = path
             .read_dir()?
             .filter_map(|x| {
                 x.ok().and_then(|x| {
@@ -52,8 +54,8 @@ impl ScriptNotFound {
             .collect::<Vec<String>>();
         Ok(Arc::new(Self {
             similar: similar_values(
-                &script,
-                &scripts
+                &name,
+                &presets
                     .iter()
                     .map(std::string::String::as_str)
                     .collect::<Vec<&str>>(),
@@ -61,33 +63,7 @@ impl ScriptNotFound {
             .iter()
             .map(std::string::ToString::to_string)
             .collect(),
-            script,
+            name,
         }))
-    }
-}
-
-pub struct ScriptFatal {
-    script: String,
-}
-impl Code for ScriptFatal {
-    fn ident(&self) -> &'static str {
-        "BHE2"
-    }
-
-    fn message(&self) -> String {
-        format!("Script {} signalled fatal", self.script)
-    }
-
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, None))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
-    }
-}
-impl ScriptFatal {
-    pub fn code(script: String) -> Arc<dyn Code> {
-        Arc::new(Self { script })
     }
 }

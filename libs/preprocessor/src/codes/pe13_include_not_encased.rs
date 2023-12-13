@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -65,7 +67,7 @@ impl IncludeNotEncased {
     }
 
     pub fn code(token: Token, encased_in: Option<Token>) -> Error {
-        Error::Code(Box::new(Self::new(Box::new(token), encased_in)))
+        Error::Code(Arc::new(Self::new(Box::new(token), encased_in)))
     }
 
     fn report_generate(mut self) -> Self {

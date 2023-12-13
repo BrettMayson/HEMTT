@@ -209,12 +209,12 @@ impl Processor {
                     ));
                 };
                 if args.len() != function.args().len() {
-                    return Err(Error::Code(Box::new(FunctionCallArgumentCount::new(
-                        Box::new(ident.as_ref().clone()),
+                    return Err(FunctionCallArgumentCount::code(
+                        ident.as_ref().clone(),
                         function.args().len(),
                         args.len(),
                         &self.defines.clone(),
-                    ))));
+                    ));
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {

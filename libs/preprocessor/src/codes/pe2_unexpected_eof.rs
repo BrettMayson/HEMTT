@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -47,7 +49,7 @@ impl UnexpectedEOF {
     }
 
     pub fn code(token: Token) -> Error {
-        Error::Code(Box::new(Self::new(Box::new(token))))
+        Error::Code(Arc::new(Self::new(Box::new(token))))
     }
 
     fn report_generate(mut self) -> Self {

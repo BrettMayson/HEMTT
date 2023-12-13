@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -79,7 +81,7 @@ impl DoubleElse {
     }
 
     pub fn code(token: Token, previous: Token, if_token: Token) -> Error {
-        Error::Code(Box::new(Self::new(
+        Error::Code(Arc::new(Self::new(
             Box::new(token),
             Box::new(previous),
             Box::new(if_token),

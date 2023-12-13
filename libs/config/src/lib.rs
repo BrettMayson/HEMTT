@@ -44,7 +44,6 @@ pub fn parse(
         },
         |config| {
             Ok(ConfigReport {
-                valid: config.valid(project),
                 warnings: config.warnings(project, processed),
                 errors: config.errors(project, processed),
                 patches: config.get_patches(),
@@ -57,7 +56,6 @@ pub fn parse(
 /// A parsed config file with warnings and errors
 pub struct ConfigReport {
     config: Config,
-    valid: bool,
     warnings: Vec<Arc<dyn Code>>,
     errors: Vec<Arc<dyn Code>>,
     patches: Vec<CfgPatch>,
@@ -74,12 +72,6 @@ impl ConfigReport {
     /// Consumes the report and returns the config
     pub fn into_config(self) -> Config {
         self.config
-    }
-
-    #[must_use]
-    /// Get the validity
-    pub const fn valid(&self) -> bool {
-        self.valid
     }
 
     #[must_use]

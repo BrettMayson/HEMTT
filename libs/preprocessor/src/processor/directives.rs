@@ -203,7 +203,7 @@ impl Processor {
         let Ok(Some(path)) =
             current.locate(&path.iter().map(|t| t.to_string()).collect::<String>())
         else {
-            return Err(Error::Code(Box::new(IncludeNotFound::new(path))));
+            return Err(IncludeNotFound::code(path));
         };
         let tokens = crate::parse::parse(&path)?;
         self.files.push(path);
@@ -286,10 +286,10 @@ impl Processor {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
                 }
-                return Err(Error::Code(Box::new(IfUnitOrFunction::new(
-                    Box::new(token.as_ref().clone()),
+                return Err(IfUnitOrFunction::code(
+                    token.as_ref().clone(),
                     &defines.clone(),
-                ))));
+                ));
             }
             Ok((vec![token], false))
         }
@@ -313,10 +313,7 @@ impl Processor {
         {
             let pos = stream.peek().unwrap().position().clone();
             if !left_defined {
-                return Err(Error::Code(Box::new(IfUndefined::new(
-                    Box::new(left[0].as_ref().clone()),
-                    &self.defines,
-                ))));
+                return Err(IfUndefined::code(left[0].as_ref().clone(), &self.defines));
             }
             let equals = Rc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
@@ -356,18 +353,18 @@ impl Processor {
             "!=" => left_string != right_string,
             ">" | ">=" | "<" | "<=" => {
                 let Ok(left_f64) = left_string.parse::<f64>() else {
-                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                    return Err(IfIncompatibleType::code(
                         (left, left_defined),
                         operators,
                         (right, right_defined),
-                    ))));
+                    ));
                 };
                 let Ok(right_f64) = right_string.parse::<f64>() else {
-                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                    return Err(IfIncompatibleType::code(
                         (left, left_defined),
                         operators,
                         (right, right_defined),
-                    ))));
+                    ));
                 };
                 match operator.as_str() {
                     ">" => left_f64 > right_f64,

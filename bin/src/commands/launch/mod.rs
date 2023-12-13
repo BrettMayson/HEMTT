@@ -14,7 +14,14 @@ use regex::Regex;
 use steamlocate::SteamDir;
 
 use crate::{
-    commands::launch::error::PresetNotFound, error::Error, link::create_link, report::Report,
+    commands::launch::error::{
+        bcle1_preset_not_found::PresetNotFound, bcle2_workshop_not_found::WorkshopNotFound,
+        bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
+        bcle5_missing_main_prefix::MissingMainPrefix,
+    },
+    error::Error,
+    link::create_link,
+    report::Report,
 };
 
 use super::dev;
@@ -53,13 +60,11 @@ pub fn cli() -> Command {
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
-    let Some(mainprefix) = config.mainprefix() else {
-        return Err(Error::MainPrefixNotFound(String::from(
-            "Required for launch",
-        )));
-    };
-
     let mut report = Report::new();
+    let Some(mainprefix) = config.mainprefix() else {
+        report.error(MissingMainPrefix::code());
+        return Ok(report);
+    };
 
     let launch_config = matches
         .get_one::<String>("config")
@@ -79,7 +84,8 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let Some(arma3dir) =
         SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned))
     else {
-        return Err(Error::Arma3NotFound);
+        report.error(ArmaNotFound::code());
+        return Ok(report);
     };
 
     debug!("Arma 3 found at: {}", arma3dir.path.display());
@@ -137,14 +143,17 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     // climb to the workshop folder
     if !workshop.is_empty() {
         let Some(common) = arma3dir.path.parent() else {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         let Some(root) = common.parent() else {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         let workshop_folder = root.join("workshop").join("content").join("107410");
         if !workshop_folder.exists() {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         for load_mod in workshop {
             if Some(load_mod.clone()) == meta {
@@ -156,10 +165,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             }
             let mod_path = workshop_folder.join(&load_mod);
             if !mod_path.exists() {
-                return Err(Error::WorkshopModNotFound(load_mod));
+                report.error(WorkshopModNotFound::code(load_mod));
             };
             mods.push(mod_path.display().to_string());
         }
+    }
+    if report.failed() {
+        return Ok(report);
     }
 
     for dlc in dlc {

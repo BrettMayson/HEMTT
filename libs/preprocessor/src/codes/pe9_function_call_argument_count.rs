@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
-use crate::defines::Defines;
+use crate::{defines::Defines, Error};
 
 #[allow(unused)]
 /// Tried to call a [`FunctionDefinition`](crate::context::FunctionDefinition) with the wrong number of arguments
@@ -99,6 +101,10 @@ impl FunctionCallArgumentCount {
             report: None,
         }
         .report_generate()
+    }
+
+    pub fn code(token: Token, expected: usize, got: usize, defines: &Defines) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), expected, got, defines)))
     }
 
     fn report_generate(mut self) -> Self {

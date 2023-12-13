@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::{
     reporting::{Annotation, AnnotationLevel, Code, Token},
@@ -111,7 +113,7 @@ impl PragmaInvalidScope {
     }
 
     pub fn code(token: Token, root: bool) -> Error {
-        Error::Code(Box::new(Self::new(Box::new(token), root)))
+        Error::Code(Arc::new(Self::new(Box::new(token), root)))
     }
 
     fn report_generate(mut self) -> Self {

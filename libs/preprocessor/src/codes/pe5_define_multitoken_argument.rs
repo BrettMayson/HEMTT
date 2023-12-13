@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 
@@ -76,7 +78,7 @@ impl DefineMissingComma {
     }
 
     pub fn code(current: Token, previous: Token) -> Error {
-        Error::Code(Box::new(Self::new(Box::new(current), Box::new(previous))))
+        Error::Code(Arc::new(Self::new(Box::new(current), Box::new(previous))))
     }
 
     fn report_generate(mut self) -> Self {

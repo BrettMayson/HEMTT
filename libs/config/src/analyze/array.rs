@@ -11,10 +11,6 @@ use crate::{
 use super::Analyze;
 
 impl Analyze for Array {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        self.items.iter().all(|p| p.valid(project))
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,
@@ -35,15 +31,6 @@ impl Analyze for Array {
 }
 
 impl Analyze for Item {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        match self {
-            Self::Str(s) => s.valid(project),
-            Self::Number(n) => n.valid(project),
-            Self::Array(a) => a.iter().all(|p| p.valid(project)),
-            Self::Invalid(_) => false,
-        }
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,

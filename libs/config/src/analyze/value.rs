@@ -11,16 +11,6 @@ use crate::{
 use super::Analyze;
 
 impl Analyze for Value {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        match self {
-            Self::Str(s) => s.valid(project),
-            Self::Number(n) => n.valid(project),
-            Self::Expression(e) => e.valid(project),
-            Self::Array(a) => a.valid(project),
-            Self::UnexpectedArray(_) | Self::Invalid(_) => false,
-        }
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,
