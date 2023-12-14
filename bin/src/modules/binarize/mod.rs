@@ -29,8 +29,8 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
-        setup_tmp()?;
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        setup_tmp(ctx)?;
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
