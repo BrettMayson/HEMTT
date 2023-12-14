@@ -4,21 +4,12 @@ use hemtt_common::error::thiserror;
 pub enum Error {
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
-    #[error("Launch config not found: {0}")]
-    LaunchConfigNotFound(String),
-
-    #[error("Folder already exists: {0}")]
-    NewFolderExists(String),
-    #[error("New can only be ran in an interactive terminal")]
-    NewNoInput,
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
-    #[error("Config error: {0}")]
-    Config(#[from] hemtt_config::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]

@@ -18,6 +18,7 @@ use crate::{
         bcle1_preset_not_found::PresetNotFound, bcle2_workshop_not_found::WorkshopNotFound,
         bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
         bcle5_missing_main_prefix::MissingMainPrefix,
+        bcle6_launch_config_not_found::LaunchConfigNotFound,
     },
     error::Error,
     link::create_link,
@@ -69,7 +70,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let launch_config = matches
         .get_one::<String>("config")
         .map_or_else(|| String::from("default"), std::string::ToString::to_string);
-    let launch = config
+    let Some(launch) = config
         .hemtt()
         .launch(&launch_config)
         .or(if launch_config == "default" {
@@ -77,7 +78,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         } else {
             None
         })
-        .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
+    else {
+        report.error(LaunchConfigNotFound::code(launch_config));
+        return Ok(report);
+    };
 
     trace!("launch config: {:?}", launch);
 

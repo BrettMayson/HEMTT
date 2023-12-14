@@ -8,14 +8,15 @@ use std::{
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use self::errors::PlatformNotSupported;
-use super::Module;
-use crate::{
-    context::Context, error::Error, link::create_link, modules::binarize::errors::BinarizeFailed,
-    report::Report,
+#[allow(unused_imports)] // used in windows only
+use self::error::{
+    bbe1_tools_not_found::ToolsNotFound, bbe2_pltaform_not_supported::PlatformNotSupported,
+    bbe3_binarize_failed::BinarizeFailed,
 };
+use super::Module;
+use crate::{context::Context, error::Error, link::create_link, report::Report};
 
-mod errors;
+mod error;
 
 #[derive(Default)]
 pub struct Binarize {
@@ -33,15 +34,16 @@ impl Module for Binarize {
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-            report.error(errors::ToolsNotFound::code());
+            report.error(ToolsNotFound::code());
         };
         let Ok(path) = key.get_value::<String, _>("path") else {
-            report.error(errors::ToolsNotFound::code());
+            report.error(ToolsNotFound::code());
         };
         let path = PathBuf::from(path).join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
+        Ok(report)
     }
 
     #[cfg(not(windows))]
