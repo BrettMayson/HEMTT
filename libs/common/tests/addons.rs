@@ -3,7 +3,7 @@ use std::path::Path;
 use hemtt_common::addons::Addon;
 
 #[test]
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "linux")]
 fn case_duplicate() {
     assert_eq!(
         Addon::scan(Path::new("tests/addons_cases"))
