@@ -35,9 +35,11 @@ impl Module for Binarize {
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
             report.error(ToolsNotFound::code());
+            return Ok(report);
         };
         let Ok(path) = key.get_value::<String, _>("path") else {
             report.error(ToolsNotFound::code());
+            return Ok(report);
         };
         let path = PathBuf::from(path).join("binarize_x64.exe");
         if path.exists() {
