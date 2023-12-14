@@ -230,9 +230,7 @@ impl Defines {
             .collect::<Vec<_>>();
         similar.sort_by_key(|(_, v)| *v);
         similar.retain(|s| s.1 <= 3);
-        if similar.len() > 3 {
-            similar.truncate(3);
-        }
+        similar.truncate(3);
         similar.into_iter().map(|(n, _)| n).collect::<Vec<_>>()
     }
 
@@ -250,9 +248,7 @@ impl Defines {
             .collect::<Vec<_>>();
         similar.sort_by_key(|(_, v)| *v);
         similar.retain(|s| s.1 <= 3);
-        if similar.len() > 3 {
-            similar.truncate(3);
-        }
+        similar.truncate(3);
         similar.into_iter().map(|(n, _)| n).collect::<Vec<_>>()
     }
 }

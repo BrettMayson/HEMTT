@@ -86,7 +86,7 @@ impl MissingSemicolon {
                 token.position().path().to_string(),
                 token.position().start().0..token.position().end().0,
             ))
-            .with_message(format!("missing {}", "semicolon".fg(a)))
+            .with_message(format!("missing {}", ";".fg(a)))
             .with_color(a),
         )
         .with_help(format!(

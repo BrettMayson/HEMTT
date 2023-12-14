@@ -1,9 +1,13 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::{
+    reporting::{simple, Code},
+    similar_values,
+};
 
 pub struct LaunchConfigNotFound {
     config: String,
+    similar: Vec<String>,
 }
 
 impl Code for LaunchConfigNotFound {
@@ -13,6 +17,21 @@ impl Code for LaunchConfigNotFound {
 
     fn message(&self) -> String {
         format!("Launch config `{}` not found.", self.config)
+    }
+
+    fn help(&self) -> Option<String> {
+        if self.similar.is_empty() {
+            None
+        } else {
+            Some(format!(
+                "Did you mean `{}`?",
+                self.similar
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<String>>()
+                    .join("`, `")
+            ))
+        }
     }
 
     fn report(&self) -> Option<String> {
@@ -25,7 +44,19 @@ impl Code for LaunchConfigNotFound {
 }
 
 impl LaunchConfigNotFound {
-    pub fn code(config: String) -> Arc<dyn Code> {
-        Arc::new(Self { config })
+    pub fn code(config: String, available: Vec<String>) -> Arc<dyn Code> {
+        Arc::new(Self {
+            similar: similar_values(
+                &config,
+                &available
+                    .iter()
+                    .map(std::string::String::as_str)
+                    .collect::<Vec<&str>>(),
+            )
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect(),
+            config,
+        })
     }
 }

@@ -159,17 +159,23 @@ pub fn simple(code: &dyn Code, kind: ReportKind<'_>, help: Option<String>) -> St
         ReportKind::Advice => "Advice",
         ReportKind::Custom(w, _) => w,
     };
-    let left = format!("[{}]: {}", code.ident(), title)
+    let left = format!("[{}] {}:", code.ident(), title)
         .fg(match kind {
             ReportKind::Error => Color::Red,
             ReportKind::Warning => Color::Yellow,
-            ReportKind::Advice => Color::Blue,
+            ReportKind::Advice => Color::Fixed(147),
             ReportKind::Custom(_, c) => c,
         })
         .to_string();
     let top = format!("{} {}", left, code.message());
     match help {
-        Some(help) => format!("{}\n{} {}", top, "Help:".fg(Color::Green), help),
+        Some(help) => format!(
+            "{}\n{}{} {}",
+            top,
+            " ".repeat(code.ident().len() + 4),
+            "Help:".fg(Color::Fixed(115)),
+            help
+        ),
         None => top,
     }
 }

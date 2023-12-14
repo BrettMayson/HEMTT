@@ -1,5 +1,8 @@
 use super::{message::Message, Report};
 
+// This file is current unused, but I'm keeping it around for now.
+// I may decide to use it at a later date.
+
 #[derive(Debug, Default)]
 pub struct Output<T> {
     result: Option<T>,

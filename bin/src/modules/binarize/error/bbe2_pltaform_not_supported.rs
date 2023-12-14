@@ -28,6 +28,7 @@ impl Code for PlatformNotSupported {
 }
 
 impl PlatformNotSupported {
+    #[allow(dead_code)] // only used on non-windows platforms
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self)
     }

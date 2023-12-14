@@ -50,7 +50,7 @@ impl Module for SQFCompiler {
                         for warning in warnings {
                             report.warn(warning);
                         }
-                        if !errors.is_empty() {
+                        if errors.is_empty() {
                             sqf.compile_to_writer(&processed, &mut out)?;
                             counter.fetch_add(1, Ordering::Relaxed);
                         }

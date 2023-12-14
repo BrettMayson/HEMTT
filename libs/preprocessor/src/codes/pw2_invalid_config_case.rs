@@ -1,7 +1,6 @@
-use ariadne::Fmt;
 use hemtt_common::{
     position::{LineCol, Position},
-    reporting::{Annotation, AnnotationLevel, Code},
+    reporting::{simple, Annotation, AnnotationLevel, Code},
     workspace::WorkspacePath,
 };
 
@@ -31,7 +30,7 @@ impl Code for InvalidConfigCase {
     }
 
     fn report(&self) -> Option<String> {
-        self.report.clone()
+        Some(simple(self, ariadne::ReportKind::Warning, self.help()))
     }
 
     fn ci(&self) -> Vec<Annotation> {
@@ -45,17 +44,6 @@ impl Code for InvalidConfigCase {
 
 impl InvalidConfigCase {
     pub fn new(path: WorkspacePath) -> Self {
-        Self { path, report: None }.report_generate()
-    }
-
-    fn report_generate(mut self) -> Self {
-        self.report = Some(format!(
-            "{} {}\n      {}: {}",
-            format!("[{}] Warning:", self.ident()).fg(ariadne::Color::Yellow),
-            self.message(),
-            "Help".fg(ariadne::Color::Fixed(115)),
-            self.help().expect("help should be Some")
-        ));
-        self
+        Self { path, report: None }
     }
 }

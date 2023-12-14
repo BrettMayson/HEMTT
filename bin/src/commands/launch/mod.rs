@@ -79,7 +79,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             None
         })
     else {
-        report.error(LaunchConfigNotFound::code(launch_config));
+        report.error(LaunchConfigNotFound::code(
+            launch_config,
+            config.hemtt().launch_keys(),
+        ));
         return Ok(report);
     };
 
@@ -124,7 +127,11 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         trace!("Loading preset: {}", preset);
         let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            report.error(PresetNotFound::code(preset.to_string(), &presets)?);
+            report.error(PresetNotFound::code(
+                &launch_config,
+                preset.to_string(),
+                &presets,
+            )?);
             continue;
         }
         let html = std::fs::read_to_string(html)?;

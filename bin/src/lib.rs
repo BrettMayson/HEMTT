@@ -111,10 +111,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
     let report = match matches.subcommand() {
         Some(("new", matches)) => commands::new::execute(matches).map(Some),
-        Some(("dev", matches)) => {
-            commands::dev::execute(matches, &[])?;
-            Ok(None)
-        }
+        Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
         Some(("build", matches)) => commands::build::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),
