@@ -154,22 +154,23 @@ presets = [
     "test2",
     "test3",
 ]
-"#;
+"#
+        .replace("\r\n", "\n");
         assert_eq!(
-            attempt_locate(content, "server", "test"),
-            Some(39..45),
+            attempt_locate(&content, "server", "test"),
+            Some(40..44),
             "test"
         );
         assert_eq!(
-            attempt_locate(content, "server", "test2"),
-            Some(51..58),
+            attempt_locate(&content, "server", "test2"),
+            Some(52..57),
             "test2"
         );
         assert_eq!(
-            attempt_locate(content, "server", "test3"),
-            Some(64..71),
+            attempt_locate(&content, "server", "test3"),
+            Some(65..70),
             "test3"
         );
-        assert_eq!(attempt_locate(content, "server", "test4"), None, "test4");
+        assert_eq!(attempt_locate(&content, "server", "test4"), None, "test4");
     }
 }
