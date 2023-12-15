@@ -41,7 +41,7 @@ jobs:
     - name: Checkout the source code
       uses: actions/checkout@master
     - name: Download wasm
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: wasm
         path: wasm
@@ -70,7 +70,7 @@ jobs:
     - name: Checkout the source code
       uses: actions/checkout@master
     - name: Download wasm
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: wasm
         path: wasm
