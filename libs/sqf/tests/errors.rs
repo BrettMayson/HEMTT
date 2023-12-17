@@ -43,7 +43,8 @@ fn errors(dir: &str) {
     if expected.is_empty() {
         std::fs::write(folder.join("error.ansi"), errors.as_bytes()).unwrap();
     }
-    assert_eq!(errors.as_bytes(), expected);
+    let expected = String::from_utf8_lossy(&expected).replace('\r', "");
+    assert_eq!(errors, expected);
 }
 
 errors!(spe2_unparseable);
