@@ -1,3 +1,5 @@
+mod error;
+
 use std::{
     borrow::Cow,
     path::{Path, PathBuf},
@@ -11,7 +13,17 @@ use hemtt_common::{
 use regex::Regex;
 use steamlocate::SteamDir;
 
-use crate::{error::Error, link::create_link};
+use crate::{
+    commands::launch::error::{
+        bcle1_preset_not_found::PresetNotFound, bcle2_workshop_not_found::WorkshopNotFound,
+        bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
+        bcle5_missing_main_prefix::MissingMainPrefix,
+        bcle6_launch_config_not_found::LaunchConfigNotFound,
+    },
+    error::Error,
+    link::create_link,
+    report::Report,
+};
 
 use super::dev;
 
@@ -47,18 +59,18 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
+    let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
-        return Err(Error::MainPrefixNotFound(String::from(
-            "Required for launch",
-        )));
+        report.error(MissingMainPrefix::code());
+        return Ok(report);
     };
 
     let launch_config = matches
         .get_one::<String>("config")
         .map_or_else(|| String::from("default"), std::string::ToString::to_string);
-    let launch = config
+    let Some(launch) = config
         .hemtt()
         .launch(&launch_config)
         .or(if launch_config == "default" {
@@ -66,14 +78,21 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         } else {
             None
         })
-        .ok_or(Error::LaunchConfigNotFound(launch_config.to_string()))?;
+    else {
+        report.error(LaunchConfigNotFound::code(
+            launch_config,
+            &config.hemtt().launch_keys(),
+        ));
+        return Ok(report);
+    };
 
     trace!("launch config: {:?}", launch);
 
     let Some(arma3dir) =
         SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned))
     else {
-        return Err(Error::Arma3NotFound);
+        report.error(ArmaNotFound::code());
+        return Ok(report);
     };
 
     debug!("Arma 3 found at: {}", arma3dir.path.display());
@@ -103,14 +122,17 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let mut workshop = launch.workshop().to_vec();
     let mut dlc = launch.dlc().to_vec();
 
+    let presets = std::env::current_dir()?.join(".hemtt/presets");
     for preset in launch.presets() {
         trace!("Loading preset: {}", preset);
-        let html = std::env::current_dir()?
-            .join(".hemtt/presets")
-            .join(preset)
-            .with_extension("html");
+        let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            return Err(Error::PresetNotFound(preset.to_string()));
+            report.error(PresetNotFound::code(
+                &launch_config,
+                preset.to_string(),
+                &presets,
+            ));
+            continue;
         }
         let html = std::fs::read_to_string(html)?;
         let (preset_mods, preset_dlc) = read_preset(preset, &html);
@@ -125,18 +147,24 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             }
         }
     }
+    if report.failed() {
+        return Ok(report);
+    }
 
     // climb to the workshop folder
     if !workshop.is_empty() {
         let Some(common) = arma3dir.path.parent() else {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         let Some(root) = common.parent() else {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         let workshop_folder = root.join("workshop").join("content").join("107410");
         if !workshop_folder.exists() {
-            return Err(Error::WorkshopNotFound);
+            report.error(WorkshopNotFound::code());
+            return Ok(report);
         };
         for load_mod in workshop {
             if Some(load_mod.clone()) == meta {
@@ -148,26 +176,31 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             }
             let mod_path = workshop_folder.join(&load_mod);
             if !mod_path.exists() {
-                return Err(Error::WorkshopModNotFound(load_mod));
+                report.error(WorkshopModNotFound::code(load_mod));
             };
             mods.push(mod_path.display().to_string());
         }
+    }
+    if report.failed() {
+        return Ok(report);
     }
 
     for dlc in dlc {
         mods.push(dlc.to_mod().to_string());
     }
 
-    let ctx = super::dev::execute(matches, launch.optionals())?;
+    let mut executor = super::dev::context(matches, launch.optionals())?;
+
+    report.merge(executor.run()?);
 
     let prefix_folder = arma3dir.path.join(mainprefix);
     if !prefix_folder.exists() {
         std::fs::create_dir_all(&prefix_folder)?;
     }
 
-    let link = prefix_folder.join(ctx.config().prefix());
+    let link = prefix_folder.join(executor.ctx().config().prefix());
     if !link.exists() {
-        create_link(&link, ctx.build_folder())?;
+        create_link(&link, executor.ctx().build_folder())?;
     }
 
     let mut args: Vec<String> = [
@@ -224,7 +257,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         linux_launch(&arma3dir.path, &launch.executable(), &args)?;
     }
 
-    Ok(())
+    Ok(report)
 }
 
 /// Read a preset file and return the mods and DLCs

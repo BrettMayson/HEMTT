@@ -2,14 +2,13 @@
 
 use std::fmt::{Debug, Display};
 
-mod error;
 mod output;
 mod processed;
 mod symbol;
 mod token;
 mod whitespace;
 
-pub use error::Error;
+use ariadne::{Color, Fmt, ReportKind};
 pub use output::Output;
 pub use processed::{Mapping, Processed};
 pub use symbol::Symbol;
@@ -29,27 +28,20 @@ pub trait Code: Send + Sync {
     /// Message explaining the error
     fn message(&self) -> String;
     /// Message explaining the error, applied to the label
-    fn label_message(&self) -> String;
+    fn label_message(&self) -> String {
+        self.message()
+    }
     /// Help message, if any
-    fn help(&self) -> Option<String>;
+    fn help(&self) -> Option<String> {
+        None
+    }
 
     /// A report for the CLI
-    fn report_generate(&self) -> Option<String> {
-        None
-    }
-    /// A report for the CLI, applied to the processed file
-    fn report_generate_processed(&self, _processed: &Processed) -> Option<String> {
-        None
-    }
+    fn report(&self) -> Option<String>;
 
     /// A report for CI
-    fn ci_generate(&self) -> Vec<Annotation> {
-        Vec::new()
-    }
-    /// A report for CI, applied to the processed file
-    fn ci_generate_processed(&self, _processed: &Processed) -> Vec<Annotation> {
-        Vec::new()
-    }
+    fn ci(&self) -> Vec<Annotation>;
+
     /// Helper to generate an annotation for CI
     fn annotation(&self, level: AnnotationLevel, path: String, span: &Position) -> Annotation {
         Annotation {
@@ -156,5 +148,34 @@ impl Annotation {
             self.message,
             self.path,
         )
+    }
+}
+
+#[must_use]
+pub fn simple(code: &dyn Code, kind: ReportKind<'_>, help: Option<String>) -> String {
+    let title = match kind {
+        ReportKind::Error => "Error",
+        ReportKind::Warning => "Warning",
+        ReportKind::Advice => "Advice",
+        ReportKind::Custom(w, _) => w,
+    };
+    let left = format!("[{}] {}:", code.ident(), title)
+        .fg(match kind {
+            ReportKind::Error => Color::Red,
+            ReportKind::Warning => Color::Yellow,
+            ReportKind::Advice => Color::Fixed(147),
+            ReportKind::Custom(_, c) => c,
+        })
+        .to_string();
+    let top = format!("{} {}", left, code.message());
+    match help {
+        Some(help) => format!(
+            "{}\n{}{} {}",
+            top,
+            " ".repeat(code.ident().len() + 4),
+            "Help:".fg(Color::Fixed(115)),
+            help
+        ),
+        None => top,
     }
 }

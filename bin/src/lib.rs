@@ -11,6 +11,7 @@ pub mod executor;
 pub mod link;
 pub mod logging;
 pub mod modules;
+pub mod report;
 pub mod update;
 pub mod utils;
 
@@ -108,29 +109,31 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             error!("Failed to initialize thread pool: {e}");
         }
     }
-    match matches.subcommand() {
-        Some(("new", matches)) => commands::new::execute(matches),
-        Some(("dev", matches)) => {
-            commands::dev::execute(matches, &[])?;
-            Ok(())
-        }
-        Some(("build", matches)) => {
-            commands::build::pre_execute(matches).map_err(std::convert::Into::into)
-        }
-        Some(("release", matches)) => {
-            commands::release::execute(matches).map_err(std::convert::Into::into)
-        }
-        Some(("launch", matches)) => {
-            commands::launch::execute(matches).map_err(std::convert::Into::into)
-        }
-        Some(("script", matches)) => {
-            commands::script::execute(matches).map_err(std::convert::Into::into)
-        }
-        Some(("utils", matches)) => {
-            commands::utils::execute(matches).map_err(std::convert::Into::into)
-        }
+    let report = match matches.subcommand() {
+        Some(("new", matches)) => commands::new::execute(matches).map(Some),
+        Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
+        Some(("build", matches)) => commands::build::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        Some(("release", matches)) => commands::release::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        Some(("launch", matches)) => commands::launch::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        Some(("script", matches)) => commands::script::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        Some(("utils", matches)) => commands::utils::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
         _ => unreachable!(),
+    };
+    if let Some(report) = report? {
+        report.write_to_stdout();
+        report.write_ci_annotations()?;
     }
+    Ok(())
 }
 
 #[must_use]

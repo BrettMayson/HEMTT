@@ -1,5 +1,5 @@
 use std::{
-    fs::create_dir_all,
+    fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
     process::Command,
     sync::atomic::{AtomicU16, Ordering},
@@ -8,8 +8,15 @@ use std::{
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
+#[allow(unused_imports)] // used in windows only
+use self::error::{
+    bbe1_tools_not_found::ToolsNotFound, bbe2_pltaform_not_supported::PlatformNotSupported,
+    bbe3_binarize_failed::BinarizeFailed,
+};
 use super::Module;
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, link::create_link, report::Report};
+
+mod error;
 
 #[derive(Default)]
 pub struct Binarize {
@@ -22,39 +29,36 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        setup_tmp(ctx)?;
+        let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-            return Ok(());
+            report.error(ToolsNotFound::code());
+            return Ok(report);
         };
         let Ok(path) = key.get_value::<String, _>("path") else {
-            return Ok(());
+            report.error(ToolsNotFound::code());
+            return Ok(report);
         };
         let path = PathBuf::from(path).join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
-        Ok(())
+        Ok(report)
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.error(PlatformNotSupported::code());
+        Ok(report)
     }
 
     #[allow(clippy::too_many_lines)]
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
-        if self.command.is_none() {
-            if cfg!(target_os = "windows") {
-                warn!("Binarize was not found in the system registery.");
-            } else {
-                warn!("Binarize is not available on non-Windows platforms.");
-            }
-            return Ok(());
-        }
-
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut targets = Vec::with_capacity(ctx.addons().len());
-
+        let mut report = Report::new();
         let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
@@ -133,39 +137,46 @@ impl Module for Binarize {
             }
         }
 
-        targets.par_iter().for_each(|target| {
-            debug!("binarizing {}", target.entry);
-            create_dir_all(&target.output).unwrap();
-            let exe = self.command.as_ref().unwrap();
-            let mut cmd = Command::new(exe);
-            cmd.args([
-                "-norecurse",
-                "-always",
-                "-silent",
-                "-maxProcesses=0",
-                &target.source,
-                &target.output,
-                &target.entry,
-            ])
-            .current_dir(&tmp_source);
-            trace!("{:?}", cmd);
-            let output = cmd.output().unwrap();
-            assert!(
-                output.status.success(),
-                "binarize failed with code {:?}",
-                output.status.code().unwrap_or(-1)
-            );
-            if !PathBuf::from(&target.output).join(&target.entry).exists() {
-                error!(
-                    "No output file for {}, it likely failed to binarize",
-                    target.entry
+        targets
+            .par_iter()
+            .map(|target| {
+                debug!("binarizing {}", target.entry);
+                create_dir_all(&target.output).unwrap();
+                let exe = self.command.as_ref().unwrap();
+                let mut cmd = Command::new(exe);
+                cmd.args([
+                    "-norecurse",
+                    "-always",
+                    "-silent",
+                    "-maxProcesses=0",
+                    &target.source,
+                    &target.output,
+                    &target.entry,
+                ])
+                .current_dir(&tmp_source);
+                trace!("{:?}", cmd);
+                let output = cmd.output().unwrap();
+                assert!(
+                    output.status.success(),
+                    "binarize failed with code {:?}",
+                    output.status.code().unwrap_or(-1)
                 );
-            }
-            counter.fetch_add(1, Ordering::Relaxed);
-        });
+                if PathBuf::from(&target.output).join(&target.entry).exists() {
+                    counter.fetch_add(1, Ordering::Relaxed);
+                    None
+                } else {
+                    Some(BinarizeFailed::code(target.entry.clone()))
+                }
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .flatten()
+            .for_each(|error| {
+                report.error(error);
+            });
 
         info!("Binarized {} files", counter.load(Ordering::Relaxed));
-        Ok(())
+        Ok(report)
     }
 }
 
@@ -183,4 +194,62 @@ fn check_signature(buf: [u8; 4]) -> bool {
     buf == [0x42, 0x4D, 0x54, 0x52] ||
     // OPRW
     buf == [0x4F, 0x50, 0x52, 0x57]
+}
+
+#[allow(dead_code)] // used in windows only
+fn setup_tmp(ctx: &Context) -> Result<(), Error> {
+    if ctx.tmp().exists() {
+        remove_dir_all(ctx.tmp())?;
+    }
+    create_dir_all(ctx.tmp().join("output"))?;
+    let tmp = ctx.tmp().join("source");
+    create_dir_all(&tmp)?;
+    for addon in ctx.addons() {
+        let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
+        create_dir_all(tmp_addon.parent().unwrap())?;
+        let target = ctx.project_folder().join(
+            addon
+                .folder()
+                .as_str()
+                .trim_start_matches('/')
+                .replace('/', "\\"),
+        );
+        create_link(&tmp_addon, &target)?;
+    }
+    // maybe replace with config or rhai in the future?
+    let addons = ctx.project_folder().join("addons");
+    for file in std::fs::read_dir(addons)? {
+        let file = file?.path();
+        if file.is_dir() {
+            continue;
+        }
+        let tmp_file = tmp.join(file.file_name().unwrap());
+        if file.metadata()?.len() > 1024 * 1024 * 10 {
+            warn!(
+                "File `{}` is larger than 10MB, this will slow builds.",
+                file.display()
+            );
+        }
+        trace!("copying `{}` to tmp for binarization", file.display());
+        std::fs::copy(&file, &tmp_file)?;
+    }
+    let include = ctx.project_folder().join("include");
+    if !include.exists() {
+        return Ok(());
+    }
+    for outer_prefix in std::fs::read_dir(include)? {
+        let outer_prefix = outer_prefix?.path();
+        if outer_prefix.is_dir() {
+            let tmp_outer_prefix = tmp.join(outer_prefix.file_name().unwrap());
+            for prefix in std::fs::read_dir(outer_prefix)? {
+                let prefix = prefix?.path();
+                if prefix.is_dir() {
+                    let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
+                    create_dir_all(tmp_mod.parent().unwrap())?;
+                    create_link(&tmp_mod, &prefix)?;
+                }
+            }
+        }
+    }
+    Ok(())
 }

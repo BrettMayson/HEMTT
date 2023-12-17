@@ -10,25 +10,9 @@ pub struct InsufficientRequiredVersion {
     version: Version,
     required: (Version, String, Range<usize>),
     stable: Version,
-}
 
-impl InsufficientRequiredVersion {
-    #[must_use]
-    pub const fn new(
-        command: String,
-        span: Range<usize>,
-        version: Version,
-        required: (Version, String, Range<usize>),
-        stable: Version,
-    ) -> Self {
-        Self {
-            command,
-            span,
-            version,
-            required,
-            stable,
-        }
-    }
+    report: Option<String>,
+    annotations: Vec<Annotation>,
 }
 
 impl Code for InsufficientRequiredVersion {
@@ -47,11 +31,57 @@ impl Code for InsufficientRequiredVersion {
         format!("requires version {}", self.version)
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        self.annotations.clone()
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let map = processed.mapping(self.span.start).unwrap();
+        let map_file = processed.source(map.source()).unwrap();
+        let Some(path) = map_file.1 .0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            self.diagnostic(lsp_types::Range::new(map.original().to_lsp(), {
+                let mut end = map.original().to_lsp();
+                end.character += self.span.len() as u32;
+                end
+            })),
+        )]
+    }
+}
+
+impl InsufficientRequiredVersion {
+    #[must_use]
+    pub fn new(
+        command: String,
+        span: Range<usize>,
+        version: Version,
+        required: (Version, String, Range<usize>),
+        stable: Version,
+        processed: &Processed,
+    ) -> Self {
+        Self {
+            command,
+            span,
+            version,
+            required,
+            stable,
+
+            report: None,
+            annotations: Vec::new(),
+        }
+        .report_generate_processed(processed)
+        .ci_generate_processed(processed)
+    }
+
+    fn report_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed.mapping(self.span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();
         let mut out = Vec::new();
@@ -111,33 +141,18 @@ impl Code for InsufficientRequiredVersion {
                 &mut out,
             )
             .unwrap();
-        Some(String::from_utf8(out).unwrap())
+        self.report = Some(String::from_utf8(out).unwrap());
+        self
     }
 
-    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed.mapping(self.span.start).unwrap();
         let map_file = processed.source(map.source()).unwrap();
-        vec![self.annotation(
+        self.annotations = vec![self.annotation(
             AnnotationLevel::Error,
             map_file.0.as_str().to_string(),
             map.original(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let map = processed.mapping(self.span.start).unwrap();
-        let map_file = processed.source(map.source()).unwrap();
-        let Some(path) = map_file.1 .0.clone() else {
-            return vec![];
-        };
-        vec![(
-            path,
-            self.diagnostic(lsp_types::Range::new(map.original().to_lsp(), {
-                let mut end = map.original().to_lsp();
-                end.character += self.span.len() as u32;
-                end
-            })),
-        )]
+        )];
+        self
     }
 }

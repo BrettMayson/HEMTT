@@ -1,22 +1,75 @@
+use std::sync::Arc;
+
 use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
 
-use crate::defines::Defines;
+use crate::{defines::Defines, Error};
 
 #[allow(unused)]
 /// Tried to call a [`FunctionDefinition`](crate::context::FunctionDefinition) with the wrong number of arguments
 pub struct FunctionCallArgumentCount {
     /// The [`Token`] that was found
-    pub(crate) token: Box<Token>,
+    token: Box<Token>,
     /// The number of arguments that were expected
-    pub(crate) expected: usize,
+    expected: usize,
     /// The number of arguments that were found
-    pub(crate) got: usize,
+    got: usize,
     /// Similar defines
-    pub(crate) similar: Vec<String>,
+    similar: Vec<String>,
     /// defined
-    pub(crate) defined: (Token, Vec<Token>),
+    defined: (Token, Vec<Token>),
+    /// The report
+    report: Option<String>,
+}
+
+impl Code for FunctionCallArgumentCount {
+    fn ident(&self) -> &'static str {
+        "PE9"
+    }
+
+    fn token(&self) -> Option<&Token> {
+        Some(&self.token)
+    }
+
+    fn message(&self) -> String {
+        format!(
+            "function call with incorrect number of arguments, expected `{}` got `{}`",
+            self.expected, self.got
+        )
+    }
+
+    fn label_message(&self) -> String {
+        format!(
+            "incorrect argument count, expected `{}` got `{}`",
+            self.expected, self.got,
+        )
+    }
+
+    fn report(&self) -> Option<String> {
+        self.report.clone()
+    }
+
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.position().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            self.diagnostic(Range {
+                start: self.token.position().start().to_lsp(),
+                end: self.token.position().end().to_lsp(),
+            }),
+        ))
+    }
 }
 
 impl FunctionCallArgumentCount {
@@ -45,38 +98,16 @@ impl FunctionCallArgumentCount {
                 )
             },
             token,
+            report: None,
         }
-    }
-}
-
-impl Code for FunctionCallArgumentCount {
-    fn ident(&self) -> &'static str {
-        "PE9"
+        .report_generate()
     }
 
-    fn token(&self) -> Option<&Token> {
-        Some(&self.token)
+    pub fn code(token: Token, expected: usize, got: usize, defines: &Defines) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), expected, got, defines)))
     }
 
-    fn message(&self) -> String {
-        format!(
-            "function call with incorrect number of arguments, expected `{}` got `{}`",
-            self.expected, self.got
-        )
-    }
-
-    fn label_message(&self) -> String {
-        format!(
-            "incorrect argument count, expected `{}` got `{}`",
-            self.expected, self.got,
-        )
-    }
-
-    fn help(&self) -> Option<String> {
-        None
-    }
-
-    fn report_generate(&self) -> Option<String> {
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let mut out = Vec::new();
         let span = self.token.position().span();
@@ -144,31 +175,9 @@ impl Code for FunctionCallArgumentCount {
             ]),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
-        ))
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

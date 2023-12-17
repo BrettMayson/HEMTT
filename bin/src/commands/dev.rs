@@ -6,6 +6,7 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
+    report::Report,
 };
 
 use super::build::add_just;
@@ -48,7 +49,16 @@ pub fn add_args(cmd: Command) -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Context, Error> {
+pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Report, Error> {
+    let mut executor = context(matches, launch_optionals)?;
+    executor.run()
+}
+
+/// Create a new executor for the dev command
+///
+/// # Errors
+/// [`Error`] depending on the modules
+pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Executor, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches
         .get_many::<String>("optional")
@@ -100,7 +110,7 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
         }
     }
 
-    let mut executor = Executor::new(&ctx);
+    let mut executor = Executor::new(ctx);
 
     executor.collapse(Collapse::Yes);
 
@@ -115,13 +125,13 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Cont
 
     info!("Creating `dev` version");
 
-    executor.init()?;
-    executor.check()?;
-    executor.build()?;
+    executor.init();
+    executor.check();
+    executor.build();
 
     if !just.is_empty() {
         warn!("Use of `--just` is not recommended, only use it if you know what you're doing");
     }
 
-    Ok(ctx)
+    Ok(executor)
 }

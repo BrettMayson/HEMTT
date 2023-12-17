@@ -14,3 +14,15 @@ pub mod workspace;
 
 mod sign_version;
 pub use sign_version::BISignVersion;
+
+#[must_use]
+pub fn similar_values<'a>(search: &str, haystack: &'a [&str]) -> Vec<&'a str> {
+    let mut similar = haystack
+        .iter()
+        .map(|v| (v, strsim::levenshtein(v, search)))
+        .collect::<Vec<_>>();
+    similar.sort_by_key(|(_, v)| *v);
+    similar.retain(|s| s.1 <= 3);
+    similar.truncate(3);
+    similar.into_iter().map(|(n, _)| *n).collect::<Vec<_>>()
+}

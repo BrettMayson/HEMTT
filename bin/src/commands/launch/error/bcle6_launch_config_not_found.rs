@@ -1,0 +1,62 @@
+use std::sync::Arc;
+
+use hemtt_common::{
+    reporting::{simple, Code},
+    similar_values,
+};
+
+pub struct LaunchConfigNotFound {
+    config: String,
+    similar: Vec<String>,
+}
+
+impl Code for LaunchConfigNotFound {
+    fn ident(&self) -> &'static str {
+        "BCLE6"
+    }
+
+    fn message(&self) -> String {
+        format!("Launch config `{}` not found.", self.config)
+    }
+
+    fn help(&self) -> Option<String> {
+        if self.similar.is_empty() {
+            None
+        } else {
+            Some(format!(
+                "Did you mean `{}`?",
+                self.similar
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<String>>()
+                    .join("`, `")
+            ))
+        }
+    }
+
+    fn report(&self) -> Option<String> {
+        Some(simple(self, ariadne::ReportKind::Error, self.help()))
+    }
+
+    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
+        vec![]
+    }
+}
+
+impl LaunchConfigNotFound {
+    pub fn code(config: String, available: &[String]) -> Arc<dyn Code> {
+        Arc::new(Self {
+            similar: similar_values(
+                &config,
+                &available
+                    .iter()
+                    .map(std::string::String::as_str)
+                    .collect::<Vec<&str>>(),
+            )
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect(),
+            config,
+        })
+    }
+}

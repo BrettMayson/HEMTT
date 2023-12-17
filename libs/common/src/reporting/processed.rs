@@ -1,14 +1,14 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::{ops::Range, rc::Rc};
+use std::{rc::Rc, sync::Arc};
 
 use crate::{
     position::{LineCol, Position},
     reporting::{Output, Token},
-    workspace::WorkspacePath,
+    workspace::{Error, WorkspacePath},
 };
 
-use super::{Code, Error};
+use super::Code;
 
 #[derive(Debug, Default)]
 /// A processed file
@@ -37,7 +37,7 @@ pub struct Processed {
     total: usize,
 
     /// Warnings
-    warnings: Vec<Box<dyn Code>>,
+    warnings: Vec<Arc<dyn Code>>,
 
     /// The preprocessor was able to check the file, but it should not be rapified
     no_rapify: bool,
@@ -57,11 +57,10 @@ fn append_token(
             || {
                 let content = path.read_to_string()?;
                 processed.sources.push((path.clone(), content));
-                Ok(processed.sources.len() - 1)
+                Ok::<usize, Error>(processed.sources.len() - 1)
             },
             Ok,
-        )
-        .map_err(Error::Workspace)?;
+        )?;
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');
@@ -177,7 +176,7 @@ impl Processed {
         output: Vec<Output>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
-        warnings: Vec<Box<dyn Code>>,
+        warnings: Vec<Arc<dyn Code>>,
         no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
@@ -250,7 +249,7 @@ impl Processed {
 
     #[must_use]
     /// Returns the warnings
-    pub fn warnings(&self) -> &[Box<dyn Code>] {
+    pub fn warnings(&self) -> &[Arc<dyn Code>] {
         &self.warnings
     }
 

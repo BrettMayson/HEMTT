@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use hemtt_common::{
     position::Position,
@@ -109,11 +109,7 @@ impl Processor {
                         let (code, scope) = self.read_pragma(&command, pragma, stream)?;
                         pragma.flag(&code, scope)?;
                     }
-                    _ => {
-                        return Err(Error::Code(Box::new(PragmaUnknown {
-                            token: Box::new(command.as_ref().clone()),
-                        })))
-                    }
+                    _ => return Err(PragmaUnknown::code(command.as_ref().clone())),
                 }
                 Ok(())
             }
@@ -121,9 +117,7 @@ impl Processor {
                 self.skip_to_after_newline(stream, None);
                 Ok(())
             }
-            (_, true) => Err(Error::Code(Box::new(UnknownDirective {
-                token: Box::new(command.as_ref().clone()),
-            }))),
+            (_, true) => Err(UnknownDirective::code(command.as_ref().clone())),
         }
     }
 
@@ -143,10 +137,10 @@ impl Processor {
             ))
         });
         let Ok(scope) = Scope::try_from(scope_token.to_string().as_str()) else {
-            return Err(Error::Code(Box::new(PragmaInvalidScope {
-                token: Box::new(scope_token.as_ref().clone()),
-                root: pragma.root,
-            })));
+            return Err(PragmaInvalidScope::code(
+                scope_token.as_ref().clone(),
+                pragma.root,
+            ));
         };
         if !hit_end {
             Self::expect_nothing_to_newline(stream)?;
@@ -164,14 +158,14 @@ impl Processor {
         self.skip_whitespace(stream, None);
         let open = stream.next().expect("was peeked in directive()");
         if !open.symbol().is_include_enclosure() {
-            return Err(Error::Code(Box::new(IncludeNotEncased {
-                encased_in: if open.symbol().is_word() {
+            return Err(IncludeNotEncased::code(
+                open.as_ref().clone(),
+                if open.symbol().is_word() {
                     None
                 } else {
                     Some(open.as_ref().clone())
                 },
-                token: Box::new(open.as_ref().clone()),
-            })));
+            ));
         }
         let close = open
             .symbol()
@@ -184,24 +178,20 @@ impl Processor {
                 break;
             }
             if symbol.is_newline() {
-                return Err(Error::Code(Box::new(IncludeNotEncased {
-                    token: Box::new(token.as_ref().clone()),
-                    encased_in: Some(open.as_ref().clone()),
-                })));
+                return Err(IncludeNotEncased::code(
+                    token.as_ref().clone(),
+                    Some(open.as_ref().clone()),
+                ));
             }
             if symbol.is_eoi() {
-                return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token.as_ref().clone()),
-                })));
+                return Err(UnexpectedEOF::code(token.as_ref().clone()));
             }
             path.push(token);
         }
 
         if let Err(Error::Code(code)) = Self::expect_nothing_to_newline(stream) {
             if let Some(token) = code.token() {
-                return Err(Error::Code(Box::new(IncludeUnexpectedSuffix {
-                    token: Box::new(token.clone()),
-                })));
+                return Err(IncludeUnexpectedSuffix::code(token.clone()));
             }
             return Err(Error::Code(code));
         }
@@ -213,7 +203,7 @@ impl Processor {
         let Ok(Some(path)) =
             current.locate(&path.iter().map(|t| t.to_string()).collect::<String>())
         else {
-            return Err(Error::Code(Box::new(IncludeNotFound::new(path))));
+            return Err(IncludeNotFound::code(path));
         };
         let tokens = crate::parse::parse(&path)?;
         self.files.push(path);
@@ -229,26 +219,23 @@ impl Processor {
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
-            return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident.as_ref().clone()),
-            })));
+            return Err(ExpectedIdent::code(ident.as_ref().clone()));
         }
         let ident_string = ident.symbol().to_string();
         let Some(next) = stream.peek() else {
-            return Err(Error::Code(Box::new(UnexpectedEOF {
-                token: Box::new(Token::new(Symbol::Eoi, ident.position().clone())),
-            })));
+            return Err(UnexpectedEOF::code(Token::new(
+                Symbol::Eoi,
+                ident.position().clone(),
+            )));
         };
         if Defines::is_builtin(&ident_string) {
-            return Err(Error::Code(Box::new(ChangeBuiltin {
-                token: Box::new(ident.as_ref().clone()),
-            })));
+            return Err(ChangeBuiltin::code(ident.as_ref().clone()));
         }
         if let Some((original, _)) = self.defines.remove(&ident_string) {
-            self.warnings.push(Box::new(RedefineMacro {
-                token: Box::new(ident.as_ref().clone()),
-                original: Box::new(original.as_ref().clone()),
-            }));
+            self.warnings.push(Arc::new(RedefineMacro::new(
+                Box::new(ident.as_ref().clone()),
+                Box::new(original.as_ref().clone()),
+            )));
         }
         let definition = match next.symbol() {
             Symbol::LeftParenthesis => Definition::Function({
@@ -280,9 +267,7 @@ impl Processor {
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
-            return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident.as_ref().clone()),
-            })));
+            return Err(ExpectedIdent::code(ident.as_ref().clone()));
         }
         let ident_string = ident.symbol().to_string();
         self.defines.remove(&ident_string);
@@ -301,10 +286,10 @@ impl Processor {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
                 }
-                return Err(Error::Code(Box::new(IfUnitOrFunction::new(
-                    Box::new(token.as_ref().clone()),
+                return Err(IfUnitOrFunction::code(
+                    token.as_ref().clone(),
                     &defines.clone(),
-                ))));
+                ));
             }
             Ok((vec![token], false))
         }
@@ -319,9 +304,7 @@ impl Processor {
                 self.skip_to_after_newline(stream, None);
                 return Ok(());
             }
-            return Err(Error::Code(Box::new(IfHasInclude {
-                token: Box::new(left.as_ref().clone()),
-            })));
+            return Err(IfHasInclude::code(left.as_ref().clone()));
         }
         let (left, left_defined) = value(&mut self.defines, left)?;
         self.skip_whitespace(stream, None);
@@ -330,10 +313,7 @@ impl Processor {
         {
             let pos = stream.peek().unwrap().position().clone();
             if !left_defined {
-                return Err(Error::Code(Box::new(IfUndefined::new(
-                    Box::new(left[0].as_ref().clone()),
-                    &self.defines,
-                ))));
+                return Err(IfUndefined::code(left[0].as_ref().clone(), &self.defines));
             }
             let equals = Rc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
@@ -341,14 +321,12 @@ impl Processor {
         } else {
             loop {
                 let Some(token) = stream.peek() else {
-                    return Err(Error::Code(Box::new(UnexpectedEOF {
-                        token: Box::new(
-                            left.last()
-                                .expect("left should exists at this point")
-                                .as_ref()
-                                .clone(),
-                        ),
-                    })));
+                    return Err(UnexpectedEOF::code(
+                        left.last()
+                            .expect("left should exists at this point")
+                            .as_ref()
+                            .clone(),
+                    ));
                 };
                 if matches!(token.symbol(), Symbol::Whitespace(_)) {
                     stream.next();
@@ -358,14 +336,12 @@ impl Processor {
                 stream.next();
             }
             let Some(right) = stream.next() else {
-                return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(
-                        left.last()
-                            .expect("left should exists at this point")
-                            .as_ref()
-                            .clone(),
-                    ),
-                })));
+                return Err(UnexpectedEOF::code(
+                    left.last()
+                        .expect("left should exists at this point")
+                        .as_ref()
+                        .clone(),
+                ));
             };
             value(&mut self.defines, right)?
         };
@@ -377,18 +353,18 @@ impl Processor {
             "!=" => left_string != right_string,
             ">" | ">=" | "<" | "<=" => {
                 let Ok(left_f64) = left_string.parse::<f64>() else {
-                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                    return Err(IfIncompatibleType::code(
                         (left, left_defined),
                         operators,
                         (right, right_defined),
-                    ))));
+                    ));
                 };
                 let Ok(right_f64) = right_string.parse::<f64>() else {
-                    return Err(Error::Code(Box::new(IfIncompatibleType::new(
+                    return Err(IfIncompatibleType::code(
                         (left, left_defined),
                         operators,
                         (right, right_defined),
-                    ))));
+                    ));
                 };
                 match operator.as_str() {
                     ">" => left_f64 > right_f64,
@@ -399,9 +375,9 @@ impl Processor {
                 }
             }
             _ => {
-                return Err(Error::Code(Box::new(IfInvalidOperator {
-                    tokens: operators.iter().map(|t| t.as_ref().clone()).collect(),
-                })))
+                return Err(IfInvalidOperator::code(
+                    operators.iter().map(|t| t.as_ref().clone()).collect(),
+                ));
             }
         };
         self.ifstates.push_if(command, read);
@@ -417,9 +393,7 @@ impl Processor {
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
-            return Err(Error::Code(Box::new(ExpectedIdent {
-                token: Box::new(ident.as_ref().clone()),
-            })));
+            return Err(ExpectedIdent::code(ident.as_ref().clone()));
         }
         let ident_string = ident.symbol().to_string();
         self.ifstates

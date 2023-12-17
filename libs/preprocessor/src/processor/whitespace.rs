@@ -60,10 +60,10 @@ impl Processor {
                 break;
             }
             if !token.symbol().is_whitespace() {
-                return Err(Error::Code(Box::new(UnexpectedToken {
-                    token: Box::new(token.as_ref().clone()),
-                    expected: vec!["newline".to_string()],
-                })));
+                return Err(UnexpectedToken::code(
+                    token.as_ref().clone(),
+                    vec!["newline".to_string()],
+                ));
             }
         }
         Ok(())

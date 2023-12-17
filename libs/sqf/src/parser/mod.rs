@@ -3,6 +3,7 @@ pub mod database;
 pub mod lexer;
 
 use std::ops::Range;
+use std::sync::Arc;
 
 use self::database::{is_special_command, Database};
 use self::lexer::{Control, Operator, Token};
@@ -19,14 +20,24 @@ use hemtt_common::reporting::{Code, Processed};
 /// [`ParserError::LexingError`] if the input string contains invalid tokens.
 /// [`ParserError::ParsingError`] if the input string contains invalid syntax.
 pub fn run(database: &Database, processed: &Processed) -> Result<Statements, ParserError> {
-    let mut tokens = self::lexer::run(processed.as_str()).map_err(ParserError::LexingError)?;
+    let mut tokens = self::lexer::run(processed.as_str()).map_err(|e| {
+        let mut errors: Vec<Arc<dyn Code>> = Vec::new();
+        for e in e {
+            errors.push(Arc::new(codes::spe1_invalid_token::InvalidToken::new(
+                e.span(),
+                processed,
+            )));
+        }
+        ParserError::LexingError(errors)
+    })?;
     self::lexer::strip_comments(&mut tokens);
     self::lexer::strip_noop(&mut tokens);
     let mut statements = run_for_tokens(database, processed, tokens).map_err(|e| {
-        let mut errors: Vec<Box<dyn Code>> = Vec::new();
+        let mut errors: Vec<Arc<dyn Code>> = Vec::new();
         for e in e {
-            errors.push(Box::new(codes::spe1_unparseable::UnparseableSyntax::new(
+            errors.push(Arc::new(codes::spe2_unparseable::UnparseableSyntax::new(
                 e.span(),
+                processed,
             )));
         }
         ParserError::ParsingError(errors)
@@ -264,7 +275,7 @@ fn keyword(name: &'static str) -> impl Parser<Token, (), Error = Simple<Token>> 
 #[derive(Debug, Error)]
 pub enum ParserError {
     #[error("lexing error {0:?}")]
-    LexingError(Vec<Simple<char>>),
+    LexingError(Vec<Arc<dyn Code>>),
     #[error("parsing error")]
-    ParsingError(Vec<Box<dyn Code>>),
+    ParsingError(Vec<Arc<dyn Code>>),
 }

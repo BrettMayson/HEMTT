@@ -18,6 +18,24 @@ impl LineCol {
     }
 
     #[must_use]
+    pub fn from_content(content: &str, offset: usize) -> Self {
+        let mut line = 1;
+        let mut column = 1;
+        for (i, c) in content.chars().enumerate() {
+            if i == offset {
+                break;
+            }
+            if c == '\n' {
+                line += 1;
+                column = 1;
+            } else {
+                column += 1;
+            }
+        }
+        Self(offset, (line, column))
+    }
+
+    #[must_use]
     /// Get the line of the token
     pub const fn line(&self) -> usize {
         self.1 .0

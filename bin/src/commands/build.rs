@@ -5,6 +5,7 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
+    report::Report,
 };
 
 #[must_use]
@@ -48,7 +49,7 @@ pub fn add_just(cmd: Command) -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let just = matches
         .get_many::<String>("just")
         .unwrap_or_default()
@@ -67,22 +68,21 @@ pub fn pre_execute(matches: &ArgMatches) -> Result<(), Error> {
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
     }
-    let mut executor = Executor::new(&ctx);
-
-    execute(matches, &mut executor)?;
+    let mut executor = executor(ctx, matches);
 
     if !just.is_empty() {
         warn!("Use of `--just` is not recommended, only use it if you know what you're doing");
     }
 
-    Ok(())
+    info!("Creating `build` version");
+
+    executor.run()
 }
 
-/// Execute the build command, with a given executor
-///
-/// # Errors
-/// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Error> {
+#[must_use]
+pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
+    let mut executor = Executor::new(ctx);
+
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<Hooks>::default());
@@ -95,11 +95,9 @@ pub fn execute(matches: &ArgMatches, executor: &mut Executor) -> Result<(), Erro
     }
     executor.add_module(Box::<Files>::default());
 
-    info!("Creating `build` version");
+    executor.init();
+    executor.check();
+    executor.build();
 
-    executor.init()?;
-    executor.check()?;
-    executor.build()?;
-
-    Ok(())
+    executor
 }

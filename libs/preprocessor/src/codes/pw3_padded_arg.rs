@@ -1,12 +1,13 @@
 use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
 
 #[allow(unused)]
 /// Unexpected token
 pub struct PaddedArg {
     /// The [`Token`] that was found to be padding an arg
-    pub(crate) token: Box<Token>,
+    token: Box<Token>,
+    /// The report
+    report: Option<String>,
 }
 
 impl Code for PaddedArg {
@@ -26,11 +27,29 @@ impl Code for PaddedArg {
         "padding a macro argument is likely unintended".to_string()
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate(&self) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Warning,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
+    }
+}
+
+impl PaddedArg {
+    pub fn new(token: Box<Token>) -> Self {
+        Self {
+            token,
+            report: None,
+        }
+        .report_generate()
+    }
+
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let color_token = colors.next();
         let mut out = Vec::new();
@@ -62,17 +81,9 @@ impl Code for PaddedArg {
             )]),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Warning,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

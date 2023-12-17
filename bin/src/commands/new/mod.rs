@@ -7,7 +7,16 @@ use std::{
 use clap::{ArgMatches, Command};
 use dialoguer::Input;
 
-use crate::{error::Error, modules::Licenses};
+use crate::{
+    commands::new::error::{
+        bcne1_not_terminal::TerminalNotInput, bcne2_folder_exists::FolderExists,
+    },
+    error::Error,
+    modules::Licenses,
+    report::Report,
+};
+
+mod error;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -25,9 +34,12 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+    let mut report = Report::new();
+
     if !std::io::stdin().is_terminal() {
-        return Err(Error::NewNoInput);
+        report.error(TerminalNotInput::code());
+        return Ok(report);
     }
 
     let name = matches
@@ -35,7 +47,8 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .expect("name to be set as required");
     let path = Path::new(&name);
     if path.exists() {
-        return Err(Error::NewFolderExists(name.to_string()));
+        report.error(FolderExists::code(name.to_string()));
+        return Ok(report);
     }
 
     println!("Example: Advanced Banana Environment");
@@ -78,5 +91,5 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         file.write_all(license.as_bytes())?;
     }
 
-    Ok(())
+    Ok(report)
 }

@@ -30,12 +30,7 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let warning = config
-                .warnings()
-                .first()
-                .unwrap()
-                .report_generate()
-                .unwrap();
+            let warning = config.warnings().first().unwrap().report().unwrap();
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
             }
@@ -48,7 +43,7 @@ fn check(dir: &str) {
             panic!(
                 "`{:?}` should have succeeded: {:#?}",
                 folder,
-                e.get_code().unwrap().report_generate().unwrap()
+                e.get_code().unwrap().report().unwrap()
             )
         }
     }

@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use hemtt_common::project::ProjectConfig;
 use hemtt_common::reporting::{Code, Processed};
@@ -14,37 +15,33 @@ use super::{
 };
 
 impl Analyze for Config {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        self.0.iter().all(|p| p.valid(project))
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-    ) -> Vec<Box<dyn Code>> {
+    ) -> Vec<Arc<dyn Code>> {
         let mut warnings = self
             .0
             .iter()
             .flat_map(|p| p.warnings(project, processed))
             .collect::<Vec<_>>();
         let mut defined = HashMap::new();
-        warnings.extend(external_parent_case_warn(&self.0, &mut defined));
+        warnings.extend(external_parent_case_warn(&self.0, &mut defined, processed));
         if let Some(project) = project {
-            warnings.extend(magwell_missing_magazine(project, self));
+            warnings.extend(magwell_missing_magazine(project, self, processed));
         }
         warnings
     }
 
-    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Arc<dyn Code>> {
         let mut errors = self
             .0
             .iter()
             .flat_map(|p| p.errors(project, processed))
             .collect::<Vec<_>>();
         let mut defined = HashSet::new();
-        errors.extend(external_missing_error(&self.0, &mut defined));
-        errors.extend(duplicate_properties(&self.0));
+        errors.extend(external_missing_error(&self.0, &mut defined, processed));
+        errors.extend(duplicate_properties(&self.0, processed));
         errors
     }
 }
@@ -52,13 +49,14 @@ impl Analyze for Config {
 fn external_missing_error(
     properties: &[Property],
     defined: &mut HashSet<String>,
-) -> Vec<Box<dyn Code>> {
-    let mut errors: Vec<Box<dyn Code>> = Vec::new();
+    processed: &Processed,
+) -> Vec<Arc<dyn Code>> {
+    let mut errors: Vec<Arc<dyn Code>> = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {
                 Class::Root { properties } => {
-                    errors.extend(external_missing_error(properties, defined));
+                    errors.extend(external_missing_error(properties, defined, processed));
                 }
                 Class::External { name } => {
                     let name = name.value.to_lowercase();
@@ -75,11 +73,11 @@ fn external_missing_error(
                     if let Some(parent) = parent {
                         let parent = parent.value.to_lowercase();
                         if parent != name && !defined.contains(&parent) {
-                            errors.push(Box::new(MissingParent::new(c.clone())));
+                            errors.push(Arc::new(MissingParent::new(c.clone(), processed)));
                         }
                     }
                     defined.insert(name);
-                    errors.extend(external_missing_error(properties, defined));
+                    errors.extend(external_missing_error(properties, defined, processed));
                 }
             }
         }
@@ -90,8 +88,9 @@ fn external_missing_error(
 fn external_parent_case_warn(
     properties: &[Property],
     defined: &mut HashMap<String, Class>,
-) -> Vec<Box<dyn Code>> {
-    let mut warnings: Vec<Box<dyn Code>> = Vec::new();
+    processed: &Processed,
+) -> Vec<Arc<dyn Code>> {
+    let mut warnings: Vec<Arc<dyn Code>> = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {
@@ -113,18 +112,23 @@ fn external_parent_case_warn(
                         if parent_lower != name_lower {
                             if let Some(parent_class) = defined.get(&parent_lower) {
                                 if parent_class.name().map(|p| &p.value) != Some(&parent.value) {
-                                    warnings.push(Box::new(ParentCase::new(
+                                    warnings.push(Arc::new(ParentCase::new(
                                         c.clone(),
                                         parent_class.clone(),
+                                        processed,
                                     )));
                                 }
                             }
                         } else if parent.value != name.value {
-                            warnings.push(Box::new(ParentCase::new(c.clone(), c.clone())));
+                            warnings.push(Arc::new(ParentCase::new(
+                                c.clone(),
+                                c.clone(),
+                                processed,
+                            )));
                         }
                     }
                     defined.insert(name_lower, c.clone());
-                    warnings.extend(external_parent_case_warn(properties, defined));
+                    warnings.extend(external_parent_case_warn(properties, defined, processed));
                 }
             }
         }
@@ -132,14 +136,15 @@ fn external_parent_case_warn(
     warnings
 }
 
-fn duplicate_properties(properties: &[Property]) -> Vec<Box<dyn Code>> {
+fn duplicate_properties(properties: &[Property], processed: &Processed) -> Vec<Arc<dyn Code>> {
     let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
     duplicate_properties_inner("", properties, &mut seen);
-    let mut errors: Vec<Box<dyn Code>> = Vec::new();
+    let mut errors: Vec<Arc<dyn Code>> = Vec::new();
     for (_, idents) in seen {
         if idents.len() > 1 && !idents.iter().all(|(class, _)| *class) {
-            errors.push(Box::new(DuplicateProperty::new(
+            errors.push(Arc::new(DuplicateProperty::new(
                 idents.into_iter().map(|(_, i)| i).collect(),
+                processed,
             )));
         }
     }
@@ -177,8 +182,12 @@ fn duplicate_properties_inner(
     }
 }
 
-fn magwell_missing_magazine(project: &ProjectConfig, config: &Config) -> Vec<Box<dyn Code>> {
-    let mut warnings: Vec<Box<dyn Code>> = Vec::new();
+fn magwell_missing_magazine(
+    project: &ProjectConfig,
+    config: &Config,
+    processed: &Processed,
+) -> Vec<Arc<dyn Code>> {
+    let mut warnings: Vec<Arc<dyn Code>> = Vec::new();
     let mut classes = Vec::new();
     let Some(Property::Class(Class::Local {
         properties: magwells,
@@ -232,10 +241,11 @@ fn magwell_missing_magazine(project: &ProjectConfig, config: &Config) -> Vec<Box
                     continue;
                 }
                 if !classes.iter().any(|c| c.value == *value) {
-                    warnings.push(Box::new(MagwellMissingMagazine::new(
+                    warnings.push(Arc::new(MagwellMissingMagazine::new(
                         name.clone(),
                         value.clone(),
                         span.clone(),
+                        processed,
                     )));
                 }
             }

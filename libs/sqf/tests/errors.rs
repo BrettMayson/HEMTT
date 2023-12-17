@@ -36,13 +36,15 @@ fn errors(dir: &str) {
         .unwrap();
     let errors = parsed
         .iter()
-        .map(|e| e.report_generate_processed(&processed).unwrap())
+        .map(|e| e.report().unwrap())
         .collect::<Vec<_>>()
-        .join("\n");
+        .join("\n")
+        .replace('\r', "");
     if expected.is_empty() {
         std::fs::write(folder.join("error.ansi"), errors.as_bytes()).unwrap();
     }
-    assert_eq!(errors.as_bytes(), expected);
+    let expected = String::from_utf8_lossy(&expected).replace('\r', "");
+    assert_eq!(errors, expected);
 }
 
-errors!(spe1_unparseable);
+errors!(spe2_unparseable);

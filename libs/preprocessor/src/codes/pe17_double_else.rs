@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
-use tracing::error;
+
+use crate::Error;
 
 #[allow(unused)]
 /// An `#else` [`IfState`] was found after another `#else`
@@ -13,11 +16,13 @@ use tracing::error;
 /// ```
 pub struct DoubleElse {
     /// The [`Token`] of the new `#else`
-    pub(crate) token: Box<Token>,
+    token: Box<Token>,
     /// The [`Token`] of the previous `#else`
-    pub(crate) previous: Box<Token>,
+    previous: Box<Token>,
     /// The [`Token`] of the `#if` that this `#else` is in
-    pub(crate) if_token: Box<Token>,
+    if_token: Box<Token>,
+    /// The report
+    report: Option<String>,
 }
 
 impl Code for DoubleElse {
@@ -37,11 +42,53 @@ impl Code for DoubleElse {
         "second `#else` directive".to_string()
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate(&self) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        vec![self.annotation(
+            AnnotationLevel::Error,
+            self.token.position().path().as_str().to_string(),
+            self.token.position(),
+        )]
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
+        let Some(path) = self.token.position().path() else {
+            return None;
+        };
+        Some((
+            path.clone(),
+            self.diagnostic(Range {
+                start: self.token.position().start().to_lsp(),
+                end: self.token.position().end().to_lsp(),
+            }),
+        ))
+    }
+}
+
+impl DoubleElse {
+    pub fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
+        Self {
+            token,
+            previous,
+            if_token,
+            report: None,
+        }
+        .report_generate()
+    }
+
+    pub fn code(token: Token, previous: Token, if_token: Token) -> Error {
+        Error::Code(Arc::new(Self::new(
+            Box::new(token),
+            Box::new(previous),
+            Box::new(if_token),
+        )))
+    }
+
+    fn report_generate(mut self) -> Self {
         let mut colors = ColorGenerator::default();
         let color_token = colors.next();
         let color_previous = colors.next();
@@ -91,31 +138,9 @@ impl Code for DoubleElse {
             ),
             &mut out,
         ) {
-            error!("while reporting: {e}");
-            return None;
+            panic!("while reporting: {e}");
         }
-        Some(String::from_utf8(out).unwrap_or_default())
-    }
-
-    fn ci_generate(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
-        ))
+        self.report = Some(String::from_utf8(out).unwrap_or_default());
+        self
     }
 }

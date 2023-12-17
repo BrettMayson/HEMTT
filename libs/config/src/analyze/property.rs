@@ -1,4 +1,5 @@
 use std::ops::Range;
+use std::sync::Arc;
 
 use hemtt_common::project::ProjectConfig;
 use hemtt_common::reporting::{Code, Processed};
@@ -13,20 +14,11 @@ use super::{
 use crate::{Property, Value};
 
 impl Analyze for Property {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        match self {
-            Self::Entry { value, .. } => value.valid(project),
-            Self::Class(c) => c.valid(project),
-            Self::Delete(_) => true,
-            Self::MissingSemicolon(_, _) => false,
-        }
-    }
-
     fn warnings(
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-    ) -> Vec<Box<dyn Code>> {
+    ) -> Vec<Arc<dyn Code>> {
         match self {
             Self::Entry { value, .. } => value.warnings(project, processed),
             Self::Class(c) => c.warnings(project, processed),
@@ -34,26 +26,26 @@ impl Analyze for Property {
         }
     }
 
-    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Box<dyn Code>> {
+    fn errors(&self, project: Option<&ProjectConfig>, processed: &Processed) -> Vec<Arc<dyn Code>> {
         match self {
             Self::Entry { value, .. } => {
                 let mut errors = value.errors(project, processed);
-                errors.extend(unexpected_array(self));
-                errors.extend(expected_array(self));
+                errors.extend(unexpected_array(self, processed));
+                errors.extend(expected_array(self, processed));
                 errors
             }
             Self::Class(c) => c.errors(project, processed),
             Self::Delete(_) => vec![],
-            Self::MissingSemicolon(_, span) => vec![missing_semicolon(span)],
+            Self::MissingSemicolon(_, span) => vec![missing_semicolon(span, processed)],
         }
     }
 }
 
-fn missing_semicolon(span: &Range<usize>) -> Box<dyn Code> {
-    Box::new(MissingSemicolon::new(span.clone()))
+fn missing_semicolon(span: &Range<usize>, processed: &Processed) -> Arc<dyn Code> {
+    Arc::new(MissingSemicolon::new(span.clone(), processed))
 }
 
-fn unexpected_array(property: &Property) -> Vec<Box<dyn Code>> {
+fn unexpected_array(property: &Property, processed: &Processed) -> Vec<Arc<dyn Code>> {
     let Property::Entry {
         value: Value::UnexpectedArray(_),
         ..
@@ -61,10 +53,10 @@ fn unexpected_array(property: &Property) -> Vec<Box<dyn Code>> {
     else {
         return vec![];
     };
-    vec![Box::new(UnexpectedArray::new(property.clone()))]
+    vec![Arc::new(UnexpectedArray::new(property.clone(), processed))]
 }
 
-fn expected_array(property: &Property) -> Vec<Box<dyn Code>> {
+fn expected_array(property: &Property, processed: &Processed) -> Vec<Arc<dyn Code>> {
     let Property::Entry {
         value,
         expected_array,
@@ -83,5 +75,5 @@ fn expected_array(property: &Property) -> Vec<Box<dyn Code>> {
     if let Value::Invalid(_) = value {
         return vec![];
     }
-    vec![Box::new(ExpectedArray::new(property.clone()))]
+    vec![Arc::new(ExpectedArray::new(property.clone(), processed))]
 }

@@ -1,8 +1,9 @@
 use std::ops::Range;
+use std::path::Path;
 use std::sync::{Arc, RwLock};
-use std::{fs::DirEntry, path::PathBuf, str::FromStr};
+use std::{fs::DirEntry, str::FromStr};
 
-use tracing::warn;
+use tracing::{trace, warn};
 
 use crate::{
     prefix::{self, Prefix},
@@ -10,7 +11,7 @@ use crate::{
     version::Version,
 };
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("Addon duplicated with different case: {0}")]
     AddonNameDuplicate(String),
@@ -41,8 +42,8 @@ impl Addon {
     /// - [`std::io::Error`] if the addon.toml file cannot be read
     /// - [`toml::de::Error`] if the addon.toml file is invalid
     /// - [`std::io::Error`] if the prefix file cannot be read
-    pub fn new(name: String, location: Location) -> Result<Self, crate::error::Error> {
-        let path = PathBuf::from(location.to_string()).join(&name);
+    pub fn new(root: &Path, name: String, location: Location) -> Result<Self, crate::error::Error> {
+        let path = root.join(location.to_string()).join(&name);
         Ok(Self {
             config: {
                 let path = path.join("addon.toml");
@@ -122,10 +123,12 @@ impl Addon {
     /// # Errors
     /// - [`Error::AddonLocationInvalid`] if a location is invalid
     /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
-    pub fn scan() -> Result<Vec<Self>, crate::error::Error> {
+    pub fn scan(root: &Path) -> Result<Vec<Self>, crate::error::Error> {
         let mut addons = Vec::new();
         for location in [Location::Addons, Location::Optionals] {
-            addons.extend(location.scan()?);
+            if let Some(scanned) = location.scan(root)? {
+                addons.extend(scanned);
+            }
         }
         for addon in &addons {
             if addon.name().to_lowercase() != addon.name() {
@@ -165,11 +168,13 @@ impl Location {
     ///
     /// # Errors
     /// - [`Error::AddonLocationInvalid`] if a folder name is invalid
-    pub fn scan(self) -> Result<Vec<Addon>, crate::error::Error> {
-        if !PathBuf::from(self.to_string()).exists() {
-            return Ok(Vec::new());
+    pub fn scan(self, root: &Path) -> Result<Option<Vec<Addon>>, crate::error::Error> {
+        let folder = root.join(self.to_string());
+        if !folder.exists() {
+            return Ok(None);
         }
-        std::fs::read_dir(self.to_string())?
+        trace!("Scanning {} for addons", folder.display());
+        std::fs::read_dir(folder)?
             .collect::<std::io::Result<Vec<DirEntry>>>()?
             .iter()
             .map(std::fs::DirEntry::path)
@@ -185,9 +190,10 @@ impl Location {
                         file.display().to_string(),
                     )));
                 };
-                Addon::new(name.to_string(), self)
+                Addon::new(root, name.to_string(), self)
             })
             .collect::<Result<Vec<Addon>, crate::error::Error>>()
+            .map(Some)
     }
 }
 
@@ -246,5 +252,18 @@ impl BuildData {
     /// Panics if the lock is poisoned
     pub fn set_required_version(&self, version: Version, file: String, line: Range<usize>) {
         *self.required_version.write().unwrap() = Some((version, file, line));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    pub fn location_from_str() {
+        assert_eq!("addons".parse(), Ok(super::Location::Addons));
+        assert_eq!("optionals".parse(), Ok(super::Location::Optionals));
+        assert_eq!(
+            "foobar".parse::<super::Location>(),
+            Err(super::Error::AddonLocationInvalid("foobar".to_string()))
+        );
     }
 }

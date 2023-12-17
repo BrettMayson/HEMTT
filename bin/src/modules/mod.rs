@@ -1,4 +1,4 @@
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 pub mod archive;
 pub mod hook;
@@ -28,42 +28,42 @@ pub trait Module {
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn init(&mut self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
     /// Executes the module's `check` phase
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn check(&self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn check(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
     /// Executes the module's `pre_build` phase
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn pre_build(&self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn pre_build(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
     /// Executes the module's `post_build` phase
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn post_build(&self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn post_build(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
     /// Executes the module's `pre_release` phase
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn pre_release(&self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn pre_release(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
     /// Executes the module's `post_release` phase
     ///
     /// # Errors
     /// Any error that the module encounters
-    fn post_release(&self, _ctx: &Context) -> Result<(), Error> {
-        Ok(())
+    fn post_release(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
     }
 }

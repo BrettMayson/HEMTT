@@ -76,7 +76,7 @@ impl Context {
         let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
-        std::fs::File::create(out_folder.join("ci_annotation.txt"))?;
+        std::fs::File::create(out_folder.join("ci_annotations.txt"))?;
         let build_folder = out_folder.join(folder);
         trace!("using build folder: {:?}", build_folder.display());
         if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
@@ -107,11 +107,11 @@ impl Context {
             config,
             folder: folder.to_owned(),
             workspace,
+            addons: Addon::scan(&root)?,
             project_folder: root,
             hemtt_folder,
             out_folder,
             build_folder,
-            addons: Addon::scan()?,
             tmp,
         })
     }

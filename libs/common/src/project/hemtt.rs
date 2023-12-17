@@ -29,9 +29,15 @@ impl Features {
     }
 
     #[must_use]
-    /// Launch options
+    /// Get launch options by key
     pub fn launch(&self, key: &str) -> Option<Cow<LaunchOptions>> {
         self.launch.get(key).map(Cow::Borrowed)
+    }
+
+    #[must_use]
+    /// Get all launch keys
+    pub fn launch_keys(&self) -> Vec<String> {
+        self.launch.keys().cloned().collect()
     }
 
     #[must_use]

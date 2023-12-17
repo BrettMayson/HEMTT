@@ -868,6 +868,7 @@ dependencies = [
 name = "hemtt"
 version = "1.11.0-rc2"
 dependencies = [
+ "ariadne",
  "clap",
  "dialoguer",
  "enable-ansi-support",
@@ -907,8 +908,10 @@ dependencies = [
 name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
+ "ariadne",
  "git2",
  "serde",
+ "strsim",
  "thiserror",
  "toml",
  "tracing",

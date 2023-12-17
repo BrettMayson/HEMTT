@@ -64,11 +64,11 @@ impl IfStates {
 
     pub fn flip(&mut self, token: Rc<Token>) -> Result<(), Error> {
         if let Some(previous) = self.did_else.take() {
-            return Err(Error::Code(Box::new(DoubleElse {
-                token: Box::new(token.as_ref().clone()),
-                previous: Box::new(previous.as_ref().clone()),
-                if_token: Box::new(self.stack.last().unwrap().token().as_ref().clone()),
-            })));
+            return Err(DoubleElse::code(
+                token.as_ref().clone(),
+                previous.as_ref().clone(),
+                self.stack.last().unwrap().token().as_ref().clone(),
+            ));
         }
         if self
             .stack

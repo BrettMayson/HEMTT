@@ -118,19 +118,19 @@ impl Processor {
             let symbol = token.symbol();
             if symbol.is_word() {
                 if comma_next {
-                    return Err(Error::Code(Box::new(DefineMissingComma {
-                        current: Box::new(stream.next().expect("peeked above").as_ref().clone()),
-                        previous: Box::new(args.last().expect("peeked above").as_ref().clone()),
-                    })));
+                    return Err(DefineMissingComma::code(
+                        stream.next().expect("peeked above").as_ref().clone(),
+                        args.last().expect("peeked above").as_ref().clone(),
+                    ));
                 }
                 args.push(stream.next().expect("peeked above"));
                 comma_next = true;
             } else if symbol.is_comma() {
                 if !comma_next {
-                    return Err(Error::Code(Box::new(UnexpectedToken {
-                        token: Box::new(stream.next().expect("peeked above").as_ref().clone()),
-                        expected: vec!["{variable}".to_string()],
-                    })));
+                    return Err(UnexpectedToken::code(
+                        stream.next().expect("peeked above").as_ref().clone(),
+                        vec!["{variable}".to_string()],
+                    ));
                 }
                 stream.next();
                 comma_next = false;
@@ -141,10 +141,10 @@ impl Processor {
             } else if symbol.is_whitespace() {
                 stream.next();
             } else {
-                return Err(Error::Code(Box::new(UnexpectedToken {
-                    token: Box::new(stream.next().expect("peeked above").as_ref().clone()),
-                    expected: vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
-                })));
+                return Err(UnexpectedToken::code(
+                    stream.next().expect("peeked above").as_ref().clone(),
+                    vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
+                ));
             }
         }
         Ok(args)
@@ -203,18 +203,18 @@ impl Processor {
             Definition::Function(function) => {
                 let Some(args) = self.call_read_args(callsite, pragma, stream)? else {
                     #[allow(clippy::redundant_clone)] // behind hls feature flag
-                    return Err(Error::Code(Box::new(FunctionAsValue {
-                        token: Box::new(ident.as_ref().clone()),
-                        source: Box::new(source.as_ref().clone()),
-                    })));
+                    return Err(FunctionAsValue::code(
+                        ident.as_ref().clone(),
+                        source.as_ref().clone(),
+                    ));
                 };
                 if args.len() != function.args().len() {
-                    return Err(Error::Code(Box::new(FunctionCallArgumentCount::new(
-                        Box::new(ident.as_ref().clone()),
+                    return Err(FunctionCallArgumentCount::code(
+                        ident.as_ref().clone(),
                         function.args().len(),
                         args.len(),
                         &self.defines.clone(),
-                    ))));
+                    ));
                 }
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
@@ -224,11 +224,9 @@ impl Processor {
                     {
                         for token in [value.first(), value.last()] {
                             if token.map_or(false, |t| t.symbol().is_whitespace()) {
-                                self.warnings.push(Box::new(PaddedArg {
-                                    token: Box::new(
-                                        (**token.expect("token exists from map_or check")).clone(),
-                                    ),
-                                }));
+                                self.warnings.push(Arc::new(PaddedArg::new(Box::new(
+                                    (**token.expect("token exists from map_or check")).clone(),
+                                ))));
                             }
                         }
                     }
@@ -265,15 +263,15 @@ impl Processor {
             Definition::Void => return Ok(()),
             Definition::Unit => {
                 #[allow(clippy::redundant_clone)] // behind hls feature flag
-                return Err(Error::Code(Box::new(ExpectedFunctionOrValue {
-                    token: Box::new(ident.as_ref().clone()),
-                    source: Box::new(source.as_ref().clone()),
-                    likely_function: stream
+                return Err(ExpectedFunctionOrValue::code(
+                    ident.as_ref().clone(),
+                    source.as_ref().clone(),
+                    stream
                         .peek()
                         .expect("peeked by caller")
                         .symbol()
                         .is_left_paren(),
-                })));
+                ));
             }
         };
         #[cfg(feature = "lsp")]

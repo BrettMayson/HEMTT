@@ -28,7 +28,7 @@ fn simple(file: &str) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
             for error in e {
-                println!("{}", error.report_generate_processed(&processed).unwrap());
+                println!("{}", error.report().unwrap());
             }
             panic!("failed to parse");
         }

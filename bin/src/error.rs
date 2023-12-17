@@ -4,44 +4,12 @@ use hemtt_common::error::thiserror;
 pub enum Error {
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
-    #[error("Launch config not found: {0}")]
-    LaunchConfigNotFound(String),
-
-    #[error("ASC: {0}")]
-    SQFCompiler(String),
-
-    #[error("Folder already exists: {0}")]
-    NewFolderExists(String),
-    #[error("New can only be ran in an interactive terminal")]
-    NewNoInput,
-
-    #[error("Hook signaled failure: {0}")]
-    HookFatal(String),
-    #[error("Script not found: {0}")]
-    ScriptNotFound(String),
-
-    #[error("One or more files failed linting")]
-    LintFailed,
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
-    #[error("Arma 3 not found in Steam")]
-    Arma3NotFound,
-    #[error("Workshop folder not found")]
-    WorkshopNotFound,
-    #[error("Workshop mod not found: {0}")]
-    WorkshopModNotFound(String),
-    #[error("Preset not found: {0}")]
-    PresetNotFound(String),
-
-    #[error("Main prefix not found: {0}")]
-    MainPrefixNotFound(String),
-
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
-    #[error("Config error: {0}")]
-    Config(#[from] hemtt_config::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
@@ -80,21 +48,10 @@ pub enum Error {
     Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
-    #[error("Rhai Parse Error: {0}")]
-    RhaiParse(#[from] rhai::ParseError),
-    #[error("Rhai Script Error: {0}")]
-    /// because of annyoing send + sync I don't care about
-    RhaiScript(String),
 }
 
 impl From<vfs::VfsError> for Error {
     fn from(e: vfs::VfsError) -> Self {
         Self::Vfs(Box::new(e))
-    }
-}
-
-impl From<Box<rhai::EvalAltResult>> for Error {
-    fn from(e: Box<rhai::EvalAltResult>) -> Self {
-        Self::RhaiScript(e.to_string())
     }
 }

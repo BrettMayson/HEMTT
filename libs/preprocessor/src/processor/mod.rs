@@ -1,6 +1,7 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use hemtt_common::position::Position;
 use hemtt_common::reporting::{Code, Output, Processed, Symbol, Token};
@@ -43,7 +44,7 @@ pub struct Processor {
     pub(crate) usage: HashMap<Position, Vec<Position>>,
 
     /// Warnings
-    pub(crate) warnings: Vec<Box<dyn Code>>,
+    pub(crate) warnings: Vec<Arc<dyn Code>>,
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,
@@ -73,15 +74,13 @@ impl Processor {
         processor.file(&mut pragma, &mut stream, &mut buffer)?;
 
         if let Some(state) = processor.ifstates.pop() {
-            return Err(Error::Code(Box::new(EoiIfState {
-                token: Box::new(state.token().as_ref().clone()),
-            })));
+            return Err(EoiIfState::code(state.token().as_ref().clone()));
         }
 
         if path.filename() == "Config.cpp" {
             processor
                 .warnings
-                .push(Box::new(InvalidConfigCase { path: path.clone() }));
+                .push(Arc::new(InvalidConfigCase::new(path.clone())));
         }
 
         Processed::new(
@@ -210,14 +209,12 @@ impl Processor {
                 return Ok(stream.next().expect("just checked"));
             }
             if token.symbol().is_eoi() {
-                return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token.as_ref().clone()),
-                })));
+                return Err(UnexpectedEOF::code(token.as_ref().clone()));
             }
         }
-        Err(Error::Code(Box::new(ExpectedIdent {
-            token: Box::new(stream.next().expect("just checked").as_ref().clone()),
-        })))
+        Err(ExpectedIdent::code(
+            stream.next().expect("just checked").as_ref().clone(),
+        ))
     }
 
     /// Skips whitespace, returning the next word and consuming it from the stream
@@ -246,9 +243,7 @@ impl Processor {
         self.skip_whitespace(stream, buffer);
         if let Some(token) = stream.peek() {
             if token.symbol().is_eoi() {
-                return Err(Error::Code(Box::new(UnexpectedEOF {
-                    token: Box::new(token.as_ref().clone()),
-                })));
+                return Err(UnexpectedEOF::code(token.as_ref().clone()));
             }
         }
         Ok(stream.next().expect("just checked"))

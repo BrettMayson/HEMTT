@@ -61,9 +61,7 @@ impl Pragma {
     pub fn suppress(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
         let Ok(suppress) = Suppress::try_from(code.as_str()) else {
-            return Err(Error::Code(Box::new(PragmaInvalidSuppress {
-                token: Box::new((**token).clone()),
-            })));
+            return Err(PragmaInvalidSuppress::code((**token).clone()));
         };
         if let Some(existing) = self.suppress.get(&suppress) {
             if *existing as u8 > scope as u8 {
@@ -81,9 +79,7 @@ impl Pragma {
     pub fn flag(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
         let Ok(flag) = Flag::try_from(code.as_str()) else {
-            return Err(Error::Code(Box::new(PragmaInvalidFlag {
-                token: Box::new((**token).clone()),
-            })));
+            return Err(PragmaInvalidFlag::code((**token).clone()));
         };
         if let Some(existing) = self.flags.get(&flag) {
             if *existing as u8 > scope as u8 {

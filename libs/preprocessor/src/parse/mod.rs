@@ -9,7 +9,7 @@ use hemtt_common::{
 use pest::Parser;
 use pest_derive::Parser;
 
-use crate::Error;
+use crate::{codes::pe24_parsing_failed::ParsingFailed, Error};
 
 #[derive(Parser)]
 #[grammar = "parse/config.pest"]
@@ -24,7 +24,8 @@ pub struct PreprocessorParser;
 /// If the file is invalid
 pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
     let source = path.read_to_string()?;
-    let pairs = PreprocessorParser::parse(Rule::file, &source)?;
+    let pairs = PreprocessorParser::parse(Rule::file, &source)
+        .map_err(|e| ParsingFailed::code(e, path.clone()))?;
     let mut tokens = Vec::new();
     let mut line = 1;
     let mut col = 0;

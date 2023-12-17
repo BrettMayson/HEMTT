@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
@@ -12,7 +12,7 @@ impl Module for Files {
         "Files"
     }
 
-    fn post_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn post_build(&self, ctx: &Context) -> Result<Report, Error> {
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
@@ -52,6 +52,6 @@ impl Module for Files {
             copied += 1;
         }
         info!("Copied {} files", copied);
-        Ok(())
+        Ok(Report::new())
     }
 }

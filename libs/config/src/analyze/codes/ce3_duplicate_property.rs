@@ -5,12 +5,8 @@ use crate::Ident;
 
 pub struct DuplicateProperty {
     conflicts: Vec<Ident>,
-}
-
-impl DuplicateProperty {
-    pub fn new(conflicts: Vec<Ident>) -> Self {
-        Self { conflicts }
-    }
+    report: Option<String>,
+    annotations: Vec<Annotation>,
 }
 
 impl Code for DuplicateProperty {
@@ -26,11 +22,45 @@ impl Code for DuplicateProperty {
         "duplicate property".to_string()
     }
 
-    fn help(&self) -> Option<String> {
-        None
+    fn report(&self) -> Option<String> {
+        self.report.clone()
     }
 
-    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
+    fn ci(&self) -> Vec<Annotation> {
+        self.annotations.clone()
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
+        let first = self.conflicts.last().unwrap();
+        let first_map = processed.mapping(first.span.start).unwrap();
+        let first_file = processed.source(first_map.position()).unwrap();
+        let Some(path) = first_file.1 .0.clone() else {
+            return vec![];
+        };
+        vec![(
+            path,
+            self.diagnostic(lsp_types::Range::new(first_map.original().to_lsp(), {
+                let mut end = first_map.original().to_lsp();
+                end.character += first.value.len() as u32;
+                end
+            })),
+        )]
+    }
+}
+
+impl DuplicateProperty {
+    pub fn new(conflicts: Vec<Ident>, processed: &Processed) -> Self {
+        Self {
+            conflicts,
+            report: None,
+            annotations: vec![],
+        }
+        .report_generate_processed(processed)
+        .ci_generate_processed(processed)
+    }
+
+    fn report_generate_processed(mut self, processed: &Processed) -> Self {
         let first = self.conflicts.first().unwrap();
         let first_map = processed.mapping(first.span.start).unwrap();
         let first_file = processed.source(first_map.source()).unwrap();
@@ -63,38 +93,20 @@ impl Code for DuplicateProperty {
         .finish()
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
-        Some(String::from_utf8(out).unwrap())
+        self.report = Some(String::from_utf8(out).unwrap());
+        self
     }
 
-    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
-        let mut out = Vec::with_capacity(self.conflicts.len());
+    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
         for conflict in &self.conflicts {
             let map = processed.mapping(conflict.span.start).unwrap();
             let map_file = processed.source(map.source()).unwrap();
-            out.push(self.annotation(
+            self.annotations.push(self.annotation(
                 AnnotationLevel::Error,
                 map_file.0.as_str().to_string(),
                 map.original(),
             ));
         }
-        out
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let first = self.conflicts.last().unwrap();
-        let first_map = processed.mapping(first.span.start).unwrap();
-        let first_file = processed.source(first_map.position()).unwrap();
-        let Some(path) = first_file.1 .0.clone() else {
-            return vec![];
-        };
-        vec![(
-            path,
-            self.diagnostic(lsp_types::Range::new(first_map.original().to_lsp(), {
-                let mut end = first_map.original().to_lsp();
-                end.character += first.value.len() as u32;
-                end
-            })),
-        )]
+        self
     }
 }

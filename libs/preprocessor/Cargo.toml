@@ -19,7 +19,7 @@ lsp-types = { workspace = true, optional = true }
 peekmore = { workspace = true }
 pest = { workspace = true }
 pest_derive = { workspace = true }
-strsim = "0.10.0"
+strsim = { workspace = true }
 tracing = { workspace = true }
 vfs = { workspace = true }
 

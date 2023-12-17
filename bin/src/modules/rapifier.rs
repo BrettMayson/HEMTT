@@ -1,26 +1,19 @@
 use std::{
-    collections::HashSet,
-    fs::OpenOptions,
-    io::{BufWriter, Write},
     path::PathBuf,
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_common::{
-    addons::Addon,
-    reporting::{Annotation, Code},
-    workspace::WorkspacePath,
-};
+use hemtt_common::{addons::Addon, workspace::WorkspacePath};
 use hemtt_config::{parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
-type RapifyResult = (Vec<(String, Vec<Annotation>)>, Result<(), Error>);
+// type RapifyResult = (Vec<(String, Vec<Annotation>)>, Result<(), Error>);
 
 #[derive(Default)]
 pub struct Rapifier;
@@ -30,28 +23,27 @@ impl Module for Rapifier {
         "Rapifier"
     }
 
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
         let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
         };
-        let results = ctx
-            .addons()
-            .par_iter()
+        let mut entries = Vec::new();
+        ctx.addons()
+            .iter()
             .map(|addon| {
                 let mut globs = Vec::new();
                 if let Some(config) = addon.config() {
                     if !config.rapify().enabled() {
                         debug!("rapify disabled for {}", addon.name());
-                        return Ok((vec![], Ok(())));
+                        return Ok(());
                     }
                     for file in config.rapify().exclude() {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
-                let mut messages = Vec::new();
-                let mut res = Ok(());
                 for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_rapify(entry.as_str())
@@ -63,115 +55,64 @@ impl Module for Rapifier {
                             debug!("skipping {}", entry.as_str());
                             continue;
                         }
-                        debug!("rapifying {}", entry.as_str());
-                        let (new_messages, result) = rapify(addon, entry.clone(), ctx);
-                        messages.extend(new_messages);
-                        counter.fetch_add(1, Ordering::Relaxed);
-                        if let Err(e) = result {
-                            res = Err(e);
-                        }
+                        entries.push((addon, entry));
                     }
                 }
-                Ok((messages, res))
+                Ok(())
             })
-            .collect::<Result<Vec<RapifyResult>, Error>>()?;
-        let messages = results.iter().flat_map(|(v, _)| v).collect::<HashSet<_>>();
-        let mut ci_annotation = BufWriter::new(
-            OpenOptions::new()
-                .write(true)
-                .append(true)
-                .open(ctx.out_folder().join("ci_annotation.txt"))?,
-        );
-        for (message, annotations) in messages {
-            eprintln!("{message}");
-            for annotation in annotations {
-                ci_annotation.write_all(annotation.line().as_bytes())?;
-            }
+            .collect::<Result<Vec<_>, Error>>()?;
+
+        let reports = entries
+            .par_iter()
+            .map(|(addon, entry)| {
+                let report = rapify(addon, entry, ctx)?;
+                counter.fetch_add(1, Ordering::Relaxed);
+                Ok(report)
+            })
+            .collect::<Result<Vec<Report>, Error>>()?;
+
+        for new_report in reports {
+            report.merge(new_report);
         }
-        for (_, result) in results {
-            result?;
-        }
+
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
-        Ok(())
+        Ok(report)
     }
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn rapify(addon: &Addon, path: WorkspacePath, ctx: &Context) -> RapifyResult {
-    let processed = match Processor::run(&path) {
+pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
+    let mut report = Report::new();
+    let processed = match Processor::run(path) {
         Ok(processed) => processed,
+        Err(hemtt_preprocessor::Error::Code(e)) => {
+            report.error(e);
+            return Ok(report);
+        }
         Err(e) => {
-            return (Vec::new(), Err(e.into()));
+            return Err(e.into());
         }
     };
-    let mut messages = Vec::new();
     for warning in processed.warnings() {
-        if let Some(content) = warning.report_generate() {
-            messages.push((content, warning.ci_generate()));
-        }
+        report.warn(warning.clone());
     }
     let configreport = match parse(Some(ctx.config()), &processed) {
         Ok(configreport) => configreport,
         Err(errors) => {
             for e in &errors {
-                messages.push((
-                    e.report_generate_processed(&processed)
-                        .expect("chumsky requires processed"),
-                    e.ci_generate_processed(&processed),
-                ));
+                report.error(e.clone());
             }
-            return (
-                messages,
-                Err(Error::Config(hemtt_config::Error::ConfigInvalid(
-                    path.as_str().to_string(),
-                ))),
-            );
+            return Ok(report);
         }
     };
     configreport.warnings().iter().for_each(|e| {
-        let message = e.report_generate_processed(&processed).map_or_else(
-            || {
-                e.report_generate()
-                    .map_or_else(String::new, |warning| warning)
-            },
-            |warning| warning,
-        );
-        if !message.is_empty() {
-            messages.push((message, {
-                let mut annotations = e.ci_generate_processed(&processed);
-                annotations.extend(e.ci_generate());
-                annotations
-            }));
-        }
+        report.warn(e.clone());
     });
     configreport.errors().iter().for_each(|e| {
-        let message = e.report_generate_processed(&processed).map_or_else(
-            || e.report_generate().map_or_else(String::new, |error| error),
-            |error| error,
-        );
-        if !message.is_empty() {
-            messages.push((message, {
-                let mut annotations = e.ci_generate_processed(&processed);
-                annotations.extend(e.ci_generate());
-                annotations
-            }));
-        }
+        report.error(e.clone());
     });
     if !configreport.errors().is_empty() {
-        return (
-            messages,
-            Err(Error::Config(hemtt_config::Error::ConfigInvalid(
-                path.as_str().to_string(),
-            ))),
-        );
-    }
-    if !configreport.valid() {
-        return (
-            messages,
-            Err(Error::Config(hemtt_config::Error::ConfigInvalid(
-                path.as_str().to_string(),
-            ))),
-        );
+        return Ok(report);
     }
     let out = if path.filename().to_lowercase() == "config.cpp" {
         let (version, cfgpatch) = configreport.required_version();
@@ -185,25 +126,25 @@ pub fn rapify(addon: &Addon, path: WorkspacePath, ctx: &Context) -> RapifyResult
         addon.build_data().set_required_version(version, file, span);
         path.parent().join("config.bin").unwrap()
     } else {
-        path
+        path.to_owned()
     };
     if processed.no_rapify() {
         debug!(
             "skipping rapify for {}, as instructed by preprocessor",
             out.as_str()
         );
-        return (messages, Ok(()));
+        return Ok(report);
     }
     let mut output = match out.create_file() {
         Ok(output) => output,
         Err(e) => {
-            return (messages, Err(e.into()));
+            return Err(e.into());
         }
     };
     if let Err(e) = configreport.config().rapify(&mut output, 0) {
-        return (messages, Err(e.into()));
+        return Err(e.into());
     }
-    (messages, Ok(()))
+    Ok(report)
 }
 
 pub fn can_rapify(path: &str) -> bool {

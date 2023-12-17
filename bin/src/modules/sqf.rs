@@ -6,9 +6,8 @@ use hemtt_sqf::{
     parser::{database::Database, ParserError},
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use time::Instant;
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
@@ -21,15 +20,15 @@ impl Module for SQFCompiler {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn pre_build(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
         let sqf_ext = Some(String::from("sqf"));
-        let start = Instant::now();
         let counter = AtomicU16::new(0);
         let mut entries = Vec::new();
         for addon in ctx.addons() {
             for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
-                    if entry.extension() != sqf_ext {
+                    if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
                         continue;
                     }
                     entries.push((addon, entry));
@@ -37,7 +36,7 @@ impl Module for SQFCompiler {
             }
         }
         let database = Database::default();
-        entries
+        let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
                 trace!("asc compiling {}", entry);
@@ -47,55 +46,46 @@ impl Module for SQFCompiler {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;
                         let (warnings, errors) =
                             analyze(&sqf, Some(ctx.config()), &processed, addon, &database);
+                        let mut report = Report::new();
                         for warning in warnings {
-                            warn!("{}", warning.report_generate_processed(&processed).unwrap());
+                            report.warn(warning);
                         }
-                        if !errors.is_empty() {
-                            for error in errors {
-                                error!("{}", error.report_generate_processed(&processed).unwrap());
-                            }
-                            return Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF));
+                        if errors.is_empty() {
+                            sqf.compile_to_writer(&processed, &mut out)?;
+                            counter.fetch_add(1, Ordering::Relaxed);
                         }
-                        sqf.compile_to_writer(&processed, &mut out)?;
-                        counter.fetch_add(1, Ordering::Relaxed);
-                        Ok(())
+                        for error in errors {
+                            report.error(error);
+                        }
+                        Ok(report)
                     }
                     Err(ParserError::ParsingError(e)) => {
-                        if entry.filename().ends_with(".inc.sqf") {
-                            Ok(())
-                        } else if processed.as_str().starts_with("force ")
+                        let mut report = Report::new();
+                        if processed.as_str().starts_with("force ")
                             || processed.as_str().contains("\nforce ")
                         {
                             warn!("skipping apparent CBA settings file: {}", entry);
-                            Ok(())
                         } else {
                             for error in e {
-                                eprintln!(
-                                    "{}",
-                                    error.report_generate_processed(&processed).unwrap()
-                                );
+                                report.error(error);
                             }
-                            Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF))
                         }
+                        Ok(report)
                     }
                     Err(ParserError::LexingError(e)) => {
-                        if entry.filename().ends_with(".inc.sqf") {
-                            Ok(())
-                        } else {
-                            for error in e {
-                                eprintln!("{entry} {error:?}");
-                            }
-                            Err(Error::Sqf(hemtt_sqf::Error::InvalidSQF))
+                        let mut report = Report::new();
+                        for error in e {
+                            report.error(error);
                         }
+                        Ok(report)
                     }
                 }
             })
-            .collect::<Result<_, Error>>()?;
-        debug!(
-            "ASC Preprocess took {:?}",
-            start.elapsed().whole_milliseconds()
-        );
+            .collect::<Result<Vec<Report>, Error>>()?;
+        for new_report in reports {
+            report.merge(new_report);
+        }
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
-        Ok(())
+        Ok(report)
     }
 }

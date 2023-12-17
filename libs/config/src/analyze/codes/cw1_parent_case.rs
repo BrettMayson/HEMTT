@@ -6,12 +6,9 @@ use crate::Class;
 pub struct ParentCase {
     class: Class,
     parent: Class,
-}
 
-impl ParentCase {
-    pub const fn new(class: Class, parent: Class) -> Self {
-        Self { class, parent }
-    }
+    report: Option<String>,
+    annotations: Vec<Annotation>,
 }
 
 // TODO: maybe we could have a `did you mean` here without too much trouble?
@@ -26,7 +23,7 @@ impl Code for ParentCase {
     }
 
     fn label_message(&self) -> String {
-        "class's parent does not match parent definition case".to_string()
+        "parent does not match definition case".to_string()
     }
 
     fn help(&self) -> Option<String> {
@@ -39,8 +36,35 @@ impl Code for ParentCase {
         ))
     }
 
-    fn report_generate_processed(&self, processed: &Processed) -> Option<String> {
-        let class_parent = self.class.parent()?;
+    fn report(&self) -> Option<String> {
+        self.report.clone()
+    }
+
+    fn ci(&self) -> Vec<Annotation> {
+        self.annotations.clone()
+    }
+
+    #[cfg(feature = "lsp")]
+    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {}
+}
+
+impl ParentCase {
+    pub fn new(class: Class, parent: Class, processed: &Processed) -> Self {
+        Self {
+            class,
+            parent,
+
+            report: None,
+            annotations: vec![],
+        }
+        .report_generate_processed(processed)
+        .ci_generate_processed(processed)
+    }
+
+    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+        let Some(parent) = self.class.parent() else {
+            panic!("ParentCase::report_generate_processed called on class without parent");
+        };
         let map = processed
             .mapping(
                 self.class
@@ -51,7 +75,7 @@ impl Code for ParentCase {
             )
             .unwrap();
         let token = map.token();
-        let class_parent_map = processed.mapping(class_parent.span.start).unwrap();
+        let class_parent_map = processed.mapping(parent.span.start).unwrap();
         let class_parent_token = class_parent_map.token();
         let parent_map = processed
             .mapping(
@@ -102,21 +126,20 @@ impl Code for ParentCase {
         .finish()
         .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
         .unwrap();
-        Some(String::from_utf8(out).unwrap())
+        self.report = Some(String::from_utf8(out).unwrap());
+        self
     }
 
-    fn ci_generate_processed(&self, processed: &Processed) -> Vec<Annotation> {
+    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
         let map = processed
             .mapping(self.class.parent().unwrap().span.start)
             .unwrap();
         let map_file = processed.source(map.source()).unwrap();
-        vec![self.annotation(
+        self.annotations = vec![self.annotation(
             AnnotationLevel::Warning,
             map_file.0.as_str().to_string(),
             map.original(),
-        )]
+        )];
+        self
     }
-
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {}
 }

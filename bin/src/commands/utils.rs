@@ -1,6 +1,6 @@
 use clap::{ArgMatches, Command};
 
-use crate::{utils, Error};
+use crate::{report::Report, utils, Error};
 
 #[must_use]
 pub fn cli() -> Command {
@@ -18,12 +18,13 @@ pub fn cli() -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     match matches.subcommand() {
         Some(("inspect", matches)) => utils::inspect::execute(matches),
         Some(("paa", matches)) => utils::paa::execute(matches),
         Some(("pbo", matches)) => utils::pbo::execute(matches),
         Some(("verify", matches)) => utils::verify::execute(matches),
         _ => unreachable!(),
-    }
+    }?;
+    Ok(Report::new())
 }

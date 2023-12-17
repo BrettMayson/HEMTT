@@ -5,7 +5,7 @@ use hemtt_common::addons::Location;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
 
-use crate::{context::Context, error::Error};
+use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
@@ -22,14 +22,14 @@ impl Module for Sign {
         "Sign"
     }
 
-    fn check(&self, ctx: &Context) -> Result<(), Error> {
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
         if ctx.config().version().git_hash().is_some() {
             Repository::discover(".")?;
         }
-        Ok(())
+        Ok(Report::new())
     }
 
-    fn pre_release(&self, ctx: &Context) -> Result<(), Error> {
+    fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
         create_dir_all(ctx.build_folder().join("keys"))?;
@@ -89,7 +89,7 @@ impl Module for Sign {
             sig.write(&mut File::create(sig_location)?)?;
             Result::<(), Error>::Ok(())
         })?;
-        Ok(())
+        Ok(Report::new())
     }
 }
 
