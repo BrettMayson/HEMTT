@@ -44,7 +44,7 @@ impl Code for LaunchConfigNotFound {
 }
 
 impl LaunchConfigNotFound {
-    pub fn code(config: String, available: Vec<String>) -> Arc<dyn Code> {
+    pub fn code(config: String, available: &[String]) -> Arc<dyn Code> {
         Arc::new(Self {
             similar: similar_values(
                 &config,

@@ -81,7 +81,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     else {
         report.error(LaunchConfigNotFound::code(
             launch_config,
-            config.hemtt().launch_keys(),
+            &config.hemtt().launch_keys(),
         ));
         return Ok(report);
     };
@@ -131,7 +131,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
                 &launch_config,
                 preset.to_string(),
                 &presets,
-            )?);
+            ));
             continue;
         }
         let html = std::fs::read_to_string(html)?;
