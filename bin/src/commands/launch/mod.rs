@@ -88,14 +88,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     trace!("launch config: {:?}", launch);
 
-    let Some(arma3dir) =
-        SteamDir::locate().and_then(|mut s| s.app(&107_410).map(std::borrow::ToOwned::to_owned))
-    else {
+    let Ok(Some((arma3app, library))) = SteamDir::locate().and_then(|s| s.find_app(107_410)) else {
         report.error(ArmaNotFound::code());
         return Ok(report);
     };
+    let arma3dir = library.resolve_app_dir(&arma3app);
 
-    debug!("Arma 3 found at: {}", arma3dir.path.display());
+    debug!("Arma 3 found at: {}", arma3dir.display());
 
     let mut mods = Vec::new();
 
@@ -153,7 +152,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     // climb to the workshop folder
     if !workshop.is_empty() {
-        let Some(common) = arma3dir.path.parent() else {
+        let Some(common) = arma3dir.parent() else {
             report.error(WorkshopNotFound::code());
             return Ok(report);
         };
@@ -193,7 +192,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     report.merge(executor.run()?);
 
-    let prefix_folder = arma3dir.path.join(mainprefix);
+    let prefix_folder = arma3dir.join(mainprefix);
     if !prefix_folder.exists() {
         std::fs::create_dir_all(&prefix_folder)?;
     }
@@ -231,11 +230,11 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     if cfg!(target_os = "windows") {
         info!(
             "Launching {:?} with:\n  {}",
-            arma3dir.path.display(),
+            arma3dir.display(),
             args.join("\n  ")
         );
         std::process::Command::new({
-            let mut path = arma3dir.path;
+            let mut path = arma3dir;
             if let Some(exe) = matches.get_one::<String>("executable") {
                 let exe = PathBuf::from(exe);
                 if exe.is_absolute() {
@@ -254,7 +253,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .args(args)
         .spawn()?;
     } else {
-        linux_launch(&arma3dir.path, &launch.executable(), &args)?;
+        linux_launch(&arma3dir, &launch.executable(), &args)?;
     }
 
     Ok(report)
