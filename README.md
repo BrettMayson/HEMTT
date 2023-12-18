@@ -42,7 +42,7 @@ jobs:
             - name: Run HEMTT build
               run: hemtt release
             - name: Upload Release
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   name: my-mod-latest
                   path: release/my-mod-latest.zip

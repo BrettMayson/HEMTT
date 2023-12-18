@@ -45,7 +45,7 @@ jobs:
           command: build
           args: --release
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
@@ -79,7 +79,7 @@ jobs:
             commit: dc895a0b1e28a3d7f5e43cfe95b3d325ab5d77ac
     steps:
       - name: Download HEMTT
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.os.artifact }}
           path: hemtt
@@ -120,13 +120,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download Linux x64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-x64
           path: release
 
       - name: Download Windows x64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: release
