@@ -92,6 +92,7 @@ impl Defines {
                         return Some((key.clone(), Definition::Void));
                     }
                     "__FILE__" => {
+                        let path = site.path().as_str().replace('/', "\\");
                         return Some((
                             key.clone(),
                             Definition::Value(vec![
@@ -99,7 +100,7 @@ impl Defines {
                                 Rc::new(site.path().workspace().project().map_or_else(
                                     || {
                                         Token::new(
-                                            Symbol::Word(site.path().as_str().to_string()),
+                                            Symbol::Word(path.clone()),
                                             key.position().clone(),
                                         )
                                     },
@@ -108,17 +109,17 @@ impl Defines {
                                             project.mainprefix().map_or_else(
                                                 || {
                                                     Symbol::Word(format!(
-                                                        "{}\\{}",
+                                                        "{}{}",
                                                         project.prefix(),
-                                                        site.path().as_str()
+                                                        path,
                                                     ))
                                                 },
                                                 |mainprefix| {
                                                     Symbol::Word(format!(
-                                                        "{}\\{}\\{}",
+                                                        "{}\\{}{}",
                                                         mainprefix,
                                                         project.prefix(),
-                                                        site.path().as_str()
+                                                        path,
                                                     ))
                                                 },
                                             ),
