@@ -881,7 +881,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt"
-version = "1.11.0-rc2"
+version = "1.11.0-rc3"
 dependencies = [
  "ariadne",
  "clap",
