@@ -8,7 +8,8 @@ pub fn cli() -> Command {
     add_args(
         Command::new("script")
             .about("Run a Rhai script on the project")
-            .long_about("Run a Rhai script on the project, this is useful for automating tasks in a platform agnostic way, or requiring external dependencies.").arg(
+            .long_about("Run a Rhai script on the project, this is useful for automating tasks in a platform agnostic way, or requiring external dependencies.")
+            .arg(
                 clap::Arg::new("name")
                     .help("Name of the new mod")
                     .required(true),
@@ -53,6 +54,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         std::env::current_dir()?,
         "script",
         crate::context::PreservePrevious::Remove,
+        true,
     )?
     .filter(|a, config| {
         if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())

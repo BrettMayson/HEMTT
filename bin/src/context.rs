@@ -46,6 +46,7 @@ impl Context {
         root: PathBuf,
         folder: &str,
         preserve_previous: PreservePrevious,
+        print_info: bool,
     ) -> Result<Self, Error> {
         let config = {
             let path = root.join(".hemtt").join("project.toml");
@@ -101,7 +102,9 @@ impl Context {
                 println!("\n[version]\ngit_hash = 0\n");
                 std::process::exit(1);
             };
-            info!("Config loaded for {} {}", config.name(), version?);
+            if print_info {
+                info!("Config loaded for {} {}", config.name(), version?);
+            }
         }
         Ok(Self {
             config,

@@ -34,6 +34,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         std::env::current_dir()?,
         "release",
         crate::context::PreservePrevious::Remove,
+        true,
     )?;
     let mut executor = build::executor(ctx, matches);
 

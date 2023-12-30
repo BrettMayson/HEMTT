@@ -11,7 +11,7 @@ mod file_patching;
 mod files;
 mod new;
 mod rapifier;
-mod sign;
+pub(crate) mod sign;
 mod sqf;
 
 pub use binarize::Binarize;

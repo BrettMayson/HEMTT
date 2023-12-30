@@ -93,7 +93,7 @@ impl Module for Sign {
     }
 }
 
-fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Error> {
+pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Error> {
     let mut authority = format!(
         "{}_{}",
         ctx.config().signing().authority().map_or_else(
