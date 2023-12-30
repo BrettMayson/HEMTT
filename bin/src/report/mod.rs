@@ -31,7 +31,6 @@ impl Report {
         trace!("writing ci annotations to .hemttout/ci_annotations.txt");
         let mut ci_annotation = BufWriter::new(
             OpenOptions::new()
-                .write(true)
                 .append(true)
                 .open(".hemttout/ci_annotations.txt")?,
         );
