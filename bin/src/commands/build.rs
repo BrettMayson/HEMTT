@@ -64,6 +64,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             warn!("keeping previous build artifacts");
             context::PreservePrevious::Keep
         },
+        true,
     )?;
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));

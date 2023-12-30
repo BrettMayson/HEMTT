@@ -30,6 +30,7 @@ pub fn cli() -> Command {
         .subcommand(commands::release::cli())
         .subcommand(commands::script::cli())
         .subcommand(commands::utils::cli())
+        .subcommand(commands::value::cli())
         .arg(
             clap::Arg::new("threads")
                 .global(true)
@@ -125,6 +126,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             .map_err(std::convert::Into::into)
             .map(Some),
         Some(("utils", matches)) => commands::utils::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        Some(("value", matches)) => commands::value::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),
         _ => unreachable!(),

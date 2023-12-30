@@ -102,6 +102,10 @@ impl Options {
         Err(crate::version::Error::UnknownVersion.into())
     }
 
+    pub fn path(&self) -> Option<&str> {
+        self.path.as_deref()
+    }
+
     #[must_use]
     pub const fn git_hash(&self) -> Option<u8> {
         if let Some(include) = self.git_hash {

@@ -81,6 +81,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
             warn!("keeping previous build artifacts");
             crate::context::PreservePrevious::Keep
         },
+        true,
     )?
     .filter(|a, config| {
         if !just.is_empty() && !just.contains(&a.name().to_lowercase()) {

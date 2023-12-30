@@ -45,7 +45,6 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             file.write_all(value.as_bytes())?;
         } else {
             let mut file = OpenOptions::new()
-                .write(true)
                 .create(true)
                 .append(true)
                 .open(output.join("properties.txt"))?;
