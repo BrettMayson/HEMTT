@@ -40,13 +40,16 @@ impl Module for SQFCompiler {
             .par_iter()
             .map(|(addon, entry)| {
                 trace!("asc compiling {}", entry);
+                let mut report = Report::new();
                 let processed = Processor::run(entry)?;
+                for warning in processed.warnings() {
+                    report.warn(warning.clone());
+                }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;
                         let (warnings, errors) =
                             analyze(&sqf, Some(ctx.config()), &processed, addon, &database);
-                        let mut report = Report::new();
                         for warning in warnings {
                             report.warn(warning);
                         }
