@@ -1,6 +1,11 @@
-mod statements;
-
 pub mod codes;
+
+mod find_in_str;
+mod if_assign;
+mod required_version;
+mod select_parse_number;
+mod str_format;
+mod typename;
 
 use std::sync::Arc;
 
@@ -22,7 +27,7 @@ pub trait Analyze {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        addon: &Addon,
+        addon: Option<&Addon>,
         database: &Database,
     ) -> Codes;
 
@@ -30,7 +35,7 @@ pub trait Analyze {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        addon: &Addon,
+        addon: Option<&Addon>,
         database: &Database,
     ) -> Codes;
 }
@@ -38,13 +43,29 @@ pub trait Analyze {
 #[must_use]
 pub fn analyze(
     statements: &Statements,
-    project: Option<&ProjectConfig>,
+    _project: Option<&ProjectConfig>,
     processed: &Processed,
-    addon: &Addon,
+    addon: Option<&Addon>,
     database: &Database,
 ) -> (Codes, Codes) {
     (
-        statements.warnings(project, processed, addon, database),
-        statements.errors(project, processed, addon, database),
+        {
+            let mut warnings = Vec::new();
+            warnings.extend(if_assign::if_assign(statements, processed));
+            warnings.extend(find_in_str::find_in_str(statements, processed));
+            warnings.extend(typename::typename(statements, processed));
+            warnings.extend(str_format::str_format(statements, processed));
+            warnings.extend(select_parse_number::select_parse_number(
+                statements, processed,
+            ));
+            warnings
+        },
+        {
+            let mut errors = Vec::new();
+            errors.extend(required_version::required_version(
+                statements, processed, addon, database,
+            ));
+            errors
+        },
     )
 }

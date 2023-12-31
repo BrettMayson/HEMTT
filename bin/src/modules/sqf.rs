@@ -49,7 +49,7 @@ impl Module for SQFCompiler {
                     Ok(sqf) => {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;
                         let (warnings, errors) =
-                            analyze(&sqf, Some(ctx.config()), &processed, addon, &database);
+                            analyze(&sqf, Some(ctx.config()), &processed, Some(addon), &database);
                         for warning in warnings {
                             report.warn(warning);
                         }

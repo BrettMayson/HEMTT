@@ -45,6 +45,21 @@ impl Statements {
     }
 
     #[must_use]
+    pub fn span(&self) -> Range<usize> {
+        let start = self
+            .content
+            .first()
+            .map(|s| s.span().start)
+            .unwrap_or_default();
+        let end = self
+            .content
+            .last()
+            .map(|s| s.span().end)
+            .unwrap_or_default();
+        start..end
+    }
+
+    #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
         // TODO can probably replace String with Rc<str>
@@ -96,7 +111,7 @@ impl Statements {
             if let Some((used_command, command_version, command_span)) = match statement {
                 Statement::AssignGlobal(_, expression, _)
                 | Statement::AssignLocal(_, expression, _)
-                | Statement::Expression(expression) => extract_expression(expression, database),
+                | Statement::Expression(expression, _) => extract_expression(expression, database),
             } {
                 if command_version > version {
                     command = used_command.to_string();
@@ -122,20 +137,166 @@ impl From<Vec<Statement>> for Statements {
 pub enum Statement {
     AssignGlobal(String, Expression, Range<usize>),
     AssignLocal(String, Expression, Range<usize>),
-    Expression(Expression),
+    Expression(Expression, Range<usize>),
+}
+
+impl Statement {
+    #[must_use]
+    pub fn walk_statements(&self) -> Vec<&Self> {
+        match self {
+            Self::AssignGlobal(_, expression, _)
+            | Self::AssignLocal(_, expression, _)
+            | Self::Expression(expression, _) => vec![self]
+                .into_iter()
+                .chain(expression.walk_statements())
+                .collect(),
+        }
+    }
+
+    #[must_use]
+    pub fn walk_expressions(&self) -> Vec<&Expression> {
+        match self {
+            Self::AssignGlobal(_, expression, _)
+            | Self::AssignLocal(_, expression, _)
+            | Self::Expression(expression, _) => expression.walk_expressions(),
+        }
+    }
+
+    #[must_use]
+    pub fn span(&self) -> Range<usize> {
+        match self {
+            Self::AssignGlobal(_, _, span)
+            | Self::AssignLocal(_, _, span)
+            | Self::Expression(_, span) => span.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression {
     Code(Statements),
-    String(String),
-    Number(Scalar<f32>),
-    Boolean(bool),
+    String(String, Range<usize>),
+    Number(Scalar<f32>, Range<usize>),
+    Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
     Variable(String, Range<usize>),
+}
+
+impl Expression {
+    #[must_use]
+    pub fn source(&self) -> String {
+        match self {
+            Self::Code(code) => code.source().to_string(),
+            Self::String(string, _) => format!("\"{string}\""),
+            Self::Number(number, _) => number.0.to_string(),
+            Self::Boolean(boolean, _) => boolean.to_string(),
+            Self::Array(array, _) => {
+                let mut out = String::new();
+                out.push('[');
+                for (i, element) in array.iter().enumerate() {
+                    if i != 0 {
+                        out.push(',');
+                    }
+                    out.push_str(element.source().as_str());
+                }
+                out.push(']');
+                out
+            }
+            Self::NularCommand(command, _) => command.as_str().to_string(),
+            Self::UnaryCommand(command, child, _) => {
+                format!("{} {}", command.as_str(), child.source())
+            }
+            Self::BinaryCommand(command, left, right, _) => {
+                format!("{} {} {}", left.source(), command.as_str(), right.source())
+            }
+            Self::Variable(variable, _) => variable.to_string(),
+        }
+    }
+
+    #[must_use]
+    pub fn walk_statements(&self) -> Vec<&Statement> {
+        let mut root = vec![];
+        match self {
+            Self::Code(code) => {
+                for statement in code.content() {
+                    root.extend(statement.walk_statements());
+                }
+            }
+            Self::UnaryCommand(_, child, _) => {
+                root.extend(child.walk_statements());
+            }
+            Self::BinaryCommand(_, left, right, _) => {
+                root.extend(left.walk_statements());
+                root.extend(right.walk_statements());
+            }
+            Self::Array(array, _) => {
+                for element in array {
+                    root.extend(element.walk_statements());
+                }
+            }
+            _ => {}
+        }
+        root
+    }
+
+    #[must_use]
+    pub fn walk_expressions(&self) -> Vec<&Self> {
+        let mut root = vec![self];
+        match self {
+            Self::Code(code) => {
+                for statement in code.content() {
+                    root.extend(statement.walk_expressions());
+                }
+            }
+            Self::UnaryCommand(_, child, _) => {
+                root.extend(child.walk_expressions());
+            }
+            Self::BinaryCommand(_, left, right, _) => {
+                root.extend(left.walk_expressions());
+                root.extend(right.walk_expressions());
+            }
+            Self::Array(array, _) => {
+                for element in array {
+                    root.extend(element.walk_expressions());
+                }
+            }
+            _ => {}
+        }
+        root
+    }
+
+    #[must_use]
+    pub fn span(&self) -> Range<usize> {
+        match self {
+            Self::Code(code) => code.span(),
+            Self::Array(_, span) => span.start - 1..span.end,
+            Self::String(_, span)
+            | Self::Number(_, span)
+            | Self::Boolean(_, span)
+            | Self::NularCommand(_, span)
+            | Self::UnaryCommand(_, _, span)
+            | Self::BinaryCommand(_, _, _, span)
+            | Self::Variable(_, span) => span.clone(),
+        }
+    }
+
+    #[must_use]
+    pub fn full_span(&self) -> Range<usize> {
+        match self {
+            Self::Code(code) => code.span(),
+            Self::Array(_, _) => self.span(),
+            Self::String(_, span)
+            | Self::Number(_, span)
+            | Self::Boolean(_, span)
+            | Self::NularCommand(_, span)
+            | Self::Variable(_, span) => span.clone(),
+            Self::UnaryCommand(_, child, span) => span.start..child.full_span().end,
+            Self::BinaryCommand(_, left, right, _) => left.full_span().start..right.full_span().end,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

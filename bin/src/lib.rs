@@ -24,9 +24,10 @@ pub fn cli() -> Command {
         .subcommand_required(false)
         .arg_required_else_help(true)
         .subcommand(commands::new::cli())
+        .subcommand(commands::check::cli())
         .subcommand(commands::dev::cli())
-        .subcommand(commands::build::cli())
         .subcommand(commands::launch::cli())
+        .subcommand(commands::build::cli())
         .subcommand(commands::release::cli())
         .subcommand(commands::script::cli())
         .subcommand(commands::utils::cli())
@@ -113,6 +114,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     let report = match matches.subcommand() {
         Some(("new", matches)) => commands::new::execute(matches).map(Some),
         Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
+        Some(("check", matches)) => commands::check::execute(matches, &[]).map(Some),
         Some(("build", matches)) => commands::build::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),

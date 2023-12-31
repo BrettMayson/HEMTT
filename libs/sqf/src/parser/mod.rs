@@ -73,13 +73,13 @@ fn statements(database: &Database) -> impl Parser<Token, Statements, Error = Sim
     recursive(|statements| {
         let expression = recursive(|expression| {
             let value = select! { |span|
-              Token::Number(number) => Expression::Number(number),
-              Token::String(string) => Expression::String(string),
+                Token::Number(number) => Expression::Number(number, span),
+                Token::String(string) => Expression::String(string, span),
               // i know you can *technically* redefine true and false to be something else in SQF,
               // so this isn't *technically* correct, but if you're doing evil things like that,
               // you don't deserve parity
-              Token::Identifier(id) if id.eq_ignore_ascii_case("true") => Expression::Boolean(true),
-              Token::Identifier(id) if id.eq_ignore_ascii_case("false") => Expression::Boolean(false),
+              Token::Identifier(id) if id.eq_ignore_ascii_case("true") => Expression::Boolean(true, span),
+              Token::Identifier(id) if id.eq_ignore_ascii_case("false") => Expression::Boolean(false, span),
               Token::Identifier(id) if database.has_nular_command(&id) => {
                 Expression::NularCommand(NularCommand { name: id }, span)
               },
@@ -215,7 +215,7 @@ fn statements(database: &Database) -> impl Parser<Token, Statements, Error = Sim
                 }
             });
         assignment
-            .or(expression.map(Statement::Expression))
+            .or(expression.map_with_span(Statement::Expression))
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
             .map(|content| Statements {

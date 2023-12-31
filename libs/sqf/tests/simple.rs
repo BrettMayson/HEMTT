@@ -45,6 +45,7 @@ fn simple(file: &str) {
     .unwrap();
 }
 
+simple!(format_font);
 simple!(dev);
 simple!(eventhandler);
 simple!(foreach);

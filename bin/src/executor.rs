@@ -48,10 +48,12 @@ impl Executor {
     }
 
     /// The exeuctor will run the `build` phases
-    pub fn build(&mut self) {
+    pub fn build(&mut self, write: bool) {
         self.stages.push("pre_build");
-        self.stages.push("build");
-        self.stages.push("post_build");
+        if write {
+            self.stages.push("build");
+            self.stages.push("post_build");
+        }
     }
 
     /// The exeuctor will run the `release` phases
