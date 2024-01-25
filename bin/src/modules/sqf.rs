@@ -48,18 +48,18 @@ impl Module for SQFCompiler {
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
                         let mut out = entry.with_extension("sqfc")?.create_file()?;
-                        // let (warnings, errors) =
-                        //     analyze(&sqf, Some(ctx.config()), &processed, Some(addon), &database);
-                        // for warning in warnings {
-                        //     report.warn(warning);
-                        // }
-                        // if errors.is_empty() {
-                        sqf.compile_to_writer(&processed, &mut out)?;
-                        counter.fetch_add(1, Ordering::Relaxed);
-                        // }
-                        // for error in errors {
-                        //     report.error(error);
-                        // }
+                        let (warnings, errors) =
+                            analyze(&sqf, Some(ctx.config()), &processed, Some(addon), &database);
+                        for warning in warnings {
+                            report.warn(warning);
+                        }
+                        if errors.is_empty() {
+                            sqf.compile_to_writer(&processed, &mut out)?;
+                            counter.fetch_add(1, Ordering::Relaxed);
+                        }
+                        for error in errors {
+                            report.error(error);
+                        }
                         Ok(report)
                     }
                     Err(ParserError::ParsingError(e)) => {
