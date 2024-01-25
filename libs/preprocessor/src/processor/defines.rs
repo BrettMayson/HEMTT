@@ -181,6 +181,7 @@ impl Processor {
         body
     }
 
+    #[allow(clippy::too_many_lines)]
     /// A define was used
     ///
     /// Expects the stream to be at the ident
@@ -219,14 +220,23 @@ impl Processor {
                 let mut arg_defines = HashMap::new();
                 for (arg, value) in function.args().iter().zip(args) {
                     if !pragma.is_suppressed(&Suppress::Pw3PaddedArg)
-                        && (!pragma.is_flagged(&Flag::Pw3IgnoreArr)
-                            || !ident_string.starts_with("ARR_"))
+                        && (!pragma.is_flagged(&Flag::Pw3IgnoreFormat) || {
+                            [
+                                "ARR_", "TRACE_", "INFO_", "WARNING_", "ERROR_", "DEBUG_",
+                                "FORMAT_",
+                            ]
+                            .iter()
+                            .all(|s| !ident_string.starts_with(s))
+                        })
                     {
                         for token in [value.first(), value.last()] {
                             if token.map_or(false, |t| t.symbol().is_whitespace()) {
-                                self.warnings.push(Arc::new(PaddedArg::new(Box::new(
-                                    (**token.expect("token exists from map_or check")).clone(),
-                                ))));
+                                self.warnings.push(Arc::new(PaddedArg::new(
+                                    Box::new(
+                                        (**token.expect("token exists from map_or check")).clone(),
+                                    ),
+                                    ident_string.clone(),
+                                )));
                             }
                         }
                     }

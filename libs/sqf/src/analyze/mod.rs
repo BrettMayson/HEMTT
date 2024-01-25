@@ -54,7 +54,7 @@ pub fn analyze(
             warnings.extend(if_assign::if_assign(statements, processed));
             warnings.extend(find_in_str::find_in_str(statements, processed));
             warnings.extend(typename::typename(statements, processed));
-            warnings.extend(str_format::str_format(statements, processed));
+            // warnings.extend(str_format::str_format(statements, processed)); // Too many false positives for now
             warnings.extend(select_parse_number::select_parse_number(
                 statements, processed,
             ));

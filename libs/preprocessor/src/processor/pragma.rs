@@ -113,13 +113,13 @@ impl TryFrom<&str> for Scope {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Flag {
-    Pw3IgnoreArr,
+    Pw3IgnoreFormat,
     Pe23IgnoreIfHasInclude,
 }
 
 impl Flag {
     pub const fn as_slice() -> &'static [&'static str] {
-        &["pw3_ignore_arr", "pe23_ignore_has_include"]
+        &["pw3_ignore_format", "pe23_ignore_has_include"]
     }
 }
 
@@ -128,7 +128,7 @@ impl TryFrom<&str> for Flag {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "pw3_ignore_arr" => Ok(Self::Pw3IgnoreArr),
+            "pw3_ignore_format" => Ok(Self::Pw3IgnoreFormat),
             "pe23_ignore_has_include" => Ok(Self::Pe23IgnoreIfHasInclude),
             _ => Err(()),
         }

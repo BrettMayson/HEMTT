@@ -30,7 +30,7 @@ HEMTT provides a few preprocessor flags to control the behavior of the preproces
 
 | Flag | Description |
 | ---- | ----------- |
-| pw3_ignore_arr | Ignore padded arguments in `ARR_N` macros |
+| pw3_ignore_format | Ignores padded arguments in `ARR_N`, `WARNING_N`, `TRACE_N`, `FORMAT_N`, etc. macros |
 | pe23_ignore_has_include| Assume any `#if __has_include` is false |
 
 The scope of these flags is the same as the warning suppression scope.
@@ -72,10 +72,10 @@ HELLO(Jim, Bob)
 
 This would produce `Jim, meet  Bob` instead of `Jim, meet Bob`. (Note the extra space before `Bob`).
 
-By default, all macros are checked, but a flag can be set to ignore `ARR_N` macros.
+By default, all macros are checked, but a flag can be set to ignore `ARR_N`, `WARNING_N`, `TRACE_N`, `FORMAT_N`, etc. macros.
 
 ```cpp
-#pragma hemtt flag pw3_ignore_arr { scope = line }
+#pragma hemtt flag pw3_ignore_format { scope = line }
 ```
 
 ## Rapify Warnings
