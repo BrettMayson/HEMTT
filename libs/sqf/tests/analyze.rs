@@ -26,7 +26,7 @@ fn test_analyze(file: &str) {
     let database = Database::default();
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let (warnings, errors) = analyze(&sqf, None, &processed, None, &database);
+            let (warnings, _errors) = analyze(&sqf, None, &processed, None, &database);
             for warning in warnings {
                 println!("{}", warning.report().unwrap());
             }

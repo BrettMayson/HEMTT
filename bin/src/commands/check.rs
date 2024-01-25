@@ -1,11 +1,10 @@
-use clap::{ArgAction, ArgMatches, Command};
-use hemtt_common::addons::Location;
+use clap::Command;
 
 use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{pbo::Collapse, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
 
@@ -18,16 +17,7 @@ pub fn cli() -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Report, Error> {
-    let mut executor = context(matches, launch_optionals)?;
-    executor.run()
-}
-
-/// Create a new executor for the dev command
-///
-/// # Errors
-/// [`Error`] depending on the modules
-pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Executor, Error> {
+pub fn execute() -> Result<Report, Error> {
     let ctx = Context::new(
         std::env::current_dir()?,
         "check",
@@ -49,5 +39,5 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     executor.check();
     executor.build(false);
 
-    Ok(executor)
+    executor.run()
 }

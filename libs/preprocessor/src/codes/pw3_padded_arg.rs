@@ -71,7 +71,7 @@ impl PaddedArg {
             .with_color(color_token)
             .with_message("padding a macro argument is likely unintended"),
         )
-        .with_note(self.debug.clone())
+        .with_note(format!("Occured in: `{}`", self.debug))
         .finish()
         .write_for_stdout(
             sources(vec![(
