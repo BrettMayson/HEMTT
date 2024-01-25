@@ -98,7 +98,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
 
     executor.init();
     executor.check();
-    executor.build();
+    executor.build(true);
 
     executor
 }

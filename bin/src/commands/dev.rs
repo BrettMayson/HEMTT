@@ -128,7 +128,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
 
     executor.init();
     executor.check();
-    executor.build();
+    executor.build(true);
 
     if !just.is_empty() {
         warn!("Use of `--just` is not recommended, only use it if you know what you're doing");

@@ -6,6 +6,7 @@ use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
 pub struct PaddedArg {
     /// The [`Token`] that was found to be padding an arg
     token: Box<Token>,
+    debug: String,
     /// The report
     report: Option<String>,
 }
@@ -41,9 +42,10 @@ impl Code for PaddedArg {
 }
 
 impl PaddedArg {
-    pub fn new(token: Box<Token>) -> Self {
+    pub fn new(token: Box<Token>, debug: String) -> Self {
         Self {
             token,
+            debug,
             report: None,
         }
         .report_generate()
@@ -69,6 +71,7 @@ impl PaddedArg {
             .with_color(color_token)
             .with_message("padding a macro argument is likely unintended"),
         )
+        .with_note(format!("Occured in: `{}`", self.debug))
         .finish()
         .write_for_stdout(
             sources(vec![(

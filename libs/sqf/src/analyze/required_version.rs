@@ -1,55 +1,22 @@
-use std::{ops::Range, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_common::{
     addons::Addon,
-    project::ProjectConfig,
     reporting::{Code, Processed},
-    version::Version,
 };
 
 use crate::{parser::database::Database, Statements};
 
-use super::Analyze;
-
-impl Analyze for Statements {
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool {
-        true
-    }
-
-    fn warnings(
-        &self,
-        project: Option<&ProjectConfig>,
-        processed: &Processed,
-        addon: &Addon,
-        database: &Database,
-    ) -> Vec<Arc<dyn Code>> {
-        vec![]
-    }
-
-    fn errors(
-        &self,
-        project: Option<&ProjectConfig>,
-        processed: &Processed,
-        addon: &Addon,
-        database: &Database,
-    ) -> Vec<Arc<dyn Code>> {
-        let mut errors = Vec::new();
-        errors.extend(required_version(
-            addon.build_data().required_version().unwrap_or_default(),
-            self,
-            processed,
-            database,
-        ));
-        errors
-    }
-}
-
-fn required_version(
-    required: (Version, String, Range<usize>),
+pub fn required_version(
     statements: &Statements,
     processed: &Processed,
+    addon: Option<&Addon>,
     database: &Database,
 ) -> Vec<Arc<dyn Code>> {
+    let Some(addon) = addon else {
+        return Vec::new();
+    };
+    let required = addon.build_data().required_version().unwrap_or_default();
     let mut errors: Vec<Arc<dyn Code>> = Vec::new();
     let wiki_version = arma3_wiki::model::Version::new(
         u8::try_from(required.0.major()).unwrap_or_default(),
