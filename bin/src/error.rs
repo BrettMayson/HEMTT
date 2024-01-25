@@ -5,6 +5,10 @@ pub enum Error {
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
 
+    #[error("ASC: {0}")]
+    #[cfg(not(target_os = "macos"))]
+    ArmaScriptCompiler(String),
+
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),

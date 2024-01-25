@@ -4,7 +4,9 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{
+        asc::ArmaScriptCompiler, pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler,
+    },
     report::Report,
 };
 
@@ -94,6 +96,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
+    executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
 
     executor.init();

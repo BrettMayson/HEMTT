@@ -5,7 +5,10 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{
+        asc::ArmaScriptCompiler, pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier,
+        SQFCompiler,
+    },
     report::Report,
 };
 
@@ -118,6 +121,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<SQFCompiler>::default());
+    executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if matches.get_one::<bool>("binarize") == Some(&true) {
