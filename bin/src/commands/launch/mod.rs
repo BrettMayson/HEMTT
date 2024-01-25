@@ -192,6 +192,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     report.merge(executor.run()?);
 
+    if report.failed() {
+        return Ok(report);
+    }
+
     let prefix_folder = arma3dir.join(mainprefix);
     if !prefix_folder.exists() {
         std::fs::create_dir_all(&prefix_folder)?;

@@ -86,7 +86,7 @@ impl Module for SQFCompiler {
         for new_report in reports {
             report.merge(new_report);
         }
-        info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
+        info!("Validated {} sqf files", counter.load(Ordering::Relaxed));
         Ok(report)
     }
 }
