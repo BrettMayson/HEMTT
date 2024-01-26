@@ -174,7 +174,6 @@ impl Processor {
                         }
                     }
                     let token = stream.next().expect("peeked above");
-                    println!("not a real directive: {:?}", token.symbol());
                     if in_macro.is_some()
                     && stream.peek().map_or(false, |t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
                         // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
