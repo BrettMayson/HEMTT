@@ -139,9 +139,11 @@ impl Processor {
     ) -> Result<(), Error> {
         let mut in_quotes = false;
         let mut quote = None;
+        let mut just_whitespace = true;
         while let Some(token) = stream.peek() {
             match (token.symbol(), in_quotes) {
                 (Symbol::Word(w), false) => {
+                    just_whitespace = false;
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();
                         self.define_use(
@@ -155,7 +157,24 @@ impl Processor {
                     }
                 }
                 (Symbol::Directive, false) => {
+                    if just_whitespace {
+                        if let Some(command) = stream.peek_forward(1) {
+                            if [
+                                "if", "else", "endif", "ifdef", "ifndef", "define", "undef",
+                                "include", "pragma",
+                            ]
+                            .contains(&command.to_string().as_str())
+                            {
+                                let _ = stream.peek_backward(1);
+                                self.directive(pragma, stream, buffer)?;
+                                just_whitespace = true;
+                                continue;
+                            }
+                            let _ = stream.peek_backward(1);
+                        }
+                    }
                     let token = stream.next().expect("peeked above");
+                    println!("not a real directive: {:?}", token.symbol());
                     if in_macro.is_some()
                     && stream.peek().map_or(false, |t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
                         // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
@@ -172,19 +191,25 @@ impl Processor {
                     self.output(token, buffer);
                 }
                 (Symbol::Newline, false) => {
+                    just_whitespace = true;
                     self.output(stream.next().expect("peeked above"), buffer);
                     if in_macro.is_none() {
                         return Ok(());
                     }
                 }
                 (Symbol::DoubleQuote, _) => {
+                    just_whitespace = false;
                     in_quotes = !in_quotes;
                     self.output(stream.next().expect("peeked above"), buffer);
                 }
                 (Symbol::Eoi, _) => {
                     return Ok(());
                 }
+                (Symbol::Whitespace(_), _) => {
+                    self.output(stream.next().expect("peeked above"), buffer);
+                }
                 (_, _) => {
+                    just_whitespace = false;
                     self.output(stream.next().expect("peeked above"), buffer);
                 }
             }
