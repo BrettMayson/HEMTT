@@ -50,7 +50,6 @@ impl Executor {
     /// The exeuctor will run the `build` phases
     pub fn build(&mut self, write: bool) {
         self.stages.push("pre_build");
-        info!("will write pbo: {}", write);
         if write {
             self.stages.push("build");
             self.stages.push("post_build");
