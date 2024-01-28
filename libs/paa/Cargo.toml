@@ -14,12 +14,12 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 hemtt-lzo = { path = "../lzo", version = "1.0.0", features = ["decompress"], default-features = false }
 
-js-sys = { version = "0.3.66", optional = true }
-wasm-bindgen = { version = "0.2.89", optional = true }
+js-sys = { version = "0.3.67", optional = true }
+wasm-bindgen = { version = "0.2.90", optional = true }
 
 byteorder = { workspace = true }
 texpresso = "2.0.1"
-image = "0.24.7"
+image = "0.24.8"
 
 [features]
 wasm = ["wasm-bindgen", "js-sys"]

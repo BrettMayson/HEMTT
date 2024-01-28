@@ -122,9 +122,9 @@ dependencies = [
 
 [[package]]
 name = "arma3-wiki"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daa14125b7cc4ee94eff8f033a9d158aa6f8b8414e9358cf9beba41525a67fae"
+checksum = "64e23ec76db246e9acfbfd0f8cfa2cdb0182a0f70db5b684f6bdd4d0b8d7ee79"
 dependencies = [
  "fs_extra",
  "git2",
@@ -325,7 +325,7 @@ dependencies = [
  "anstream",
  "anstyle",
  "clap_lex",
- "strsim",
+ "strsim 0.10.0",
 ]
 
 [[package]]
@@ -919,7 +919,7 @@ dependencies = [
  "ariadne",
  "git2",
  "serde",
- "strsim",
+ "strsim 0.11.0",
  "thiserror",
  "toml",
  "tracing",
@@ -983,7 +983,7 @@ dependencies = [
  "peekmore",
  "pest",
  "pest_derive",
- "strsim",
+ "strsim 0.11.0",
  "tracing",
  "vfs",
 ]
@@ -2335,6 +2335,12 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "strsim"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
 
 [[package]]
 name = "subtle"
