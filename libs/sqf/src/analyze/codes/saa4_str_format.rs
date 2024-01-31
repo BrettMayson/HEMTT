@@ -69,7 +69,7 @@ impl StrFormat {
         )
         .with_code(self.ident())
         .with_message(self.message())
-        .with_label(
+        .with_labels(vec![
             Label::new((
                 map_file.0.to_string(),
                 map.original_column()..map.original_column() + self.span.len(),
@@ -88,14 +88,12 @@ impl StrFormat {
                 .fg(color_expr)
             ))
             .with_color(color),
-        )
-        .with_colored_span(
-            (
+            Label::new((
                 map_file.0.to_string(),
                 map_expr_start.original_column()..map_expr_end.original_column(),
-            ),
-            color_expr,
-        );
+            ))
+            .with_color(color_expr),
+        ]);
         report
             .finish()
             .write_for_stdout(

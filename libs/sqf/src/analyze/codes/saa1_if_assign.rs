@@ -88,7 +88,7 @@ impl IfAssign {
         )
         .with_code(self.ident())
         .with_message(self.message())
-        .with_label(
+        .with_labels(vec![
             Label::new((
                 map_file.0.to_string(),
                 map.original_column()..map.original_column() + self.condition.1.len(),
@@ -107,22 +107,18 @@ impl IfAssign {
                 )
             })
             .with_color(color_if),
-        )
-        .with_colored_spans(vec![
-            (
+            Label::new(
                 (
                     map_file.0.to_string(),
                     map_lhs.original_column()..map_lhs.original_column() + self.lhs.1.len(),
-                ),
-                color_lhs,
-            ),
-            (
+                )
+            ).with_color(color_lhs),
+            Label::new(
                 (
                     map_file.0.to_string(),
                     map_rhs.original_column()..map_rhs.original_column() + self.rhs.1.len(),
-                ),
-                color_rhs,
-            ),
+                )
+            ).with_color(color_rhs),
         ])
         .with_note(
             if self.lhs.0 == "1" && self.rhs.0 == "0" {

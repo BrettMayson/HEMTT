@@ -72,31 +72,24 @@ impl FindInStr {
         )
         .with_code(self.ident())
         .with_message(self.message())
-        .with_label(
+        .with_labels(vec![
             Label::new((
                 map_file.0.to_string(),
                 map.original_column()..map.original_column() + self.span.len(),
             ))
             .with_message(self.label_message())
             .with_color(color_if),
-        )
-        .with_colored_spans(vec![
-            (
-                (
-                    map_file.0.to_string(),
-                    map_haystack.original_column()
-                        ..map_haystack.original_column() + self.haystack.1.len(),
-                ),
-                color_lhs,
-            ),
-            (
-                (
-                    map_file.0.to_string(),
-                    map_needle.original_column()
-                        ..map_needle.original_column() + self.needle.1.len(),
-                ),
-                color_rhs,
-            ),
+            Label::new((
+                map_file.0.to_string(),
+                map_haystack.original_column()
+                    ..map_haystack.original_column() + self.haystack.1.len(),
+            ))
+            .with_color(color_lhs),
+            Label::new((
+                map_file.0.to_string(),
+                map_needle.original_column()..map_needle.original_column() + self.needle.1.len(),
+            ))
+            .with_color(color_rhs),
         ])
         .with_help(format!(
             "try `{} in {}`",

@@ -105,7 +105,7 @@ impl<I: Seek + Read> WritablePbo<I> {
 
     /// Remove an property from the PBO
     pub fn remove_property(&mut self, key: &str) -> Option<String> {
-        self.properties.remove(key)
+        self.properties.swap_remove(key)
     }
 
     #[must_use]

@@ -66,7 +66,7 @@ impl Typename {
         )
         .with_code(self.ident())
         .with_message(self.message())
-        .with_label(
+        .with_labels(vec![
             Label::new((
                 map_file.0.to_string(),
                 map.original_column()..map.original_column() + self.span.len(),
@@ -76,14 +76,12 @@ impl Typename {
                 &format!("\"{}\"", self.constant.0).fg(color_typename)
             ))
             .with_color(color_typename),
-        )
-        .with_colored_span(
-            (
+            Label::new((
                 map_file.0.to_string(),
                 map_constant.original_column()..map_constant.original_column() + self.constant.2,
-            ),
-            color_type,
-        );
+            ))
+            .with_color(color_type),
+        ]);
         report
             .finish()
             .write_for_stdout(
