@@ -14,7 +14,7 @@ fn python() {
         .finish(None)
         .unwrap();
     let diagnostic = Diagnostic::new("T1".to_string(), "using python 2".to_string())
-        .with_severity(Severity::Warning)
+        .set_severity(Severity::Warning)
         .with_label(
             Label::primary(workspace.join("example.py").unwrap(), 0..5)
                 .with_message("using outdated `print`".to_string()),

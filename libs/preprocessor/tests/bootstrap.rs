@@ -1,3 +1,4 @@
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/bootstrap/";
@@ -16,13 +17,20 @@ macro_rules! bootstrap {
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source);
     if let Err(e) = processed {
-        panic!("{}", e.get_code().unwrap().report().unwrap());
+        panic!(
+            "{}",
+            e.get_code()
+                .unwrap()
+                .diagnostic()
+                .unwrap()
+                .to_string(&WorkspaceFiles::new())
+        );
     }
     let processed = processed.unwrap();
     let expected = workspace

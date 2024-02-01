@@ -22,11 +22,11 @@ pub struct Diagnostic {
 
 impl Diagnostic {
     #[must_use]
-    pub fn new(code: impl Into<String>, message: String) -> Self {
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             severity: Severity::Error,
             code: code.into(),
-            message,
+            message: message.into(),
             labels: Vec::new(),
             notes: Vec::new(),
             help: Vec::new(),
@@ -35,7 +35,7 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub const fn with_severity(mut self, severity: Severity) -> Self {
+    pub const fn set_severity(mut self, severity: Severity) -> Self {
         self.severity = severity;
         self
     }
@@ -47,8 +47,8 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_message(mut self, message: String) -> Self {
-        self.message = message;
+    pub fn set_message(mut self, message: impl Into<String>) -> Self {
+        self.message = message.into();
         self
     }
 
@@ -71,8 +71,8 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_note(mut self, note: String) -> Self {
-        self.notes.push(note);
+    pub fn with_note(mut self, note: impl Into<String>) -> Self {
+        self.notes.push(note.into());
         self
     }
 
@@ -83,8 +83,8 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_help(mut self, help: String) -> Self {
-        self.help.push(help);
+    pub fn with_help(mut self, help: impl Into<String>) -> Self {
+        self.help.push(help.into());
         self
     }
 
@@ -95,8 +95,8 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_suggestion(mut self, suggestion: String) -> Self {
-        self.suggestions.push(suggestion);
+    pub fn with_suggestion(mut self, suggestion: impl Into<String>) -> Self {
+        self.suggestions.push(suggestion.into());
         self
     }
 

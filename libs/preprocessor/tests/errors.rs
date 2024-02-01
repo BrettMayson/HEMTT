@@ -71,3 +71,7 @@ bootstrap!(pe17_double_else);
 bootstrap!(pe18_eoi_ifstate);
 bootstrap!(pe19_pragma_unknown);
 bootstrap!(pe20_pragma_invalid_scope);
+bootstrap!(pe21_pragma_invalid_suppress);
+bootstrap!(pe22_pragma_invalid_flag);
+bootstrap!(pe23_if_has_include);
+bootstrap!(pe24_parsing_failed);

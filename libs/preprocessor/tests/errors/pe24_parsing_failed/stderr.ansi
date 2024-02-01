@@ -1,0 +1,6 @@
+[0m[1m[38;5;9merror[failed to parse][0m[1m: failed to parse[0m
+  [0m[34m┌─[0m source.hpp:1:6
+  [0m[34m│[0m
+[0m[34m1[0m [0m[34m│[0m class[0m[31m [0mtest {};
+  [0m[34m│[0m      [0m[31m^[0m [0m[31mfailed to parse[0m
+
