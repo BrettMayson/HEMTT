@@ -114,7 +114,7 @@ dependencies = [
 [[package]]
 name = "ariadne"
 version = "0.3.0"
-source = "git+https://github.com/BrettMayson/ariadne#4825b433b1297acaedfcf3a01c268129c5ed125b"
+source = "git+https://github.com/BrettMayson/ariadne#a9e5206cfd01a93f3bea03557b6fc2e9db282761"
 dependencies = [
  "unicode-width",
  "yansi",
