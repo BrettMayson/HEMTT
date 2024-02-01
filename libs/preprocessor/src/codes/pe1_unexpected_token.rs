@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+use hemtt_common::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -12,8 +11,6 @@ pub struct UnexpectedToken {
     token: Box<Token>,
     /// A vec of [`Token`]s that would be valid here
     expected: Vec<String>,
-    /// The report
-    report: Option<String>,
 }
 
 impl Code for UnexpectedToken {
@@ -36,76 +33,30 @@ impl Code for UnexpectedToken {
         )
     }
 
-    fn report(&self) -> Option<String> {
-        self.report.clone()
-    }
-
-    fn ci(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
+            Label::primary(
+                self.token.position().path().clone(),
+                self.token.position().span(),
+            )
+            .with_message(self.label_message()),
+        );
+        if !self.expected.is_empty() {
+            diag = diag.with_help(format!(
+                "expected one of: {}",
+                Yellow.paint(self.expected.join(" "))
+            ));
+        }
+        Some(diag)
     }
 }
 
 impl UnexpectedToken {
     pub fn new(token: Box<Token>, expected: Vec<String>) -> Self {
-        Self {
-            token,
-            expected,
-            report: None,
-        }
-        .report_generate()
+        Self { token, expected }
     }
 
     pub fn code(token: Token, expected: Vec<String>) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), expected)))
-    }
-
-    fn report_generate(mut self) -> Self {
-        let mut colors = ColorGenerator::default();
-        let a = colors.next();
-        let mut out = Vec::new();
-        let span = self.token.position().span();
-        let mut report = Report::build(
-            ReportKind::Error,
-            self.token.position().path().as_str(),
-            span.start,
-        )
-        .with_code(self.ident())
-        .with_message(self.message())
-        .with_label(
-            Label::new((self.token.position().path().as_str(), span.start..span.end))
-                .with_color(a)
-                .with_message("Unexpected token"),
-        );
-        if !self.expected.is_empty() {
-            report = report.with_help(format!(
-                "expected one of: {}",
-                self.expected
-                    .iter()
-                    .map(|s| format!("`{}`", s.fg(a)))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
-        }
-        if let Err(e) = report.finish().write_for_stdout(
-            (
-                self.token.position().path().as_str(),
-                Source::from(
-                    self.token
-                        .position()
-                        .path()
-                        .read_to_string()
-                        .unwrap_or_default(),
-                ),
-            ),
-            &mut out,
-        ) {
-            panic!("while reporting: {e}");
-        }
-        self.report = Some(String::from_utf8(out).unwrap_or_default());
-        self
     }
 }

@@ -3,7 +3,7 @@ use std::{hash::Hasher, io::Write, sync::Arc};
 use tracing::trace;
 use vfs::VfsPath;
 
-use super::{Error, Workspace};
+use super::{Error, LayerType, Workspace};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, PartialEq, Eq)]
@@ -24,6 +24,16 @@ impl WorkspacePath {
     /// Returns the workspace
     pub fn workspace(&self) -> &Workspace {
         &self.workspace
+    }
+
+    #[must_use]
+    /// Is the file from an include path
+    pub fn is_include(&self) -> bool {
+        self.workspace
+            .layers
+            .iter()
+            .filter(|(_, t)| *t == LayerType::Include)
+            .any(|(p, _)| p.join(self.path.as_str()).is_ok())
     }
 
     /// join a path to the workspace path

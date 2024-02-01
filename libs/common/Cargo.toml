@@ -9,7 +9,8 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-ariadne = { workspace = true }
+ansi_term = "0.12.1"
+codespan-reporting = "0.11.1"
 git2 = { workspace = true }
 serde = { workspace = true }
 strsim = { workspace = true }

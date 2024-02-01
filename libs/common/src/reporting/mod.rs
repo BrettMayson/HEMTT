@@ -2,13 +2,16 @@
 
 use std::fmt::{Debug, Display};
 
+pub mod diagnostic;
+mod files;
 mod output;
 mod processed;
 mod symbol;
 mod token;
 mod whitespace;
 
-use ariadne::{Color, Fmt, ReportKind};
+pub use diagnostic::{Diagnostic, Label};
+pub use files::{WorkspaceFile, WorkspaceFiles};
 pub use output::Output;
 pub use processed::{Mapping, Processed};
 pub use symbol::Symbol;
@@ -35,12 +38,34 @@ pub trait Code: Send + Sync {
     fn help(&self) -> Option<String> {
         None
     }
+    /// Code suggestion, if any
+    fn suggestion(&self) -> Option<String> {
+        None
+    }
 
-    /// A report for the CLI
-    fn report(&self) -> Option<String>;
+    /// A diagnostic for the LSP / terminal
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        let Some(token) = self.token() else {
+            return None;
+        };
+        let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
+            Label::primary(token.position().path().clone(), token.position().span())
+                .with_message(self.label_message()),
+        );
+        if let Some(help) = self.help() {
+            diag = diag.with_help(help);
+        }
+        if let Some(suggestion) = self.suggestion() {
+            diag = diag.with_suggestion(suggestion);
+        }
+        diag = self.expand_diagnostic(diag);
+        Some(diag)
+    }
 
-    /// A report for CI
-    fn ci(&self) -> Vec<Annotation>;
+    /// Expand the default diagnostic with additional information
+    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
+        diag
+    }
 
     /// Helper to generate an annotation for CI
     fn annotation(&self, level: AnnotationLevel, path: String, span: &Position) -> Annotation {
@@ -53,32 +78,6 @@ pub trait Code: Send + Sync {
             level,
             message: self.message(),
             title: self.label_message(),
-        }
-    }
-
-    #[cfg(feature = "lsp")]
-    /// Generate a diagnostic for the LSP
-    fn lsp_generate(&self) -> Option<(VfsPath, Diagnostic)> {
-        None
-    }
-    #[cfg(feature = "lsp")]
-    /// Generate a diagnostic for the LSP, applied to the processed file
-    fn lsp_generate_processed(&self, _processed: &Processed) -> Vec<(VfsPath, Diagnostic)> {
-        Vec::new()
-    }
-    #[cfg(feature = "lsp")]
-    /// Helper to generate a diagnostic for the LSP
-    fn lsp_diagnostic(&self, range: Range) -> Diagnostic {
-        Diagnostic {
-            range,
-            severity: Some(DiagnosticSeverity::ERROR),
-            code: Some(lsp_types::NumberOrString::String(self.ident().to_string())),
-            code_description: None,
-            source: Some(String::from("HEMTT")),
-            message: self.label_message(),
-            related_information: None,
-            tags: None,
-            data: None,
         }
     }
 }
@@ -151,31 +150,31 @@ impl Annotation {
     }
 }
 
-#[must_use]
-pub fn simple(code: &dyn Code, kind: ReportKind<'_>, help: Option<String>) -> String {
-    let title = match kind {
-        ReportKind::Error => "Error",
-        ReportKind::Warning => "Warning",
-        ReportKind::Advice => "Advice",
-        ReportKind::Custom(w, _) => w,
-    };
-    let left = format!("[{}] {}:", code.ident(), title)
-        .fg(match kind {
-            ReportKind::Error => Color::Red,
-            ReportKind::Warning => Color::Yellow,
-            ReportKind::Advice => Color::Fixed(147),
-            ReportKind::Custom(_, c) => c,
-        })
-        .to_string();
-    let top = format!("{} {}", left, code.message());
-    match help {
-        Some(help) => format!(
-            "{}\n{}{} {}",
-            top,
-            " ".repeat(code.ident().len() + 4),
-            "Help:".fg(Color::Fixed(115)),
-            help
-        ),
-        None => top,
-    }
-}
+// #[must_use]
+// pub fn simple(code: &dyn Code, kind: ReportKind<'_>, help: Option<String>) -> String {
+//     let title = match kind {
+//         ReportKind::Error => "Error",
+//         ReportKind::Warning => "Warning",
+//         ReportKind::Advice => "Advice",
+//         ReportKind::Custom(w, _) => w,
+//     };
+//     let left = format!("[{}] {}:", code.ident(), title)
+//         .fg(match kind {
+//             ReportKind::Error => Color::Red,
+//             ReportKind::Warning => Color::Yellow,
+//             ReportKind::Advice => Color::Fixed(147),
+//             ReportKind::Custom(_, c) => c,
+//         })
+//         .to_string();
+//     let top = format!("{} {}", left, code.message());
+//     match help {
+//         Some(help) => format!(
+//             "{}\n{}{} {}",
+//             top,
+//             " ".repeat(code.ident().len() + 4),
+//             "Help:".fg(Color::Fixed(115)),
+//             help
+//         ),
+//         None => top,
+//     }
+// }

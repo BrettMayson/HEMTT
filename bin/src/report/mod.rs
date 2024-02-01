@@ -35,7 +35,7 @@ impl Report {
                 .open(".hemttout/ci_annotations.txt")?,
         );
         for code in self.warnings.iter().chain(self.errors.iter()) {
-            for annotation in code.ci() {
+            for annotation in code.diagnostic() {
                 ci_annotation.write_all(annotation.line().as_bytes())?;
             }
         }

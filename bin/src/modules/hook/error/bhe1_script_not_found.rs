@@ -25,7 +25,7 @@ impl Code for ScriptNotFound {
         if self.similar.is_empty() {
             None
         } else {
-            Some(format!("Did you mean `{}`?", self.similar.join("`, `")))
+            Some(format!("did you mean `{}`?", self.similar.join("`, `")))
         }
     }
 

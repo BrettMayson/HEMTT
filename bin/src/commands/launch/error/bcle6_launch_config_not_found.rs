@@ -24,7 +24,7 @@ impl Code for LaunchConfigNotFound {
             None
         } else {
             Some(format!(
-                "Did you mean `{}`?",
+                "did you mean `{}`?",
                 self.similar
                     .iter()
                     .map(std::string::ToString::to_string)

@@ -140,6 +140,11 @@ impl Processor {
                 break;
             } else if symbol.is_whitespace() {
                 stream.next();
+            } else if comma_next {
+                return Err(UnexpectedToken::code(
+                    stream.next().expect("peeked above").as_ref().clone(),
+                    vec![",".to_string(), ")".to_string()],
+                ));
             } else {
                 return Err(UnexpectedToken::code(
                     stream.next().expect("peeked above").as_ref().clone(),

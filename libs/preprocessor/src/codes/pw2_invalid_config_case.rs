@@ -1,6 +1,6 @@
 use hemtt_common::{
     position::{LineCol, Position},
-    reporting::{simple, Annotation, AnnotationLevel, Code},
+    reporting::{Annotation, AnnotationLevel, Code},
     workspace::WorkspacePath,
 };
 
@@ -29,17 +29,17 @@ impl Code for InvalidConfigCase {
         Some(format!("Rename to `{}`", self.path.as_str().to_lowercase()))
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Warning, self.help()))
-    }
+    // fn report(&self) -> Option<String> {
+    //     Some(simple(self, ariadne::ReportKind::Warning, self.help()))
+    // }
 
-    fn ci(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Warning,
-            self.path.as_str().to_string(),
-            &Position::new(LineCol::default(), LineCol::default(), self.path.clone()),
-        )]
-    }
+    // fn ci(&self) -> Vec<Annotation> {
+    //     vec![self.annotation(
+    //         AnnotationLevel::Warning,
+    //         self.path.as_str().to_string(),
+    //         &Position::new(LineCol::default(), LineCol::default(), self.path.clone()),
+    //     )]
+    // }
 }
 
 impl InvalidConfigCase {

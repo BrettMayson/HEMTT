@@ -19,7 +19,7 @@ impl Code for PlatformNotSupported {
     }
 
     fn report(&self) -> Option<String> {
-        Some(simple(self, ReportKind::Error, self.help()))
+        Some(simple(self, ReportKind::Warning, self.help()))
     }
 
     fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {

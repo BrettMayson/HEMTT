@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/errors/";
@@ -18,7 +19,7 @@ macro_rules! bootstrap {
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
@@ -33,7 +34,12 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let error = e.get_code().unwrap().report().unwrap();
+            let error = e
+                .get_code()
+                .unwrap()
+                .diagnostic()
+                .unwrap()
+                .to_string(&WorkspaceFiles::new());
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
             }
@@ -63,3 +69,5 @@ bootstrap!(pe15_if_invalid_operator);
 bootstrap!(pe16_if_incompatible_types);
 bootstrap!(pe17_double_else);
 bootstrap!(pe18_eoi_ifstate);
+bootstrap!(pe19_pragma_unknown);
+bootstrap!(pe20_pragma_invalid_scope);

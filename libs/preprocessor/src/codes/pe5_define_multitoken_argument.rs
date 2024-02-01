@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -12,12 +11,10 @@ use crate::Error;
 /// #define FUNC(my arg) ...
 /// ```
 pub struct DefineMissingComma {
-    /// The [`Token`] of the previous arg
-    previous: Box<Token>,
     /// The [`Token`] of the current arg
     current: Box<Token>,
-    /// The report
-    report: Option<String>,
+    /// The [`Token`] of the previous arg
+    previous: Box<Token>,
 }
 
 impl Code for DefineMissingComma {
@@ -40,108 +37,35 @@ impl Code for DefineMissingComma {
         )
     }
 
-    fn report(&self) -> Option<String> {
-        self.report.clone()
+    fn help(&self) -> Option<String> {
+        Some("define arguments must be separated by a comma".to_string())
     }
 
-    fn ci(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.current.position().path().as_str().to_string(),
-            self.current.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
+    fn suggestion(&self) -> Option<String> {
+        Some(format!(
+            "{}, {}",
+            self.previous.symbol().to_string(),
+            self.current.symbol().to_string()
         ))
+    }
+
+    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
+        diag.with_label(
+            Label::secondary(
+                self.current.position().path().clone(),
+                self.previous.position().span().end..self.current.position().span().start,
+            )
+            .with_message("missing comma"),
+        )
     }
 }
 
 impl DefineMissingComma {
     pub fn new(current: Box<Token>, previous: Box<Token>) -> Self {
-        Self {
-            current,
-            previous,
-            report: None,
-        }
-        .report_generate()
+        Self { current, previous }
     }
 
     pub fn code(current: Token, previous: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(current), Box::new(previous))))
-    }
-
-    fn report_generate(mut self) -> Self {
-        let mut colors = ColorGenerator::default();
-        let color_comma = colors.next();
-        let color_current = colors.next();
-        let color_previous = colors.next();
-        let mut out = Vec::new();
-        let span = self.previous.position().start().0..self.current.position().end().0;
-        let report = Report::build(
-            ReportKind::Error,
-            self.previous.position().path().as_str(),
-            span.start,
-        )
-        .with_code(self.ident())
-        .with_message(self.message())
-        .with_label(
-            Label::new((
-                self.current.position().path().as_str(),
-                self.previous.position().start().0..self.previous.position().end().0,
-            ))
-            .with_color(color_previous),
-        )
-        .with_label(
-            Label::new((
-                self.current.position().path().as_str(),
-                self.current.position().start().0..self.current.position().end().0,
-            ))
-            .with_color(color_current),
-        )
-        .with_label(
-            Label::new((
-                self.previous.position().path().as_str(),
-                self.previous.position().start().0..self.current.position().end().0,
-            ))
-            .with_message(format!(
-                "multiple tokens found without a {}",
-                "comma".fg(color_comma)
-            ))
-            .with_color(color_comma),
-        )
-        .with_help(format!(
-            "try `{}{} {}`",
-            self.previous.to_string().fg(color_previous),
-            ",".fg(color_comma),
-            self.current.to_string().fg(color_current),
-        ));
-        if let Err(e) = report.finish().write_for_stdout(
-            (
-                self.current.position().path().as_str(),
-                Source::from(
-                    self.current
-                        .position()
-                        .path()
-                        .read_to_string()
-                        .unwrap_or_default(),
-                ),
-            ),
-            &mut out,
-        ) {
-            panic!("while reporting: {e}");
-        }
-        self.report = Some(String::from_utf8(out).unwrap_or_default());
-        self
     }
 }

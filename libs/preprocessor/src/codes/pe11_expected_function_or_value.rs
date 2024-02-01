@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use ariadne::{ColorGenerator, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -14,8 +13,6 @@ pub struct ExpectedFunctionOrValue {
     source: Box<Token>,
     /// Likely a function
     likely_function: bool,
-    /// The report
-    report: Option<String>,
 }
 
 impl Code for ExpectedFunctionOrValue {
@@ -28,40 +25,27 @@ impl Code for ExpectedFunctionOrValue {
     }
 
     fn message(&self) -> String {
-        "expected function or value, found unit".to_string()
+        if self.likely_function {
+            "attempted to use a unit as a function".to_string()
+        } else {
+            "attempted to use a unit as a value".to_string()
+        }
     }
 
     fn label_message(&self) -> String {
-        format!(
-            "found unit `{}`",
-            self.token.symbol().to_string().replace('\n', "\\n")
+        if self.likely_function {
+            "used as a function".to_string()
+        } else {
+            "used as a value".to_string()
+        }
+    }
+
+    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
+        diag.with_labels(vec![Label::secondary(
+            self.source.position().path().clone(),
+            self.source.position().span(),
         )
-    }
-
-    fn report(&self) -> Option<String> {
-        self.report.clone()
-    }
-
-    fn ci(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
-            return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
-        ))
+        .with_message("defined as a unit")])
     }
 }
 
@@ -71,9 +55,7 @@ impl ExpectedFunctionOrValue {
             token,
             source,
             likely_function,
-            report: None,
         }
-        .report_generate()
     }
 
     pub fn code(token: Token, source: Token, likely_function: bool) -> Error {
@@ -82,54 +64,5 @@ impl ExpectedFunctionOrValue {
             Box::new(source),
             likely_function,
         )))
-    }
-
-    fn report_generate(mut self) -> Self {
-        let mut colors = ColorGenerator::default();
-        let a = colors.next();
-        let mut out = Vec::new();
-        let span = self.token.position().span();
-        if let Err(e) = Report::build(
-            ReportKind::Error,
-            self.token.position().path().as_str(),
-            span.start,
-        )
-        .with_code(self.ident())
-        .with_message(self.message())
-        .with_label(
-            Label::new((self.token.position().path().as_str(), span.start..span.end))
-                .with_color(a)
-                .with_message(if self.likely_function {
-                    "tried to use as a function"
-                } else {
-                    "tried to use as a value"
-                }),
-        )
-        .with_label(
-            Label::new((
-                self.source.position().path().as_str(),
-                self.source.position().start().0..self.source.position().end().0,
-            ))
-            .with_color(a)
-            .with_message("defined as a unit here"),
-        )
-        .finish()
-        .write_for_stdout(
-            (
-                self.token.position().path().as_str(),
-                Source::from(
-                    self.token
-                        .position()
-                        .path()
-                        .read_to_string()
-                        .unwrap_or_default(),
-                ),
-            ),
-            &mut out,
-        ) {
-            panic!("while reporting: {e}");
-        }
-        self.report = Some(String::from_utf8(out).unwrap_or_default());
-        self
     }
 }
