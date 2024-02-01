@@ -6,10 +6,11 @@ use crate::workspace::WorkspacePath;
 
 pub use self::label::Label;
 
-use super::WorkspaceFiles;
+use super::{Code, WorkspaceFiles};
 
 mod label;
 
+#[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub severity: Severity,
     pub code: String,
@@ -32,6 +33,37 @@ impl Diagnostic {
             help: Vec::new(),
             suggestions: Vec::new(),
         }
+    }
+
+    pub fn new_for_processed(
+        code: &impl Code,
+        span: std::ops::Range<usize>,
+        processed: &crate::reporting::Processed,
+    ) -> Option<Self> {
+        let mut diag = Self::new(code.ident(), code.message());
+        let Some(map_start) = processed.mapping(span.start) else {
+            return None;
+        };
+        let Some(map_end) = processed.mapping(span.end) else {
+            return None;
+        };
+        let Some(map_file) = processed.source(map_start.source()) else {
+            return None;
+        };
+        diag.labels.push(
+            Label::primary(
+                map_file.0.clone(),
+                map_start.original_column()..map_end.original_column(),
+            )
+            .with_message(code.label_message()),
+        );
+        if let Some(help) = code.help() {
+            diag.help.push(help);
+        }
+        if let Some(suggestion) = code.suggestion() {
+            diag.suggestions.push(suggestion);
+        }
+        Some(diag)
     }
 
     #[must_use]

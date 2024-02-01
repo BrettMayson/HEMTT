@@ -4,6 +4,7 @@ use codespan_reporting::diagnostic::LabelStyle;
 
 use crate::workspace::WorkspacePath;
 
+#[derive(Debug, Clone)]
 pub struct Label {
     style: LabelStyle,
     message: Option<String>,

@@ -1,12 +1,11 @@
-use ariadne::{sources, ColorGenerator, Fmt, Label, Report};
-use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Processed};
+use hemtt_common::reporting::{Code, Diagnostic, Label, Processed};
 
 use crate::{Property, Value};
 
 pub struct ExpectedArray {
     property: Property,
-    report: Option<String>,
-    annotations: Vec<Annotation>,
+    diagnostic: Option<Diagnostic>,
+    suggestion: Option<String>,
 }
 
 impl Code for ExpectedArray {
@@ -19,46 +18,19 @@ impl Code for ExpectedArray {
     }
 
     fn label_message(&self) -> String {
-        "expected array".to_string()
+        "expects an array".to_string()
     }
 
-    fn report(&self) -> Option<String> {
-        self.report.clone()
+    fn help(&self) -> Option<String> {
+        Some("remove the [] from the property".to_string())
     }
 
-    fn ci(&self) -> Vec<Annotation> {
-        self.annotations.clone()
+    fn suggestion(&self) -> Option<String> {
+        self.suggestion.clone()
     }
 
-    #[cfg(feature = "lsp")]
-    fn generate_processed_lsp(&self, processed: &Processed) -> Vec<(vfs::VfsPath, Diagnostic)> {
-        let Property::Entry {
-            value,
-            expected_array,
-            ..
-        } = &self.property
-        else {
-            return vec![];
-        };
-        if !expected_array {
-            return vec![];
-        }
-        if let Value::Array(_) = value {
-            return vec![];
-        }
-        let value_start = processed.mapping(value.span().start).unwrap();
-        let value_file = processed.source(value_start.source()).unwrap();
-        let value_end = processed.mapping(value.span().end).unwrap();
-        let Some(path) = value_file.1 .0.clone() else {
-            return vec![];
-        };
-        vec![(
-            path,
-            self.diagnostic(lsp_types::Range::new(
-                value_start.original().to_lsp(),
-                value_end.original().to_lsp(),
-            )),
-        )]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        self.diagnostic.clone()
     }
 }
 
@@ -66,11 +38,10 @@ impl ExpectedArray {
     pub fn new(property: Property, processed: &Processed) -> Self {
         Self {
             property,
-            report: None,
-            annotations: vec![],
+            diagnostic: None,
+            suggestion: None,
         }
         .report_generate_processed(processed)
-        .ci_generate_processed(processed)
     }
 
     fn report_generate_processed(mut self, processed: &Processed) -> Self {
@@ -92,50 +63,20 @@ impl ExpectedArray {
         let ident_start = processed.mapping(name.span.start).unwrap();
         let ident_file = processed.source(ident_start.source()).unwrap();
         let ident_end = processed.mapping(name.span.end).unwrap();
-        let value_start = processed.mapping(value.span().start).unwrap();
-        let value_end = processed.mapping(value.span().end).unwrap();
-        let mut out = Vec::new();
-        let mut colors = ColorGenerator::new();
-        let a = colors.next();
-        let b = colors.next();
-        Report::build(
-            ariadne::ReportKind::Error,
-            ident_file.0.clone(),
-            ident_start.original_column(),
-        )
-        .with_code(self.ident())
-        .with_message(self.message())
-        .with_label(
-            Label::new((
-                ident_file.0.clone(),
-                value_start.original_column()..value_end.original_column(),
-            ))
-            .with_message(self.label_message())
-            .with_color(a),
-        )
-        .with_label(
-            Label::new((
-                ident_file.0.clone(),
-                (ident_end.original_column())..(ident_end.original_column() + 2),
-            ))
-            .with_message(format!("`{}` indicates an upcoming array", "[]".fg(b)))
-            .with_color(b),
-        )
-        .finish()
-        .write_for_stdout(sources(processed.sources()), &mut out)
-        .unwrap();
-        self.report = Some(String::from_utf8(out).unwrap());
-        self
-    }
-
-    fn ci_generate_processed(mut self, processed: &Processed) -> Self {
-        let map = processed.mapping(self.property.name().span.start).unwrap();
-        let map_file = processed.source(map.source()).unwrap();
-        self.annotations = vec![self.annotation(
-            AnnotationLevel::Error,
-            map_file.0.as_str().to_string(),
-            map.original(),
-        )];
+        let haystack = &processed.as_str()[ident_end.original_column()..value.span().start];
+        let possible_end =
+            ident_end.original_column() + haystack.find(|c: char| c == ']').unwrap_or(1) + 1;
+        self.suggestion = Some(name.value.to_string());
+        self.diagnostic = Diagnostic::new_for_processed(
+            &self,
+            ident_start.original_column()..possible_end,
+            processed,
+        );
+        if let Some(diag) = &mut self.diagnostic {
+            diag.labels.push(
+                Label::secondary(ident_file.0.clone(), value.span()).with_message("not an array"),
+            );
+        }
         self
     }
 }

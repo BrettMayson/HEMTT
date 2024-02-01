@@ -136,3 +136,25 @@ impl FromStr for ProjectConfig {
         toml::from_str(s).map_err(Error::from)
     }
 }
+
+mod tests {
+    use std::collections::HashMap;
+
+    use super::{files, hemtt, signing, version};
+
+    impl super::ProjectConfig {
+        #[must_use]
+        pub fn test_project() -> Self {
+            Self {
+                name: "Advanced Banana Environment".to_string(),
+                prefix: "abe".to_string(),
+                mainprefix: None,
+                version: version::Options::default(),
+                properties: HashMap::default(),
+                files: files::Options::default(),
+                hemtt: hemtt::Features::default(),
+                signing: signing::Options::default(),
+            }
+        }
+    }
+}

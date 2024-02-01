@@ -1,3 +1,3 @@
 class Test {
-    outer = something;
+    value = something;
 };
