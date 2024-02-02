@@ -34,6 +34,11 @@ impl Label {
     }
 
     #[must_use]
+    pub const fn file(&self) -> &WorkspacePath {
+        &self.file
+    }
+
+    #[must_use]
     pub fn with_message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
         self

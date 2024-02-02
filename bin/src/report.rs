@@ -35,7 +35,11 @@ impl Report {
                 .open(".hemttout/ci_annotations.txt")?,
         );
         let workspace_files = WorkspaceFiles::new();
-        for code in self.warnings.iter().chain(self.errors.iter()) {
+        for code in self
+            .warnings(WithIncludes::No)
+            .iter()
+            .chain(self.errors(WithIncludes::No).iter())
+        {
             if let Some(diag) = code.diagnostic() {
                 let annotations = diag.to_annotations(&workspace_files);
                 for annotation in annotations {
@@ -52,7 +56,11 @@ impl Report {
 
     pub fn write_to_stdout(&self) {
         let workspace_files = WorkspaceFiles::new();
-        for code in self.warnings.iter().chain(self.errors.iter()) {
+        for code in self
+            .warnings(WithIncludes::No)
+            .iter()
+            .chain(self.errors(WithIncludes::No).iter())
+        {
             if let Some(diag) = code.diagnostic() {
                 eprintln!("{}", diag.to_string(&workspace_files));
             }
@@ -81,17 +89,41 @@ impl Report {
     }
 
     #[must_use]
-    pub fn warnings(&self) -> &[Arc<dyn Code>] {
-        &self.warnings
+    pub fn warnings(&self, includes: WithIncludes) -> Vec<Arc<dyn Code>> {
+        filter_codes(&self.warnings, includes)
     }
 
     #[must_use]
-    pub fn errors(&self) -> &[Arc<dyn Code>] {
-        &self.errors
+    pub fn errors(&self, includes: WithIncludes) -> Vec<Arc<dyn Code>> {
+        filter_codes(&self.errors, includes)
     }
 
     #[must_use]
     pub fn failed(&self) -> bool {
         !self.errors.is_empty()
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WithIncludes {
+    Yes,
+    No,
+}
+
+fn filter_codes(codes: &[Arc<dyn Code>], includes: WithIncludes) -> Vec<Arc<dyn Code>> {
+    if includes == WithIncludes::Yes {
+        return codes.to_vec();
+    }
+    codes
+        .iter()
+        .filter(|c| {
+            if includes == WithIncludes::Yes {
+                true
+            } else {
+                c.diagnostic()
+                    .map_or(true, |d| !d.labels.iter().any(|l| l.file().is_include()))
+            }
+        })
+        .cloned()
+        .collect::<Vec<_>>()
 }

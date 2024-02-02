@@ -33,7 +33,11 @@ impl WorkspacePath {
             .layers
             .iter()
             .filter(|(_, t)| *t == LayerType::Include)
-            .any(|(p, _)| p.join(self.path.as_str()).is_ok())
+            .any(|(p, _)| {
+                p.join(self.path.as_str())
+                    .and_then(|p| p.exists())
+                    .unwrap_or(false)
+            })
     }
 
     /// join a path to the workspace path
