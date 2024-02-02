@@ -42,7 +42,7 @@ impl ScriptNotFound {
             .iter()
             .filter_map(|x| {
                 if x.is_file().map_or(false, |x| x) {
-                    Some(x.filename())
+                    Some(x.filename().trim_end_matches(".rhai").to_string())
                 } else {
                     None
                 }

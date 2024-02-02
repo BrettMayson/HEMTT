@@ -106,7 +106,7 @@ impl Hooks {
     pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
         let mut report = Report::new();
         let scripts = ctx.workspace().join(".hemtt")?.join("scripts")?;
-        let path = scripts.join(format!("{name}.rhai"))?;
+        let path = scripts.join(name)?.with_extension("rhai")?;
         if !path.exists()? {
             report.error(ScriptNotFound::code(name.to_owned(), &scripts)?);
             return Ok(report);
