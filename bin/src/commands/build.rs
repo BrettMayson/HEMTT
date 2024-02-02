@@ -8,7 +8,7 @@ use crate::{
     report::Report,
 };
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(target_os = "macos"))]
 use crate::modules::asc::ArmaScriptCompiler;
 
 #[must_use]
@@ -96,7 +96,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(target_os = "macos"))]
     executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
 
