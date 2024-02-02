@@ -2,7 +2,7 @@
   [0m[34m┌─[0m source.hpp:3:1
   [0m[34m│[0m
 [0m[34m1[0m [0m[34m│[0m #define HELLO(var) Hello var
-  [0m[34m│[0m         [0m[34m-----[0m [0m[34mdefined here with 1 argument[0m
+  [0m[34m│[0m         [0m[34m-----[0m [0m[34mdefined with 1 argument[0m
 [0m[34m2[0m [0m[34m│[0m 
 [0m[34m3[0m [0m[34m│[0m [0m[31mHELLO[0m(world,aceteam)
   [0m[34m│[0m [0m[31m^^^^^[0m [0m[31mcalled with 2 arguments[0m

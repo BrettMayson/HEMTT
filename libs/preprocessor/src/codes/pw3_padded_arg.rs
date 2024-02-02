@@ -26,9 +26,12 @@ impl Code for PaddedArg {
         "padding a macro argument".to_string()
     }
 
+    fn note(&self) -> Option<String> {
+        Some("padding a macro argument is likely unintended".to_string())
+    }
+
     fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_note("padding a macro argument is likely unintended".to_string())
-            .with_note(format!("occured in: `{}`", self.ident))
+        diag.with_note(format!("occured in: `{}`", self.ident))
     }
 }
 

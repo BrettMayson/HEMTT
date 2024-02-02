@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use hemtt_common::workspace::LayerType;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
 
@@ -18,7 +19,7 @@ macro_rules! preprocess {
 
 fn preprocess(file: &str) {
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&PathBuf::from(ROOT))
+        .physical(&PathBuf::from(ROOT), LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();

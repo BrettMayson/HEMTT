@@ -1,0 +1,6 @@
+[0m[1m[38;5;9merror[SPE1][0m[1m: invalid token[0m
+  [0m[34m┌─[0m source.sqf:1:9
+  [0m[34m│[0m
+[0m[34m1[0m [0m[34m│[0m private [0m[31mð[0m = 0;
+  [0m[34m│[0m         [0m[31m^[0m [0m[31minvalid token[0m
+

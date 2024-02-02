@@ -53,24 +53,6 @@ impl Code for IfInvalidOperator {
     ) -> hemtt_common::reporting::Diagnostic {
         diag
     }
-
-    fn annotation(
-        &self,
-        level: hemtt_common::reporting::AnnotationLevel,
-        path: String,
-        span: &hemtt_common::position::Position,
-    ) -> hemtt_common::reporting::Annotation {
-        hemtt_common::reporting::Annotation {
-            path,
-            start_line: span.start().1 .0,
-            end_line: span.end().1 .0,
-            start_column: span.start().1 .1,
-            end_column: span.end().1 .1,
-            level,
-            message: self.message(),
-            title: self.label_message(),
-        }
-    }
 }
 
 impl IfInvalidOperator {

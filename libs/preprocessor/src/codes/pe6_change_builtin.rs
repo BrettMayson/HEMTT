@@ -31,8 +31,8 @@ impl Code for ChangeBuiltin {
         )
     }
 
-    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_note("built-in macros cannot be changed".to_string())
+    fn note(&self) -> Option<String> {
+        Some("built-in macros cannot be changed".to_string())
     }
 }
 

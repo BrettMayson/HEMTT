@@ -1,4 +1,3 @@
-// use ariadne::{sources, ColorGenerator, Label, Report, ReportKind};
 use hemtt_common::reporting::{Code, Diagnostic, Label, Severity, Token};
 
 #[allow(unused)]

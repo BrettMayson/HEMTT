@@ -5,6 +5,7 @@ use std::{fs::DirEntry, str::FromStr};
 
 use tracing::{trace, warn};
 
+use crate::workspace::WorkspacePath;
 use crate::{
     prefix::{self, Prefix},
     project::AddonConfig,
@@ -219,7 +220,7 @@ impl ToString for Location {
     }
 }
 
-type RequiredVersion = (Version, String, Range<usize>);
+type RequiredVersion = (Version, WorkspacePath, Range<usize>);
 
 #[derive(Debug, Clone, Default)]
 pub struct BuildData {
@@ -250,7 +251,7 @@ impl BuildData {
     ///
     /// # Panics
     /// Panics if the lock is poisoned
-    pub fn set_required_version(&self, version: Version, file: String, line: Range<usize>) {
+    pub fn set_required_version(&self, version: Version, file: WorkspacePath, line: Range<usize>) {
         *self.required_version.write().unwrap() = Some((version, file, line));
     }
 }

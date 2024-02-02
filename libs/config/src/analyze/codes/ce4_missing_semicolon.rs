@@ -38,10 +38,10 @@ impl MissingSemicolon {
             span,
             diagnostic: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         let haystack = &processed.as_str()[self.span.clone()];
         let possible_end = self.span.start
             + haystack
@@ -50,36 +50,5 @@ impl MissingSemicolon {
         self.diagnostic =
             Diagnostic::new_for_processed(&self, possible_end..possible_end, processed);
         self
-        //
-        // let map = processed.mapping(possible_end).unwrap();
-        // let token = map.token();
-        // let mut out = Vec::new();
-        // let mut colors = ColorGenerator::new();
-        // let a = colors.next();
-        // Report::build(
-        //     ariadne::ReportKind::Error,
-        //     token.position().path().as_str(),
-        //     token.position().start().0,
-        // )
-        // .with_code(self.ident())
-        // .with_message(self.message())
-        // .with_label(
-        //     #[allow(clippy::range_plus_one)] // not supported by ariadne
-        //     Label::new((
-        //         token.position().path().to_string(),
-        //         token.position().start().0..token.position().end().0,
-        //     ))
-        //     .with_message(format!("missing {}", ";".fg(a)))
-        //     .with_color(a),
-        // )
-        // .with_help(format!(
-        //     "add a semicolon `{}` to the end of the property",
-        //     ";".fg(a)
-        // ))
-        // .finish()
-        // .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
-        // .unwrap();
-        // self.diagnostic = Some(String::from_utf8(out).unwrap());
-        // self
     }
 }

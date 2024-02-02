@@ -31,10 +31,10 @@ impl DuplicateProperty {
             conflicts,
             diagnostic: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic = Diagnostic::new_for_processed(
             &self,
             self.conflicts.last().unwrap().span.clone(),

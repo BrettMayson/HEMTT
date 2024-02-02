@@ -1,0 +1,6 @@
+[0m[1m[38;5;9merror[SPE2][0m[1m: unparseable syntax[0m
+  [0m[34m┌─[0m source.sqf:1:1
+  [0m[34m│[0m
+[0m[34m1[0m [0m[34m│[0m [0m[31mgetVariable[0m
+  [0m[34m│[0m [0m[31m^^^^^^^^^^^[0m [0m[31munparseable syntax[0m
+

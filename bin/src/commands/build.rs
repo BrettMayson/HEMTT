@@ -58,7 +58,6 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
     let mut ctx = Context::new(
-        std::env::current_dir()?,
         "build",
         if just.is_empty() {
             context::PreservePrevious::Remove

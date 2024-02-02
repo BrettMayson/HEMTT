@@ -41,24 +41,24 @@ impl ExpectedArray {
             diagnostic: None,
             suggestion: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         let Property::Entry {
             name,
             value,
             expected_array,
         } = &self.property
         else {
-            panic!("ExpectedArray::report_generate_processed called on non-ExpectedArray property");
+            panic!("ExpectedArray::generate_processed called on non-ExpectedArray property");
         };
         assert!(
             expected_array,
-            "ExpectedArray::report_generate_processed called on non-ExpectedArray property"
+            "ExpectedArray::generate_processed called on non-ExpectedArray property"
         );
         if let Value::Array(_) = value {
-            panic!("ExpectedArray::report_generate_processed called on non-ExpectedArray property");
+            panic!("ExpectedArray::generate_processed called on non-ExpectedArray property");
         }
         let ident_start = processed.mapping(name.span.start).unwrap();
         let ident_file = processed.source(ident_start.source()).unwrap();

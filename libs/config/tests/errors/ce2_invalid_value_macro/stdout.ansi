@@ -4,6 +4,8 @@
 [0m[34m5[0m [0m[34m│[0m path = [0m[31mPATHTO(thing)[0m;
   [0m[34m│[0m        [0m[31m^^^^^^^^^^^^^[0m [0m[31minvalid macro result[0m
   [0m[34m│[0m
+  [0m[34m=[0m [36mnote[0m: The processed output was:
+          \some\thing 
   [0m[34m=[0m [33mhelp[0m: perhaps this macro has a `Q_` variant or you need `QUOTE(..)`
 
 
@@ -13,5 +15,7 @@
 [0m[34m7[0m [0m[34m│[0m     path = [0m[31mPATHTO(thing)[0m;
   [0m[34m│[0m            [0m[31m^^^^^^^^^^^^^[0m [0m[31minvalid macro result[0m
   [0m[34m│[0m
+  [0m[34m=[0m [36mnote[0m: The processed output was:
+          \some\thing 
   [0m[34m=[0m [33mhelp[0m: perhaps this macro has a `Q_` variant or you need `QUOTE(..)`
 

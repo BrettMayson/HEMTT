@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::reporting::{Code, Diagnostic};
 
 pub struct ScriptFatal {
     script: String,
@@ -15,12 +15,8 @@ impl Code for ScriptFatal {
         format!("Script {} signalled fatal", self.script)
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, None))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

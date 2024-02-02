@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-// use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::reporting::{Code, Token};
 
 use crate::{defines::Defines, Error};

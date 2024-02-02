@@ -1,13 +1,19 @@
 pub use ansi_term::Colour::*;
 
-use codespan_reporting::{diagnostic::Severity, term::termcolor::Ansi};
+use codespan_reporting::{
+    diagnostic::{LabelStyle, Severity},
+    files::Files,
+    term::termcolor::Ansi,
+};
 
 use crate::workspace::WorkspacePath;
 
+use self::annotation::Annotation;
 pub use self::label::Label;
 
 use super::{Code, WorkspaceFiles};
 
+mod annotation;
 mod label;
 
 #[derive(Debug, Clone)]
@@ -40,7 +46,7 @@ impl Diagnostic {
         span: std::ops::Range<usize>,
         processed: &crate::reporting::Processed,
     ) -> Option<Self> {
-        let mut diag = Self::new(code.ident(), code.message());
+        let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
         let Some(map_start) = processed.mapping(span.start) else {
             return None;
         };
@@ -57,6 +63,9 @@ impl Diagnostic {
             )
             .with_message(code.label_message()),
         );
+        if let Some(note) = code.note() {
+            diag.notes.push(note);
+        }
         if let Some(help) = code.help() {
             diag.help.push(help);
         }
@@ -64,6 +73,20 @@ impl Diagnostic {
             diag.suggestions.push(suggestion);
         }
         Some(diag)
+    }
+
+    pub fn simple(code: &impl Code) -> Self {
+        let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
+        if let Some(note) = code.note() {
+            diag.notes.push(note);
+        }
+        if let Some(help) = code.help() {
+            diag.help.push(help);
+        }
+        if let Some(suggestion) = code.suggestion() {
+            diag.suggestions.push(suggestion);
+        }
+        diag
     }
 
     #[must_use]
@@ -141,28 +164,66 @@ impl Diagnostic {
                 let mut notes = self
                     .notes
                     .iter()
-                    .map(|n| format!("{}: {}", Cyan.paint("note"), n))
+                    .map(|n| format!("{}: {}", Cyan.paint("note"), n.replace('\n', "\n      ")))
                     .collect::<Vec<_>>();
                 notes.extend(
-                    self.help
-                        .iter()
-                        .map(|h| format!("{}: {}", Yellow.paint("help"), h)),
+                    self.help.iter().map(|h| {
+                        format!("{}: {}", Yellow.paint("help"), h.replace('\n', "\n      "))
+                    }),
                 );
                 notes.extend(
                     self.suggestions
                         .iter()
-                        .map(|s| format!("{}: {}", Green.paint("try"), s)),
+                        .map(|s| format!("{}: {}", Green.paint("try"), s.replace('\n', "\n     "))),
                 );
                 notes
             })
     }
 
     #[must_use]
+    /// Convert the diagnostic to a string
+    ///
+    /// # Panics
+    /// Will panic if the codespan term writer fails, or produces invalid utf8
     pub fn to_string(&self, files: &WorkspaceFiles) -> String {
         let diag = self.to_codespan();
         let config = codespan_reporting::term::Config::default();
         let mut buffer: Ansi<Vec<u8>> = Ansi::new(Vec::new());
-        codespan_reporting::term::emit(&mut buffer, &config, files, &diag).unwrap();
-        String::from_utf8(buffer.into_inner()).unwrap()
+        codespan_reporting::term::emit(&mut buffer, &config, files, &diag)
+            .expect("emit should succeed");
+        String::from_utf8(buffer.into_inner()).expect("utf8")
+    }
+
+    #[must_use]
+    /// Convert the diagnostic to an annotation for GitHub
+    ///
+    /// # Panics
+    /// Will panic if the file is not found in the workspace
+    pub fn to_annotations(&self, files: &WorkspaceFiles) -> Vec<Annotation> {
+        self.labels
+            .iter()
+            .filter_map(|l| {
+                if l.style == LabelStyle::Secondary {
+                    return None;
+                }
+                l.message.as_ref()?;
+                let start_line_index = files.line_index(&l.file, l.span.start).unwrap();
+                let end_line_index = files.line_index(&l.file, l.span.end).unwrap();
+                Some(Annotation {
+                    path: l.file.path.as_str().to_string(),
+                    start_line: files.line_number(&l.file, start_line_index).unwrap(),
+                    end_line: files.line_number(&l.file, end_line_index).unwrap(),
+                    start_column: files
+                        .column_number(&l.file, start_line_index, l.span.start)
+                        .unwrap(),
+                    end_column: files
+                        .column_number(&l.file, end_line_index, l.span.end)
+                        .unwrap(),
+                    level: self.severity.into(),
+                    message: l.message.clone().unwrap(),
+                    title: self.message.clone(),
+                })
+            })
+            .collect()
     }
 }

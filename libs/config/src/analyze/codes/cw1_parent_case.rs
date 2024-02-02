@@ -51,10 +51,10 @@ impl ParentCase {
 
             diagnostic: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic = Diagnostic::new_for_processed(
             &self,
             self.class
@@ -66,7 +66,7 @@ impl ParentCase {
         );
         if let Some(diag) = &mut self.diagnostic {
             let Some(parent) = self.class.parent() else {
-                panic!("ParentCase::report_generate_processed called on class without parent");
+                panic!("ParentCase::generate_processed called on class without parent");
             };
             let map = processed
                 .mapping(
@@ -87,71 +87,5 @@ impl ParentCase {
             );
         }
         self
-        // let Some(parent) = self.class.parent() else {
-        //     panic!("ParentCase::report_generate_processed called on class without parent");
-        // };
-        // let map = processed
-        //     .mapping(
-        //         self.class
-        //             .name()
-        //             .expect("parent existed to create error")
-        //             .span
-        //             .start,
-        //     )
-        //     .unwrap();
-        // let token = map.token();
-        // let class_parent_map = processed.mapping(parent.span.start).unwrap();
-        // let class_parent_token = class_parent_map.token();
-        // let parent_map = processed
-        //     .mapping(
-        //         self.parent
-        //             .name()
-        //             .expect("parent existed to create error")
-        //             .span
-        //             .start,
-        //     )
-        //     .unwrap();
-        // let parent_token = parent_map.token();
-        // let mut out = Vec::new();
-        // let mut colors = ColorGenerator::new();
-        // let color_class = colors.next();
-        // let color_parent = colors.next();
-        // Report::build(
-        //     ariadne::ReportKind::Warning,
-        //     token.position().path().as_str(),
-        //     map.original_column(),
-        // )
-        // .with_code(self.ident())
-        // .with_message(self.message())
-        // .with_label(
-        //     Label::new((
-        //         class_parent_token.position().path().to_string(),
-        //         class_parent_token.position().start().0..class_parent_token.position().end().0,
-        //     ))
-        //     .with_message(self.label_message())
-        //     .with_color(color_class),
-        // )
-        // .with_label(
-        //     Label::new((
-        //         parent_token.position().path().to_string(),
-        //         parent_token.position().start().0..parent_token.position().end().0,
-        //     ))
-        //     .with_message("parent definition here")
-        //     .with_color(color_parent),
-        // )
-        // .with_help(format!(
-        //     "change the {} to match the parent definition `{}`",
-        //     "parent case".fg(color_class),
-        //     self.parent
-        //         .name()
-        //         .expect("parent existed to create error")
-        //         .as_str()
-        //         .fg(color_parent)
-        // ))
-        // .finish()
-        // .write_for_stdout(sources(processed.sources_adrianne()), &mut out)
-        // .unwrap();
-        // self.diagnostic = Some(String::from_utf8(out).unwrap());
-        // self
     }
 }

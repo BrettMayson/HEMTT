@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use ariadne::ReportKind;
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::reporting::{Code, Diagnostic, Severity};
 
 pub struct PlatformNotSupported;
 
@@ -10,20 +9,20 @@ impl Code for PlatformNotSupported {
         "BBE2"
     }
 
+    fn severity(&self) -> Severity {
+        Severity::Warning
+    }
+
     fn message(&self) -> String {
         String::from("Platform not supported for binarization.")
     }
 
-    fn help(&self) -> Option<String> {
+    fn note(&self) -> Option<String> {
         Some(String::from("HEMTT only supports binarization on Windows."))
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ReportKind::Warning, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

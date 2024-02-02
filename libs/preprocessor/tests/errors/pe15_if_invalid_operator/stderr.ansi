@@ -4,5 +4,5 @@
 [0m[34m2[0m [0m[34m│[0m #if A [0m[31m===[0m 1
   [0m[34m│[0m       [0m[31m^^^[0m [0m[31minvalid #if operator[0m
   [0m[34m│[0m
-  [0m[34m=[0m [33mhelp[0m: valid operators are [9;33m== != < > <= >=[0m
+  [0m[34m=[0m [33mhelp[0m: valid operators are [33m== != < > <= >=[0m
 

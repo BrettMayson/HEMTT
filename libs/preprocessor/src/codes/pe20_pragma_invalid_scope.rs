@@ -66,15 +66,15 @@ impl Code for PragmaInvalidScope {
         }
     }
 
-    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_notes(vec![format!(
+    fn note(&self) -> Option<String> {
+        Some(format!(
             "valid scopes are: {}",
             self.scopes()
                 .iter()
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()
                 .join(", ")
-        )])
+        ))
     }
 }
 

@@ -16,7 +16,10 @@ pub fn required_version(
     let Some(addon) = addon else {
         return Vec::new();
     };
-    let required = addon.build_data().required_version().unwrap_or_default();
+    let Some(required) = addon.build_data().required_version() else {
+        // TODO what to do here?
+        return Vec::new();
+    };
     let mut errors: Vec<Arc<dyn Code>> = Vec::new();
     let wiki_version = arma3_wiki::model::Version::new(
         u8::try_from(required.0.major()).unwrap_or_default(),

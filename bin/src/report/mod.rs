@@ -4,7 +4,7 @@ use std::{
     sync::Arc,
 };
 
-use hemtt_common::reporting::Code;
+use hemtt_common::reporting::{Code, WorkspaceFiles};
 
 use crate::Error;
 
@@ -34,19 +34,27 @@ impl Report {
                 .append(true)
                 .open(".hemttout/ci_annotations.txt")?,
         );
+        let workspace_files = WorkspaceFiles::new();
         for code in self.warnings.iter().chain(self.errors.iter()) {
-            for annotation in code.diagnostic() {
-                ci_annotation.write_all(annotation.line().as_bytes())?;
+            if let Some(diag) = code.diagnostic() {
+                let annotations = diag.to_annotations(&workspace_files);
+                for annotation in annotations {
+                    ci_annotation.write_all(annotation.line().as_bytes())?;
+                }
             }
         }
-        trace!("wrote ci annotations to .hemttout/ci_annotations.txt");
+        trace!(
+            "wrote {} ci annotations to .hemttout/ci_annotations.txt",
+            self.warnings.len() + self.errors.len()
+        );
         Ok(())
     }
 
     pub fn write_to_stdout(&self) {
+        let workspace_files = WorkspaceFiles::new();
         for code in self.warnings.iter().chain(self.errors.iter()) {
-            if let Some(report) = code.report() {
-                eprintln!("{report}");
+            if let Some(diag) = code.diagnostic() {
+                eprintln!("{}", diag.to_string(&workspace_files));
             }
         }
     }

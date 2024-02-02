@@ -28,6 +28,7 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
                 let rhs = extract_constant(rhs_expr);
                 if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                     return vec![Arc::new(IfAssign::new(
+                        if_cmd.span(),
                         (condition.source(), condition.full_span()),
                         (lhs, lhs_expr.span()),
                         (rhs, rhs_expr.span()),

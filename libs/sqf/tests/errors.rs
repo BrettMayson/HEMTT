@@ -1,7 +1,8 @@
 use std::io::Read;
 
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::{database::Database, ParserError};
+use hemtt_sqf::parser::database::Database;
 
 const ROOT: &str = "tests/errors/";
 
@@ -19,32 +20,30 @@ macro_rules! errors {
 fn errors(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let ParserError::ParsingError(parsed) =
-        hemtt_sqf::parser::run(&Database::default(), &processed).unwrap_err()
-    else {
-        panic!("Expected parsing error");
-    };
+    let parsed = hemtt_sqf::parser::run(&Database::default(), &processed).unwrap_err();
+    let codes = parsed.codes();
     let mut expected = Vec::new();
-    std::fs::File::open(folder.join("error.ansi"))
+    std::fs::File::open(folder.join("stderr.ansi"))
         .unwrap()
         .read_to_end(&mut expected)
         .unwrap();
-    let errors = parsed
+    let errors = codes
         .iter()
-        .map(|e| e.report().unwrap())
+        .map(|e| e.diagnostic().unwrap().to_string(&WorkspaceFiles::new()))
         .collect::<Vec<_>>()
         .join("\n")
         .replace('\r', "");
     if expected.is_empty() {
-        std::fs::write(folder.join("error.ansi"), errors.as_bytes()).unwrap();
+        std::fs::write(folder.join("stderr.ansi"), errors.as_bytes()).unwrap();
     }
     let expected = String::from_utf8_lossy(&expected).replace('\r', "");
     assert_eq!(errors, expected);
 }
 
+errors!(spe1_invalid_token);
 errors!(spe2_unparseable);

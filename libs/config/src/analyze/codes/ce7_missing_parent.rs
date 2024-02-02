@@ -42,12 +42,12 @@ impl MissingParent {
             class,
             diagnostic: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         let Some(parent) = self.class.parent() else {
-            panic!("MissingParent::report_generate_processed called on class without parent");
+            panic!("MissingParent::generate_processed called on class without parent");
         };
         self.diagnostic = Diagnostic::new_for_processed(&self, parent.span.clone(), processed);
         self

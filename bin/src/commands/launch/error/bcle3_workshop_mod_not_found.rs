@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::reporting::{Code, Diagnostic};
 
 pub struct WorkshopModNotFound {
     id: String,
@@ -19,12 +19,8 @@ impl Code for WorkshopModNotFound {
         Some("HEMTT does not subscribe to mods, you must subscribe in Steam and allow it to download.".to_owned())
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        vec![]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

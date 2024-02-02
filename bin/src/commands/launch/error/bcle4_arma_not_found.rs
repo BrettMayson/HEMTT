@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::reporting::{Code, Diagnostic};
 
 pub struct ArmaNotFound;
 
@@ -17,12 +17,8 @@ impl Code for ArmaNotFound {
         Some("Install Arma 3 via Steam, and run it at least once.".to_owned())
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        vec![]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

@@ -28,8 +28,8 @@ impl Code for IfHasInclude {
         "use of `__has_include`".to_string()
     }
 
-    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_note("use of `#if __has_include` will prevent HEMTT from rapifying the file")
+    fn note(&self) -> Option<String> {
+        Some("use of `#if __has_include` will prevent HEMTT from rapifying the file".to_string())
     }
 
     fn help(&self) -> Option<String> {

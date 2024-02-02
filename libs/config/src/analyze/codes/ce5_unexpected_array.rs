@@ -42,19 +42,17 @@ impl UnexpectedArray {
             diagnostic: None,
             suggestion: None,
         }
-        .report_generate_processed(processed)
+        .generate_processed(processed)
     }
 
-    fn report_generate_processed(mut self, processed: &Processed) -> Self {
+    fn generate_processed(mut self, processed: &Processed) -> Self {
         let Property::Entry {
             name,
             value: Value::UnexpectedArray(array),
             ..
         } = &self.property
         else {
-            panic!(
-                "UnexpectedArray::report_generate_processed called on non-UnexpectedArray property"
-            );
+            panic!("UnexpectedArray::generate_processed called on non-UnexpectedArray property");
         };
         let array_start = processed.mapping(array.span.start).unwrap();
         let array_file = processed.source(array_start.source()).unwrap();

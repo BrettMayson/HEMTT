@@ -1,12 +1,13 @@
 use std::{ops::Range, path::Path, sync::Arc};
 
-use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
 use hemtt_common::{
-    reporting::{simple, Code},
+    reporting::{Code, Diagnostic, Label},
     similar_values,
+    workspace::{LayerType, Workspace, WorkspacePath},
 };
 
 pub struct PresetNotFound {
+    project_toml: WorkspacePath,
     name: String,
     similar: Vec<String>,
     position: Option<Range<usize>>,
@@ -29,47 +30,17 @@ impl Code for PresetNotFound {
         }
     }
 
-    fn report(&self) -> Option<String> {
-        self.position.as_ref().map_or_else(
-            || Some(simple(self, ariadne::ReportKind::Error, self.help())),
-            |position| {
-                let color = ColorGenerator::default().next();
-                let mut out = Vec::new();
-                let mut report =
-                    Report::build(ReportKind::Error, ".hemtt/project.toml", position.start)
-                        .with_code(self.ident())
-                        .with_message(self.message())
-                        .with_label(
-                            Label::new((".hemtt/project.toml", position.clone()))
-                                .with_color(color)
-                                .with_message(format!(
-                                    "Preset `{}` not found.",
-                                    (&self.name).fg(color)
-                                )),
-                        );
-                if let Some(help) = self.help() {
-                    report = report.with_help(help);
-                }
-                report
-                    .finish()
-                    .write_for_stdout(
-                        (
-                            ".hemtt/project.toml",
-                            Source::from(
-                                std::fs::read_to_string(".hemtt/project.toml")
-                                    .expect("can not find position if file is not readable"),
-                            ),
-                        ),
-                        &mut out,
-                    )
-                    .unwrap();
-                Some(String::from_utf8(out).unwrap_or_default())
-            },
-        )
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        vec![]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some({
+            let mut diag = Diagnostic::simple(self);
+            if let Some(position) = &self.position {
+                diag = diag.with_label(
+                    Label::primary(self.project_toml.clone(), position.clone())
+                        .with_message("preset not found"),
+                );
+            }
+            diag
+        })
     }
 }
 
@@ -98,6 +69,19 @@ impl PresetNotFound {
             .map_or(None, |content| attempt_locate(&content, launch, &name));
 
         Arc::new(Self {
+            project_toml: {
+                Workspace::builder()
+                    .physical(
+                        &std::env::current_dir().expect("to be in a folder"),
+                        LayerType::Source,
+                    )
+                    .finish(None)
+                    .expect("can create workspace")
+                    .join(".hemtt")
+                    .expect("project.toml must exist to get here")
+                    .join("project.toml")
+                    .expect("project.toml must exist to get here")
+            },
             similar: similar_values(
                 &name,
                 &presets

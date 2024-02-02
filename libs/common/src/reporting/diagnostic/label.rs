@@ -6,10 +6,10 @@ use crate::workspace::WorkspacePath;
 
 #[derive(Debug, Clone)]
 pub struct Label {
-    style: LabelStyle,
-    message: Option<String>,
-    file: WorkspacePath,
-    span: Range<usize>,
+    pub(crate) style: LabelStyle,
+    pub(crate) message: Option<String>,
+    pub(crate) file: WorkspacePath,
+    pub(crate) span: Range<usize>,
 }
 
 impl Label {

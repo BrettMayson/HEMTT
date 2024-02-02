@@ -1,12 +1,12 @@
-[0m[1m[38;5;9merror[PE23][0m[1m: use of `#if __has_include`[0m
+[0m[1m[38;5;9merror[PE23][0m[1m: use of `__has_include`[0m
   [0m[34m┌─[0m source.hpp:1:5
   [0m[34m│[0m
 [0m[34m1[0m [0m[34m│[0m #if [0m[31m__has_include[0m(something.hpp)
-  [0m[34m│[0m     [0m[31m^^^^^^^^^^^^^[0m [0m[31muse of `#if __has_include`[0m
+  [0m[34m│[0m     [0m[31m^^^^^^^^^^^^^[0m [0m[31muse of `__has_include`[0m
   [0m[34m│[0m
   [0m[34m=[0m [36mnote[0m: use of `#if __has_include` will prevent HEMTT from rapifying the file
   [0m[34m=[0m [33mhelp[0m: use `#pragma hemtt flag pe23_ignore_has_include`
-    to have HEMTT act as if the include was not found.
-    This will still prevent HEMTT from rapifying the file
-    but will allow the false branch to be validated.
+          to have HEMTT act as if the include was not found.
+          This will still prevent HEMTT from rapifying the file
+          but will allow the false branch to be validated.
 
