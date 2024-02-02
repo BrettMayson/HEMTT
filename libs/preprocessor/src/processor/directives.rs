@@ -160,6 +160,7 @@ impl Processor {
         if !open.symbol().is_include_enclosure() {
             return Err(IncludeNotEncased::code(
                 open.as_ref().clone(),
+                Vec::new(),
                 if open.symbol().is_word() {
                     None
                 } else {
@@ -180,6 +181,7 @@ impl Processor {
             if symbol.is_newline() {
                 return Err(IncludeNotEncased::code(
                     token.as_ref().clone(),
+                    path,
                     Some(open.as_ref().clone()),
                 ));
             }

@@ -50,25 +50,23 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let ctx = Context::new(
-        std::env::current_dir()?,
-        "script",
-        crate::context::PreservePrevious::Remove,
-        true,
-    )?
-    .filter(|a, config| {
-        if a.location() == &Location::Optionals && !all_optionals && !optionals.contains(&a.name())
-        {
-            debug!("ignoring optional {}", a.name());
-            return false;
-        }
-        !config
-            .hemtt()
-            .dev()
-            .exclude()
-            .iter()
-            .any(|e| (a.folder() + "/").starts_with(&format!("{e}/")))
-    });
+    let ctx = Context::new("script", crate::context::PreservePrevious::Remove, true)?.filter(
+        |a, config| {
+            if a.location() == &Location::Optionals
+                && !all_optionals
+                && !optionals.contains(&a.name())
+            {
+                debug!("ignoring optional {}", a.name());
+                return false;
+            }
+            !config
+                .hemtt()
+                .dev()
+                .exclude()
+                .iter()
+                .any(|e| (a.folder() + "/").starts_with(&format!("{e}/")))
+        },
+    );
 
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
@@ -81,7 +79,5 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let name = matches
         .get_one::<String>("name")
         .expect("name to be set as required");
-    Hooks::run_file(&ctx, name)?;
-
-    Ok(Report::new())
+    Hooks::run_file(&ctx, name)
 }

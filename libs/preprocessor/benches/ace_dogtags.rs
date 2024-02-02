@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 
 use criterion::{criterion_group, criterion_main, Criterion};
+use hemtt_common::workspace::LayerType;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&PathBuf::from("benches"))
+        .physical(&PathBuf::from("benches"), LayerType::Source)
         .memory()
         .finish(None)
         .unwrap();

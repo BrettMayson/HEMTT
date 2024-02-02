@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::workspace::{Workspace, WorkspacePath};
+use hemtt_common::workspace::{LayerType, Workspace, WorkspacePath};
 use hemtt_common::{addons::Addon, project::ProjectConfig};
 
 use crate::error::Error;
@@ -43,11 +43,11 @@ impl Context {
     /// # Panics
     /// If the project folder is not a valid [`OsStr`] (UTF-8)
     pub fn new(
-        root: PathBuf,
         folder: &str,
         preserve_previous: PreservePrevious,
         print_info: bool,
     ) -> Result<Self, Error> {
+        let root = std::env::current_dir()?;
         let config = {
             let path = root.join(".hemtt").join("project.toml");
             if !path.exists() {
@@ -85,13 +85,13 @@ impl Context {
         }
         create_dir_all(&build_folder)?;
         let workspace = {
-            let mut builder = Workspace::builder().physical(&root);
+            let mut builder = Workspace::builder().physical(&root, LayerType::Source);
             if cfg!(target_os = "windows") {
-                builder = builder.physical(&tmp.join("output"));
+                builder = builder.physical(&tmp.join("output"), LayerType::Build);
             }
             let include = root.join("include");
             if include.is_dir() {
-                builder = builder.physical(&include);
+                builder = builder.physical(&include, LayerType::Include);
             }
             builder.memory().finish(Some(config.clone()))?
         };

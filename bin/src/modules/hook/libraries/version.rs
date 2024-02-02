@@ -1,5 +1,5 @@
 use rhai::plugin::{
-    export_module, Dynamic, FnAccess, FnNamespace, Module, NativeCallContext, PluginFunction,
+    export_module, Dynamic, FnNamespace, FuncRegistration, Module, NativeCallContext, PluginFunc,
     RhaiResult, TypeId,
 };
 

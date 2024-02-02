@@ -16,7 +16,6 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 
 hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0" }
 
-ariadne = { workspace = true }
 byteorder = { workspace = true }
 chumsky = { workspace = true }
 lsp-types = { workspace = true }

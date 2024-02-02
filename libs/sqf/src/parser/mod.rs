@@ -271,11 +271,19 @@ fn keyword(name: &'static str) -> impl Parser<Token, (), Error = Simple<Token>> 
 }
 
 #[allow(clippy::module_name_repetitions)]
-// TODO: `std::error::Error` implementation
 #[derive(Debug, Error)]
 pub enum ParserError {
     #[error("lexing error {0:?}")]
     LexingError(Vec<Arc<dyn Code>>),
     #[error("parsing error")]
     ParsingError(Vec<Arc<dyn Code>>),
+}
+
+impl ParserError {
+    #[must_use]
+    pub fn codes(&self) -> &[Arc<dyn Code>] {
+        match self {
+            Self::ParsingError(codes) | Self::LexingError(codes) => codes,
+        }
+    }
 }

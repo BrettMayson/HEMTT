@@ -10,7 +10,7 @@ use vfs::VfsFileType;
 
 #[allow(unused_imports)] // used in windows only
 use self::error::{
-    bbe1_tools_not_found::ToolsNotFound, bbe2_pltaform_not_supported::PlatformNotSupported,
+    bbe1_tools_not_found::ToolsNotFound, bbe2_platform_not_supported::PlatformNotSupported,
     bbe3_binarize_failed::BinarizeFailed,
 };
 use super::Module;

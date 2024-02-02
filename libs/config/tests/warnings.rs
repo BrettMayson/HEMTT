@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use hemtt_common::{project::ProjectConfig, reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/warnings/";
@@ -18,12 +19,13 @@ macro_rules! bootstrap {
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(None, &processed);
+    let parsed = hemtt_config::parse(Some(&ProjectConfig::test_project()), &processed);
+    let workspacefiles = WorkspaceFiles::new();
     match parsed {
         Ok(config) => {
             let mut expected = Vec::new();
@@ -34,7 +36,7 @@ fn check(dir: &str) {
             let warnings = config
                 .warnings()
                 .iter()
-                .map(|e| e.report().unwrap())
+                .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
                 .collect::<Vec<_>>();
             if expected.is_empty() {
                 std::fs::write(
@@ -51,7 +53,7 @@ fn check(dir: &str) {
         // warnings may occur, but they should be handled, if one is not a handler should be created
         Err(e) => {
             for e in &e {
-                eprintln!("{}", e.report().unwrap());
+                eprintln!("{}", e.diagnostic().unwrap().to_string(&workspacefiles));
             }
             panic!("Error parsing config");
         }
@@ -59,3 +61,4 @@ fn check(dir: &str) {
 }
 
 bootstrap!(cw1_parent_case);
+bootstrap!(cw2_magwell_missing_magazine);

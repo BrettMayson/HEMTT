@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use ariadne::ReportKind;
-use hemtt_common::reporting::{simple, Code};
+use hemtt_common::reporting::{Code, Diagnostic};
 
 pub struct BinarizeFailed {
     file: String,
@@ -15,12 +14,8 @@ impl Code for BinarizeFailed {
         format!("No output found for {}, binarization failed.", self.file)
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ReportKind::Error, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

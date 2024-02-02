@@ -1,3 +1,4 @@
+use hemtt_common::reporting::WorkspaceFiles;
 use tracing::error;
 
 fn main() {
@@ -29,8 +30,8 @@ It is always best to the include the log and a link to your project when reporti
     if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
-                if let Some(report) = code.report() {
-                    eprintln!("{report}");
+                if let Some(diag) = code.diagnostic() {
+                    eprintln!("{}", diag.to_string(&WorkspaceFiles::new()));
                     std::process::exit(1);
                 }
             }

@@ -1,7 +1,6 @@
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
-use ariadne::{ColorGenerator, Fmt, Label, Report, ReportKind, Source};
-use hemtt_common::reporting::{Annotation, AnnotationLevel, Code, Token};
+use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -10,10 +9,10 @@ use crate::Error;
 pub struct IncludeNotEncased {
     /// The [`Token`] that was found
     token: Box<Token>,
+    /// The [`Token`]s that make up the include
+    path: Vec<Token>,
     /// The [`Symbol`] that the include is encased in
-    encased_in: Option<Token>,
-    /// The report
-    report: Option<String>,
+    start: Option<Token>,
 }
 
 impl Code for IncludeNotEncased {
@@ -29,103 +28,59 @@ impl Code for IncludeNotEncased {
         "include not encased".to_string()
     }
 
-    fn report(&self) -> Option<String> {
-        self.report.clone()
+    fn label_message(&self) -> String {
+        "not encased".to_string()
     }
 
-    fn ci(&self) -> Vec<Annotation> {
-        vec![self.annotation(
-            AnnotationLevel::Error,
-            self.token.position().path().as_str().to_string(),
-            self.token.position(),
-        )]
-    }
-
-    #[cfg(feature = "lsp")]
-    fn generate_lsp(&self) -> Option<(VfsPath, Diagnostic)> {
-        let Some(path) = self.token.position().path() else {
+    fn suggestion(&self) -> Option<String> {
+        self.start.as_ref()?;
+        if self.path.is_empty() {
             return None;
-        };
-        Some((
-            path.clone(),
-            self.diagnostic(Range {
-                start: self.token.position().start().to_lsp(),
-                end: self.token.position().end().to_lsp(),
-            }),
+        }
+        Some(format!(
+            "{}{}{}",
+            self.start
+                .as_ref()
+                .map_or("<".to_string(), |t| t.symbol().to_string()),
+            self.path
+                .iter()
+                .map(|t| t.symbol().to_string())
+                .collect::<String>(),
+            self.start.as_ref().map_or(">".to_string(), |t| t
+                .symbol()
+                .matching_enclosure()
+                .unwrap()
+                .to_string())
         ))
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        let start = self.start.as_ref()?;
+        let end = self.token.as_ref();
+        let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
+            Label::primary(
+                start.position().path().clone(),
+                start.position().span().start..end.position().span().end,
+            )
+            .with_message(self.label_message()),
+        );
+        if let Some(suggestion) = self.suggestion() {
+            diag = diag.with_suggestion(suggestion);
+        }
+        Some(diag)
     }
 }
 
 impl IncludeNotEncased {
-    pub fn new(token: Box<Token>, encased_in: Option<Token>) -> Self {
+    pub fn new(token: Box<Token>, path: Vec<Rc<Token>>, start: Option<Token>) -> Self {
         Self {
             token,
-            encased_in,
-            report: None,
+            path: path.into_iter().map(|t| t.as_ref().clone()).collect(),
+            start,
         }
-        .report_generate()
     }
 
-    pub fn code(token: Token, encased_in: Option<Token>) -> Error {
-        Error::Code(Arc::new(Self::new(Box::new(token), encased_in)))
-    }
-
-    fn report_generate(mut self) -> Self {
-        let mut colors = ColorGenerator::default();
-        let a = colors.next();
-        let mut out = Vec::new();
-        let start_token = self
-            .encased_in
-            .as_ref()
-            .map_or(*self.token.clone(), Clone::clone);
-        let span = start_token.position().start().0..self.token.position().end().0;
-        if let Err(e) = Report::build(
-            ReportKind::Error,
-            self.token.position().path().as_str(),
-            span.start,
-        )
-        .with_code(self.ident())
-        .with_message(self.message())
-        .with_label(
-            Label::new((self.token.position().path().as_str(), span.start..span.end))
-                .with_color(a)
-                .with_message(if self.encased_in.is_none() {
-                    format!(
-                        "try {}",
-                        format!("<{}>", self.token.symbol().to_string().trim()).fg(a)
-                    )
-                } else {
-                    format!(
-                        "add {}",
-                        self.encased_in
-                            .as_ref()
-                            .unwrap()
-                            .symbol()
-                            .matching_enclosure()
-                            .unwrap()
-                            .to_string()
-                            .trim()
-                            .fg(a)
-                    )
-                }),
-        )
-        .finish()
-        .write_for_stdout(
-            (
-                self.token.position().path().as_str(),
-                Source::from(
-                    self.token
-                        .position()
-                        .path()
-                        .read_to_string()
-                        .unwrap_or_default(),
-                ),
-            ),
-            &mut out,
-        ) {
-            panic!("while reporting: {e}");
-        }
-        self.report = Some(String::from_utf8(out).unwrap_or_default());
-        self
+    pub fn code(token: Token, path: Vec<Rc<Token>>, start: Option<Token>) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), path, start)))
     }
 }

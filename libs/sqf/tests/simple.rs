@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
 
@@ -18,7 +19,7 @@ macro_rules! simple {
 
 fn simple(file: &str) {
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&PathBuf::from(ROOT))
+        .physical(&PathBuf::from(ROOT), LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
@@ -28,7 +29,13 @@ fn simple(file: &str) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
             for error in e {
-                println!("{}", error.report().unwrap());
+                println!(
+                    "{}",
+                    error
+                        .diagnostic()
+                        .unwrap()
+                        .to_string(&WorkspaceFiles::new())
+                );
             }
             panic!("failed to parse");
         }

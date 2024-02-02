@@ -102,9 +102,9 @@ Only entries that start with the project's [prefix](../configuration/index.md#mi
 ```cpp
 class CfgMagazineWells {
     class abe_banana_shooter {
-        ADDON[] = {
+        abe_main[] = {
             "abe_cavendish",
-            "abe_plantain"
+            "abe_plantain",
             "external_banana"
         };
     };

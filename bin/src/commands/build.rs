@@ -4,11 +4,12 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{
-        asc::ArmaScriptCompiler, pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler,
-    },
+    modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
+
+#[cfg(not(target_os = "macos"))]
+use crate::modules::asc::ArmaScriptCompiler;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -58,7 +59,6 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
     let mut ctx = Context::new(
-        std::env::current_dir()?,
         "build",
         if just.is_empty() {
             context::PreservePrevious::Remove
@@ -96,6 +96,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
+    #[cfg(not(target_os = "macos"))]
     executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
 

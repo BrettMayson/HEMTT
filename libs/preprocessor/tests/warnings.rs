@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 
 const ROOT: &str = "tests/warnings/";
@@ -18,7 +19,7 @@ macro_rules! bootstrap {
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
@@ -30,7 +31,13 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let warning = config.warnings().first().unwrap().report().unwrap();
+            let warning = config
+                .warnings()
+                .first()
+                .unwrap()
+                .diagnostic()
+                .unwrap()
+                .to_string(&WorkspaceFiles::new());
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
             }
@@ -43,7 +50,11 @@ fn check(dir: &str) {
             panic!(
                 "`{:?}` should have succeeded: {:#?}",
                 folder,
-                e.get_code().unwrap().report().unwrap()
+                e.get_code()
+                    .unwrap()
+                    .diagnostic()
+                    .unwrap()
+                    .to_string(&WorkspaceFiles::new())
             )
         }
     }

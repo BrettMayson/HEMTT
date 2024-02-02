@@ -116,14 +116,16 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     }
     let out = if path.filename().to_lowercase() == "config.cpp" {
         let (version, cfgpatch) = configreport.required_version();
-        let mut file = path.as_str().to_string();
+        let mut file = path;
         let mut span = 0..0;
         if let Some(cfgpatch) = cfgpatch {
             let map = processed.mapping(cfgpatch.name().span.start).unwrap();
-            file = map.original().path().as_str().to_string();
+            file = map.original().path();
             span = map.original().start().0..map.original().end().0;
         }
-        addon.build_data().set_required_version(version, file, span);
+        addon
+            .build_data()
+            .set_required_version(version, file.to_owned(), span);
         path.parent().join("config.bin").unwrap()
     } else {
         path.to_owned()

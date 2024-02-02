@@ -1,9 +1,7 @@
-use std::{
-    ffi::OsString,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use ::rhai::{packages::Package, Engine, Scope};
+use hemtt_common::workspace::WorkspacePath;
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -75,38 +73,23 @@ impl Hooks {
         if !self.0 {
             return Ok(());
         }
-        let folder = ctx.hemtt_folder().join("hooks").join(name);
-        if !folder.exists() {
+        let folder = ctx.workspace().join(".hemtt")?.join("hooks")?.join(name)?;
+        if !folder.exists()? {
             trace!("no {} hooks", name);
             return Ok(());
         }
-        let mut entries = folder.read_dir()?.collect::<Vec<_>>();
-        entries.sort_by_key(|x| {
-            x.as_ref()
-                .map_or_else(|_| OsString::new(), std::fs::DirEntry::file_name)
-        });
+        let mut entries = folder.read_dir()?;
+        entries.sort_by_key(WorkspacePath::filename);
         for file in entries {
-            let file = file?;
-            if !file.file_type()?.is_file() {
+            if !file.is_file()? {
                 continue;
             }
             info!(
                 "Running hook: {}",
-                file.path()
-                    .display()
-                    .to_string()
+                file.as_str()
                     .trim_start_matches(&ctx.hemtt_folder().display().to_string())
             );
-            Self::run(
-                ctx,
-                format!(
-                    "{}/{}",
-                    name,
-                    file.file_name().to_str().expect("Invalid file name")
-                ),
-                &std::fs::read_to_string(file.path())?,
-                vfs,
-            )?;
+            Self::run(ctx, file, vfs)?;
             ctx.config().version().invalidate();
         }
         Ok(())
@@ -123,27 +106,24 @@ impl Hooks {
     /// If a file path is not a valid [`OsStr`] (UTF-8)
     pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
         let mut report = Report::new();
-        let scripts = ctx.hemtt_folder().join("scripts");
-        let mut path = scripts.join(name);
-        path.set_extension("rhai");
-        if !path.exists() {
-            report.error(ScriptNotFound::code(
-                name.to_owned(),
-                &scripts.join("*.rhai"),
-            )?);
+        let scripts = ctx.workspace().join(".hemtt")?.join("scripts")?;
+        let path = scripts.join(format!("{name}.rhai"))?;
+        if !path.exists()? {
+            report.error(ScriptNotFound::code(name.to_owned(), &scripts)?);
             return Ok(report);
         }
-        let res = Self::run(ctx, name.to_owned(), &std::fs::read_to_string(path)?, false);
+        let res = Self::run(ctx, path, false);
         ctx.config().version().invalidate();
         res
     }
 
     #[allow(clippy::needless_pass_by_value)] // rhai things
-    fn run(ctx: &Context, name: String, script: &str, vfs: bool) -> Result<Report, Error> {
+    fn run(ctx: &Context, path: WorkspacePath, vfs: bool) -> Result<Report, Error> {
         let mut report = Report::new();
         let mut engine = engine(vfs);
         let mut scope = scope(ctx, vfs)?;
         let told_to_fail = Arc::new(Mutex::new(false));
+        let name = path.as_str().to_string();
         let inner_name = name.clone();
         engine.on_debug(move |x, _src, _pos| {
             debug!("[{inner_name}] {x}");
@@ -170,8 +150,8 @@ impl Hooks {
             error!("[{inner_name}] {s}");
             *inner_told_to_fail.lock().unwrap() = true;
         });
-        if let Err(e) = engine.run_with_scope(&mut scope, script) {
-            report.error(RuntimeError::code(name, &e));
+        if let Err(e) = engine.run_with_scope(&mut scope, &path.read_to_string()?) {
+            report.error(RuntimeError::code(path, &e));
             return Ok(report);
         }
         if *told_to_fail.lock().unwrap() {
@@ -198,12 +178,14 @@ impl Module for Hooks {
                 }
                 for hook in dir.read_dir().unwrap() {
                     let hook = hook?;
-                    if let Err(e) = engine.compile(&std::fs::read_to_string(hook.path())?) {
-                        report.error(RhaiParseError::code(
-                            hook.path().display().to_string(),
-                            e.0,
-                            e.1,
-                        ));
+                    let path = ctx
+                        .workspace()
+                        .join(".hemtt")?
+                        .join("hooks")?
+                        .join(phase)?
+                        .join(hook.file_name().to_str().unwrap())?;
+                    if let Err(e) = engine.compile(&path.read_to_string()?) {
+                        report.error(RhaiParseError::code(path, e.0, e.1));
                     }
                 }
             }

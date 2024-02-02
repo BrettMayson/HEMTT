@@ -1,0 +1,12 @@
+[0m[1m[38;5;11mwarning[T1][0m[1m: using python 2[0m
+  [0m[36m┌─[0m example.py:1:1
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m [0m[33mprint[0m "Hello World"
+  [0m[36m│[0m [0m[33m^^^^^[0m [0m[36m-------------[0m
+  [0m[36m│[0m [0m[33m│[0m      
+  [0m[36m│[0m [0m[33musing outdated `print`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: python2 is not supported
+  [0m[36m=[0m [33mhelp[0m: `print` is replaced by `print()`
+  [0m[36m=[0m [32mtry[0m: print()
+

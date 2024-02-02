@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_common::{
-    reporting::{simple, Code},
+    reporting::{Code, Diagnostic},
     similar_values,
 };
 
@@ -24,7 +24,7 @@ impl Code for LaunchConfigNotFound {
             None
         } else {
             Some(format!(
-                "Did you mean `{}`?",
+                "did you mean `{}`?",
                 self.similar
                     .iter()
                     .map(std::string::ToString::to_string)
@@ -34,12 +34,8 @@ impl Code for LaunchConfigNotFound {
         }
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        vec![]
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 

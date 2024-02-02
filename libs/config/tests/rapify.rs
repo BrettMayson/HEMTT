@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use hemtt_common::workspace::LayerType;
 use hemtt_config::rapify::Rapify;
 use hemtt_preprocessor::Processor;
 
@@ -19,14 +20,18 @@ macro_rules! bootstrap {
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
-        .physical(&folder)
+        .physical(&folder, LayerType::Source)
         .finish(None)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
     let parsed = hemtt_config::parse(None, &processed);
+    let workspacefiles = hemtt_common::reporting::WorkspaceFiles::new();
     if let Err(e) = &parsed {
-        let e = e.iter().map(|e| e.report().unwrap()).collect::<Vec<_>>();
+        let e = e
+            .iter()
+            .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
+            .collect::<Vec<_>>();
         std::fs::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();
         std::fs::write(folder.join("processed.txt"), processed.as_str()).unwrap();
         panic!("failed to parse")

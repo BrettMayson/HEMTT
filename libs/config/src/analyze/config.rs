@@ -243,7 +243,6 @@ fn magwell_missing_magazine(
                 if !classes.iter().any(|c| c.value == *value) {
                     warnings.push(Arc::new(MagwellMissingMagazine::new(
                         name.clone(),
-                        value.clone(),
                         span.clone(),
                         processed,
                     )));

@@ -1,8 +1,9 @@
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_common::{
-    reporting::{simple, Code},
+    reporting::{Code, Diagnostic},
     similar_values,
+    workspace::WorkspacePath,
 };
 
 use crate::Error;
@@ -25,31 +26,26 @@ impl Code for ScriptNotFound {
         if self.similar.is_empty() {
             None
         } else {
-            Some(format!("Did you mean `{}`?", self.similar.join("`, `")))
+            Some(format!("did you mean `{}`?", self.similar.join("`, `")))
         }
     }
 
-    fn report(&self) -> Option<String> {
-        Some(simple(self, ariadne::ReportKind::Error, self.help()))
-    }
-
-    fn ci(&self) -> Vec<hemtt_common::reporting::Annotation> {
-        Vec::new()
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 
 impl ScriptNotFound {
-    pub fn code(script: String, path: &Path) -> Result<Arc<dyn Code>, Error> {
-        let scripts = path
+    pub fn code(script: String, scripts: &WorkspacePath) -> Result<Arc<dyn Code>, Error> {
+        let scripts = scripts
             .read_dir()?
+            .iter()
             .filter_map(|x| {
-                x.ok().and_then(|x| {
-                    if x.file_type().ok()?.is_file() {
-                        x.file_name().to_str().map(std::borrow::ToOwned::to_owned)
-                    } else {
-                        None
-                    }
-                })
+                if x.is_file().map_or(false, |x| x) {
+                    Some(x.filename())
+                } else {
+                    None
+                }
             })
             .collect::<Vec<String>>();
         Ok(Arc::new(Self {

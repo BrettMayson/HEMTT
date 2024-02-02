@@ -21,6 +21,7 @@ use crate::{
 /// A workspace (directory) containing addons and / or missions
 pub struct Workspace {
     pub(crate) vfs: VfsPath,
+    pub(crate) layers: Vec<(VfsPath, LayerType)>,
     pub(crate) project: Option<ProjectConfig>,
     pub(crate) pointers: HashMap<String, VfsPath>,
     pub(crate) addons: Vec<VfsPath>,
@@ -44,9 +45,14 @@ impl Workspace {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the workspace could not be created
-    pub fn create(vfs: VfsPath, project: Option<ProjectConfig>) -> Result<WorkspacePath, Error> {
+    pub fn create(
+        vfs: VfsPath,
+        layers: Vec<(VfsPath, LayerType)>,
+        project: Option<ProjectConfig>,
+    ) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
+            layers,
             project,
             pointers: HashMap::new(),
             addons: Vec::new(),
@@ -91,26 +97,35 @@ impl Workspace {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LayerType {
+    Source,
+    Include,
+    Build,
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 /// A workspace builder
 pub struct WorkspaceBuilder {
-    layers: Vec<VfsPath>,
+    layers: Vec<(VfsPath, LayerType)>,
 }
 
 impl WorkspaceBuilder {
     #[must_use]
     /// Add a physical layer to the virtual filesystem
-    pub fn physical(mut self, path: &PathBuf) -> Self {
-        self.layers
-            .push(AltrootFS::new(PhysicalFS::new(path).into()).into());
+    pub fn physical(mut self, path: &PathBuf, layer_type: LayerType) -> Self {
+        self.layers.push((
+            AltrootFS::new(PhysicalFS::new(path).into()).into(),
+            layer_type,
+        ));
         self
     }
 
     #[must_use]
     /// Add a memory layer to the virtual filesystem
     pub fn memory(mut self) -> Self {
-        self.layers.push(MemoryFS::new().into());
+        self.layers.push((MemoryFS::new().into(), LayerType::Build));
         self
     }
 
@@ -119,8 +134,12 @@ impl WorkspaceBuilder {
     /// # Errors
     /// [`Error::Vfs`] if the workspace could not be built
     pub fn finish(self, project: Option<ProjectConfig>) -> Result<WorkspacePath, Error> {
-        let mut layers = self.layers;
+        let mut layers = self.layers.clone();
         layers.reverse();
-        Workspace::create(OverlayFS::new(&layers).into(), project)
+        Workspace::create(
+            OverlayFS::new(&layers.into_iter().map(|(l, _)| l).collect::<Vec<_>>()).into(),
+            self.layers,
+            project,
+        )
     }
 }

@@ -1,4 +1,4 @@
-class Imported;
-class Local: imported {
+class imported;
+class local: Imported {
     value = 1;
 };

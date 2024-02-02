@@ -80,7 +80,6 @@ fn number_digits() -> impl Parser<char, Vec<char>, Error = Simple<char>> {
 }
 
 #[inline]
-#[allow(clippy::result_large_err)] // todo
 fn error_map<T, E, I>(result: Result<T, E>, span: std::ops::Range<usize>) -> Result<T, Simple<I>>
 where
     E: ToString,
