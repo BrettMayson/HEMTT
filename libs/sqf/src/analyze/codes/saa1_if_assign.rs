@@ -5,8 +5,8 @@ use hemtt_common::reporting::{Code, Diagnostic, Processed, Severity};
 pub struct IfAssign {
     if_cmd: Range<usize>,
     condition: (String, Range<usize>),
-    lhs: (String, Range<usize>),
-    rhs: (String, Range<usize>),
+    lhs: ((String, bool), Range<usize>),
+    rhs: ((String, bool), Range<usize>),
 
     diagnostic: Option<Diagnostic>,
 }
@@ -21,7 +21,7 @@ impl Code for IfAssign {
     }
 
     fn message(&self) -> String {
-        if self.lhs.0 == "1" && self.rhs.0 == "0" {
+        if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             String::from("assignment to if can be replaced with parseNumber")
         } else {
             String::from("assignment to if can be replaced with select")
@@ -29,7 +29,7 @@ impl Code for IfAssign {
     }
 
     fn label_message(&self) -> String {
-        if self.lhs.0 == "1" && self.rhs.0 == "0" {
+        if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             String::from("use parseNumber")
         } else {
             String::from("use select")
@@ -37,13 +37,21 @@ impl Code for IfAssign {
     }
 
     fn suggestion(&self) -> Option<String> {
-        if self.lhs.0 == "1" && self.rhs.0 == "0" {
+        if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             Some(format!("parseNumber {}", self.condition.0.as_str(),))
         } else {
             Some(format!(
                 "[{}, {}] select ({})",
-                self.rhs.0.as_str(),
-                self.lhs.0.as_str(),
+                if self.rhs.0 .1 {
+                    format!("\"{}\"", self.rhs.0 .0.as_str())
+                } else {
+                    self.rhs.0 .0.clone()
+                },
+                if self.lhs.0 .1 {
+                    format!("\"{}\"", self.lhs.0 .0.as_str())
+                } else {
+                    self.lhs.0 .0.clone()
+                },
                 self.condition.0.as_str(),
             ))
         }
@@ -51,7 +59,7 @@ impl Code for IfAssign {
 
     fn note(&self) -> Option<String> {
         Some(
-            if self.lhs.0 == "1" && self.rhs.0 == "0" {
+            if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
                 "parseNumber returns 1 for true and 0 for false"
             } else {
                 "the if and else blocks only return constant values\nselect is faster in this case"
@@ -70,8 +78,8 @@ impl IfAssign {
     pub fn new(
         if_cmd: Range<usize>,
         condition: (String, Range<usize>),
-        lhs: (String, Range<usize>),
-        rhs: (String, Range<usize>),
+        lhs: ((String, bool), Range<usize>),
+        rhs: ((String, bool), Range<usize>),
         processed: &Processed,
     ) -> Self {
         Self {
