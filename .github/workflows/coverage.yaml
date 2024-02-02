@@ -20,7 +20,7 @@ jobs:
           - runner: windows-latest
             name: windows
     outputs:
-      runner: ${{ matrix.os.name }}
+      os_name: ${{ matrix.os.name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,7 +58,7 @@ jobs:
       - name: Download Coverage from GitHub Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.coverage.outputs.runner.os.name }}-coverage
+          name: ${{ needs.coverage.outputs.os_name }}-coverage
           path: out.lcov
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v3

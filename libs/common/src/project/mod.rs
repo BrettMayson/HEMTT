@@ -1,6 +1,6 @@
 //! Project configuration
 
-use std::{collections::HashMap, path::Path, str::FromStr};
+use std::{collections::HashMap, path::Path, str::FromStr, sync::Once};
 
 use serde::{Deserialize, Serialize};
 use tracing::warn;
@@ -12,6 +12,8 @@ mod signing;
 mod version;
 
 pub use {crate::error::Error, addon::*};
+
+static CONFIG_DEPRECATION: Once = Once::new();
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
@@ -117,13 +119,15 @@ impl ProjectConfig {
             return Err(Error::ConfigInvalid("prefix cannot be empty".to_string()));
         }
 
-        if file.contains("[asc]") {
-            warn!("ASC config is no longer used");
-        }
+        CONFIG_DEPRECATION.call_once(|| {
+            if file.contains("[asc]") {
+                warn!("ASC config is no longer used");
+            }
 
-        if file.contains("[lint]") {
-            warn!("lint config is no longer used");
-        }
+            if file.contains("[lint]") {
+                warn!("lint config is no longer used");
+            }
+        });
 
         Ok(config)
     }

@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use clap::{ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
     project::{hemtt::LaunchOptions, ProjectConfig},
@@ -19,6 +19,7 @@ use crate::{
         bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
         bcle5_missing_main_prefix::MissingMainPrefix,
         bcle6_launch_config_not_found::LaunchConfigNotFound,
+        bcle7_can_not_quicklaunch::CanNotQuickLaunch,
     },
     error::Error,
     link::create_link,
@@ -48,10 +49,33 @@ pub fn cli() -> Command {
                     .raw(true)
                     .help("Passthrough additional arguments to Arma 3"),
             )
+            .arg(
+                clap::Arg::new("server")
+                    .long("with-server")
+                    .short('S')
+                    .help("Launches a dedicated server alongside the client")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                clap::Arg::new("instances")
+                    .long("instances")
+                    .short('i')
+                    .help("Launches multiple instances of the game")
+                    .action(ArgAction::Set)
+                    .default_value("1"),
+            )
+            .arg(
+                clap::Arg::new("no-build")
+                    .long("quick")
+                    .short('Q')
+                    .help("Skips the build step, launching the last built version")
+                    .action(ArgAction::SetTrue),
+            ),
     )
 }
 
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::cognitive_complexity)]
 /// Execute the launch command
 ///
 /// # Errors
@@ -60,6 +84,16 @@ pub fn cli() -> Command {
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+    let Ok(instance_count) = matches
+        .get_one::<String>("instances")
+        .expect("default exists")
+        .parse::<usize>()
+    else {
+        // maybe a pretty error message here
+        eprintln!("Invalid instance count");
+        std::process::exit(1);
+    };
+
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
@@ -188,34 +222,47 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         mods.push(dlc.to_mod().to_string());
     }
 
-    let mut executor = super::dev::context(matches, launch.optionals())?;
+    if matches.get_flag("no-build") {
+        warn!("Using Quick Launch! HEMTT will not rebuild the project");
+        if !std::env::current_dir()?.join(".hemttout/dev").exists() {
+            report.error(CanNotQuickLaunch::code(
+                "no dev build found in .hemttout/dev".to_string(),
+            ));
+            return Ok(report);
+        }
 
-    report.merge(executor.run()?);
+        let prefix_folder = arma3dir.join(mainprefix);
+        let link = prefix_folder.join(config.prefix());
+        if !prefix_folder.exists() || !link.exists() {
+            report.error(CanNotQuickLaunch::code(
+                "link does not exist in the Arma 3 folder".to_string(),
+            ));
+            return Ok(report);
+        }
+    } else {
+        let mut executor = super::dev::context(matches, launch.optionals())?;
 
-    if report.failed() {
-        return Ok(report);
+        report.merge(executor.run()?);
+
+        if report.failed() {
+            return Ok(report);
+        }
+
+        let prefix_folder = arma3dir.join(mainprefix);
+        if !prefix_folder.exists() {
+            std::fs::create_dir_all(&prefix_folder)?;
+        }
+
+        let link = prefix_folder.join(executor.ctx().config().prefix());
+        if !link.exists() {
+            create_link(&link, executor.ctx().build_folder())?;
+        }
     }
 
-    let prefix_folder = arma3dir.join(mainprefix);
-    if !prefix_folder.exists() {
-        std::fs::create_dir_all(&prefix_folder)?;
-    }
-
-    let link = prefix_folder.join(executor.ctx().config().prefix());
-    if !link.exists() {
-        create_link(&link, executor.ctx().build_folder())?;
-    }
-
-    let mut args: Vec<String> = [
-        "-skipIntro",
-        "-noSplash",
-        "-showScriptErrors",
-        "-debug",
-        "-filePatching",
-    ]
-    .iter()
-    .map(std::string::ToString::to_string)
-    .collect();
+    let mut args: Vec<String> = ["-skipIntro", "-noSplash", "-showScriptErrors", "-debug"]
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
     args.append(&mut launch.parameters().to_vec());
     args.append(
         &mut matches
@@ -231,33 +278,44 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             .join(" "),
     );
 
+    let mut instances = vec![];
+    if matches.get_flag("server") {
+        let mut args = args.clone();
+        args.push("-server".to_string());
+        instances.push(args);
+    }
+    for _ in 0..instance_count {
+        let mut args = args.clone();
+        if matches.get_flag("server") {
+            args.push("-connect=127.0.0.1".to_string());
+        } else {
+            args.push("-filePatching".to_string());
+        }
+        instances.push(args);
+    }
+
     if cfg!(target_os = "windows") {
-        info!(
-            "Launching {:?} with:\n  {}",
-            arma3dir.display(),
-            args.join("\n  ")
-        );
-        std::process::Command::new({
-            let mut path = arma3dir;
-            if let Some(exe) = matches.get_one::<String>("executable") {
-                let exe = PathBuf::from(exe);
-                if exe.is_absolute() {
-                    path = exe;
-                } else {
-                    path.push(exe);
-                }
-                if cfg!(windows) {
-                    path.set_extension("exe");
-                }
+        let mut path = arma3dir.clone();
+        if let Some(exe) = matches.get_one::<String>("executable") {
+            let exe = PathBuf::from(exe);
+            if exe.is_absolute() {
+                path = exe;
             } else {
-                path.push(launch.executable());
+                path.push(exe);
             }
-            path.display().to_string()
-        })
-        .args(args)
-        .spawn()?;
+            if cfg!(windows) {
+                path.set_extension("exe");
+            }
+        } else {
+            path.push(launch.executable());
+        }
+        for instance in instances {
+            windows_launch(&arma3dir, &path, &instance)?;
+        }
     } else {
-        linux_launch(&arma3dir, &launch.executable(), &args)?;
+        for instance in instances {
+            linux_launch(&arma3dir, &launch.executable(), &instance)?;
+        }
     }
 
     Ok(report)
@@ -300,6 +358,16 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
         }
     }
     (workshop, dlc)
+}
+
+fn windows_launch(arma3dir: &Path, executable: &PathBuf, args: &[String]) -> Result<(), Error> {
+    info!(
+        "Launching {:?} with:\n  {}",
+        arma3dir.display(),
+        args.join("\n  ")
+    );
+    std::process::Command::new(executable).args(args).spawn()?;
+    Ok(())
 }
 
 fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<(), Error> {

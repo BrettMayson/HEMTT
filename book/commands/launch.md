@@ -15,6 +15,17 @@ Options:
     <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
         Arma 3 executable to launch
 
+    <a href="#-S---with-server">-S, --with-server</a>
+        Launches a dedicated server alongside the client
+
+    <a href="#-i---instances">-i, --instances &lt;instances&gt;</a>
+          Launches multiple instances of the game
+
+          [default: 1]
+
+    <a href="#-Q---quick">-Q, --quick</a>
+        Skips the build step, launching the last built version
+
     <a href="dev.md#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
 
@@ -29,6 +40,7 @@ Options:
 
     <a href="index.md#-v">-v...</a>
         Verbosity level
+        
 
     -h, --help
         Print help information (use `-h` for a summary)
@@ -116,6 +128,31 @@ A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Start
 The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x64`. Do not include the `.exe` extension, it will be added automatically on Windows. Only paths relative to the Arma 3 directory are supported.
 
 ## Options
+
+### -S, --with-server
+
+Launches a dedicated server alongside the client.
+
+```bash
+hemtt launch -S
+```
+
+### -i, --instances &lt;instances&gt;
+
+Launches multiple instances of the game. If unspecified, it will default to 1.
+
+```bash
+hemtt launch -i 2
+```
+
+### -Q, --quick
+
+Skips the build step, launching the last built version.
+Will throw an error if no build has been made, or no symlink exists.
+
+```bash
+hemtt launch -Q
+```
 
 ### -e, --executable &lt;executable&gt;
 

@@ -6,7 +6,7 @@ use arma3_wiki::{
     model::{Call, Version},
     Wiki,
 };
-use tracing::warn;
+use tracing::{trace, warn};
 
 /// The list of commands that are valid nular command constants for the compiler.
 pub const NULAR_COMMANDS_CONSTANTS: &[&str] = &[
@@ -215,15 +215,11 @@ fn is_in(list: &[&str], item: &str) -> bool {
 
 fn load_wiki() -> Wiki {
     Wiki::load_git().map_or_else(
-        |_| {
+        |e| {
+            trace!(?e, "failed to load arma 3 wiki from git: {}", e);
             warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
             Wiki::load_dist()
         },
-        |wiki| {
-            if !wiki.updated() {
-                warn!("Failed to update Arma 3 Wiki, using previous version");
-            }
-            wiki
-        },
+        |wiki| wiki,
     )
 }
