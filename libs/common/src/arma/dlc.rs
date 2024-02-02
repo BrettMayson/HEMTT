@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize)]
+#[cfg_attr(test, derive(strum::EnumIter))]
 /// DLCs that require opt-in.
 pub enum DLC {
     #[serde(rename = "contact")]
@@ -102,5 +103,41 @@ impl<'de> Deserialize<'de> for DLC {
     {
         let s = String::deserialize(deserializer)?;
         Self::try_from(s).map_err(serde::de::Error::custom)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn each_to_string_and_back() {
+        for dlc in super::DLC::iter() {
+            assert_eq!(
+                dlc,
+                super::DLC::try_from(dlc.to_string()).expect("failed to convert to string")
+            );
+        }
+    }
+
+    #[test]
+    fn each_to_mod_and_back() {
+        for dlc in super::DLC::iter() {
+            assert_eq!(
+                dlc,
+                super::DLC::try_from(dlc.to_mod().to_string()).expect("failed to convert to mod")
+            );
+        }
+    }
+
+    #[test]
+    fn each_to_appid_and_back() {
+        for dlc in super::DLC::iter() {
+            assert_eq!(
+                dlc,
+                super::DLC::try_from(dlc.to_appid().to_string())
+                    .expect("failed to convert to appid")
+            );
+        }
     }
 }

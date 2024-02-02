@@ -46,7 +46,7 @@ jobs:
       - name: Upload Coverage to GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os.name }}-coverage
+          name: ${{ matrix.os.name }}-coverage
           path: out.lcov
 
 

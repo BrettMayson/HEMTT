@@ -133,3 +133,38 @@ impl Display for BISignVersion {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn serialize_and_deserialize() {
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct Test {
+            version: super::BISignVersion,
+        }
+
+        let v = Test {
+            version: super::BISignVersion::V2,
+        };
+        let s = toml::to_string(&v).unwrap();
+        assert_eq!(s, "version = 2\n");
+        let v: Test = toml::from_str(&s).unwrap();
+        assert_eq!(v.version, super::BISignVersion::V2);
+
+        let v = Test {
+            version: super::BISignVersion::V3,
+        };
+        let s = toml::to_string(&v).unwrap();
+        assert_eq!(s, "version = 3\n");
+        let v: Test = toml::from_str(&s).unwrap();
+        assert_eq!(v.version, super::BISignVersion::V3);
+    }
+
+    #[test]
+    fn should_hash_file() {
+        assert!(super::BISignVersion::V2.should_hash_file("test.paa"));
+        assert!(!super::BISignVersion::V2.should_hash_file("test.sqf"));
+        assert!(super::BISignVersion::V3.should_hash_file("test.sqf"));
+        assert!(!super::BISignVersion::V3.should_hash_file("test.paa"));
+    }
+}
