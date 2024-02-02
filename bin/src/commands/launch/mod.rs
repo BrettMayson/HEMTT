@@ -49,13 +49,13 @@ pub fn cli() -> Command {
                     .raw(true)
                     .help("Passthrough additional arguments to Arma 3"),
             )
-            .arg(
-                clap::Arg::new("server")
-                    .long("with-server")
-                    .short('S')
-                    .help("Launches a dedicated server alongside the client")
-                    .action(ArgAction::SetTrue),
-            )
+            // .arg(
+            //     clap::Arg::new("server")
+            //         .long("with-server")
+            //         .short('S')
+            //         .help("Launches a dedicated server alongside the client")
+            //         .action(ArgAction::SetTrue),
+            // )
             .arg(
                 clap::Arg::new("instances")
                     .long("instances")
@@ -278,15 +278,18 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             .join(" "),
     );
 
+    // let with_server = matches.get_flag("server");
+    let with_server = false;
+
     let mut instances = vec![];
-    if matches.get_flag("server") {
+    if with_server {
         let mut args = args.clone();
         args.push("-server".to_string());
         instances.push(args);
     }
     for _ in 0..instance_count {
         let mut args = args.clone();
-        if matches.get_flag("server") {
+        if with_server {
             args.push("-connect=127.0.0.1".to_string());
         } else {
             args.push("-filePatching".to_string());

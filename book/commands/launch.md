@@ -15,8 +15,8 @@ Options:
     <a href="#-e---executable">-e, --executable &lt;executable&gt;</a>
         Arma 3 executable to launch
 
-    <a href="#-S---with-server">-S, --with-server</a>
-        Launches a dedicated server alongside the client
+    <!-- <a href="#-S---with-server">-S, --with-server</a>
+        Launches a dedicated server alongside the client -->
 
     <a href="#-i---instances">-i, --instances &lt;instances&gt;</a>
           Launches multiple instances of the game
@@ -129,13 +129,13 @@ The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x
 
 ## Options
 
-### -S, --with-server
+<!-- ### -S, --with-server
 
 Launches a dedicated server alongside the client.
 
 ```bash
 hemtt launch -S
-```
+``` -->
 
 ### -i, --instances &lt;instances&gt;
 
