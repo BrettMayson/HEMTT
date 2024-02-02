@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_common::{
-    reporting::{Code, Diagnostic, Token},
+    reporting::{Code, Token},
     similar_values,
 };
 
