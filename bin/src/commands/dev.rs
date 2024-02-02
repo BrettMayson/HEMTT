@@ -5,12 +5,12 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{
-        asc::ArmaScriptCompiler, pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier,
-        SQFCompiler,
-    },
+    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
+
+#[cfg(not(target_os = "macos"))]
+use crate::modules::asc::ArmaScriptCompiler;
 
 use super::build::add_just;
 
@@ -120,6 +120,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<SQFCompiler>::default());
+    #[cfg(not(target_os = "macos"))]
     executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());

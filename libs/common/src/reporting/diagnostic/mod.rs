@@ -191,7 +191,9 @@ impl Diagnostic {
         let mut buffer: Ansi<Vec<u8>> = Ansi::new(Vec::new());
         codespan_reporting::term::emit(&mut buffer, &config, files, &diag)
             .expect("emit should succeed");
-        String::from_utf8(buffer.into_inner()).expect("utf8")
+        String::from_utf8(buffer.into_inner())
+            .expect("utf8")
+            .replace("\u{1b}[34m", "\u{1b}[36m")
     }
 
     #[must_use]

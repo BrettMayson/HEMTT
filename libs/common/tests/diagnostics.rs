@@ -26,8 +26,11 @@ fn python() {
         .with_note("python2 is not supported".to_string())
         .with_help("`print` is replaced by `print()`".to_string())
         .with_suggestion("print()".to_string())
-        .to_string(&WorkspaceFiles::new());
-    let expected = std::fs::read_to_string(folder.join("stderr.ansi")).unwrap();
+        .to_string(&WorkspaceFiles::new())
+        .replace('\r', "");
+    let expected = std::fs::read_to_string(folder.join("stderr.ansi"))
+        .unwrap()
+        .replace('\r', "");
     if expected.is_empty() {
         std::fs::write(folder.join("stderr.ansi"), &diagnostic).unwrap();
     }
