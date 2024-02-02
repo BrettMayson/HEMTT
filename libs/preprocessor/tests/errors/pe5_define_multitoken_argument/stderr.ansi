@@ -1,11 +1,11 @@
 [0m[1m[38;5;9merror[PE5][0m[1m: define arguments missing comma[0m
-  [0m[34m┌─[0m source.hpp:1:17
-  [0m[34m│[0m
-[0m[34m1[0m [0m[34m│[0m #define HI(var1 [0m[31mvar2[0m) Hello var1 var2
-  [0m[34m│[0m                [0m[34m-[0m[31m^^^^[0m [0m[31mdefine arguments missing comma `var2`[0m
-  [0m[34m│[0m                [0m[34m│[0m 
-  [0m[34m│[0m                [0m[34mmissing comma[0m
-  [0m[34m│[0m
-  [0m[34m=[0m [33mhelp[0m: define arguments must be separated by a comma
-  [0m[34m=[0m [32mtry[0m: var1, var2
+  [0m[36m┌─[0m source.hpp:1:17
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #define HI(var1 [0m[31mvar2[0m) Hello var1 var2
+  [0m[36m│[0m                [0m[36m-[0m[31m^^^^[0m [0m[31mdefine arguments missing comma `var2`[0m
+  [0m[36m│[0m                [0m[36m│[0m 
+  [0m[36m│[0m                [0m[36mmissing comma[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: define arguments must be separated by a comma
+  [0m[36m=[0m [32mtry[0m: var1, var2
 

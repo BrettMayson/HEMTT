@@ -1,6 +1,6 @@
 [0m[1m[38;5;9merror[PE18][0m[1m: end of input reached while reading an #if directive[0m
-  [0m[34m┌─[0m source.hpp:3:2
-  [0m[34m│[0m
-[0m[34m3[0m [0m[34m│[0m #[0m[31mif[0m test
-  [0m[34m│[0m  [0m[31m^^[0m [0m[31mlast #if directive[0m
+  [0m[36m┌─[0m source.hpp:3:2
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m #[0m[31mif[0m test
+  [0m[36m│[0m  [0m[31m^^[0m [0m[31mlast #if directive[0m
 

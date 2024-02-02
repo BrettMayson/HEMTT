@@ -1,6 +1,6 @@
 [0m[1m[38;5;9merror[PE22][0m[1m: unknown #pragma flag `something`[0m
-  [0m[34m┌─[0m source.hpp:1:20
-  [0m[34m│[0m
-[0m[34m1[0m [0m[34m│[0m #pragma hemtt flag [0m[31msomething[0m line
-  [0m[34m│[0m                    [0m[31m^^^^^^^^^[0m [0m[31munknown #pragma flag`[0m
+  [0m[36m┌─[0m source.hpp:1:20
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #pragma hemtt flag [0m[31msomething[0m line
+  [0m[36m│[0m                    [0m[31m^^^^^^^^^[0m [0m[31munknown #pragma flag`[0m
 

@@ -1,11 +1,11 @@
 [0m[1m[38;5;9merror[PE15][0m[1m: incompatible types for operator in #if[0m
-  [0m[34m┌─[0m source.hpp:3:7
-  [0m[34m│[0m
-[0m[34m1[0m [0m[34m│[0m #define A "Hello"
-  [0m[34m│[0m           [0m[34m-------[0m [0m[34mlhs, string is not supported[0m
-[0m[34m2[0m [0m[34m│[0m 
-[0m[34m3[0m [0m[34m│[0m #if A [0m[31m>[0m 2
-  [0m[34m│[0m       [0m[31m^[0m [0m[31mincompatible types[0m
-  [0m[34m│[0m
-  [0m[34m=[0m [33mhelp[0m: only numbers are supported for >
+  [0m[36m┌─[0m source.hpp:3:7
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #define A "Hello"
+  [0m[36m│[0m           [0m[36m-------[0m [0m[36mlhs, string is not supported[0m
+[0m[36m2[0m [0m[36m│[0m 
+[0m[36m3[0m [0m[36m│[0m #if A [0m[31m>[0m 2
+  [0m[36m│[0m       [0m[31m^[0m [0m[31mincompatible types[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: only numbers are supported for >
 

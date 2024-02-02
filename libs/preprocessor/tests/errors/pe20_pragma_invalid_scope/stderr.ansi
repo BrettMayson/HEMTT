@@ -1,9 +1,9 @@
 [0m[1m[38;5;9merror[PE20][0m[1m: unknown #pragma scope `lin`[0m
-  [0m[34m┌─[0m source.hpp:1:34
-  [0m[34m│[0m
-[0m[34m1[0m [0m[34m│[0m #pragma hemtt suppress something [0m[31mlin[0m
-  [0m[34m│[0m                                  [0m[31m^^^[0m [0m[31munknown #pragma scope[0m
-  [0m[34m│[0m
-  [0m[34m=[0m [36mnote[0m: valid scopes are: line, file, config
-  [0m[34m=[0m [33mhelp[0m: did you mean `line`, `file`?
+  [0m[36m┌─[0m source.hpp:1:34
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #pragma hemtt suppress something [0m[31mlin[0m
+  [0m[36m│[0m                                  [0m[31m^^^[0m [0m[31munknown #pragma scope[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: valid scopes are: line, file, config
+  [0m[36m=[0m [33mhelp[0m: did you mean `line`, `file`?
 

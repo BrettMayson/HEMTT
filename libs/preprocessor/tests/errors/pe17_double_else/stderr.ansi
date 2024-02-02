@@ -1,12 +1,12 @@
 [0m[1m[38;5;9merror[PE17][0m[1m: multiple `#else` directives found in a single `#if`[0m
-   [0m[34m┌─[0m source.hpp:12:2
-   [0m[34m│[0m
-[0m[34m 8[0m [0m[34m│[0m #if test
-   [0m[34m│[0m  [0m[34m--[0m [0m[34m`#if` directive[0m
-[0m[34m 9[0m [0m[34m│[0m value = 1;
-[0m[34m10[0m [0m[34m│[0m #else
-   [0m[34m│[0m  [0m[34m----[0m [0m[34mfirst `#else` directive[0m
-[0m[34m11[0m [0m[34m│[0m value = 0;
-[0m[34m12[0m [0m[34m│[0m #[0m[31melse[0m
-   [0m[34m│[0m  [0m[31m^^^^[0m [0m[31msecond `#else` directive[0m
+   [0m[36m┌─[0m source.hpp:12:2
+   [0m[36m│[0m
+[0m[36m 8[0m [0m[36m│[0m #if test
+   [0m[36m│[0m  [0m[36m--[0m [0m[36m`#if` directive[0m
+[0m[36m 9[0m [0m[36m│[0m value = 1;
+[0m[36m10[0m [0m[36m│[0m #else
+   [0m[36m│[0m  [0m[36m----[0m [0m[36mfirst `#else` directive[0m
+[0m[36m11[0m [0m[36m│[0m value = 0;
+[0m[36m12[0m [0m[36m│[0m #[0m[31melse[0m
+   [0m[36m│[0m  [0m[31m^^^^[0m [0m[31msecond `#else` directive[0m
 

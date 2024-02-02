@@ -1,10 +1,10 @@
 [0m[1m[38;5;11mwarning[PW1][0m[1m: redefining macro[0m
-  [0m[34m┌─[0m source.hpp:2:9
-  [0m[34m│[0m
-[0m[34m1[0m [0m[34m│[0m #define test 1
-  [0m[34m│[0m         [0m[34m----[0m [0m[34mprevious definition here[0m
-[0m[34m2[0m [0m[34m│[0m #define [0m[33mtest[0m 2
-  [0m[34m│[0m         [0m[33m^^^^[0m [0m[33mredefining macro[0m
-  [0m[34m│[0m
-  [0m[34m=[0m [33mhelp[0m: `#undef` macros before redefining them
+  [0m[36m┌─[0m source.hpp:2:9
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #define test 1
+  [0m[36m│[0m         [0m[36m----[0m [0m[36mprevious definition here[0m
+[0m[36m2[0m [0m[36m│[0m #define [0m[33mtest[0m 2
+  [0m[36m│[0m         [0m[33m^^^^[0m [0m[33mredefining macro[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: `#undef` macros before redefining them
 
