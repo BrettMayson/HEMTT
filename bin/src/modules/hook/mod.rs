@@ -86,8 +86,7 @@ impl Hooks {
             }
             info!(
                 "Running hook: {}",
-                file.as_str()
-                    .trim_start_matches(&ctx.hemtt_folder().display().to_string())
+                file.as_str().trim_start_matches("/.hemtt/hooks/")
             );
             Self::run(ctx, file, vfs)?;
             ctx.config().version().invalidate();
@@ -123,7 +122,12 @@ impl Hooks {
         let mut engine = engine(vfs);
         let mut scope = scope(ctx, vfs)?;
         let told_to_fail = Arc::new(Mutex::new(false));
-        let name = path.as_str().to_string();
+        let parts = path.as_str().split('/');
+        let name = parts
+            .clone()
+            .skip(parts.count().saturating_sub(2))
+            .collect::<Vec<_>>()
+            .join("/");
         let inner_name = name.clone();
         engine.on_debug(move |x, _src, _pos| {
             debug!("[{inner_name}] {x}");
