@@ -9,6 +9,8 @@ use rhai::plugin::{
 pub mod path_functions {
     use std::path::PathBuf;
 
+    use rhai::EvalAltResult;
+
     #[rhai_fn(global, pure)]
     pub fn join(path: &mut PathBuf, other: &str) -> PathBuf {
         path.join(other)
@@ -44,22 +46,32 @@ pub mod path_functions {
         path.display().to_string().replace('\\', "/")
     }
 
-    #[rhai_fn(global, name = "copy", pure)]
-    pub fn copy(path: &mut PathBuf, other: PathBuf) -> bool {
-        if path.is_dir() {
-            fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new()).is_ok()
+    #[rhai_fn(global, name = "copy", return_raw)]
+    pub fn copy(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
+        let res = if path.is_dir() {
+            fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new())
+                .map_err(|e| e.to_string().into())
+                .err()
         } else {
-            std::fs::copy(path, other).is_ok()
-        }
+            std::fs::copy(path, other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        };
+        res.map_or_else(|| Ok(true), Err)
     }
 
-    #[rhai_fn(global, name = "move", pure)]
-    pub fn _move(path: &mut PathBuf, other: PathBuf) -> bool {
-        if path.is_dir() {
-            fs_extra::dir::move_dir(path, other, &fs_extra::dir::CopyOptions::new()).is_ok()
+    #[rhai_fn(global, name = "move", return_raw)]
+    pub fn _move(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
+        let res = if path.is_dir() {
+            fs_extra::dir::move_dir(path, other, &fs_extra::dir::CopyOptions::new())
+                .map_err(|e| e.to_string().into())
+                .err()
         } else {
-            std::fs::rename(path, other).is_ok()
-        }
+            std::fs::rename(path, other)
+                .map_err(|e| e.to_string().into())
+                .err()
+        };
+        res.map_or_else(|| Ok(true), Err)
     }
 
     #[rhai_fn(global, pure)]
