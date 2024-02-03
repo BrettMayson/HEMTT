@@ -51,7 +51,7 @@ impl Module for Binarize {
     #[cfg(not(windows))]
     fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.error(PlatformNotSupported::code());
+        report.warn(PlatformNotSupported::code());
         Ok(report)
     }
 
