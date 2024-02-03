@@ -107,6 +107,7 @@ impl Hooks {
         let mut report = Report::new();
         let scripts = ctx.workspace().join(".hemtt")?.join("scripts")?;
         let path = scripts.join(name)?.with_extension("rhai")?;
+        trace!("running script: {}", path.as_str());
         if !path.exists()? {
             report.error(ScriptNotFound::code(name.to_owned(), &scripts)?);
             return Ok(report);

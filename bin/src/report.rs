@@ -99,6 +99,7 @@ impl Report {
     }
 
     #[must_use]
+    /// Returns `true` if there are any errors
     pub fn failed(&self) -> bool {
         !self.errors.is_empty()
     }

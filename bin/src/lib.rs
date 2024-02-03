@@ -138,6 +138,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     if let Some(report) = report? {
         report.write_to_stdout();
         report.write_ci_annotations()?;
+        if report.failed() {
+            std::process::exit(1);
+        }
     }
     Ok(())
 }

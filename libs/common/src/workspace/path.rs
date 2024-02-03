@@ -141,7 +141,10 @@ impl WorkspacePath {
                     .rev()
                     .collect::<String>()
                     .split_once('.')
-                    .map_or(self.path.filename().as_str(), |(_, s)| s)
+                    .map_or(
+                        self.path.filename().as_str().chars().rev().collect(),
+                        |(_, s)| s.to_string(),
+                    )
                     .chars()
                     .rev()
                     .collect::<String>();
