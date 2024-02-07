@@ -88,6 +88,10 @@ pub struct LaunchOptions {
     optionals: Vec<String>,
 
     #[serde(default)]
+    /// Mission to launch directly into the editor with
+    mission: Option<String>,
+
+    #[serde(default)]
     /// Extra launch parameters
     parameters: Vec<String>,
 
@@ -119,6 +123,12 @@ impl LaunchOptions {
     /// Optional addons that should be built into the mod
     pub fn optionals(&self) -> &[String] {
         &self.optionals
+    }
+
+    #[must_use]
+    /// Mission to launch directly into the editor with
+    pub const fn mission(&self) -> Option<&String> {
+        self.mission.as_ref()
     }
 
     #[must_use]

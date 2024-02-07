@@ -72,13 +72,13 @@ dlc = [
 optionals = [
     "caramel",
 ]
+mission = "test.VR" # Mission to launch directly into the editor with
 parameters = [
     "-skipIntro",           # These parameters are passed to the Arma 3 executable
     "-noSplash",            # They do not need to be added to your list
     "-showScriptErrors",    # You can add additional parameters here
     "-debug",
     "-filePatching",
-    "Path\\To\\mission.sqm", # Launch into existing Editor Mission - \\ needed
 ]
 executable = "arma3" # Default: "arma3_x64"
 
@@ -118,6 +118,10 @@ Currently supported DLCs:
 ### optionals
 
 A list of optional addon folders to launch with your mod.
+
+### mission
+
+The mission to launch directly into the editor with. This can be specified as either the name of a folder in `.hemtt/missions/` (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`) or the relative (to the project root) or absolute path to a `mission.sqm` file or a folder containing it.
 
 ### parameters
 
