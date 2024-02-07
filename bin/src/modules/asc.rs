@@ -82,6 +82,9 @@ impl Module for ArmaScriptCompiler {
                     if entry.extension() != sqf_ext {
                         continue;
                     }
+                    if entry.filename().ends_with(".inc.sqf") {
+                        continue;
+                    }
                     entries.push(entry);
                 }
             }
