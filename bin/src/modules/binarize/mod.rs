@@ -21,6 +21,7 @@ mod error;
 #[derive(Default)]
 pub struct Binarize {
     command: Option<String>,
+    available: bool,
 }
 
 impl Module for Binarize {
@@ -34,11 +35,13 @@ impl Module for Binarize {
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-            report.error(ToolsNotFound::code());
+            report.warn(ToolsNotFound::code());
+            self.available = false;
             return Ok(report);
         };
         let Ok(path) = key.get_value::<String, _>("path") else {
-            report.error(ToolsNotFound::code());
+            report.warn(ToolsNotFound::code());
+            self.available = false;
             return Ok(report);
         };
         let path = PathBuf::from(path).join("binarize_x64.exe");
@@ -52,11 +55,15 @@ impl Module for Binarize {
     fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         report.warn(PlatformNotSupported::code());
+        self.available = false;
         Ok(report)
     }
 
     #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        if !self.available {
+            return Ok(Report::new());
+        }
         let mut targets = Vec::with_capacity(ctx.addons().len());
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
