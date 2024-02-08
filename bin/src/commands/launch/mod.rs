@@ -298,7 +298,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         }
 
         if path.is_file() {
-            args.push(format!("\"{}\"", path.display().to_string()));
+            args.push(format!("\"{}\"", path.display()));
         } else {
             warn!("Could not launch with mission `{}`", mission);
         }
