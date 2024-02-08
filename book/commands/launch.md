@@ -121,7 +121,7 @@ A list of optional addon folders to launch with your mod.
 
 ### mission
 
-The mission to launch directly into the editor with. This can be specified as either the name of a folder in `.hemtt/missions/` (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`) or the relative (to the project root) or absolute path to a `mission.sqm` file or a folder containing it.
+The mission to launch directly into the editor with. This can be specified as either the name of a folder in `.hemtt/missions/` (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`) or the relative (to the project root) path to a `mission.sqm` file or a folder containing it.
 
 ### parameters
 

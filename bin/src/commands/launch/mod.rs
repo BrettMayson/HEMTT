@@ -283,24 +283,26 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
         if !path.is_absolute() {
             path = std::env::current_dir()?.join(mission);
-        }
 
-        if !path.ends_with("mission.sqm") {
-            path.push("mission.sqm");
-        }
+            if !path.ends_with("mission.sqm") {
+                path.push("mission.sqm");
+            }
 
-        if !path.is_file() {
-            path = std::env::current_dir()?
-                .join(".hemtt")
-                .join("missions")
-                .join(mission)
-                .join("mission.sqm");
-        }
+            if !path.is_file() {
+                path = std::env::current_dir()?
+                    .join(".hemtt")
+                    .join("missions")
+                    .join(mission)
+                    .join("mission.sqm");
+            }
 
-        if path.is_file() {
-            args.push(format!("\"{}\"", path.display()));
+            if path.is_file() {
+                args.push(format!("\"{}\"", path.display()));
+            } else {
+                warn!("Could not launch with mission `{}`", mission);
+            }
         } else {
-            warn!("Could not launch with mission `{}`", mission);
+            warn!("Absolute paths are not supported for missions in the launch config")
         }
     }
 
