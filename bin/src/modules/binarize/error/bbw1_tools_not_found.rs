@@ -1,12 +1,16 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic};
+use hemtt_common::reporting::{Code, Diagnostic, Severity};
 
 pub struct ToolsNotFound;
 
 impl Code for ToolsNotFound {
     fn ident(&self) -> &'static str {
-        "BBE1"
+        "BBW1"
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Warning
     }
 
     fn message(&self) -> String {

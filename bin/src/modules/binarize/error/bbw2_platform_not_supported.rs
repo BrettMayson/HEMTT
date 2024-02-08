@@ -6,7 +6,7 @@ pub struct PlatformNotSupported;
 
 impl Code for PlatformNotSupported {
     fn ident(&self) -> &'static str {
-        "BBE2"
+        "BBW2"
     }
 
     fn severity(&self) -> Severity {

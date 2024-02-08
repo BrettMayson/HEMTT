@@ -10,8 +10,8 @@ use vfs::VfsFileType;
 
 #[allow(unused_imports)] // used in windows only
 use self::error::{
-    bbe1_tools_not_found::ToolsNotFound, bbe2_platform_not_supported::PlatformNotSupported,
-    bbe3_binarize_failed::BinarizeFailed,
+    bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
+    bbw2_platform_not_supported::PlatformNotSupported,
 };
 use super::Module;
 use crate::{context::Context, error::Error, link::create_link, report::Report};
