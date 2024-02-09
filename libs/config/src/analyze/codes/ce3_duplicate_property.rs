@@ -47,7 +47,7 @@ impl DuplicateProperty {
                 diag.labels.push(
                     Label::secondary(
                         file.0.clone(),
-                        map.original_column()..map.original_column() + conflict.span.len(),
+                        map.original_start()..map.original_start() + conflict.span.len(),
                     )
                     .with_message("also defined here"),
                 );

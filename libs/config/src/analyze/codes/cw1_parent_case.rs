@@ -81,7 +81,7 @@ impl ParentCase {
             diag.labels.push(
                 Label::secondary(
                     file.0.clone(),
-                    map.original_column()..map.original_column() + parent.span.len(),
+                    map.original_start()..map.original_start() + parent.span.len(),
                 )
                 .with_message("parent definition here"),
             );

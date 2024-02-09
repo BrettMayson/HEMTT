@@ -291,8 +291,14 @@ impl Mapping {
 
     #[must_use]
     /// Get the start column of the original token
-    pub const fn original_column(&self) -> usize {
+    pub const fn original_start(&self) -> usize {
         self.original.start().0
+    }
+
+    #[must_use]
+    /// Get the end column of the original token
+    pub const fn original_end(&self) -> usize {
+        self.original.end().0
     }
 
     #[must_use]

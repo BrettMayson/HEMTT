@@ -59,7 +59,7 @@ impl Diagnostic {
         diag.labels.push(
             Label::primary(
                 map_file.0.clone(),
-                map_start.original_column()..map_end.original_column(),
+                map_start.original_start()..map_end.original_end(),
             )
             .with_message(code.label_message()),
         );

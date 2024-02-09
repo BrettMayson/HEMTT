@@ -63,13 +63,13 @@ impl ExpectedArray {
         let ident_start = processed.mapping(name.span.start).unwrap();
         let ident_file = processed.source(ident_start.source()).unwrap();
         let ident_end = processed.mapping(name.span.end).unwrap();
-        let haystack = &processed.as_str()[ident_end.original_column()..value.span().start];
+        let haystack = &processed.as_str()[ident_end.original_start()..value.span().start];
         let possible_end =
-            ident_end.original_column() + haystack.find(|c: char| c == ']').unwrap_or(1) + 1;
+            ident_end.original_start() + haystack.find(|c: char| c == ']').unwrap_or(1) + 1;
         self.suggestion = Some(name.value.to_string());
         self.diagnostic = Diagnostic::new_for_processed(
             &self,
-            ident_start.original_column()..possible_end,
+            ident_start.original_start()..possible_end,
             processed,
         );
         if let Some(diag) = &mut self.diagnostic {

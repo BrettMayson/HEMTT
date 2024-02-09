@@ -61,7 +61,7 @@ impl UnexpectedArray {
         self.suggestion = Some(format!("{}[]", name.value));
         self.diagnostic = Diagnostic::new_for_processed(
             &self,
-            ident_start.original_column()..ident_end.original_column(),
+            ident_start.original_start()..ident_end.original_start(),
             processed,
         );
         if let Some(diag) = &mut self.diagnostic {

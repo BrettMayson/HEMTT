@@ -55,7 +55,8 @@ impl Report {
     }
 
     pub fn write_to_stdout(&self) {
-        let with_includes = if std::env::var("HEMTT_REPORT_WITH_INCLUDES") == Ok("true".to_string()) {
+        let with_includes = if std::env::var("HEMTT_REPORT_WITH_INCLUDES") == Ok("true".to_string())
+        {
             WithIncludes::Yes
         } else {
             WithIncludes::No
@@ -64,7 +65,7 @@ impl Report {
         for code in self
             .warnings(with_includes)
             .iter()
-            .chain(self.errors(with_includes).iter())
+            .chain(self.errors(WithIncludes::Yes).iter())
         {
             if let Some(diag) = code.diagnostic() {
                 eprintln!("{}", diag.to_string(&workspace_files));
