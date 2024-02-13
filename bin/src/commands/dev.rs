@@ -46,6 +46,12 @@ pub fn add_args(cmd: Command) -> Command {
             .help("Include all optional addon folders")
             .action(ArgAction::SetTrue),
     )
+    .arg(
+        clap::Arg::new("expsqfc")
+            .long("expsqfc")
+            .help("Use HEMTT's experimental SQF compiler")
+            .action(ArgAction::SetTrue),
+    )
 }
 
 /// Execute the dev command
@@ -113,15 +119,19 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
         }
     }
 
+    let expsqfc = matches.get_one::<bool>("expsqfc") == Some(&true);
+
     let mut executor = Executor::new(ctx);
 
     executor.collapse(Collapse::Yes);
 
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
-    executor.add_module(Box::<SQFCompiler>::default());
+    executor.add_module(Box::new(SQFCompiler { compile: expsqfc }));
     #[cfg(not(target_os = "macos"))]
-    executor.add_module(Box::<ArmaScriptCompiler>::default());
+    if !expsqfc {
+        executor.add_module(Box::<ArmaScriptCompiler>::default());
+    }
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if matches.get_one::<bool>("binarize") == Some(&true) {

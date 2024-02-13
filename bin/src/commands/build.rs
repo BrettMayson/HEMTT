@@ -36,6 +36,12 @@ pub fn add_args(cmd: Command) -> Command {
             .help("Do not rapify (cpp, rvmat)")
             .action(ArgAction::SetTrue),
     )
+    .arg(
+        clap::Arg::new("expsqfc")
+            .long("expsqfc")
+            .help("Use HEMTT's experimental SQF compiler")
+            .action(ArgAction::SetTrue),
+    )
 }
 
 #[must_use]
@@ -86,18 +92,22 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     let mut executor = Executor::new(ctx);
 
+    let expsqfc = matches.get_one::<bool>("expsqfc") == Some(&true);
+
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<Hooks>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::<SQFCompiler>::default());
+    executor.add_module(Box::new(SQFCompiler { compile: expsqfc }));
+    #[cfg(not(target_os = "macos"))]
+    if !expsqfc {
+        executor.add_module(Box::<ArmaScriptCompiler>::default());
+    }
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
-    #[cfg(not(target_os = "macos"))]
-    executor.add_module(Box::<ArmaScriptCompiler>::default());
     executor.add_module(Box::<Files>::default());
 
     executor.init();

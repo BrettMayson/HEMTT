@@ -1,6 +1,6 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::{rc::Rc, sync::Arc};
+use std::{ops::Range, rc::Rc, sync::Arc};
 
 use crate::{
     position::{LineCol, Position},
@@ -257,6 +257,12 @@ impl Processed {
     /// Returns whether the file should not be rapified
     pub const fn no_rapify(&self) -> bool {
         self.no_rapify
+    }
+
+    #[must_use]
+    /// Return a string with the source from the span
+    pub fn extract(&self, span: Range<usize>) -> String {
+        self.output[span].to_string()
     }
 }
 

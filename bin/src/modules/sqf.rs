@@ -12,7 +12,9 @@ use crate::{context::Context, error::Error, report::Report};
 use super::Module;
 
 #[derive(Default)]
-pub struct SQFCompiler;
+pub struct SQFCompiler {
+    pub compile: bool,
+}
 
 impl Module for SQFCompiler {
     fn name(&self) -> &'static str {
@@ -47,14 +49,16 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        // let mut out = entry.with_extension("sqfc")?.create_file()?;
                         let (warnings, errors) =
                             analyze(&sqf, Some(ctx.config()), &processed, Some(addon), &database);
                         for warning in warnings {
                             report.warn(warning);
                         }
                         if errors.is_empty() {
-                            // sqf.compile_to_writer(&processed, &mut out)?;
+                            if self.compile {
+                                let mut out = entry.with_extension("sqfc")?.create_file()?;
+                                sqf.compile_to_writer(&processed, &mut out)?;
+                            }
                             counter.fetch_add(1, Ordering::Relaxed);
                         }
                         for error in errors {
@@ -86,7 +90,15 @@ impl Module for SQFCompiler {
         for new_report in reports {
             report.merge(new_report);
         }
-        info!("Validated {} sqf files", counter.load(Ordering::Relaxed));
+        info!(
+            "{} {} sqf files",
+            if self.compile {
+                "Compiled"
+            } else {
+                "Validated"
+            },
+            counter.load(Ordering::Relaxed)
+        );
         Ok(report)
     }
 }

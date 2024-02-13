@@ -60,16 +60,23 @@ where
     I: IntoIterator<Item = (Token, Range<usize>)>,
 {
     let len = processed.as_str().len();
-    let statements = parser(database).parse(Stream::from_iter(len..len + 1, input.into_iter()))?;
+    let statements =
+        parser(database, processed).parse(Stream::from_iter(len..len + 1, input.into_iter()))?;
     Ok(statements)
 }
 
-fn parser(database: &Database) -> impl Parser<Token, Statements, Error = Simple<Token>> + '_ {
-    statements(database).then_ignore(end())
+fn parser<'a>(
+    database: &'a Database,
+    processed: &'a Processed,
+) -> impl Parser<Token, Statements, Error = Simple<Token>> + 'a {
+    statements(database, processed).then_ignore(end())
 }
 
 #[allow(clippy::too_many_lines)]
-fn statements(database: &Database) -> impl Parser<Token, Statements, Error = Simple<Token>> + '_ {
+fn statements<'a>(
+    database: &'a Database,
+    processed: &'a Processed,
+) -> impl Parser<Token, Statements, Error = Simple<Token>> + 'a {
     recursive(|statements| {
         let expression = recursive(|expression| {
             let value = select! { |span|
@@ -218,9 +225,9 @@ fn statements(database: &Database) -> impl Parser<Token, Statements, Error = Sim
             .or(expression.map_with_span(Statement::Expression))
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
-            .map(|content| Statements {
+            .map_with_span(|content, span| Statements {
                 content,
-                source: String::new(),
+                source: processed.extract(span),
             })
     })
 }
