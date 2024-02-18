@@ -226,16 +226,7 @@ fn statements<'a>(
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
             .map_with_span(|content, span| Statements {
-                source: {
-                    println!(
-                        "content at {:?}: {:?} from {:?} is {:?}",
-                        span,
-                        content,
-                        processed.as_str(),
-                        processed.extract(span.clone()),
-                    );
-                    processed.extract(span)
-                },
+                source: processed.extract(span),
                 content,
             })
     })
