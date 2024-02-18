@@ -52,10 +52,10 @@ fn simple(file: &str) {
     .unwrap();
 }
 
-simple!(format_font);
 simple!(dev);
 simple!(eventhandler);
 simple!(foreach);
+simple!(format_font);
 simple!(get_visibility);
 simple!(hash_select);
 simple!(hello);

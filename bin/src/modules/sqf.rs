@@ -58,6 +58,10 @@ impl Module for SQFCompiler {
                             if self.compile {
                                 let mut out = entry.with_extension("sqfc")?.create_file()?;
                                 sqf.compile_to_writer(&processed, &mut out)?;
+                                let mut out = entry.with_extension("sqfast")?.create_file()?;
+                                out.write_all(format!("{:#?}", sqf.content()).as_bytes())?;
+                                let mut out = entry.with_extension("sqfs")?.create_file()?;
+                                out.write_all(sqf.source().as_bytes())?;
                             }
                             counter.fetch_add(1, Ordering::Relaxed);
                         }

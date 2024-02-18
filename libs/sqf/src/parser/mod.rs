@@ -82,14 +82,14 @@ fn statements<'a>(
             let value = select! { |span|
                 Token::Number(number) => Expression::Number(number, span),
                 Token::String(string) => Expression::String(string, span),
-              // i know you can *technically* redefine true and false to be something else in SQF,
-              // so this isn't *technically* correct, but if you're doing evil things like that,
-              // you don't deserve parity
-              Token::Identifier(id) if id.eq_ignore_ascii_case("true") => Expression::Boolean(true, span),
-              Token::Identifier(id) if id.eq_ignore_ascii_case("false") => Expression::Boolean(false, span),
-              Token::Identifier(id) if database.has_nular_command(&id) => {
-                Expression::NularCommand(NularCommand { name: id }, span)
-              },
+                // i know you can *technically* redefine true and false to be something else in SQF,
+                // so this isn't *technically* correct, but if you're doing evil things like that,
+                // you don't deserve parity
+                Token::Identifier(id) if id.eq_ignore_ascii_case("true") => Expression::Boolean(true, span),
+                Token::Identifier(id) if id.eq_ignore_ascii_case("false") => Expression::Boolean(false, span),
+                Token::Identifier(id) if database.has_nular_command(&id) => {
+                    Expression::NularCommand(NularCommand { name: id }, span)
+                },
             };
 
             let array_open = just(Token::Control(Control::SquareBracketOpen));
@@ -140,11 +140,11 @@ fn statements<'a>(
                 base.boxed(),
                 locate,
                 select! {
-                  Token::Operator(Operator::Mul) => BinaryCommand::Mul,
-                  Token::Operator(Operator::Div) => BinaryCommand::Div,
-                  Token::Operator(Operator::Rem) => BinaryCommand::Rem,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("mod") => BinaryCommand::Mod,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("atan2") => BinaryCommand::Atan2
+                    Token::Operator(Operator::Mul) => BinaryCommand::Mul,
+                    Token::Operator(Operator::Div) => BinaryCommand::Div,
+                    Token::Operator(Operator::Rem) => BinaryCommand::Rem,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("mod") => BinaryCommand::Mod,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("atan2") => BinaryCommand::Atan2
                 },
             );
 
@@ -153,10 +153,10 @@ fn statements<'a>(
                 base.boxed(),
                 locate,
                 select! {
-                  Token::Operator(Operator::Add) => BinaryCommand::Add,
-                  Token::Operator(Operator::Sub) => BinaryCommand::Sub,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("max") => BinaryCommand::Max,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("min") => BinaryCommand::Min
+                    Token::Operator(Operator::Add) => BinaryCommand::Add,
+                    Token::Operator(Operator::Sub) => BinaryCommand::Sub,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("max") => BinaryCommand::Max,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("min") => BinaryCommand::Min
                 },
             );
 
@@ -173,13 +173,13 @@ fn statements<'a>(
                 base.boxed(),
                 locate,
                 select! {
-                  Token::Operator(Operator::Eq) => BinaryCommand::Eq,
-                  Token::Operator(Operator::NotEq) => BinaryCommand::NotEq,
-                  Token::Operator(Operator::Greater) => BinaryCommand::Greater,
-                  Token::Operator(Operator::Less) => BinaryCommand::Less,
-                  Token::Operator(Operator::GreaterEq) => BinaryCommand::GreaterEq,
-                  Token::Operator(Operator::LessEq) => BinaryCommand::LessEq,
-                  Token::Operator(Operator::ConfigPath) => BinaryCommand::ConfigPath
+                    Token::Operator(Operator::Eq) => BinaryCommand::Eq,
+                    Token::Operator(Operator::NotEq) => BinaryCommand::NotEq,
+                    Token::Operator(Operator::Greater) => BinaryCommand::Greater,
+                    Token::Operator(Operator::Less) => BinaryCommand::Less,
+                    Token::Operator(Operator::GreaterEq) => BinaryCommand::GreaterEq,
+                    Token::Operator(Operator::LessEq) => BinaryCommand::LessEq,
+                    Token::Operator(Operator::ConfigPath) => BinaryCommand::ConfigPath
                 },
             );
 
@@ -188,8 +188,8 @@ fn statements<'a>(
                 base.boxed(),
                 locate,
                 select! {
-                  Token::Operator(Operator::And) => BinaryCommand::And,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("and") => BinaryCommand::And
+                    Token::Operator(Operator::And) => BinaryCommand::And,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("and") => BinaryCommand::And
                 },
             );
 
@@ -198,8 +198,8 @@ fn statements<'a>(
                 base.boxed(),
                 locate,
                 select! {
-                  Token::Operator(Operator::Or) => BinaryCommand::Or,
-                  Token::Identifier(id) if id.eq_ignore_ascii_case("or") => BinaryCommand::Or
+                    Token::Operator(Operator::Or) => BinaryCommand::Or,
+                    Token::Identifier(id) if id.eq_ignore_ascii_case("or") => BinaryCommand::Or
                 },
             );
 
@@ -226,8 +226,17 @@ fn statements<'a>(
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
             .map_with_span(|content, span| Statements {
+                source: {
+                    println!(
+                        "content at {:?}: {:?} from {:?} is {:?}",
+                        span,
+                        content,
+                        processed.as_str(),
+                        processed.extract(span.clone()),
+                    );
+                    processed.extract(span)
+                },
                 content,
-                source: processed.extract(span),
             })
     })
 }
@@ -250,10 +259,10 @@ fn unary_command(
     database: &Database,
 ) -> impl Parser<Token, UnaryCommand, Error = Simple<Token>> + '_ {
     select! {
-      Token::Operator(Operator::Add) => UnaryCommand::Plus,
-      Token::Operator(Operator::Sub) => UnaryCommand::Minus,
-      Token::Operator(Operator::Not) => UnaryCommand::Not,
-      Token::Identifier(id) if database.has_unary_command(&id) => UnaryCommand::Named(id)
+        Token::Operator(Operator::Add) => UnaryCommand::Plus,
+        Token::Operator(Operator::Sub) => UnaryCommand::Minus,
+        Token::Operator(Operator::Not) => UnaryCommand::Not,
+        Token::Identifier(id) if database.has_unary_command(&id) => UnaryCommand::Named(id)
     }
 }
 
@@ -262,8 +271,8 @@ fn binary_command(
     database: &Database,
 ) -> impl Parser<Token, BinaryCommand, Error = Simple<Token>> + '_ {
     select! {
-      Token::Operator(Operator::Associate) => BinaryCommand::Associate,
-      Token::Identifier(id) if database.has_binary_command(&id) => BinaryCommand::Named(id)
+        Token::Operator(Operator::Associate) => BinaryCommand::Associate,
+        Token::Identifier(id) if database.has_binary_command(&id) => BinaryCommand::Named(id)
     }
 }
 

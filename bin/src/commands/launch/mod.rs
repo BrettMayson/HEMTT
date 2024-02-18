@@ -19,7 +19,7 @@ use crate::{
         bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
         bcle5_missing_main_prefix::MissingMainPrefix,
         bcle6_launch_config_not_found::LaunchConfigNotFound,
-        bcle7_can_not_quicklaunch::CanNotQuickLaunch,
+        bcle7_can_not_quicklaunch::CanNotQuickLaunch, bcle8_mission_not_found::MissionNotFound, bcle9_mission_absolute::MissionAbsolutePath,
     },
     error::Error,
     link::create_link,
@@ -222,6 +222,58 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         mods.push(dlc.to_mod().to_string());
     }
 
+    let mut args: Vec<String> = ["-skipIntro", "-noSplash", "-showScriptErrors", "-debug"]
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
+    args.append(&mut launch.parameters().to_vec());
+    args.append(
+        &mut matches
+            .get_raw("passthrough")
+            .unwrap_or_default()
+            .map(|s| s.to_string_lossy().to_string())
+            .collect::<Vec<_>>(),
+    );
+    args.push(
+        mods.iter()
+            .map(|s| format!("-mod=\"{s}\""))
+            .collect::<Vec<_>>()
+            .join(" "),
+    );
+
+    if let Some(mission) = launch.mission() {
+        let mut path = PathBuf::from(mission);
+
+        if path.is_absolute() {
+            report.error(MissionAbsolutePath::code(mission.to_string()));
+            return Ok(report);
+        }
+        path = std::env::current_dir()?.join(mission);
+
+        if !path.ends_with("mission.sqm") {
+            path.push("mission.sqm");
+        }
+
+        if !path.is_file() {
+            path = std::env::current_dir()?
+                .join(".hemtt")
+                .join("missions")
+                .join(mission)
+                .join("mission.sqm");
+        }
+
+        if path.is_file() {
+            args.push(format!("\"{}\"", path.display()));
+        } else {
+            report.error(MissionNotFound::code(
+                &launch_config,
+                mission.to_string(),
+                &std::env::current_dir()?,
+            ));
+            return Ok(report);
+        }
+    }
+
     if matches.get_flag("no-build") {
         warn!("Using Quick Launch! HEMTT will not rebuild the project");
         if !std::env::current_dir()?.join(".hemttout/dev").exists() {
@@ -256,53 +308,6 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let link = prefix_folder.join(executor.ctx().config().prefix());
         if !link.exists() {
             create_link(&link, executor.ctx().build_folder())?;
-        }
-    }
-
-    let mut args: Vec<String> = ["-skipIntro", "-noSplash", "-showScriptErrors", "-debug"]
-        .iter()
-        .map(std::string::ToString::to_string)
-        .collect();
-    args.append(&mut launch.parameters().to_vec());
-    args.append(
-        &mut matches
-            .get_raw("passthrough")
-            .unwrap_or_default()
-            .map(|s| s.to_string_lossy().to_string())
-            .collect::<Vec<_>>(),
-    );
-    args.push(
-        mods.iter()
-            .map(|s| format!("-mod=\"{s}\""))
-            .collect::<Vec<_>>()
-            .join(" "),
-    );
-
-    if let Some(mission) = launch.mission() {
-        let mut path = PathBuf::from(mission);
-
-        if !path.is_absolute() {
-            path = std::env::current_dir()?.join(mission);
-
-            if !path.ends_with("mission.sqm") {
-                path.push("mission.sqm");
-            }
-
-            if !path.is_file() {
-                path = std::env::current_dir()?
-                    .join(".hemtt")
-                    .join("missions")
-                    .join(mission)
-                    .join("mission.sqm");
-            }
-
-            if path.is_file() {
-                args.push(format!("\"{}\"", path.display()));
-            } else {
-                warn!("Could not launch with mission `{}`", mission);
-            }
-        } else {
-            warn!("Absolute paths are not supported for missions in the launch config")
         }
     }
 

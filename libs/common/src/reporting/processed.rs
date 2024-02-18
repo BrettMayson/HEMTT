@@ -262,7 +262,11 @@ impl Processed {
     #[must_use]
     /// Return a string with the source from the span
     pub fn extract(&self, span: Range<usize>) -> String {
-        self.output[span].to_string()
+        self.output
+            .chars()
+            .skip(span.start)
+            .take(span.end - span.start)
+            .collect()
     }
 }
 
