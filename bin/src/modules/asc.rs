@@ -57,6 +57,7 @@ impl Module for ArmaScriptCompiler {
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
             let out = tmp.join(file);
+            let _ = std::fs::create_dir_all(out.parent().unwrap());
             trace!("unpacking {:?} to {:?}", file, out.display());
             let mut f = File::create(&out)?;
             f.write_all(&Distributables::get(file).unwrap().data)?;
