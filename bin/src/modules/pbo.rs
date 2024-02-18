@@ -45,8 +45,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     let counter = AtomicU16::new(0);
     ctx.addons()
         .to_vec()
-        // .par_iter()
-        .iter()
+        .par_iter()
         .map(|addon| {
             _build(ctx, addon, collapse, &version, git_hash.as_ref())?;
             counter.fetch_add(1, Ordering::Relaxed);

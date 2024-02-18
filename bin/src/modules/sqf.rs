@@ -39,8 +39,7 @@ impl Module for SQFCompiler {
         }
         let database = Database::default();
         let reports = entries
-            // .par_iter()
-            .iter()
+            .par_iter()
             .map(|(addon, entry)| {
                 trace!("asc compiling {}", entry);
                 let mut report = Report::new();
