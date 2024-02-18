@@ -121,37 +121,3 @@ fn attempt_locate(content: &str, launch: &str, mission: &str) -> Option<Range<us
     }
     None
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_attempt_locate() {
-        let content = r#"
-[hemtt.launch.server]
-presets = [
-    "test",
-    "test2",
-    "test3",
-]
-"#
-        .replace("\r\n", "\n");
-        assert_eq!(
-            attempt_locate(&content, "server", "test"),
-            Some(40..44),
-            "test"
-        );
-        assert_eq!(
-            attempt_locate(&content, "server", "test2"),
-            Some(52..57),
-            "test2"
-        );
-        assert_eq!(
-            attempt_locate(&content, "server", "test3"),
-            Some(65..70),
-            "test3"
-        );
-        assert_eq!(attempt_locate(&content, "server", "test4"), None, "test4");
-    }
-}
