@@ -62,3 +62,4 @@ fn check(dir: &str) {
 
 bootstrap!(pw1_redefine);
 bootstrap!(pw3_padded_arg);
+bootstrap!(pw3_padded_arg_duplicates);
