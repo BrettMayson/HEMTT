@@ -299,7 +299,7 @@ pub mod tests {
     pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
         let workspace = hemtt_common::workspace::Workspace::builder()
             .memory()
-            .finish(None)
+            .finish(None, false)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()

@@ -42,3 +42,6 @@ pedantic = "warn"
 
 [profile.bench]
 lto = true
+
+[profile.release]
+debug = true

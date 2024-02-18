@@ -93,7 +93,9 @@ impl Context {
             if include.is_dir() {
                 builder = builder.physical(&include, LayerType::Include);
             }
-            builder.memory().finish(Some(config.clone()))?
+            builder
+                .memory()
+                .finish(Some(config.clone()), folder != "value")?
         };
         {
             let version = config.version().get(workspace.vfs());

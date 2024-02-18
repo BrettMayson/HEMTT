@@ -26,7 +26,7 @@ impl Module for Files {
             if entry.as_str().starts_with("/.hemtt") {
                 continue;
             }
-            if entry.is_dir()? {
+            if entry.metadata()?.file_type == vfs::VfsFileType::Directory {
                 continue;
             }
             if !entry.exists()? {

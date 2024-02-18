@@ -11,7 +11,7 @@ fn python() {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_common::workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None)
+        .finish(None, false)
         .unwrap();
     let diagnostic = Diagnostic::new("T1".to_string(), "using python 2".to_string())
         .set_severity(Severity::Warning)

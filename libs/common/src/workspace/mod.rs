@@ -49,6 +49,7 @@ impl Workspace {
         vfs: VfsPath,
         layers: Vec<(VfsPath, LayerType)>,
         project: Option<ProjectConfig>,
+        discovery: bool,
     ) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
@@ -58,31 +59,38 @@ impl Workspace {
             addons: Vec::new(),
             missions: Vec::new(),
         };
-        for entry in workspace.vfs.walk_dir()? {
+        if discovery {
+            workspace.discover()?;
+        }
+        Ok(WorkspacePath {
+            path: workspace.vfs.root(),
+            workspace: Arc::new(workspace),
+        })
+    }
+
+    fn discover(&mut self) -> Result<(), Error> {
+        for entry in self.vfs.walk_dir()? {
             let Ok(entry) = entry else {
                 trace!("unknown issue with entry: {:?}", entry);
                 continue;
             };
-            if entry.is_dir()? {
-                continue;
-            }
             if entry.as_str().contains(".hemtt") {
                 continue;
             }
             match entry.filename().to_lowercase().as_str() {
                 "config.cpp" => {
                     trace!("config.cpp: {:?}", entry);
-                    workspace.addons.push(entry);
+                    self.addons.push(entry);
                 }
                 "mission.sqm" => {
                     trace!("mission.sqm: {:?}", entry);
-                    workspace.missions.push(entry);
+                    self.missions.push(entry);
                 }
                 _ => {
                     if FILES.contains(&entry.filename().to_lowercase().as_str()) {
                         trace!("Prefix: {:?}", entry);
                         let prefix = Prefix::new(&entry.read_to_string()?)?;
-                        workspace.pointers.insert(
+                        self.pointers.insert(
                             format!("/{}", prefix.to_string().replace('\\', "/")),
                             entry.parent(),
                         );
@@ -90,10 +98,7 @@ impl Workspace {
                 }
             }
         }
-        Ok(WorkspacePath {
-            path: workspace.vfs.root(),
-            workspace: Arc::new(workspace),
-        })
+        Ok(())
     }
 }
 
@@ -133,13 +138,18 @@ impl WorkspaceBuilder {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the workspace could not be built
-    pub fn finish(self, project: Option<ProjectConfig>) -> Result<WorkspacePath, Error> {
+    pub fn finish(
+        self,
+        project: Option<ProjectConfig>,
+        discovery: bool,
+    ) -> Result<WorkspacePath, Error> {
         let mut layers = self.layers.clone();
         layers.reverse();
         Workspace::create(
             OverlayFS::new(&layers.into_iter().map(|(l, _)| l).collect::<Vec<_>>()).into(),
             self.layers,
             project,
+            discovery,
         )
     }
 }
