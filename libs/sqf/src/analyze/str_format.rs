@@ -30,7 +30,7 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
     let Expression::String(format, _) = &args[0] else {
         return Vec::new();
     };
-    if format != "%1" {
+    if &**format != "%1" {
         return Vec::new();
     }
     StrFormat::new(expression.full_span(), args[1].clone(), processed)

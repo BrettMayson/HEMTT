@@ -212,7 +212,7 @@ impl Diagnostic {
                 let start_line_index = files.line_index(&l.file, l.span.start).unwrap();
                 let end_line_index = files.line_index(&l.file, l.span.end).unwrap();
                 Some(Annotation {
-                    path: l.file.path.as_str().to_string(),
+                    path: l.file.data.path.as_str().to_string(),
                     start_line: files.line_number(&l.file, start_line_index).unwrap(),
                     end_line: files.line_number(&l.file, end_line_index).unwrap(),
                     start_column: files

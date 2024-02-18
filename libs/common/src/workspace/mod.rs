@@ -63,8 +63,10 @@ impl Workspace {
             workspace.discover()?;
         }
         Ok(WorkspacePath {
-            path: workspace.vfs.root(),
-            workspace: Arc::new(workspace),
+            data: Arc::new(path::WorkspacePathData {
+                path: workspace.vfs.root(),
+                workspace: Arc::new(workspace),
+            }),
         })
     }
 

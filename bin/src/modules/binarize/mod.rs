@@ -145,7 +145,8 @@ impl Module for Binarize {
         }
 
         targets
-            .par_iter()
+            // .par_iter()
+            .iter()
             .map(|target| {
                 debug!("binarizing {}", target.entry);
                 create_dir_all(&target.output).unwrap();

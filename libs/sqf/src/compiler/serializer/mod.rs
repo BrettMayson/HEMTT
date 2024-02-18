@@ -12,6 +12,7 @@ use hemtt_common::error::thiserror;
 
 use std::cmp::Ordering;
 use std::io::{self, Read, Write};
+use std::sync::Arc;
 
 /// `ArmaScriptCompiler` defaults to `1`, so this is hardcoded for now.
 pub const VERSION: u32 = 1;
@@ -217,11 +218,11 @@ impl Instructions {
 #[derive(Debug, Clone)]
 pub enum Constant {
     Code(Instructions),
-    String(String),
+    String(Arc<str>),
     Scalar(f32),
     Boolean(bool),
     Array(Vec<Self>),
-    NularCommand(String),
+    NularCommand(Arc<str>),
 }
 
 impl Constant {
@@ -363,9 +364,9 @@ pub struct Compiled {
     /// Also known as `constants`, a list of hard-coded constant values used in the script.
     pub constants_cache: Vec<Constant>,
     /// Also knows as `commandNameDirectory`, a list of commands and variable names used in the script.
-    pub names_cache: Vec<String>,
+    pub names_cache: Vec<Arc<str>>,
     /// A list of file names which can be referenced by instructions for debug purposes.
-    pub file_names: Vec<String>,
+    pub file_names: Vec<Arc<str>>,
 }
 
 impl Compiled {
@@ -410,7 +411,7 @@ impl Compiled {
     }
 
     #[must_use]
-    pub fn get_name(&self, index: u16) -> Option<&String> {
+    pub fn get_name(&self, index: u16) -> Option<&Arc<str>> {
         self.names_cache.get(index as usize)
     }
 
@@ -474,7 +475,7 @@ impl Compiled {
     }
 
     #[allow(dead_code)]
-    fn deserialize_name_cache(reader: &mut impl Read) -> DeserializeResult<Vec<String>> {
+    fn deserialize_name_cache(reader: &mut impl Read) -> DeserializeResult<Vec<Arc<str>>> {
         let name_cache_len = reader.read_u16::<LE>()? as usize;
         (0..name_cache_len)
             .map(|_| deserialize_string(reader))
@@ -528,7 +529,7 @@ impl Compiled {
                     file_names = Some({
                         (0..file_names_len)
                             .map(|_| deserialize_string(reader))
-                            .collect::<DeserializeResult<Vec<String>>>()?
+                            .collect::<DeserializeResult<Vec<Arc<str>>>>()?
                     });
                 }
                 BlockType::Code if entry_point.is_none() => {
@@ -600,12 +601,12 @@ fn serialize_string(string: &str, writer: &mut impl Write) -> SerializeResult {
     Ok(())
 }
 
-fn deserialize_string(reader: &mut impl Read) -> DeserializeResult<String> {
+fn deserialize_string(reader: &mut impl Read) -> DeserializeResult<Arc<str>> {
     let buffer_len = reader.read_u24::<LE>()? as usize;
     let mut buffer = vec![0; buffer_len];
     reader.read_exact(&mut buffer)?;
     let string = String::from_utf8(buffer)?;
-    Ok(string)
+    Ok(string.into())
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -104,6 +104,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     trace!("args: {:#?}", std::env::args().collect::<Vec<String>>());
 
     if let Some(threads) = matches.get_one::<String>("threads") {
+        debug!("Using custom thread count: {threads}");
         if let Err(e) = rayon::ThreadPoolBuilder::new()
             .num_threads(threads.parse::<usize>().unwrap())
             .build_global()

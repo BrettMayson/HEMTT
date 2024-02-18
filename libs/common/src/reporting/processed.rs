@@ -261,12 +261,12 @@ impl Processed {
 
     #[must_use]
     /// Return a string with the source from the span
-    pub fn extract(&self, span: Range<usize>) -> String {
-        self.output
-            .chars()
-            .skip(span.start)
-            .take(span.end - span.start)
-            .collect()
+    pub fn extract(&self, span: Range<usize>) -> Arc<str> {
+        let mut real_end = 0;
+        self.output.chars().skip(span.start).take(span.end - span.start).for_each(|c| {
+            real_end += c.len_utf8();
+        });
+        Arc::from(&self.output[span.start..span.start + real_end])
     }
 }
 

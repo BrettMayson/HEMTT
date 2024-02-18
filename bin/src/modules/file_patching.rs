@@ -21,7 +21,8 @@ impl Module for FilePatching {
                 .join("addons"),
         )?;
         ctx.addons()
-            .par_iter()
+            // .par_iter()
+            .iter()
             .map(|addon| {
                 create_link(
                     &ctx.build_folder()

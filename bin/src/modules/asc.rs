@@ -1,11 +1,8 @@
 use std::{
-    fs::{create_dir_all, File},
-    io::{Read, Write},
-    process::Command,
-    sync::{
+    fs::{create_dir_all, File}, io::{BufReader, Read, Write}, os::windows::fs::MetadataExt, process::Command, sync::{
         atomic::{AtomicU16, Ordering},
         Arc, RwLock,
-    },
+    }
 };
 
 use hemtt_preprocessor::Processor;
@@ -90,7 +87,8 @@ impl Module for ArmaScriptCompiler {
                 }
             }
             entries
-                .par_iter()
+                // .par_iter()
+                .iter()
                 .map(|entry| {
                     let processed = Processor::run(entry)?;
                     let source = tmp_addon.join(

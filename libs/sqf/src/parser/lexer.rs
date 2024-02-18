@@ -1,4 +1,5 @@
 use std::ops::Range;
+use std::sync::Arc;
 
 use chumsky::prelude::*;
 use chumsky::text::ident;
@@ -43,7 +44,7 @@ pub enum Token {
     /// An identifier, keyword, or command.
     Identifier(String),
     /// A string literal.
-    String(String),
+    String(Arc<str>),
 }
 
 #[repr(u8)]
@@ -149,7 +150,7 @@ fn lexer() -> impl Parser<char, Tokens, Error = Simple<char>> {
 fn base() -> impl Parser<char, Token, Error = Simple<char>> {
     let number = number().map(Token::Number);
     let identifier = ident().map(Token::Identifier);
-    let string = string('\"').or(string('\'')).map(Token::String);
+    let string = string('\"').or(string('\'')).map(|s| Token::String(s.into()));
 
     // a constant (ident, number or string) must not be immediately followed
     // by another constant (without whitespace), or something is wrong

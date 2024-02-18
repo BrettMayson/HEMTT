@@ -77,7 +77,7 @@ impl<'files> files::Files<'files> for WorkspaceFiles {
     type Source = Rc<str>;
 
     fn name(&'files self, id: Self::FileId) -> Result<Self::Name, files::Error> {
-        Ok(id.path.as_str().trim_start_matches('/'))
+        Ok(id.data.path.as_str().trim_start_matches('/'))
     }
 
     fn source(&'files self, id: Self::FileId) -> Result<Self::Source, files::Error> {

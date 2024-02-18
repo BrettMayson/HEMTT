@@ -7,7 +7,7 @@ pub mod analyze;
 mod error;
 mod misc;
 
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 
 pub use self::error::Error;
 
@@ -21,7 +21,7 @@ pub struct Statements {
     content: Vec<Statement>,
     /// The source code string of this section of code.
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
-    source: String,
+    source: Arc<str>,
 }
 
 impl Statements {
@@ -37,7 +37,7 @@ impl Statements {
 
     #[must_use]
     /// Adds a source string to this code chunk.
-    pub fn with_source(self, source: String) -> Self {
+    pub fn with_source(self, source: Arc<str>) -> Self {
         Self {
             content: self.content,
             source,
@@ -128,7 +128,7 @@ impl From<Vec<Statement>> for Statements {
     fn from(content: Vec<Statement>) -> Self {
         Self {
             content,
-            source: String::new(),
+            source: "".into(),
         }
     }
 }
@@ -175,7 +175,7 @@ impl Statement {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression {
     Code(Statements),
-    String(String, Range<usize>),
+    String(Arc<str>, Range<usize>),
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),

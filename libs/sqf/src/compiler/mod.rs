@@ -9,7 +9,7 @@
 
 pub mod serializer;
 
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 
 use hemtt_common::{error::thiserror, reporting::Processed};
 
@@ -38,7 +38,7 @@ impl Statements {
             file_names: processed
                 .sources()
                 .iter()
-                .map(|(s, _)| s.to_string())
+                .map(|(s, _)| s.as_str().into())
                 .collect(),
         })
     }
@@ -236,11 +236,11 @@ impl Expression {
             Self::NularCommand(ref command, ..) if command.is_constant() => {
                 let command = try_normalize_name(&command.name)?;
                 debug_assert_ne!(
-                    command, "true",
+                    &*command, "true",
                     "do not provide `true` as a nular constant command"
                 );
                 debug_assert_ne!(
-                    command, "false",
+                    &*command, "false",
                     "do not provide `false` as a nular constant command"
                 );
                 Some(Constant::NularCommand(command))
@@ -263,7 +263,7 @@ type CompileResult<T = ()> = Result<T, CompileError>;
 #[derive(Debug)]
 pub(crate) struct Context {
     constants_cache: Vec<Constant>,
-    names_cache: Vec<String>,
+    names_cache: Vec<Arc<str>>,
 }
 
 impl Context {
@@ -276,10 +276,10 @@ impl Context {
     }
 }
 
-fn try_normalize_name(name: &str) -> CompileResult<String> {
+fn try_normalize_name(name: &str) -> CompileResult<Arc<str>> {
     let name_lower = name.to_ascii_lowercase();
     if crate::parser::database::is_valid_command(&name_lower) {
-        Ok(name_lower)
+        Ok(name_lower.into())
     } else {
         Err(CompileError::InvalidName(name.to_owned()))
     }

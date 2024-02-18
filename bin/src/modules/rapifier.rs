@@ -63,7 +63,8 @@ impl Module for Rapifier {
             .collect::<Result<Vec<_>, Error>>()?;
 
         let reports = entries
-            .par_iter()
+            // .par_iter()
+            .iter()
             .map(|(addon, entry)| {
                 let report = rapify(addon, entry, ctx)?;
                 counter.fetch_add(1, Ordering::Relaxed);

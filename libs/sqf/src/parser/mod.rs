@@ -42,7 +42,7 @@ pub fn run(database: &Database, processed: &Processed) -> Result<Statements, Par
         }
         ParserError::ParsingError(errors)
     })?;
-    statements.source = processed.as_str().to_string();
+    statements.source = processed.as_str().into();
     Ok(statements)
 }
 
