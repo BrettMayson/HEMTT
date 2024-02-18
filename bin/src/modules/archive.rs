@@ -25,14 +25,14 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
 
     debug!("creating release at {:?}", output.display());
     let mut zip = zip::ZipWriter::new(std::fs::File::create(&output)?);
-    for entry in walkdir::WalkDir::new(ctx.build_folder()) {
+    for entry in walkdir::WalkDir::new(ctx.build_folder().expect("build folder exists")) {
         let Ok(entry) = entry else {
             continue;
         };
         let path = entry.path();
         if path.is_dir() {
             let path = path
-                .strip_prefix(ctx.build_folder())
+                .strip_prefix(ctx.build_folder().expect("build folder exists"))
                 .expect("We are in the HEMTT folder, the prefix should always exist")
                 .display()
                 .to_string();
@@ -49,7 +49,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
             continue;
         }
         let name = path
-            .strip_prefix(ctx.build_folder())
+            .strip_prefix(ctx.build_folder().expect("build folder exists"))
             .expect("We are in the HEMTT folder, the prefix should always exist");
         let file = format!(
             "@{}/{}",

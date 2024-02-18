@@ -30,7 +30,11 @@ pub fn cli() -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    let ctx = Context::new("release", crate::context::PreservePrevious::Remove, true)?;
+    let ctx = Context::new(
+        Some("release"),
+        crate::context::PreservePrevious::Remove,
+        true,
+    )?;
     let mut executor = build::executor(ctx, matches);
 
     if matches.get_one::<bool>("no-sign") != Some(&true)

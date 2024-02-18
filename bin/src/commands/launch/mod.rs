@@ -308,7 +308,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
         let link = prefix_folder.join(executor.ctx().config().prefix());
         if !link.exists() {
-            create_link(&link, executor.ctx().build_folder())?;
+            create_link(
+                &link,
+                executor.ctx().build_folder().expect("build folder exists"),
+            )?;
         }
     }
 

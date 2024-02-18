@@ -82,7 +82,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
         .collect::<Vec<_>>();
 
     let ctx = Context::new(
-        "dev",
+        Some("dev"),
         if just.is_empty() {
             crate::context::PreservePrevious::Remove
         } else {

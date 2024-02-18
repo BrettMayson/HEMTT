@@ -15,12 +15,17 @@ impl Module for FilePatching {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        create_dir_all(ctx.build_folder().join("addons"))?;
+        create_dir_all(
+            ctx.build_folder()
+                .expect("build folder exists")
+                .join("addons"),
+        )?;
         ctx.addons()
             .par_iter()
             .map(|addon| {
                 create_link(
                     &ctx.build_folder()
+                        .expect("build folder exists")
                         .join("addons")
                         .join(addon.name().replace('/', "\\")),
                     &ctx.project_folder().join(if cfg!(windows) {

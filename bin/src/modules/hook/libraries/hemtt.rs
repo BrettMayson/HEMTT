@@ -21,7 +21,7 @@ impl RhaiHemtt {
         Self {
             version: Version::try_from(env!("HEMTT_VERSION")).unwrap(),
             project: RhaiProject::new(ctx),
-            folder: ctx.folder().to_string(),
+            folder: ctx.folder().expect("folder exists").to_string(),
         }
     }
 }

@@ -65,7 +65,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
     let mut ctx = Context::new(
-        "build",
+        Some("build"),
         if just.is_empty() {
             context::PreservePrevious::Remove
         } else {

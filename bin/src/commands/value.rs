@@ -25,7 +25,7 @@ pub fn cli() -> Command {
 /// If a name is not provided, but this is usually handled by clap
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let default = String::new();
-    let ctx = Context::new("value", crate::context::PreservePrevious::Remove, false)?;
+    let ctx = Context::new(None, crate::context::PreservePrevious::Remove, false)?;
     match matches
         .get_one::<String>("name")
         .unwrap_or(&default)

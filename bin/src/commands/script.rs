@@ -22,7 +22,11 @@ pub fn cli() -> Command {
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    let ctx = Context::new("script", crate::context::PreservePrevious::Remove, true)?;
+    let ctx = Context::new(
+        Some("script"),
+        crate::context::PreservePrevious::Remove,
+        true,
+    )?;
     let name = matches
         .get_one::<String>("name")
         .expect("name to be set as required");

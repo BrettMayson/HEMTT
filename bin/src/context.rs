@@ -21,13 +21,13 @@ pub enum PreservePrevious {
 #[derive(Debug, Clone)]
 pub struct Context {
     config: ProjectConfig,
-    folder: String,
+    folder: Option<String>,
     addons: Vec<Addon>,
     workspace: WorkspacePath,
     project_folder: PathBuf,
     hemtt_folder: PathBuf,
     out_folder: PathBuf,
-    build_folder: PathBuf,
+    build_folder: Option<PathBuf>,
     tmp: PathBuf,
 }
 
@@ -43,7 +43,7 @@ impl Context {
     /// # Panics
     /// If the project folder is not a valid [`OsStr`] (UTF-8)
     pub fn new(
-        folder: &str,
+        folder: Option<&str>,
         preserve_previous: PreservePrevious,
         print_info: bool,
     ) -> Result<Self, Error> {
@@ -78,14 +78,15 @@ impl Context {
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
         std::fs::File::create(out_folder.join("ci_annotations.txt"))?;
-        let build_folder = out_folder.join(folder);
-        trace!("using build folder: {:?}", build_folder.display());
-        if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
-            remove_dir_all(&build_folder)?;
-        }
-        create_dir_all(&build_folder)?;
-        let workspace = {
-            let mut builder = Workspace::builder().physical(&root, LayerType::Source);
+        let mut builder = Workspace::builder().physical(&root, LayerType::Source);
+        let mut maybe_build_folder = None;
+        if let Some(folder) = folder {
+            let build_folder = out_folder.join(folder);
+            trace!("using build folder: {:?}", build_folder.display());
+            if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
+                remove_dir_all(&build_folder)?;
+            }
+            create_dir_all(&build_folder)?;
             if cfg!(target_os = "windows") {
                 builder = builder.physical(&tmp.join("output"), LayerType::Build);
             }
@@ -93,10 +94,11 @@ impl Context {
             if include.is_dir() {
                 builder = builder.physical(&include, LayerType::Include);
             }
-            builder
-                .memory()
-                .finish(Some(config.clone()), folder != "value")?
+            maybe_build_folder = Some(build_folder);
         };
+        let workspace = builder
+            .memory()
+            .finish(Some(config.clone()), folder.is_some())?;
         {
             let version = config.version().get(workspace.vfs());
             if let Err(hemtt_common::project::Error::Git(_)) = version {
@@ -110,13 +112,13 @@ impl Context {
         }
         Ok(Self {
             config,
-            folder: folder.to_owned(),
+            folder: folder.map(std::borrow::ToOwned::to_owned),
             workspace,
             addons: Addon::scan(&root)?,
             project_folder: root,
             hemtt_folder,
             out_folder,
-            build_folder,
+            build_folder: maybe_build_folder,
             tmp,
         })
     }
@@ -143,8 +145,8 @@ impl Context {
     }
 
     #[must_use]
-    pub fn folder(&self) -> &str {
-        &self.folder
+    pub const fn folder(&self) -> Option<&String> {
+        self.folder.as_ref()
     }
 
     #[must_use]
@@ -182,8 +184,8 @@ impl Context {
 
     #[must_use]
     /// The .hemttout/{command} folder
-    pub const fn build_folder(&self) -> &PathBuf {
-        &self.build_folder
+    pub const fn build_folder(&self) -> Option<&PathBuf> {
+        self.build_folder.as_ref()
     }
 
     #[must_use]

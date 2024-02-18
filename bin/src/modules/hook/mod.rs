@@ -23,15 +23,24 @@ mod time;
 ///
 /// # Errors
 /// [`Error::Version`] if the version is not a valid semver version
+///
+/// # Panics
+/// If the build folder does not exist
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
     }
     scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
-    scope.push_constant("HEMTT_OUTPUT", ctx.build_folder().clone());
+    scope.push_constant(
+        "HEMTT_OUTPUT",
+        ctx.build_folder().expect("build folder exists").clone(),
+    );
     scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
-    scope.push_constant("HEMTT_OUT", ctx.build_folder().clone());
+    scope.push_constant(
+        "HEMTT_OUT",
+        ctx.build_folder().expect("build folder exists").clone(),
+    );
 
     scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
 

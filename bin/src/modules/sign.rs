@@ -32,9 +32,14 @@ impl Module for Sign {
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
-        create_dir_all(ctx.build_folder().join("keys"))?;
+        create_dir_all(
+            ctx.build_folder()
+                .expect("build folder exists")
+                .join("keys"),
+        )?;
         addons_key.to_public_key().write(&mut File::create(
             ctx.build_folder()
+                .expect("build folder exists")
                 .join("keys")
                 .join(format!("{authority}.bikey")),
         )?)?;
@@ -43,7 +48,11 @@ impl Module for Sign {
             let (mut pbo, sig_location, key) = match addon.location() {
                 Location::Addons => {
                     let target_pbo = {
-                        let mut path = ctx.build_folder().join("addons").join(pbo_name);
+                        let mut path = ctx
+                            .build_folder()
+                            .expect("build folder exists")
+                            .join("addons")
+                            .join(pbo_name);
                         path.set_extension("pbo");
                         path
                     };
@@ -60,6 +69,7 @@ impl Module for Sign {
                             let key = BIPrivateKey::generate(1024, &authority)?;
                             let mod_root = ctx
                                 .build_folder()
+                                .expect("build folder exists")
                                 .join("optionals")
                                 .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())));
                             create_dir_all(mod_root.join("keys"))?;
@@ -70,6 +80,7 @@ impl Module for Sign {
                         } else {
                             (
                                 ctx.build_folder()
+                                    .expect("build folder exists")
                                     .join(addon.location().to_string())
                                     .join(pbo_name),
                                 addons_key.clone(),
