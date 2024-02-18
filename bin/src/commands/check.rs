@@ -18,7 +18,11 @@ pub fn cli() -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute() -> Result<Report, Error> {
-    let ctx = Context::new(Some("check"), crate::context::PreservePrevious::Remove, true)?;
+    let ctx = Context::new(
+        Some("check"),
+        crate::context::PreservePrevious::Remove,
+        true,
+    )?;
 
     let mut executor = Executor::new(ctx);
 

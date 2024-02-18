@@ -150,7 +150,9 @@ fn lexer() -> impl Parser<char, Tokens, Error = Simple<char>> {
 fn base() -> impl Parser<char, Token, Error = Simple<char>> {
     let number = number().map(Token::Number);
     let identifier = ident().map(Token::Identifier);
-    let string = string('\"').or(string('\'')).map(|s| Token::String(s.into()));
+    let string = string('\"')
+        .or(string('\''))
+        .map(|s| Token::String(s.into()));
 
     // a constant (ident, number or string) must not be immediately followed
     // by another constant (without whitespace), or something is wrong

@@ -34,7 +34,8 @@ impl WorkspacePath {
     #[must_use]
     /// Is the file from an include path
     pub fn is_include(&self) -> bool {
-        self.data.workspace
+        self.data
+            .workspace
             .layers
             .iter()
             .filter(|(_, t)| *t == LayerType::Include)
@@ -105,7 +106,8 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be read
     pub fn read_to_string(&self) -> Result<String, Error> {
-        self.data.path
+        self.data
+            .path
             .read_to_string()
             .map(|s| s.replace('\r', ""))
             .map_err(Into::into)
@@ -141,27 +143,29 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be changed
     pub fn with_extension(&self, ext: &str) -> Result<Self, Error> {
-        Ok(Self { data : Arc::new(WorkspacePathData {
-            path: {
-                let current = self
-                    .data
-                    .path
-                    .filename()
-                    .chars()
-                    .rev()
-                    .collect::<String>()
-                    .split_once('.')
-                    .map_or(
-                        self.data.path.filename().as_str().chars().rev().collect(),
-                        |(_, s)| s.to_string(),
-                    )
-                    .chars()
-                    .rev()
-                    .collect::<String>();
-                self.data.path.parent().join(format!("{current}.{ext}"))?
-            },
-            workspace: self.data.workspace.clone(),
-        })})
+        Ok(Self {
+            data: Arc::new(WorkspacePathData {
+                path: {
+                    let current = self
+                        .data
+                        .path
+                        .filename()
+                        .chars()
+                        .rev()
+                        .collect::<String>()
+                        .split_once('.')
+                        .map_or(
+                            self.data.path.filename().as_str().chars().rev().collect(),
+                            |(_, s)| s.to_string(),
+                        )
+                        .chars()
+                        .rev()
+                        .collect::<String>();
+                    self.data.path.parent().join(format!("{current}.{ext}"))?
+                },
+                workspace: self.data.workspace.clone(),
+            }),
+        })
     }
 
     /// Locate a path in the workspace
@@ -183,7 +187,7 @@ impl WorkspacePath {
                         path: self.data.workspace.vfs.join(path)?,
                         workspace: self.data.workspace.clone(),
                     }),
-                }))
+                }));
             }
             if let Some((base, root)) = self
                 .data
@@ -205,7 +209,7 @@ impl WorkspacePath {
                             path,
                             workspace: self.data.workspace.clone(),
                         }),
-                    }))
+                    }));
                 }
             }
         }
