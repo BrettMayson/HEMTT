@@ -85,4 +85,24 @@ pub mod path_functions {
         }
         list
     }
+
+    #[rhai_fn(global, pure)]
+    pub fn create_dir(path: &mut PathBuf) -> bool {
+        std::fs::create_dir(path).is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn create_dir_all(path: &mut PathBuf) -> bool {
+        std::fs::create_dir_all(path).is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn remove_dir(path: &mut PathBuf) -> bool {
+        std::fs::remove_dir(path).is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn remove_dir_all(path: &mut PathBuf) -> bool {
+        std::fs::remove_dir_all(path).is_ok()
+    }
 }

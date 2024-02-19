@@ -82,4 +82,24 @@ pub mod path_functions {
         }
         Ok(list)
     }
+
+    #[rhai_fn(global, pure)]
+    pub fn create_dir(path: &mut VfsPath) -> bool {
+        path.create_dir().is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn create_dir_all(path: &mut VfsPath) -> bool {
+        path.create_dir_all().is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn remove_dir(path: &mut VfsPath) -> bool {
+        path.remove_dir().is_ok()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn remove_dir_all(path: &mut VfsPath) -> bool {
+        path.remove_dir_all().is_ok()
+    }
 }
