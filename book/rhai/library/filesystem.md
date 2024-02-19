@@ -192,3 +192,35 @@ Writes the string to the file. Can be called multiple times to append to the fil
 ```ts
 HEMTT_VFS.join("docs").join("readme.md").create_file().write("Hello World!"); // Writes "Hello World!" to the file
 ```
+
+### `create_dir()`
+
+Creates the directory.
+
+```ts
+HEMTT_VFS.join("docs").create_dir(); // Creates the docs folder
+```
+
+### `create_dir_all()`
+
+Creates the directory and all parent directories.
+
+```ts
+HEMTT_VFS.join("docs").join("images").create_dir_all(); // Creates the images folder and the docs folder if they don't exist
+```
+
+### `remove_dir()`
+
+Removes the directory.
+
+```ts
+HEMTT_VFS.join("docs").remove_dir(); // Removes the docs folder
+```
+
+### `remove_dir_all()`
+
+Removes the directory and all its contents.
+
+```ts
+HEMTT_VFS.join("docs").remove_dir_all(); // Removes the docs folder and all its contents
+```
