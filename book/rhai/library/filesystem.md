@@ -207,7 +207,7 @@ Creates the directory and all parent directories.
 
 ```ts
 HEMTT_VFS.join("docs").join("images").create_dir_all(); // Creates the images folder and the docs folder if they don't exist
-
+```
 
 ### `remove_dir()`
 
