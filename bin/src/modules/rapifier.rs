@@ -131,10 +131,12 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 .build_data()
                 .set_required_version(version, file.to_owned(), span);
         }
-        path.parent().with_extension("bin")?
+        println!("using .bin");
+        path.with_extension("bin")?
     } else {
         path.to_owned()
     };
+    println!("out: {:?}", out.as_str());
     if processed.no_rapify() {
         debug!(
             "skipping rapify for {}, as instructed by preprocessor",

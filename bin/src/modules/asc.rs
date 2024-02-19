@@ -1,7 +1,6 @@
 use std::{
     fs::{create_dir_all, File},
-    io::{BufReader, Read, Write},
-    os::windows::fs::MetadataExt,
+    io::{Read, Write},
     process::Command,
     sync::{
         atomic::{AtomicU16, Ordering},
