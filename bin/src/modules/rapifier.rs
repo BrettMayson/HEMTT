@@ -114,19 +114,24 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     if !configreport.errors().is_empty() {
         return Ok(report);
     }
-    let out = if path.filename().to_lowercase() == "config.cpp" {
-        let (version, cfgpatch) = configreport.required_version();
-        let mut file = path;
-        let mut span = 0..0;
-        if let Some(cfgpatch) = cfgpatch {
-            let map = processed.mapping(cfgpatch.name().span.start).unwrap();
-            file = map.original().path();
-            span = map.original().start().0..map.original().end().0;
+    let out = if std::path::Path::new(&path.filename())
+        .extension()
+        .map_or(false, |ext| ext.eq_ignore_ascii_case("cpp"))
+    {
+        if path.filename() == "config.cpp" {
+            let (version, cfgpatch) = configreport.required_version();
+            let mut file = path;
+            let mut span = 0..0;
+            if let Some(cfgpatch) = cfgpatch {
+                let map = processed.mapping(cfgpatch.name().span.start).unwrap();
+                file = map.original().path();
+                span = map.original().start().0..map.original().end().0;
+            }
+            addon
+                .build_data()
+                .set_required_version(version, file.to_owned(), span);
         }
-        addon
-            .build_data()
-            .set_required_version(version, file.to_owned(), span);
-        path.parent().join("config.bin").unwrap()
+        path.parent().with_extension("bin")?
     } else {
         path.to_owned()
     };
@@ -151,10 +156,13 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
 
 pub fn can_rapify(path: &str) -> bool {
     let path = PathBuf::from(path);
-    let name = path
+    let ext = path
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
         .to_str()
         .unwrap();
-    ["cpp", "rvmat", "ext"].contains(&name)
+    if ext == "cpp" && path.file_name() != Some(std::ffi::OsStr::new("config.cpp")) {
+        warn!("{} - cpp files other than config.cpp are usually not intentional. use hpp for includes", path.file_name().unwrap().to_str().unwrap());
+    }
+    ["cpp", "rvmat", "ext"].contains(&ext)
 }
