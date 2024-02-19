@@ -28,12 +28,8 @@ impl Code for IfInvalidOperator {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        let Some(start) = self.tokens.first() else {
-            return None;
-        };
-        let Some(end) = self.tokens.last() else {
-            return None;
-        };
+        let start = self.tokens.first()?;
+        let end = self.tokens.last()?;
         Some(
             Diagnostic::new(self.ident(), self.message())
                 .with_label(

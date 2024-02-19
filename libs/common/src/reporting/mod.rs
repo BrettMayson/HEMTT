@@ -52,9 +52,7 @@ pub trait Code: Send + Sync {
 
     /// A diagnostic for the LSP / terminal
     fn diagnostic(&self) -> Option<Diagnostic> {
-        let Some(token) = self.token() else {
-            return None;
-        };
+        let token = self.token()?;
         let mut diag = Diagnostic::new(self.ident(), self.message())
             .with_label(
                 Label::primary(token.position().path().clone(), token.position().span())

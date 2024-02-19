@@ -25,12 +25,8 @@ impl Code for IncludeNotFound {
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         // TODO look for files with a similar name
-        let Some(first) = self.token.first() else {
-            return None;
-        };
-        let Some(last) = self.token.last() else {
-            return None;
-        };
+        let first = self.token.first()?;
+        let last = self.token.last()?;
         Some(
             Diagnostic::new(self.ident(), self.message()).with_label(
                 Label::primary(

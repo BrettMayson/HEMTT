@@ -47,15 +47,9 @@ impl Diagnostic {
         processed: &crate::reporting::Processed,
     ) -> Option<Self> {
         let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
-        let Some(map_start) = processed.mapping(span.start) else {
-            return None;
-        };
-        let Some(map_end) = processed.mapping(span.end) else {
-            return None;
-        };
-        let Some(map_file) = processed.source(map_start.source()) else {
-            return None;
-        };
+        let map_start = processed.mapping(span.start)?;
+        let map_end = processed.mapping(span.end)?;
+        let map_file = processed.source(map_start.source())?;
         diag.labels.push(
             Label::primary(
                 map_file.0.clone(),
