@@ -155,14 +155,17 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
 }
 
 pub fn can_rapify(path: &str) -> bool {
-    let path = PathBuf::from(path);
-    let ext = path
+    let pathbuf = PathBuf::from(path);
+    let ext = pathbuf
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
         .to_str()
         .unwrap();
-    if ext == "cpp" && path.file_name() != Some(std::ffi::OsStr::new("config.cpp")) {
-        warn!("{} - cpp files other than config.cpp are usually not intentional. use hpp for includes", path.file_name().unwrap().to_str().unwrap());
+    if ext == "cpp" && pathbuf.file_name() != Some(std::ffi::OsStr::new("config.cpp")) {
+        warn!(
+            "{} - cpp files other than config.cpp are usually not intentional. use hpp for includes",
+            path.trim_start_matches('/')
+        );
     }
     ["cpp", "rvmat", "ext"].contains(&ext)
 }
