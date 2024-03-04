@@ -9,13 +9,15 @@ use crate::{
 };
 
 pub fn select_parse_number(statements: &Statements, processed: &Processed) -> Vec<Arc<dyn Code>> {
-    let mut advice: Vec<Arc<dyn Code>> = Vec::new();
-    for statement in statements.content() {
-        for expression in statement.walk_expressions() {
-            advice.extend(check_expression(expression, processed));
-        }
-    }
-    advice
+    vec![]
+    // Need to be sure that parseNumber will work with the input, as it doesn't support numbers
+    // let mut advice: Vec<Arc<dyn Code>> = Vec::new();
+    // for statement in statements.content() {
+    //     for expression in statement.walk_expressions() {
+    //         advice.extend(check_expression(expression, processed));
+    //     }
+    // }
+    // advice
 }
 
 fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<dyn Code>> {
