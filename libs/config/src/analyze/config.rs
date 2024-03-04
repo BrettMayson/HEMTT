@@ -39,8 +39,7 @@ impl Analyze for Config {
             .iter()
             .flat_map(|p| p.errors(project, processed))
             .collect::<Vec<_>>();
-        let mut defined = HashSet::new();
-        errors.extend(external_missing_error(&self.0, &mut defined, processed));
+        errors.extend(external_missing_error(&self.0, HashSet::new(), processed));
         errors.extend(duplicate_properties(&self.0, processed));
         errors
     }
@@ -48,7 +47,7 @@ impl Analyze for Config {
 
 fn external_missing_error(
     properties: &[Property],
-    defined: &mut HashSet<String>,
+    mut defined: HashSet<String>,
     processed: &Processed,
 ) -> Vec<Arc<dyn Code>> {
     let mut errors: Vec<Arc<dyn Code>> = Vec::new();
@@ -56,7 +55,11 @@ fn external_missing_error(
         if let Property::Class(c) = property {
             match c {
                 Class::Root { properties } => {
-                    errors.extend(external_missing_error(properties, defined, processed));
+                    errors.extend(external_missing_error(
+                        properties,
+                        defined.clone(),
+                        processed,
+                    ));
                 }
                 Class::External { name } => {
                     let name = name.value.to_lowercase();
@@ -77,7 +80,11 @@ fn external_missing_error(
                         }
                     }
                     defined.insert(name);
-                    errors.extend(external_missing_error(properties, defined, processed));
+                    errors.extend(external_missing_error(
+                        properties,
+                        defined.clone(),
+                        processed,
+                    ));
                 }
             }
         }

@@ -68,3 +68,4 @@ bootstrap!(ce4_missing_semicolon);
 bootstrap!(ce5_unexpected_array);
 bootstrap!(ce6_expected_array);
 bootstrap!(ce7_missing_parent);
+bootstrap!(ce7_missing_parent_tree);
