@@ -150,7 +150,7 @@ jobs:
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             release/*
