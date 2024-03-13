@@ -23,6 +23,7 @@ pub struct Context {
     config: ProjectConfig,
     folder: Option<String>,
     addons: Vec<Addon>,
+    all_addons: Vec<Addon>,
     workspace: WorkspacePath,
     project_folder: PathBuf,
     hemtt_folder: PathBuf,
@@ -110,11 +111,13 @@ impl Context {
                 info!("Config loaded for {} {}", config.name(), version?);
             }
         }
+        let addons = Addon::scan(&root)?;
         Ok(Self {
             config,
             folder: folder.map(std::borrow::ToOwned::to_owned),
             workspace,
-            addons: Addon::scan(&root)?,
+            all_addons: addons.clone(),
+            addons,
             project_folder: root,
             hemtt_folder,
             out_folder,
@@ -152,6 +155,11 @@ impl Context {
     #[must_use]
     pub fn addons(&self) -> &[Addon] {
         &self.addons
+    }
+
+    #[must_use]
+    pub fn all_addons(&self) -> &[Addon] {
+        &self.all_addons
     }
 
     #[must_use]
