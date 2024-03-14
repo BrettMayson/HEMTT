@@ -1,6 +1,6 @@
 //! HEMTT Configuration
 
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use crate::arma::dlc::DLC;
 use serde::{Deserialize, Serialize};
@@ -30,8 +30,28 @@ impl Features {
 
     #[must_use]
     /// Get launch options by key
-    pub fn launch(&self, key: &str) -> Option<Cow<LaunchOptions>> {
-        self.launch.get(key).map(Cow::Borrowed)
+    pub fn launch(&self, key: &str) -> Option<LaunchOptions> {
+        let config = self.launch.get(key);
+        config.and_then(|config| {
+            config.extends().map_or_else(
+                || Some(config.clone()),
+                |extends| {
+                    let mut base = self.launch(extends).unwrap_or_default();
+                    base.workshop.extend(config.workshop.clone());
+                    base.dlc.extend(config.dlc.clone());
+                    base.presets.extend(config.presets.clone());
+                    base.optionals.extend(config.optionals.clone());
+                    base.parameters.extend(config.parameters.clone());
+                    if let Some(executable) = &config.executable {
+                        base.executable = Some(executable.clone());
+                    }
+                    if let Some(mission) = &config.mission {
+                        base.mission = Some(mission.clone());
+                    }
+                    Some(base)
+                },
+            )
+        })
     }
 
     #[must_use]
@@ -72,6 +92,9 @@ impl DevOptions {
 /// Launch specific configuration
 pub struct LaunchOptions {
     #[serde(default)]
+    extends: Option<String>,
+
+    #[serde(default)]
     /// Workshop mods that should be launched with the mod
     workshop: Vec<String>,
 
@@ -101,6 +124,12 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
+    #[must_use]
+    /// Preset to extend
+    pub const fn extends(&self) -> Option<&String> {
+        self.extends.as_ref()
+    }
+
     #[must_use]
     /// Workshop mods that should be launched with the mod
     pub fn workshop(&self) -> &[String] {

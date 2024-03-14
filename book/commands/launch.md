@@ -90,7 +90,18 @@ workshop = [
 dlc = [
     "S.O.G. Prairie Fire",
 ]
+
+# Launched with `hemtt launch vn-ace
+[hemtt.launch.vn-ace]
+extends = "vn"
+workshop = [
+    "463939057", # ACE3's Workshop ID
+]
 ```
+
+### extends
+
+The name of another configuration to extend. This will merge all arrays with the base configuration, and override any duplicate keys.
 
 ### workshop
 

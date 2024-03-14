@@ -1,0 +1,27 @@
+name = "extends"
+prefix = "extends"
+
+[hemtt.launch.base]
+workshop = ["1","2","3"]
+dlc = ["vn"]
+presets = ["preset1"]
+optionals = ["optional1"]
+mission = "base"
+parameters = ["-mod=@base"]
+
+[hemtt.launch.layer1]
+extends = "base"
+workshop = ["4","5","6"]
+dlc = ["ws"]
+presets = ["preset2"]
+optionals = ["optional2"]
+parameters = ["-mod=@layer1"]
+executable = "asdf"
+
+[hemtt.launch.layer2]
+extends = "layer1"
+workshop = ["7","8","9"]
+dlc = ["csla"]
+presets = ["preset3"]
+optionals = ["optional3"]
+parameters = ["-mod=@layer2"]

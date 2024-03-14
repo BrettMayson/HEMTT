@@ -1,9 +1,6 @@
 mod error;
 
-use std::{
-    borrow::Cow,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
@@ -109,7 +106,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .hemtt()
         .launch(&launch_config)
         .or(if launch_config == "default" {
-            Some(Cow::Owned(LaunchOptions::default()))
+            Some(LaunchOptions::default())
         } else {
             None
         })
