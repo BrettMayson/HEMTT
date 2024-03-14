@@ -2,11 +2,11 @@
 
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
-Usage: hemtt launch [OPTIONS] [config] [-- &lt;passthrough&gt;...]
+Usage: hemtt launch [OPTIONS] [config]... [-- &lt;passthrough&gt;...]
 
 Arguments:
-  [config]
-        Launches with the specified `hemtt.launch.<config>` configuration
+  [config]...
+        Launches with the specified `hemtt.launch.<config>` configurations
 
   [passthrough]...
         Passthrough additional arguments to Arma 3
@@ -48,6 +48,8 @@ Options:
 </pre>
 
 `hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, options are passed to the `dev` command.
+
+You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden.
 
 ## Configuration
 

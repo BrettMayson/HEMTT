@@ -125,6 +125,37 @@ pub struct LaunchOptions {
 
 impl LaunchOptions {
     #[must_use]
+    /// Overlay another launch config
+    pub fn overlay(&self, other: &Self) -> Self {
+        let mut base = self.clone();
+        base.workshop.extend(other.workshop.clone());
+        base.dlc.extend(other.dlc.clone());
+        base.presets.extend(other.presets.clone());
+        base.optionals.extend(other.optionals.clone());
+        base.parameters.extend(other.parameters.clone());
+        if let Some(executable) = &other.executable {
+            base.executable = Some(executable.clone());
+        }
+        if let Some(mission) = &other.mission {
+            base.mission = Some(mission.clone());
+        }
+        base
+    }
+
+    pub fn dedup(&mut self) {
+        self.workshop.sort();
+        self.workshop.dedup();
+        self.dlc.sort();
+        self.dlc.dedup();
+        self.presets.sort();
+        self.presets.dedup();
+        self.optionals.sort();
+        self.optionals.dedup();
+        self.parameters.sort();
+        self.parameters.dedup();
+    }
+
+    #[must_use]
     /// Preset to extend
     pub const fn extends(&self) -> Option<&String> {
         self.extends.as_ref()
