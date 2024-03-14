@@ -10,6 +10,8 @@
 use std::io;
 use std::io::{Read, Write};
 
+use tracing::trace;
+
 /// Read extension trait
 pub trait ReadExt: Read {
     /// Read a null-terminated string from the input.
@@ -35,7 +37,14 @@ impl<T: Read> ReadExt for T {
             bytes.push(b);
         }
 
-        Ok(String::from_utf8(bytes).unwrap())
+        // Ok(String::from_utf8(bytes).unwrap())
+        String::from_utf8(bytes).map_or_else(
+            |_| {
+                trace!("Failed to convert bytes to string");
+                Ok(String::new())
+            },
+            Ok,
+        )
     }
 
     fn read_compressed_int(&mut self) -> io::Result<u32> {

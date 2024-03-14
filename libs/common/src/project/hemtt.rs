@@ -159,6 +159,10 @@ pub struct BuildOptions {
     /// Should optionals be built into their own mod?
     /// Default: true
     optional_mod_folders: Option<bool>,
+    #[serde(default)]
+    /// Can includes come from the P drive?
+    /// Default: false
+    allow_pdrive: Option<bool>,
 }
 
 impl BuildOptions {
@@ -169,6 +173,16 @@ impl BuildOptions {
             optional
         } else {
             true
+        }
+    }
+
+    #[must_use]
+    /// Can includes come from the P drive?
+    pub const fn allow_pdrive(&self) -> bool {
+        if let Some(allow_pdirve) = self.allow_pdrive {
+            allow_pdirve
+        } else {
+            false
         }
     }
 }

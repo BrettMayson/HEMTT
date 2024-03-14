@@ -171,6 +171,7 @@ impl WorkspacePath {
     /// Locate a path in the workspace
     ///
     /// Checks in order:
+    /// - A3 P drive, if allowed and path starts with `/a3/`
     /// - Relative to the current path, or absolute if the path starts with `/`
     /// - In the scanned pointers (prefix files)
     /// - In the include path
@@ -178,7 +179,21 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
     pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
-        let path = path.replace('\\', "/");
+        let path = path.replace('\\', "/").to_lowercase();
+        if path.starts_with("/a3/") {
+            if let Some(pdrive) = &self.workspace().pdrive {
+                let path = pdrive.join(&path)?;
+                if path.exists()? {
+                    trace!("Located with P drive: {:?}", path);
+                    return Ok(Some(Self {
+                        data: Arc::new(WorkspacePathData {
+                            path,
+                            workspace: self.data.workspace.clone(),
+                        }),
+                    }));
+                }
+            }
+        }
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
                 trace!("Located with absolute path: {:?}", path);
@@ -194,7 +209,7 @@ impl WorkspacePath {
                 .workspace
                 .pointers
                 .iter()
-                .find(|(p, _)| path.starts_with(&format!("{p}/")))
+                .find(|(p, _)| path.starts_with(&format!("{}/", p.to_lowercase())))
             {
                 let path = root.join(
                     path.strip_prefix(base)

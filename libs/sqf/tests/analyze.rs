@@ -21,7 +21,7 @@ fn test_analyze(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_common::workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, false)
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();

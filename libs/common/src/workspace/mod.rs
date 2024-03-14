@@ -26,6 +26,7 @@ pub struct Workspace {
     pub(crate) pointers: HashMap<String, VfsPath>,
     pub(crate) addons: Vec<VfsPath>,
     pub(crate) missions: Vec<VfsPath>,
+    pub(crate) pdrive: Option<VfsPath>,
 }
 
 impl Workspace {
@@ -50,6 +51,7 @@ impl Workspace {
         layers: Vec<(VfsPath, LayerType)>,
         project: Option<ProjectConfig>,
         discovery: bool,
+        allow_pdrive: bool,
     ) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
@@ -58,6 +60,11 @@ impl Workspace {
             pointers: HashMap::new(),
             addons: Vec::new(),
             missions: Vec::new(),
+            pdrive: if allow_pdrive {
+                Some(AltrootFS::new(PhysicalFS::new("P:/").into()).into())
+            } else {
+                None
+            },
         };
         if discovery {
             workspace.discover()?;
@@ -93,7 +100,7 @@ impl Workspace {
                         trace!("Prefix: {:?}", entry);
                         let prefix = Prefix::new(&entry.read_to_string()?)?;
                         self.pointers.insert(
-                            format!("/{}", prefix.to_string().replace('\\', "/")),
+                            format!("/{}", prefix.to_string().to_lowercase().replace('\\', "/")),
                             entry.parent(),
                         );
                     }
@@ -144,6 +151,7 @@ impl WorkspaceBuilder {
         self,
         project: Option<ProjectConfig>,
         discovery: bool,
+        allow_pdrive: bool,
     ) -> Result<WorkspacePath, Error> {
         let mut layers = self.layers.clone();
         layers.reverse();
@@ -152,6 +160,7 @@ impl WorkspaceBuilder {
             self.layers,
             project,
             discovery,
+            allow_pdrive,
         )
     }
 }

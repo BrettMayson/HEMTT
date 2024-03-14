@@ -75,7 +75,7 @@ impl PresetNotFound {
                         &std::env::current_dir().expect("to be in a folder"),
                         LayerType::Source,
                     )
-                    .finish(None, false)
+                    .finish(None, false, false)
                     .expect("can create workspace")
                     .join(".hemtt")
                     .expect("project.toml must exist to get here")

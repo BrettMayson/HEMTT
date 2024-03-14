@@ -97,9 +97,11 @@ impl Context {
             }
             maybe_build_folder = Some(build_folder);
         };
-        let workspace = builder
-            .memory()
-            .finish(Some(config.clone()), folder.is_some())?;
+        let workspace = builder.memory().finish(
+            Some(config.clone()),
+            folder.is_some(),
+            config.hemtt().build().allow_pdrive(),
+        )?;
         {
             let version = config.version().get(workspace.vfs());
             if let Err(hemtt_common::project::Error::Git(_)) = version {

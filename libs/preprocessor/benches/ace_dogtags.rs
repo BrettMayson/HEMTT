@@ -7,7 +7,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let workspace = hemtt_common::workspace::Workspace::builder()
         .physical(&PathBuf::from("benches"), LayerType::Source)
         .memory()
-        .finish(None, false)
+        .finish(None, false, false)
         .unwrap();
     let source = workspace.join("ace_dogtags.hpp").unwrap();
     c.bench_function("preprocess - ace dogtags", |b| {

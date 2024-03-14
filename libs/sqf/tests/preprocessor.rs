@@ -20,7 +20,7 @@ macro_rules! preprocess {
 fn preprocess(file: &str) {
     let workspace = hemtt_common::workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, false)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();

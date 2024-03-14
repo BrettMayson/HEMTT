@@ -903,6 +903,7 @@ dependencies = [
  "glob",
  "hemtt-common",
  "hemtt-config",
+ "hemtt-p3d",
  "hemtt-paa",
  "hemtt-pbo",
  "hemtt-preprocessor",
@@ -965,6 +966,15 @@ version = "1.0.1"
 dependencies = [
  "libc",
  "thiserror",
+]
+
+[[package]]
+name = "hemtt-p3d"
+version = "1.0.0"
+dependencies = [
+ "byteorder",
+ "hemtt-common",
+ "indexmap",
 ]
 
 [[package]]

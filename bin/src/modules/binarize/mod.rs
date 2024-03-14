@@ -1,26 +1,47 @@
 use std::{
+    collections::{HashMap, HashSet},
     fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
     process::Command,
-    sync::atomic::{AtomicU16, Ordering},
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        RwLock,
+    },
 };
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
+use self::error::bbe4_missing_textures::MissingTextures;
 #[allow(unused_imports)] // used in windows only
 use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
 };
 use super::Module;
-use crate::{context::Context, error::Error, link::create_link, report::Report};
+use crate::{
+    context::Context, error::Error, link::create_link,
+    modules::binarize::error::bbe5_missing_material::MissingMaterials, report::Report,
+};
 
 mod error;
 
 #[derive(Default)]
 pub struct Binarize {
+    check_only: bool,
     command: Option<String>,
+    prechecked: RwLock<Vec<BinarizeTarget>>,
+}
+
+impl Binarize {
+    #[must_use]
+    pub fn new(check_only: bool) -> Self {
+        Self {
+            check_only,
+            command: None,
+            prechecked: RwLock::new(Vec::new()),
+        }
+    }
 }
 
 impl Module for Binarize {
@@ -56,15 +77,13 @@ impl Module for Binarize {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        if self.command.is_none() {
-            return Ok(Report::new());
-        }
-        let mut targets = Vec::with_capacity(ctx.addons().len());
+    #[allow(clippy::cognitive_complexity)]
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
+        let mut textures_cache: HashMap<String, bool> = HashMap::new();
+        let mut materials_cache: HashMap<String, bool> = HashMap::new();
         for addon in ctx.addons() {
             if let Some(config) = addon.config() {
                 if !config.binarize().enabled() {
@@ -115,6 +134,92 @@ impl Module for Binarize {
                         continue;
                     }
 
+                    // check mlod for textures
+                    if buf == [0x4D, 0x4C, 0x4F, 0x44] {
+                        trace!("checking textures & materials for {}", entry.as_str());
+                        let p3d = hemtt_p3d::P3D::read(&mut entry.open_file().unwrap()).unwrap();
+                        let mut textures = HashSet::new();
+                        for lod in &p3d.lods {
+                            for face in &lod.faces {
+                                textures.insert(face.texture.clone());
+                            }
+                        }
+                        let mut missing = Vec::new();
+                        for texture in textures {
+                            if texture.is_empty() || texture.starts_with('#') {
+                                continue;
+                            }
+                            let texture = if texture.starts_with('\\') {
+                                texture
+                            } else {
+                                format!("\\{texture}")
+                            };
+                            let texture = texture.to_lowercase();
+                            if let Some(exists) = textures_cache.get(&texture) {
+                                if !exists {
+                                    missing.push(texture);
+                                }
+                            } else if ctx.workspace().locate(&texture).unwrap().is_none() {
+                                #[allow(clippy::case_sensitive_file_extension_comparisons)]
+                                // working on lowercase paths
+                                let (replaced, ext) = if texture.ends_with(".paa") {
+                                    (texture.replace(".paa", ".tga"), "tga")
+                                } else if texture.ends_with(".tga") {
+                                    (texture.replace(".tga", ".paa"), "paa")
+                                } else if texture.ends_with(".png") {
+                                    (texture.replace(".png", ".paa"), "paa")
+                                } else {
+                                    (texture.clone(), "")
+                                };
+                                if ext.is_empty()
+                                    || ctx.workspace().locate(&replaced).unwrap().is_none()
+                                {
+                                    textures_cache.insert(texture.clone(), false);
+                                    missing.push(texture);
+                                } else {
+                                    textures_cache.insert(texture.clone(), true);
+                                }
+                            } else {
+                                textures_cache.insert(texture.clone(), true);
+                            }
+                        }
+                        if !missing.is_empty() {
+                            report
+                                .error(MissingTextures::code(entry.as_str().to_string(), missing));
+                        }
+                        let mut materials = HashSet::new();
+                        for lod in &p3d.lods {
+                            for face in &lod.faces {
+                                materials.insert(face.material.clone());
+                            }
+                        }
+                        let mut missing = Vec::new();
+                        for material in materials {
+                            if material.is_empty() || material.starts_with('#') {
+                                continue;
+                            }
+                            let material = if material.starts_with('\\') {
+                                material
+                            } else {
+                                format!("\\{material}")
+                            };
+                            if let Some(exists) = materials_cache.get(&material) {
+                                if !exists {
+                                    missing.push(material);
+                                }
+                            } else if ctx.workspace().locate(&material).unwrap().is_none() {
+                                materials_cache.insert(material.clone(), false);
+                                missing.push(material);
+                            } else {
+                                materials_cache.insert(material.clone(), true);
+                            }
+                        }
+                        if !missing.is_empty() {
+                            report
+                                .error(MissingMaterials::code(entry.as_str().to_string(), missing));
+                        }
+                    }
+
                     let tmp_sourced = tmp_source.join(addon.prefix().as_pathbuf()).join(
                         entry
                             .as_str()
@@ -126,21 +231,36 @@ impl Module for Binarize {
                     );
                     let tmp_outed = tmp_out.join(entry.parent().as_str().trim_start_matches('/'));
 
-                    targets.push(BinarizeTarget {
-                        source: tmp_sourced
-                            .to_str()
-                            .unwrap()
-                            .trim_start_matches('/')
-                            .trim_start_matches(&addon.folder())
-                            .to_owned(),
-                        output: tmp_outed.to_str().unwrap().to_owned(),
-                        entry: entry.filename().trim_start_matches('/').to_owned(),
-                    });
+                    self.prechecked
+                        .write()
+                        .expect("can write in check")
+                        .push(BinarizeTarget {
+                            source: tmp_sourced
+                                .to_str()
+                                .unwrap()
+                                .trim_start_matches('/')
+                                .trim_start_matches(&addon.folder())
+                                .to_owned(),
+                            output: tmp_outed.to_str().unwrap().to_owned(),
+                            entry: entry.filename().trim_start_matches('/').to_owned(),
+                        });
                 }
             }
         }
+        Ok(report)
+    }
 
-        targets
+    #[allow(clippy::too_many_lines)]
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        if self.command.is_none() || self.check_only {
+            return Ok(Report::new());
+        }
+        let mut report = Report::new();
+        let counter = AtomicU16::new(0);
+        let tmp_source = ctx.tmp().join("source");
+        self.prechecked
+            .read()
+            .expect("can read in pre_build")
             .par_iter()
             .map(|target| {
                 debug!("binarizing {}", target.entry);

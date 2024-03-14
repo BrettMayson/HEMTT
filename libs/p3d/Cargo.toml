@@ -1,20 +1,15 @@
 [package]
-name = "hemtt-pbo"
-version = "1.0.1"
+name = "hemtt-p3d"
+version = "1.0.0"
 edition = "2021"
-description = "An PBO library for hemtt"
+description = "An P3d library for hemtt"
 license = "GPL-2.0"
 
 [lints]
 workspace = true
-
-[lib]
-bench = false
 
 [dependencies]
 hemtt-common = { path = "../common", version = "1.0.0" }
 
 byteorder = { workspace = true }
 indexmap = { workspace = true }
-serde = { workspace = true }
-sha-1 = { workspace = true }
