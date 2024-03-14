@@ -207,7 +207,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     create_dir_all(ctx.tmp().join("output"))?;
     let tmp = ctx.tmp().join("source");
     create_dir_all(&tmp)?;
-    for addon in ctx.addons() {
+    for addon in ctx.all_addons() {
         let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
         create_dir_all(tmp_addon.parent().unwrap())?;
         let target = ctx.project_folder().join(
