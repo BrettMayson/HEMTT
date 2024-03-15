@@ -4,8 +4,8 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::workspace::{LayerType, Workspace, WorkspacePath};
-use hemtt_common::{addons::Addon, project::ProjectConfig};
+use hemtt_common::project::ProjectConfig;
+use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
 
@@ -100,7 +100,7 @@ impl Context {
         let workspace = builder.memory().finish(
             Some(config.clone()),
             folder.is_some(),
-            config.hemtt().build().allow_pdrive(),
+            config.hemtt().build().pdrive(),
         )?;
         {
             let version = config.version().get(workspace.vfs());

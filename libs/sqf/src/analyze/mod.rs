@@ -9,9 +9,9 @@ mod typename;
 
 use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_common::project::ProjectConfig;
+use hemtt_workspace::{
     addons::Addon,
-    project::ProjectConfig,
     reporting::{Code, Processed},
 };
 

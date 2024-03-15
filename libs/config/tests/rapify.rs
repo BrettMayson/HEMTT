@@ -1,8 +1,8 @@
 use std::io::Read;
 
-use hemtt_common::workspace::LayerType;
 use hemtt_config::rapify::Rapify;
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::LayerType;
 
 const ROOT: &str = "tests/rapify/";
 
@@ -19,14 +19,18 @@ macro_rules! bootstrap {
 
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false, false)
+        .finish(
+            None,
+            false,
+            &hemtt_common::project::hemtt::PDriveOption::Disallow,
+        )
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
     let parsed = hemtt_config::parse(None, &processed);
-    let workspacefiles = hemtt_common::reporting::WorkspaceFiles::new();
+    let workspacefiles = hemtt_workspace::reporting::WorkspaceFiles::new();
     if let Err(e) = &parsed {
         let e = e
             .iter()

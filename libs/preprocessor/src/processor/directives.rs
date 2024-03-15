@@ -1,6 +1,6 @@
 use std::{rc::Rc, sync::Arc};
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::Position,
     reporting::{Output, Symbol, Token},
 };
@@ -406,7 +406,7 @@ impl Processor {
 
 #[cfg(test)]
 mod tests {
-    use hemtt_common::reporting::Symbol;
+    use hemtt_workspace::reporting::Symbol;
 
     use crate::{
         definition::Definition,

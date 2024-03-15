@@ -4,11 +4,10 @@ use std::{ops::Range, rc::Rc, sync::Arc};
 
 use crate::{
     position::{LineCol, Position},
-    reporting::{Output, Token},
-    workspace::{Error, WorkspacePath},
+    Error, WorkspacePath,
 };
 
-use super::Code;
+use super::{Code, Output, Token};
 
 #[derive(Debug, Default)]
 /// A processed file

@@ -12,7 +12,7 @@ use crate::{BinaryCommand, Expression, NularCommand, Statement, Statements, Unar
 use chumsky::prelude::*;
 use chumsky::Stream;
 use hemtt_common::error::thiserror::Error;
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 /// Parses a SQF string into a list of statements.
 ///

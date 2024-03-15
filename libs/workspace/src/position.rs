@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use crate::workspace::WorkspacePath;
+use crate::WorkspacePath;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Line and column of a token

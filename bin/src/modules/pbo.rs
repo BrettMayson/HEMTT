@@ -5,11 +5,11 @@ use std::{
 
 use git2::Repository;
 use hemtt_common::{
-    addons::{Addon, Location},
     prefix::{Prefix, FILES},
     version::Version,
 };
 use hemtt_pbo::WritablePbo;
+use hemtt_workspace::addons::{Addon, Location};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 

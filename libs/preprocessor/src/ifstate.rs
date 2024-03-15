@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use hemtt_common::reporting::Token;
+use hemtt_workspace::reporting::Token;
 
 use crate::{codes::pe17_double_else::DoubleElse, Error};
 

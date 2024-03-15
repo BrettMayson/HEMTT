@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use hemtt_common::{position::Position, reporting::Token};
+use hemtt_workspace::{position::Position, reporting::Token};
 use peekmore::{PeekMore, PeekMoreIterator};
 
 #[derive(Clone, Debug, PartialEq, Eq)]

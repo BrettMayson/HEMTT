@@ -3,27 +3,26 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
+use hemtt_common::error::thiserror;
+use hemtt_common::prefix::{Prefix, FILES};
+use hemtt_common::project::AddonConfig;
+use hemtt_common::version::Version;
 use tracing::{trace, warn};
 
-use crate::workspace::WorkspacePath;
-use crate::{
-    prefix::{self, Prefix},
-    project::AddonConfig,
-    version::Version,
-};
+use crate::WorkspacePath;
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("Addon duplicated with different case: {0}")]
-    AddonNameDuplicate(String),
+    NameDuplicate(String),
     #[error("Addon present in addons and optionals: {0}")]
-    AddonDuplicate(String),
+    Duplicate(String),
     #[error("Invalid addon location: {0}")]
-    AddonLocationInvalid(String),
+    LocationInvalid(String),
     #[error("Optional addon not found: {0}")]
-    AddonOptionalNotFound(String),
+    OptionalNotFound(String),
     #[error("Addon prefix not found: {0}")]
-    AddonPrefixMissing(String),
+    PrefixMissing(String),
 }
 
 #[derive(Debug, Clone)]
@@ -56,12 +55,12 @@ impl Addon {
             },
             prefix: {
                 let mut prefix = None;
-                let mut files = prefix::FILES
+                let mut files = FILES
                     .iter()
                     .map(std::string::ToString::to_string)
                     .collect::<Vec<_>>();
                 files.append(
-                    &mut prefix::FILES
+                    &mut FILES
                         .iter()
                         .map(|f| f.to_uppercase())
                         .collect::<Vec<String>>(),
@@ -74,7 +73,7 @@ impl Addon {
                         break 'search;
                     }
                 }
-                prefix.ok_or_else(|| Error::AddonPrefixMissing(name.clone()))?
+                prefix.ok_or_else(|| Error::PrefixMissing(name.clone()))?
             },
             location,
             name,
@@ -132,16 +131,16 @@ impl Addon {
             }
         }
         for addon in &addons {
-            if addon.name().to_lowercase() != addon.name() {
-                warn!(
-                    "Addon name {} is not lowercase, it is highly recommended to use lowercase names",
-                    addon.name()
-                );
-            }
+            // if addon.name().to_lowercase() != addon.name() {
+            //     warn!(
+            //         "Addon name {} is not lowercase, it is highly recommended to use lowercase names",
+            //         addon.name()
+            //     );
+            // }
             if addons.iter().any(|a| {
                 a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
             }) {
-                return Err(crate::error::Error::Addon(Error::AddonNameDuplicate(
+                return Err(crate::error::Error::Addon(Error::NameDuplicate(
                     addon.name().to_string(),
                 )));
             }
@@ -149,7 +148,7 @@ impl Addon {
                 a.name().to_lowercase() == addon.name().to_lowercase()
                     && a.location() != addon.location()
             }) {
-                return Err(crate::error::Error::Addon(Error::AddonDuplicate(
+                return Err(crate::error::Error::Addon(Error::Duplicate(
                     addon.name().to_string(),
                 )));
             }
@@ -182,12 +181,12 @@ impl Location {
             .filter(|file_or_dir| file_or_dir.is_dir())
             .map(|file| {
                 let Some(name) = file.file_name() else {
-                    return Err(crate::error::Error::Addon(Error::AddonLocationInvalid(
+                    return Err(crate::error::Error::Addon(Error::LocationInvalid(
                         file.display().to_string(),
                     )));
                 };
                 let Some(name) = name.to_str() else {
-                    return Err(crate::error::Error::Addon(Error::AddonLocationInvalid(
+                    return Err(crate::error::Error::Addon(Error::LocationInvalid(
                         file.display().to_string(),
                     )));
                 };
@@ -205,7 +204,7 @@ impl FromStr for Location {
         match s {
             "addons" => Ok(Self::Addons),
             "optionals" => Ok(Self::Optionals),
-            _ => Err(Error::AddonLocationInvalid(s.to_string())),
+            _ => Err(Error::LocationInvalid(s.to_string())),
         }
     }
 }
@@ -264,7 +263,7 @@ mod tests {
         assert_eq!("optionals".parse(), Ok(super::Location::Optionals));
         assert_eq!(
             "foobar".parse::<super::Location>(),
-            Err(super::Error::AddonLocationInvalid("foobar".to_string()))
+            Err(super::Error::LocationInvalid("foobar".to_string()))
         );
     }
 }

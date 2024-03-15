@@ -4,7 +4,7 @@ use std::{
     sync::Arc,
 };
 
-use hemtt_common::reporting::{Code, WorkspaceFiles};
+use hemtt_workspace::reporting::{Code, WorkspaceFiles};
 
 use crate::Error;
 

@@ -1,6 +1,5 @@
 use std::{hash::Hasher, io::Write, sync::Arc};
 
-use tracing::trace;
 use vfs::VfsPath;
 
 use super::{Error, LayerType, Workspace};
@@ -182,12 +181,10 @@ impl WorkspacePath {
         let path = path.replace('\\', "/").to_lowercase();
         if path.starts_with("/a3/") {
             if let Some(pdrive) = &self.workspace().pdrive {
-                let path = pdrive.join(&path)?;
-                if path.exists()? {
-                    trace!("Located with P drive: {:?}", path);
+                if let Some(pdrive_path) = pdrive.path_to(&path) {
                     return Ok(Some(Self {
                         data: Arc::new(WorkspacePathData {
-                            path,
+                            path: pdrive_path,
                             workspace: self.data.workspace.clone(),
                         }),
                     }));
@@ -196,7 +193,6 @@ impl WorkspacePath {
         }
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
-                trace!("Located with absolute path: {:?}", path);
                 return Ok(Some(Self {
                     data: Arc::new(WorkspacePathData {
                         path: self.data.workspace.vfs.join(path)?,
@@ -218,7 +214,6 @@ impl WorkspacePath {
                         .unwrap_or(&path),
                 )?;
                 if path.exists()? {
-                    trace!("Located with prefix pointer: {:?}", path);
                     return Ok(Some(Self {
                         data: Arc::new(WorkspacePathData {
                             path,
@@ -230,7 +225,6 @@ impl WorkspacePath {
         }
         let path = self.data.path.parent().join(path)?;
         if path.exists()? {
-            trace!("Located with parent: vfs {}", path.as_str());
             Ok(Some(Self {
                 data: Arc::new(WorkspacePathData {
                     path,

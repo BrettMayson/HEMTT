@@ -909,6 +909,7 @@ dependencies = [
  "hemtt-preprocessor",
  "hemtt-signing",
  "hemtt-sqf",
+ "hemtt-workspace",
  "num_cpus",
  "paste",
  "rayon",
@@ -919,7 +920,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "steamlocate",
  "term-table",
  "time",
  "tracing",
@@ -935,10 +935,9 @@ dependencies = [
 name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
- "ansi_term",
- "codespan-reporting",
  "git2",
  "serde",
+ "steamlocate",
  "strsim",
  "strum",
  "thiserror",
@@ -955,6 +954,7 @@ dependencies = [
  "chumsky",
  "hemtt-common",
  "hemtt-preprocessor",
+ "hemtt-workspace",
  "lsp-types",
  "paste",
  "vfs",
@@ -974,6 +974,7 @@ version = "1.0.0"
 dependencies = [
  "byteorder",
  "hemtt-common",
+ "hemtt-workspace",
  "indexmap",
 ]
 
@@ -1006,6 +1007,7 @@ version = "1.0.0"
 dependencies = [
  "criterion",
  "hemtt-common",
+ "hemtt-workspace",
  "lsp-types",
  "paste",
  "peekmore",
@@ -1039,8 +1041,22 @@ dependencies = [
  "hemtt-common",
  "hemtt-lzo",
  "hemtt-preprocessor",
+ "hemtt-workspace",
  "paste",
  "tracing",
+]
+
+[[package]]
+name = "hemtt-workspace"
+version = "1.0.0"
+dependencies = [
+ "ansi_term",
+ "codespan-reporting",
+ "dirs",
+ "hemtt-common",
+ "hemtt-pbo",
+ "tracing",
+ "vfs",
 ]
 
 [[package]]

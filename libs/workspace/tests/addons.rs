@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use hemtt_common::addons::Addon;
+use hemtt_workspace::addons::Addon;
 
 #[test]
 fn locations_duplicate() {

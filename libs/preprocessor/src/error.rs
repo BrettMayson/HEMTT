@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use tracing::error;
 
-use hemtt_common::{error::thiserror, reporting::Code};
+use hemtt_common::error::thiserror;
+use hemtt_workspace::reporting::Code;
 
 #[derive(thiserror::Error, Debug)]
 /// Errors that can occur during preprocessing
@@ -13,9 +14,9 @@ pub enum Error {
     #[error("IO Error: {0}")]
     /// [`std::io::Error`]
     Io(Box<std::io::Error>),
-    /// [`hemtt_common::workspace::Error`]
+    /// [`hemtt_workspace::Error`]
     #[error("Workspace Error: {0}")]
-    Workspace(#[from] hemtt_common::workspace::Error),
+    Workspace(#[from] hemtt_workspace::Error),
 }
 
 impl From<std::io::Error> for Error {

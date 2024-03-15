@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Token};
+use hemtt_workspace::reporting::{Code, Token};
 
 use crate::Error;
 

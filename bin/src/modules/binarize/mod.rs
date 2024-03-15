@@ -1,5 +1,4 @@
 use std::{
-    collections::{HashMap, HashSet},
     fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
     process::Command,
@@ -9,6 +8,8 @@ use std::{
     },
 };
 
+use hemtt_common::project::hemtt::PDriveOption;
+use hemtt_p3d::SearchCache;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -51,7 +52,6 @@ impl Module for Binarize {
 
     #[cfg(windows)]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        setup_tmp(ctx)?;
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
@@ -76,14 +76,11 @@ impl Module for Binarize {
         Ok(report)
     }
 
-    #[allow(clippy::too_many_lines)]
-    #[allow(clippy::cognitive_complexity)]
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
-        let mut textures_cache: HashMap<String, bool> = HashMap::new();
-        let mut materials_cache: HashMap<String, bool> = HashMap::new();
+        let search_cache = SearchCache::new();
         for addon in ctx.addons() {
             if let Some(config) = addon.config() {
                 if !config.binarize().enabled() {
@@ -138,85 +135,19 @@ impl Module for Binarize {
                     if buf == [0x4D, 0x4C, 0x4F, 0x44] {
                         trace!("checking textures & materials for {}", entry.as_str());
                         let p3d = hemtt_p3d::P3D::read(&mut entry.open_file().unwrap()).unwrap();
-                        let mut textures = HashSet::new();
-                        for lod in &p3d.lods {
-                            for face in &lod.faces {
-                                textures.insert(face.texture.clone());
-                            }
+                        let (missing_textures, missing_materials) =
+                            p3d.missing(ctx.workspace(), &search_cache)?;
+                        if !missing_textures.is_empty() {
+                            report.error(MissingTextures::code(
+                                entry.as_str().to_string(),
+                                missing_textures,
+                            ));
                         }
-                        let mut missing = Vec::new();
-                        for texture in textures {
-                            if texture.is_empty() || texture.starts_with('#') {
-                                continue;
-                            }
-                            let texture = if texture.starts_with('\\') {
-                                texture
-                            } else {
-                                format!("\\{texture}")
-                            };
-                            let texture = texture.to_lowercase();
-                            if let Some(exists) = textures_cache.get(&texture) {
-                                if !exists {
-                                    missing.push(texture);
-                                }
-                            } else if ctx.workspace().locate(&texture).unwrap().is_none() {
-                                #[allow(clippy::case_sensitive_file_extension_comparisons)]
-                                // working on lowercase paths
-                                let (replaced, ext) = if texture.ends_with(".paa") {
-                                    (texture.replace(".paa", ".tga"), "tga")
-                                } else if texture.ends_with(".tga") {
-                                    (texture.replace(".tga", ".paa"), "paa")
-                                } else if texture.ends_with(".png") {
-                                    (texture.replace(".png", ".paa"), "paa")
-                                } else {
-                                    (texture.clone(), "")
-                                };
-                                if ext.is_empty()
-                                    || ctx.workspace().locate(&replaced).unwrap().is_none()
-                                {
-                                    textures_cache.insert(texture.clone(), false);
-                                    missing.push(texture);
-                                } else {
-                                    textures_cache.insert(texture.clone(), true);
-                                }
-                            } else {
-                                textures_cache.insert(texture.clone(), true);
-                            }
-                        }
-                        if !missing.is_empty() {
-                            report
-                                .error(MissingTextures::code(entry.as_str().to_string(), missing));
-                        }
-                        let mut materials = HashSet::new();
-                        for lod in &p3d.lods {
-                            for face in &lod.faces {
-                                materials.insert(face.material.clone());
-                            }
-                        }
-                        let mut missing = Vec::new();
-                        for material in materials {
-                            if material.is_empty() || material.starts_with('#') {
-                                continue;
-                            }
-                            let material = if material.starts_with('\\') {
-                                material
-                            } else {
-                                format!("\\{material}")
-                            };
-                            if let Some(exists) = materials_cache.get(&material) {
-                                if !exists {
-                                    missing.push(material);
-                                }
-                            } else if ctx.workspace().locate(&material).unwrap().is_none() {
-                                materials_cache.insert(material.clone(), false);
-                                missing.push(material);
-                            } else {
-                                materials_cache.insert(material.clone(), true);
-                            }
-                        }
-                        if !missing.is_empty() {
-                            report
-                                .error(MissingMaterials::code(entry.as_str().to_string(), missing));
+                        if !missing_materials.is_empty() {
+                            report.error(MissingMaterials::code(
+                                entry.as_str().to_string(),
+                                missing_materials,
+                            ));
                         }
                     }
 
@@ -255,6 +186,7 @@ impl Module for Binarize {
         if self.command.is_none() || self.check_only {
             return Ok(Report::new());
         }
+        setup_tmp(ctx)?;
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
@@ -356,22 +288,40 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         trace!("copying `{}` to tmp for binarization", file.display());
         std::fs::copy(&file, &tmp_file)?;
     }
+
+    // link include folders
     let include = ctx.project_folder().join("include");
-    if !include.exists() {
-        return Ok(());
-    }
-    for outer_prefix in std::fs::read_dir(include)? {
-        let outer_prefix = outer_prefix?.path();
-        if outer_prefix.is_dir() {
-            let tmp_outer_prefix = tmp.join(outer_prefix.file_name().unwrap());
-            for prefix in std::fs::read_dir(outer_prefix)? {
-                let prefix = prefix?.path();
-                if prefix.is_dir() {
-                    let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
-                    create_dir_all(tmp_mod.parent().unwrap())?;
-                    create_link(&tmp_mod, &prefix)?;
+    if include.exists() {
+        for outer_prefix in std::fs::read_dir(include)? {
+            let outer_prefix = outer_prefix?.path();
+            if outer_prefix.is_dir() {
+                let tmp_outer_prefix = tmp.join(outer_prefix.file_name().unwrap());
+                for prefix in std::fs::read_dir(outer_prefix)? {
+                    let prefix = prefix?.path();
+                    if prefix.is_dir() {
+                        let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
+                        create_dir_all(tmp_mod.parent().unwrap())?;
+                        create_link(&tmp_mod, &prefix)?;
+                    }
                 }
             }
+        }
+    }
+
+    // link the pdrive, if it is required
+    if ctx.config().hemtt().build().pdrive() != &PDriveOption::Require {
+        return Ok(());
+    }
+    let Some(pdrive) = ctx.workspace().workspace().pdrive() else {
+        return Ok(());
+    };
+    println!("pdrive from {}", pdrive.link().display());
+    for folder in std::fs::read_dir(pdrive.link())? {
+        let folder = folder?.path();
+        if folder.is_dir() {
+            let tmp_folder = tmp.join("a3").join(folder.file_name().unwrap());
+            create_dir_all(tmp_folder.parent().unwrap())?;
+            create_link(&tmp_folder, &folder)?;
         }
     }
     Ok(())

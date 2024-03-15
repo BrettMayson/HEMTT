@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::{analyze::codes::saa4_str_format::StrFormat, Expression, Statements, UnaryCommand};
 

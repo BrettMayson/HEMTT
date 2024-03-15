@@ -1,5 +1,5 @@
 use chumsky::error::Simple;
-use hemtt_common::reporting::{Code, Diagnostic, Processed};
+use hemtt_workspace::reporting::{Code, Diagnostic, Processed};
 
 pub mod ce1_invalid_value;
 pub mod ce2_invalid_value_macro;

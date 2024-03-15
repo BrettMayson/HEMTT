@@ -1,9 +1,9 @@
 use std::{ops::Range, path::Path, sync::Arc};
 
-use hemtt_common::{
+use hemtt_common::similar_values;
+use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label},
-    similar_values,
-    workspace::{LayerType, Workspace, WorkspacePath},
+    LayerType, Workspace, WorkspacePath,
 };
 
 pub struct PresetNotFound {
@@ -75,7 +75,11 @@ impl PresetNotFound {
                         &std::env::current_dir().expect("to be in a folder"),
                         LayerType::Source,
                     )
-                    .finish(None, false, false)
+                    .finish(
+                        None,
+                        false,
+                        &hemtt_common::project::hemtt::PDriveOption::Disallow,
+                    )
                     .expect("can create workspace")
                     .join(".hemtt")
                     .expect("project.toml must exist to get here")

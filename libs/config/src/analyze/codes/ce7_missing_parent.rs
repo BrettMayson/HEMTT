@@ -1,4 +1,4 @@
-use hemtt_common::reporting::{Code, Diagnostic, Processed};
+use hemtt_workspace::reporting::{Code, Diagnostic, Processed};
 
 use crate::Class;
 

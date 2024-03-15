@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use hemtt_common::reporting::{Code, Diagnostic, Processed};
+use hemtt_workspace::reporting::{Code, Diagnostic, Processed};
 
 pub struct InvalidValueMacro {
     span: Range<usize>,

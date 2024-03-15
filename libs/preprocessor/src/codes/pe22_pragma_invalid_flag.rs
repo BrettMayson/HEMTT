@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use hemtt_common::{
-    reporting::{Code, Token},
-    similar_values,
-};
+use hemtt_common::similar_values;
+use hemtt_workspace::reporting::{Code, Token};
 
 use crate::{processor::pragma::Flag, Error};
 

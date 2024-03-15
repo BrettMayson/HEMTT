@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use hemtt_common::{
-    reporting::{Code, Diagnostic},
-    similar_values,
-};
+use hemtt_common::similar_values;
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct LaunchConfigNotFound {
     config: String,

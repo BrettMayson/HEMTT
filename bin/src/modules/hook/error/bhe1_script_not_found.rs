@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_common::similar_values;
+use hemtt_workspace::{
     reporting::{Code, Diagnostic},
-    similar_values,
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 use crate::Error;

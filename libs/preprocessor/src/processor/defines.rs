@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc, sync::Arc};
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::Position,
     reporting::{Output, Symbol, Token},
 };
@@ -307,7 +307,7 @@ impl Processor {
 
 #[cfg(test)]
 mod tests {
-    use hemtt_common::reporting::{Symbol, Whitespace};
+    use hemtt_workspace::reporting::{Symbol, Whitespace};
 
     use crate::processor::{pragma::Pragma, tests, Processor};
 

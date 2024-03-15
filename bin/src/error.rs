@@ -25,11 +25,11 @@ pub enum Error {
     #[error("Version Error: {0}")]
     Version(#[from] hemtt_common::version::Error),
     #[error("Workspace Error: {0}")]
-    Workspace(#[from] hemtt_common::workspace::Error),
+    Workspace(#[from] hemtt_workspace::Error),
     #[error("Sqf Error: {0}")]
     Sqf(#[from] hemtt_sqf::Error),
     #[error("Addon Error: {0}")]
-    Addon(#[from] hemtt_common::addons::Error),
+    Addon(#[from] hemtt_workspace::addons::Error),
 
     #[error("Update error: {0}")]
     Update(String),

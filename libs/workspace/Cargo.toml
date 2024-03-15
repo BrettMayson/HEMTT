@@ -1,0 +1,19 @@
+[package]
+name = "hemtt-workspace"
+version = "1.0.0"
+edition = "2021"
+description = "A workspace library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-pbo = { path = "../pbo", version = "1.0.0" }
+
+ansi_term = "0.12.1"
+codespan-reporting = "0.11.1"
+dirs = "5.0.1"
+tracing = { workspace = true }
+vfs = { workspace = true }

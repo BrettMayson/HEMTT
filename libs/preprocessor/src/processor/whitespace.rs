@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use hemtt_common::reporting::{Output, Token};
+use hemtt_workspace::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{codes::pe1_unexpected_token::UnexpectedToken, Error};
@@ -72,7 +72,7 @@ impl Processor {
 
 #[cfg(test)]
 mod tests {
-    use hemtt_common::reporting::Symbol;
+    use hemtt_workspace::reporting::Symbol;
 
     use crate::processor::{tests, Processor};
 

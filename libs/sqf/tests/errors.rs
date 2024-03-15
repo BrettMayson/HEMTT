@@ -1,8 +1,8 @@
 use std::io::Read;
 
-use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
+use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/errors/";
 
@@ -19,9 +19,13 @@ macro_rules! errors {
 
 fn errors(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false, false)
+        .finish(
+            None,
+            false,
+            &hemtt_common::project::hemtt::PDriveOption::Disallow,
+        )
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();

@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use codespan_reporting::diagnostic::LabelStyle;
 
-use crate::workspace::WorkspacePath;
+use crate::WorkspacePath;
 
 #[derive(Debug, Clone)]
 pub struct Label {

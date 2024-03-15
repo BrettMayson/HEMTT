@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::{defines::Defines, Error};
 
@@ -58,12 +58,9 @@ impl Code for IfUnitOrFunction {
         }
     }
 
-    fn expand_diagnostic(
-        &self,
-        diag: hemtt_common::reporting::Diagnostic,
-    ) -> hemtt_common::reporting::Diagnostic {
+    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
         diag.with_label(
-            hemtt_common::reporting::Label::secondary(
+            Label::secondary(
                 self.defined.0.position().path().clone(),
                 self.defined.0.position().span(),
             )

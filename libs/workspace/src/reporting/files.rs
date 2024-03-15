@@ -2,7 +2,7 @@ use std::{collections::HashMap, ops::Range, rc::Rc, sync::RwLock};
 
 use codespan_reporting::files;
 
-use crate::workspace::WorkspacePath;
+use crate::WorkspacePath;
 
 #[derive(Debug, Clone)]
 pub struct WorkspaceFile {

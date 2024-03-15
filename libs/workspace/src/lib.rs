@@ -2,20 +2,26 @@
 
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
+use hemtt_common::{
+    prefix::{Prefix, FILES},
+    project::{hemtt::PDriveOption, ProjectConfig},
+};
+use pdrive::PDrive;
 use tracing::trace;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
-mod error;
-mod path;
+pub mod addons;
+pub mod error;
+pub mod path;
+pub mod pdrive;
+pub mod position;
+pub mod reporting;
+
+use pdrive::search as pdrive_search;
 
 pub use error::Error;
 #[allow(clippy::module_name_repetitions)]
 pub use path::WorkspacePath;
-
-use crate::{
-    prefix::{Prefix, FILES},
-    project::ProjectConfig,
-};
 
 #[derive(Debug, PartialEq, Eq)]
 /// A workspace (directory) containing addons and / or missions
@@ -26,7 +32,7 @@ pub struct Workspace {
     pub(crate) pointers: HashMap<String, VfsPath>,
     pub(crate) addons: Vec<VfsPath>,
     pub(crate) missions: Vec<VfsPath>,
-    pub(crate) pdrive: Option<VfsPath>,
+    pub(crate) pdrive: Option<PDrive>,
 }
 
 impl Workspace {
@@ -42,6 +48,12 @@ impl Workspace {
         self.project.as_ref()
     }
 
+    #[must_use]
+    /// Returns the pdrive
+    pub const fn pdrive(&self) -> Option<&PDrive> {
+        self.pdrive.as_ref()
+    }
+
     /// Create a new workspace from a vfs path
     ///
     /// # Errors
@@ -51,7 +63,7 @@ impl Workspace {
         layers: Vec<(VfsPath, LayerType)>,
         project: Option<ProjectConfig>,
         discovery: bool,
-        allow_pdrive: bool,
+        pdrive: &PDriveOption,
     ) -> Result<WorkspacePath, Error> {
         let mut workspace = Self {
             vfs,
@@ -60,10 +72,10 @@ impl Workspace {
             pointers: HashMap::new(),
             addons: Vec::new(),
             missions: Vec::new(),
-            pdrive: if allow_pdrive {
-                Some(AltrootFS::new(PhysicalFS::new("P:/").into()).into())
-            } else {
+            pdrive: if pdrive == &PDriveOption::Disallow {
                 None
+            } else {
+                pdrive_search()
             },
         };
         if discovery {
@@ -151,7 +163,7 @@ impl WorkspaceBuilder {
         self,
         project: Option<ProjectConfig>,
         discovery: bool,
-        allow_pdrive: bool,
+        pdrive: &PDriveOption,
     ) -> Result<WorkspacePath, Error> {
         let mut layers = self.layers.clone();
         layers.reverse();
@@ -160,7 +172,7 @@ impl WorkspaceBuilder {
             self.layers,
             project,
             discovery,
-            allow_pdrive,
+            pdrive,
         )
     }
 }

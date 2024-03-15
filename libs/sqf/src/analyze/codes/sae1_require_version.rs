@@ -1,9 +1,9 @@
 use std::ops::Range;
 
 use arma3_wiki::model::Version;
-use hemtt_common::{
+use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 pub struct InsufficientRequiredVersion {

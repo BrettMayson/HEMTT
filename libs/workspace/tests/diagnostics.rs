@@ -1,7 +1,7 @@
 use codespan_reporting::diagnostic::Severity;
-use hemtt_common::{
+use hemtt_workspace::{
     reporting::{Diagnostic, Label, WorkspaceFiles},
-    workspace::LayerType,
+    LayerType,
 };
 
 const ROOT: &str = "tests/diagnostics/";
@@ -9,9 +9,13 @@ const ROOT: &str = "tests/diagnostics/";
 #[test]
 fn python() {
     let folder = std::path::PathBuf::from(ROOT);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false, false)
+        .finish(
+            None,
+            false,
+            &hemtt_common::project::hemtt::PDriveOption::Disallow,
+        )
         .unwrap();
     let diagnostic = Diagnostic::new("T1".to_string(), "using python 2".to_string())
         .set_severity(Severity::Warning)
