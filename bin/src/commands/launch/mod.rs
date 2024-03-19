@@ -1,9 +1,6 @@
 mod error;
 
-use std::{
-    borrow::Cow,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
@@ -37,8 +34,8 @@ pub fn cli() -> Command {
             .long_about("Builds your project in dev mode and launches Arma 3 with file patching enabled, loading your mod and any workshop mods.")
             .arg(
                 clap::Arg::new("config")
-                    .default_value("default")
-                    .help("Launches with the specified `[hemtt.launch.<config>]` configuration"),
+                    .action(ArgAction::Append)
+                    .help("Launches with the specified `[hemtt.launch.<config>]` configurations"),
             )
             .arg(
                 clap::Arg::new("executable")
@@ -102,22 +99,32 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         return Ok(report);
     };
 
-    let launch_config = matches
-        .get_one::<String>("config")
-        .map_or_else(|| String::from("default"), std::string::ToString::to_string);
-    let Some(launch) = config
-        .hemtt()
-        .launch(&launch_config)
-        .or(if launch_config == "default" {
-            Some(Cow::Owned(LaunchOptions::default()))
-        } else {
-            None
+    let launch_config: Vec<&String> = matches
+        .get_many::<String>("config")
+        .unwrap_or_default()
+        .collect();
+    let launch = if launch_config.is_empty() {
+        config.hemtt().launch("default").unwrap_or_default()
+    } else if let Some(launch) = launch_config
+        .iter()
+        .map(|c| {
+            config.hemtt().launch(c).map_or_else(
+                || {
+                    report.error(LaunchConfigNotFound::code(
+                        (*c).to_string(),
+                        &config.hemtt().launch_keys(),
+                    ));
+                    None
+                },
+                Some,
+            )
         })
-    else {
-        report.error(LaunchConfigNotFound::code(
-            launch_config,
-            &config.hemtt().launch_keys(),
-        ));
+        .collect::<Option<Vec<_>>>()
+    {
+        launch
+            .into_iter()
+            .fold(LaunchOptions::default(), |acc, l| acc.overlay(&l))
+    } else {
         return Ok(report);
     };
 
@@ -161,11 +168,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         trace!("Loading preset: {}", preset);
         let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            report.error(PresetNotFound::code(
-                &launch_config,
-                preset.to_string(),
-                &presets,
-            ));
+            report.error(PresetNotFound::code(preset.to_string(), &presets));
             continue;
         }
         let html = std::fs::read_to_string(html)?;
@@ -267,7 +270,6 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             args.push(format!("\"{}\"", path.display()));
         } else {
             report.error(MissionNotFound::code(
-                &launch_config,
                 mission.to_string(),
                 &std::env::current_dir()?,
             ));

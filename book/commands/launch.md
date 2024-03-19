@@ -2,11 +2,11 @@
 
 <pre><code>Launch Arma 3 with your mod and dependencies.
 
-Usage: hemtt launch [OPTIONS] [config] [-- &lt;passthrough&gt;...]
+Usage: hemtt launch [OPTIONS] [config]... [-- &lt;passthrough&gt;...]
 
 Arguments:
-  [config]
-        Launches with the specified `hemtt.launch.<config>` configuration
+  [config]...
+        Launches with the specified `hemtt.launch.<config>` configurations
 
   [passthrough]...
         Passthrough additional arguments to Arma 3
@@ -49,6 +49,8 @@ Options:
 
 `hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, options are passed to the `dev` command.
 
+You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden.
+
 ## Configuration
 
 `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
@@ -90,7 +92,18 @@ workshop = [
 dlc = [
     "S.O.G. Prairie Fire",
 ]
+
+# Launched with `hemtt launch vn-ace
+[hemtt.launch.vn-ace]
+extends = "vn"
+workshop = [
+    "463939057", # ACE3's Workshop ID
+]
 ```
+
+### extends
+
+The name of another configuration to extend. This will merge all arrays with the base configuration, and override any duplicate keys.
 
 ### workshop
 

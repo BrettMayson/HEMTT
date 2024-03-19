@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Eq, Clone, Debug, Serialize)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, PartialOrd, Ord, Hash, Copy)]
 #[cfg_attr(test, derive(strum::EnumIter))]
 /// DLCs that require opt-in.
 pub enum DLC {
