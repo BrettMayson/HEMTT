@@ -108,13 +108,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     } else if let Some(launch) = launch_config
         .iter()
         .map(|c| {
-            config.hemtt().launch(c).map_or_else(|| {
-                report.error(LaunchConfigNotFound::code(
-                    (*c).to_string(),
-                    &config.hemtt().launch_keys(),
-                ));
-                None
-            }, Some)
+            config.hemtt().launch(c).map_or_else(
+                || {
+                    report.error(LaunchConfigNotFound::code(
+                        (*c).to_string(),
+                        &config.hemtt().launch_keys(),
+                    ));
+                    None
+                },
+                Some,
+            )
         })
         .collect::<Option<Vec<_>>>()
     {
