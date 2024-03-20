@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use codespan_reporting::diagnostic::Severity;
 use hemtt_workspace::{
     reporting::{Diagnostic, Label, WorkspaceFiles},

@@ -120,6 +120,10 @@ impl ProjectConfig {
         }
 
         CONFIG_DEPRECATION.call_once(|| {
+            if file.contains("[hemtt.launch]") {
+                warn!("hemtt.launch is deprecated, use hemtt.launch.default instead");
+            }
+
             if file.contains("[asc]") {
                 warn!("ASC config is no longer used");
             }

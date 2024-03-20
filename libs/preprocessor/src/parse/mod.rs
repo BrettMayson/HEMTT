@@ -13,6 +13,7 @@ use crate::{codes::pe24_parsing_failed::ParsingFailed, Error};
 
 #[derive(Parser)]
 #[grammar = "parse/config.pest"]
+/// Parser for the preprocessor, generated from `config.pest`
 pub struct PreprocessorParser;
 
 /// Parse a file into tokens
@@ -59,7 +60,11 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
                     let count = lines.len() - 1;
                     line += count;
                     if count > 0 {
-                        col = lines.last().unwrap().len() + 1;
+                        col = lines
+                            .last()
+                            .expect("exists because count is greater than 0")
+                            .len()
+                            + 1;
                     } else {
                         col = 0;
                     }
@@ -101,8 +106,17 @@ impl Parse for Symbol {
     fn to_symbol(pair: pest::iterators::Pair<Rule>) -> Self {
         match pair.as_rule() {
             Rule::word => Self::from_word(pair.as_str().to_string()),
-            Rule::alpha => Self::Alpha(pair.as_str().chars().next().unwrap()),
-            Rule::digit => Self::Digit(pair.as_str().parse::<usize>().unwrap()),
+            Rule::alpha => Self::Alpha(
+                pair.as_str()
+                    .chars()
+                    .next()
+                    .expect("at least one character should exist"),
+            ),
+            Rule::digit => Self::Digit(
+                pair.as_str()
+                    .parse::<usize>()
+                    .expect("should be a parseable number"),
+            ),
             Rule::underscore => Self::Underscore,
             Rule::left_parentheses => Self::LeftParenthesis,
             Rule::right_parentheses => Self::RightParenthesis,
@@ -121,7 +135,9 @@ impl Parse for Symbol {
             Rule::newline => Self::Newline,
             Rule::space => Self::Whitespace(Whitespace::Space),
             Rule::tab => Self::Whitespace(Whitespace::Tab),
-            Rule::WHITESPACE => Self::to_symbol(pair.into_inner().next().unwrap()),
+            Rule::WHITESPACE => {
+                Self::to_symbol(pair.into_inner().next().expect("inner token should exist"))
+            }
             Rule::COMMENT => Self::Comment(pair.as_str().to_string()),
             Rule::EOI | Rule::file => Self::Eoi,
         }
@@ -129,6 +145,7 @@ impl Parse for Symbol {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     #[test]
     fn simple() {

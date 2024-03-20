@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::ops::Range;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
@@ -105,7 +106,7 @@ impl Addon {
     /// addons/foobar
     /// optionals/foobar
     pub fn folder(&self) -> String {
-        format!("{}/{}", self.location.to_string(), self.name)
+        format!("{}/{}", self.location, self.name)
     }
 
     #[must_use]
@@ -213,13 +214,16 @@ impl FromStr for Location {
     }
 }
 
-impl ToString for Location {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Addons => "addons",
-            Self::Optionals => "optionals",
-        }
-        .to_string()
+impl Display for Location {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Addons => "addons",
+                Self::Optionals => "optionals",
+            }
+        )
     }
 }
 
@@ -247,7 +251,10 @@ impl BuildData {
     /// # Panics
     /// Panics if the lock is poisoned
     pub fn required_version(&self) -> Option<RequiredVersion> {
-        self.required_version.read().unwrap().clone()
+        self.required_version
+            .read()
+            .expect("the required version lock is poisoned")
+            .clone()
     }
 
     /// Sets the required version
@@ -255,7 +262,10 @@ impl BuildData {
     /// # Panics
     /// Panics if the lock is poisoned
     pub fn set_required_version(&self, version: Version, file: WorkspacePath, line: Range<usize>) {
-        *self.required_version.write().unwrap() = Some((version, file, line));
+        *self
+            .required_version
+            .write()
+            .expect("the required version lock is poisoned") = Some((version, file, line));
     }
 }
 

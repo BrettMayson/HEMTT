@@ -5,6 +5,7 @@ use rhai::plugin::{
 
 #[allow(clippy::needless_pass_by_ref_mut)]
 #[allow(clippy::ptr_arg)]
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod path_functions {
     use std::path::PathBuf;

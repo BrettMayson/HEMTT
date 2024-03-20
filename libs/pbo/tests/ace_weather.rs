@@ -1,6 +1,11 @@
-use hemtt_pbo::WritablePbo;
+#![allow(clippy::unwrap_used)]
 
-include!("utils.rs");
+use std::{fs::File, io::Read};
+
+use hemtt_pbo::{Checksum, Mime, WritablePbo};
+
+mod utils;
+use utils::*;
 
 #[test]
 fn ace_weather_cba6f72c() {

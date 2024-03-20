@@ -1,6 +1,6 @@
-use std::{hash::Hasher, io::Write, sync::Arc};
+use std::{hash::Hasher, sync::Arc};
 
-use vfs::VfsPath;
+use vfs::{SeekAndWrite, VfsPath};
 
 use super::{Error, LayerType, Workspace};
 
@@ -63,7 +63,7 @@ impl WorkspacePath {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the file could not be created
-    pub fn create_file(&self) -> Result<Box<dyn Write + Send>, Error> {
+    pub fn create_file(&self) -> Result<Box<dyn SeekAndWrite + Send>, Error> {
         self.data.path.create_file().map_err(Into::into)
     }
 

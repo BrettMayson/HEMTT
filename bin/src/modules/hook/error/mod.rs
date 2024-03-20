@@ -10,8 +10,10 @@ pub mod bhe4_runtime_error;
 fn get_offset(content: &str, location: Position) -> usize {
     let mut offset = 0;
     for (i, line) in content.lines().enumerate() {
-        if i == location.line().unwrap() {
-            offset += location.position().unwrap();
+        if i == location.line().expect("location should have a line number") {
+            offset += location
+                .position()
+                .expect("location should have a column number");
             break;
         }
         offset += line.len() + 1;

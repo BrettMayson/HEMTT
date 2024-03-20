@@ -97,7 +97,10 @@ impl PDriveOnDemand {
                                 continue;
                             }
                             cache.insert(
-                                path.file_stem().unwrap().to_string_lossy().to_string(),
+                                path.file_stem()
+                                    .expect("file stem should be able to be extracted from path")
+                                    .to_string_lossy()
+                                    .to_string(),
                                 path,
                             );
                         }

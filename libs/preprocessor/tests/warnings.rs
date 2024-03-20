@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::io::Read;
 
 use hemtt_preprocessor::Processor;

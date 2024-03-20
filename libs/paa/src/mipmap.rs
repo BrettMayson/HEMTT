@@ -102,7 +102,7 @@ impl MipMap {
         };
         image::DynamicImage::ImageRgba8(
             image::RgbaImage::from_raw(u32::from(width_2), u32::from(self.height), out_buffer)
-                .unwrap(),
+                .expect("paa should contain valid image data"),
         )
     }
 }

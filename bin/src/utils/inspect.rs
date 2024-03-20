@@ -140,7 +140,7 @@ pub fn pbo(file: File) -> Result<(), Error> {
     println!("Checksum (SHA1)");
     let stored = *pbo.checksum();
     println!("  - Stored:  {}", stored.hex());
-    let actual = pbo.gen_checksum().unwrap();
+    let actual = pbo.gen_checksum()?;
     println!("  - Actual:  {}", actual.hex());
 
     let files = pbo.files();

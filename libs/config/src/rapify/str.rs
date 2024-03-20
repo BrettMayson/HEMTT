@@ -24,6 +24,7 @@ impl Rapify for Str {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::Str;
 

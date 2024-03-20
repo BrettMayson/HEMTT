@@ -43,7 +43,7 @@ impl Module for Files {
             let mut d = ctx.build_folder().expect("build folder exists").clone();
 
             d.push(entry.as_str().trim_start_matches('/'));
-            let folder = d.parent().unwrap();
+            let folder = d.parent().expect("must have parent, just joined");
             if !folder.exists() {
                 std::mem::drop(create_dir_all(folder));
             }

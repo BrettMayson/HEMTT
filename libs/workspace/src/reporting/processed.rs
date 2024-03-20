@@ -63,7 +63,7 @@ fn append_token(
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');
-        } else if string_stack.last().unwrap() == &'"' {
+        } else if string_stack.last().expect("string stack is empty") == &'"' {
             string_stack.pop();
         } else {
             string_stack.push('"');
@@ -71,7 +71,7 @@ fn append_token(
     } else if token.symbol().is_single_quote() {
         if string_stack.is_empty() {
             string_stack.push('\'');
-        } else if string_stack.last().unwrap() == &'\''
+        } else if string_stack.last().expect("string stack is empty") == &'\''
             && token.position().start().0 != token.position().end().0
         {
             string_stack.pop();
@@ -144,7 +144,7 @@ fn append_output(
                     .position(|(s, _)| s.as_str() == path.as_str())
                     .map_or_else(
                         || {
-                            let content = path.read_to_string().unwrap();
+                            let content = path.read_to_string().expect("file should exist if used");
                             processed.sources.push((path, content));
                             processed.sources.len() - 1
                         },

@@ -199,7 +199,9 @@ impl<I: Seek + Read> ReadablePbo<I> {
         hasher.update(headers.get_ref());
 
         for header in &self.files_sorted() {
-            let mut file = self.file(header.filename())?.unwrap();
+            let mut file = self
+                .file(header.filename())?
+                .expect("file with header should exist");
             std::io::copy(&mut file, &mut hasher)?;
         }
 

@@ -306,6 +306,7 @@ impl Processor {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use hemtt_workspace::reporting::{Symbol, Whitespace};
 

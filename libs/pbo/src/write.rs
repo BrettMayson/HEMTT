@@ -168,7 +168,9 @@ impl<I: Seek + Read> WritablePbo<I> {
         hasher.update(headers.get_ref());
 
         for header in &files_sorted {
-            let file = self.file(header.filename())?.unwrap();
+            let file = self
+                .file(header.filename())?
+                .expect("file with header should exist");
             let mut buffer = Vec::with_capacity(header.size() as usize);
             file.read_to_end(&mut buffer)?;
 
@@ -179,7 +181,9 @@ impl<I: Seek + Read> WritablePbo<I> {
                         hasher.update(&*buffer);
                     });
                     s.spawn(|| {
-                        buffered_output.write_all(&buffer).unwrap();
+                        buffered_output
+                            .write_all(&buffer)
+                            .expect("failed to write file");
                     });
                 });
             } else {

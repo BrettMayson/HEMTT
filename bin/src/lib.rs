@@ -104,9 +104,13 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     trace!("args: {:#?}", std::env::args().collect::<Vec<String>>());
 
     if let Some(threads) = matches.get_one::<String>("threads") {
+        let Ok(threads) = threads.parse::<usize>() else {
+            error!("Invalid thread count: {threads}");
+            std::process::exit(1);
+        };
         debug!("Using custom thread count: {threads}");
         if let Err(e) = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads.parse::<usize>().unwrap())
+            .num_threads(threads)
             .build_global()
         {
             error!("Failed to initialize thread pool: {e}");

@@ -117,8 +117,14 @@ impl TryFrom<&str> for Version {
     type Error = Error;
 
     fn try_from(version: &str) -> Result<Self, Self::Error> {
+        if version.is_empty() {
+            return Err(Error::UnknownVersion);
+        }
         let mut parts = version.split('-');
-        let mut version = parts.next().unwrap().split('.');
+        let mut version = parts
+            .next()
+            .expect("should have something to attempt to parse")
+            .split('.');
         let Some(major) = version.next() else {
             return Err(Error::ExpectedMajor);
         };
@@ -260,6 +266,7 @@ pub enum Error {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 

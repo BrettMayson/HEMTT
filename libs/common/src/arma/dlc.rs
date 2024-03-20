@@ -1,34 +1,36 @@
 //! Information about Arma 3 DLCs
 
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Eq, Clone, Debug, Serialize)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, PartialOrd, Ord, Hash, Copy)]
 #[cfg_attr(test, derive(strum::EnumIter))]
 /// DLCs that require opt-in.
 pub enum DLC {
     #[serde(rename = "contact")]
     /// Contact
-    /// https://store.steampowered.com/app/1021790/Arma_3_Contact/
+    /// <https://store.steampowered.com/app/1021790/Arma_3_Contact/>
     Contact,
     #[serde(rename = "gm")]
     /// Creator DLC: Global Mobilization - Cold War Germany
-    /// https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/
+    /// <https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/>
     GlobalMobilization,
     #[serde(rename = "vn")]
     /// Creator DLC: S.O.G. Prairie Fire
-    /// https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire/
+    /// <https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire/>
     PrairieFire,
     #[serde(rename = "csla")]
     /// Creator DLC: CSLA Iron Curtain
-    /// https://store.steampowered.com/app/1294440/Arma_3_Creator_DLC_CSLA_Iron_Curtain/
+    /// <https://store.steampowered.com/app/1294440/Arma_3_Creator_DLC_CSLA_Iron_Curtain/>
     IronCurtain,
     #[serde(rename = "ws")]
     /// Creator DLC: Western Sahara
-    /// https://store.steampowered.com/app/1681170/Arma_3_Creator_DLC_Western_Sahara/
+    /// <https://store.steampowered.com/app/1681170/Arma_3_Creator_DLC_Western_Sahara/>
     WesternSahara,
     #[serde(rename = "spe")]
     /// Creator DLC: Spearhead 1944
-    /// https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/
+    /// <https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/>
     Spearhead1944,
 }
 
@@ -60,17 +62,20 @@ impl DLC {
     }
 }
 
-impl ToString for DLC {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Contact => "Contact",
-            Self::GlobalMobilization => "Creator DLC: Global Mobilization - Cold War Germany",
-            Self::PrairieFire => "Creator DLC: S.O.G. Prairie Fire",
-            Self::IronCurtain => "Creator DLC: CSLA Iron Curtain",
-            Self::WesternSahara => "Creator DLC: Western Sahara",
-            Self::Spearhead1944 => "Creator DLC: Spearhead 1944",
-        }
-        .to_string()
+impl Display for DLC {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Contact => "Contact",
+                Self::GlobalMobilization => "Creator DLC: Global Mobilization - Cold War Germany",
+                Self::PrairieFire => "Creator DLC: S.O.G. Prairie Fire",
+                Self::IronCurtain => "Creator DLC: CSLA Iron Curtain",
+                Self::WesternSahara => "Creator DLC: Western Sahara",
+                Self::Spearhead1944 => "Creator DLC: Spearhead 1944",
+            }
+        )
     }
 }
 

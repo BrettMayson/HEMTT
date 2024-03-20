@@ -19,7 +19,8 @@ pub struct RhaiHemtt {
 impl RhaiHemtt {
     pub fn new(ctx: &Context) -> Self {
         Self {
-            version: Version::try_from(env!("HEMTT_VERSION")).unwrap(),
+            version: Version::try_from(env!("HEMTT_VERSION"))
+                .expect("hemtt version should be valid"),
             project: RhaiProject::new(ctx),
             folder: ctx.folder().expect("folder exists").to_string(),
         }
@@ -27,6 +28,7 @@ impl RhaiHemtt {
 }
 
 #[allow(clippy::needless_pass_by_ref_mut)]
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod project_functions {
     #[rhai_fn(global, pure)]

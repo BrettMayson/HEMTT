@@ -17,13 +17,23 @@ members = [
 ]
 resolver = "2"
 
+[workspace.lints.clippy]
+all = "deny"
+nursery = "deny"
+pedantic = "warn"
+unwrap_used = "deny"
+
+[workspace.lints.rust]
+future_incompatible = "warn"
+nonstandard_style = "warn"
+
 [workspace.dependencies]
 byteorder = "1.5.0"
 chumsky = "0.9.3"
-clap = "4.5.1"
-git2 = "0.18.2"
+clap = "4.5.3"
+git2 = "0.18.3"
 indexmap = "2.2.5"
-lsp-types = "0.95.0"
+lsp-types = "0.95.1"
 peekmore = "1.3.0"
 pest = "2.7.8"
 pest_derive = "2.7.8"
@@ -31,17 +41,12 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 sha-1 = "0.10.1"
 strsim = "0.11.0"
-thiserror = "1.0.57"
-toml = "0.8.10"
+thiserror = "1.0.58"
+toml = "0.8.12"
 tracing = { version = "0.1.40", features = ["attributes"] }
-vfs = "0.11.0"
+vfs = "0.12.0"
 walkdir = "2.5.0"
 zip = "0.6.6"
-
-[workspace.lints.clippy]
-all = "deny"
-nursery = "deny"
-pedantic = "warn"
 
 [profile.bench]
 lto = true

@@ -1,6 +1,6 @@
 use crate::ReadPbo;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 /// A checksum found at the end of a PBO
 ///
 /// The checksum is a SHA1 hash of the PBO's properties & files

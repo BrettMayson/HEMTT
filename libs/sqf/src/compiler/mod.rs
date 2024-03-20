@@ -80,16 +80,18 @@ impl Statements {
 /// # Panics
 /// Panics if the location is not mapped.
 pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> SourceInfo {
-    let map = processed.mapping(location.start).unwrap().original();
+    let map = processed.mapping(location.start).expect(
+        "location not in mapping, this should not happen as the location is from the processed file",
+    ).original();
     SourceInfo {
         offset: location.start as u32,
         file_index: processed
             .sources()
             .iter()
             .position(|(p, _)| p == map.path())
-            .unwrap()
+            .expect("file not in sources")
             .try_into()
-            .unwrap(),
+            .expect("file index too large"),
         file_line: map.start().line() as u16,
     }
 }
@@ -148,7 +150,7 @@ impl Expression {
                             push_constant(item, instructions, ctx)?;
                         }
                         instructions.push(Instruction::MakeArray(
-                            len.try_into().unwrap(),
+                            len.try_into().expect("array too long"),
                             SourceInfo {
                                 offset: 0,
                                 file_index: 0,

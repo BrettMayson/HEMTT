@@ -57,10 +57,14 @@ impl Module for ArmaScriptCompiler {
         let tmp = ctx.tmp().join("asc");
         for file in SOURCE {
             let out = tmp.join(file);
-            let _ = std::fs::create_dir_all(out.parent().unwrap());
+            let _ = std::fs::create_dir_all(out.parent().expect("must have parent"));
             trace!("unpacking {:?} to {:?}", file, out.display());
             let mut f = File::create(&out)?;
-            f.write_all(&Distributables::get(file).unwrap().data)?;
+            f.write_all(
+                &Distributables::get(file)
+                    .expect("dist files should exist")
+                    .data,
+            )?;
             #[cfg(target_os = "linux")]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -98,33 +102,36 @@ impl Module for ArmaScriptCompiler {
                             .as_str()
                             .trim_start_matches(&format!("/{}/", addon.folder())),
                     );
-                    let parent = source.parent().unwrap();
+                    let parent = source.parent().expect("must have parent");
                     if !parent.exists() {
                         std::mem::drop(create_dir_all(parent));
                     }
                     let mut f = File::create(source)?;
                     f.write_all(processed.as_str().as_bytes())?;
-                    files.write().unwrap().push((
-                        format!(
-                            "{}{}",
-                            addon
-                                .prefix()
+                    files
+                        .write()
+                        .expect("unable to write to source files to tmp")
+                        .push((
+                            format!(
+                                "{}{}",
+                                addon
+                                    .prefix()
+                                    .to_string()
+                                    .replace('\\', "/")
+                                    .trim_end_matches(&addon.folder().replacen(
+                                        "optionals/",
+                                        "addons/",
+                                        1
+                                    ))
+                                    .trim_end_matches(&addon.folder()),
+                                entry.as_str().to_string().trim_start_matches('/'),
+                            ),
+                            entry
+                                .as_str()
                                 .to_string()
-                                .replace('\\', "/")
-                                .trim_end_matches(&addon.folder().replacen(
-                                    "optionals/",
-                                    "addons/",
-                                    1
-                                ))
-                                .trim_end_matches(&addon.folder()),
-                            entry.as_str().to_string().trim_start_matches('/'),
-                        ),
-                        entry
-                            .as_str()
-                            .to_string()
-                            .trim_start_matches('/')
-                            .to_string(),
-                    ));
+                                .trim_start_matches('/')
+                                .to_string(),
+                        ));
                     Ok(())
                 })
                 .collect::<Result<_, Error>>()?;
@@ -150,7 +157,7 @@ impl Module for ArmaScriptCompiler {
         out_file.write_all(&command.stdout)?;
         out_file.write_all(&command.stderr)?;
         if String::from_utf8(command.stdout.clone())
-            .unwrap()
+            .expect("stdout should be valid utf8")
             .contains("Parse Error")
         {
             warn!("ASC 'Parse Error' - check .hemttout/asc.log");
@@ -159,13 +166,13 @@ impl Module for ArmaScriptCompiler {
             debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
         } else {
             return Err(Error::ArmaScriptCompiler(
-                String::from_utf8(command.stdout).unwrap(),
+                String::from_utf8(command.stdout).expect("stdout should be valid utf8"),
             ));
         }
         std::env::set_current_dir(ctx.project_folder())?;
         let tmp_output = tmp.join("output");
         let counter = AtomicU16::new(0);
-        for (src, dst) in &*files.read().unwrap() {
+        for (src, dst) in &*files.read().expect("unable to read source files") {
             let from = tmp_output.join(&format!("{src}c"));
             let to = ctx.workspace().join(&format!("{dst}c"))?;
             if !from.exists() {

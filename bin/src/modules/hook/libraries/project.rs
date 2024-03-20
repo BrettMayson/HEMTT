@@ -25,13 +25,18 @@ impl RhaiProject {
                 .config()
                 .mainprefix()
                 .map_or_else(String::new, std::string::ToString::to_string),
-            version: ctx.config().version().get(ctx.workspace().vfs()).unwrap(),
+            version: ctx
+                .config()
+                .version()
+                .get(ctx.workspace().vfs())
+                .expect("version config is valid to get to rhai module"),
             // addons: ctx.addons().to_vec(),
         }
     }
 }
 
 #[allow(clippy::needless_pass_by_ref_mut)]
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod project_functions {
     use crate::modules::hook::libraries::project::RhaiProject;

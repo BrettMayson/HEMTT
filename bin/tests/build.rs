@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use hemtt::cli;
 
 #[test]

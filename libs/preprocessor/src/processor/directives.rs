@@ -202,9 +202,12 @@ impl Processor {
             .files
             .last()
             .expect("root file should always be present");
-        let Ok(Some(path)) =
-            current.locate(&path.iter().map(|t| t.to_string()).collect::<String>())
-        else {
+        let Ok(Some(path)) = current.locate(
+            &path
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect::<String>(),
+        ) else {
             return Err(IncludeNotFound::code(path));
         };
         let tokens = crate::parse::parse(&path)?;
@@ -245,8 +248,16 @@ impl Processor {
                 let body = self.define_read_body(stream);
                 let position = if body.first().is_some() {
                     Position::new(
-                        *body.first().unwrap().position().start(),
-                        *body.last().unwrap().position().end(),
+                        *body
+                            .first()
+                            .expect("must exist because of the if")
+                            .position()
+                            .start(),
+                        *body
+                            .last()
+                            .expect("must exist because of the if")
+                            .position()
+                            .end(),
                         ident.position().path().clone(),
                     )
                 } else {
@@ -313,7 +324,11 @@ impl Processor {
         let mut operators = Vec::with_capacity(2);
         let (right, right_defined) = if stream.peek().map(|t| t.symbol()) == Some(&Symbol::Newline)
         {
-            let pos = stream.peek().unwrap().position().clone();
+            let pos = stream
+                .peek()
+                .expect("peeked in the if statement, so there should be a token")
+                .position()
+                .clone();
             if !left_defined {
                 return Err(IfUndefined::code(left[0].as_ref().clone(), &self.defines));
             }
@@ -347,9 +362,18 @@ impl Processor {
             };
             value(&mut self.defines, right)?
         };
-        let operator = operators.iter().map(|t| t.to_string()).collect::<String>();
-        let left_string = left.iter().map(|t| t.to_string()).collect::<String>();
-        let right_string = right.iter().map(|t| t.to_string()).collect::<String>();
+        let operator = operators
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let left_string = left
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let right_string = right
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
         let read = match operator.as_str() {
             "==" => left_string == right_string,
             "!=" => left_string != right_string,
@@ -405,6 +429,7 @@ impl Processor {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use hemtt_workspace::reporting::Symbol;
 

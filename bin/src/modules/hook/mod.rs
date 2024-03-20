@@ -162,13 +162,15 @@ impl Hooks {
         let inner_told_to_fail = told_to_fail.clone();
         engine.register_fn("fatal", move |s: &str| {
             error!("[{inner_name}] {s}");
-            *inner_told_to_fail.lock().unwrap() = true;
+            *inner_told_to_fail
+                .lock()
+                .expect("told_to_fail mutex poisoned") = true;
         });
         if let Err(e) = engine.run_with_scope(&mut scope, &path.read_to_string()?) {
             report.error(RuntimeError::code(path, &e));
             return Ok(report);
         }
-        if *told_to_fail.lock().unwrap() {
+        if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
             report.error(ScriptFatal::code(name));
         }
         Ok(report)
@@ -190,14 +192,14 @@ impl Module for Hooks {
                 if !dir.exists() {
                     continue;
                 }
-                for hook in dir.read_dir().unwrap() {
+                for hook in dir.read_dir().expect("hooks folder should be readable") {
                     let hook = hook?;
                     let path = ctx
                         .workspace()
                         .join(".hemtt")?
                         .join("hooks")?
                         .join(phase)?
-                        .join(hook.file_name().to_str().unwrap())?;
+                        .join(hook.file_name().to_str().expect("file name is valid utf-8"))?;
                     if let Err(e) = engine.compile(&path.read_to_string()?) {
                         report.error(RhaiParseError::code(path, e.0, e.1));
                     }

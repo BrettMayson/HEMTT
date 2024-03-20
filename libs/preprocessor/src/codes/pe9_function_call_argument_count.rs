@@ -83,11 +83,11 @@ impl FunctionCallArgumentCount {
             defined: {
                 let (t, d) = defines
                     .get_readonly(token.symbol().to_string().trim())
-                    .unwrap();
+                    .expect("define should exist on error about its type");
                 (
                     t.as_ref().clone(),
                     d.as_function()
-                        .unwrap()
+                        .expect("define should be a function in an error about it being called")
                         .clone()
                         .args()
                         .iter()

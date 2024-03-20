@@ -203,7 +203,10 @@ impl Instructions {
     pub(crate) fn deserialize(reader: &mut impl Read) -> DeserializeResult<Self> {
         // if this panics, i've got no clue what's with your SQFC
         // only 2^16 constants can be embedded anyways, so any value above that is probably technically invalid
-        let source_string_index: u16 = reader.read_u64::<LE>()?.try_into().unwrap();
+        let source_string_index: u16 = reader
+            .read_u64::<LE>()?
+            .try_into()
+            .expect("invalid source string index");
         let instructions_len = reader.read_u32::<LE>()? as usize;
         let instructions = (0..instructions_len)
             .map(|_| Instruction::deserialize(reader))
@@ -544,11 +547,11 @@ impl Compiled {
         }
 
         Ok(Self {
-            entry_point: entry_point.unwrap(),
+            entry_point: entry_point.expect("entry point not found"),
             constants_cache_compression: true,
-            constants_cache: constants_cache.unwrap(),
-            names_cache: names_cache.unwrap(),
-            file_names: file_names.unwrap(),
+            constants_cache: constants_cache.expect("constants cache not found"),
+            names_cache: names_cache.expect("names cache not found"),
+            file_names: file_names.expect("file names not found"),
         })
     }
 }

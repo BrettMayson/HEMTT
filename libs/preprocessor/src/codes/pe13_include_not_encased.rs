@@ -49,7 +49,7 @@ impl Code for IncludeNotEncased {
             self.start.as_ref().map_or(">".to_string(), |t| t
                 .symbol()
                 .matching_enclosure()
-                .unwrap()
+                .expect("matching enclosure should exist if first exists")
                 .to_string())
         ))
     }

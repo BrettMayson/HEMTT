@@ -11,6 +11,7 @@ pub struct ReadFile(Rc<RefCell<File>>);
 #[derive(Clone)]
 pub struct WriteFile(Rc<RefCell<File>>);
 
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod file_functions {
     use std::{fs::File, io::Read, path::PathBuf, rc::Rc};

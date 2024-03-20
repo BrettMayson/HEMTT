@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::position::Position;
 
 use super::Symbol;
@@ -35,8 +37,8 @@ impl Token {
     }
 }
 
-impl ToString for Token {
-    fn to_string(&self) -> String {
-        self.symbol.to_string()
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.symbol)
     }
 }

@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::path::PathBuf;
 
 use hemtt::commands::launch::read_preset;

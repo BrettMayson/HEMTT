@@ -52,7 +52,7 @@ impl Code for IfUnitOrFunction {
 
     fn suggestion(&self) -> Option<String> {
         if self.similar.is_empty() {
-            Some(format!("#ifdef {}", self.token.symbol().to_string()))
+            Some(format!("#ifdef {}", self.token.symbol()))
         } else {
             None
         }
@@ -83,7 +83,7 @@ impl IfUnitOrFunction {
             defined: {
                 let (t, d) = defines
                     .get_readonly(token.symbol().to_string().trim())
-                    .unwrap();
+                    .expect("define should exist on error about its type");
                 (t.as_ref().clone(), d.is_unit())
             },
             token,

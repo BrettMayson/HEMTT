@@ -1,3 +1,6 @@
+#![allow(clippy::unwrap_used)]
+
+use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 

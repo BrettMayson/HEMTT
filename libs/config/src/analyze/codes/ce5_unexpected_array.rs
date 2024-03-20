@@ -54,10 +54,18 @@ impl UnexpectedArray {
         else {
             panic!("UnexpectedArray::generate_processed called on non-UnexpectedArray property");
         };
-        let array_start = processed.mapping(array.span.start).unwrap();
-        let array_file = processed.source(array_start.source()).unwrap();
-        let ident_start = processed.mapping(name.span.start).unwrap();
-        let ident_end = processed.mapping(name.span.end).unwrap();
+        let array_start = processed
+            .mapping(array.span.start)
+            .expect("mapping should exist");
+        let array_file = processed
+            .source(array_start.source())
+            .expect("source should exist");
+        let ident_start = processed
+            .mapping(name.span.start)
+            .expect("mapping should exist");
+        let ident_end = processed
+            .mapping(name.span.end)
+            .expect("mapping should exist");
         self.suggestion = Some(format!("{}[]", name.value));
         self.diagnostic = Diagnostic::new_for_processed(
             &self,

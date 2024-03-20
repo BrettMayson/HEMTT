@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::path::PathBuf;
 
 use criterion::{criterion_group, criterion_main, Criterion};

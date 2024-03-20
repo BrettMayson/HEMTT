@@ -1,5 +1,7 @@
 //! Whitespace and comments
 
+use std::fmt::Display;
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// Whitespace characters
 pub enum Whitespace {
@@ -9,12 +11,15 @@ pub enum Whitespace {
     Tab,
 }
 
-impl ToString for Whitespace {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Space => " ",
-            Self::Tab => "\t",
-        }
-        .to_string()
+impl Display for Whitespace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Space => " ",
+                Self::Tab => "\t",
+            }
+        )
     }
 }

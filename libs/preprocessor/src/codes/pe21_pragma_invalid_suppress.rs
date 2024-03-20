@@ -26,10 +26,7 @@ impl Code for PragmaInvalidSuppress {
     }
 
     fn message(&self) -> String {
-        format!(
-            "unknown #pragma suppress `{}`",
-            self.token.symbol().to_string(),
-        )
+        format!("unknown #pragma suppress `{}`", self.token.symbol(),)
     }
 
     fn label_message(&self) -> String {
