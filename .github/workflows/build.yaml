@@ -114,7 +114,8 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y wine32 winbind xvfb
+          sudo apt-get install -y wine32 winbind xvfb winetricks
+          winetricks physx d3dx11_43 d3dx9_43
           Xvfb :99 -screen 0 1024x768x16 &
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         env:
