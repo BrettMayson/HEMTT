@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io::{Cursor, Read, Seek, SeekFrom, Write},
+    io::{BufWriter, Cursor, Read, Seek, SeekFrom, Write},
 };
 
 use hemtt_common::io::WriteExt;
@@ -33,22 +33,17 @@ impl<I: Seek + Read> WritablePbo<I> {
     pub fn add_file<S: Into<String>>(
         &mut self,
         name: S,
-        size: Option<u32>,
         mut input: I,
     ) -> Result<Option<(I, Header)>, Error> {
         let name = name.into().replace('/', "\\");
-        let size = if let Some(size) = size {
-            size
-        } else {
-            let size = input.seek(SeekFrom::End(0))?;
-            if size > u32::MAX as u64 {
-                return Err(Error::FileTooLarge);
-            }
-            size as u32
-        };
-        Ok(self
-            .files
-            .insert(name.clone(), (input, Header::new_for_file(name, size))))
+        let size = input.seek(SeekFrom::End(0))?;
+        if size > u32::MAX as u64 {
+            return Err(Error::FileTooLarge);
+        }
+        Ok(self.files.insert(
+            name.clone(),
+            (input, Header::new_for_file(name, size as u32)),
+        ))
     }
 
     /// Add a file with a custom header
@@ -132,7 +127,11 @@ impl<I: Seek + Read> WritablePbo<I> {
     ///
     /// # Panics
     /// if a file does not exist but a header is present
-    pub fn write<O: Write>(&mut self, output: &mut O, properties: bool) -> Result<(), Error> {
+    pub fn write<O: Write + Send>(
+        &mut self,
+        output: &mut O,
+        properties: bool,
+    ) -> Result<(), Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         if properties {
             Header::property().write_pbo(&mut headers)?;
@@ -163,18 +162,34 @@ impl<I: Seek + Read> WritablePbo<I> {
 
         let mut hasher = Sha1::new();
 
-        output.write_all(headers.get_ref())?;
+        let mut buffered_output = BufWriter::new(output);
+
+        buffered_output.write_all(headers.get_ref())?;
         hasher.update(headers.get_ref());
 
         for header in &files_sorted {
             let file = self.file(header.filename())?.unwrap();
-            std::io::copy(file, output)?;
-            file.rewind()?;
-            std::io::copy(file, &mut hasher)?;
+            let mut buffer = Vec::with_capacity(header.size() as usize);
+            file.read_to_end(&mut buffer)?;
+
+            if header.size() > 1_000_000 {
+                // pay the paralellization cost for large files
+                std::thread::scope(|s| {
+                    s.spawn(|| {
+                        hasher.update(&*buffer);
+                    });
+                    s.spawn(|| {
+                        buffered_output.write_all(&buffer).unwrap();
+                    });
+                });
+            } else {
+                buffered_output.write_all(&buffer)?;
+                hasher.update(&buffer);
+            }
         }
 
-        output.write_all(&[0])?;
-        output.write_all(&hasher.finalize())?;
+        buffered_output.write_all(&[0])?;
+        buffered_output.write_all(&hasher.finalize())?;
 
         Ok(())
     }
