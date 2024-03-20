@@ -53,8 +53,11 @@ impl Module for Binarize {
         let mut report = Report::new();
         let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
             report.warn(PlatformNotSupported::code());
+            return Ok(report);
         };
-        let path = PathBuf::from(tools_path).join("Binarize").join("binarize.exe");
+        let path = PathBuf::from(tools_path)
+            .join("Binarize")
+            .join("binarize.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
