@@ -178,7 +178,8 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
     pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
-        let path = path.replace('\\', "/").to_lowercase();
+        let path = path.replace('\\', "/");
+        let path_lower = path.to_lowercase();
         if path.starts_with("/a3/") {
             if let Some(pdrive) = &self.workspace().pdrive {
                 if let Some(pdrive_path) = pdrive.path_to(&path) {
@@ -205,7 +206,7 @@ impl WorkspacePath {
                 .workspace
                 .pointers
                 .iter()
-                .find(|(p, _)| path.starts_with(&format!("{}/", p.to_lowercase())))
+                .find(|(p, _)| path_lower.starts_with(&format!("{}/", p.to_lowercase())))
             {
                 let path = root.join(
                     path.strip_prefix(base)
