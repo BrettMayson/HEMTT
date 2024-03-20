@@ -114,10 +114,12 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y wine32 winbind
+          sudo apt-get install -y wine32 winbind xvfb
+          Xvfb :99 -screen 0 1024x768x16 &
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         env:
           HEMTT_BI_TOOLS: /tmp/arma3tools
+          DISPLAY: :99.0
         run: |
           cd mod && hemtt build
 
