@@ -30,7 +30,6 @@ impl Module for Binarize {
 
     #[cfg(windows)]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        setup_tmp(ctx)?;
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
@@ -45,6 +44,7 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
@@ -63,6 +63,7 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
