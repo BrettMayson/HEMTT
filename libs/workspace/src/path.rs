@@ -200,13 +200,10 @@ impl WorkspacePath {
                     }),
                 }));
             }
-            if let Some((base, root)) = self
-                .data
-                .workspace
-                .pointers
-                .iter()
-                .find(|(p, _)| path.to_lowercase().starts_with(&format!("{}/", p.to_lowercase())))
-            {
+            if let Some((base, root)) = self.data.workspace.pointers.iter().find(|(p, _)| {
+                path.to_lowercase()
+                    .starts_with(&format!("{}/", p.to_lowercase()))
+            }) {
                 let path = root.join(
                     path.strip_prefix(base)
                         .unwrap_or(&path)
