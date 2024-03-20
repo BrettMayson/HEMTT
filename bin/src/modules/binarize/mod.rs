@@ -148,7 +148,10 @@ impl Module for Binarize {
                     // check mlod for textures
                     if buf == [0x4D, 0x4C, 0x4F, 0x44] {
                         trace!("checking textures & materials for {}", entry.as_str());
-                        let p3d = hemtt_p3d::P3D::read(&mut entry.open_file().unwrap()).unwrap();
+                        let p3d = hemtt_p3d::P3D::read(
+                            &mut entry.open_file().expect("file should exist from walk_dir"),
+                        )
+                        .expect("p3d should be able to be read if it is a valid p3d file");
                         let (missing_textures, missing_materials) =
                             p3d.missing(ctx.workspace(), &search_cache)?;
                         if !missing_textures.is_empty() {
@@ -197,7 +200,10 @@ impl Module for Binarize {
         }
         info!(
             "Validated {} files for binarization",
-            self.prechecked.read().unwrap().len()
+            self.prechecked
+                .read()
+                .expect("prechecked should not be poisoned")
+                .len()
         );
         Ok(report)
     }
@@ -346,8 +352,12 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     for folder in std::fs::read_dir(pdrive.link())? {
         let folder = folder?.path();
         if folder.is_dir() {
-            let tmp_folder = tmp.join(folder.file_name().unwrap());
-            create_dir_all(tmp_folder.parent().unwrap())?;
+            let tmp_folder = tmp.join(folder.file_name().expect("folder should have a name"));
+            create_dir_all(
+                tmp_folder
+                    .parent()
+                    .expect("tmp folder should have a parent"),
+            )?;
             create_link(&tmp_folder, &folder)?;
         }
     }

@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::collections::HashSet;
 
 use hemtt_p3d::P3D;

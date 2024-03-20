@@ -131,9 +131,7 @@ impl PDriveOnDemand {
                 return Some(dest_path);
             }
             let mut pbo = ReadablePbo::from(File::open(p).ok()?).ok()?;
-            let Some(mut file) = pbo.file(&source).ok()? else {
-                return None;
-            };
+            let mut file = pbo.file(&source).ok()??;
             let _ = dest_path.parent().create_dir_all();
             if let Err(e) = std::io::copy(
                 &mut file,
