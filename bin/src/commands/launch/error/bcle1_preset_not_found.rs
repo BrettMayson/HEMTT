@@ -1,10 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use hemtt_common::similar_values;
-use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Label},
-    LayerType, Workspace, WorkspacePath,
-};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct PresetNotFound {
     name: String,

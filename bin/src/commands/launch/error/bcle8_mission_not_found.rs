@@ -1,16 +1,11 @@
 use std::{path::Path, sync::Arc};
 
 use hemtt_common::similar_values;
-use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Label},
-    LayerType, Workspace, WorkspacePath,
-};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct MissionNotFound {
-    // project_toml: WorkspacePath,
     name: String,
     similar: Vec<String>,
-    // position: Option<Range<usize>>,
 }
 
 impl Code for MissionNotFound {
