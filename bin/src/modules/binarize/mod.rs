@@ -30,7 +30,6 @@ impl Module for Binarize {
 
     #[cfg(windows)]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        setup_tmp(ctx)?;
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
@@ -45,13 +44,26 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.warn(PlatformNotSupported::code());
+        println!("HEMTT_BI_TOOLS: {:?}", std::env::var("HEMTT_BI_TOOLS"));
+        let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
+            report.warn(PlatformNotSupported::code());
+            return Ok(report);
+        };
+        let path = PathBuf::from(tools_path)
+            .join("Binarize")
+            .join("binarize.exe");
+        println!("path: {:?} - {}", path, path.exists());
+        if path.exists() {
+            self.command = Some(path.display().to_string());
+        }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
@@ -161,7 +173,13 @@ impl Module for Binarize {
                     .command
                     .as_ref()
                     .expect("command should be set if we attempted to binarize");
-                let mut cmd = Command::new(exe);
+                let mut cmd = if cfg!(windows) {
+                    Command::new(exe)
+                } else {
+                    let mut cmd = Command::new("wine");
+                    cmd.arg(exe);
+                    cmd
+                };
                 cmd.args([
                     "-norecurse",
                     "-always",
@@ -179,6 +197,8 @@ impl Module for Binarize {
                     "binarize failed with code {:?}",
                     output.status.code().unwrap_or(-1)
                 );
+                println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+                println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
                     counter.fetch_add(1, Ordering::Relaxed);
                     None

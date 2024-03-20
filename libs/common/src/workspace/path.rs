@@ -181,7 +181,6 @@ impl WorkspacePath {
         let path = path.replace('\\', "/");
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
-                trace!("Located with absolute path: {:?}", path);
                 return Ok(Some(Self {
                     data: Arc::new(WorkspacePathData {
                         path: self.data.workspace.vfs.join(path)?,
@@ -203,7 +202,6 @@ impl WorkspacePath {
                         .unwrap_or(&path),
                 )?;
                 if path.exists()? {
-                    trace!("Located with prefix pointer: {:?}", path);
                     return Ok(Some(Self {
                         data: Arc::new(WorkspacePathData {
                             path,
@@ -215,7 +213,6 @@ impl WorkspacePath {
         }
         let path = self.data.path.parent().join(path)?;
         if path.exists()? {
-            trace!("Located with parent: vfs {}", path.as_str());
             Ok(Some(Self {
                 data: Arc::new(WorkspacePathData {
                     path,

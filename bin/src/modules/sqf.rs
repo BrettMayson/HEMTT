@@ -41,7 +41,7 @@ impl Module for SQFCompiler {
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
-                trace!("asc compiling {}", entry);
+                trace!("sqf validating {}", entry);
                 let mut report = Report::new();
                 let processed = Processor::run(entry)?;
                 for warning in processed.warnings() {
