@@ -51,6 +51,7 @@ impl Module for Binarize {
     #[cfg(not(windows))]
     fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
+        println!("HEMTT_BI_TOOLS: {:?}", std::env::var("HEMTT_BI_TOOLS"));
         let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
             report.warn(PlatformNotSupported::code());
             return Ok(report);
@@ -58,6 +59,7 @@ impl Module for Binarize {
         let path = PathBuf::from(tools_path)
             .join("Binarize")
             .join("binarize.exe");
+        println!("path: {:?} - {}", path, path.exists());
         if path.exists() {
             self.command = Some(path.display().to_string());
         }

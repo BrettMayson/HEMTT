@@ -20,10 +20,10 @@ jobs:
             name: ubuntu
             artifact: linux-x64
             exe: hemtt
-          - runner: windows-latest
-            name: windows
-            artifact: windows-x64
-            exe: hemtt.exe
+          # - runner: windows-latest
+          #   name: windows
+          #   artifact: windows-x64
+          #   exe: hemtt.exe
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
@@ -62,9 +62,9 @@ jobs:
           - runner: ubuntu-latest
             name: ubuntu
             artifact: linux-x64
-          - runner: windows-latest
-            name: windows
-            artifact: windows-x64
+          # - runner: windows-latest
+          #   name: windows
+          #   artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
             commit: 8bb83aa0283200070ff6c3da80a6e22dcf11b9f6
