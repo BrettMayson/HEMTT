@@ -197,6 +197,8 @@ impl Module for Binarize {
                     "binarize failed with code {:?}",
                     output.status.code().unwrap_or(-1)
                 );
+                println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+                println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
                     counter.fetch_add(1, Ordering::Relaxed);
                     None
