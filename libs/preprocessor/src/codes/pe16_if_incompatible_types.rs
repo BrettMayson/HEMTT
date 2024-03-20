@@ -52,14 +52,23 @@ impl Code for IfIncompatibleType {
             .with_message(self.label_message()),
         );
         if self.left.1 {
+            let left_first = self
+                .left
+                .0
+                .first()
+                .expect("left side should have a first token");
+            let left_last = self
+                .left
+                .0
+                .last()
+                .expect("left side should have a last token");
             diag = diag.with_label(
                 Label::secondary(
-                    self.left.0.first().unwrap().position().path().clone(),
-                    self.left.0.first().unwrap().position().span().start
-                        ..self.left.0.last().unwrap().position().span().end,
+                    left_first.position().path().clone(),
+                    left_first.position().span().start..left_last.position().span().end,
                 )
                 .with_message(
-                    if self.left.0.first().unwrap().symbol().is_double_quote() {
+                    if left_first.symbol().is_double_quote() {
                         "lhs, string is not supported"
                     } else {
                         "lhs"
@@ -69,14 +78,23 @@ impl Code for IfIncompatibleType {
             );
         }
         if self.right.1 {
+            let right_first = self
+                .right
+                .0
+                .first()
+                .expect("right side should have a first token");
+            let right_last = self
+                .right
+                .0
+                .last()
+                .expect("right side should have a last token");
             diag = diag.with_label(
                 Label::secondary(
-                    self.right.0.first().unwrap().position().path().clone(),
-                    self.right.0.first().unwrap().position().span().start
-                        ..self.right.0.last().unwrap().position().span().end,
+                    right_first.position().path().clone(),
+                    right_first.position().span().start..right_last.position().span().end,
                 )
                 .with_message(
-                    if self.right.0.first().unwrap().symbol().is_double_quote() {
+                    if right_first.symbol().is_double_quote() {
                         "rhs, string is not supported"
                     } else {
                         "rhs"

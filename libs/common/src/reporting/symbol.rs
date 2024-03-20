@@ -1,6 +1,8 @@
 // dead code from a previous hemtt version, don't feel the need to delete atm
 #![allow(dead_code)]
 
+use std::fmt::Display;
+
 use super::Whitespace;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -204,38 +206,49 @@ impl Symbol {
     }
 }
 
-impl ToString for Symbol {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Word(w) => w.clone(),
-            Self::Alpha(c) => c.to_string(),
-            Self::Digit(d) => d.to_string(),
-            Self::Underscore => "_".to_string(),
-            Self::Dash => "-".to_string(),
-            Self::Equals => "=".to_string(),
-            Self::Plus => "+".to_string(),
-            Self::LeftBrace => "{".to_string(),
-            Self::RightBrace => "}".to_string(),
-            Self::LeftBracket => "[".to_string(),
-            Self::RightBracket => "]".to_string(),
-            Self::LeftParenthesis => "(".to_string(),
-            Self::RightParenthesis => ")".to_string(),
-            Self::Colon => ":".to_string(),
-            Self::Semicolon => ";".to_string(),
-            Self::Join => "##".to_string(),
-            Self::Directive => "#".to_string(),
-            Self::Escape => "\\".to_string(),
-            Self::Slash => "/".to_string(),
-            Self::Comma => ",".to_string(),
-            Self::Decimal => ".".to_string(),
-            Self::DoubleQuote => "\"".to_string(),
-            Self::SingleQuote => "'".to_string(),
-            Self::LeftAngle => "<".to_string(),
-            Self::RightAngle => ">".to_string(),
-            Self::Unicode(s) => s.to_string(),
-            Self::Newline => "\n".to_string(),
-            Self::Whitespace(w) => w.to_string(),
-            Self::Eoi | Self::Comment(_) => String::new(),
+impl Display for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Self::Alpha(c) = self {
+            return write!(f, "{c}");
         }
+        if let Self::Digit(d) = self {
+            return write!(f, "{d}");
+        }
+        if let Self::Whitespace(w) = self {
+            return write!(f, "{w}");
+        }
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Word(w) => w.as_str(),
+                Self::Underscore => "_",
+                Self::Dash => "-",
+                Self::Equals => "=",
+                Self::Plus => "+",
+                Self::LeftBrace => "{",
+                Self::RightBrace => "}",
+                Self::LeftBracket => "[",
+                Self::RightBracket => "]",
+                Self::LeftParenthesis => "(",
+                Self::RightParenthesis => ")",
+                Self::Colon => ":",
+                Self::Semicolon => ";",
+                Self::Join => "##",
+                Self::Directive => "#",
+                Self::Escape => "\\",
+                Self::Slash => "/",
+                Self::Comma => ",",
+                Self::Decimal => ".",
+                Self::DoubleQuote => "\"",
+                Self::SingleQuote => "'",
+                Self::LeftAngle => "<",
+                Self::RightAngle => ">",
+                Self::Unicode(s) => s,
+                Self::Newline => "\n",
+                Self::Eoi | Self::Comment(_) => "",
+                Self::Alpha(_) | Self::Digit(_) | Self::Whitespace(_) => unreachable!(),
+            }
+        )
     }
 }

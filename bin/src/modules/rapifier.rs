@@ -123,7 +123,9 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             let mut file = path;
             let mut span = 0..0;
             if let Some(cfgpatch) = cfgpatch {
-                let map = processed.mapping(cfgpatch.name().span.start).unwrap();
+                let map = processed
+                    .mapping(cfgpatch.name().span.start)
+                    .expect("mapping should exist");
                 file = map.original().path();
                 span = map.original().start().0..map.original().end().0;
             }
@@ -160,7 +162,7 @@ pub fn can_rapify(path: &str) -> bool {
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
         .to_str()
-        .unwrap();
+        .expect("osstr should be valid utf8");
     if ext == "cpp" && pathbuf.file_name() != Some(std::ffi::OsStr::new("config.cpp")) {
         warn!(
             "{} - cpp files other than config.cpp are usually not intentional. use hpp for includes",

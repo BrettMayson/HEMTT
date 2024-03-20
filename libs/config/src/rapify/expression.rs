@@ -24,6 +24,7 @@ impl Rapify for Expression {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::Expression;
 

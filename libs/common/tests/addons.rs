@@ -6,7 +6,7 @@ use hemtt_common::addons::Addon;
 fn locations_duplicate() {
     assert_eq!(
         Addon::scan(Path::new("tests/addons_duplicate"))
-            .unwrap_err()
+            .expect_err("should fail with duplicate locations")
             .to_string(),
         "Addon error: Addon present in addons and optionals: else"
     );

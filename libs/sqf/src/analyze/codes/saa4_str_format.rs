@@ -60,7 +60,9 @@ impl StrFormat {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Option<Self> {
-        let map = processed.mapping(self.span.start).unwrap();
+        let map = processed
+            .mapping(self.span.start)
+            .expect("span not in mapping");
         if map.was_macro() {
             // Don't emit for WARNING_1 and such macros
             return None;

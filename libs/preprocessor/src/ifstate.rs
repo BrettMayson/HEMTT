@@ -67,7 +67,12 @@ impl IfStates {
             return Err(DoubleElse::code(
                 token.as_ref().clone(),
                 previous.as_ref().clone(),
-                self.stack.last().unwrap().token().as_ref().clone(),
+                self.stack
+                    .last()
+                    .expect("did_else should only be Some if there is a last element in the stack")
+                    .token()
+                    .as_ref()
+                    .clone(),
             ));
         }
         if self

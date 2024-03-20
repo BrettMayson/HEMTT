@@ -15,6 +15,16 @@ members = [
 ]
 resolver = "2"
 
+[workspace.lints.clippy]
+all = "deny"
+nursery = "deny"
+pedantic = "warn"
+unwrap_used = "deny"
+
+[workspace.lints.rust]
+future_incompatible = "warn"
+nonstandard_style = "warn"
+
 [workspace.dependencies]
 byteorder = "1.5.0"
 chumsky = "0.9.3"
@@ -34,11 +44,6 @@ tracing = { version = "0.1.40", features = ["attributes"] }
 vfs = "0.11.0"
 walkdir = "2.5.0"
 zip = "0.6.6"
-
-[workspace.lints.clippy]
-all = "deny"
-nursery = "deny"
-pedantic = "warn"
 
 [profile.bench]
 lto = true

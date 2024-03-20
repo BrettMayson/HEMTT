@@ -122,6 +122,7 @@ pub fn decompress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut 
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 #[test]
 fn compress_and_back() {
     unsafe {

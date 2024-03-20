@@ -45,6 +45,7 @@ impl Rapify for Number {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::Number;
 

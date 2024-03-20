@@ -75,11 +75,15 @@ impl Module for Binarize {
             for entry in ctx
                 .workspace()
                 .join(addon.folder())
-                .unwrap()
+                .expect("workspace should be able to join the addon folder")
                 .walk_dir()
-                .unwrap()
+                .expect("should be able to walk the vfs addon directory")
             {
-                if entry.metadata().unwrap().file_type == VfsFileType::File
+                if entry
+                    .metadata()
+                    .expect("should be able to get metadata for the vfs entry")
+                    .file_type
+                    == VfsFileType::File
                     && ["rtm", "p3d", "wrp"]
                         .contains(&entry.extension().unwrap_or_default().as_str())
                 {
@@ -106,7 +110,11 @@ impl Module for Binarize {
 
                     // skip OLOD & BMTR files as they are already binarized
                     let mut buf = [0; 4];
-                    entry.open_file().unwrap().read_exact(&mut buf).unwrap();
+                    entry
+                        .open_file()
+                        .expect("file should exist if it came from walk_dir")
+                        .read_exact(&mut buf)
+                        .expect("p3ds should be at least 4 bytes");
                     if check_signature(buf) {
                         debug!(
                             "skipping binarization of already binarized {}",
@@ -129,11 +137,14 @@ impl Module for Binarize {
                     targets.push(BinarizeTarget {
                         source: tmp_sourced
                             .to_str()
-                            .unwrap()
+                            .expect("tmp source path should be valid utf-8")
                             .trim_start_matches('/')
                             .trim_start_matches(&addon.folder())
                             .to_owned(),
-                        output: tmp_outed.to_str().unwrap().to_owned(),
+                        output: tmp_outed
+                            .to_str()
+                            .expect("tmp output path should be valid utf-8")
+                            .to_owned(),
                         entry: entry.filename().trim_start_matches('/').to_owned(),
                     });
                 }
@@ -144,8 +155,12 @@ impl Module for Binarize {
             .par_iter()
             .map(|target| {
                 debug!("binarizing {}", target.entry);
-                create_dir_all(&target.output).unwrap();
-                let exe = self.command.as_ref().unwrap();
+                create_dir_all(&target.output)
+                    .expect("should be able to create output dir for target");
+                let exe = self
+                    .command
+                    .as_ref()
+                    .expect("command should be set if we attempted to binarize");
                 let mut cmd = Command::new(exe);
                 cmd.args([
                     "-norecurse",
@@ -158,7 +173,7 @@ impl Module for Binarize {
                 ])
                 .current_dir(&tmp_source);
                 trace!("{:?}", cmd);
-                let output = cmd.output().unwrap();
+                let output = cmd.output().expect("should be able to run binarize");
                 assert!(
                     output.status.success(),
                     "binarize failed with code {:?}",
@@ -209,7 +224,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     create_dir_all(&tmp)?;
     for addon in ctx.all_addons() {
         let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
-        create_dir_all(tmp_addon.parent().unwrap())?;
+        create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
         let target = ctx.project_folder().join(
             addon
                 .folder()
@@ -226,7 +241,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         if file.is_dir() {
             continue;
         }
-        let tmp_file = tmp.join(file.file_name().unwrap());
+        let tmp_file = tmp.join(file.file_name().expect("file should have a name"));
         if file.metadata()?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",
@@ -243,12 +258,17 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     for outer_prefix in std::fs::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
         if outer_prefix.is_dir() {
-            let tmp_outer_prefix = tmp.join(outer_prefix.file_name().unwrap());
+            let tmp_outer_prefix = tmp.join(
+                outer_prefix
+                    .file_name()
+                    .expect("outer prefix should have a name"),
+            );
             for prefix in std::fs::read_dir(outer_prefix)? {
                 let prefix = prefix?.path();
                 if prefix.is_dir() {
-                    let tmp_mod = tmp_outer_prefix.join(prefix.file_name().unwrap());
-                    create_dir_all(tmp_mod.parent().unwrap())?;
+                    let tmp_mod = tmp_outer_prefix
+                        .join(prefix.file_name().expect("prefix should have a name"));
+                    create_dir_all(tmp_mod.parent().expect("tmp mod should have a parent"))?;
                     create_link(&tmp_mod, &prefix)?;
                 }
             }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{fmt::Display, rc::Rc};
 
 use super::{Symbol, Token};
 
@@ -21,15 +21,19 @@ impl Output {
     }
 }
 
-impl ToString for Output {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Direct(t) => t.to_string(),
-            Self::Macro(_, t) => t
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<String>(),
-        }
+impl Display for Output {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Direct(t) => t.to_string(),
+                Self::Macro(_, t) => t
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<String>(),
+            }
+        )
     }
 }
 

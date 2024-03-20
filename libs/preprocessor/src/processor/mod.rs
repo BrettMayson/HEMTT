@@ -177,8 +177,12 @@ impl Processor {
                     if in_macro.is_some()
                     && stream.peek().map_or(false, |t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
                         // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
-                        && (token.position().path() != callsite.unwrap().path()
-                            || token.position().start().0 < callsite.unwrap().start().0)
+                        && (token.position().path() != callsite.expect(
+                            "callsite should exist if in_macro is some"
+                        ).path()
+                            || token.position().start().0 < callsite.expect(
+                            "callsite should exist if in_macro is some"
+                            ).start().0)
                     {
                         self.output(
                             Rc::new(Token::new(Symbol::DoubleQuote, token.position().clone())),
@@ -290,6 +294,7 @@ impl Processor {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 pub mod tests {
     use std::rc::Rc;
 

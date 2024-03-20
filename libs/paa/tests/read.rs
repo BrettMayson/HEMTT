@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 #[test]
 fn read_dxt1() {
     let file = std::fs::File::open("tests/dxt1.paa").unwrap();

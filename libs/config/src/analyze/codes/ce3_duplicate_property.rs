@@ -37,13 +37,19 @@ impl DuplicateProperty {
     fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic = Diagnostic::new_for_processed(
             &self,
-            self.conflicts.last().unwrap().span.clone(),
+            self.conflicts
+                .last()
+                .expect("conflicts should have at least one element if it was created with new")
+                .span
+                .clone(),
             processed,
         );
         if let Some(diag) = &mut self.diagnostic {
             for conflict in self.conflicts.iter().rev().skip(1) {
-                let map = processed.mapping(conflict.span.start).unwrap();
-                let file = processed.source(map.source()).unwrap();
+                let map = processed
+                    .mapping(conflict.span.start)
+                    .expect("mapping should exist");
+                let file = processed.source(map.source()).expect("source should exist");
                 diag.labels.push(
                     Label::secondary(
                         file.0.clone(),

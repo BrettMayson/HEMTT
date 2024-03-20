@@ -214,12 +214,9 @@ fn is_in(list: &[&str], item: &str) -> bool {
 }
 
 fn load_wiki() -> Wiki {
-    Wiki::load_git().map_or_else(
-        |e| {
-            trace!(?e, "failed to load arma 3 wiki from git: {}", e);
-            warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
-            Wiki::load_dist()
-        },
-        |wiki| wiki,
-    )
+    Wiki::load_git().unwrap_or_else(|e| {
+        trace!(?e, "failed to load arma 3 wiki from git: {}", e);
+        warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+        Wiki::load_dist()
+    })
 }

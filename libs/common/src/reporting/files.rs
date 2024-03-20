@@ -47,7 +47,10 @@ impl WorkspaceFiles {
 
     /// Get the file corresponding to the given id.
     fn get(&self, file_id: &WorkspacePath) -> WorkspaceFile {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self
+            .cache
+            .write()
+            .expect("failed to lock workspace files cache");
         cache
             .entry(file_id.clone())
             .or_insert_with(|| {

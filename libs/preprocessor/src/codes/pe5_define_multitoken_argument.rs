@@ -44,8 +44,8 @@ impl Code for DefineMissingComma {
     fn suggestion(&self) -> Option<String> {
         Some(format!(
             "{}, {}",
-            self.previous.symbol().to_string(),
-            self.current.symbol().to_string()
+            self.previous.symbol(),
+            self.current.symbol()
         ))
     }
 

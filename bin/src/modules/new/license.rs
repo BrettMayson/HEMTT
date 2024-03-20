@@ -27,23 +27,24 @@ impl Licenses {
             .items(&licenses)
             .default(0)
             .interact()
-            .unwrap();
+            .expect("Failed to get license selection");
         if selection == 7 {
             return None;
         }
 
         let license = match selection {
-            0 => Self::get("apl-sa.txt").unwrap(),
-            1 => Self::get("apl.txt").unwrap(),
-            2 => Self::get("apl-nd.txt").unwrap(),
-            3 => Self::get("apache.txt").unwrap(),
-            4 => Self::get("gpl-3.0.txt").unwrap(),
-            5 => Self::get("mit.txt").unwrap(),
-            6 => Self::get("unlicense.txt").unwrap(),
+            0 => Self::get("apl-sa.txt"),
+            1 => Self::get("apl.txt"),
+            2 => Self::get("apl-nd.txt"),
+            3 => Self::get("apache.txt"),
+            4 => Self::get("gpl-3.0.txt"),
+            5 => Self::get("mit.txt"),
+            6 => Self::get("unlicense.txt"),
             _ => unreachable!(),
-        };
+        }
+        .expect("license should exist");
 
-        let license = String::from_utf8(license.data.to_vec()).unwrap();
+        let license = String::from_utf8(license.data.to_vec()).expect("license should be utf8");
         Some(license.replace("{author}", author).replace(
             "{year}",
             time::OffsetDateTime::now_utc().year().to_string().as_str(),

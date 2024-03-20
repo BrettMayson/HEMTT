@@ -28,7 +28,7 @@ impl Code for PragmaInvalidFlag {
     }
 
     fn message(&self) -> String {
-        format!("unknown #pragma flag `{}`", self.token.symbol().to_string())
+        format!("unknown #pragma flag `{}`", self.token.symbol())
     }
 
     fn label_message(&self) -> String {

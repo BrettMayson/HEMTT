@@ -89,11 +89,17 @@ fn _build(
         path.set_extension("pbo");
         path
     };
-    if target_pbo.parent().unwrap().exists() {
-        debug!("{:?} already exists", target_pbo.parent().unwrap());
+    let Some(parent) = target_pbo.parent() else {
+        return Err(Error::Io(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "target_pbo is at root",
+        )));
+    };
+    if parent.exists() {
+        debug!("{:?} already exists", parent);
     } else {
-        debug!("creating {:?}", target_pbo.parent().unwrap());
-        create_dir_all(target_pbo.parent().unwrap())?;
+        debug!("creating {:?}", parent);
+        create_dir_all(parent)?;
     }
     debug!(
         "building {:?} => {:?}",

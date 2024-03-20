@@ -15,7 +15,7 @@ impl Rapify for Array {
         let mut written = output.write_compressed_int(self.items.len() as u32)?;
         for item in &self.items {
             output.write_all(&[item.rapified_code()])?;
-            written += item.rapify(output, offset).unwrap() + 1;
+            written += item.rapify(output, offset)? + 1;
         }
         assert_eq!(written, self.rapified_length());
         Ok(written)
@@ -40,7 +40,7 @@ impl Rapify for Item {
                 let mut written = output.write_compressed_int(a.len() as u32)?;
                 for item in a {
                     output.write_all(&[item.rapified_code()])?;
-                    written += item.rapify(output, offset).unwrap() + 1;
+                    written += item.rapify(output, offset)? + 1;
                 }
                 Ok(written)
             }

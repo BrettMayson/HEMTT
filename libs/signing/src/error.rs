@@ -4,13 +4,13 @@ use hemtt_common::error::thiserror;
 /// Error type for the signing module
 pub enum Error {
     #[error("RSA Error: {0}")]
-    /// [rsa::errors::Error]
+    /// [`rsa::errors::Error`]
     Rsa(#[from] rsa::errors::Error),
     #[error("IO Error: {0}")]
-    /// [std::io::Error]
+    /// [`std::io::Error`]
     Io(Box<std::io::Error>),
     #[error("PBO Error: {0}")]
-    /// [hemtt_pbo::Error]
+    /// [`hemtt_pbo::Error`]
     Pbo(Box<hemtt_pbo::Error>),
 
     #[error("Invalid length while reading")]

@@ -60,9 +60,15 @@ impl ExpectedArray {
         if let Value::Array(_) = value {
             panic!("ExpectedArray::generate_processed called on non-ExpectedArray property");
         }
-        let ident_start = processed.mapping(name.span.start).unwrap();
-        let ident_file = processed.source(ident_start.source()).unwrap();
-        let ident_end = processed.mapping(name.span.end).unwrap();
+        let ident_start = processed
+            .mapping(name.span.start)
+            .expect("mapping should exist");
+        let ident_file = processed
+            .source(ident_start.source())
+            .expect("source should exist");
+        let ident_end = processed
+            .mapping(name.span.end)
+            .expect("mapping should exist");
         let haystack = &processed.as_str()[ident_end.original_start()..value.span().start];
         let possible_end =
             ident_end.original_start() + haystack.find(|c: char| c == ']').unwrap_or(1) + 1;

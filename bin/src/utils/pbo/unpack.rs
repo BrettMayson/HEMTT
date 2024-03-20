@@ -53,7 +53,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     }
     for header in pbo.files() {
         let path = output.join(header.filename().replace('\\', "/"));
-        std::fs::create_dir_all(path.parent().unwrap())?;
+        std::fs::create_dir_all(path.parent().expect("must have parent, just joined"))?;
         let mut out = File::create(path)?;
         let mut file = pbo
             .file(header.filename())?

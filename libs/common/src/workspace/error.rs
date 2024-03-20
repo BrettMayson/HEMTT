@@ -2,7 +2,7 @@
 /// Errors that can occur while parsing a version
 pub enum Error {
     #[error("VfsError: {0}")]
-    /// [vfs::VfsError]
+    /// [`vfs::VfsError`]
     Vfs(Box<vfs::VfsError>),
 
     #[error("PrefixError: {0}")]

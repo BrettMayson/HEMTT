@@ -13,7 +13,7 @@
 //! extra=header
 //! ```
 
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 /// Files that may be used to contain the prefix, case insensitive, convert to lowercase
 pub const FILES: [&str; 4] = [
@@ -99,9 +99,9 @@ impl Prefix {
     }
 }
 
-impl ToString for Prefix {
-    fn to_string(&self) -> String {
-        self.0.join("\\")
+impl Display for Prefix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.join("\\"))
     }
 }
 
@@ -114,6 +114,7 @@ pub enum Error {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::Prefix;
 

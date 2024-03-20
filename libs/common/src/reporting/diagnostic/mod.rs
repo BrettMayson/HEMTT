@@ -203,20 +203,28 @@ impl Diagnostic {
                     return None;
                 }
                 l.message.as_ref()?;
-                let start_line_index = files.line_index(&l.file, l.span.start).unwrap();
-                let end_line_index = files.line_index(&l.file, l.span.end).unwrap();
+                let start_line_index = files
+                    .line_index(&l.file, l.span.start)
+                    .expect("start line should be within file");
+                let end_line_index = files
+                    .line_index(&l.file, l.span.end)
+                    .expect("end line should be within file");
                 Some(Annotation {
                     path: l.file.data.path.as_str().to_string(),
-                    start_line: files.line_number(&l.file, start_line_index).unwrap(),
-                    end_line: files.line_number(&l.file, end_line_index).unwrap(),
+                    start_line: files
+                        .line_number(&l.file, start_line_index)
+                        .expect("start line index should be within file"),
+                    end_line: files
+                        .line_number(&l.file, end_line_index)
+                        .expect("end line index should be within file"),
                     start_column: files
                         .column_number(&l.file, start_line_index, l.span.start)
-                        .unwrap(),
+                        .expect("start column should be within file"),
                     end_column: files
                         .column_number(&l.file, end_line_index, l.span.end)
-                        .unwrap(),
+                        .expect("end column should be within file"),
                     level: self.severity.into(),
-                    message: l.message.clone().unwrap(),
+                    message: l.message.clone().expect("message should exist"),
                     title: self.message.clone(),
                 })
             })

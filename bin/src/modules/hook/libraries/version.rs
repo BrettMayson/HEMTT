@@ -4,6 +4,7 @@ use rhai::plugin::{
 };
 
 #[allow(clippy::needless_pass_by_ref_mut)]
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod version_functions {
     use hemtt_common::version::Version;

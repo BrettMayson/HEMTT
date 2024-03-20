@@ -154,7 +154,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let meta_path = std::env::current_dir()?.join("meta.cpp");
     if meta_path.exists() {
         let content = std::fs::read_to_string(meta_path)?;
-        let regex = Regex::new(r"publishedid\s*=\s*(\d+);").unwrap();
+        let regex = Regex::new(r"publishedid\s*=\s*(\d+);").expect("meta regex compiles");
         if let Some(id) = regex.captures(&content).map(|c| c[1].to_string()) {
             meta = Some(id);
         }
@@ -373,7 +373,7 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
     let mod_regex = Regex::new(
         r#"(?m)href="https?:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)""#,
     )
-    .unwrap();
+    .expect("mod regex compiles");
     for id in mod_regex.captures_iter(html).map(|c| c[1].to_string()) {
         if workshop.contains(&id) {
             trace!("Skipping mod {} in preset {}", id, name);
@@ -382,8 +382,8 @@ pub fn read_preset(name: &str, html: &str) -> (Vec<String>, Vec<DLC>) {
             workshop.push(id);
         }
     }
-    let dlc_regex =
-        Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#).unwrap();
+    let dlc_regex = Regex::new(r#"(?m)href="https?:\/\/store\.steampowered\.com\/app\/(\d+)""#)
+        .expect("dlc regex compiles");
     for id in dlc_regex.captures_iter(html).map(|c| c[1].to_string()) {
         let Ok(preset_dlc) = DLC::try_from(id.clone()) else {
             warn!(

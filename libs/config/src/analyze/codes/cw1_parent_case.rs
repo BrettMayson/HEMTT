@@ -76,8 +76,8 @@ impl ParentCase {
                         .span
                         .start,
                 )
-                .unwrap();
-            let file = processed.source(map.source()).unwrap();
+                .expect("mapping should exist");
+            let file = processed.source(map.source()).expect("source should exist");
             diag.labels.push(
                 Label::secondary(
                     file.0.clone(),

@@ -135,6 +135,7 @@ impl Display for BISignVersion {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     #[test]
     fn serialize_and_deserialize() {

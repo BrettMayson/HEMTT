@@ -162,7 +162,9 @@ impl<I: Seek + Read> WritablePbo<I> {
         hasher.update(headers.get_ref());
 
         for header in &files_sorted {
-            let file = self.file(header.filename())?.unwrap();
+            let file = self
+                .file(header.filename())?
+                .expect("file with header should exist");
             std::io::copy(file, output)?;
             file.rewind()?;
             std::io::copy(file, &mut hasher)?;

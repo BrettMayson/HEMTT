@@ -13,6 +13,7 @@ pub struct ReadFile(Rc<RefCell<Box<dyn SeekAndRead + Send>>>);
 pub struct WriteFile(Rc<RefCell<Box<dyn Write + Send>>>);
 
 #[allow(clippy::needless_pass_by_ref_mut)]
+#[allow(clippy::unwrap_used)] // coming from rhai codegen
 #[export_module]
 pub mod file_functions {
     use std::{cell::RefCell, rc::Rc};

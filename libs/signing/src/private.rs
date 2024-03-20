@@ -39,7 +39,9 @@ impl BIPrivateKey {
         let mut rsa = RsaPrivateKey::new(&mut rng, length as usize)?;
         rsa.precompute()?;
         let primes = rsa.primes();
-        let Some(qinv) = rsa.qinv().unwrap().to_biguint() else {
+        let Some(qinv) = rsa.qinv().expect(
+            "qinv should be precomputed, if it's not, the precompute failed and we should return",
+        ).to_biguint() else {
             return Err(Error::Rsa(rsa::errors::Error::Internal));
         };
         Ok(Self {
@@ -49,8 +51,12 @@ impl BIPrivateKey {
             n: rsa.n().clone(),
             p: primes[0].clone(),
             q: primes[1].clone(),
-            dp: rsa.dp().unwrap().clone(),
-            dq: rsa.dq().unwrap().clone(),
+            dp: rsa.dp().expect(
+                "dp should be precomputed, if it's not, the precompute failed and we should return",
+            ).clone(),
+            dq: rsa.dq().expect(
+                "dq should be precomputed, if it's not, the precompute failed and we should return",
+            ).clone(),
             qinv,
             d: rsa.d().clone(),
         })
