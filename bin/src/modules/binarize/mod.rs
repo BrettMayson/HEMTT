@@ -49,7 +49,7 @@ impl Module for Binarize {
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         println!("HEMTT_BI_TOOLS: {:?}", std::env::var("HEMTT_BI_TOOLS"));
         let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
