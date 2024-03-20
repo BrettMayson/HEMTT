@@ -104,6 +104,18 @@ jobs:
         uses: arma-actions/arma3-tools@master
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
+      - name: Install Arma 3 Tools (Linux)
+        if: startsWith(matrix.os.runner, 'ubuntu')
+        run: |
+          wget -O arma3.zip ${{ secrets.ARMA3_TOOLS_URL }}
+          unzip arma3.zip -d /tmp/arma3tools
+          export HEMTT_BI_TOOLS="/tmp/arma3tools"
+      - name: Install Wine
+        if: startsWith(matrix.os.runner, 'ubuntu')
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y wine32
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         run: |
           cd mod && hemtt build
