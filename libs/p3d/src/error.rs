@@ -4,7 +4,7 @@ use hemtt_common::error::thiserror;
 /// Error type for the PBO writer/reader
 pub enum Error {
     #[error("IO Error: {0}")]
-    /// [std::io::Error]
+    /// [`std::io::Error`]
     Io(#[from] std::io::Error),
 
     #[error("Unsupported p3d type: {0}")]
