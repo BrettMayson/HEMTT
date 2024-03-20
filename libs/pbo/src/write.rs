@@ -33,17 +33,22 @@ impl<I: Seek + Read> WritablePbo<I> {
     pub fn add_file<S: Into<String>>(
         &mut self,
         name: S,
+        size: Option<u32>,
         mut input: I,
     ) -> Result<Option<(I, Header)>, Error> {
         let name = name.into().replace('/', "\\");
-        let size = input.seek(SeekFrom::End(0))?;
-        if size > u32::MAX as u64 {
-            return Err(Error::FileTooLarge);
-        }
-        Ok(self.files.insert(
-            name.clone(),
-            (input, Header::new_for_file(name, size as u32)),
-        ))
+        let size = if let Some(size) = size {
+            size
+        } else {
+            let size = input.seek(SeekFrom::End(0))?;
+            if size > u32::MAX as u64 {
+                return Err(Error::FileTooLarge);
+            }
+            size as u32
+        };
+        Ok(self
+            .files
+            .insert(name.clone(), (input, Header::new_for_file(name, size))))
     }
 
     /// Add a file with a custom header

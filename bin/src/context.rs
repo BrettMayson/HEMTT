@@ -72,6 +72,9 @@ impl Context {
                 .expect("valid utf-8")
                 .replace(['\\', '/'], "_"),
         );
+        if tmp.exists() {
+            remove_dir_all(&tmp)?;
+        }
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
         trace!("using project folder: {:?}", root.display());

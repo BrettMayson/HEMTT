@@ -131,12 +131,16 @@ impl Addon {
             }
         }
         for addon in &addons {
-            // if addon.name().to_lowercase() != addon.name() {
-            //     warn!(
-            //         "Addon name {} is not lowercase, it is highly recommended to use lowercase names",
-            //         addon.name()
-            //     );
-            // }
+            // I thought about creating a setting for this, but I don't want
+            // it to end up in some HEMTT template that everyone just copies
+            // and becomes irrelevant. I don't like this solutution either,
+            // but I dislike it slightly less.
+            if addon.name().to_lowercase() != addon.name() && !addon.name().starts_with("CUP_") {
+                warn!(
+                    "Addon name {} is not lowercase, it is highly recommended to use lowercase names",
+                    addon.name()
+                );
+            }
             if addons.iter().any(|a| {
                 a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
             }) {

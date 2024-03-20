@@ -40,11 +40,17 @@ pub enum PDrive {
 impl PDrive {
     #[must_use]
     /// Get the path to the a3 folder
+    ///
+    /// # Panics
+    /// Panics if the vfs fails to manage paths
     pub fn path_to(&self, path: &str) -> Option<VfsPath> {
         match self {
             Self::Tools(vfs, _) => {
                 let path = vfs.join(path).ok()?;
-                if path.exists().expect("path exists") {
+                if path
+                    .exists()
+                    .expect("vfs should be able to check if path exists")
+                {
                     Some(path)
                 } else {
                     None
@@ -59,9 +65,8 @@ impl PDrive {
     pub fn link(&self) -> PathBuf {
         match self {
             Self::Tools(_, p) => p.clone(),
-            Self::OnDemand(p) => p.real_root.clone(),
+            Self::OnDemand(p) => p.real_root.clone().join("a3"),
         }
-        .join("a3")
     }
 }
 
@@ -141,6 +146,9 @@ impl PDriveOnDemand {
 }
 
 /// Search for the P drive, returns a `VfsPath` and the path to the a3 folder if found
+///
+/// # Panics
+/// Panics if the vfs fails to manage paths
 pub fn search() -> Option<PDrive> {
     // Check if a P drive exists with the a3 folder
     let path = Path::new("P:\\a3");

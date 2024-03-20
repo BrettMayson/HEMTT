@@ -146,7 +146,15 @@ fn _build(
                 .trim_start_matches(&format!("/{}/", addon.folder()))
                 .replace('/', "\\");
             trace!("adding file {:?}", file);
-            pbo.add_file(file, entry.open_file()?)?;
+
+            pbo.add_file(
+                file,
+                Some(
+                    u32::try_from(entry.metadata()?.len)
+                        .expect("files larger than 4GB are not supported"),
+                ),
+                entry.open_file()?,
+            )?;
         }
     }
     for header in ctx.config().properties() {

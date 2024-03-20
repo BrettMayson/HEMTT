@@ -13,12 +13,12 @@ use hemtt_p3d::SearchCache;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use self::error::bbe4_missing_textures::MissingTextures;
 #[allow(unused_imports)] // used in windows only
 use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
 };
+use self::error::{bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive};
 use super::Module;
 use crate::{
     context::Context, error::Error, link::create_link,
@@ -51,7 +51,7 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
@@ -76,11 +76,17 @@ impl Module for Binarize {
         Ok(report)
     }
 
+    #[allow(clippy::too_many_lines)]
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         let search_cache = SearchCache::new();
+        if let Some(pdrive) = ctx.workspace().workspace().pdrive() {
+            info!("P Drive at {}", pdrive.link().display());
+        } else if ctx.config().hemtt().build().pdrive() == &PDriveOption::Require {
+            report.error(MissingPDrive::code());
+        }
         for addon in ctx.addons() {
             if let Some(config) = addon.config() {
                 if !config.binarize().enabled() {
@@ -178,6 +184,10 @@ impl Module for Binarize {
                 }
             }
         }
+        info!(
+            "Validated {} files for binarization",
+            self.prechecked.read().unwrap().len()
+        );
         Ok(report)
     }
 
@@ -253,9 +263,6 @@ fn check_signature(buf: [u8; 4]) -> bool {
 
 #[allow(dead_code)] // used in windows only
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    if ctx.tmp().exists() {
-        remove_dir_all(ctx.tmp())?;
-    }
     create_dir_all(ctx.tmp().join("output"))?;
     let tmp = ctx.tmp().join("source");
     create_dir_all(&tmp)?;
@@ -315,11 +322,10 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     let Some(pdrive) = ctx.workspace().workspace().pdrive() else {
         return Ok(());
     };
-    println!("pdrive from {}", pdrive.link().display());
     for folder in std::fs::read_dir(pdrive.link())? {
         let folder = folder?.path();
         if folder.is_dir() {
-            let tmp_folder = tmp.join("a3").join(folder.file_name().unwrap());
+            let tmp_folder = tmp.join(folder.file_name().unwrap());
             create_dir_all(tmp_folder.parent().unwrap())?;
             create_link(&tmp_folder, &folder)?;
         }
