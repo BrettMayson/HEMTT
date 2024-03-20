@@ -109,7 +109,6 @@ jobs:
         run: |
           wget -O arma3.zip ${{ secrets.ARMA3_TOOLS_URL }}
           unzip arma3.zip -d /tmp/arma3tools
-          export HEMTT_BI_TOOLS="/tmp/arma3tools"
       - name: Install Wine
         if: startsWith(matrix.os.runner, 'ubuntu')
         run: |
@@ -117,6 +116,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wine32
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
+        env:
+          HEMTT_BI_TOOLS: /tmp/arma3tools
         run: |
           cd mod && hemtt build
 
