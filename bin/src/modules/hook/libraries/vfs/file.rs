@@ -4,13 +4,13 @@ use rhai::plugin::{
     export_module, mem, Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module,
     NativeCallContext, PluginFunc, RhaiResult, TypeId,
 };
-use vfs::SeekAndRead;
+use vfs::{SeekAndRead, SeekAndWrite};
 
 #[derive(Clone)]
 pub struct ReadFile(Rc<RefCell<Box<dyn SeekAndRead + Send>>>);
 
 #[derive(Clone)]
-pub struct WriteFile(Rc<RefCell<Box<dyn Write + Send>>>);
+pub struct WriteFile(Rc<RefCell<Box<dyn SeekAndWrite + Send>>>);
 
 #[allow(clippy::needless_pass_by_ref_mut)]
 #[allow(clippy::unwrap_used)] // coming from rhai codegen

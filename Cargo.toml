@@ -41,7 +41,7 @@ strsim = "0.11.0"
 thiserror = "1.0.58"
 toml = "0.8.12"
 tracing = { version = "0.1.40", features = ["attributes"] }
-vfs = "0.11.0"
+vfs = "0.12.0"
 walkdir = "2.5.0"
 zip = "0.6.6"
 
