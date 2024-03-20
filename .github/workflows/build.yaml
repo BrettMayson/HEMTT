@@ -114,7 +114,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y wine32
+          sudo apt-get install -y wine32 winbind
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         env:
           HEMTT_BI_TOOLS: /tmp/arma3tools
