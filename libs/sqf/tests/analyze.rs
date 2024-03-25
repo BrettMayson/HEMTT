@@ -70,4 +70,4 @@ analyze!(saa1_if_assign);
 analyze!(saa2_find_in_str);
 analyze!(saa3_typename);
 analyze!(saa4_str_format);
-// analyze!(saa5_select_parse_number);
+analyze!(saa5_select_parse_number);

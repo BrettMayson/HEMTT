@@ -301,7 +301,7 @@ impl Expression {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NularCommand {
-    pub name: String,
+    name: String,
 }
 
 impl NularCommand {
