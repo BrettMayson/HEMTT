@@ -1,9 +1,9 @@
 use std::rc::Rc;
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 use pest::Parser;
@@ -149,9 +149,13 @@ impl Parse for Symbol {
 mod tests {
     #[test]
     fn simple() {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(
+                None,
+                false,
+                &hemtt_common::project::hemtt::PDriveOption::Disallow,
+            )
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -164,9 +168,13 @@ mod tests {
 
     #[test]
     fn unicode() {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(
+                None,
+                false,
+                &hemtt_common::project::hemtt::PDriveOption::Disallow,
+            )
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         let content = "² ƒ ‡ Œ Š – µ œ š ˆ ˜ € º ¨ ¬ 🤔";

@@ -4,8 +4,8 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::workspace::{LayerType, Workspace, WorkspacePath};
-use hemtt_common::{addons::Addon, project::ProjectConfig};
+use hemtt_common::project::ProjectConfig;
+use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
 
@@ -72,6 +72,9 @@ impl Context {
                 .expect("valid utf-8")
                 .replace(['\\', '/'], "_"),
         );
+        if tmp.exists() {
+            remove_dir_all(&tmp)?;
+        }
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
         trace!("using project folder: {:?}", root.display());
@@ -97,9 +100,11 @@ impl Context {
             }
             maybe_build_folder = Some(build_folder);
         };
-        let workspace = builder
-            .memory()
-            .finish(Some(config.clone()), folder.is_some())?;
+        let workspace = builder.memory().finish(
+            Some(config.clone()),
+            folder.is_some(),
+            config.hemtt().build().pdrive(),
+        )?;
         {
             let version = config.version().get(workspace.vfs());
             if let Err(hemtt_common::project::Error::Git(_)) = version {

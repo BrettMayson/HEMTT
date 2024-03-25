@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Processed};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Processed};
 
 use crate::Ident;
 

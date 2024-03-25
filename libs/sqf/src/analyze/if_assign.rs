@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::{
     analyze::codes::saa1_if_assign::IfAssign, BinaryCommand, Expression, Statement, Statements,

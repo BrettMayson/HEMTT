@@ -1,5 +1,5 @@
 use clap::{ArgAction, ArgMatches, Command};
-use hemtt_common::addons::Location;
+use hemtt_workspace::addons::Location;
 
 use crate::{
     context::Context,
@@ -114,7 +114,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
             return Err(Error::Addon(
-                hemtt_common::addons::Error::AddonOptionalNotFound(optional.to_owned()),
+                hemtt_workspace::addons::Error::OptionalNotFound(optional.to_owned()),
             ));
         }
     }

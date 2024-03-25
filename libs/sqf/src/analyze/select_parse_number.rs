@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use float_ord::FloatOrd;
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::{
     analyze::codes::saa5_select_parse_number::SelectParseNumber, BinaryCommand, Expression,

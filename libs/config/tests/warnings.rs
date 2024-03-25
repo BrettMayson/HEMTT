@@ -2,8 +2,9 @@
 
 use std::io::Read;
 
-use hemtt_common::{project::ProjectConfig, reporting::WorkspaceFiles, workspace::LayerType};
+use hemtt_common::project::ProjectConfig;
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/warnings/";
 
@@ -20,9 +21,13 @@ macro_rules! bootstrap {
 
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false)
+        .finish(
+            None,
+            false,
+            &hemtt_common::project::hemtt::PDriveOption::Disallow,
+        )
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();

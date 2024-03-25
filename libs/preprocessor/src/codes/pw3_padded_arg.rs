@@ -1,4 +1,4 @@
-use hemtt_common::reporting::{Code, Diagnostic, Severity, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Severity, Token};
 
 #[allow(unused)]
 /// Unexpected token

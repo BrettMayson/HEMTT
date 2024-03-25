@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use ::rhai::{packages::Package, Engine, Scope};
-use hemtt_common::workspace::WorkspacePath;
+use hemtt_workspace::WorkspacePath;
 
 use crate::{context::Context, error::Error, report::Report};
 

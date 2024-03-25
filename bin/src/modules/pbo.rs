@@ -5,12 +5,11 @@ use std::{
 
 use git2::Repository;
 use hemtt_common::{
-    addons::{Addon, Location},
     prefix::{Prefix, FILES},
     version::Version,
 };
 use hemtt_pbo::WritablePbo;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use hemtt_workspace::addons::{Addon, Location};
 use vfs::VfsFileType;
 
 use crate::{context::Context, error::Error, report::Report};
@@ -45,7 +44,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     let counter = AtomicU16::new(0);
     ctx.addons()
         .to_vec()
-        .par_iter()
+        .iter()
         .map(|addon| {
             _build(ctx, addon, collapse, &version, git_hash.as_ref())?;
             counter.fetch_add(1, Ordering::Relaxed);
@@ -152,6 +151,7 @@ fn _build(
                 .trim_start_matches(&format!("/{}/", addon.folder()))
                 .replace('/', "\\");
             trace!("adding file {:?}", file);
+
             pbo.add_file(file, entry.open_file()?)?;
         }
     }

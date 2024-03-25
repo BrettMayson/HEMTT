@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct BinarizeFailed {
     file: String,

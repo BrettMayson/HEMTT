@@ -1,9 +1,9 @@
 use std::fs::{create_dir_all, File};
 
 use git2::Repository;
-use hemtt_common::addons::Location;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
+use hemtt_workspace::addons::Location;
 
 use crate::{context::Context, error::Error, report::Report};
 

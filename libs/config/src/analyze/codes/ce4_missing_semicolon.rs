@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use hemtt_common::reporting::{diagnostic::Yellow, Code, Diagnostic, Processed};
+use hemtt_workspace::reporting::{diagnostic::Yellow, Code, Diagnostic, Processed};
 
 pub struct MissingSemicolon {
     span: Range<usize>,

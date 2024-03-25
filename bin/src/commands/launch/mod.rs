@@ -6,9 +6,9 @@ use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
     project::{hemtt::LaunchOptions, ProjectConfig},
+    steam,
 };
 use regex::Regex;
-use steamlocate::SteamDir;
 
 use crate::{
     commands::launch::error::{
@@ -130,11 +130,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     trace!("launch config: {:?}", launch);
 
-    let Ok(Some((arma3app, library))) = SteamDir::locate().and_then(|s| s.find_app(107_410)) else {
+    let Some(arma3dir) = steam::find_app(107_410) else {
         report.error(ArmaNotFound::code());
         return Ok(report);
     };
-    let arma3dir = library.resolve_app_dir(&arma3app);
 
     debug!("Arma 3 found at: {}", arma3dir.display());
 

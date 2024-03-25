@@ -1,10 +1,16 @@
 use std::{
-    fs::{create_dir_all, remove_dir_all},
+    ffi::OsStr,
+    fs::create_dir_all,
     path::PathBuf,
     process::Command,
-    sync::atomic::{AtomicU16, Ordering},
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        RwLock,
+    },
 };
 
+use hemtt_common::project::hemtt::PDriveOption;
+use hemtt_p3d::SearchCache;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -13,14 +19,31 @@ use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
 };
+use self::error::{bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive};
 use super::Module;
-use crate::{context::Context, error::Error, link::create_link, report::Report};
+use crate::{
+    context::Context, error::Error, link::create_link,
+    modules::binarize::error::bbe5_missing_material::MissingMaterials, report::Report,
+};
 
 mod error;
 
 #[derive(Default)]
 pub struct Binarize {
+    check_only: bool,
     command: Option<String>,
+    prechecked: RwLock<Vec<BinarizeTarget>>,
+}
+
+impl Binarize {
+    #[must_use]
+    pub fn new(check_only: bool) -> Self {
+        Self {
+            check_only,
+            command: None,
+            prechecked: RwLock::new(Vec::new()),
+        }
+    }
 }
 
 impl Module for Binarize {
@@ -29,8 +52,7 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        setup_tmp(ctx)?;
+    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
         let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
@@ -56,15 +78,16 @@ impl Module for Binarize {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        if self.command.is_none() {
-            return Ok(Report::new());
-        }
-        let mut targets = Vec::with_capacity(ctx.addons().len());
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
+        let search_cache = SearchCache::new();
+        if let Some(pdrive) = ctx.workspace().workspace().pdrive() {
+            info!("P Drive at {}", pdrive.link().display());
+        } else if ctx.config().hemtt().build().pdrive() == &PDriveOption::Require {
+            report.error(MissingPDrive::code());
+        }
         for addon in ctx.addons() {
             if let Some(config) = addon.config() {
                 if !config.binarize().enabled() {
@@ -123,6 +146,29 @@ impl Module for Binarize {
                         continue;
                     }
 
+                    // check mlod for textures
+                    if buf == [0x4D, 0x4C, 0x4F, 0x44] {
+                        trace!("checking textures & materials for {}", entry.as_str());
+                        let p3d = hemtt_p3d::P3D::read(
+                            &mut entry.open_file().expect("file should exist from walk_dir"),
+                        )
+                        .expect("p3d should be able to be read if it is a valid p3d file");
+                        let (missing_textures, missing_materials) =
+                            p3d.missing(ctx.workspace(), &search_cache)?;
+                        if !missing_textures.is_empty() {
+                            report.error(MissingTextures::code(
+                                entry.as_str().to_string(),
+                                missing_textures,
+                            ));
+                        }
+                        if !missing_materials.is_empty() {
+                            report.error(MissingMaterials::code(
+                                entry.as_str().to_string(),
+                                missing_materials,
+                            ));
+                        }
+                    }
+
                     let tmp_sourced = tmp_source.join(addon.prefix().as_pathbuf()).join(
                         entry
                             .as_str()
@@ -134,24 +180,47 @@ impl Module for Binarize {
                     );
                     let tmp_outed = tmp_out.join(entry.parent().as_str().trim_start_matches('/'));
 
-                    targets.push(BinarizeTarget {
-                        source: tmp_sourced
-                            .to_str()
-                            .expect("tmp source path should be valid utf-8")
-                            .trim_start_matches('/')
-                            .trim_start_matches(&addon.folder())
-                            .to_owned(),
-                        output: tmp_outed
-                            .to_str()
-                            .expect("tmp output path should be valid utf-8")
-                            .to_owned(),
-                        entry: entry.filename().trim_start_matches('/').to_owned(),
-                    });
+                    self.prechecked
+                        .write()
+                        .expect("can write in check")
+                        .push(BinarizeTarget {
+                            source: tmp_sourced
+                                .to_str()
+                                .expect("tmp source path should be valid utf-8")
+                                .trim_start_matches('/')
+                                .trim_start_matches(&addon.folder())
+                                .to_owned(),
+                            output: tmp_outed
+                                .to_str()
+                                .expect("tmp output path should be valid utf-8")
+                                .to_owned(),
+                            entry: entry.filename().trim_start_matches('/').to_owned(),
+                        });
                 }
             }
         }
+        info!(
+            "Validated {} files for binarization",
+            self.prechecked
+                .read()
+                .expect("prechecked should not be poisoned")
+                .len()
+        );
+        Ok(report)
+    }
 
-        targets
+    #[allow(clippy::too_many_lines)]
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        if self.command.is_none() || self.check_only {
+            return Ok(Report::new());
+        }
+        setup_tmp(ctx)?;
+        let mut report = Report::new();
+        let counter = AtomicU16::new(0);
+        let tmp_source = ctx.tmp().join("source");
+        self.prechecked
+            .read()
+            .expect("can read in pre_build")
             .par_iter()
             .map(|target| {
                 debug!("binarizing {}", target.entry);
@@ -216,9 +285,6 @@ fn check_signature(buf: [u8; 4]) -> bool {
 
 #[allow(dead_code)] // used in windows only
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    if ctx.tmp().exists() {
-        remove_dir_all(ctx.tmp())?;
-    }
     create_dir_all(ctx.tmp().join("output"))?;
     let tmp = ctx.tmp().join("source");
     create_dir_all(&tmp)?;
@@ -251,12 +317,23 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         trace!("copying `{}` to tmp for binarization", file.display());
         std::fs::copy(&file, &tmp_file)?;
     }
+
+    // link include folders
     let include = ctx.project_folder().join("include");
     if !include.exists() {
         return Ok(());
     }
+    let has_pdrive = ctx.workspace().workspace().pdrive().is_some();
+    let mut warned_a3_include = false;
     for outer_prefix in std::fs::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
+        if has_pdrive && outer_prefix.file_name() == Some(OsStr::new("a3")) {
+            if !warned_a3_include {
+                info!("binarize ignores include/a3 when a P Drive is used");
+                warned_a3_include = true;
+            }
+            continue;
+        }
         if outer_prefix.is_dir() {
             let tmp_outer_prefix = tmp.join(
                 outer_prefix
@@ -274,5 +351,14 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
             }
         }
     }
+
+    // link the pdrive, if it is required
+    if ctx.config().hemtt().build().pdrive() != &PDriveOption::Require {
+        return Ok(());
+    }
+    let Some(pdrive) = ctx.workspace().workspace().pdrive() else {
+        return Ok(());
+    };
+    create_link(&tmp.join("a3"), &pdrive.link())?;
     Ok(())
 }

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::{LineCol, Position},
     reporting::{Code, Diagnostic, Label},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 use pest::error::InputLocation;
 

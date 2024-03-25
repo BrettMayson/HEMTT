@@ -3,9 +3,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use hemtt_common::position::Position;
-use hemtt_common::reporting::{Code, Output, Processed, Symbol, Token};
-use hemtt_common::workspace::WorkspacePath;
+use hemtt_workspace::{
+    position::Position,
+    reporting::{Code, Output, Processed, Symbol, Token},
+    WorkspacePath,
+};
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::codes::pe18_eoi_ifstate::EoiIfState;
@@ -298,13 +300,17 @@ impl Processor {
 pub mod tests {
     use std::rc::Rc;
 
-    use hemtt_common::reporting::Token;
+    use hemtt_workspace::reporting::Token;
     use peekmore::{PeekMore, PeekMoreIterator};
 
     pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(
+                None,
+                false,
+                &hemtt_common::project::hemtt::PDriveOption::Disallow,
+            )
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -315,7 +321,7 @@ pub mod tests {
     }
 
     // pub fn setup(content: &str) -> Processed {
-    //     let workspace = hemtt_common::workspace::Workspace::builder()
+    //     let workspace = hemtt_workspace::Workspace::builder()
     //         .memory()
     //         .finish()
     //         .unwrap();

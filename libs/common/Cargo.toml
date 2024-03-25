@@ -9,10 +9,9 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-ansi_term = "0.12.1"
-codespan-reporting = "0.11.1"
 git2 = { workspace = true }
 serde = { workspace = true }
+steamlocate = "2.0.0-beta.1"
 strsim = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }

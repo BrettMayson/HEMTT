@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
 
 use crate::Error;
 

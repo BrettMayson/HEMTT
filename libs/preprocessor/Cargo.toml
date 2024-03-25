@@ -13,6 +13,7 @@ bench = false
 
 [dependencies]
 hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 lsp-types = { workspace = true, optional = true }
 peekmore = { workspace = true }

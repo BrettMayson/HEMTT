@@ -11,7 +11,8 @@ pub mod serializer;
 
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::{error::thiserror, reporting::Processed};
+use hemtt_common::error::thiserror;
+use hemtt_workspace::reporting::Processed;
 
 use self::serializer::{Compiled, Constant, Instruction, Instructions, SourceInfo};
 use crate::{Error, Expression, Statement, Statements};

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc, sync::Arc};
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::Position,
     reporting::{Symbol, Token},
 };

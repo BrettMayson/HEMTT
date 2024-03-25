@@ -1,4 +1,4 @@
-use hemtt_common::reporting::WorkspaceFiles;
+use hemtt_workspace::reporting::WorkspaceFiles;
 use tracing::error;
 
 fn main() {

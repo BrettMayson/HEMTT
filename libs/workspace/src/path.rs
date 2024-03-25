@@ -1,6 +1,5 @@
 use std::{hash::Hasher, sync::Arc};
 
-use tracing::trace;
 use vfs::{SeekAndWrite, VfsPath};
 
 use super::{Error, LayerType, Workspace};
@@ -171,6 +170,7 @@ impl WorkspacePath {
     /// Locate a path in the workspace
     ///
     /// Checks in order:
+    /// - A3 P drive, if allowed and path starts with `/a3/`
     /// - Relative to the current path, or absolute if the path starts with `/`
     /// - In the scanned pointers (prefix files)
     /// - In the include path
@@ -178,10 +178,21 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
     pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
-        let path = path.replace('\\', "/");
+        let path = path.replace('\\', "/").to_lowercase();
+        if path.starts_with("/a3/") {
+            if let Some(pdrive) = &self.workspace().pdrive {
+                if let Some(pdrive_path) = pdrive.path_to(&path) {
+                    return Ok(Some(Self {
+                        data: Arc::new(WorkspacePathData {
+                            path: pdrive_path,
+                            workspace: self.data.workspace.clone(),
+                        }),
+                    }));
+                }
+            }
+        }
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
-                trace!("Located with absolute path: {:?}", path);
                 return Ok(Some(Self {
                     data: Arc::new(WorkspacePathData {
                         path: self.data.workspace.vfs.join(path)?,
@@ -203,7 +214,6 @@ impl WorkspacePath {
                         .unwrap_or(&path),
                 )?;
                 if path.exists()? {
-                    trace!("Located with prefix pointer: {:?}", path);
                     return Ok(Some(Self {
                         data: Arc::new(WorkspacePathData {
                             path,
@@ -215,7 +225,6 @@ impl WorkspacePath {
         }
         let path = self.data.path.parent().join(path)?;
         if path.exists()? {
-            trace!("Located with parent: vfs {}", path.as_str());
             Ok(Some(Self {
                 data: Arc::new(WorkspacePathData {
                     path,

@@ -3,9 +3,9 @@ use std::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_common::{addons::Addon, workspace::WorkspacePath};
 use hemtt_config::{parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{addons::Addon, WorkspacePath};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 

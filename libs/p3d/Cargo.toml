@@ -1,0 +1,16 @@
+[package]
+name = "hemtt-p3d"
+version = "1.0.0"
+edition = "2021"
+description = "An P3d library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-workspace = { path = "../workspace", version = "1.0.0" }
+
+byteorder = { workspace = true }
+indexmap = { workspace = true }

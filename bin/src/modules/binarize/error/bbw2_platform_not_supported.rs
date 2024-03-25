@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Severity};
+use hemtt_workspace::reporting::{Code, Diagnostic, Severity};
 
 pub struct PlatformNotSupported;
 

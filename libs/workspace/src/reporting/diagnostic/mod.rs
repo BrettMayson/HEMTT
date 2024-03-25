@@ -6,7 +6,7 @@ use codespan_reporting::{
     term::termcolor::Ansi,
 };
 
-use crate::workspace::WorkspacePath;
+use crate::WorkspacePath;
 
 use self::annotation::Annotation;
 pub use self::label::Label;

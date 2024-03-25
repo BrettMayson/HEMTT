@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use crate::arma::dlc::DLC;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 /// Feature specific configuration
@@ -219,6 +219,10 @@ pub struct BuildOptions {
     /// Should optionals be built into their own mod?
     /// Default: true
     optional_mod_folders: Option<bool>,
+    #[serde(default)]
+    /// Can includes come from the P drive?
+    /// Default: false
+    pdrive: PDriveOption,
 }
 
 impl BuildOptions {
@@ -229,6 +233,47 @@ impl BuildOptions {
             optional
         } else {
             true
+        }
+    }
+
+    #[must_use]
+    /// Can includes come from the P drive?
+    pub const fn pdrive(&self) -> &PDriveOption {
+        &self.pdrive
+    }
+}
+
+#[derive(Default, PartialEq, Eq, Debug, Clone)]
+pub enum PDriveOption {
+    #[default]
+    Disallow,
+    Require,
+}
+
+impl<'de> Deserialize<'de> for PDriveOption {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.to_lowercase().as_str() {
+            "disallow" => Ok(Self::Disallow),
+            "require" => Ok(Self::Require),
+            _ => Err(serde::de::Error::custom(
+                "valid values are disallow, allow, require",
+            )),
+        }
+    }
+}
+
+impl Serialize for PDriveOption {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Disallow => serializer.serialize_str("disallow"),
+            Self::Require => serializer.serialize_str("required"),
         }
     }
 }

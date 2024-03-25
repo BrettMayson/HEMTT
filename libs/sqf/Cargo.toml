@@ -14,6 +14,7 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-lzo = { path = "../lzo", version = "1.0.0", optional = true }
+hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 arma3-wiki = "0.1.4"
 byteorder = { workspace = true, optional = true }

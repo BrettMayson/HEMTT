@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_common::project::ProjectConfig;
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::{
     analyze::codes::{ce1_invalid_value::InvalidValue, ce2_invalid_value_macro::InvalidValueMacro},
@@ -36,7 +36,7 @@ impl Analyze for Value {
                 vec![{
                     if processed
                         .mapping(invalid.start)
-                        .is_some_and(hemtt_common::reporting::Mapping::was_macro)
+                        .is_some_and(hemtt_workspace::reporting::Mapping::was_macro)
                     {
                         Arc::new(InvalidValueMacro::new(invalid.clone(), processed))
                     } else {

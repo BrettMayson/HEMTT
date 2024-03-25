@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
-use hemtt_common::reporting::Token;
+use hemtt_workspace::reporting::Token;
 
 use crate::{
     codes::{

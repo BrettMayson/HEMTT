@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use hemtt_common::reporting::{Code, Diagnostic, Processed, Severity};
+use hemtt_workspace::reporting::{Code, Diagnostic, Processed, Severity};
 
 use crate::Expression;
 

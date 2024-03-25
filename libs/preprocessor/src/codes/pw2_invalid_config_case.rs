@@ -1,6 +1,6 @@
-use hemtt_common::{
+use hemtt_workspace::{
     reporting::{Code, Severity},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 #[allow(unused)]

@@ -12,13 +12,11 @@ use std::sync::Arc;
 
 use analyze::{codes::ChumskyCode, Analyze, CfgPatch};
 use chumsky::Parser;
-use hemtt_common::{
-    reporting::{Code, Processed},
-    version::Version,
-};
+use hemtt_common::version::Version;
 
 pub use error::Error;
 use hemtt_common::project::ProjectConfig;
+use hemtt_workspace::reporting::{Code, Processed};
 pub use model::*;
 pub mod parse;
 pub mod rapify;

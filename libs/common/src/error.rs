@@ -11,8 +11,6 @@ pub enum Error {
     /// Invalid config
     ConfigInvalid(String),
 
-    #[error("Addon error: {0}")]
-    Addon(#[from] crate::addons::Error),
     #[error("Prefix error: {0}")]
     Prefix(#[from] crate::prefix::Error),
 
