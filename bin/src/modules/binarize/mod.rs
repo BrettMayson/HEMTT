@@ -359,19 +359,6 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     let Some(pdrive) = ctx.workspace().workspace().pdrive() else {
         return Ok(());
     };
-    for folder in std::fs::read_dir(pdrive.link())? {
-        let folder = folder?.path();
-        if folder.is_dir() {
-            let tmp_folder = tmp
-                .join("a3")
-                .join(folder.file_name().expect("folder should have a name"));
-            create_dir_all(
-                tmp_folder
-                    .parent()
-                    .expect("tmp folder should have a parent"),
-            )?;
-            create_link(&tmp_folder, &folder)?;
-        }
-    }
+    create_link(&tmp.join("a3"), &pdrive.link())?;
     Ok(())
 }
