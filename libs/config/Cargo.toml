@@ -23,4 +23,4 @@ vfs = { workspace = true }
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
-paste = "1.0.14"
+paste = { workspace = true }
