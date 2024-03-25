@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     fs::create_dir_all,
     path::PathBuf,
     process::Command,
@@ -322,8 +323,17 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     if !include.exists() {
         return Ok(());
     }
+    let has_pdrive = ctx.workspace().workspace().pdrive().is_some();
+    let mut warned_a3_include = false;
     for outer_prefix in std::fs::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
+        if has_pdrive && outer_prefix.file_name() == Some(OsStr::new("a3")) {
+            if !warned_a3_include {
+                info!("binarize ignores include/a3 when a P Drive is used");
+                warned_a3_include = true;
+            }
+            continue;
+        }
         if outer_prefix.is_dir() {
             let tmp_outer_prefix = tmp.join(
                 outer_prefix
@@ -352,7 +362,9 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     for folder in std::fs::read_dir(pdrive.link())? {
         let folder = folder?.path();
         if folder.is_dir() {
-            let tmp_folder = tmp.join(folder.file_name().expect("folder should have a name"));
+            let tmp_folder = tmp
+                .join("a3")
+                .join(folder.file_name().expect("folder should have a name"));
             create_dir_all(
                 tmp_folder
                     .parent()
