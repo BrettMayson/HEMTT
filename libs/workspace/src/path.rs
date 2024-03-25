@@ -180,7 +180,7 @@ impl WorkspacePath {
     pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
-        if path.starts_with("/a3/") {
+        if path_lower.starts_with("/a3/") {
             if let Some(pdrive) = &self.workspace().pdrive {
                 if let Some(pdrive_path) = pdrive.path_to(&path) {
                     return Ok(Some(Self {
