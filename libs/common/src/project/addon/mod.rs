@@ -57,7 +57,6 @@ impl AddonConfig {
     ///
     /// If the file cannot be read, or if the file is not valid TOML, or if the
     /// file does not contain a valid configuration, an error is returned.
-    #[allow(clippy::cognitive_complexity)]
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let file = std::fs::read_to_string(path)?;
         if file.contains("preprocess = ") {

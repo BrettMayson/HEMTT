@@ -73,7 +73,6 @@ pub fn cli() -> Command {
 }
 
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 /// Execute the launch command
 ///
 /// # Errors

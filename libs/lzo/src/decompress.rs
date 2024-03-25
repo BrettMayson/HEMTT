@@ -10,7 +10,6 @@ const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) 
 
 #[no_mangle]
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 #[allow(clippy::similar_names)]
 pub unsafe extern "C" fn lzo1x_decompress_safe(
     in_: *const u8,

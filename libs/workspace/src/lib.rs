@@ -89,7 +89,6 @@ impl Workspace {
         })
     }
 
-    #[allow(clippy::cognitive_complexity)]
     fn discover(&mut self) -> Result<(), Error> {
         for entry in self.vfs.walk_dir()? {
             let Ok(entry) = entry else {

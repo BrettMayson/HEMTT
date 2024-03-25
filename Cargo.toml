@@ -22,6 +22,7 @@ all = "deny"
 nursery = "deny"
 pedantic = "warn"
 unwrap_used = "deny"
+cognitive_complexity = "allow"
 
 [workspace.lints.rust]
 future_incompatible = "warn"
