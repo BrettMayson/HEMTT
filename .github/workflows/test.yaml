@@ -34,7 +34,7 @@ jobs:
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
       - name: cargo generate-lockfile
