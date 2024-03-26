@@ -76,6 +76,9 @@ fn check_expression(
 }
 
 fn safe_command(command: &str, database: &Database) -> bool {
+    if let "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||" = command {
+        return true;
+    }
     let Some(cmd) = database.wiki().commands().get(command) else {
         return false;
     };

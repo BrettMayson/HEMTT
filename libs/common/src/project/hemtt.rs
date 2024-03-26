@@ -245,8 +245,9 @@ impl BuildOptions {
 
 #[derive(Default, PartialEq, Eq, Debug, Clone)]
 pub enum PDriveOption {
-    #[default]
     Disallow,
+    #[default]
+    Ignore,
     Require,
 }
 
@@ -259,8 +260,9 @@ impl<'de> Deserialize<'de> for PDriveOption {
         match s.to_lowercase().as_str() {
             "disallow" => Ok(Self::Disallow),
             "require" => Ok(Self::Require),
+            "ignore" => Ok(Self::Ignore),
             _ => Err(serde::de::Error::custom(
-                "valid values are disallow, allow, require",
+                "valid values are disallow, ignore, require",
             )),
         }
     }
@@ -273,6 +275,7 @@ impl Serialize for PDriveOption {
     {
         match self {
             Self::Disallow => serializer.serialize_str("disallow"),
+            Self::Ignore => serializer.serialize_str("ignore"),
             Self::Require => serializer.serialize_str("required"),
         }
     }

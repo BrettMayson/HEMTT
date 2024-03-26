@@ -72,10 +72,10 @@ impl Workspace {
             pointers: HashMap::new(),
             addons: Vec::new(),
             missions: Vec::new(),
-            pdrive: if pdrive == &PDriveOption::Disallow {
-                None
-            } else {
+            pdrive: if pdrive == &PDriveOption::Require {
                 pdrive_search()
+            } else {
+                None
             },
         };
         if discovery {

@@ -156,16 +156,32 @@ impl Module for Binarize {
                         let (missing_textures, missing_materials) =
                             p3d.missing(ctx.workspace(), &search_cache)?;
                         if !missing_textures.is_empty() {
-                            report.error(MissingTextures::code(
+                            let warn =
+                                *ctx.config().hemtt().build().pdrive() == PDriveOption::Ignore;
+                            let diag = MissingTextures::code(
                                 entry.as_str().to_string(),
                                 missing_textures,
-                            ));
+                                warn,
+                            );
+                            if warn {
+                                report.warn(diag);
+                            } else {
+                                report.error(diag);
+                            }
                         }
                         if !missing_materials.is_empty() {
-                            report.error(MissingMaterials::code(
+                            let warn =
+                                *ctx.config().hemtt().build().pdrive() == PDriveOption::Ignore;
+                            let diag = MissingMaterials::code(
                                 entry.as_str().to_string(),
                                 missing_materials,
-                            ));
+                                warn,
+                            );
+                            if warn {
+                                report.warn(diag);
+                            } else {
+                                report.error(diag);
+                            }
                         }
                     }
 
