@@ -188,8 +188,27 @@ pub enum Expression {
 impl Expression {
     #[must_use]
     pub fn source(&self) -> String {
+        fn maybe_enclose(arg: &Expression, is_binary_left: bool) -> String {
+            if arg.is_code() || arg.is_array() || arg.is_string() {
+                return arg.source();
+            }
+            let src = arg.source();
+            if is_binary_left && !arg.is_binary() {
+                src
+            } else if src.contains(' ') {
+                format!("({src})")
+            } else {
+                src
+            }
+        }
         match self {
-            Self::Code(code) => code.source().to_string(),
+            Self::Code(code) => {
+                let mut out = String::new();
+                out.push('{');
+                out.push_str(code.source());
+                out.push('}');
+                out
+            }
             Self::String(string, _) => format!("\"{string}\""),
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
@@ -207,10 +226,15 @@ impl Expression {
             }
             Self::NularCommand(command, _) => command.as_str().to_string(),
             Self::UnaryCommand(command, child, _) => {
-                format!("{} {}", command.as_str(), child.source())
+                format!("{} {}", command.as_str(), maybe_enclose(child, false))
             }
             Self::BinaryCommand(command, left, right, _) => {
-                format!("{} {} {}", left.source(), command.as_str(), right.source())
+                format!(
+                    "{} {} {}",
+                    maybe_enclose(left, true),
+                    command.as_str(),
+                    maybe_enclose(right, false)
+                )
             }
             Self::Variable(variable, _) => variable.to_string(),
         }
@@ -296,6 +320,26 @@ impl Expression {
             Self::UnaryCommand(_, child, span) => span.start..child.full_span().end,
             Self::BinaryCommand(_, left, right, _) => left.full_span().start..right.full_span().end,
         }
+    }
+
+    #[must_use]
+    pub const fn is_code(&self) -> bool {
+        matches!(self, Self::Code(_))
+    }
+
+    #[must_use]
+    pub const fn is_array(&self) -> bool {
+        matches!(self, Self::Array(_, _))
+    }
+
+    #[must_use]
+    pub const fn is_string(&self) -> bool {
+        matches!(self, Self::String(_, _))
+    }
+
+    #[must_use]
+    pub const fn is_binary(&self) -> bool {
+        matches!(self, Self::BinaryCommand(_, _, _, _))
     }
 }
 
