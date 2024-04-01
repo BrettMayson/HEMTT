@@ -204,14 +204,9 @@ pub enum Expression {
 impl Expression {
     #[must_use]
     pub fn source(&self) -> String {
-        fn maybe_enclose(arg: &Expression, is_binary_left: bool) -> String {
-            if arg.is_code() || arg.is_array() || arg.is_string() {
-                return arg.source();
-            }
+        fn maybe_enclose(arg: &Expression) -> String {
             let src = arg.source();
-            if is_binary_left && !arg.is_binary() {
-                src
-            } else if src.contains(' ') {
+            if arg.is_binary() {
                 format!("({src})")
             } else {
                 src
@@ -244,14 +239,14 @@ impl Expression {
             }
             Self::NularCommand(command, _) => command.as_str().to_string(),
             Self::UnaryCommand(command, child, _) => {
-                format!("{} {}", command.as_str(), maybe_enclose(child, false))
+                format!("{} {}", command.as_str(), maybe_enclose(child))
             }
             Self::BinaryCommand(command, left, right, _) => {
                 format!(
                     "{} {} {}",
-                    maybe_enclose(left, true),
+                    maybe_enclose(left),
                     command.as_str(),
-                    maybe_enclose(right, false)
+                    maybe_enclose(right)
                 )
             }
             Self::Variable(variable, _) => variable.to_string(),
