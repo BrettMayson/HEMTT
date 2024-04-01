@@ -51,7 +51,7 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
                 return match expr {
                     Expression::Boolean(bool, _) => Some((bool.to_string(), false)),
                     Expression::Number(num, _) => Some((num.0.to_string(), false)),
-                    Expression::String(string, _) => Some((string.to_string(), true)),
+                    Expression::String(string, _, _) => Some((string.to_string(), true)),
                     Expression::Variable(var, _) => Some((var.to_string(), false)),
                     _ => None,
                 };

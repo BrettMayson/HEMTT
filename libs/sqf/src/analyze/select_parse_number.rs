@@ -52,7 +52,7 @@ fn check_expression(
         | Expression::Number(_, _)
         | Expression::Array(_, _)
         | Expression::Variable(_, _) => false,
-        Expression::String(_, _) | Expression::Boolean(_, _) => true,
+        Expression::String(_, _, _) | Expression::Boolean(_, _) => true,
         Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), database),
         Expression::UnaryCommand(cmd, _, _) => safe_command(cmd.as_str(), database),
         Expression::BinaryCommand(cmd, _, _, _) => safe_command(cmd.as_str(), database),

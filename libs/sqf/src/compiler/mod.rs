@@ -210,7 +210,10 @@ impl Expression {
                         location_to_source(processed, location),
                     ));
                 }
-                Self::Code(_) | Self::String(_, _) | Self::Number(_, _) | Self::Boolean(_, _) => {
+                Self::Code(_)
+                | Self::String(_, _, _)
+                | Self::Number(_, _)
+                | Self::Boolean(_, _) => {
                     unreachable!("constant should have been handled")
                 }
             },
@@ -228,7 +231,7 @@ impl Expression {
             Self::Code(ref statements) => Some(Constant::Code(
                 statements.compile_to_instructions(processed, ctx)?,
             )),
-            Self::String(ref string, _) => Some(Constant::String(string.clone())),
+            Self::String(ref string, _, _) => Some(Constant::String(string.clone())),
             Self::Number(crate::Scalar(number), _) => Some(Constant::Scalar(number)),
             Self::Boolean(boolean, _) => Some(Constant::Boolean(boolean)),
             Self::Array(ref array, ..) => array

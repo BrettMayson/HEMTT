@@ -173,9 +173,25 @@ impl Statement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum StringWrapper {
+    SingleQuote,
+    DoubleQuote,
+}
+
+impl StringWrapper {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
+        match self {
+            Self::SingleQuote => "'",
+            Self::DoubleQuote => "\"",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression {
     Code(Statements),
-    String(Arc<str>, Range<usize>),
+    String(Arc<str>, Range<usize>, StringWrapper),
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
@@ -209,7 +225,9 @@ impl Expression {
                 out.push('}');
                 out
             }
-            Self::String(string, _) => format!("\"{string}\""),
+            Self::String(string, _, wrapper) => {
+                format!("{}{}{}", wrapper.as_str(), string, wrapper.as_str())
+            }
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
             Self::Array(array, _) => {
@@ -297,7 +315,7 @@ impl Expression {
         match self {
             Self::Code(code) => code.span(),
             Self::Array(_, span) => span.start - 1..span.end,
-            Self::String(_, span)
+            Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
             | Self::NularCommand(_, span)
@@ -312,7 +330,7 @@ impl Expression {
         match self {
             Self::Code(code) => code.span(),
             Self::Array(_, _) => self.span(),
-            Self::String(_, span)
+            Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
             | Self::NularCommand(_, span)
@@ -334,7 +352,7 @@ impl Expression {
 
     #[must_use]
     pub const fn is_string(&self) -> bool {
-        matches!(self, Self::String(_, _))
+        matches!(self, Self::String(_, _, _))
     }
 
     #[must_use]

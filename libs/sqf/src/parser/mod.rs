@@ -81,7 +81,7 @@ fn statements<'a>(
         let expression = recursive(|expression| {
             let value = select! { |span|
                 Token::Number(number) => Expression::Number(number, span),
-                Token::String(string) => Expression::String(string, span),
+                Token::String(string, wrapper) => Expression::String(string, span, wrapper),
                 // i know you can *technically* redefine true and false to be something else in SQF,
                 // so this isn't *technically* correct, but if you're doing evil things like that,
                 // you don't deserve parity

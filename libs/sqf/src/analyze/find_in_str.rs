@@ -38,9 +38,11 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
         return Vec::new();
     }
 
-    if let Expression::String(needle_str, _) = &**needle {
+    if let Expression::String(needle_str, _, _) = &**needle {
         let haystack_str = match &**haystack {
-            Expression::String(s, _) => format!("\"{s}\""),
+            Expression::String(s, _, wrapper) => {
+                format!("{}{s}{}", wrapper.as_str(), wrapper.as_str())
+            }
             Expression::Variable(name, _) => name.to_string(),
             _ => return Vec::new(),
         };

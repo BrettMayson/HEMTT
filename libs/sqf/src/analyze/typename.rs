@@ -26,7 +26,7 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
     }
     let target_span = target.span();
     let (constant_type, span, length) = match &**target {
-        Expression::String(s, span) => ("STRING", span, s.len() + 2),
+        Expression::String(s, span, _) => ("STRING", span, s.len() + 2),
         Expression::Number(FloatOrd(s), span) => ("SCALAR", span, s.to_string().len()),
         Expression::Boolean(bool, span) => ("BOOL", span, bool.to_string().len()),
         Expression::Code(statements) if statements.content().is_empty() => {

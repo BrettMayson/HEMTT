@@ -27,7 +27,7 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
     if args.len() != 2 {
         return Vec::new();
     }
-    let Expression::String(format, _) = &args[0] else {
+    let Expression::String(format, _, _) = &args[0] else {
         return Vec::new();
     };
     if &**format != "%1" {
