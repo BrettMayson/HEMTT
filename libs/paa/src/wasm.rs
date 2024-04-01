@@ -31,12 +31,12 @@ impl ImageResult {
     #[wasm_bindgen(constructor)]
     pub fn new(s: &Uint8Array) -> Self {
         let bytes = s.to_vec();
-        let paa = crate::Paa::read(Cursor::new(bytes)).unwrap();
+        let paa = crate::Paa::read(Cursor::new(bytes)).expect("Failed to read PAA");
         let mut buffer = Cursor::new(Vec::new());
         paa.maps()[0]
             .get_image()
             .write_to(&mut buffer, image::ImageFormat::Png)
-            .unwrap();
+            .expect("Failed to write PNG");
 
         Self {
             data: std::rc::Rc::new(std::cell::RefCell::from(buffer.into_inner())),
