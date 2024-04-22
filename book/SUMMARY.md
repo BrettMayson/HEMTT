@@ -10,7 +10,7 @@
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
   - [Addon](configuration/addon.md)
-  - [P-Drive](configuration/p-drive.md)
+  - [P Drive](configuration/p-drive.md)
 - [Commands](commands/index.md)
   - [new](commands/new.md)
   - [dev](commands/dev.md)
