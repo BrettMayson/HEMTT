@@ -8,7 +8,7 @@ HEMTT supports a P Drive for mods that do require one, but only to access `\a3\`
 
 Whenever possible, an `.\include\` folder should be used in place of a P Drive. Any files placed in the `.\include\` folder can be used from models or scripts as if they were in a P Drive. No `$PBOPREFIX$` is required, but the full path must be created in the `.\include\` folder.
 
-The most common use case is for CBA's script_macros_common.hpp, you can see an example of this in [ACE's GitHub Repo](include/x/cba/addons/main/script_macros_common.hpp).
+The most common use case is for CBA's script_macros_common.hpp, you can see an example of this in [ACE's GitHub Repo](https://github.com/acemod/ACE3/tree/master/include/x/cba/addons/main/script_macros_common.hpp).
 
 ## Requiring P Drive
 
