@@ -80,7 +80,6 @@ fn append_token(
         }
     }
     if token.symbol().is_newline() {
-        // processed.line_offsets.push(processed.output.len());
         processed.line_offsets.entry(path).or_default().insert(
             token.position().end().line() - 1,
             token.position().end().offset(),

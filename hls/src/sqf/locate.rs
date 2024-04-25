@@ -80,8 +80,8 @@ fn locate_expression(
         }
         Expression::NularCommand(_, _) => Some(expression.clone()),
         Expression::UnaryCommand(_, lhs, _) => {
-            let start_map = processed.mapping(lhs.span().start)?;
-            let end_map = processed.mapping(lhs.span().end)?;
+            let start_map = processed.mapping(lhs.full_span().start)?;
+            let end_map = processed.mapping(lhs.full_span().end)?;
             if start_map.original_start() <= offset && end_map.original_end() > offset {
                 locate_expression(processed, lhs, offset)
             } else {
@@ -90,8 +90,8 @@ fn locate_expression(
         }
         Expression::BinaryCommand(_, lhs, rhs, _) => {
             for hs in [lhs, rhs].iter() {
-                let start_map = processed.mapping(hs.span().start)?;
-                let end_map = processed.mapping(hs.span().end)?;
+                let start_map = processed.mapping(hs.full_span().start)?;
+                let end_map = processed.mapping(hs.full_span().end)?;
                 if start_map.original_start() <= offset && end_map.original_end() > offset {
                     return locate_expression(processed, hs, offset);
                 }
