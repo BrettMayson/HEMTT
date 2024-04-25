@@ -1,6 +1,6 @@
 #[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::{ops::Range, rc::Rc, sync::Arc};
+use std::{collections::HashMap, ops::Range, rc::Rc, sync::Arc};
 
 use crate::{
     position::{LineCol, Position},
@@ -16,7 +16,7 @@ pub struct Processed {
     output: String,
 
     /// character offset for each line
-    line_offsets: Vec<usize>,
+    line_offsets: HashMap<WorkspacePath, HashMap<usize, usize>>,
 
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
@@ -80,7 +80,11 @@ fn append_token(
         }
     }
     if token.symbol().is_newline() {
-        processed.line_offsets.push(processed.output.len());
+        // processed.line_offsets.push(processed.output.len());
+        processed.line_offsets.entry(path).or_default().insert(
+            token.position().end().line() - 1,
+            token.position().end().offset(),
+        );
         processed.output.push('\n');
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
@@ -201,8 +205,8 @@ impl Processed {
 
     #[must_use]
     /// Character offset for a line
-    pub fn line_offset(&self, line: usize) -> Option<usize> {
-        self.line_offsets.get(line).copied()
+    pub fn line_offset(&self, source: &WorkspacePath, line: usize) -> Option<usize> {
+        self.line_offsets.get(source)?.get(&line).copied()
     }
 
     #[must_use]

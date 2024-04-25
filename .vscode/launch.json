@@ -14,7 +14,7 @@
       ],
       "preLaunchTask": "build hls",
       "env": {
-        "SERVER_PATH": "${workspaceRoot}\\target\\debug\\hemtt-language-server"
+        "SERVER_PATH": "${workspaceRoot}/target/debug/hemtt-language-server"
       },
     }
   ]

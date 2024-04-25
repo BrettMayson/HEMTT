@@ -22,3 +22,6 @@ pkg/
 *.sqfast
 *.sqfc
 *.sqfp
+
+# HLS Build Files
+hls/languages/sqf.json

@@ -4,16 +4,18 @@ use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
-use config::ConfigServer;
 use tracing::{debug, info, Level};
 
-mod config;
+use crate::sqf::SqfCache;
+use crate::workspace::EditorWorkspaces;
+
 mod positions;
+mod sqf;
+mod workspace;
 
 #[derive(Debug)]
 struct Backend {
     client: Client,
-    config: ConfigServer,
 }
 
 #[tower_lsp::async_trait]
@@ -36,6 +38,7 @@ impl LanguageServer for Backend {
                     commands: vec!["dummy.do_something".to_string()],
                     work_done_progress_options: Default::default(),
                 }),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
                 workspace: Some(WorkspaceServerCapabilities {
                     workspace_folders: Some(WorkspaceFoldersServerCapabilities {
                         supported: Some(true),
@@ -51,7 +54,9 @@ impl LanguageServer for Backend {
 
     async fn initialized(&self, _: InitializedParams) {
         info!("initialized");
-        self.config.initialize().await;
+        if let Some(folders) = self.client.workspace_folders().await.unwrap() {
+            EditorWorkspaces::get().initialize(folders);
+        }
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -60,7 +65,7 @@ impl LanguageServer for Backend {
 
     async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) {
         debug!("did_change_workspace_folders: {:?}", params);
-        self.config.did_change_workspace_folders(params).await;
+        EditorWorkspaces::get().changed(params);
     }
 
     async fn did_change_configuration(&self, _: DidChangeConfigurationParams) {
@@ -84,10 +89,11 @@ impl LanguageServer for Backend {
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         debug!("did_open: {:?}", params);
-        let uri_string = params.text_document.uri.to_string();
-        if uri_string.ends_with(".hpp") || uri_string.ends_with("config.cpp") {
-            self.config.did_open(params).await;
-        }
+        // let uri_string = params.text_document.uri.to_string();
+        // if uri_string.ends_with(".hpp") || uri_string.ends_with("config.cpp") {
+        // } else if uri_string.ends_with(".sqf") {
+        // }
+        SqfCache::cache(params.text_document.uri);
     }
 
     async fn did_change(&self, _: DidChangeTextDocumentParams) {
@@ -96,7 +102,7 @@ impl LanguageServer for Backend {
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         debug!("did_save");
-        self.config.did_save(params).await;
+        SqfCache::cache(params.text_document.uri);
     }
 
     async fn did_close(&self, _: DidCloseTextDocumentParams) {
@@ -110,7 +116,15 @@ impl LanguageServer for Backend {
             CompletionItem::new_simple("Bye".to_string(), "More detail".to_string()),
         ])))
     }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        Ok(SqfCache::get().hover(
+            params.text_document_position_params.text_document.uri,
+            params.text_document_position_params.position,
+        ))
+    }
 }
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -124,9 +138,6 @@ async fn main() {
 
     let (read, write) = tokio::io::split(stream);
 
-    let (service, socket) = LspService::new(|client| Backend {
-        config: ConfigServer::new(client.clone()),
-        client,
-    });
+    let (service, socket) = LspService::new(|client| Backend { client });
     Server::new(read, write, socket).serve(service).await;
 }

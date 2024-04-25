@@ -3,16 +3,9 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import {
-  workspace,
-  EventEmitter,
-  ExtensionContext,
-  window,
-  TextDocumentChangeEvent,
-} from "vscode";
+import { workspace, ExtensionContext } from "vscode";
 
 import {
-  Disposable,
   Executable,
   LanguageClient,
   LanguageClientOptions,
@@ -71,31 +64,4 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
-}
-
-export function activateInlayHints(ctx: ExtensionContext) {
-  const maybeUpdater = {
-    hintsProvider: null as Disposable | null,
-    updateHintsEventEmitter: new EventEmitter<void>(),
-
-    onDidChangeTextDocument({
-      contentChanges,
-      document,
-    }: TextDocumentChangeEvent) {
-      // debugger
-      // this.updateHintsEventEmitter.fire();
-    },
-
-    dispose() {
-      this.hintsProvider?.dispose();
-      this.hintsProvider = null;
-      this.updateHintsEventEmitter.dispose();
-    },
-  };
-
-  workspace.onDidChangeTextDocument(
-    maybeUpdater.onDidChangeTextDocument,
-    maybeUpdater,
-    ctx.subscriptions
-  );
 }

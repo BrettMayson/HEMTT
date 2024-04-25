@@ -9,7 +9,7 @@
     "tower-lsp"
   ],
   "repository": {
-    "url": "https://github.com/IWANABETHATGUY/tower-lsp-boilerplate"
+    "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
     "vscode": "^1.66.0"
@@ -22,12 +22,12 @@
       {
         "language": "sqf",
         "scopeName": "sqf",
-        "path": "./languages/sqf.min.json"
+        "path": "./languages/sqf.json"
       },
       {
         "language": "arma-config",
         "scopeName": "config",
-        "path": "./languages/config.min.json"
+        "path": "./languages/config.json"
       }
     ],
     "languages": [
@@ -39,8 +39,7 @@
           "Arma SQF"
         ],
         "extensions": [
-          ".sqf",
-          ".sqm"
+          ".sqf"
         ],
         "configuration": "./languages/sqf.configuration.json"
       },
@@ -51,7 +50,8 @@
         ],
         "extensions": [
           ".ext",
-          ".hpp"
+          ".hpp",
+          ".sqm"
         ],
         "filenames": [
           "config.cpp"
@@ -91,21 +91,21 @@
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.77.0",
-    "@types/ws": "^8.5.4",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
-    "@vscode/test-electron": "^2.3.0",
-    "eslint": "^8.39.0",
-    "glob": "^8.1.0",
-    "mocha": "^10.0.1",
-    "typescript": "^4.4.3",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.88.0",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.56.0",
+    "glob": "^10.3.12",
+    "mocha": "^10.4.0",
+    "typescript": "^5.4.5",
     "vscode-test": "^1.4.0",
-    "vscode-uri": "^3.0.2"
+    "vscode-uri": "^3.0.8"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.0.2"
+    "vscode-languageclient": "^9.0.1"
   }
 }
