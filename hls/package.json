@@ -2,13 +2,17 @@
   "name": "hemtt-language-server",
   "description": "nano rust language server",
   "license": "MIT",
-  "version": "1.5.0",
+  "version": "0.2.0",
+  "publisher": "brettmayson",
+  "icon": "icon.png",
   "categories": [],
   "keywords": [
     "language-server",
-    "tower-lsp"
+    "arma",
+    "sqf"
   ],
   "repository": {
+    "type": "git",
     "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
@@ -80,6 +84,44 @@
           "description": "Traces the communication between VS Code and the language server."
         }
       }
+    },
+    "customEditors": [
+      {
+        "viewType": "hemtt.paa",
+        "displayName": "PAA",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.paa"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "hemtt.zoomIn",
+        "title": "%command.zoomIn%",
+        "category": "Image Preview"
+      },
+      {
+        "command": "hemtt.zoomOut",
+        "title": "%command.zoomOut%",
+        "category": "Image Preview"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "hemtt.zoomIn",
+          "when": "activeCustomEditorId == 'hemtt.previewEditor'",
+          "group": "1_imagePreview"
+        },
+        {
+          "command": "hemtt.zoomOut",
+          "when": "activeCustomEditorId == 'hemtt.previewEditor'",
+          "group": "1_imagePreview"
+        }
+      ]
     }
   },
   "scripts": {

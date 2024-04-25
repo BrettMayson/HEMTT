@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { workspace, ExtensionContext } from "vscode";
+import * as vscode from "vscode";
 
 import {
   Executable,
@@ -13,9 +13,12 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
+import * as paa from './paa';
+
 let client: LanguageClient;
 
-export async function activate(context: ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+  paa.activate(context);
   const command = process.env.SERVER_PATH || "hemtt-language-server";
   const run: Executable = {
     command,
@@ -44,7 +47,7 @@ export async function activate(context: ExtensionContext) {
     ],
     synchronize: {
       // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher("**/.hemtt/**"),
+      fileEvents: vscode.workspace.createFileSystemWatcher("**/.hemtt/**"),
     },
   };
 
