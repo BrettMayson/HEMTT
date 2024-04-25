@@ -106,20 +106,24 @@ fn markdown_links(name: &str, source: String) -> String {
         );
     }
 
-    // {{Link|#Example 5}}
-    let regex = Regex::new(r"(?m)\{\{Link\|#(.+?)\}\}").unwrap();
+    // {{Link|Example 5}}
+    let regex = Regex::new(r"(?m)\{\{Link\|(.+?)\}\}").unwrap();
     let source = string.clone();
     let result = regex.captures_iter(&source);
     for mat in result {
         let link = mat.get(1).unwrap().as_str();
         string = string.replace(
             mat.get(0).unwrap().as_str(),
-            &format!(
-                "[{}](https://community.bistudio.com/wiki/{}{})",
-                link,
-                name.replace(' ', "_"),
-                link.replace(' ', "_"),
-            ),
+            &if link.starts_with('#') {
+                format!(
+                    "[{}](https://community.bistudio.com/wiki/{}{})",
+                    link.trim_start_matches('#'),
+                    name.replace(' ', "_"),
+                    link.replace(' ', "_"),
+                )
+            } else {
+                format!("[{}](https://community.bistudio.com/wiki/{})", link, link)
+            },
         );
     }
     string
@@ -292,7 +296,7 @@ mod tests {
         );
         assert_eq!(
             super::markdown_links("setVariable", "See {{Link|#Example 5}}".to_string()),
-            "See [Example 5](https://community.bistudio.com/wiki/setVariableExample_5"
+            "See [Example 5](https://community.bistudio.com/wiki/setVariable#Example_5)"
         );
         println!(
             "{:?}",
