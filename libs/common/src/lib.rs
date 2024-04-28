@@ -7,6 +7,7 @@ pub mod math;
 pub mod prefix;
 pub mod project;
 pub mod steam;
+pub mod strip;
 pub mod version;
 
 mod sign_version;
