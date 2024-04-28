@@ -45,21 +45,22 @@ z\abe\addons\main
 
 ### Files
 
-You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions.
+You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions. To include a folder, you must use a glob pattern that matches all files in that folder.
 
 **.hemtt/project.toml**
 
 ```toml
 [files]
 include = [
-    "mod.cpp",      # These files are copied to the build directory by default
-    "meta.cpp",     # They do not need to be added to your list
+    "mod.cpp",        # These files are copied to the build directory by default
+    "meta.cpp",       # They do not need to be added to your list
     "LICENSE",
     "logo_ca.paa",
     "logo_co.paa",
+    "python_code/**", # Copy the folder "python_code" including all its files
 ]
 exclude = [
-    "*.psd",        # By default this list is empty
+    "*.psd",          # By default this list is empty
     "addons/main/README.md",
 ]
 ```
