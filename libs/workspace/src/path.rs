@@ -209,6 +209,9 @@ impl WorkspacePath {
                 .iter()
                 .find(|(p, _)| path_lower.starts_with(&format!("{}/", p.to_lowercase())))
             {
+                // Windows needs case insensitivity because p3ds are a
+                // disaster. On Linux we'll be more strict to avoid
+                // pain and suffering.
                 let path = if cfg!(windows) {
                     root.join(
                         path_lower
