@@ -1,5 +1,6 @@
 use std::{hash::Hasher, sync::Arc};
 
+use hemtt_common::strip::StripInsensitive;
 use vfs::{SeekAndWrite, VfsPath};
 
 use super::{Error, LayerType, Workspace};
@@ -208,9 +209,6 @@ impl WorkspacePath {
                 .iter()
                 .find(|(p, _)| path_lower.starts_with(&format!("{}/", p.to_lowercase())))
             {
-                // Windows needs case insensitivity because p3ds are a
-                // disaster. On Linux we'll be more strict to avoid
-                // pain and suffering.
                 let path = if cfg!(windows) {
                     root.join(
                         path_lower
@@ -221,7 +219,7 @@ impl WorkspacePath {
                     )?
                 } else {
                     root.join(
-                        path.strip_prefix(base)
+                        path.strip_prefix_insensitive(base)
                             .unwrap_or(&path)
                             .strip_prefix('/')
                             .unwrap_or(&path),
