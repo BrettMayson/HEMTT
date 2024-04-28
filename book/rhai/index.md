@@ -4,7 +4,7 @@ Rhai is a simple scripting language that is embedded in HEMTT for [Hooks](hooks/
 It has a syntax similar to Javascript, and uses types similar to Rust.
 
 A few examples of Rhai are provided below, but this is not a complete reference.
-The full [Lanuage Reference](https://rhai.rs/book/ref/index.md) can be found in the [Rhai Book](https://rhai.rs/book).
+The full [Language Reference](https://rhai.rs/book/ref/index.md) can be found in the [Rhai Book](https://rhai.rs/book).
 
 ## Variables
 
