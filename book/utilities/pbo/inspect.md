@@ -20,3 +20,8 @@ Options:
 Provides information about a PBO.
 
 This is the same as `hemtt utils inspect` but will assume the file is a PBO.
+
+## Example
+Check abe_main.pbo located in the build folder
+
+<code>hemtt.exe utils pbo inspect .hemttout\build\addons\abe_main.pbo</code>
