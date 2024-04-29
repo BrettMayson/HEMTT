@@ -21,6 +21,8 @@ Provides information about a PBO.
 
 This is the same as `hemtt utils inspect` but will assume the file is a PBO.
 
+In some cases the output might be cut off in the terminal. Adjust the `terminal.integrated.scrollback` setting in VS Code if necessary.
+
 ## Example
 Check abe_main.pbo located in the build folder
 
