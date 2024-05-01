@@ -37,7 +37,9 @@ jobs:
         with:
           key: hls
       - name: Compile
-        run: cargo build --release
+        run: |
+          cd hls
+          cargo build --release
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -49,12 +51,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: linux-x64
           path: linux
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: windows
@@ -69,7 +71,7 @@ jobs:
           npm install -g vsce
           vsce package
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: hls
           path: hls/*.vsix

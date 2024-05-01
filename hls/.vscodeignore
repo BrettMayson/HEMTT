@@ -5,3 +5,7 @@ src/
 tsconfig.json
 webpack.config.js
 target
+languages-src
+build.rs
+Cargo.toml
+.eslintrc.js
