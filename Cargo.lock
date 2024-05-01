@@ -151,9 +151,9 @@ dependencies = [
 
 [[package]]
 name = "arma3-wiki"
-version = "0.1.11"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e7a19bc0908ab05a0f125b3b2afd61c8b7772488af8b2cbdfbe26407d69a132"
+checksum = "1d7684096dda4014cf6ba697b151862fbf6ee6e34bd2cb0e4793d2f45a207865"
 dependencies = [
  "directories",
  "fs_extra",
@@ -2539,6 +2539,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rust-embed-utils",
+ "shellexpand",
  "syn",
  "walkdir",
 ]
@@ -2776,6 +2777,15 @@ name = "shell-words"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
+
+[[package]]
+name = "shellexpand"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da03fa3b94cc19e3ebfc88c4229c49d8f08cdbd1228870a45f0ffdf84988e14b"
+dependencies = [
+ "dirs",
+]
 
 [[package]]
 name = "signal-hook-registry"
