@@ -22,6 +22,22 @@ fn main() {
         dest.push(command.name());
     }
 
+    // Remove special commands
+    commands.retain(|x| {
+        ![
+            "call",
+            "callExtension",
+            "compile",
+            "compileFinal",
+            "exec",
+            "execFSM",
+            "execVM",
+            "private",
+            "spawn",
+        ]
+        .contains(x)
+    });
+
     let content = std::fs::read_to_string("languages-src/sqf.json").unwrap();
     let mut content = content.replace("$flow$", &flow.join("|"));
     let chunked = commands.len() / 6;

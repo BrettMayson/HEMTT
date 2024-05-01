@@ -101,7 +101,12 @@ async fn main() {
         .with_max_level(Level::DEBUG)
         .init();
 
-    let stream = TcpStream::connect("127.0.0.1:9632").await.unwrap();
+    // first argument is the port
+    let port = std::env::args().nth(1).unwrap_or("9632".to_string());
+
+    let stream = TcpStream::connect(format!("127.0.0.1:{}", port))
+        .await
+        .unwrap();
 
     info!("connected to server");
 

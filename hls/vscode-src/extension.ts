@@ -8,18 +8,29 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
-import * as paa from './paa';
+import * as paa from "./paa";
+
+import { getPortPromise } from "portfinder";
 
 let client: LanguageClient;
+let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
 
 export async function activate(context: vscode.ExtensionContext) {
   paa.activate(context);
-  let command = process.env.SERVER_PATH || "hemtt-language-server";
+  let command = context.asAbsolutePath("hemtt-language-server");
   if (process.platform === "win32") {
     command += ".exe";
   }
+  const port = await getPortPromise({
+    port: 12000,
+  });
+
+  channel.appendLine(`Starting HEMTT Language Server on port ${port}`);
+  channel.appendLine(`Using command: ${command}`);
+
   const run: Executable = {
     command,
+    args: [port.toString()],
     options: {
       env: {
         ...process.env,
@@ -27,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
     },
     transport: {
       kind: TransportKind.socket,
-      port: 9632,
+      port,
     },
   };
   const serverOptions: ServerOptions = {

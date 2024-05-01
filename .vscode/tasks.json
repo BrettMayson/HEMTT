@@ -2,14 +2,16 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build hls (Rust)",
-      "command": "cargo",
-      "args": ["build", "--bin", "hemtt-language-server"],
-      "type": "shell"
+      "type": "npm",
+      "label": "build hls (lsp)",
+      "script": "compile-lsp",
+      "options": {
+        "cwd": "${workspaceRoot}/hls"
+      }
     },
     {
       "type": "npm",
-      "label": "build hls (npm)",
+      "label": "build hls (vscode)",
       "script": "compile",
       "options": {
         "cwd": "${workspaceRoot}/hls"
@@ -17,7 +19,7 @@
     },
     {
       "label": "build hls",
-      "dependsOn": ["build hls (Rust)", "build hls (npm)"],
+      "dependsOn": ["build hls (lsp)", "build hls (vscode)"],
     }
   ]
 }

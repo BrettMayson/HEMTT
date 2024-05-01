@@ -4,5 +4,4 @@ out/
 src/
 tsconfig.json
 webpack.config.js
-client/**
 target

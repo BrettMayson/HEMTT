@@ -43,3 +43,37 @@ jobs:
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: linux-x64
+          path: linux
+      - uses: actions/download-artifact@v2
+        with:
+          name: windows-x64
+          path: windows
+      - name: Move Server
+        run: |
+          mv linux/hemtt-language-server hls/hemtt-language-server
+          mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
+      - name: Package
+        run: |
+          cd hls
+          npm install
+          npm install -g vsce
+          vsce package
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: hls
+          path: hls/*.vsix
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          vsce publish -p ${{ secrets.VSCE_TOKEN }}
