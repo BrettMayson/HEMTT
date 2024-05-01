@@ -1,11 +1,12 @@
 name: Coverage
 
-permissions:
-  contents: read
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   coverage:

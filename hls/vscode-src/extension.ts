@@ -1,8 +1,3 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as vscode from "vscode";
 
 import {
@@ -19,7 +14,10 @@ let client: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
   paa.activate(context);
-  const command = process.env.SERVER_PATH || "hemtt-language-server";
+  let command = process.env.SERVER_PATH || "hemtt-language-server";
+  if (process.platform === "win32") {
+    command += ".exe";
+  }
   const run: Executable = {
     command,
     options: {
