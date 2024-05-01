@@ -36,7 +36,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: build
+          key: build-${{ matrix.os.name }}
       - name: Compile
         run: cargo build --release
       - name: Upload

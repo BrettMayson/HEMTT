@@ -35,7 +35,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: hls
+          key: hls-${{ matrix.os.name }}
       - name: Compile
         run: |
           cd hls
@@ -68,7 +68,7 @@ jobs:
         run: |
           cd hls
           npm install
-          npm install -g vsce
+          npm install -g @vscode/vsce
           vsce package
       - name: Upload
         uses: actions/upload-artifact@v4

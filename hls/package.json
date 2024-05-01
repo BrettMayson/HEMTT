@@ -125,12 +125,13 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify && npm run compile-lsp",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "esbuild ./vscode-src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
-    "compile-lsp": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
+    "compile-linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
+    "compile-windows": "cargo build --release --bin hemtt-language-server.exe && cp ../target/release/hemtt-language-server.exe ./hemtt-language-server.exe",
     "test-compile": "tsc -p ./",
     "lint": "eslint vscode-src --ext ts"
   },

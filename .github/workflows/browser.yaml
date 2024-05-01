@@ -18,7 +18,7 @@ jobs:
     - name: Rust Cache
       uses: Swatinem/rust-cache@v2
       with:
-        key: build
+        key: browser
     - name: Build
       run: wasm-pack build libs/paa --target web --features wasm
     - name: Rename
