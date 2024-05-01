@@ -49,7 +49,7 @@ Options:
 
 `hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, options are passed to the `dev` command.
 
-You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden. With the below configuration, `hemtt launch defaukt vn ace` would launch with all three configurations. Note that `default` must be specified when specifying additional configurations, `default` is only implied when no configurations are specified.
+You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden. With the below configuration, `hemtt launch default vn ace` would launch with all three configurations. Note that `default` must be specified when specifying additional configurations, `default` is only implied when no configurations are specified.
 
 ## Configuration
 
