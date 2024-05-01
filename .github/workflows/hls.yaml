@@ -81,4 +81,5 @@ jobs:
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          cd hls
           vsce publish -p ${{ secrets.VSCE_TOKEN }}
