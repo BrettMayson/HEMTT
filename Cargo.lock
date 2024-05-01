@@ -151,9 +151,9 @@ dependencies = [
 
 [[package]]
 name = "arma3-wiki"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d7684096dda4014cf6ba697b151862fbf6ee6e34bd2cb0e4793d2f45a207865"
+checksum = "c91e4687d4e2981ed4965e983a8ed4fdf26ec785d1fdd54301906975f89e1b87"
 dependencies = [
  "directories",
  "fs_extra",
