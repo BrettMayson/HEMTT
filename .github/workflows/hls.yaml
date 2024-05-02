@@ -45,6 +45,12 @@ jobs:
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
+      - name: Upload Language (Linux)
+        if: startsWith(matrix.os.runner, 'ubuntu')
+        uses: actions/upload-artifact@v4
+        with:
+          name: languages
+          path: hls/languages
 
   package:
     name: Package
@@ -67,6 +73,14 @@ jobs:
         run: |
           mv linux/hemtt-language-server hls/hemtt-language-server
           mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
+      - name: Remove Existing Languages
+        run: |
+          rm -rf hls/languages
+      - name: Download Languages
+        uses: actions/download-artifact@v4
+        with:
+          name: languages
+          path: hls/languages
       - name: Package
         run: |
           cd hls

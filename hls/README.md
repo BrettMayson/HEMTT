@@ -1,11 +1,5 @@
 # HEMTT Language Server
 
-## Building Locally
-
-```bash
-npm run compile-linux # or compile-windows
-```
-
 Use VSCode tasks to test the VSCode extension.
 
 ## Credit

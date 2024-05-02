@@ -1,10 +1,10 @@
-.vscode
-node_modules
+.vscode/
+node_modules/
 out/
 src/
 tsconfig.json
 webpack.config.js
-target
+target/
 languages-src
 build.rs
 Cargo.toml

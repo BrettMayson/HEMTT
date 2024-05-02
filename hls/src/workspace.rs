@@ -95,7 +95,11 @@ impl EditorWorkspace {
         if folder.uri.scheme() == "file" {
             let Ok(workspace) = Workspace::builder()
                 .physical(
-                    &PathBuf::from(format!("{}", folder.uri).replace("file://", "")),
+                    &PathBuf::from(
+                        format!("{}", folder.uri)
+                            .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
+                            .replace("%3A", ":"),
+                    ),
                     LayerType::Source,
                 )
                 .finish(None, true, &PDriveOption::Disallow)

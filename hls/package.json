@@ -130,8 +130,9 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
-    "compile-linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
-    "compile-windows": "cargo build --release --bin hemtt-language-server.exe && cp ../target/release/hemtt-language-server.exe ./hemtt-language-server.exe",
+    "compile-lsp": "run-script-os",
+    "compile-lsp:darwin:linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
+    "compile-lsp:win32": "cargo build --release --bin hemtt-language-server && copy ..\\target\\release\\hemtt-language-server.exe .\\hemtt-language-server.exe",
     "test-compile": "tsc -p ./",
     "lint": "eslint vscode-src --ext ts"
   },
@@ -148,9 +149,9 @@
     "eslint": "^8.56.0",
     "glob": "^10.3.12",
     "mocha": "^10.4.0",
+    "run-script-os": "^1.1.6",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
-    "vscode-test": "^1.4.0",
     "vscode-uri": "^3.0.8"
   },
   "dependencies": {
