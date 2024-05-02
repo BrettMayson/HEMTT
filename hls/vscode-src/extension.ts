@@ -1,18 +1,6 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
+import * as vscode from "vscode";
 
 import {
-  workspace,
-  EventEmitter,
-  ExtensionContext,
-  window,
-  TextDocumentChangeEvent,
-} from "vscode";
-
-import {
-  Disposable,
   Executable,
   LanguageClient,
   LanguageClientOptions,
@@ -20,12 +8,29 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
-let client: LanguageClient;
+import * as paa from "./paa";
 
-export async function activate(context: ExtensionContext) {
-  const command = process.env.SERVER_PATH || "hemtt-language-server";
+import { getPortPromise } from "portfinder";
+
+let client: LanguageClient;
+let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
+
+export async function activate(context: vscode.ExtensionContext) {
+  paa.activate(context);
+  let command = context.asAbsolutePath("hemtt-language-server");
+  if (process.platform === "win32") {
+    command += ".exe";
+  }
+  const port = await getPortPromise({
+    port: 12000,
+  });
+
+  channel.appendLine(`Starting HEMTT Language Server on port ${port}`);
+  channel.appendLine(`Using command: ${command}`);
+
   const run: Executable = {
     command,
+    args: [port.toString()],
     options: {
       env: {
         ...process.env,
@@ -33,7 +38,7 @@ export async function activate(context: ExtensionContext) {
     },
     transport: {
       kind: TransportKind.socket,
-      port: 9632,
+      port,
     },
   };
   const serverOptions: ServerOptions = {
@@ -51,7 +56,7 @@ export async function activate(context: ExtensionContext) {
     ],
     synchronize: {
       // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher("**/.hemtt/**"),
+      fileEvents: vscode.workspace.createFileSystemWatcher("**/.hemtt/**"),
     },
   };
 
@@ -71,31 +76,4 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
-}
-
-export function activateInlayHints(ctx: ExtensionContext) {
-  const maybeUpdater = {
-    hintsProvider: null as Disposable | null,
-    updateHintsEventEmitter: new EventEmitter<void>(),
-
-    onDidChangeTextDocument({
-      contentChanges,
-      document,
-    }: TextDocumentChangeEvent) {
-      // debugger
-      // this.updateHintsEventEmitter.fire();
-    },
-
-    dispose() {
-      this.hintsProvider?.dispose();
-      this.hintsProvider = null;
-      this.updateHintsEventEmitter.dispose();
-    },
-  };
-
-  workspace.onDidChangeTextDocument(
-    maybeUpdater.onDidChangeTextDocument,
-    maybeUpdater,
-    ctx.subscriptions
-  );
 }
