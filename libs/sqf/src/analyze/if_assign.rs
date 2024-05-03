@@ -31,10 +31,11 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
                     let cond_lower = condition.source().to_lowercase();
                     let lhs_lower = lhs.0.to_lowercase();
                     let rhs_lower = rhs.0.to_lowercase();
-                    if cond_lower.contains(&format!("isnil \"{}\"", lhs_lower)) 
-                    || cond_lower.contains(&format!("isnil {{{}}}", lhs_lower)) 
-                    || cond_lower.contains(&format!("isnil \"{}\"", rhs_lower)) 
-                    || cond_lower.contains(&format!("isnil {{{}}}", rhs_lower)) {
+                    if cond_lower.contains(&format!("isnil \"{}\"", lhs_lower))
+                        || cond_lower.contains(&format!("isnil {{{}}}", lhs_lower))
+                        || cond_lower.contains(&format!("isnil \"{}\"", rhs_lower))
+                        || cond_lower.contains(&format!("isnil {{{}}}", rhs_lower))
+                    {
                         return Vec::new();
                     };
                     return vec![Arc::new(IfAssign::new(
