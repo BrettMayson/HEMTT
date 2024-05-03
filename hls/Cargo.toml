@@ -23,6 +23,7 @@ tower-lsp = { version = "0.20.0", features = ["proposed"]}
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
 url = "2.5.0"
+urldecode = "0.1.1"
 vfs = { workspace = true }
 
 [build-dependencies]

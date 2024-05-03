@@ -95,11 +95,12 @@ impl EditorWorkspace {
         if folder.uri.scheme() == "file" {
             let Ok(workspace) = Workspace::builder()
                 .physical(
-                    &PathBuf::from(
-                        format!("{}", folder.uri)
-                            .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
-                            .replace("%3A", ":"),
-                    ),
+                    &PathBuf::from(urldecode::decode(
+                        folder
+                            .uri
+                            .to_string()
+                            .replace(if cfg!(windows) { "file:///" } else { "file://" }, ""),
+                    )),
                     LayerType::Source,
                 )
                 .finish(None, true, &PDriveOption::Disallow)
