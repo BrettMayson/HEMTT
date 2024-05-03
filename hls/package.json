@@ -100,12 +100,12 @@
     "commands": [
       {
         "command": "hemtt.zoomIn",
-        "title": "%command.zoomIn%",
+        "title": "Zoom In",
         "category": "Image Preview"
       },
       {
         "command": "hemtt.zoomOut",
-        "title": "%command.zoomOut%",
+        "title": "Zoom Out%",
         "category": "Image Preview"
       }
     ],
