@@ -361,6 +361,9 @@ impl Processor {
         } else {
             (left, false)
         };
+        if left.is_empty() {
+            return Err(UnexpectedEOF::code(command.as_ref().clone()));
+        }
         self.skip_whitespace(stream, None);
         #[allow(unused_assignments)]
         let mut operators = Vec::new();
@@ -385,7 +388,7 @@ impl Processor {
                 return Err(UnexpectedEOF::code(
                     operators
                         .last()
-                        .expect("left should exists at this point")
+                        .expect("right should exists at this point")
                         .as_ref()
                         .clone(),
                 ));
