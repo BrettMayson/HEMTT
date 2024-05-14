@@ -52,6 +52,7 @@ pub fn cli() -> Command {
         global = global
             .arg(
                 clap::Arg::new("in-test")
+                    .hide(true)
                     .global(true)
                     .help("we are in a test")
                     .action(ArgAction::SetTrue)
@@ -142,7 +143,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     };
     if let Some(report) = report? {
         report.write_to_stdout();
-        report.write_ci_annotations()?;
+        if !matches.subcommand_name().is_some_and(|s| s == "new") {
+            report.write_ci_annotations()?;
+        }
         if report.failed() {
             std::process::exit(1);
         }
