@@ -68,6 +68,7 @@ bootstrap!(define_use_define);
 bootstrap!(define_with_dash);
 bootstrap!(group_unit);
 bootstrap!(hashtag_outside_macro);
+bootstrap!(if_digits);
 bootstrap!(if_nested);
 bootstrap!(if_operators);
 bootstrap!(if_pass);
