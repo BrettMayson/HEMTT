@@ -294,7 +294,27 @@ impl Processor {
         command: Rc<Token>,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
     ) -> Result<(), Error> {
-        fn value(defines: &mut Defines, token: Rc<Token>) -> Result<(Vec<Rc<Token>>, bool), Error> {
+        fn read_value(
+            stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        ) -> Vec<Rc<Token>> {
+            let mut tokens = Vec::new();
+            while stream.peek().is_some() {
+                let token = stream
+                    .peek()
+                    .expect("peeked in the if statement, so there should be a token")
+                    .clone();
+                if token.symbol().is_whitespace() || token.symbol().is_newline() {
+                    break;
+                }
+                tokens.push(token);
+                stream.next();
+            }
+            tokens
+        }
+        fn resolve_value(
+            defines: &mut Defines,
+            token: Rc<Token>,
+        ) -> Result<(Vec<Rc<Token>>, bool), Error> {
             if let Some((_, definition)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
@@ -306,8 +326,15 @@ impl Processor {
             }
             Ok((vec![token], false))
         }
-        let left = self.next_value(stream, None)?;
-        if &Symbol::Word(String::from("__has_include")) == left.symbol() {
+        self.skip_whitespace(stream, None);
+        let left = read_value(stream);
+        if !left.is_empty()
+            && &Symbol::Word(String::from("__has_include"))
+                == left
+                    .first()
+                    .expect("left is not empty, must exist")
+                    .symbol()
+        {
             if pragma.is_flagged(&Flag::Pe23IgnoreIfHasInclude) {
                 debug!(
                     "ignoring __has_include due to pragma flag, this config will not be rapified"
@@ -317,11 +344,26 @@ impl Processor {
                 self.skip_to_after_newline(stream, None);
                 return Ok(());
             }
-            return Err(IfHasInclude::code(left.as_ref().clone()));
+            return Err(IfHasInclude::code(
+                left.first()
+                    .expect("left is not empty, must exist")
+                    .as_ref()
+                    .clone(),
+            ));
         }
-        let (left, left_defined) = value(&mut self.defines, left)?;
+        let (left, left_defined) = if left.len() == 1 {
+            resolve_value(
+                &mut self.defines,
+                left.into_iter()
+                    .next()
+                    .expect("length is 1, next will exist"),
+            )?
+        } else {
+            (left, false)
+        };
         self.skip_whitespace(stream, None);
-        let mut operators = Vec::with_capacity(2);
+        #[allow(unused_assignments)]
+        let mut operators = Vec::new();
         let (right, right_defined) = if stream.peek().map(|t| t.symbol()) == Some(&Symbol::Newline)
         {
             let pos = stream
@@ -336,31 +378,29 @@ impl Processor {
             operators = vec![equals.clone(), equals];
             (vec![Rc::new(Token::new(Symbol::Digit(1), pos))], false)
         } else {
-            loop {
-                let Some(token) = stream.peek() else {
-                    return Err(UnexpectedEOF::code(
-                        left.last()
-                            .expect("left should exists at this point")
-                            .as_ref()
-                            .clone(),
-                    ));
-                };
-                if matches!(token.symbol(), Symbol::Whitespace(_)) {
-                    stream.next();
-                    break;
-                }
-                operators.push(token.clone());
-                stream.next();
-            }
-            let Some(right) = stream.next() else {
+            operators = read_value(stream);
+            self.skip_whitespace(stream, None);
+            let right = read_value(stream);
+            if right.is_empty() {
                 return Err(UnexpectedEOF::code(
-                    left.last()
+                    operators
+                        .last()
                         .expect("left should exists at this point")
                         .as_ref()
                         .clone(),
                 ));
-            };
-            value(&mut self.defines, right)?
+            }
+            if right.len() == 1 {
+                resolve_value(
+                    &mut self.defines,
+                    right
+                        .into_iter()
+                        .next()
+                        .expect("length is 1, next will exist"),
+                )?
+            } else {
+                (right, false)
+            }
         };
         let operator = operators
             .iter()
