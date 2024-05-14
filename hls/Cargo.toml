@@ -12,7 +12,7 @@ hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
-chumsky = "0.9.3"
+chumsky = { workspace = true }
 dashmap = "5.5.3"
 regex = { workspace = true }
 ropey = "1.6.1"
