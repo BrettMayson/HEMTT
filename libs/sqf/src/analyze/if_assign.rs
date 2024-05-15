@@ -19,7 +19,7 @@ pub fn if_assign(statements: &Statements, processed: &Processed) -> Vec<Arc<dyn 
 
 fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<dyn Code>> {
     if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = expression {
-        if name == "then" {
+        if name.to_lowercase() == "then" {
             let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
                 return Vec::new();
             };
@@ -27,6 +27,13 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
                 let lhs = extract_constant(lhs_expr);
                 let rhs = extract_constant(rhs_expr);
                 if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
+                    // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
+                    if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
+                    {
+                        if name.to_lowercase() == "isnil" {
+                            return Vec::new();
+                        }
+                    }
                     return vec![Arc::new(IfAssign::new(
                         if_cmd.span(),
                         (condition.source(), condition.full_span()),
