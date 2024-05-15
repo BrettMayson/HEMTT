@@ -37,7 +37,7 @@ impl Module for SQFCompiler {
                 }
             }
         }
-        let database = Database::default();
+        let database = Database::a3_with_workspace(ctx.workspace())?;
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {

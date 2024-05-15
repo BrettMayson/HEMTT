@@ -37,7 +37,7 @@ pub fn cli() -> Command {
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let mut report = Report::new();
 
-    let test_mode = matches.get_flag("in-test");
+    let test_mode = !cfg!(not(debug_assertions)) && matches.get_flag("in-test");
 
     if !test_mode && !std::io::stdin().is_terminal() {
         report.error(TerminalNotInput::code());

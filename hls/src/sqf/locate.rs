@@ -12,7 +12,7 @@ pub trait Locate {
 impl Locate for (&Processed, &Statements) {
     fn locate_expression(&self, uri: Url, position: Position) -> Option<Expression> {
         SqfCache::get().files.read().unwrap().get(&uri).map(
-            |(processed, workspace_path, statements)| {
+            |(processed, workspace_path, statements, _)| {
                 let offset = processed
                     .line_offset(workspace_path, position.line as usize)
                     .unwrap_or_default()

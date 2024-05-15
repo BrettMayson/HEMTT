@@ -120,4 +120,8 @@ impl EditorWorkspace {
         let path = url.path().strip_prefix(self.path.path()).unwrap();
         self.workspace.join(path).map_err(|e| format!("{}", e))
     }
+
+    pub fn root(&self) -> &WorkspacePath {
+        &self.workspace
+    }
 }

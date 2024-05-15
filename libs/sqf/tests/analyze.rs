@@ -31,7 +31,7 @@ fn test_analyze(dir: &str) {
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let database = Database::default();
+    let database = Database::a3();
     let workspace_files = WorkspaceFiles::new();
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {

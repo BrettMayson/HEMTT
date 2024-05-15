@@ -10,4 +10,6 @@ pub enum Error {
     #[cfg(feature = "compiler")]
     #[error(transparent)]
     SerializeError(#[from] crate::compiler::serializer::SerializeError),
+    #[error("Custom command error: {0}")]
+    CustomCommandError(String),
 }
