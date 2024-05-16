@@ -6,14 +6,14 @@ use std::{collections::HashMap, mem::MaybeUninit, rc::Rc, sync::RwLock};
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{parser::database::Database, Statements};
 use hemtt_workspace::{reporting::Processed, WorkspacePath};
-use tracing::{debug, warn};
+use tracing::{debug, error, warn};
 use url::Url;
 
 use crate::workspace::EditorWorkspaces;
 
 #[derive(Clone)]
 pub struct SqfCache {
-    files: Rc<RwLock<HashMap<Url, (Processed, WorkspacePath, Statements)>>>,
+    files: Rc<RwLock<HashMap<Url, (Processed, WorkspacePath, Statements, Database)>>>,
 }
 
 impl SqfCache {
@@ -55,14 +55,20 @@ impl SqfCache {
                 return;
             }
         };
-        let database = Database::default();
+        let database = match Database::a3_with_workspace(workspace.root()) {
+            Ok(database) => database,
+            Err(e) => {
+                error!("Failed to create database {:?}", e);
+                return;
+            }
+        };
         match hemtt_sqf::parser::run(&database, &processed) {
             Ok(sqf) => {
                 Self::get()
                     .files
                     .write()
                     .unwrap()
-                    .insert(file, (processed, source, sqf));
+                    .insert(file, (processed, source, sqf, database));
             }
             Err(e) => {
                 warn!("Failed to parse {}: {e:?}", file);

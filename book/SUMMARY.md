@@ -11,6 +11,7 @@
   - [Version](configuration/version.md)
   - [Addon](configuration/addon.md)
   - [P Drive](configuration/p-drive.md)
+  - [Custom Commands](configuration/custom-commands.md)
 - [Commands](commands/index.md)
   - [new](commands/new.md)
   - [dev](commands/dev.md)

@@ -1,7 +1,5 @@
-use arma3_wiki::{
-    model::{Command, Locality, Since, Syntax},
-    Wiki,
-};
+use arma3_wiki::model::{Command, Locality, Since, Syntax};
+use hemtt_sqf::parser::database::Database;
 use regex::Regex;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position};
 use tracing::debug;
@@ -14,17 +12,17 @@ const WIKI: &str = "https://community.bistudio.com/wiki/";
 impl SqfCache {
     pub fn hover(&self, uri: Url, position: Position) -> Option<Hover> {
         let files = self.files.read().unwrap();
-        if let Some((processed, _, statements)) = files.get(&uri) {
+        if let Some((processed, _, statements, database)) = files.get(&uri) {
             if let Some(expression) = (processed, statements).locate_expression(uri, position) {
                 match expression {
                     hemtt_sqf::Expression::NularCommand(command, _) => {
-                        return Some(hover(command.as_str()))
+                        return Some(hover(command.as_str(), database))
                     }
                     hemtt_sqf::Expression::UnaryCommand(command, _, _) => {
-                        return Some(hover(command.as_str()))
+                        return Some(hover(command.as_str(), database))
                     }
                     hemtt_sqf::Expression::BinaryCommand(command, _, _, _) => {
-                        return Some(hover(command.as_str()))
+                        return Some(hover(command.as_str(), database))
                     }
                     _ => return None,
                 }
@@ -36,9 +34,9 @@ impl SqfCache {
     }
 }
 
-fn hover(command: &str) -> Hover {
-    let wiki = Wiki::load();
-    wiki.commands().get(command).map_or_else(
+fn hover(command: &str, database: &Database) -> Hover {
+    debug!("Hovering over {}", command);
+    database.wiki().commands().get(command).map_or_else(
         || Hover {
             contents: HoverContents::Scalar(MarkedString::String("No documentation found".into())),
             range: None,
@@ -47,9 +45,13 @@ fn hover(command: &str) -> Hover {
             contents: HoverContents::Array({
                 let mut contents = Vec::new();
                 contents.push(MarkedString::String(format!(
-                    "## {}\n[BI Wiki]({WIKI}{})\n\n{}{}{}",
+                    "## {}\n{}\n\n{}{}{}",
                     command.name(),
-                    command.name().replace(' ', "_"),
+                    if !database.wiki().is_custom_command(command.name()) {
+                        format!("[BI Wiki]({WIKI}{})", command.name().replace(' ', "_"))
+                    } else {
+                        "Custom Command".to_string()
+                    },
                     markdown_since(command.since()),
                     markdown_locality(command.argument_loc(), "Argument"),
                     markdown_locality(command.effect_loc(), "Effect"),
