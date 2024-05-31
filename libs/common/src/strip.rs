@@ -1,3 +1,4 @@
+#[allow(clippy::module_name_repetitions)]
 pub trait StripInsensitive {
     fn strip_prefix_insensitive(&self, prefix: &str) -> Option<&str>;
 }

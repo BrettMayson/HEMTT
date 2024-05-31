@@ -85,11 +85,11 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     let mut report = Report::new();
     let processed = match Processor::run(path) {
         Ok(processed) => processed,
-        Err(hemtt_preprocessor::Error::Code(e)) => {
+        Err((_, hemtt_preprocessor::Error::Code(e))) => {
             report.error(e);
             return Ok(report);
         }
-        Err(e) => {
+        Err((_, e)) => {
             return Err(e.into());
         }
     };

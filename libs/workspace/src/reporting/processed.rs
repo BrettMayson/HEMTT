@@ -1,5 +1,3 @@
-#[cfg(feature = "lsp")]
-use std::collections::HashMap;
 use std::{collections::HashMap, ops::Range, rc::Rc, sync::Arc};
 
 use crate::{
@@ -9,10 +7,12 @@ use crate::{
 
 use super::{Code, Output, Token};
 
+pub type Sources = Vec<(WorkspacePath, String)>;
+
 #[derive(Debug, Default)]
 /// A processed file
 pub struct Processed {
-    sources: Vec<(WorkspacePath, String)>,
+    sources: Sources,
     output: String,
 
     /// character offset for each line

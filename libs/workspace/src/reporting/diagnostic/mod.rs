@@ -230,4 +230,62 @@ impl Diagnostic {
             })
             .collect()
     }
+
+    #[cfg(feature = "lsp")]
+    pub fn to_lsp(
+        &self,
+        files: &WorkspaceFiles,
+    ) -> Vec<(WorkspacePath, tower_lsp::lsp_types::Diagnostic)> {
+        let mut diags = Vec::new();
+        for label in &self.labels {
+            let start = label.span.start;
+            let end = label.span.end;
+            let start_line_index = files.line_index(&label.file, start).unwrap_or(0);
+            let end_line_index = files.line_index(&label.file, end).unwrap_or(0);
+            #[allow(clippy::cast_possible_truncation)]
+            let range = tower_lsp::lsp_types::Range {
+                start: tower_lsp::lsp_types::Position {
+                    line: start_line_index as u32,
+                    character: files
+                        .column_number(&label.file, start_line_index, start)
+                        .unwrap_or(1) as u32
+                        - 1,
+                },
+                end: tower_lsp::lsp_types::Position {
+                    line: end_line_index as u32,
+                    character: files
+                        .column_number(&label.file, end_line_index, end)
+                        .unwrap_or(1) as u32
+                        - 1,
+                },
+            };
+            diags.push((
+                label.file().clone(),
+                tower_lsp::lsp_types::Diagnostic {
+                    range,
+                    severity: Some(severity_to_lsp(self.severity)),
+                    code: Some(tower_lsp::lsp_types::NumberOrString::String(
+                        self.code.clone(),
+                    )),
+                    source: Some("hemtt".to_string()),
+                    message: self.message.clone(),
+                    related_information: None,
+                    tags: None,
+                    code_description: None,
+                    data: None,
+                },
+            ));
+        }
+        diags
+    }
+}
+
+#[cfg(feature = "lsp")]
+const fn severity_to_lsp(severity: Severity) -> tower_lsp::lsp_types::DiagnosticSeverity {
+    match severity {
+        Severity::Error | Severity::Bug => tower_lsp::lsp_types::DiagnosticSeverity::ERROR,
+        Severity::Warning => tower_lsp::lsp_types::DiagnosticSeverity::WARNING,
+        Severity::Note => tower_lsp::lsp_types::DiagnosticSeverity::INFORMATION,
+        Severity::Help => tower_lsp::lsp_types::DiagnosticSeverity::HINT,
+    }
 }

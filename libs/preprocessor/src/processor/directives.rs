@@ -199,7 +199,7 @@ impl Processor {
         }
 
         let current = self
-            .files
+            .file_stack
             .last()
             .expect("root file should always be present");
         let Ok(Some(path)) = current.locate(
@@ -211,10 +211,11 @@ impl Processor {
             return Err(IncludeNotFound::code(path));
         };
         let tokens = crate::parse::parse(&path)?;
-        self.files.push(path);
+        self.file_stack.push(path.clone());
+        self.included_files.push(path);
         let mut stream = tokens.into_iter().peekmore();
         let ret = self.file(&mut pragma.child(), &mut stream, buffer);
-        self.files.pop();
+        self.file_stack.pop();
         ret
     }
 

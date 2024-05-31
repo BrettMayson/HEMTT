@@ -127,11 +127,8 @@ fn version(ctx: &Context) -> Version {
     ctx.config()
         .version()
         .get(ctx.workspace().vfs())
-        .map_or_else(
-            |_| {
-                println!("Unable to find version");
-                std::process::exit(1);
-            },
-            |v| v,
-        )
+        .unwrap_or_else(|_| {
+            println!("Unable to find version");
+            std::process::exit(1);
+        })
 }

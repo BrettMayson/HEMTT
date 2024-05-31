@@ -96,7 +96,7 @@ impl Module for ArmaScriptCompiler {
             entries
                 .par_iter()
                 .map(|entry| {
-                    let processed = Processor::run(entry)?;
+                    let processed = Processor::run(entry).map_err(|(_, e)| e)?;
                     let source = tmp_addon.join(
                         entry
                             .as_str()

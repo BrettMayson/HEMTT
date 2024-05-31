@@ -12,9 +12,9 @@ impl LineCol {
     #[cfg(feature = "lsp")]
     #[must_use]
     /// Convert to an LSP [`lsp_types::Position`]
-    pub fn to_lsp(&self) -> lsp_types::Position {
+    pub fn to_lsp(&self) -> tower_lsp::lsp_types::Position {
         #[allow(clippy::cast_possible_truncation)]
-        lsp_types::Position::new(self.1 .0 as u32 - 1, self.1 .1 as u32 - 1)
+        tower_lsp::lsp_types::Position::new(self.1 .0 as u32 - 1, self.1 .1 as u32 - 1)
     }
 
     #[must_use]
@@ -106,7 +106,7 @@ impl Position {
     #[cfg(feature = "lsp")]
     #[must_use]
     /// Convert to an LSP [`lsp_types::Range`]
-    pub fn to_lsp(&self) -> Range {
-        lsp_types::Range::new(self.start.to_lsp(), self.end.to_lsp())
+    pub fn to_lsp(&self) -> tower_lsp::lsp_types::Range {
+        tower_lsp::lsp_types::Range::new(self.start.to_lsp(), self.end.to_lsp())
     }
 }

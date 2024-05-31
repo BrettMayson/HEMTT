@@ -12,17 +12,19 @@ const WIKI: &str = "https://community.bistudio.com/wiki/";
 impl SqfCache {
     pub fn hover(&self, uri: Url, position: Position) -> Option<Hover> {
         let files = self.files.read().unwrap();
-        if let Some((processed, _, statements, database)) = files.get(&uri) {
-            if let Some(expression) = (processed, statements).locate_expression(uri, position) {
+        if let Some(cache_bundle) = files.get(&uri) {
+            if let Some(expression) =
+                (&cache_bundle.processed, &cache_bundle.statements).locate_expression(uri, position)
+            {
                 match expression {
                     hemtt_sqf::Expression::NularCommand(command, _) => {
-                        return Some(hover(command.as_str(), database))
+                        return Some(hover(command.as_str(), &cache_bundle.database))
                     }
                     hemtt_sqf::Expression::UnaryCommand(command, _, _) => {
-                        return Some(hover(command.as_str(), database))
+                        return Some(hover(command.as_str(), &cache_bundle.database))
                     }
                     hemtt_sqf::Expression::BinaryCommand(command, _, _, _) => {
-                        return Some(hover(command.as_str(), database))
+                        return Some(hover(command.as_str(), &cache_bundle.database))
                     }
                     _ => return None,
                 }

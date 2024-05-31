@@ -17,3 +17,9 @@ codespan-reporting = "0.11.1"
 dirs = "5.0.1"
 tracing = { workspace = true }
 vfs = { workspace = true }
+
+tower-lsp = { workspace = true, optional = true }
+
+[features]
+default = []
+lsp = ["tower-lsp"]

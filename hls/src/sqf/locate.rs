@@ -11,13 +11,18 @@ pub trait Locate {
 
 impl Locate for (&Processed, &Statements) {
     fn locate_expression(&self, uri: Url, position: Position) -> Option<Expression> {
-        SqfCache::get().files.read().unwrap().get(&uri).map(
-            |(processed, workspace_path, statements, _)| {
-                let offset = processed
-                    .line_offset(workspace_path, position.line as usize)
+        SqfCache::get()
+            .files
+            .read()
+            .unwrap()
+            .get(&uri)
+            .map(|cache_bundle| {
+                let offset = cache_bundle
+                    .processed
+                    .line_offset(&cache_bundle.source, position.line as usize)
                     .unwrap_or_default()
                     + position.character as usize;
-                for statement in statements.content().iter() {
+                for statement in cache_bundle.statements.content().iter() {
                     match statement {
                         Statement::AssignGlobal(_, expression, _)
                         | Statement::AssignLocal(_, expression, _)
@@ -29,8 +34,7 @@ impl Locate for (&Processed, &Statements) {
                     }
                 }
                 None
-            },
-        )?
+            })?
     }
 }
 

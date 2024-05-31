@@ -31,7 +31,8 @@ pub struct Processor {
     ifstates: IfStates,
     defines: Defines,
 
-    files: Vec<WorkspacePath>,
+    included_files: Vec<WorkspacePath>,
+    file_stack: Vec<WorkspacePath>,
 
     pub(crate) token_count: usize,
 
@@ -63,20 +64,26 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    pub fn run(path: &WorkspacePath) -> Result<Processed, Error> {
+    pub fn run(path: &WorkspacePath) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
 
-        processor.files.push(path.clone());
+        processor.file_stack.push(path.clone());
 
-        let tokens = crate::parse::parse(path)?;
+        let tokens =
+            crate::parse::parse(path).map_err(|e| (processor.included_files.clone(), e))?;
         let mut pragma = Pragma::root();
         let mut buffer = Vec::with_capacity(tokens.len());
         let mut stream = tokens.into_iter().peekmore();
 
-        processor.file(&mut pragma, &mut stream, &mut buffer)?;
+        processor
+            .file(&mut pragma, &mut stream, &mut buffer)
+            .map_err(|e| (processor.included_files.clone(), e))?;
 
         if let Some(state) = processor.ifstates.pop() {
-            return Err(EoiIfState::code(state.token().as_ref().clone()));
+            return Err((
+                processor.included_files,
+                EoiIfState::code(state.token().as_ref().clone()),
+            ));
         }
 
         if path.filename() == "Config.cpp" {
@@ -94,7 +101,7 @@ impl Processor {
             processor.warnings,
             processor.no_rapify,
         )
-        .map_err(Into::into)
+        .map_err(|e| (processor.included_files, e.into()))
     }
 
     fn file(

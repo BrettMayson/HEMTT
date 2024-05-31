@@ -28,7 +28,7 @@ criterion = "0.5.1"
 paste = { workspace = true }
 
 [features]
-# lsp = ["hemtt-common/lsp", "lsp-types"]
+lsp = ["hemtt-workspace/lsp", "lsp-types"]
 
 [[bench]]
 name = "ace_dogtags"

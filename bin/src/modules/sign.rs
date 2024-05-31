@@ -9,6 +9,7 @@ use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
+#[derive(Debug, Default)]
 pub struct Sign;
 impl Sign {
     #[must_use]

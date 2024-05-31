@@ -259,7 +259,7 @@ impl Processor {
                     &mut function.stream(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident, layer));
+                buffer.push(Output::Macro(ident.clone(), layer));
                 self.defines.pop();
             }
             #[allow(clippy::needless_collect)] // causes recursion at runtime otherwise
@@ -273,7 +273,7 @@ impl Processor {
                     &mut body.into_iter().peekmore(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident, layer));
+                buffer.push(Output::Macro(ident.clone(), layer));
             }
             Definition::Void => return Ok(()),
             Definition::Unit => {

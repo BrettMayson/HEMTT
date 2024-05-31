@@ -14,7 +14,7 @@ pub use codespan_reporting::diagnostic::Severity;
 pub use diagnostic::{Diagnostic, Label};
 pub use files::{WorkspaceFile, WorkspaceFiles};
 pub use output::Output;
-pub use processed::{Mapping, Processed};
+pub use processed::{Mapping, Processed, Sources};
 pub use symbol::Symbol;
 pub use token::Token;
 pub use whitespace::Whitespace;

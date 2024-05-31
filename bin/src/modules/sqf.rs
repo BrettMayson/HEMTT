@@ -43,7 +43,7 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed = Processor::run(entry)?;
+                let processed = Processor::run(entry).map_err(|(_, e)| e)?;
                 for warning in processed.warnings() {
                     report.warn(warning.clone());
                 }

@@ -31,7 +31,7 @@ fn check(dir: &str) {
     if let Err(e) = processed {
         panic!(
             "{}",
-            e.get_code()
+            e.1.get_code()
                 .unwrap()
                 .diagnostic()
                 .unwrap()

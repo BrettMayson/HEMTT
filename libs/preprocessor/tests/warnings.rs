@@ -56,7 +56,7 @@ fn check(dir: &str) {
             panic!(
                 "`{:?}` should have succeeded: {:#?}",
                 folder,
-                e.get_code()
+                e.1.get_code()
                     .unwrap()
                     .diagnostic()
                     .unwrap()

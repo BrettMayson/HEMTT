@@ -5,9 +5,12 @@ use tower_lsp::{Client, LanguageServer, LspService, Server};
 
 use tracing::{debug, info, Level};
 
+use crate::diag_manager::DiagManager;
 use crate::sqf::SqfCache;
 use crate::workspace::EditorWorkspaces;
 
+mod config;
+mod diag_manager;
 mod positions;
 mod sqf;
 mod workspace;
@@ -41,10 +44,12 @@ impl LanguageServer for Backend {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        info!("initialized");
+        info!("initializing");
+        DiagManager::init(self.client.clone());
         if let Some(folders) = self.client.workspace_folders().await.unwrap() {
             EditorWorkspaces::get().initialize(folders);
         }
+        info!("initialized");
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -66,11 +71,7 @@ impl LanguageServer for Backend {
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         debug!("did_open: {:?}", params);
-        // let uri_string = params.text_document.uri.to_string();
-        // if uri_string.ends_with(".hpp") || uri_string.ends_with("config.cpp") {
-        // } else if uri_string.ends_with(".sqf") {
-        // }
-        SqfCache::cache(params.text_document.uri);
+        SqfCache::cache(params.text_document.uri).await;
     }
 
     async fn did_change(&self, _: DidChangeTextDocumentParams) {
@@ -79,7 +80,8 @@ impl LanguageServer for Backend {
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         debug!("did_save");
-        SqfCache::cache(params.text_document.uri);
+        SqfCache::cache(params.text_document.uri.clone()).await;
+        config::did_save(params.text_document.uri).await;
     }
 
     async fn did_close(&self, _: DidCloseTextDocumentParams) {

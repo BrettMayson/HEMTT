@@ -13,7 +13,7 @@ pub enum Error {
     Prefix(#[from] hemtt_common::prefix::Error),
 
     #[error("VfsError: {0}")]
-    /// [vfs::VfsError]
+    /// [`vfs::VfsError`]
     Vfs(Box<vfs::VfsError>),
 
     #[error("IOError: {0}")]
