@@ -343,7 +343,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     if !include.exists() {
         return Ok(());
     }
-    let has_pdrive = ctx.workspace_path().workspace().pdrive().is_some();
+    let has_pdrive = ctx.workspace().pdrive().is_some();
     let mut warned_a3_include = false;
     for outer_prefix in std::fs::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
@@ -376,7 +376,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     if ctx.config().hemtt().build().pdrive() != &PDriveOption::Require {
         return Ok(());
     }
-    let Some(pdrive) = ctx.workspace_path().workspace().pdrive() else {
+    let Some(pdrive) = ctx.workspace().pdrive() else {
         return Ok(());
     };
     create_link(&tmp.join("a3"), &pdrive.link())?;
