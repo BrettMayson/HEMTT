@@ -103,7 +103,11 @@ impl Context {
         let workspace = builder.memory().finish(
             Some(config.clone()),
             folder.is_some(),
-            config.hemtt().build().pdrive(),
+            if folder == Some("check") {
+                config.hemtt().check().pdrive()
+            } else {
+                config.hemtt().build().pdrive()
+            },
         )?;
         {
             let version = config.version().get(workspace.vfs());
@@ -173,8 +177,13 @@ impl Context {
     }
 
     #[must_use]
-    pub const fn workspace(&self) -> &WorkspacePath {
+    pub const fn workspace_path(&self) -> &WorkspacePath {
         &self.workspace
+    }
+
+    #[must_use]
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace.workspace()
     }
 
     #[must_use]

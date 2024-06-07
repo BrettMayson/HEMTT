@@ -12,6 +12,9 @@ pub struct Features {
     dev: DevOptions,
 
     #[serde(default)]
+    check: CheckOptions,
+
+    #[serde(default)]
     launch: HashMap<String, LaunchOptions>,
 
     #[serde(default)]
@@ -26,6 +29,12 @@ impl Features {
     /// Dev options
     pub const fn dev(&self) -> &DevOptions {
         &self.dev
+    }
+
+    #[must_use]
+    /// Check options
+    pub const fn check(&self) -> &CheckOptions {
+        &self.check
     }
 
     #[must_use]
@@ -85,6 +94,23 @@ impl DevOptions {
     /// Addons to exclude from dev
     pub fn exclude(&self) -> &[String] {
         &self.exclude
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
+/// Dev specific configuration
+pub struct CheckOptions {
+    #[serde(default)]
+    /// Can includes come from the P drive?
+    /// Default: false
+    pdrive: PDriveOption,
+}
+
+impl CheckOptions {
+    #[must_use]
+    /// Can includes come from the P drive?
+    pub const fn pdrive(&self) -> &PDriveOption {
+        &self.pdrive
     }
 }
 
@@ -243,7 +269,7 @@ impl BuildOptions {
     }
 }
 
-#[derive(Default, PartialEq, Eq, Debug, Clone)]
+#[derive(Default, PartialEq, Eq, Debug, Copy, Clone)]
 pub enum PDriveOption {
     Disallow,
     #[default]

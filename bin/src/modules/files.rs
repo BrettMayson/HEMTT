@@ -22,7 +22,7 @@ impl Module for Files {
         for file in ctx.config().files().include() {
             globs.push(glob::Pattern::new(&file)?);
         }
-        for entry in ctx.workspace().walk_dir()? {
+        for entry in ctx.workspace_path().walk_dir()? {
             if entry.as_str().starts_with("/.hemtt") {
                 continue;
             }

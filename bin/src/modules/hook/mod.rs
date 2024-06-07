@@ -29,7 +29,7 @@ mod time;
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     if vfs {
-        scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
+        scope.push_constant("HEMTT_VFS", ctx.workspace_path().vfs().clone());
     }
     scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
     scope.push_constant(
@@ -82,7 +82,11 @@ impl Hooks {
         if !self.0 {
             return Ok(());
         }
-        let folder = ctx.workspace().join(".hemtt")?.join("hooks")?.join(name)?;
+        let folder = ctx
+            .workspace_path()
+            .join(".hemtt")?
+            .join("hooks")?
+            .join(name)?;
         if !folder.exists()? {
             trace!("no {} hooks", name);
             return Ok(());
@@ -114,7 +118,7 @@ impl Hooks {
     /// If a file path is not a valid [`OsStr`] (UTF-8)
     pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
         let mut report = Report::new();
-        let scripts = ctx.workspace().join(".hemtt")?.join("scripts")?;
+        let scripts = ctx.workspace_path().join(".hemtt")?.join("scripts")?;
         let path = scripts.join(name)?.with_extension("rhai")?;
         trace!("running script: {}", path.as_str());
         if !path.exists()? {
@@ -195,7 +199,7 @@ impl Module for Hooks {
                 for hook in dir.read_dir().expect("hooks folder should be readable") {
                     let hook = hook?;
                     let path = ctx
-                        .workspace()
+                        .workspace_path()
                         .join(".hemtt")?
                         .join("hooks")?
                         .join(phase)?

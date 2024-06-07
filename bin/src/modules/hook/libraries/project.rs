@@ -28,7 +28,7 @@ impl RhaiProject {
             version: ctx
                 .config()
                 .version()
-                .get(ctx.workspace().vfs())
+                .get(ctx.workspace_path().vfs())
                 .expect("version config is valid to get to rhai module"),
             // addons: ctx.addons().to_vec(),
         }

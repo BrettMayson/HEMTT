@@ -28,7 +28,7 @@ impl Module for SQFCompiler {
         let counter = AtomicU16::new(0);
         let mut entries = Vec::new();
         for addon in ctx.addons() {
-            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+            for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
                         continue;
@@ -37,7 +37,7 @@ impl Module for SQFCompiler {
                 }
             }
         }
-        let database = Database::a3_with_workspace(ctx.workspace())?;
+        let database = Database::a3_with_workspace(ctx.workspace_path())?;
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {

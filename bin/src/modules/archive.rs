@@ -67,7 +67,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
         output.set_file_name(format!(
             "{}-{}.zip",
             ctx.config().prefix(),
-            ctx.config().version().get(ctx.workspace().vfs())?
+            ctx.config().version().get(ctx.workspace_path().vfs())?
         ));
         info!("Created release: {}", output.display());
         output

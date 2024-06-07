@@ -112,7 +112,7 @@ pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Erro
             || ctx.config().prefix().to_string(),
             std::string::ToString::to_string
         ),
-        ctx.config().version().get(ctx.workspace().vfs())?
+        ctx.config().version().get(ctx.workspace_path().vfs())?
     );
     if let Some(suffix) = suffix {
         authority.push_str(&format!("_{suffix}"));

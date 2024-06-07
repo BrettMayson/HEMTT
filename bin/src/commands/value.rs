@@ -126,7 +126,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 fn version(ctx: &Context) -> Version {
     ctx.config()
         .version()
-        .get(ctx.workspace().vfs())
+        .get(ctx.workspace_path().vfs())
         .unwrap_or_else(|_| {
             println!("Unable to find version");
             std::process::exit(1);
