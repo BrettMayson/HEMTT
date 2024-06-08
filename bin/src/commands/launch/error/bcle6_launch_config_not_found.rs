@@ -21,14 +21,7 @@ impl Code for LaunchConfigNotFound {
         if self.similar.is_empty() {
             None
         } else {
-            Some(format!(
-                "did you mean `{}`?",
-                self.similar
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join("`, `")
-            ))
+            Some(format!("did you mean `{}`?", self.similar.join("`, `")))
         }
     }
 

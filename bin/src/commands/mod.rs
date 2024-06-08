@@ -7,3 +7,4 @@ pub mod release;
 pub mod script;
 pub mod utils;
 pub mod value;
+pub mod wiki;

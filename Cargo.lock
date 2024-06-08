@@ -152,9 +152,9 @@ dependencies = [
 
 [[package]]
 name = "arma3-wiki"
-version = "0.1.18"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1577db41a42995e127b93852bebe577c1be041483bc756efadcc23b95ff31c57"
+checksum = "d635c1b2e6881e8871c1cc1f9deba73f2a19a61a62ef1c5e4c3738e946cd7d97"
 dependencies = [
  "directories",
  "fs_extra",
@@ -1083,6 +1083,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "hemtt"
 version = "1.12.3"
 dependencies = [
+ "arma3-wiki",
  "clap",
  "dialoguer",
  "enable-ansi-support",

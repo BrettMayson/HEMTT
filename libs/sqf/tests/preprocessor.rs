@@ -35,7 +35,7 @@ fn preprocess(file: &str) {
         processed.as_str(),
     )
     .unwrap();
-    let parsed = hemtt_sqf::parser::run(&Database::a3(), &processed).unwrap();
+    let parsed = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
     assert_ne!(parsed.content().len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();

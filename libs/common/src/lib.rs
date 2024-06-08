@@ -14,6 +14,7 @@ mod sign_version;
 pub use sign_version::BISignVersion;
 
 #[must_use]
+/// Returns up to 3 similar values from a haystack.
 pub fn similar_values<'a>(search: &str, haystack: &'a [&str]) -> Vec<&'a str> {
     let mut similar = haystack
         .iter()

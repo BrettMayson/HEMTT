@@ -67,7 +67,7 @@ impl SqfCache {
                 return;
             }
         };
-        let database = match Database::a3_with_workspace(workspace.root()) {
+        let database = match Database::a3_with_workspace(workspace.root(), false) {
             Ok(database) => database,
             Err(e) => {
                 error!("Failed to create database {:?}", e);

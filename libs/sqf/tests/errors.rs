@@ -31,7 +31,7 @@ fn errors(dir: &str) {
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_sqf::parser::run(&Database::a3(), &processed).unwrap_err();
+    let parsed = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap_err();
     let codes = parsed.codes();
     let mut expected = Vec::new();
     std::fs::File::open(folder.join("stderr.ansi"))
