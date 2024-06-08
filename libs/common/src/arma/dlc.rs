@@ -32,7 +32,7 @@ pub enum DLC {
     /// Creator DLC: Spearhead 1944
     /// <https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/>
     Spearhead1944,
-    #[serde(rename="rf")]
+    #[serde(rename = "rf")]
     /// Creator DLC: Reaction Forces
     /// <https://store.steampowered.com/app/2647760/Arma_3_Creator_DLC_Reaction_Forces/>
     ReactionForces,

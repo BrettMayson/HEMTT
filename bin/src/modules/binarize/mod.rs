@@ -79,13 +79,19 @@ impl Module for Binarize {
 
     #[allow(clippy::too_many_lines)]
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let pdrive_option = if ctx.folder() == Some(&"check".to_string()) {
+            ctx.config().hemtt().check().pdrive()
+        } else {
+            ctx.config().hemtt().build().pdrive()
+        };
+
         let mut report = Report::new();
         let tmp_source = ctx.tmp().join("source");
         let tmp_out = ctx.tmp().join("output");
         let search_cache = SearchCache::new();
-        if let Some(pdrive) = ctx.workspace().workspace().pdrive() {
+        if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
-        } else if ctx.config().hemtt().build().pdrive() == &PDriveOption::Require {
+        } else if pdrive_option == &PDriveOption::Require {
             report.error(MissingPDrive::code());
         }
         for addon in ctx.addons() {
@@ -96,7 +102,7 @@ impl Module for Binarize {
                 }
             }
             for entry in ctx
-                .workspace()
+                .workspace_path()
                 .join(addon.folder())
                 .expect("workspace should be able to join the addon folder")
                 .walk_dir()
@@ -154,10 +160,9 @@ impl Module for Binarize {
                         )
                         .expect("p3d should be able to be read if it is a valid p3d file");
                         let (missing_textures, missing_materials) =
-                            p3d.missing(ctx.workspace(), &search_cache)?;
+                            p3d.missing(ctx.workspace_path(), &search_cache)?;
                         if !missing_textures.is_empty() {
-                            let warn =
-                                *ctx.config().hemtt().build().pdrive() == PDriveOption::Ignore;
+                            let warn = *pdrive_option == PDriveOption::Ignore;
                             let diag = MissingTextures::code(
                                 entry.as_str().to_string(),
                                 missing_textures,
@@ -170,8 +175,7 @@ impl Module for Binarize {
                             }
                         }
                         if !missing_materials.is_empty() {
-                            let warn =
-                                *ctx.config().hemtt().build().pdrive() == PDriveOption::Ignore;
+                            let warn = *pdrive_option == PDriveOption::Ignore;
                             let diag = MissingMaterials::code(
                                 entry.as_str().to_string(),
                                 missing_materials,
@@ -339,7 +343,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     if !include.exists() {
         return Ok(());
     }
-    let has_pdrive = ctx.workspace().workspace().pdrive().is_some();
+    let has_pdrive = ctx.workspace().pdrive().is_some();
     let mut warned_a3_include = false;
     for outer_prefix in std::fs::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
@@ -372,7 +376,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     if ctx.config().hemtt().build().pdrive() != &PDriveOption::Require {
         return Ok(());
     }
-    let Some(pdrive) = ctx.workspace().workspace().pdrive() else {
+    let Some(pdrive) = ctx.workspace().pdrive() else {
         return Ok(());
     };
     create_link(&tmp.join("a3"), &pdrive.link())?;

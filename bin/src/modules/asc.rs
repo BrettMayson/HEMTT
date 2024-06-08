@@ -82,7 +82,7 @@ impl Module for ArmaScriptCompiler {
             let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
             create_dir_all(&tmp_addon)?;
             let mut entries = Vec::new();
-            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+            for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
                         continue;
@@ -174,7 +174,7 @@ impl Module for ArmaScriptCompiler {
         let counter = AtomicU16::new(0);
         for (src, dst) in &*files.read().expect("unable to read source files") {
             let from = tmp_output.join(&format!("{src}c"));
-            let to = ctx.workspace().join(&format!("{dst}c"))?;
+            let to = ctx.workspace_path().join(&format!("{dst}c"))?;
             if !from.exists() {
                 // sqf that have parse errors OR just empty//no-code
                 debug!("asc didn't process {}", src);

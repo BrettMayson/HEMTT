@@ -32,7 +32,7 @@ pub enum Collapse {
 /// [`Error::Git`] if the git hash is invalid
 /// [`Error::Pbo`] if the PBO fails to write
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
-    let version = ctx.config().version().get(ctx.workspace().vfs())?;
+    let version = ctx.config().version().get(ctx.workspace_path().vfs())?;
     let git_hash = {
         Repository::discover(".").map_or(None, |repo| {
             repo.revparse_single("HEAD").map_or(None, |rev| {
@@ -109,7 +109,7 @@ fn _build(
     pbo.add_property("hemtt", env!("HEMTT_VERSION"));
     pbo.add_property("version", version.to_string());
 
-    'entries: for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+    'entries: for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
         if entry.metadata()?.file_type == VfsFileType::File {
             if entry.filename() == "config.cpp" && entry.parent().join("config.bin")?.exists()? {
                 continue;

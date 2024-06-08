@@ -44,7 +44,7 @@ impl Module for Rapifier {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
-                for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+                for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_rapify(entry.as_str())
                     {
