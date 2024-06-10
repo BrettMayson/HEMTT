@@ -60,11 +60,11 @@ fn check_expression(
         return Vec::new();
     }
     let mut negate = false;
-    if rhs.abs() < std::f32::EPSILON {
+    if rhs.abs() < f32::EPSILON {
         negate = true;
         std::mem::swap(&mut lhs, &mut rhs);
     }
-    if lhs.abs() > std::f32::EPSILON || (rhs - 1.0).abs() > std::f32::EPSILON {
+    if lhs.abs() > f32::EPSILON || (rhs - 1.0).abs() > f32::EPSILON {
         return Vec::new();
     }
     vec![Arc::new(SelectParseNumber::new(
