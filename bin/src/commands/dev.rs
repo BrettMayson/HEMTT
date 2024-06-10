@@ -127,7 +127,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
 
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
-    executor.add_module(Box::new(SQFCompiler { compile: expsqfc }));
+    executor.add_module(Box::new(SQFCompiler::new(expsqfc)));
     #[cfg(not(target_os = "macos"))]
     if !expsqfc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());

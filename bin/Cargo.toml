@@ -29,6 +29,7 @@ hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
 hemtt-sqf = { path = "../libs/sqf", version = "1.0.0" }
 hemtt-workspace = { path = "../libs/workspace", version = "1.0.0" }
 
+arma3-wiki = { workspace = true }
 clap = { workspace = true }
 dialoguer = "0.11.0"
 fs_extra = "1.3.0"

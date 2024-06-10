@@ -1,7 +1,7 @@
 use arma3_wiki::Wiki;
 
 fn main() {
-    let wiki = Wiki::load();
+    let wiki = Wiki::load(true);
 
     let mut flow = Vec::with_capacity(500);
     let mut commands = Vec::with_capacity(3000);

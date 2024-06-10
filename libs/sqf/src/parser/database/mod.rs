@@ -7,7 +7,7 @@ use arma3_wiki::{
     Wiki,
 };
 use hemtt_workspace::WorkspacePath;
-use tracing::{trace, warn};
+use tracing::{error, trace, warn};
 
 use crate::Error;
 
@@ -57,22 +57,22 @@ pub struct Database {
 impl Database {
     #[must_use]
     /// An empty database with no entries.
-    pub fn empty() -> Self {
+    pub fn empty(force_pull: bool) -> Self {
         Self {
             nular_commands: HashSet::new(),
             unary_commands: HashSet::new(),
             binary_commands: HashSet::new(),
-            wiki: load_wiki(),
+            wiki: load_wiki(force_pull),
         }
     }
 
     #[must_use]
-    pub fn a3() -> Self {
+    pub fn a3(force_pull: bool) -> Self {
         let mut nular_commands = HashSet::new();
         let mut unary_commands = HashSet::new();
         let mut binary_commands = HashSet::new();
 
-        let wiki = load_wiki();
+        let wiki = load_wiki(force_pull);
 
         for command in wiki.commands().values() {
             for syntax in command.syntax() {
@@ -106,8 +106,8 @@ impl Database {
     }
 
     /// Creates a new database with the default commands and custom commands from the workspace.
-    pub fn a3_with_workspace(workspace: &WorkspacePath) -> Result<Self, Error> {
-        let mut database = Self::a3();
+    pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
+        let mut database = Self::a3(force_pull);
         let custom_root = workspace.join("/.hemtt/commands");
         if let Ok(custom_root) = custom_root {
             if custom_root.exists().unwrap_or(false) {
@@ -260,10 +260,14 @@ fn is_in(list: &[&str], item: &str) -> bool {
     list.iter().any(|i| i.eq_ignore_ascii_case(item))
 }
 
-fn load_wiki() -> Wiki {
-    Wiki::load_git().unwrap_or_else(|e| {
+fn load_wiki(force_pull: bool) -> Wiki {
+    Wiki::load_git(force_pull).unwrap_or_else(|e| {
         trace!(?e, "failed to load arma 3 wiki from git: {}", e);
-        warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+        if force_pull {
+            error!("Failed to update Arma 3 wiki from remote");
+        } else {
+            warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+        }
         Wiki::load_dist()
     })
 }

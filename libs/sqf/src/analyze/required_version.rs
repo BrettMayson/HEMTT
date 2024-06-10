@@ -29,7 +29,7 @@ pub fn required_version(
     let (command, usage, usage_span) = statements.required_version(database);
     if wiki_version < usage {
         errors.push(Arc::new(
-            super::codes::sae1_require_version::InsufficientRequiredVersion::new(
+            super::codes::sae1_require_version_command::InsufficientRequiredVersionCommand::new(
                 command,
                 usage_span,
                 usage,

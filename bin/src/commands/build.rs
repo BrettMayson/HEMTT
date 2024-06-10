@@ -100,7 +100,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler { compile: expsqfc }));
+    executor.add_module(Box::new(SQFCompiler::new(expsqfc)));
     #[cfg(not(target_os = "macos"))]
     if !expsqfc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());

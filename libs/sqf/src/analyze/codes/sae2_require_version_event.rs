@@ -6,26 +6,23 @@ use hemtt_workspace::{
     WorkspacePath,
 };
 
-pub struct InsufficientRequiredVersion {
-    command: String,
+pub struct InsufficientRequiredVersionEvent {
+    event: String,
     span: Range<usize>,
     version: Version,
-    required: (Version, WorkspacePath, Range<usize>),
+    required: (Option<Version>, WorkspacePath, Range<usize>),
     stable: Version,
 
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for InsufficientRequiredVersion {
+impl Code for InsufficientRequiredVersionEvent {
     fn ident(&self) -> &'static str {
         "SAE1"
     }
 
     fn message(&self) -> String {
-        format!(
-            "command `{}` requires version {}",
-            self.command, self.version
-        )
+        format!("event `{}` requires version {}", self.event, self.version)
     }
 
     fn label_message(&self) -> String {
@@ -48,10 +45,10 @@ impl Code for InsufficientRequiredVersion {
     }
 }
 
-impl InsufficientRequiredVersion {
+impl InsufficientRequiredVersionEvent {
     #[must_use]
     pub fn new(
-        command: String,
+        event: String,
         span: Range<usize>,
         version: Version,
         required: (Version, WorkspacePath, Range<usize>),
@@ -59,10 +56,16 @@ impl InsufficientRequiredVersion {
         processed: &Processed,
     ) -> Self {
         Self {
-            command,
+            event,
             span,
             version,
-            required,
+            required: {
+                if required.0.major() == 0 && required.0.minor() == 0 {
+                    (None, required.1, required.2)
+                } else {
+                    (Some(required.0), required.1, required.2)
+                }
+            },
             stable,
 
             diagnostic: None,
@@ -76,7 +79,10 @@ impl InsufficientRequiredVersion {
         };
         self.diagnostic = Some(diag.with_label(
             Label::secondary(self.required.1.clone(), self.required.2.clone()).with_message(
-                format!("CfgPatch only requires version {}", self.required.0),
+                self.required.0.map_or_else(
+                    || "CfgPatch doesn't specify `requiredVersion`".to_string(),
+                    |required| format!("CfgPatch requires version {required}"),
+                ),
             ),
         ));
         self
