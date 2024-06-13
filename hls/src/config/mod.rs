@@ -51,14 +51,13 @@ async fn check_addons(workspace: EditorWorkspace) {
 }
 
 async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
-    let mut sources = Vec::new();
     let Some(manager) = DiagManager::get() else {
         warn!("failed to get diag manager");
         return;
     };
     manager.clear_current(&format!("config:{}", source.as_str()));
     let mut lsp_diags = HashMap::new();
-    match Processor::run(&source) {
+    let sources = match Processor::run(&source) {
         Ok(processed) => {
             let workspace_files = WorkspaceFiles::new();
             match hemtt_config::parse(None, &processed) {
@@ -99,12 +98,11 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                     }
                 }
             }
-            sources = processed.sources().into_iter().map(|(p, _)| p).collect();
+            processed.sources().into_iter().map(|(p, _)| p).collect()
         }
         Err((err_sources, err)) => {
             warn!("failed to parse config: {:?}", err);
-            sources = err_sources;
-            debug!("failed sources: {:?}", sources);
+            debug!("failed sources: {:?}", err_sources);
             if let hemtt_preprocessor::Error::Code(code) = err {
                 let workspace_files = WorkspaceFiles::new();
                 if let Some(diag) = code.diagnostic() {
@@ -114,8 +112,9 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                     }
                 };
             }
+            err_sources
         }
-    }
+    };
     for (file, diags) in lsp_diags {
         manager.set_current(
             &format!("config:{}", source.as_str()),

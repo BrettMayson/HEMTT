@@ -7,10 +7,7 @@ use std::{
 
 use hemtt_common::project::hemtt::PDriveOption;
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
-use tower_lsp::{
-    lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
-    Client,
-};
+use tower_lsp::lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder};
 use tracing::debug;
 use url::Url;
 
@@ -113,23 +110,23 @@ pub struct EditorWorkspace {
 impl EditorWorkspace {
     pub fn new(folder: &WorkspaceFolder) -> Option<Self> {
         if folder.uri.scheme() == "file" {
-            let Ok(workspace) = Workspace::builder()
-                .physical(
-                    &PathBuf::from(
-                        urlencoding::decode(
-                            folder
-                                .uri
-                                .to_string()
-                                .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
-                                .as_str(),
-                        )
-                        .expect("Failed to decode URL")
-                        .to_string(),
-                    ),
-                    LayerType::Source,
+            let root = PathBuf::from(
+                urlencoding::decode(
+                    folder
+                        .uri
+                        .to_string()
+                        .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
+                        .as_str(),
                 )
-                .finish(None, true, &PDriveOption::Disallow)
-            else {
+                .expect("Failed to decode URL")
+                .to_string(),
+            );
+            let mut builder = Workspace::builder().physical(&root, LayerType::Source);
+            let include = root.join("include");
+            if include.is_dir() {
+                builder = builder.physical(&include, LayerType::Include);
+            }
+            let Ok(workspace) = builder.finish(None, true, &PDriveOption::Disallow) else {
                 return None;
             };
             Some(Self {
