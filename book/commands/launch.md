@@ -126,6 +126,7 @@ Currently supported DLCs:
 | CSLA Iron Curtain   | csla       |
 | Western Sahara      | ws         |
 | Spearhead 1944      | spe        |
+| Reaction Forces     | rf         |
 
 ### optionals
 
