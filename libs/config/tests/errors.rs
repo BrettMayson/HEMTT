@@ -68,10 +68,10 @@ fn check(dir: &str) {
 
 bootstrap!(ce1_invalid_value);
 bootstrap!(ce2_invalid_value_macro);
-bootstrap!(ce3_duplicate_property_separate);
 bootstrap!(ce3_duplicate_property_shadow_property);
 bootstrap!(ce4_missing_semicolon);
 bootstrap!(ce5_unexpected_array);
 bootstrap!(ce6_expected_array);
 bootstrap!(ce7_missing_parent);
+bootstrap!(ce8_duplicate_class);
 bootstrap!(ce8_duplicate_external);

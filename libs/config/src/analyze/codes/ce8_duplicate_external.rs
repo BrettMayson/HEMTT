@@ -13,7 +13,7 @@ impl Code for DuplicateExternal {
     }
 
     fn message(&self) -> String {
-        "external class defined multiple times".to_string()
+        "class defined multiple times".to_string()
     }
 
     fn label_message(&self) -> String {

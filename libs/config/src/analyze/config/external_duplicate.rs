@@ -10,10 +10,21 @@ pub fn error(properties: &[Property], processed: &Processed) -> Vec<Arc<dyn Code
     for property in properties {
         if let Property::Class(c) = property {
             match c {
-                Class::Root { properties } | Class::Local { properties, .. } => {
+                Class::Root { properties } => {
                     errors.extend(error(properties, processed));
                 }
                 Class::External { name } => {
+                    defined
+                        .entry(name.value.to_lowercase())
+                        .or_default()
+                        .push(c.clone());
+                }
+                Class::Local {
+                    name,
+                    parent: _,
+                    properties,
+                } => {
+                    errors.extend(error(properties, processed));
                     defined
                         .entry(name.value.to_lowercase())
                         .or_default()
