@@ -660,6 +660,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23fadfd577acfd4485fb258011b0fd080882ea83359b6fd41304900b94ccf487"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+ "hashbrown",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1161,7 +1175,7 @@ version = "0.1.0"
 dependencies = [
  "arma3-wiki",
  "chumsky",
- "dashmap",
+ "dashmap 6.0.0",
  "hemtt",
  "hemtt-common",
  "hemtt-config",
@@ -3488,7 +3502,7 @@ dependencies = [
  "async-trait",
  "auto_impl",
  "bytes",
- "dashmap",
+ "dashmap 5.5.3",
  "futures",
  "httparse",
  "lsp-types 0.94.1",
