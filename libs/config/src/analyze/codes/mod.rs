@@ -8,7 +8,7 @@ pub mod ce4_missing_semicolon;
 pub mod ce5_unexpected_array;
 pub mod ce6_expected_array;
 pub mod ce7_missing_parent;
-pub mod ce8_duplicate_external;
+pub mod ce8_duplicate_classes;
 
 pub mod cw1_parent_case;
 pub mod cw2_magwell_missing_magazine;

@@ -2,12 +2,12 @@ use hemtt_workspace::reporting::{Code, Diagnostic, Label, Processed};
 
 use crate::Class;
 
-pub struct DuplicateExternal {
+pub struct DuplicateClasses {
     classes: Vec<Class>,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for DuplicateExternal {
+impl Code for DuplicateClasses {
     fn ident(&self) -> &'static str {
         "CE8"
     }
@@ -38,7 +38,7 @@ impl Code for DuplicateExternal {
     }
 }
 
-impl DuplicateExternal {
+impl DuplicateClasses {
     pub fn new(classes: Vec<Class>, processed: &Processed) -> Self {
         Self {
             classes,
@@ -49,7 +49,7 @@ impl DuplicateExternal {
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
         let Some(name) = self.classes[0].name() else {
-            panic!("DuplicateExternal::generate_processed called on class without name");
+            panic!("DuplicateClasses::generate_processed called on class without name");
         };
         self.diagnostic = Diagnostic::new_for_processed(&self, name.span.clone(), processed);
         if let Some(diag) = &mut self.diagnostic {

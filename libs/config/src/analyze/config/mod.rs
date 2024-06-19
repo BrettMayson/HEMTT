@@ -7,8 +7,8 @@ use crate::Config;
 
 use super::Analyze;
 
+mod duplicate_classes;
 mod duplicate_properties;
-mod external_duplicate;
 mod external_missing;
 mod external_parent_case;
 mod magwells;
@@ -37,7 +37,7 @@ impl Analyze for Config {
             .iter()
             .flat_map(|p| p.errors(project, processed))
             .collect::<Vec<_>>();
-        errors.extend(external_duplicate::error(&self.0, processed));
+        errors.extend(duplicate_classes::error(&self.0, processed));
         errors.extend(external_missing::error(&self.0, processed));
         errors.extend(duplicate_properties::duplicate_properties(
             &self.0, processed,
