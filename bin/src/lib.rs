@@ -92,6 +92,14 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         match update::check() {
             Ok(Some(version)) => {
                 info!("HEMTT {version} is available, please update");
+                if let Ok(path) = std::env::current_exe() {
+                    trace!("HEMTT is installed at: {}", path.display());
+                    if path.display().to_string().contains("\\Winget\\") {
+                        info!(
+                            "HEMTT is installed via winget, run `winget upgrade hemtt` to update"
+                        );
+                    }
+                }
             }
             Err(e) => {
                 error!("Failed to check for updates: {e}");
