@@ -69,6 +69,7 @@ impl Module for Binarize {
                 report.warn(ToolsNotFound::code());
                 return Ok(report);
             };
+            PathBuf::from(path)
         };
         let path = folder.join("binarize_x64.exe");
         if path.exists() {
