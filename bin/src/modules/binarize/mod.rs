@@ -54,18 +54,28 @@ impl Module for Binarize {
     #[cfg(windows)]
     fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-        let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-            report.warn(ToolsNotFound::code());
-            return Ok(report);
+
+        let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
+            trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
+            PathBuf::from(path)
+        } else {
+            trace!("Using Binarize path from registry");
+            let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
+            let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
+                report.warn(ToolsNotFound::code());
+                return Ok(report);
+            };
+            let Ok(path) = key.get_value::<String, _>("path") else {
+                report.warn(ToolsNotFound::code());
+                return Ok(report);
+            };
+            PathBuf::from(path)
         };
-        let Ok(path) = key.get_value::<String, _>("path") else {
-            report.warn(ToolsNotFound::code());
-            return Ok(report);
-        };
-        let path = PathBuf::from(path).join("binarize_x64.exe");
+        let path = folder.join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
+        } else {
+            report.warn(ToolsNotFound::code());
         }
         Ok(report)
     }
