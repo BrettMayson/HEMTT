@@ -1,4 +1,4 @@
-[0m[1m[38;5;9merror[CE8][0m[1m: external class defined multiple times[0m
+[0m[1m[38;5;9merror[CE9][0m[1m: class defined multiple times[0m
   [0m[36m┌─[0m source.hpp:2:11
   [0m[36m│[0m
 [0m[36m2[0m [0m[36m│[0m     class [0m[31mBulletBase[0m;
