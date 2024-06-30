@@ -28,7 +28,7 @@ impl Code for ParsingFailed {
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         Some(
-            Diagnostic::new(self.message(), "failed to parse").with_label(
+            Diagnostic::new(self.ident(), "failed to parse").with_label(
                 Label::primary(self.position.path().clone(), self.position.span())
                     .with_message("failed to parse"),
             ),
