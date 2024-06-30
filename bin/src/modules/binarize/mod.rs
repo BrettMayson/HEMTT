@@ -56,8 +56,10 @@ impl Module for Binarize {
         let mut report = Report::new();
 
         let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
+            trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
             PathBuf::from(path)
         } else {
+            trace!("Using Binarize path from registry");
             let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
             let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
                 report.warn(ToolsNotFound::code());
@@ -71,6 +73,8 @@ impl Module for Binarize {
         let path = folder.join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
+        } else {
+            report.warn(ToolsNotFound::code());
         }
         Ok(report)
     }
