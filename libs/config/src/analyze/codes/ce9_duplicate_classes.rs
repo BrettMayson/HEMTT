@@ -9,7 +9,7 @@ pub struct DuplicateClasses {
 
 impl Code for DuplicateClasses {
     fn ident(&self) -> &'static str {
-        "CE8"
+        "CE9"
     }
 
     fn message(&self) -> String {

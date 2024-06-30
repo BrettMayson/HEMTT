@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::reporting::{Code, Processed};
 
-use crate::{analyze::codes::ce8_duplicate_classes::DuplicateClasses, Class, Property};
+use crate::{analyze::codes::ce9_duplicate_classes::DuplicateClasses, Class, Property};
 
 pub fn error(properties: &[Property], processed: &Processed) -> Vec<Arc<dyn Code>> {
     let mut defined: HashMap<String, Vec<Class>> = HashMap::new();
