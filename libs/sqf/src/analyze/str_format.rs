@@ -1,9 +1,12 @@
 use std::sync::Arc;
 
+//*! Currently unused
+
 use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::{analyze::codes::saa4_str_format::StrFormat, Expression, Statements, UnaryCommand};
 
+#[allow(dead_code)]
 pub fn str_format(statements: &Statements, processed: &Processed) -> Vec<Arc<dyn Code>> {
     let mut advice: Vec<Arc<dyn Code>> = Vec::new();
     for statement in statements.content() {
@@ -14,6 +17,7 @@ pub fn str_format(statements: &Statements, processed: &Processed) -> Vec<Arc<dyn
     advice
 }
 
+#[allow(dead_code)]
 fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<dyn Code>> {
     let Expression::UnaryCommand(UnaryCommand::Named(name), target, _) = expression else {
         return Vec::new();

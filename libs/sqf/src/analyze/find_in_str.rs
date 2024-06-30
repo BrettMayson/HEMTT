@@ -27,7 +27,7 @@ fn check_expression(expression: &Expression, processed: &Processed) -> Vec<Arc<d
     let Expression::Number(FloatOrd(num), _) = &**to else {
         return Vec::new();
     };
-    if (num - 1.0).abs() > std::f32::EPSILON {
+    if (num - 1.0).abs() > f32::EPSILON {
         return Vec::new();
     }
     let Expression::BinaryCommand(BinaryCommand::Named(name), haystack, needle, _) = &**search
