@@ -164,7 +164,7 @@ jobs:
           echo Version: $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Download NuGet Package
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.11
         with:
           releaseId: ${{ env.VERSION }}
           fileName: '*.nupkg'
