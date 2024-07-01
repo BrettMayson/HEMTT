@@ -14,6 +14,11 @@ HEMTT is slightly opinionated, most configurations are supported, but some niche
 HEMTT works best when used in a Git based project, but the HEMTT executable should not be added to your version control.
 
 It is also recommended to use VSCode for your Arma 3 modding, as it has great extensions that will support you in your modding journey.
+
 Additionally the [HEMTT VSCode extension](https://marketplace.visualstudio.com/items?itemName=BrettMayson.hemtt) is available.
+
+```admonish warning
+The VSCode Plugin is in development, and available as an alpha
+```
 
 Using HEMTT in VSCode's integrated terminal is the recommended way to use HEMTT, the output can have helpful information that may be missed otherwise.
