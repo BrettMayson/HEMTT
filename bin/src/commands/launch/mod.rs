@@ -68,7 +68,14 @@ pub fn cli() -> Command {
                     .short('Q')
                     .help("Skips the build step, launching the last built version")
                     .action(ArgAction::SetTrue),
-            ),
+            )
+            .arg(
+                clap::Arg::new("no-filepatching")
+                    .long("no-filepatching")
+                    .short('F')
+                    .help("Disables file patching")
+                    .action(ArgAction::SetTrue),
+            )
     )
 }
 
@@ -328,7 +335,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = args.clone();
         if with_server {
             args.push("-connect=127.0.0.1".to_string());
-        } else {
+        } else if !matches.get_flag("no-filepatching") {
             args.push("-filePatching".to_string());
         }
         instances.push(args);
