@@ -244,6 +244,12 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get the raw mappings
+    pub fn raw_mappings(&self) -> &[Mapping] {
+        &self.mappings
+    }
+
+    #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
         self.mappings(offset).last().copied()
