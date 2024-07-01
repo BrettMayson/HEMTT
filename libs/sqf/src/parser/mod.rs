@@ -226,7 +226,8 @@ fn statements<'a>(
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
             .map_with_span(|content, span| Statements {
-                source: processed.extract(span),
+                source: processed.extract(span.clone()),
+                span,
                 content,
             })
     })

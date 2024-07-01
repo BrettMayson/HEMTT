@@ -22,6 +22,7 @@ pub struct Statements {
     /// The source code string of this section of code.
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
     source: Arc<str>,
+    span: Range<usize>,
 }
 
 impl Statements {
@@ -36,28 +37,24 @@ impl Statements {
     }
 
     #[must_use]
-    /// Adds a source string to this code chunk.
-    pub fn with_source(self, source: Arc<str>) -> Self {
-        Self {
-            content: self.content,
-            source,
-        }
+    pub fn span(&self) -> Range<usize> {
+        self.span.clone()
     }
 
-    #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        let start = self
-            .content
-            .first()
-            .map(|s| s.span().start)
-            .unwrap_or_default();
-        let end = self
-            .content
-            .last()
-            .map(|s| s.span().end)
-            .unwrap_or_default();
-        start..end
-    }
+    // #[must_use]
+    // pub fn span(&self) -> Range<usize> {
+    //     let start = self
+    //         .content
+    //         .first()
+    //         .map(|s| s.span().start)
+    //         .unwrap_or_default();
+    //     let end = self
+    //         .content
+    //         .last()
+    //         .map(|s| s.span().end)
+    //         .unwrap_or_default();
+    //     start..end
+    // }
 
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
@@ -121,15 +118,6 @@ impl Statements {
             }
         }
         (command, version, span)
-    }
-}
-
-impl From<Vec<Statement>> for Statements {
-    fn from(content: Vec<Statement>) -> Self {
-        Self {
-            content,
-            source: "".into(),
-        }
     }
 }
 

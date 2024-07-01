@@ -13,6 +13,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::error::thiserror;
 use hemtt_workspace::reporting::Processed;
+use serializer::CodePointer;
 
 use self::serializer::{Compiled, Constant, Instruction, Instructions, SourceInfo};
 use crate::{Error, Expression, Statement, Statements};
@@ -28,7 +29,7 @@ impl Statements {
             constants_cache: Vec::new(),
             names_cache: Vec::new(),
         };
-        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx)?;
+        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
         let entrypoint_index = ctx.constants_cache.len() as u16;
         ctx.constants_cache.push(Constant::Code(entrypoint_code));
         Ok(Compiled {
@@ -60,16 +61,29 @@ impl Statements {
         &self,
         processed: &Processed,
         ctx: &mut Context,
+        is_root: bool,
     ) -> CompileResult<Instructions> {
         let mut instructions = Vec::new();
         for statement in &self.content {
             statement.compile_instructions(&mut instructions, processed, ctx)?;
         }
 
-        let source_string_index = ctx.add_constant(Constant::String(self.source.clone()))?;
+        let source_pointer = if is_root {
+            CodePointer::Constant(u64::from(
+                ctx.add_constant(Constant::String(self.source.clone()))?,
+            ))
+        } else {
+            let start = processed
+                .mapping(self.span.start)
+                .expect("first statement not in mapping");
+            let offset = start.processed_start().offset() as u32;
+            let source = processed.extract(self.span.clone());
+            let length = source.len() as u32;
+            CodePointer::Source { offset, length }
+        };
         Ok(Instructions {
             contents: instructions,
-            source_string_index,
+            source_pointer,
         })
     }
 }
@@ -229,7 +243,7 @@ impl Expression {
     ) -> CompileResult<Option<Constant>> {
         Ok(match *self {
             Self::Code(ref statements) => Some(Constant::Code(
-                statements.compile_to_instructions(processed, ctx)?,
+                statements.compile_to_instructions(processed, ctx, false)?,
             )),
             Self::String(ref string, _, _) => Some(Constant::String(string.clone())),
             Self::Number(crate::Scalar(number), _) => Some(Constant::Scalar(number)),

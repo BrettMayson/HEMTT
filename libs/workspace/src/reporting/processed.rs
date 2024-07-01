@@ -244,6 +244,12 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get the raw mappings
+    pub fn raw_mappings(&self) -> &[Mapping] {
+        &self.mappings
+    }
+
+    #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
         self.mappings(offset).last().copied()
@@ -275,6 +281,21 @@ impl Processed {
             }
         });
         Arc::from(&self.output[real_start..real_end])
+    }
+
+    #[must_use]
+    pub fn span_byte_count(&self, span: Range<usize>) -> usize {
+        let mut real_start = 0;
+        let mut real_end = 0;
+        self.output.char_indices().for_each(|(p, c)| {
+            if p < span.start {
+                real_start += c.len_utf8();
+            }
+            if p < span.end {
+                real_end += c.len_utf8();
+            }
+        });
+        real_end - real_start
     }
 }
 
