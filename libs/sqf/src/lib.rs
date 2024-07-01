@@ -41,21 +41,6 @@ impl Statements {
         self.span.clone()
     }
 
-    // #[must_use]
-    // pub fn span(&self) -> Range<usize> {
-    //     let start = self
-    //         .content
-    //         .first()
-    //         .map(|s| s.span().start)
-    //         .unwrap_or_default();
-    //     let end = self
-    //         .content
-    //         .last()
-    //         .map(|s| s.span().end)
-    //         .unwrap_or_default();
-    //     start..end
-    // }
-
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
