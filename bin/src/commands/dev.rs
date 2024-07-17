@@ -52,6 +52,12 @@ pub fn add_args(cmd: Command) -> Command {
             .help("Use HEMTT's experimental SQF compiler")
             .action(ArgAction::SetTrue),
     )
+    .arg(
+        clap::Arg::new("no-rap")
+            .long("no-rap")
+            .help("Do not rapify (cpp, rvmat)")
+            .action(ArgAction::SetTrue),
+    )
 }
 
 /// Execute the dev command
@@ -126,7 +132,9 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     executor.collapse(Collapse::Yes);
 
     executor.add_module(Box::<Hooks>::default());
-    executor.add_module(Box::<Rapifier>::default());
+    if matches.get_one::<bool>("no-rap") != Some(&true) {
+        executor.add_module(Box::<Rapifier>::default());
+    }
     executor.add_module(Box::new(SQFCompiler::new(expsqfc)));
     #[cfg(not(target_os = "macos"))]
     if !expsqfc {
