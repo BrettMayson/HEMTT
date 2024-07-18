@@ -28,6 +28,9 @@ Options:
 
     <a href="dev.md#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
+        
+    <a href="build.md#--no-rap">--no-rap</a>
+        Do not rapify files
 
     <a href="dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
         Include an optional addon folder
