@@ -13,6 +13,7 @@ use crate::{
         pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
         pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
     },
+    defines::DefineSource,
     definition::Definition,
     Error,
 };
@@ -201,7 +202,8 @@ impl Processor {
     ) -> Result<(), Error> {
         let ident = Self::current_word(stream)?;
         let ident_string = ident.to_string();
-        let Some((source, body)) = self.defines.get_with_gen(&ident, Some(callsite)) else {
+        let Some((source, body, define_source)) = self.defines.get_with_gen(&ident, Some(callsite))
+        else {
             buffer.push(Output::Direct(ident));
             return Ok(());
         };
@@ -247,7 +249,11 @@ impl Processor {
                     }
                     arg_defines.insert(
                         Arc::from(arg.to_string().as_str()),
-                        (arg.clone(), Definition::Value(value)),
+                        (
+                            arg.clone(),
+                            Definition::Value(value),
+                            DefineSource::Argument,
+                        ),
                     );
                 }
                 self.defines.push(&ident_string, arg_defines);
@@ -264,16 +270,24 @@ impl Processor {
             }
             #[allow(clippy::needless_collect)] // causes recursion at runtime otherwise
             Definition::Value(body) => {
-                let mut layer = Vec::new();
-                let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
-                self.walk(
-                    Some(callsite),
-                    Some(&ident_string),
-                    pragma,
-                    &mut body.into_iter().peekmore(),
-                    &mut layer,
-                )?;
-                buffer.push(Output::Macro(ident.clone(), layer));
+                if define_source == DefineSource::Argument {
+                    // prevent infinite recursion
+                    buffer.push(Output::Macro(
+                        ident.clone(),
+                        body.into_iter().map(Output::Direct).collect(),
+                    ));
+                } else {
+                    let mut layer = Vec::new();
+                    let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
+                    self.walk(
+                        Some(callsite),
+                        Some(&ident_string),
+                        pragma,
+                        &mut body.into_iter().peekmore(),
+                        &mut layer,
+                    )?;
+                    buffer.push(Output::Macro(ident.clone(), layer));
+                }
             }
             Definition::Void => return Ok(()),
             Definition::Unit => {

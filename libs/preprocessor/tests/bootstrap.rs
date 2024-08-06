@@ -65,6 +65,7 @@ bootstrap!(define_nested);
 bootstrap!(define_single);
 bootstrap!(define_undef);
 bootstrap!(define_use_define);
+bootstrap!(define_variable_recursion);
 bootstrap!(define_with_dash);
 bootstrap!(group_unit);
 bootstrap!(hashtag_outside_macro);

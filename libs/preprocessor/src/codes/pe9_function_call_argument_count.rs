@@ -81,7 +81,7 @@ impl FunctionCallArgumentCount {
                 .map(std::string::ToString::to_string)
                 .collect(),
             defined: {
-                let (t, d) = defines
+                let (t, d, _) = defines
                     .get_readonly(token.symbol().to_string().trim())
                     .expect("define should exist on error about its type");
                 (

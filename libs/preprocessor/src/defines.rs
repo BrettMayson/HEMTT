@@ -8,7 +8,14 @@ use strsim::levenshtein;
 
 use crate::definition::Definition;
 
-type InnerDefines = HashMap<Arc<str>, (Rc<Token>, Definition)>;
+#[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
+pub enum DefineSource {
+    Source,
+    Generated,
+    Argument,
+}
+
+type InnerDefines = HashMap<Arc<str>, (Rc<Token>, Definition, DefineSource)>;
 
 #[derive(Clone, Default)]
 /// `HashMap` of all current defines
@@ -71,7 +78,7 @@ impl Defines {
         &mut self,
         key: &Rc<Token>,
         site: Option<&Position>,
-    ) -> Option<(Rc<Token>, Definition)> {
+    ) -> Option<(Rc<Token>, Definition, DefineSource)> {
         let ident = key.to_string();
         if let Some(site) = site {
             if BUILTIN_GEN.contains(&ident.as_str()) {
@@ -85,11 +92,12 @@ impl Defines {
                                 Symbol::Digit(counter.into()),
                                 key.position().clone(),
                             ))]),
+                            DefineSource::Generated,
                         ));
                     }
                     "__COUNTER_RESET__" => {
                         self.counter = 0;
-                        return Some((key.clone(), Definition::Void));
+                        return Some((key.clone(), Definition::Void, DefineSource::Generated));
                     }
                     "__FILE__" => {
                         let path = site.path().as_str().replace('/', "\\");
@@ -129,6 +137,7 @@ impl Defines {
                                 )),
                                 Rc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                             ]),
+                            DefineSource::Generated,
                         ));
                     }
                     "__LINE__" => {
@@ -138,6 +147,7 @@ impl Defines {
                                 Symbol::Digit(site.start().1 .0),
                                 key.position().clone(),
                             ))]),
+                            DefineSource::Generated,
                         ));
                     }
                     _ => unreachable!(),
@@ -145,7 +155,7 @@ impl Defines {
             }
         }
         let ret = self.get_readonly(&ident);
-        if let Some((_, Definition::Function(body))) = &ret {
+        if let Some((_, Definition::Function(body), _)) = &ret {
             if key.position().path() != body.position().path() {
                 return ret;
             }
@@ -163,7 +173,7 @@ impl Defines {
         ret
     }
 
-    pub fn get_readonly(&self, key: &str) -> Option<(Rc<Token>, Definition)> {
+    pub fn get_readonly(&self, key: &str) -> Option<(Rc<Token>, Definition, DefineSource)> {
         self.stack
             .last()
             .as_ref()
@@ -173,7 +183,7 @@ impl Defines {
     }
 
     #[cfg(test)]
-    pub fn get_test(&self, key: &str) -> Option<&(Rc<Token>, Definition)> {
+    pub fn get_test(&self, key: &str) -> Option<&(Rc<Token>, Definition, DefineSource)> {
         self.stack
             .last()
             .as_ref()
@@ -184,8 +194,8 @@ impl Defines {
     pub fn insert(
         &mut self,
         key: &str,
-        value: (Rc<Token>, Definition),
-    ) -> Option<(Rc<Token>, Definition)> {
+        value: (Rc<Token>, Definition, DefineSource),
+    ) -> Option<(Rc<Token>, Definition, DefineSource)> {
         if let Some(stack) = self.stack.last_mut() {
             stack.1.insert(Arc::from(key), value)
         } else {
@@ -193,7 +203,7 @@ impl Defines {
         }
     }
 
-    pub fn remove(&mut self, key: &str) -> Option<(Rc<Token>, Definition)> {
+    pub fn remove(&mut self, key: &str) -> Option<(Rc<Token>, Definition, DefineSource)> {
         if let Some(scope) = self.stack.last_mut() {
             scope.1.remove(key)
         } else {
@@ -221,7 +231,7 @@ impl Defines {
         let mut similar = self
             .global
             .iter()
-            .filter(|(_, (_, def))| {
+            .filter(|(_, (_, def, _))| {
                 let Definition::Function(func) = def else {
                     return false;
                 };
@@ -239,7 +249,7 @@ impl Defines {
         let mut similar = self
             .global
             .iter()
-            .filter(|(_, (_, def))| {
+            .filter(|(_, (_, def, _))| {
                 let Definition::Value(_) = def else {
                     return false;
                 };
