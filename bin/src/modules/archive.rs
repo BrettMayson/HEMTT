@@ -1,4 +1,7 @@
-use std::fs::create_dir_all;
+use std::fs::{create_dir_all, File};
+
+use walkdir::WalkDir;
+use zip::{write::SimpleFileOptions, ZipWriter};
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -21,11 +24,11 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
     let output = output
         .join(format!("{}-latest", ctx.config().prefix()))
         .with_extension("zip");
-    let options = zip::write::FileOptions::default().compression_level(Some(9));
+    let options = SimpleFileOptions::default().compression_level(Some(9));
 
     debug!("creating release at {:?}", output.display());
-    let mut zip = zip::ZipWriter::new(std::fs::File::create(&output)?);
-    for entry in walkdir::WalkDir::new(ctx.build_folder().expect("build folder exists")) {
+    let mut zip = ZipWriter::new(File::create(&output)?);
+    for entry in WalkDir::new(ctx.build_folder().expect("build folder exists")) {
         let Ok(entry) = entry else {
             continue;
         };
@@ -58,7 +61,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
         );
         trace!("zip: adding file {:?}", file);
         zip.start_file(file, options)?;
-        std::io::copy(&mut std::fs::File::open(path)?, &mut zip)?;
+        std::io::copy(&mut File::open(path)?, &mut zip)?;
     }
     zip.finish()?;
     info!("Created release: {}", output.display());

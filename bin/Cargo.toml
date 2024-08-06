@@ -39,12 +39,12 @@ num_cpus = "1.16.0"
 rayon = "1.10.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.5", features = ["blocking", "json"] }
-rhai = "1.18.0"
-rust-embed = "8.4.0"
+rhai = "1.19.0"
+rust-embed = "8.5.0"
 semver = "1.0.23"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-term-table = "1.3.2"
+term-table = "1.4.0"
 time = { version = "0.3.36", features = ["formatting"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["json"] }

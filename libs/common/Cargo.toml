@@ -19,7 +19,7 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
-strum = { version = "0.26.2", features = ["derive"] }
+strum = { version = "0.26.3", features = ["derive"] }
 
 [features]
 # lsp = []
