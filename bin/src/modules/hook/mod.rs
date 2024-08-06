@@ -78,9 +78,9 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
+    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<Report, Error> {
         if !self.0 {
-            return Ok(());
+            return Ok(Report::new());
         }
         let folder = ctx
             .workspace_path()
@@ -89,10 +89,11 @@ impl Hooks {
             .join(name)?;
         if !folder.exists()? {
             trace!("no {} hooks", name);
-            return Ok(());
+            return Ok(Report::new());
         }
         let mut entries = folder.read_dir()?;
         entries.sort_by_key(WorkspacePath::filename);
+        let mut report = Report::new();
         for file in entries {
             if !file.is_file()? {
                 continue;
@@ -101,10 +102,10 @@ impl Hooks {
                 "Running hook: {}",
                 file.as_str().trim_start_matches("/.hemtt/hooks/")
             );
-            Self::run(ctx, file, vfs)?;
+            report.merge(Self::run(ctx, file, vfs)?);
             ctx.config().version().invalidate();
         }
-        Ok(())
+        Ok(report)
     }
 
     /// Run a script
@@ -216,22 +217,18 @@ impl Module for Hooks {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "pre_build", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "pre_build", true)
     }
 
     fn post_build(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "post_build", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "post_build", true)
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "pre_release", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "pre_release", true)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "post_release", false)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "post_release", false)
     }
 }

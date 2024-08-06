@@ -59,7 +59,7 @@ pub mod path_functions {
         res.map_or_else(|| Ok(true), Err)
     }
 
-    #[rhai_fn(global, name = "move", return_raw)]
+    #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut VfsPath, other: VfsPath) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir().map_err(|e| e.to_string())? {
             path.move_dir(&other)
@@ -73,7 +73,7 @@ pub mod path_functions {
         res.map_or_else(|| Ok(true), Err)
     }
 
-    #[rhai_fn(global, pure, return_raw)]
+    #[rhai_fn(global, pure, return_raw, pure)]
     pub fn list(path: &mut VfsPath) -> Result<Array, Box<EvalAltResult>> {
         let mut list = Vec::new();
         if path.is_dir().map_err(|e| e.to_string())? {
