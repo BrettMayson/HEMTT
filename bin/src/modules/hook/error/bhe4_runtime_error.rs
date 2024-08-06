@@ -20,7 +20,7 @@ impl Code for RuntimeError {
     }
 
     fn message(&self) -> String {
-        format!("Script {} failed to parse", self.script)
+        format!("Script {} failed at runtime", self.script)
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
