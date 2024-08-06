@@ -19,7 +19,7 @@ use crate::{
         pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
         pw1_redefine::RedefineMacro,
     },
-    defines::Defines,
+    defines::{DefineSource, Defines},
     definition::{Definition, FunctionDefinition},
     ifstate::IfState,
     processor::pragma::Flag,
@@ -237,7 +237,7 @@ impl Processor {
         if Defines::is_builtin(&ident_string) {
             return Err(ChangeBuiltin::code(ident.as_ref().clone()));
         }
-        if let Some((original, _)) = self.defines.remove(&ident_string) {
+        if let Some((original, _, _)) = self.defines.remove(&ident_string) {
             self.warnings.push(Arc::new(RedefineMacro::new(
                 Box::new(ident.as_ref().clone()),
                 Box::new(original.as_ref().clone()),
@@ -271,7 +271,8 @@ impl Processor {
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
-        self.defines.insert(&ident_string, (ident, definition));
+        self.defines
+            .insert(&ident_string, (ident, definition, DefineSource::Source));
         Ok(())
     }
 
@@ -316,7 +317,7 @@ impl Processor {
             defines: &mut Defines,
             token: Rc<Token>,
         ) -> Result<(Vec<Rc<Token>>, bool), Error> {
-            if let Some((_, definition)) = defines.get_with_gen(&token, Some(token.position())) {
+            if let Some((_, definition, _)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
                 }
