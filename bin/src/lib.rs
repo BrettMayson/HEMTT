@@ -78,6 +78,12 @@ pub fn cli() -> Command {
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+    // check for -v with no command and show version
+    if matches.subcommand().is_none() && matches.get_count("verbosity") > 0 {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("HEMTT_VERSION"));
+        return Ok(());
+    }
+
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
         logging::init(
             matches.get_count("verbosity"),
@@ -151,7 +157,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         Some(("wiki", matches)) => commands::wiki::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),
-        _ => unreachable!(),
+        _ => {
+            cli().print_help().expect("Failed to print help");
+            Ok(None)
+        }
     };
     if let Some(report) = report? {
         report.write_to_stdout();
