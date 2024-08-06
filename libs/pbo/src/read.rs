@@ -92,7 +92,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     }
 
     /// Get the PBO's headers sorted by name
-    pub fn files_sorted(&mut self) -> Vec<Header> {
+    pub fn files_sorted(&self) -> Vec<Header> {
         let mut sorted = self.files();
         sorted.sort_by(|a, b| {
             a.filename()

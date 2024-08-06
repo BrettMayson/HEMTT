@@ -74,7 +74,8 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Get a list of all files in the PBO
-    pub fn files(&mut self) -> std::vec::Vec<Header> {
+    #[must_use]
+    pub fn files(&self) -> Vec<Header> {
         let mut filenames = Vec::new();
         for (_, h) in self.files.values() {
             filenames.push(h.clone());
@@ -83,7 +84,8 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Get a list of all files in the PBO sorted by name
-    pub fn files_sorted(&mut self) -> Vec<Header> {
+    #[must_use]
+    pub fn files_sorted(&self) -> Vec<Header> {
         let mut sorted = self.files();
         sorted.sort_by(|a, b| {
             a.filename()

@@ -14,7 +14,7 @@ use hemtt_workspace::{reporting::Processed, WorkspacePath};
 use tracing::{debug, error, warn};
 use url::Url;
 
-use crate::workspace::{EditorWorkspace, EditorWorkspaces};
+use crate::workspace::EditorWorkspaces;
 
 pub struct CacheBundle {
     pub processed: Processed,

@@ -18,9 +18,9 @@ members = [
 resolver = "2"
 
 [workspace.lints.clippy]
-all = "deny"
-nursery = "deny"
-pedantic = "warn"
+all = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"
 cognitive_complexity = "allow"
 

@@ -106,6 +106,12 @@ impl Database {
     }
 
     /// Creates a new database with the default commands and custom commands from the workspace.
+    ///
+    /// # Errors
+    /// [`Error::CustomCommandError`] if a custom command could not be parsed.
+    ///
+    /// # Panics
+    /// If the custom commands directory could not be read.
     pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
         let mut database = Self::a3(force_pull);
         let custom_root = workspace.join("/.hemtt/commands");

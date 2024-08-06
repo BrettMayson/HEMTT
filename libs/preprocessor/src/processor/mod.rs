@@ -268,6 +268,8 @@ impl Processor {
         Self::current_word(stream)
     }
 
+    // I might want this later, so for now I am leaving it here
+    #[allow(dead_code)]
     /// Skips whitespace, returning the next value and consuming it from the stream
     ///
     /// # Errors
