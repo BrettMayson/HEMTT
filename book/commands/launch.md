@@ -99,8 +99,9 @@ dlc = [
     "S.O.G. Prairie Fire",
 ]
 
-# Launched with `hemtt launch ace
+# Launched with `hemtt launch ace`
 [hemtt.launch.ace]
+extends = "default"
 workshop = [
     "463939057", # ACE3's Workshop ID
 ]
