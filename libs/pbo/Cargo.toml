@@ -18,4 +18,3 @@ byteorder = { workspace = true }
 indexmap = { workspace = true }
 serde = { workspace = true }
 sha-1 = { workspace = true }
-tracing = { workspace = true }

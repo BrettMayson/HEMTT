@@ -99,7 +99,6 @@ impl<I: Seek + Read> ReadablePbo<I> {
                 .to_lowercase()
                 .cmp(&b.filename().to_lowercase())
         });
-        tracing::trace!("Sorted {} files", sorted.len());
         sorted
     }
 
