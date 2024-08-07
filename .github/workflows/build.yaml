@@ -135,11 +135,6 @@ jobs:
           echo Version: $VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Pack for Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: pack .github/choco/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
-
       - name: Zip Windows x64
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
@@ -152,26 +147,6 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  chocolatey:
-    needs:
-      - release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Download NuGet Package
-        uses: robinraju/release-downloader@v1.11
-        with:
-          releaseId: ${{ env.VERSION }}
-          fileName: '*.nupkg'
-      - name: Push to Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: push --source "https://push.chocolatey.org/" --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
 
   winget:
     needs:
