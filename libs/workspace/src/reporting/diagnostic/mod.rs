@@ -50,8 +50,8 @@ impl Diagnostic {
 
         // Error out out bounds, will never show, just use last char
         if span.start == processed.as_str().len() {
-            span.start = processed.as_str().len()-1;
-            span.end = processed.as_str().len()-1;
+            span.start = processed.as_str().len() - 1;
+            span.end = processed.as_str().len() - 1;
         }
         let map_start = processed.mapping(span.start)?;
         let map_end = processed.mapping(span.end)?;
