@@ -50,7 +50,7 @@ impl ChumskyCode {
             diag.notes.push(format!(
                 "The processed output of the line with the error was:\n{} ",
                 {
-                    let mut start = self.err.span().start;
+                    let mut start = std::cmp::min(self.err.span().start, processed.as_str().len() - 1);
                     while start > 0 && processed.as_str().as_bytes()[start] != b'\n' {
                         start -= 1;
                     }

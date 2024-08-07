@@ -43,10 +43,16 @@ impl Diagnostic {
 
     pub fn new_for_processed(
         code: &impl Code,
-        span: std::ops::Range<usize>,
+        mut span: std::ops::Range<usize>,
         processed: &crate::reporting::Processed,
     ) -> Option<Self> {
         let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
+
+        // Error out out bounds, will never show, just use last char
+        if span.start == processed.as_str().len() {
+            span.start = processed.as_str().len()-1;
+            span.end = processed.as_str().len()-1;
+        }
         let map_start = processed.mapping(span.start)?;
         let map_end = processed.mapping(span.end)?;
         let map_file = processed.source(map_start.source())?;
