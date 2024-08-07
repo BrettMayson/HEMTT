@@ -270,6 +270,9 @@ impl Processed {
     #[must_use]
     /// Return a string with the source from the span
     pub fn extract(&self, span: Range<usize>) -> Arc<str> {
+        if span.start + 1 == span.end {
+            return Arc::from("");
+        }
         let mut real_start = 0;
         let mut real_end = 0;
         self.output.char_indices().for_each(|(p, c)| {
