@@ -32,6 +32,9 @@ Options:
     <a href="build.md#--no-rap">--no-rap</a>
         Do not rapify files
 
+    <a href="--no-filepatching">--no-filepatching</a>
+        Do not enable filePatching
+
     <a href="dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
         Include an optional addon folder
 
@@ -182,6 +185,10 @@ The Arma 3 executable to launch. Overrides the `executable` option in the config
 hemtt launch -e arma3profiling_x64 # Relative to the Arma 3 directory
 hemtt launch -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
 ```
+
+### --no-filepatching
+
+Do not launch Arma 3 with `-filePatching`.
 
 ## Passthrough Options
 
