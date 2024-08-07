@@ -1,9 +1,16 @@
-use std::fs::{create_dir_all, File};
+use std::{
+    fs::{create_dir_all, File},
+    sync::Arc,
+};
 
 use git2::Repository;
+use hemtt_common::prefix::FILES;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
-use hemtt_workspace::addons::Location;
+use hemtt_workspace::{
+    addons::Location,
+    reporting::{Code, Diagnostic},
+};
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -27,7 +34,32 @@ impl Module for Sign {
         if ctx.config().version().git_hash().is_some() {
             Repository::discover(".")?;
         }
-        Ok(Report::new())
+
+        let mut report = Report::new();
+
+        ctx.addons().to_vec().iter().for_each(|addon| {
+            let entries = std::fs::read_dir(addon.folder())
+                .expect("valid read_dir")
+                .collect::<Result<Vec<_>, _>>()
+                .expect("files valid");
+            if entries.is_empty() {
+                report.error(EmptyAddon::code(addon.folder()));
+            } else if entries.len() == 1 {
+                // prefix files won't end up in the PBO, so we need to ignore them
+                if FILES.contains(
+                    &entries[0]
+                        .file_name()
+                        .into_string()
+                        .expect("valid file name")
+                        .to_lowercase()
+                        .as_str(),
+                ) {
+                    report.error(EmptyAddon::code(addon.folder()));
+                }
+            }
+        });
+
+        Ok(report)
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
@@ -118,4 +150,32 @@ pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Erro
         authority.push_str(&format!("_{suffix}"));
     }
     Ok(authority)
+}
+
+pub struct EmptyAddon {
+    file: String,
+}
+impl Code for EmptyAddon {
+    fn ident(&self) -> &'static str {
+        "BSE1"
+    }
+
+    fn message(&self) -> String {
+        format!("Addon `{}` has no files", self.file)
+    }
+
+    fn note(&self) -> Option<String> {
+        Some("HEMTT will not be able to sign an empty PBO".to_string())
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
+    }
+}
+
+impl EmptyAddon {
+    #[must_use]
+    pub fn code(file: String) -> Arc<dyn Code> {
+        Arc::new(Self { file })
+    }
 }

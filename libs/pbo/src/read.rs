@@ -99,6 +99,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
                 .to_lowercase()
                 .cmp(&b.filename().to_lowercase())
         });
+        tracing::trace!("Sorted {} files", sorted.len());
         sorted
     }
 
@@ -216,6 +217,10 @@ impl<I: Seek + Read> ReadablePbo<I> {
     pub fn hash_filenames(&mut self) -> Result<Checksum, Error> {
         let mut hasher = Sha1::new();
 
+        if self.files().is_empty() {
+            return Err(Error::NoFiles);
+        }
+
         for header in &self.files_sorted() {
             // Skip empty files
             let Some(mut file) = self.file(header.filename())? else {
@@ -237,18 +242,21 @@ impl<I: Seek + Read> ReadablePbo<I> {
     pub fn hash_files(&mut self, version: BISignVersion) -> Result<Checksum, Error> {
         let mut hasher = Sha1::new();
 
-        if self.files().is_empty() {
-            hasher.update(version.nothing());
-        }
+        let mut nothing = true;
 
         for header in &self.files_sorted() {
             if !version.should_hash_file(header.filename()) {
                 continue;
             }
+            nothing = false;
             let Some(mut file) = self.file(header.filename())? else {
                 continue;
             };
             std::io::copy(&mut file, &mut hasher)?;
+        }
+
+        if nothing {
+            hasher.update(version.nothing());
         }
 
         Ok(hasher.finalize().to_vec().into())

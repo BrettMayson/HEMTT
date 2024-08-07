@@ -1253,6 +1253,7 @@ dependencies = [
  "indexmap",
  "serde",
  "sha-1",
+ "tracing",
 ]
 
 [[package]]
@@ -1282,6 +1283,7 @@ dependencies = [
  "rand",
  "rsa",
  "sha-1",
+ "tracing",
 ]
 
 [[package]]

@@ -16,4 +16,7 @@ pub enum Error {
     #[error("File is too large for PBO format")]
     /// File is too large for PBO format
     FileTooLarge,
+    #[error("HEMTT does not support signing PBOs with no files")]
+    /// HEMTT does not support signing PBOs with no files
+    NoFiles,
 }
