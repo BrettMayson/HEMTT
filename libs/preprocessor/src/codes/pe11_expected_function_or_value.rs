@@ -50,7 +50,7 @@ impl Code for ExpectedFunctionOrValue {
 }
 
 impl ExpectedFunctionOrValue {
-    pub fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
+    pub const fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
         Self {
             token,
             source,

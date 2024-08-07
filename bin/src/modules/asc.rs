@@ -173,8 +173,8 @@ impl Module for ArmaScriptCompiler {
         let tmp_output = tmp.join("output");
         let counter = AtomicU16::new(0);
         for (src, dst) in &*files.read().expect("unable to read source files") {
-            let from = tmp_output.join(&format!("{src}c"));
-            let to = ctx.workspace_path().join(&format!("{dst}c"))?;
+            let from = tmp_output.join(format!("{src}c"));
+            let to = ctx.workspace_path().join(format!("{dst}c"))?;
             if !from.exists() {
                 // sqf that have parse errors OR just empty//no-code
                 debug!("asc didn't process {}", src);

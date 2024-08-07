@@ -42,7 +42,7 @@ impl Code for RedefineMacro {
 }
 
 impl RedefineMacro {
-    pub fn new(token: Box<Token>, original: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>, original: Box<Token>) -> Self {
         Self { token, original }
     }
 }

@@ -42,7 +42,7 @@ impl Code for FunctionAsValue {
 }
 
 impl FunctionAsValue {
-    pub fn new(token: Box<Token>, source: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>, source: Box<Token>) -> Self {
         Self {
             token,
             source,

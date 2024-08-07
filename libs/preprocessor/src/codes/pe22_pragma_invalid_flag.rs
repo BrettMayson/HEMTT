@@ -51,7 +51,7 @@ impl Code for PragmaInvalidFlag {
 }
 
 impl PragmaInvalidFlag {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

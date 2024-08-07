@@ -37,7 +37,7 @@ impl Code for ChangeBuiltin {
 }
 
 impl ChangeBuiltin {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

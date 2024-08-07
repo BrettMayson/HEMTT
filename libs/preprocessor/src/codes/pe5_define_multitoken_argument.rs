@@ -61,7 +61,7 @@ impl Code for DefineMissingComma {
 }
 
 impl DefineMissingComma {
-    pub fn new(current: Box<Token>, previous: Box<Token>) -> Self {
+    pub const fn new(current: Box<Token>, previous: Box<Token>) -> Self {
         Self { current, previous }
     }
 

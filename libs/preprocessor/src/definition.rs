@@ -74,7 +74,7 @@ pub struct FunctionDefinition {
 impl FunctionDefinition {
     #[must_use]
     /// Create a new [`FunctionDefinition`]
-    pub fn new(position: Position, args: Vec<Rc<Token>>, body: Vec<Rc<Token>>) -> Self {
+    pub const fn new(position: Position, args: Vec<Rc<Token>>, body: Vec<Rc<Token>>) -> Self {
         Self {
             position,
             args,

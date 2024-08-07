@@ -45,7 +45,7 @@ impl MissingSemicolon {
         let haystack = &processed.as_str()[self.span.clone()];
         let possible_end = self.span.start
             + haystack
-                .find(|c: char| c == '\n')
+                .find('\n')
                 .unwrap_or_else(|| haystack.rfind(|c: char| c != ' ' && c != '}').unwrap_or(0) + 1);
         self.diagnostic =
             Diagnostic::new_for_processed(&self, possible_end..possible_end, processed);

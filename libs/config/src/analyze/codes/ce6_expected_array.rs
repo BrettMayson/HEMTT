@@ -70,8 +70,7 @@ impl ExpectedArray {
             .mapping(name.span.end)
             .expect("mapping should exist");
         let haystack = &processed.as_str()[ident_end.original_start()..value.span().start];
-        let possible_end =
-            ident_end.original_start() + haystack.find(|c: char| c == ']').unwrap_or(1) + 1;
+        let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
         self.suggestion = Some(name.value.to_string());
         self.diagnostic = Diagnostic::new_for_processed(
             &self,

@@ -36,7 +36,7 @@ impl Code for EoiIfState {
 }
 
 impl EoiIfState {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

@@ -58,7 +58,7 @@ impl Code for DoubleElse {
 }
 
 impl DoubleElse {
-    pub fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
         Self {
             token,
             previous,

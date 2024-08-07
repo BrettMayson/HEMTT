@@ -60,7 +60,7 @@ impl Code for PragmaUnknown {
 }
 
 impl PragmaUnknown {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

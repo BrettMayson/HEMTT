@@ -196,7 +196,7 @@ impl Code for RequiresFutureVersion {
 }
 
 impl RequiresFutureVersion {
-    pub fn new(
+    pub const fn new(
         required_version: arma3_wiki::model::Version,
         required_by: Vec<String>,
         wiki_version: arma3_wiki::model::Version,

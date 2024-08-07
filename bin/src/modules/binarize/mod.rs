@@ -37,7 +37,7 @@ pub struct Binarize {
 
 impl Binarize {
     #[must_use]
-    pub fn new(check_only: bool) -> Self {
+    pub const fn new(check_only: bool) -> Self {
         Self {
             check_only,
             command: None,

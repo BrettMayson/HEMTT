@@ -38,7 +38,7 @@ impl Code for IfHasInclude {
 }
 
 impl IfHasInclude {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

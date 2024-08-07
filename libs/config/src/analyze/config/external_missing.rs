@@ -22,9 +22,7 @@ fn error_inner(
                 }
                 Class::External { name } => {
                     let name = name.value.to_lowercase();
-                    if !defined.contains(&name) {
-                        defined.insert(name);
-                    }
+                    defined.insert(name);
                 }
                 Class::Local {
                     name,

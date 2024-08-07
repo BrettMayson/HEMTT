@@ -36,7 +36,7 @@ impl Code for PaddedArg {
 }
 
 impl PaddedArg {
-    pub fn new(token: Box<Token>, ident: String) -> Self {
+    pub const fn new(token: Box<Token>, ident: String) -> Self {
         Self { token, ident }
     }
 }

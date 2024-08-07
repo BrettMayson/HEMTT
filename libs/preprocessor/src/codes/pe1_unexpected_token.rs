@@ -52,7 +52,7 @@ impl Code for UnexpectedToken {
 }
 
 impl UnexpectedToken {
-    pub fn new(token: Box<Token>, expected: Vec<String>) -> Self {
+    pub const fn new(token: Box<Token>, expected: Vec<String>) -> Self {
         Self { token, expected }
     }
 

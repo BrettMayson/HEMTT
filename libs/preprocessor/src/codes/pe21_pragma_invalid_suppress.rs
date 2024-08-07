@@ -51,7 +51,7 @@ impl Code for PragmaInvalidSuppress {
 }
 
 impl PragmaInvalidSuppress {
-    pub fn new(token: Box<Token>) -> Self {
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 

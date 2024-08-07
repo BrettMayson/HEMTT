@@ -74,7 +74,7 @@ impl Code for PragmaInvalidScope {
 }
 
 impl PragmaInvalidScope {
-    pub fn new(token: Box<Token>, root: bool) -> Self {
+    pub const fn new(token: Box<Token>, root: bool) -> Self {
         Self { token, root }
     }
 
