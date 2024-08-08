@@ -1,8 +1,10 @@
 mod error;
 
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
+use clap::builder::OsStr;
 use hemtt_common::{
     arma::dlc::DLC,
     config::{LaunchOptions, ProjectConfig},
@@ -141,6 +143,18 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     };
 
     trace!("launch config: {:?}", launch);
+
+    // extend matches with config args before continuing
+    let Ok(matches) = cli().try_get_matches_from({
+        let mut args = std::env::args_os()
+            .skip_while(|a| a != "launch")
+            .collect::<Vec<_>>();
+        let mut config_args = launch.cli_options().iter().map(|s| OsString::from(s)).collect();
+        args.append(&mut config_args);
+        args
+    }) else {
+        todo!("make an error here");
+    };
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.error(ArmaNotFound::code());
@@ -306,7 +320,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             return Ok(report);
         }
     } else {
-        let mut executor = super::dev::context(matches, launch.optionals())?;
+        let mut executor = super::dev::context(&matches, launch.optionals())?;
 
         report.merge(executor.run()?);
 
