@@ -20,12 +20,12 @@ use crate::{
         bcle6_launch_config_not_found::LaunchConfigNotFound,
         bcle7_can_not_quicklaunch::CanNotQuickLaunch, bcle8_mission_not_found::MissionNotFound,
         bcle9_mission_absolute::MissionAbsolutePath,
+        bcle10_launch_config_wrong_parameter::LaunchConfigCliOptionsNotFound,
     },
     error::Error,
     link::create_link,
     report::Report,
 };
-
 use super::dev;
 
 #[must_use]
@@ -153,8 +153,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         args.append(&mut config_args);
         args
     }) else {
-        eprintln!("Failed to combine cli and cli_options in launch config");
-        std::process::exit(1);
+        report.error(LaunchConfigCliOptionsNotFound::code(
+            launch.cli_options().to_vec()
+        ));
+        return Ok(report);
     };
 
     let Some(arma3dir) = steam::find_app(107_410) else {

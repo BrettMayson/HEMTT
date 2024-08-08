@@ -7,3 +7,4 @@ pub mod bcle6_launch_config_not_found;
 pub mod bcle7_can_not_quicklaunch;
 pub mod bcle8_mission_not_found;
 pub mod bcle9_mission_absolute;
+pub mod bcle10_launch_config_wrong_parameter;
