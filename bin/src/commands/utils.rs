@@ -11,6 +11,7 @@ pub fn cli() -> Command {
         .subcommand(utils::inspect::cli())
         .subcommand(utils::paa::cli())
         .subcommand(utils::pbo::cli())
+        .subcommand(utils::sqf::cli())
         .subcommand(utils::verify::cli())
 }
 
@@ -23,6 +24,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         Some(("inspect", matches)) => utils::inspect::execute(matches),
         Some(("paa", matches)) => utils::paa::execute(matches),
         Some(("pbo", matches)) => utils::pbo::execute(matches),
+        Some(("sqf", matches)) => utils::sqf::execute(matches),
         Some(("verify", matches)) => utils::verify::execute(matches),
         _ => unreachable!(),
     }?;

@@ -1,5 +1,6 @@
 pub mod codes;
 
+mod command_case;
 mod event_handlers;
 mod find_in_str;
 mod if_assign;
@@ -61,6 +62,7 @@ pub fn analyze(
             warnings.extend(select_parse_number::select_parse_number(
                 statements, processed, database,
             ));
+            warnings.extend(command_case::command_case(statements, processed, database));
             warnings
         },
         {

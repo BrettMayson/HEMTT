@@ -74,7 +74,7 @@ impl Database {
 
         let wiki = load_wiki(force_pull);
 
-        for command in wiki.commands().values() {
+        for command in wiki.commands().raw().values() {
             for syntax in command.syntax() {
                 match syntax.call() {
                     Call::Nular => {

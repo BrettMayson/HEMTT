@@ -6,7 +6,7 @@ fn main() {
     let mut flow = Vec::with_capacity(500);
     let mut commands = Vec::with_capacity(3000);
 
-    for command in wiki.commands().values() {
+    for command in wiki.commands().raw().values() {
         let name = command.name();
         if name.contains(' ') || name.contains('%') || name.contains('_') || name.contains('+') {
             continue;
