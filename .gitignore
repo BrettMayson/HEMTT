@@ -18,6 +18,9 @@ dist/
 # Browser Extensions
 pkg/
 
+# Jetbrains IDE
+.idea/
+
 # SQF Tests
 *.sqfast
 *.sqfc
