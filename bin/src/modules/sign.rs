@@ -104,7 +104,10 @@ impl Module for Sign {
                                 .build_folder()
                                 .expect("build folder exists")
                                 .join("optionals")
-                                .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())));
+                                .join(format!(
+                                    "@{}",
+                                    addon.pbo_name(ctx.config().hemtt().release().folder())
+                                ));
                             create_dir_all(mod_root.join("keys"))?;
                             key.to_public_key().write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),

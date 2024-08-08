@@ -22,11 +22,7 @@ macro_rules! preprocess {
 fn preprocess(file: &str) {
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
-        .finish(
-            None,
-            false,
-            &hemtt_common::project::hemtt::PDriveOption::Disallow,
-        )
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();

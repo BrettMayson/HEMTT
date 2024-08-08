@@ -12,14 +12,15 @@ pub enum Error {
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
+
+    #[error("Project error: {0}")]
+    Common(#[from] hemtt_common::error::Error),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
     Prefix(#[from] hemtt_common::prefix::Error),
-    #[error("`a hemtt project file is invalid: {0}")]
-    Project(#[from] hemtt_common::project::Error),
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
     #[error("Version Error: {0}")]

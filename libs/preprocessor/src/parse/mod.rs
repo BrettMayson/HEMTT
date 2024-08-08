@@ -151,11 +151,7 @@ mod tests {
     fn simple() {
         let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(
-                None,
-                false,
-                &hemtt_common::project::hemtt::PDriveOption::Disallow,
-            )
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -170,11 +166,7 @@ mod tests {
     fn unicode() {
         let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(
-                None,
-                false,
-                &hemtt_common::project::hemtt::PDriveOption::Disallow,
-            )
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         let content = "² ƒ ‡ Œ Š – µ œ š ˆ ˜ € º ¨ ¬ 🤔";

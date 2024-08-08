@@ -4,9 +4,9 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
+use hemtt_common::config::AddonConfig;
 use hemtt_common::error::thiserror;
 use hemtt_common::prefix::{Prefix, FILES};
-use hemtt_common::project::AddonConfig;
 use hemtt_common::version::Version;
 use tracing::{trace, warn};
 

@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
-    project::{hemtt::LaunchOptions, ProjectConfig},
+    config::{LaunchOptions, ProjectConfig},
     steam,
 };
 use regex::Regex;
@@ -110,15 +110,20 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .unwrap_or_default()
         .collect();
     let launch = if launch_config.is_empty() {
-        config.hemtt().launch("default").unwrap_or_default()
+        config
+            .hemtt()
+            .launch()
+            .get("default")
+            .cloned()
+            .unwrap_or_default()
     } else if let Some(launch) = launch_config
-        .iter()
+        .into_iter()
         .map(|c| {
-            config.hemtt().launch(c).map_or_else(
+            config.hemtt().launch().get(c).cloned().map_or_else(
                 || {
                     report.error(LaunchConfigNotFound::code(
-                        (*c).to_string(),
-                        &config.hemtt().launch_keys(),
+                        c.to_string(),
+                        &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                     ));
                     None
                 },
@@ -127,9 +132,10 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         })
         .collect::<Option<Vec<_>>>()
     {
-        launch
-            .into_iter()
-            .fold(LaunchOptions::default(), |acc, l| acc.overlay(&l))
+        launch.into_iter().fold(
+            LaunchOptions::default(),
+            hemtt_common::config::LaunchOptions::overlay,
+        )
     } else {
         return Ok(report);
     };

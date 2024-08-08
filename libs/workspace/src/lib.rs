@@ -3,8 +3,8 @@
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use hemtt_common::{
+    config::{PDriveOption, ProjectConfig},
     prefix::{Prefix, FILES},
-    project::{hemtt::PDriveOption, ProjectConfig},
 };
 use pdrive::PDrive;
 use tracing::trace;

@@ -5,7 +5,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc, RwLock},
 };
 
-use hemtt_common::project::hemtt::PDriveOption;
+use hemtt_common::config::PDriveOption;
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
 use tower_lsp::lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder};
 use tracing::debug;

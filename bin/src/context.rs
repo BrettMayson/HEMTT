@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::project::ProjectConfig;
+use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
@@ -111,7 +111,7 @@ impl Context {
         )?;
         {
             let version = config.version().get(workspace.vfs());
-            if let Err(hemtt_common::project::Error::Git(_)) = version {
+            if let Err(hemtt_common::Error::Git(_)) = version {
                 error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
                 println!("\n[version]\ngit_hash = 0\n");
                 std::process::exit(1);

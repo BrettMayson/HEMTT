@@ -1,14 +1,16 @@
 //! HEMTT - Common Library
 
 pub mod arma;
+pub mod config;
 pub mod error;
 pub mod io;
 pub mod math;
 pub mod prefix;
-pub mod project;
 pub mod steam;
 pub mod strip;
 pub mod version;
+
+pub use error::Error;
 
 mod sign_version;
 pub use sign_version::BISignVersion;

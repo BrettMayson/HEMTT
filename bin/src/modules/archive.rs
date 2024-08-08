@@ -44,7 +44,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
             }
             let dir = format!(
                 "@{}/{}",
-                ctx.config().folder_name(),
+                ctx.config().hemtt().release().folder(),
                 path.replace('\\', "/")
             );
             trace!("zip: creating directory {:?}", dir);
@@ -56,7 +56,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
             .expect("We are in the HEMTT folder, the prefix should always exist");
         let file = format!(
             "@{}/{}",
-            ctx.config().folder_name(),
+            ctx.config().hemtt().release().folder(),
             name.display().to_string().replace('\\', "/")
         );
         trace!("zip: adding file {:?}", file);
