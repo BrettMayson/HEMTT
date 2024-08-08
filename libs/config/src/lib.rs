@@ -5,7 +5,6 @@
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
 mod analyze;
-mod error;
 mod model;
 
 use std::sync::Arc;
@@ -14,8 +13,7 @@ use analyze::{codes::ChumskyCode, Analyze, CfgPatch};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
-pub use error::Error;
-use hemtt_common::project::ProjectConfig;
+use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::reporting::{Code, Processed};
 pub use model::*;
 pub mod parse;

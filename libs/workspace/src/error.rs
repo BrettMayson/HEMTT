@@ -6,7 +6,7 @@ pub enum Error {
     #[error("Addon error: {0}")]
     Addon(#[from] crate::addons::Error),
 
-    #[error("Common error: {0}")]
+    #[error("Project error: {0}")]
     Common(#[from] hemtt_common::error::Error),
 
     #[error("Prefix error: {0}")]

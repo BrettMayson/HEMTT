@@ -75,7 +75,10 @@ fn _build(
                     if ctx.config().hemtt().build().optional_mod_folders() {
                         target
                             .join("optionals")
-                            .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())))
+                            .join(format!(
+                                "@{}",
+                                addon.pbo_name(ctx.config().hemtt().release().folder())
+                            ))
                             .join("addons")
                             .join(pbo_name)
                     } else {

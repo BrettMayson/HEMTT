@@ -13,11 +13,7 @@ fn python() {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(
-            None,
-            false,
-            &hemtt_common::project::hemtt::PDriveOption::Disallow,
-        )
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let diagnostic = Diagnostic::new("T1".to_string(), "using python 2".to_string())
         .set_severity(Severity::Warning)

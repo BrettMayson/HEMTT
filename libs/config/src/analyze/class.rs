@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::project::ProjectConfig;
+use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::reporting::{Code, Processed};
 
 use crate::Class;

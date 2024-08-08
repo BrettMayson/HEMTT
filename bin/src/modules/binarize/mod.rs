@@ -9,7 +9,7 @@ use std::{
     },
 };
 
-use hemtt_common::project::hemtt::PDriveOption;
+use hemtt_common::config::PDriveOption;
 use hemtt_p3d::SearchCache;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;

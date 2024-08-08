@@ -315,11 +315,7 @@ pub mod tests {
     pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
         let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(
-                None,
-                false,
-                &hemtt_common::project::hemtt::PDriveOption::Disallow,
-            )
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()

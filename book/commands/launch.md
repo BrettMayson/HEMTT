@@ -61,6 +61,8 @@ You can chain multiple configurations together, and they will be overlayed from 
 
 `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
 
+Launch configurations can be stored in either `.hemtt/project.toml` under `hemtt.launch`, or in a separate file under `.hemtt/launch.toml`. The latter is useful for keeping your main configuration file clean. When using `launch.toml`, the `hemtt.launch` key is not required.
+
 **.hemtt/project.toml**
 
 ```toml
@@ -92,9 +94,7 @@ executable = "arma3" # Default: "arma3_x64"
 
 # Launched with `hemtt launch vn`
 [hemtt.launch.vn]
-workshop = [
-    "450814997", # CBA_A3's Workshop ID
-]
+extends = "default"
 dlc = [
     "S.O.G. Prairie Fire",
 ]
@@ -104,6 +104,21 @@ dlc = [
 extends = "default"
 workshop = [
     "463939057", # ACE3's Workshop ID
+]
+```
+
+**.hemtt/launch.toml**
+
+```toml
+[default]
+workshop = [
+    "450814997", # CBA_A3's Workshop ID
+]
+
+[vn]
+extends = "default"
+dlc = [
+    "S.O.G. Prairie Fire",
 ]
 ```
 

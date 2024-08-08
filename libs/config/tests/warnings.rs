@@ -2,7 +2,7 @@
 
 use std::io::Read;
 
-use hemtt_common::project::ProjectConfig;
+use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
@@ -23,11 +23,7 @@ fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(
-            None,
-            false,
-            &hemtt_common::project::hemtt::PDriveOption::Disallow,
-        )
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();

@@ -80,7 +80,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             );
         }
         "project.version.path" => {
-            println!("{}", ctx.config().version().path().map_or("", |p| p));
+            println!("{}", ctx.config().version().path());
         }
         "project.version.git_hash" => {
             println!("{}", ctx.config().version().git_hash().unwrap_or(0));

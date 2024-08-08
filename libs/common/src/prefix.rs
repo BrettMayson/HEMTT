@@ -34,6 +34,9 @@ impl Prefix {
     /// If the prefix is invalid
     pub fn new(content: &str) -> Result<Self, Error> {
         let content = content.trim();
+        if content.is_empty() {
+            return Err(Error::Empty);
+        }
         if content.contains('/') {
             return Err(Error::InvalidPrefix(content.to_string()));
         }
@@ -108,6 +111,9 @@ impl Display for Prefix {
 #[derive(thiserror::Error, Clone, Debug, PartialEq, Eq)]
 /// An error that can occur when parsing a prefix
 pub enum Error {
+    #[error("Prefix can not be empty")]
+    /// Prefix can not be empty
+    Empty,
     #[error("Invalid prefix: {0}")]
     /// Invalid prefix
     InvalidPrefix(String),

@@ -23,11 +23,7 @@ fn errors(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(
-            None,
-            false,
-            &hemtt_common::project::hemtt::PDriveOption::Disallow,
-        )
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();
