@@ -24,6 +24,9 @@ pub struct LaunchOptions {
     /// Extra launch parameters
     parameters: Vec<String>,
 
+    /// Extra hemtt cli options
+    cli_options: Vec<String>,
+
     /// Binary to launch
     executable: Option<String>,
 }
@@ -66,6 +69,12 @@ impl LaunchOptions {
     }
 
     #[must_use]
+    /// Hemtt cli options
+    pub fn cli_options(&self) -> &[String] {
+        &self.cli_options
+    }
+
+    #[must_use]
     /// Binary to launch, `.exe` is appended on Windows  
     /// Defaults to `arma3_x64`
     pub fn executable(&self) -> String {
@@ -90,6 +99,7 @@ impl LaunchOptions {
         base.presets.extend(other.presets);
         base.optionals.extend(other.optionals);
         base.parameters.extend(other.parameters);
+        base.cli_options.extend(other.cli_options);
         if let Some(executable) = other.executable {
             base.executable = Some(executable);
         }
@@ -126,6 +136,9 @@ pub struct LaunchOptionsFile {
     parameters: Vec<String>,
 
     #[serde(default)]
+    cli_options: Vec<String>,
+
+    #[serde(default)]
     executable: Option<String>,
 }
 
@@ -137,6 +150,7 @@ impl LaunchOptionsFile {
         other.presets.extend(self.presets);
         other.optionals.extend(self.optionals);
         other.parameters.extend(self.parameters);
+        other.cli_options.extend(self.cli_options);
         if let Some(executable) = self.executable {
             other.executable = Some(executable);
         }
@@ -157,6 +171,8 @@ impl LaunchOptionsFile {
         self.optionals.dedup();
         self.parameters.sort();
         self.parameters.dedup();
+        self.cli_options.sort();
+        self.cli_options.dedup();
     }
 }
 
@@ -169,6 +185,7 @@ impl From<LaunchOptionsFile> for LaunchOptions {
             optionals: file.optionals,
             mission: file.mission,
             parameters: file.parameters,
+            cli_options: file.cli_options,
             executable: file.executable,
         }
     }

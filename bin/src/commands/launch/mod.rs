@@ -1,5 +1,6 @@
 mod error;
 
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
@@ -18,12 +19,12 @@ use crate::{
         bcle6_launch_config_not_found::LaunchConfigNotFound,
         bcle7_can_not_quicklaunch::CanNotQuickLaunch, bcle8_mission_not_found::MissionNotFound,
         bcle9_mission_absolute::MissionAbsolutePath,
+        bcle10_launch_config_wrong_parameter::LaunchConfigCliOptionsNotFound,
     },
     error::Error,
     link::create_link,
     report::Report,
 };
-
 use super::dev;
 
 #[must_use]
@@ -141,6 +142,25 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     };
 
     trace!("launch config: {:?}", launch);
+
+    // extend matches with config args before continuing
+    let Ok(matches) = cli().try_get_matches_from({
+        let mut args = std::env::args_os()
+            .skip_while(|a| a != "launch")
+            .collect::<Vec<_>>();
+        let mut config_args = launch
+            .cli_options()
+            .iter()
+            .map(|s| OsString::from(s))
+            .collect();
+        args.append(&mut config_args);
+        args
+    }) else {
+        report.error(LaunchConfigCliOptionsNotFound::code(
+            launch.cli_options().to_vec(),
+        ));
+        return Ok(report);
+    };
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.error(ArmaNotFound::code());
@@ -306,7 +326,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             return Ok(report);
         }
     } else {
-        let mut executor = super::dev::context(matches, launch.optionals())?;
+        let mut executor = super::dev::context(&matches, launch.optionals())?;
 
         report.merge(executor.run()?);
 
