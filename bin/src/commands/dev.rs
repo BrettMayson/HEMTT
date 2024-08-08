@@ -82,7 +82,8 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
         .collect::<Vec<_>>();
 
     let just = matches
-        .get_many::<String>("just")
+        .try_get_many::<String>("just")
+        .unwrap_or_default()
         .unwrap_or_default()
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
