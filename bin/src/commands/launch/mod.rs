@@ -153,7 +153,8 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         args.append(&mut config_args);
         args
     }) else {
-        todo!("make an error here");
+        eprintln!("Failed to combine cli and cli_options in launch config");
+        std::process::exit(1);
     };
 
     let Some(arma3dir) = steam::find_app(107_410) else {
