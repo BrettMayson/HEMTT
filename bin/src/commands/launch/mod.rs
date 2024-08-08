@@ -4,7 +4,6 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
-use clap::builder::OsStr;
 use hemtt_common::{
     arma::dlc::DLC,
     config::{LaunchOptions, ProjectConfig},
@@ -149,12 +148,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = std::env::args_os()
             .skip_while(|a| a != "launch")
             .collect::<Vec<_>>();
-        let mut config_args = launch.cli_options().iter().map(|s| OsString::from(s)).collect();
+        let mut config_args = launch
+            .cli_options()
+            .iter()
+            .map(|s| OsString::from(s))
+            .collect();
         args.append(&mut config_args);
         args
     }) else {
         report.error(LaunchConfigCliOptionsNotFound::code(
-            launch.cli_options().to_vec()
+            launch.cli_options().to_vec(),
         ));
         return Ok(report);
     };

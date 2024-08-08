@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct LaunchConfigCliOptionsNotFound {
-    cli_options: Vec<String>
+    cli_options: Vec<String>,
 }
 
 impl Code for LaunchConfigCliOptionsNotFound {
@@ -12,11 +12,17 @@ impl Code for LaunchConfigCliOptionsNotFound {
     }
 
     fn message(&self) -> String {
-        format!("Launch config has one of the following cli_options that is not valid: {:?}", self.cli_options)
+        format!(
+            "Launch config has one of the following cli_options that is not valid: {:?}",
+            self.cli_options
+        )
     }
 
     fn note(&self) -> Option<String> {
-        Some("Make sure the cli_options in the config file are valid cli arguments for launch".to_string())
+        Some(
+            "Make sure the cli_options in the config file are valid cli arguments for launch"
+                .to_string(),
+        )
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
