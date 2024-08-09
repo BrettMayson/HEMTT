@@ -31,7 +31,8 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
     let mut line = 1;
     let mut col = 0;
     let mut offset = 0;
-    let mut in_string = false;
+    let mut in_single_string = false;
+    let mut in_double_string = false;
     let mut skipping_comment = false;
     for pair in pairs {
         let start = LineCol(offset, (line, col));
@@ -44,7 +45,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
                 col = 0;
             }
             Rule::COMMENT => {
-                if in_string {
+                if in_single_string || in_double_string {
                     if !skipping_comment {
                         tokens.push(Rc::new(Token::new(
                             Symbol::Word(pair.as_str().to_string()),
@@ -74,9 +75,15 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
                     }
                 }
             }
+            Rule::single_quote => {
+                if !skipping_comment && !in_double_string {
+                    in_single_string = !in_single_string;
+                    col += 1;
+                }
+            }
             Rule::double_quote => {
-                if !skipping_comment {
-                    in_string = !in_string;
+                if !skipping_comment && !in_single_string {
+                    in_double_string = !in_double_string;
                     col += 1;
                 }
             }
