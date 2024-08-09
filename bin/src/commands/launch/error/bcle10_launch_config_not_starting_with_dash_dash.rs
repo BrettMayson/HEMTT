@@ -33,6 +33,9 @@ impl Code for LaunchConfigNotStartingWithDashDash {
 
 impl LaunchConfigNotStartingWithDashDash {
     pub fn code(cli_option: String, launch_config: String) -> Arc<dyn Code> {
-        Arc::new(Self { cli_option, launch_config })
+        Arc::new(Self {
+            cli_option,
+            launch_config,
+        })
     }
 }

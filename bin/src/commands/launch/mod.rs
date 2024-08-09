@@ -11,21 +11,21 @@ use hemtt_common::{
 };
 use regex::Regex;
 
+use super::dev;
 use crate::{
     commands::launch::error::{
+        bcle10_launch_config_not_starting_with_dash_dash::LaunchConfigNotStartingWithDashDash,
         bcle1_preset_not_found::PresetNotFound, bcle2_workshop_not_found::WorkshopNotFound,
         bcle3_workshop_mod_not_found::WorkshopModNotFound, bcle4_arma_not_found::ArmaNotFound,
         bcle5_missing_main_prefix::MissingMainPrefix,
         bcle6_launch_config_not_found::LaunchConfigNotFound,
         bcle7_can_not_quicklaunch::CanNotQuickLaunch, bcle8_mission_not_found::MissionNotFound,
         bcle9_mission_absolute::MissionAbsolutePath,
-        bcle10_launch_config_not_starting_with_dash_dash::LaunchConfigNotStartingWithDashDash,
     },
     error::Error,
     link::create_link,
     report::Report,
 };
-use super::dev;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -162,9 +162,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             if !arg_string.starts_with("--") {
                 report.error(LaunchConfigNotStartingWithDashDash::code(
                     arg_string,
-                    launch_config.iter().map(|&s| s.to_string()).collect::<Vec<_>>().join(",")
+                    launch_config
+                        .iter()
+                        .map(|&s| s.to_string())
+                        .collect::<Vec<_>>()
+                        .join(","),
                 ));
-                return Ok(report)
+                return Ok(report);
             }
         }
 
