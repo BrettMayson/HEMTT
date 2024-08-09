@@ -90,6 +90,15 @@ parameters = [
     "-debug",
     "-filePatching",
 ]
+cli_options = [ # CLI options for launch can be set here as part of launch config
+    "--quick",              # These parameters are passed to hemtts 'launch' command
+    "--expsqfc",            # They do not need to be added to your list
+    "--no-filepatching",
+    "--binarize",
+    "--no-rap",
+    "--optional=some_optional",
+    "--all-optionals",
+]
 executable = "arma3" # Default: "arma3_x64"
 
 # Launched with `hemtt launch vn`

@@ -149,19 +149,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = std::env::args_os()
             .skip_while(|a| a != "launch")
             .collect::<Vec<_>>();
-        let mut config_args: Vec<OsString> = launch
-            .cli_options()
-            .iter()
-            .map(|s| OsString::from(s))
-            .collect();
 
-        // test if given values in config starts with --, otherwise throw error
-        for val in &config_args {
-            let arg_string = val.clone().into_string().unwrap_or_default();
-
-            if !arg_string.starts_with("--") {
+        let mut config_args: Vec<OsString> = vec![];
+        for val in launch.cli_options() {
+            // validate if starting with --
+            if !val.starts_with("--") {
                 report.error(LaunchConfigNotStartingWithDashDash::code(
-                    arg_string,
+                    val.to_string(),
                     launch_config
                         .iter()
                         .map(|&s| s.to_string())
@@ -170,8 +164,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
                 ));
                 return Ok(report);
             }
+            // split any arguments with values into two strings
+            let mut option: Vec<OsString> = val
+                .split("=")
+                .map(|s| OsString::from(s.to_string()))
+                .collect();
+            config_args.append(&mut option);
         }
-
         args.append(&mut config_args);
         args
     });
