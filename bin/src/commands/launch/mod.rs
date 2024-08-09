@@ -1,6 +1,6 @@
 mod error;
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 
 use clap::{ArgAction, ArgMatches, Command};
@@ -19,7 +19,7 @@ use crate::{
         bcle6_launch_config_not_found::LaunchConfigNotFound,
         bcle7_can_not_quicklaunch::CanNotQuickLaunch, bcle8_mission_not_found::MissionNotFound,
         bcle9_mission_absolute::MissionAbsolutePath,
-        bcle10_launch_config_wrong_parameter::LaunchConfigCliOptionsNotFound,
+        bcle10_launch_config_not_starting_with_dash_dash::LaunchConfigNotStartingWithDashDash,
     },
     error::Error,
     link::create_link,
@@ -118,6 +118,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             .cloned()
             .unwrap_or_default()
     } else if let Some(launch) = launch_config
+        .clone()
         .into_iter()
         .map(|c| {
             config.hemtt().launch().get(c).cloned().map_or_else(
@@ -144,23 +145,32 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     trace!("launch config: {:?}", launch);
 
     // extend matches with config args before continuing
-    let Ok(matches) = cli().try_get_matches_from({
+    let matches = cli().get_matches_from({
         let mut args = std::env::args_os()
             .skip_while(|a| a != "launch")
             .collect::<Vec<_>>();
-        let mut config_args = launch
+        let mut config_args: Vec<OsString> = launch
             .cli_options()
             .iter()
             .map(|s| OsString::from(s))
             .collect();
+
+        // test if given values in config starts with --, otherwise throw error
+        for val in &config_args {
+            let arg_string = val.clone().into_string().unwrap_or_default();
+
+            if !arg_string.starts_with("--") {
+                report.error(LaunchConfigNotStartingWithDashDash::code(
+                    arg_string,
+                    launch_config.iter().map(|&s| s.to_string()).collect::<Vec<_>>().join(",")
+                ));
+                return Ok(report)
+            }
+        }
+
         args.append(&mut config_args);
         args
-    }) else {
-        report.error(LaunchConfigCliOptionsNotFound::code(
-            launch.cli_options().to_vec(),
-        ));
-        return Ok(report);
-    };
+    });
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.error(ArmaNotFound::code());
