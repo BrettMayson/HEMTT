@@ -117,7 +117,7 @@ impl Module for SQFCompiler {
         info!(
             "{} {} sqf files",
             if self.compile {
-                "Compiled"
+                if self.optimze {"Compiled [Optimized]"} else {"Compiled"} 
             } else {
                 "Validated"
             },
