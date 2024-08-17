@@ -168,6 +168,7 @@ pub enum Expression {
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
+    ConsumeableArray(Vec<Self>, Range<usize>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
@@ -198,7 +199,7 @@ impl Expression {
             }
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
-            Self::Array(array, _) => {
+            Self::ConsumeableArray(array, _) | Self::Array(array, _) => {
                 let mut out = String::new();
                 out.push('[');
                 for (i, element) in array.iter().enumerate() {
@@ -282,7 +283,7 @@ impl Expression {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::Array(_, span) => span.start - 1..span.end,
+            Self::ConsumeableArray(_, span) | Self::Array(_, span) => span.start - 1..span.end,
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
@@ -297,7 +298,7 @@ impl Expression {
     pub fn full_span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::Array(_, _) => self.span(),
+            Self::ConsumeableArray(_, _) | Self::Array(_, _) => self.span(),
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)

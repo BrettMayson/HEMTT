@@ -7,6 +7,7 @@
 //! The main entrypoint to this is the [`Statements`][crate::Statements] struct, which can be
 //! converted to a serializable [`Compiled`] via [`Statements::compile`][crate::Statements].
 
+pub mod optimzer;
 pub mod serializer;
 
 use std::{ops::Range, sync::Arc};
@@ -171,6 +172,9 @@ impl Expression {
                                 file_line: 0,
                             },
                         ));
+                    } else if let Constant::ConsumeableArray(_) = &constant {
+                        // Only safe because we know this array will be consumed on use and won't be modifieable
+                        instructions.push(Instruction::Push(ctx.add_constant(constant)?));
                     } else {
                         instructions.push(Instruction::Push(ctx.add_constant(constant)?));
                     }
@@ -179,7 +183,8 @@ impl Expression {
                 push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
-                Self::Array(ref array, ref location) => {
+                Self::Array(ref array, ref location)
+                | Self::ConsumeableArray(ref array, ref location) => {
                     let array_len = array
                         .len()
                         .try_into()
@@ -253,6 +258,11 @@ impl Expression {
                 .map(|value| value.clone().compile_constant(processed, ctx))
                 .collect::<CompileResult<Option<Vec<Constant>>>>()?
                 .map(Constant::Array),
+            Self::ConsumeableArray(ref array, ..) => array
+                .iter()
+                .map(|value| value.clone().compile_constant(processed, ctx))
+                .collect::<CompileResult<Option<Vec<Constant>>>>()?
+                .map(Constant::ConsumeableArray),
             Self::NularCommand(ref command, ..) if command.is_constant() => {
                 let command = try_normalize_name(&command.name)?;
                 debug_assert_ne!(

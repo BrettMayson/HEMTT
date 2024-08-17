@@ -51,6 +51,7 @@ fn check_expression(
         Expression::Code(_)
         | Expression::Number(_, _)
         | Expression::Array(_, _)
+        | Expression::ConsumeableArray(_, _)
         | Expression::Variable(_, _) => false,
         Expression::String(_, _, _) | Expression::Boolean(_, _) => true,
         Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), database),

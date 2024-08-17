@@ -74,7 +74,7 @@ fn locate_expression(
                 None
             }
         }
-        Expression::Array(experssions, _) => {
+        Expression::Array(experssions, _) | Expression::ConsumeableArray(experssions, _) => {
             for expression in experssions.iter() {
                 if let Some(exp) = locate_expression(processed, expression, offset) {
                     return Some(exp);

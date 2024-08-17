@@ -19,6 +19,7 @@ use super::Module;
 #[derive(Default)]
 pub struct SQFCompiler {
     pub compile: bool,
+    pub optimze: bool,
     pub database: Option<Database>,
 }
 
@@ -27,6 +28,7 @@ impl SQFCompiler {
     pub const fn new(compile: bool) -> Self {
         Self {
             compile,
+            optimze: true,
             database: None,
         }
     }
@@ -78,7 +80,8 @@ impl Module for SQFCompiler {
                         if errors.is_empty() {
                             if self.compile {
                                 let mut out = entry.with_extension("sqfc")?.create_file()?;
-                                sqf.compile_to_writer(&processed, &mut out)?;
+                                let sqf_to_write = if self.optimze { sqf.optimize() } else { sqf };
+                                sqf_to_write.compile_to_writer(&processed, &mut out)?;
                             }
                             counter.fetch_add(1, Ordering::Relaxed);
                         }
