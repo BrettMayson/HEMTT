@@ -25,9 +25,7 @@ impl Statement {
             Self::AssignLocal(left, expression, right) => {
                 Self::AssignLocal(left, expression.optimize(), right)
             }
-            Self::Expression(expression, right) => {
-                Self::Expression(expression.optimize(), right)
-            }
+            Self::Expression(expression, right) => Self::Expression(expression.optimize(), right),
         }
     }
 }
@@ -37,15 +35,10 @@ impl Expression {
     #[allow(clippy::too_many_lines)]
     fn optimize(self) -> Self {
         match &self {
-            Self::Code(code) => {
-                Self::Code(code.clone().optimize())
-            }
+            Self::Code(code) => Self::Code(code.clone().optimize()),
             Self::Array(array_old, range) => {
                 let array_new = array_old.iter().map(|e| e.clone().optimize()).collect();
-                Self::Array(
-                    array_new,
-                    range.clone(),
-                )
+                Self::Array(array_new, range.clone())
             }
             Self::UnaryCommand(op_type, right, range) => {
                 let right_o = right.clone().optimize();
@@ -203,9 +196,7 @@ impl Expression {
                     range.clone(),
                 )
             }
-            _ => {
-                self
-            }
+            _ => self,
         }
     }
 
