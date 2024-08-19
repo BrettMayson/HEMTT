@@ -12,7 +12,7 @@ use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rust_embed::RustEmbed;
 use serde::Serialize;
-use time::Instant;
+use std::time::Instant;
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -136,10 +136,7 @@ impl Module for ArmaScriptCompiler {
                 })
                 .collect::<Result<_, Error>>()?;
         }
-        debug!(
-            "ASC Preprocess took {:?}",
-            start.elapsed().whole_milliseconds()
-        );
+        debug!("ASC Preprocess took {:?}", start.elapsed().as_millis());
         for root in root_dirs {
             config.add_input_dir(root.to_string());
         }
@@ -163,7 +160,7 @@ impl Module for ArmaScriptCompiler {
             warn!("ASC 'Parse Error' - check .hemttout/asc.log");
         }
         if command.status.success() {
-            debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
+            debug!("ASC took {:?}", start.elapsed().as_millis());
         } else {
             return Err(Error::ArmaScriptCompiler(
                 String::from_utf8(command.stdout).expect("stdout should be valid utf8"),

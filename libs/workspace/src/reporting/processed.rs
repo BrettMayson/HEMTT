@@ -21,11 +21,13 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
+    #[allow(dead_code)]
     #[cfg(feature = "lsp")]
     /// Map of token usage to definition
     /// (token, definition)
     declarations: HashMap<Position, Position>,
 
+    #[allow(dead_code)]
     #[cfg(feature = "lsp")]
     /// Map of token definition to usage
     /// (definition, usages)
