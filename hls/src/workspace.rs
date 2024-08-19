@@ -159,6 +159,7 @@ impl EditorWorkspace {
         &self.workspace
     }
 
+    #[allow(dead_code)]
     pub fn url(&self) -> &Url {
         &self.url
     }

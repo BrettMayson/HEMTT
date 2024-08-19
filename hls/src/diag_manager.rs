@@ -43,6 +43,7 @@ impl DiagManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn current(&self, scope: &str, url: &Url) -> Option<Vec<Diagnostic>> {
         self.worker.current(scope, url)
     }
@@ -67,6 +68,7 @@ pub struct DiagWorker {
 }
 
 impl DiagWorker {
+    #[allow(dead_code)]
     pub fn current(&self, scope: &str, url: &Url) -> Option<Vec<Diagnostic>> {
         self.current
             .get(&(scope.to_string(), url.clone()))

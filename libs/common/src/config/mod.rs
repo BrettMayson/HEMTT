@@ -20,6 +20,6 @@ fn deprecated(file: &Path, key: &str, replacement: &str, info: Option<&str>) {
         key,
         file.display(),
         replacement,
-        info.map(|i| format!("\n  {}", i)).unwrap_or_default()
+        info.map(|i| format!("\n  {i}")).unwrap_or_default()
     );
 }
