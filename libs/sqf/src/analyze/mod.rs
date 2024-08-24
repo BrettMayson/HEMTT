@@ -2,6 +2,7 @@ pub mod codes;
 
 mod event_handlers;
 mod find_in_str;
+mod format_args;
 mod if_assign;
 mod required_version;
 mod select_parse_number;
@@ -58,6 +59,7 @@ pub fn analyze(
             warnings.extend(find_in_str::find_in_str(statements, processed));
             warnings.extend(typename::typename(statements, processed));
             // warnings.extend(str_format::str_format(statements, processed)); // Too many false positives for now
+            warnings.extend(format_args::format_args(statements, processed));
             warnings.extend(select_parse_number::select_parse_number(
                 statements, processed, database,
             ));
