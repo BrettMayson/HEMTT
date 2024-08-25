@@ -59,8 +59,10 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
             token_active = false;
             if i > token_start {
                 let token_value = format
-                    .get(token_start..i)
-                    .unwrap_or_default()
+                    .chars()
+                    .take(i)
+                    .skip(token_start)
+                    .collect::<String>()
                     .parse()
                     .unwrap_or_default();
                 tokens.push(token_value);
@@ -101,6 +103,7 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
 fn test() {
     assert!(get_format_problem("", 0).is_none());
     assert!(get_format_problem("%1%2", 2).is_none());
+    assert!(get_format_problem("🌭%1", 1).is_none());
     assert!(get_format_problem("%1%2", 1).is_some()); // undefined tokens
     assert!(get_format_problem("%1%2", 3).is_some()); // unused args
     assert!(get_format_problem("%2", 2).is_some()); // skipped tokens

@@ -1,27 +1,35 @@
 [0m[1m[38;5;14mhelp[SAA7][0m[1m: format string: empty array[0m
-  [0m[36m┌─[0m source.sqf:4:1
-  [0m[36m│[0m
-[0m[36m4[0m [0m[36m│[0m [0m[36mformat [][0m; // empty array
-  [0m[36m│[0m [0m[36m^^^^^^^^^[0m [0m[36mformat string: empty array[0m
+  [0m[36m┌─[0m source.sqf:4:21
+  [0m[36m│[0m  
+[0m[36m4[0m [0m[36m│[0m   format ["  • %1", 1][0m[36m;[0m
+  [0m[36m│[0m [0m[36m╭[0m[0m[36m─────────────────────^[0m
+[0m[36m5[0m [0m[36m│[0m [0m[36m│[0m [0m[36mformat [0m[]; // empty array
+  [0m[36m│[0m [0m[36m╰[0m[0m[36m───────^ format string: empty array[0m
 
 
 [0m[1m[38;5;14mhelp[SAA7][0m[1m: format string: unused args [used "%1", passed 3][0m
-  [0m[36m┌─[0m source.sqf:5:1
-  [0m[36m│[0m
-[0m[36m5[0m [0m[36m│[0m [0m[36mformat ["%1", 1, 2, 3[0m]; // unused args
-  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mformat string: unused args [used "%1", passed 3][0m
+  [0m[36m┌─[0m source.sqf:5:11
+  [0m[36m│[0m  
+[0m[36m5[0m [0m[36m│[0m   format [];[0m[36m // empty array[0m
+  [0m[36m│[0m [0m[36m╭[0m[0m[36m───────────^[0m
+[0m[36m6[0m [0m[36m│[0m [0m[36m│[0m [0m[36mformat ["%1", 1, 2,[0m 3]; // unused args
+  [0m[36m│[0m [0m[36m╰[0m[0m[36m───────────────────^ format string: unused args [used "%1", passed 3][0m
 
 
 [0m[1m[38;5;14mhelp[SAA7][0m[1m: format string: undefined tokens [used "%2", passed 1][0m
-  [0m[36m┌─[0m source.sqf:6:1
-  [0m[36m│[0m
-[0m[36m6[0m [0m[36m│[0m [0m[36mformat ["%1%2", 1[0m]; // undefined tokens
-  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^[0m [0m[36mformat string: undefined tokens [used "%2", passed 1][0m
+  [0m[36m┌─[0m source.sqf:6:24
+  [0m[36m│[0m  
+[0m[36m6[0m [0m[36m│[0m   format ["%1", 1, 2, 3];[0m[36m // unused args[0m
+  [0m[36m│[0m [0m[36m╭[0m[0m[36m────────────────────────^[0m
+[0m[36m7[0m [0m[36m│[0m [0m[36m│[0m [0m[36mformat ["%1%2",[0m 1]; // undefined tokens
+  [0m[36m│[0m [0m[36m╰[0m[0m[36m───────────────^ format string: undefined tokens [used "%2", passed 1][0m
 
 
 [0m[1m[38;5;14mhelp[SAA7][0m[1m: format string: skipped tokens [used "%5", but only 1 tokens][0m
-  [0m[36m┌─[0m source.sqf:7:1
-  [0m[36m│[0m
-[0m[36m7[0m [0m[36m│[0m [0m[36mformat ["%5", 1, 2 ,3 ,4, 5[0m]; // skipped tokens
-  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mformat string: skipped tokens [used "%5", but only 1 tokens][0m
+  [0m[36m┌─[0m source.sqf:7:20
+  [0m[36m│[0m  
+[0m[36m7[0m [0m[36m│[0m   format ["%1%2", 1];[0m[36m // undefined tokens[0m
+  [0m[36m│[0m [0m[36m╭[0m[0m[36m────────────────────^[0m
+[0m[36m8[0m [0m[36m│[0m [0m[36m│[0m [0m[36mformat ["%5", 1, 2 ,3 ,4,[0m 5]; // skipped tokens
+  [0m[36m│[0m [0m[36m╰[0m[0m[36m─────────────────────────^ format string: skipped tokens [used "%5", but only 1 tokens][0m
 
