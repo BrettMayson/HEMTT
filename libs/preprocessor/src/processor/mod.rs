@@ -324,26 +324,4 @@ pub mod tests {
             .unwrap();
         crate::parse::parse(&test).unwrap().into_iter().peekmore()
     }
-
-    // pub fn setup(content: &str) -> Processed {
-    //     let workspace = hemtt_workspace::Workspace::builder()
-    //         .memory()
-    //         .finish()
-    //         .unwrap();
-    //     let test = workspace.join("test.hpp").unwrap();
-    //     test.create_file()
-    //         .unwrap()
-    //         .write_all(content.as_bytes())
-    //         .unwrap();
-    //     Processed::new(&test).unwrap()
-    // }
-
-    // #[test]
-    // fn simple_define() {
-    //     let processed = setup("#define number 1\nvalue = number;");
-    //     assert_eq!(processed.as_string(), "value = 1;");
-    //     let mapping = processed.mapping(9);
-    //     println!("{:?}", mapping);
-    //     println!("{:?}", processed.usage);
-    // }
 }

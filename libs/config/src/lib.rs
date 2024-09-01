@@ -9,12 +9,15 @@ mod model;
 
 use std::sync::Arc;
 
-use analyze::{codes::ChumskyCode, Analyze, CfgPatch};
+use analyze::{Analyze, CfgPatch, ChumskyCode};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
 use hemtt_common::config::ProjectConfig;
-use hemtt_workspace::reporting::{Code, Processed};
+use hemtt_workspace::{
+    lint::LintManager,
+    reporting::{Code, Processed, Severity},
+};
 pub use model::*;
 pub mod parse;
 pub mod rapify;
@@ -39,9 +42,12 @@ pub fn parse(
                 .collect())
         },
         |config| {
+            let mut manager = LintManager::new(
+                project.map_or_else(Default::default, |project| project.lints().config().clone()),
+            );
+            manager.extend(analyze::lints::list());
             Ok(ConfigReport {
-                warnings: config.warnings(project, processed),
-                errors: config.errors(project, processed),
+                codes: config.analyze(project, processed, &manager),
                 patches: config.get_patches(),
                 config,
             })
@@ -52,8 +58,7 @@ pub fn parse(
 /// A parsed config file with warnings and errors
 pub struct ConfigReport {
     config: Config,
-    warnings: Vec<Arc<dyn Code>>,
-    errors: Vec<Arc<dyn Code>>,
+    codes: Vec<Arc<dyn Code>>,
     patches: Vec<CfgPatch>,
 }
 
@@ -71,15 +76,27 @@ impl ConfigReport {
     }
 
     #[must_use]
+    /// Get the codes
+    pub fn codes(&self) -> &[Arc<dyn Code>] {
+        &self.codes
+    }
+
+    #[must_use]
     /// Get the warnings
-    pub fn warnings(&self) -> &[Arc<dyn Code>] {
-        &self.warnings
+    pub fn warnings(&self) -> Vec<&Arc<dyn Code>> {
+        self.codes
+            .iter()
+            .filter(|c| c.severity() == Severity::Warning)
+            .collect::<Vec<_>>()
     }
 
     #[must_use]
     /// Get the errors
-    pub fn errors(&self) -> &[Arc<dyn Code>] {
-        &self.errors
+    pub fn errors(&self) -> Vec<&Arc<dyn Code>> {
+        self.codes
+            .iter()
+            .filter(|c| c.severity() == Severity::Error)
+            .collect::<Vec<_>>()
     }
 
     #[must_use]

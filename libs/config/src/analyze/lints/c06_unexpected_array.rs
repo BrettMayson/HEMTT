@@ -1,15 +1,69 @@
-use hemtt_workspace::reporting::{Code, Diagnostic, Label, Processed};
+use std::sync::Arc;
 
-use crate::model::Value;
-use crate::Property;
+use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_workspace::{
+    lint::{AnyLintRunner, Lint, LintRunner},
+    reporting::{Code, Diagnostic, Label, Processed},
+};
 
-pub struct UnexpectedArray {
+use crate::{Property, Value};
+
+#[allow(clippy::module_name_repetitions)]
+pub struct LintC06UnexpectedArray;
+
+impl Lint for LintC06UnexpectedArray {
+    fn ident(&self) -> &str {
+        "unexpected_array"
+    }
+
+    fn description(&self) -> &str {
+        "Unexpected array"
+    }
+
+    fn documentation(&self) -> &str {
+        "The property is an unexpected array"
+    }
+
+    fn default_config(&self) -> LintConfig {
+        LintConfig::error()
+    }
+
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+        vec![Box::new(Runner)]
+    }
+}
+
+struct Runner;
+impl LintRunner for Runner {
+    type Target = crate::Property;
+    fn run_processed(
+        &self,
+        _project: Option<&ProjectConfig>,
+        _config: &LintConfig,
+        processed: &Processed,
+        target: &crate::Property,
+    ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Property::Entry {
+            value: Value::UnexpectedArray(_),
+            ..
+        } = target
+        else {
+            return vec![];
+        };
+        vec![Arc::new(Code06UnexpectedArray::new(
+            target.clone(),
+            processed,
+        ))]
+    }
+}
+
+pub struct Code06UnexpectedArray {
     property: Property,
     diagnostic: Option<Diagnostic>,
     suggestion: Option<String>,
 }
 
-impl Code for UnexpectedArray {
+impl Code for Code06UnexpectedArray {
     fn ident(&self) -> &'static str {
         "CE5"
     }
@@ -35,7 +89,7 @@ impl Code for UnexpectedArray {
     }
 }
 
-impl UnexpectedArray {
+impl Code06UnexpectedArray {
     pub fn new(property: Property, processed: &Processed) -> Self {
         Self {
             property,
@@ -52,7 +106,7 @@ impl UnexpectedArray {
             ..
         } = &self.property
         else {
-            panic!("UnexpectedArray::generate_processed called on non-UnexpectedArray property");
+            panic!("Code06UnexpectedArray::generate_processed called on non-Code06UnexpectedArray property");
         };
         let array_start = processed
             .mapping(array.span.start)

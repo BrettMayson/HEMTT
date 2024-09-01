@@ -105,10 +105,10 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
-    configreport.warnings().iter().for_each(|e| {
+    configreport.warnings().into_iter().for_each(|e| {
         report.warn(e.clone());
     });
-    configreport.errors().iter().for_each(|e| {
+    configreport.errors().into_iter().for_each(|e| {
         report.error(e.clone());
     });
     if !configreport.errors().is_empty() {

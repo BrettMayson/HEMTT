@@ -1,14 +1,80 @@
-use hemtt_workspace::reporting::{Code, Diagnostic, Label, Processed};
+use std::sync::Arc;
+
+use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_workspace::{
+    lint::{AnyLintRunner, Lint, LintRunner},
+    reporting::{Code, Diagnostic, Label, Processed},
+};
 
 use crate::{Property, Value};
 
-pub struct ExpectedArray {
+#[allow(clippy::module_name_repetitions)]
+pub struct LintC07ExpectedArray;
+
+impl Lint for LintC07ExpectedArray {
+    fn ident(&self) -> &str {
+        "expected_array"
+    }
+
+    fn description(&self) -> &str {
+        "Expected array"
+    }
+
+    fn documentation(&self) -> &str {
+        "The property is expected to be an array"
+    }
+
+    fn default_config(&self) -> LintConfig {
+        LintConfig::error()
+    }
+
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+        vec![Box::new(Runner)]
+    }
+}
+
+struct Runner;
+impl LintRunner for Runner {
+    type Target = crate::Property;
+    fn run_processed(
+        &self,
+        _project: Option<&ProjectConfig>,
+        _config: &LintConfig,
+        processed: &Processed,
+        target: &crate::Property,
+    ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Property::Entry {
+            value,
+            expected_array,
+            ..
+        } = target
+        else {
+            return vec![];
+        };
+        if !expected_array {
+            return vec![];
+        }
+        if let Value::Array(_) = value {
+            return vec![];
+        }
+        // If we can't tell what the value is, we can't tell if it's an array or not
+        if let Value::Invalid(_) = value {
+            return vec![];
+        }
+        vec![Arc::new(Code07ExpectedArray::new(
+            target.clone(),
+            processed,
+        ))]
+    }
+}
+
+pub struct Code07ExpectedArray {
     property: Property,
     diagnostic: Option<Diagnostic>,
     suggestion: Option<String>,
 }
 
-impl Code for ExpectedArray {
+impl Code for Code07ExpectedArray {
     fn ident(&self) -> &'static str {
         "CE6"
     }
@@ -34,7 +100,7 @@ impl Code for ExpectedArray {
     }
 }
 
-impl ExpectedArray {
+impl Code07ExpectedArray {
     pub fn new(property: Property, processed: &Processed) -> Self {
         Self {
             property,
@@ -51,14 +117,14 @@ impl ExpectedArray {
             expected_array,
         } = &self.property
         else {
-            panic!("ExpectedArray::generate_processed called on non-ExpectedArray property");
+            panic!("Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property");
         };
         assert!(
             expected_array,
-            "ExpectedArray::generate_processed called on non-ExpectedArray property"
+            "Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property"
         );
         if let Value::Array(_) = value {
-            panic!("ExpectedArray::generate_processed called on non-ExpectedArray property");
+            panic!("Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property");
         }
         let ident_start = processed
             .mapping(name.span.start)

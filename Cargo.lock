@@ -461,6 +461,7 @@ version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3538270d33cc669650c4b093848450d380def10c331d38c768e34cac80576e6e"
 dependencies = [
+ "serde",
  "termcolor",
  "unicode-width",
 ]
@@ -1163,6 +1164,7 @@ dependencies = [
 name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
+ "codespan-reporting",
  "git2",
  "serde",
  "steamlocate",
@@ -1309,6 +1311,8 @@ dependencies = [
  "dirs",
  "hemtt-common",
  "hemtt-pbo",
+ "serde",
+ "toml",
  "tower-lsp",
  "tracing",
  "vfs",

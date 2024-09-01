@@ -11,6 +11,7 @@ use super::deprecated;
 
 pub mod files;
 pub mod hemtt;
+pub mod lint;
 pub mod signing;
 pub mod version;
 
@@ -34,8 +35,13 @@ pub struct ProjectConfig {
     /// Files to be included in the root of the project, supports glob patterns
     files: files::FilesConfig,
 
+    /// Configuration for lints
+    lints: lint::LintGroupConfig,
+
+    /// HEMTT specific configuration
     hemtt: hemtt::HemttConfig,
 
+    /// Signing specific configuration
     signing: signing::SigningConfig,
 }
 
@@ -74,6 +80,12 @@ impl ProjectConfig {
     /// Files to be included in the root of the project, supports glob patterns
     pub const fn files(&self) -> &files::FilesConfig {
         &self.files
+    }
+
+    #[must_use]
+    /// Configuration for lints
+    pub const fn lints(&self) -> &lint::LintGroupConfig {
+        &self.lints
     }
 
     #[must_use]
@@ -121,6 +133,10 @@ pub struct ProjectFile {
     #[serde(default)]
     /// Files to be included in the root of the project, supports glob patterns
     files: files::FilesSectionFile,
+
+    #[serde(default)]
+    /// Lint configuration
+    lints: lint::LintSectionFile,
 
     #[serde(default)]
     hemtt: hemtt::HemttSectionFile,
@@ -177,6 +193,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             version: file.version.try_into()?,
             properties: file.properties,
             files: file.files.into(),
+            lints: file.lints.into(),
             signing: file.signing.into(),
         })
     }
@@ -185,7 +202,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
 mod tests {
     use std::collections::HashMap;
 
-    use super::{files, hemtt, signing, version};
+    use super::{files, hemtt, lint, signing, version};
 
     impl super::ProjectConfig {
         #[must_use]
@@ -201,6 +218,7 @@ mod tests {
                 version: version::VersionSectionFile::default(),
                 properties: HashMap::default(),
                 files: files::FilesSectionFile::default(),
+                lints: lint::LintSectionFile::default(),
                 hemtt: hemtt::HemttSectionFile::default(),
                 signing: signing::SigningSectionFile::default(),
                 meta_path: std::path::PathBuf::default(),
