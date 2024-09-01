@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{Class, Property};
+use crate::{Class, Config, Property};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LintC03DuplicateClasses;
@@ -35,15 +35,15 @@ impl Lint for LintC03DuplicateClasses {
 
 struct Runner;
 impl LintRunner for Runner {
-    type Target = Class;
+    type Target = Config;
     fn run_processed(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: &Processed,
-        target: &Class,
+        target: &Config,
     ) -> Vec<Arc<dyn Code>> {
-        check(target.properties(), processed)
+        check(&target.0, processed)
     }
 }
 
@@ -94,7 +94,7 @@ pub struct CodeC03DuplicateClasses {
 
 impl Code for CodeC03DuplicateClasses {
     fn ident(&self) -> &'static str {
-        "L-C003"
+        "L-C03"
     }
 
     fn message(&self) -> String {

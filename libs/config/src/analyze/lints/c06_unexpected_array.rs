@@ -65,7 +65,7 @@ pub struct Code06UnexpectedArray {
 
 impl Code for Code06UnexpectedArray {
     fn ident(&self) -> &'static str {
-        "CE5"
+        "L-C06"
     }
 
     fn message(&self) -> String {

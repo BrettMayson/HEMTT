@@ -76,7 +76,7 @@ pub struct Code07ExpectedArray {
 
 impl Code for Code07ExpectedArray {
     fn ident(&self) -> &'static str {
-        "CE6"
+        "L-C07"
     }
 
     fn message(&self) -> String {

@@ -109,7 +109,7 @@ pub struct CodeC01InvalidValue {
 
 impl Code for CodeC01InvalidValue {
     fn ident(&self) -> &'static str {
-        "L-C001"
+        "L-C01"
     }
 
     fn severity(&self) -> Severity {
@@ -117,7 +117,7 @@ impl Code for CodeC01InvalidValue {
     }
 
     fn message(&self) -> String {
-        "property's value could not be parsed.".to_string()
+        "property's value could not be parsed".to_string()
     }
 
     fn label_message(&self) -> String {
@@ -157,7 +157,7 @@ pub struct CodeC01InvalidValueMacro {
 
 impl Code for CodeC01InvalidValueMacro {
     fn ident(&self) -> &'static str {
-        "L-C001M"
+        "L-C01M"
     }
 
     fn severity(&self) -> Severity {
@@ -165,15 +165,15 @@ impl Code for CodeC01InvalidValueMacro {
     }
 
     fn message(&self) -> String {
-        "macro's value could not be parsed.".to_string()
+        "macro's result could not be parsed".to_string()
     }
 
     fn label_message(&self) -> String {
-        "invalid value".to_string()
+        "invalid macro result".to_string()
     }
 
     fn help(&self) -> Option<String> {
-        Some("use quotes `\"` around the value".to_string())
+        Some("perhaps this macro has a `Q_` variant or you need `QUOTE(..)`".to_string())
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

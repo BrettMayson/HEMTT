@@ -44,6 +44,9 @@ impl Analyze for Config {
         let mut codes = vec![];
         codes.extend(manager.run(project, self));
         codes.extend(manager.run_processed(project, processed, self));
+        let root_class = self.to_class();
+        codes.extend(manager.run(project, &root_class));
+        codes.extend(manager.run_processed(project, processed, &root_class));
         codes.extend(
             self.0
                 .iter()

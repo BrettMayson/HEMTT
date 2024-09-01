@@ -1,4 +1,4 @@
-[0m[1m[38;5;9merror[CE7][0m[1m: class's parent is not present[0m
+[0m[1m[38;5;9merror[L-C04][0m[1m: class's parent is not present[0m
   [0m[36m┌─[0m source.hpp:8:14
   [0m[36m│[0m
 [0m[36m8[0m [0m[36m│[0m class third: [0m[31mother[0m {

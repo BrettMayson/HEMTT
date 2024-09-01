@@ -1,4 +1,4 @@
-[0m[1m[38;5;9merror[CE6][0m[1m: property was expected to be an array[0m
+[0m[1m[38;5;9merror[L-C07][0m[1m: property was expected to be an array[0m
   [0m[36m┌─[0m source.hpp:1:1
   [0m[36m│[0m
 [0m[36m1[0m [0m[36m│[0m [0m[31mnot_array[][0m = "hello";

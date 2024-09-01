@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{Class, Ident, Property};
+use crate::{Class, Config, Ident, Property};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LintC02DuplicateProperty;
@@ -35,17 +35,16 @@ impl Lint for LintC02DuplicateProperty {
 
 struct Runner;
 impl LintRunner for Runner {
-    type Target = Class;
+    type Target = Config;
     fn run_processed(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: &Processed,
-        target: &Class,
+        target: &Config,
     ) -> Vec<Arc<dyn Code>> {
-        let properties = target.properties();
         let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
-        duplicate_properties_inner("", properties, &mut seen);
+        duplicate_properties_inner("", &target.0, &mut seen);
         let mut codes: Vec<Arc<dyn Code>> = Vec::new();
         for (_, idents) in seen {
             if idents.len() > 1 && !idents.iter().all(|(class, _)| *class) {
@@ -98,7 +97,7 @@ pub struct CodeC02DuplicateProperty {
 
 impl Code for CodeC02DuplicateProperty {
     fn ident(&self) -> &'static str {
-        "L-C002"
+        "L-C02"
     }
 
     fn message(&self) -> String {

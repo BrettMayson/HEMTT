@@ -106,7 +106,7 @@ pub struct Code05ExternalParentCase {
 
 impl Code for Code05ExternalParentCase {
     fn ident(&self) -> &'static str {
-        "CW1"
+        "L-C05"
     }
 
     fn message(&self) -> String {

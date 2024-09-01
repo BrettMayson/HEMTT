@@ -1,4 +1,4 @@
-[0m[1m[38;5;9merror[CW1][0m[1m: parent case does not match parent definition[0m
+[0m[1m[38;5;9merror[L-C05][0m[1m: parent case does not match parent definition[0m
   [0m[36m┌─[0m source.hpp:2:14
   [0m[36m│[0m
 [0m[36m1[0m [0m[36m│[0m class imported;

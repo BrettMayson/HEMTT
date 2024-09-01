@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed},
 };
 
-use crate::{Class, Property};
+use crate::{Class, Config, Property};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LintC04ExternalMissing;
@@ -35,15 +35,15 @@ impl Lint for LintC04ExternalMissing {
 
 struct Runner;
 impl LintRunner for Runner {
-    type Target = crate::Class;
+    type Target = Config;
     fn run_processed(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: &Processed,
-        target: &crate::Class,
+        target: &Config,
     ) -> Vec<std::sync::Arc<dyn Code>> {
-        check(target.properties(), &mut HashSet::new(), processed)
+        check(&target.0, &mut HashSet::new(), processed)
     }
 }
 
@@ -72,8 +72,7 @@ fn check(
                     if let Some(parent) = parent {
                         let parent = parent.value.to_lowercase();
                         if parent != name && !defined.contains(&parent) {
-                            codes
-                                .push(Arc::new(CodeC004ExternalMissing::new(c.clone(), processed)));
+                            codes.push(Arc::new(CodeC04ExternalMissing::new(c.clone(), processed)));
                         }
                     }
                     defined.insert(name);
@@ -85,14 +84,15 @@ fn check(
     codes
 }
 
-pub struct CodeC004ExternalMissing {
+#[allow(clippy::module_name_repetitions)]
+pub struct CodeC04ExternalMissing {
     class: Class,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeC004ExternalMissing {
+impl Code for CodeC04ExternalMissing {
     fn ident(&self) -> &'static str {
-        "CE7"
+        "L-C04"
     }
 
     fn message(&self) -> String {
@@ -117,7 +117,7 @@ impl Code for CodeC004ExternalMissing {
     }
 }
 
-impl CodeC004ExternalMissing {
+impl CodeC04ExternalMissing {
     pub fn new(class: Class, processed: &Processed) -> Self {
         Self {
             class,
@@ -128,7 +128,7 @@ impl CodeC004ExternalMissing {
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
         let Some(parent) = self.class.parent() else {
-            panic!("CodeC004ExternalMissing::generate_processed called on class without parent");
+            panic!("CodeC04ExternalMissing::generate_processed called on class without parent");
         };
         self.diagnostic = Diagnostic::new_for_processed(&self, parent.span.clone(), processed);
         self

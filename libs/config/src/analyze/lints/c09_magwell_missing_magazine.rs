@@ -43,9 +43,6 @@ impl LintRunner for Runner {
         processed: &Processed,
         target: &Config,
     ) -> Vec<Arc<dyn Code>> {
-        let Some(project) = project else {
-            return vec![];
-        };
         let mut codes: Vec<Arc<dyn Code>> = Vec::new();
         let mut classes = Vec::new();
         let Some(Property::Class(Class::Local {
@@ -93,11 +90,13 @@ impl LintRunner for Runner {
                     let Item::Str(Str { value, span }) = mag else {
                         continue;
                     };
-                    if !value
-                        .to_lowercase()
-                        .starts_with(&project.prefix().to_lowercase())
-                    {
-                        continue;
+                    if let Some(project) = project {
+                        if !value
+                            .to_lowercase()
+                            .starts_with(&project.prefix().to_lowercase())
+                        {
+                            continue;
+                        }
                     }
                     if !classes.iter().any(|c| c.value == *value) {
                         codes.push(Arc::new(Code09MagwellMissingMagazine::new(
@@ -124,7 +123,7 @@ pub struct Code09MagwellMissingMagazine {
 
 impl Code for Code09MagwellMissingMagazine {
     fn ident(&self) -> &'static str {
-        "CW2"
+        "L-C09"
     }
 
     fn message(&self) -> String {

@@ -62,7 +62,7 @@ pub struct Code08MissingSemicolon {
 
 impl Code for Code08MissingSemicolon {
     fn ident(&self) -> &'static str {
-        "CE4"
+        "L-C08"
     }
 
     fn message(&self) -> String {
