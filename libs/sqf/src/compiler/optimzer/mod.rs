@@ -187,6 +187,16 @@ impl Expression {
                             return eval;
                         }
                     }
+                    BinaryCommand::Else => {
+                        if let Self::Code(_) = left_o {
+                            if let Self::Code(_) = right_o {
+                                return Self::ConsumeableArray(
+                                    vec![left_o, right_o],
+                                    range.clone(),
+                                );
+                            }
+                        }
+                    }
                     _ => {}
                 }
                 Self::BinaryCommand(
@@ -211,6 +221,7 @@ impl Expression {
     call sqfc
     x is now [5] - the const has been modified
     */
+    #[must_use]
     fn is_safe_param(&self) -> bool {
         #[allow(clippy::single_match)]
         match self {
@@ -227,6 +238,7 @@ impl Expression {
     }
 
     // Boilerplate for uniary and binary ops
+    #[must_use]
     fn op_uni_string(
         &self,
         op_type: &UnaryCommand,
@@ -248,17 +260,17 @@ impl Expression {
                     range.clone(),
                     right_wrapper.clone(),
                 ));
-            } else {
-                warn!(
-                    "Skipping Optimization because unicode [U:{}] ({}) => {}",
-                    op_type.as_str(),
-                    self.source(),
-                    right_string.to_string()
-                );
             }
+            warn!(
+                "Skipping Optimization because unicode [U:{}] ({}) => {}",
+                op_type.as_str(),
+                self.source(),
+                right_string.to_string()
+            );
         }
         None
     }
+    #[must_use]
     fn op_uni_float(
         &self,
         op_type: &UnaryCommand,
@@ -276,17 +288,17 @@ impl Expression {
                     new_number
                 );
                 return Some(Self::Number(crate::Scalar(new_number), range.clone()));
-            } else {
-                warn!(
-                    "Skipping Optimization because NaN [U:{}] ({}) => {}",
-                    op_type.as_str(),
-                    self.source(),
-                    new_number
-                );
             }
+            warn!(
+                "Skipping Optimization because NaN [U:{}] ({}) => {}",
+                op_type.as_str(),
+                self.source(),
+                new_number
+            );
         }
         None
     }
+    #[must_use]
     fn op_bin_string(
         &self,
         op_type: &BinaryCommand,
@@ -310,18 +322,18 @@ impl Expression {
                         range.clone(),
                         right_wrapper.clone(),
                     ));
-                } else {
-                    warn!(
-                        "Skipping Optimization because unicode [B:{}] ({}) => {}",
-                        op_type.as_str(),
-                        self.source(),
-                        right_string.to_string()
-                    );
                 }
+                warn!(
+                    "Skipping Optimization because unicode [B:{}] ({}) => {}",
+                    op_type.as_str(),
+                    self.source(),
+                    right_string.to_string()
+                );
             }
         }
         None
     }
+    #[must_use]
     fn op_bin_float(
         &self,
         op_type: &BinaryCommand,
@@ -341,14 +353,13 @@ impl Expression {
                         new_number
                     );
                     return Some(Self::Number(crate::Scalar(new_number), range.clone()));
-                } else {
-                    warn!(
-                        "Skipping Optimization because NaN [B:{}] ({}) => {}",
-                        op_type.as_str(),
-                        self.source(),
-                        new_number
-                    );
                 }
+                warn!(
+                    "Skipping Optimization because NaN [B:{}] ({}) => {}",
+                    op_type.as_str(),
+                    self.source(),
+                    new_number
+                );
             }
         }
         None
