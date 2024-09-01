@@ -36,13 +36,16 @@ impl Lint for LintC04ExternalMissing {
 struct Runner;
 impl LintRunner for Runner {
     type Target = Config;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &Config,
     ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         check(&target.0, &mut HashSet::new(), processed)
     }
 }

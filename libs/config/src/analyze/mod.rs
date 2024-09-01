@@ -24,8 +24,7 @@ pub trait Analyze: Sized + 'static {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes
     }
 }
@@ -42,11 +41,8 @@ impl Analyze for Config {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
-        let root_class = self.to_class();
-        codes.extend(manager.run(project, &root_class));
-        codes.extend(manager.run_processed(project, processed, &root_class));
+        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(project, Some(processed), &self.to_class()));
         codes.extend(
             self.0
                 .iter()
@@ -64,8 +60,7 @@ impl Analyze for Class {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } | Self::Root { properties, .. } => properties
@@ -85,8 +80,7 @@ impl Analyze for Property {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
             Self::Entry { value, .. } => value.analyze(project, processed, manager),
             Self::Class(c) => c.analyze(project, processed, manager),
@@ -104,8 +98,7 @@ impl Analyze for Value {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
             Self::Str(s) => s.analyze(project, processed, manager),
             Self::Number(n) => n.analyze(project, processed, manager),
@@ -127,8 +120,7 @@ impl Analyze for Array {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes.extend(
             self.items
                 .iter()
@@ -146,8 +138,7 @@ impl Analyze for Item {
         manager: &LintManager,
     ) -> Vec<Arc<dyn Code>> {
         let mut codes = vec![];
-        codes.extend(manager.run(project, self));
-        codes.extend(manager.run_processed(project, processed, self));
+        codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
             Self::Str(s) => s.analyze(project, processed, manager),
             Self::Number(n) => n.analyze(project, processed, manager),

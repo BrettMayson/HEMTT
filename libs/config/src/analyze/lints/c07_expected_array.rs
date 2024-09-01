@@ -36,13 +36,16 @@ impl Lint for LintC07ExpectedArray {
 struct Runner;
 impl LintRunner for Runner {
     type Target = crate::Property;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &crate::Property,
     ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         let Property::Entry {
             value,
             expected_array,

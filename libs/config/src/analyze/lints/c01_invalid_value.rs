@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Processed, Severity},
+    reporting::{Code, Diagnostic, Processed},
 };
 
 use crate::{Item, Value};
@@ -37,29 +37,24 @@ struct RunnerValue;
 
 impl LintRunner for RunnerValue {
     type Target = Value;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        config: &LintConfig,
-        processed: &Processed,
+        _config: &LintConfig,
+        processed: Option<&Processed>,
         target: &Value,
     ) -> Vec<Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         if let Value::Invalid(invalid) = target {
             vec![if processed
                 .mapping(invalid.start)
                 .is_some_and(hemtt_workspace::reporting::Mapping::was_macro)
             {
-                Arc::new(CodeC01InvalidValueMacro::new(
-                    invalid.clone(),
-                    processed,
-                    config.severity(),
-                ))
+                Arc::new(CodeC01InvalidValueMacro::new(invalid.clone(), processed))
             } else {
-                Arc::new(CodeC01InvalidValue::new(
-                    invalid.clone(),
-                    processed,
-                    config.severity(),
-                ))
+                Arc::new(CodeC01InvalidValue::new(invalid.clone(), processed))
             }]
         } else {
             vec![]
@@ -70,29 +65,24 @@ impl LintRunner for RunnerValue {
 struct RunnerItem;
 impl LintRunner for RunnerItem {
     type Target = Item;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        config: &LintConfig,
-        processed: &Processed,
+        _config: &LintConfig,
+        processed: Option<&Processed>,
         target: &Item,
     ) -> Vec<Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         if let Item::Invalid(invalid) = target {
             vec![if processed
                 .mapping(invalid.start)
                 .is_some_and(hemtt_workspace::reporting::Mapping::was_macro)
             {
-                Arc::new(CodeC01InvalidValueMacro::new(
-                    invalid.clone(),
-                    processed,
-                    config.severity(),
-                ))
+                Arc::new(CodeC01InvalidValueMacro::new(invalid.clone(), processed))
             } else {
-                Arc::new(CodeC01InvalidValue::new(
-                    invalid.clone(),
-                    processed,
-                    config.severity(),
-                ))
+                Arc::new(CodeC01InvalidValue::new(invalid.clone(), processed))
             }]
         } else {
             vec![]
@@ -103,17 +93,12 @@ impl LintRunner for RunnerItem {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeC01InvalidValue {
     span: Range<usize>,
-    severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
 impl Code for CodeC01InvalidValue {
     fn ident(&self) -> &'static str {
         "L-C01"
-    }
-
-    fn severity(&self) -> Severity {
-        self.severity
     }
 
     fn message(&self) -> String {
@@ -134,10 +119,9 @@ impl Code for CodeC01InvalidValue {
 }
 
 impl CodeC01InvalidValue {
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             span,
-            severity,
             diagnostic: None,
         }
         .generate_processed(processed)
@@ -151,17 +135,12 @@ impl CodeC01InvalidValue {
 
 pub struct CodeC01InvalidValueMacro {
     span: Range<usize>,
-    severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
 impl Code for CodeC01InvalidValueMacro {
     fn ident(&self) -> &'static str {
         "L-C01M"
-    }
-
-    fn severity(&self) -> Severity {
-        self.severity
     }
 
     fn message(&self) -> String {
@@ -182,10 +161,9 @@ impl Code for CodeC01InvalidValueMacro {
 }
 
 impl CodeC01InvalidValueMacro {
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             span,
-            severity,
             diagnostic: None,
         }
         .generate_processed(processed)

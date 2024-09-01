@@ -37,13 +37,16 @@ struct Runner;
 
 impl LintRunner for Runner {
     type Target = crate::Property;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &crate::Property,
     ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         if let Property::MissingSemicolon(_, span) = target {
             vec![Arc::new(Code08MissingSemicolon::new(
                 span.clone(),

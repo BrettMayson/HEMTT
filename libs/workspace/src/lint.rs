@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use codespan_reporting::diagnostic::Severity;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 
 use crate::reporting::{Code, Processed};
@@ -9,6 +10,9 @@ pub trait Lint {
     fn description(&self) -> &str;
     fn documentation(&self) -> &str;
     fn default_config(&self) -> LintConfig;
+    fn minimum_severity(&self) -> Severity {
+        self.default_config().severity()
+    }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner>>;
 }
 
@@ -20,15 +24,7 @@ pub trait LintRunner {
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
-        target: &Self::Target,
-    ) -> Vec<Arc<dyn Code>> {
-        vec![]
-    }
-    fn run_processed(
-        &self,
-        project: Option<&ProjectConfig>,
-        config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &Self::Target,
     ) -> Vec<Arc<dyn Code>> {
         vec![]
@@ -40,13 +36,7 @@ pub trait AnyLintRunner {
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
-        target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>>;
-    fn run_processed(
-        &self,
-        project: Option<&ProjectConfig>,
-        config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &dyn std::any::Any,
     ) -> Vec<Arc<dyn Code>>;
 }
@@ -56,25 +46,13 @@ impl<T: LintRunner> AnyLintRunner for T {
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
+        processed: Option<&Processed>,
         target: &dyn std::any::Any,
     ) -> Vec<Arc<dyn Code>> {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, config, target)
-            })
-    }
-    fn run_processed(
-        &self,
-        project: Option<&ProjectConfig>,
-        config: &LintConfig,
-        processed: &Processed,
-        target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>> {
-        target
-            .downcast_ref::<T::Target>()
-            .map_or_else(std::vec::Vec::new, |target| {
-                self.run_processed(project, config, processed, target)
+                self.run(project, config, processed, target)
             })
     }
 }
@@ -94,17 +72,56 @@ impl LintManager {
         }
     }
 
-    pub fn push(&mut self, lint: Box<dyn Lint>) {
-        self.lints.push(lint);
+    pub fn push(&mut self, lint: Box<dyn Lint>) -> Option<Vec<hemtt_common::Error>> {
+        let lints = vec![lint];
+        if let Some(code) = self.check(&lints) {
+            return Some(code);
+        }
+        self.lints.extend(lints);
+        None
     }
 
-    pub fn extend(&mut self, lints: Vec<Box<dyn Lint>>) {
+    pub fn extend(&mut self, lints: Vec<Box<dyn Lint>>) -> Option<Vec<hemtt_common::Error>> {
+        if let Some(code) = self.check(&lints) {
+            return Some(code);
+        }
         self.lints.extend(lints);
+        None
+    }
+
+    #[must_use]
+    pub fn check(&self, lints: &[Box<dyn Lint>]) -> Option<Vec<hemtt_common::Error>> {
+        let mut errors = vec![];
+        for lint in lints {
+            if self.lints.iter().any(|l| l.ident() == lint.ident()) {
+                errors.push(hemtt_common::Error::ConfigInvalid(format!(
+                    "Lint {} already exists",
+                    lint.ident()
+                )));
+            }
+            if let Some(config) = self.configs.get(lint.ident()) {
+                if config.severity() < lint.minimum_severity() {
+                    errors.push(hemtt_common::Error::ConfigInvalid(format!(
+                        "Lint `{}` severity is lower than minimum severity {:?}",
+                        lint.ident(),
+                        lint.minimum_severity(),
+                    )));
+                }
+                if !config.enabled() && lint.minimum_severity() == Severity::Error {
+                    errors.push(hemtt_common::Error::ConfigInvalid(format!(
+                        "Lint `{}` cannot be disabled",
+                        lint.ident(),
+                    )));
+                }
+            }
+        }
+        errors.is_empty().then_some(errors)
     }
 
     pub fn run(
         &self,
         project: Option<&ProjectConfig>,
+        processed: Option<&Processed>,
         target: &dyn std::any::Any,
     ) -> Vec<Arc<dyn Code>> {
         self.lints
@@ -115,31 +132,12 @@ impl LintManager {
                     .get(lint.ident())
                     .cloned()
                     .unwrap_or_else(|| lint.default_config());
+                if !config.enabled() {
+                    return vec![];
+                }
                 lint.runners()
                     .iter()
-                    .flat_map(|runner| runner.run(project, &config, target))
-                    .collect::<Vec<Arc<dyn Code>>>()
-            })
-            .collect()
-    }
-
-    pub fn run_processed(
-        &self,
-        project: Option<&ProjectConfig>,
-        processed: &Processed,
-        target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>> {
-        self.lints
-            .iter()
-            .flat_map(|lint| {
-                let config = self
-                    .configs
-                    .get(lint.ident())
-                    .cloned()
-                    .unwrap_or_else(|| lint.default_config());
-                lint.runners()
-                    .iter()
-                    .flat_map(|runner| runner.run_processed(project, &config, processed, target))
+                    .flat_map(|runner| runner.run(project, &config, processed, target))
                     .collect::<Vec<Arc<dyn Code>>>()
             })
             .collect()
@@ -210,6 +208,10 @@ mod tests {
             LintConfig::error()
         }
 
+        fn minimum_severity(&self) -> Severity {
+            Severity::Error
+        }
+
         fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
             vec![Box::new(LintARunner)]
         }
@@ -223,6 +225,7 @@ mod tests {
             &self,
             _project: Option<&ProjectConfig>,
             _config: &LintConfig,
+            _processed: Option<&Processed>,
             _target: &TypeA,
         ) -> Vec<Arc<dyn Code>> {
             vec![Arc::new(CodeA)]
@@ -247,6 +250,10 @@ mod tests {
             LintConfig::error()
         }
 
+        fn minimum_severity(&self) -> Severity {
+            Severity::Error
+        }
+
         fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
             vec![Box::new(LintBRunner)]
         }
@@ -260,6 +267,7 @@ mod tests {
             &self,
             _project: Option<&ProjectConfig>,
             _config: &LintConfig,
+            _processed: Option<&Processed>,
             _target: &TypeB,
         ) -> Vec<Arc<dyn Code>> {
             vec![Arc::new(CodeB)]
@@ -277,15 +285,15 @@ mod tests {
         let target_b = TypeB;
         let target_c = TypeC;
 
-        let codes = manager.run(None, &target_a);
+        let codes = manager.run(None, None, &target_a);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeA");
 
-        let codes = manager.run(None, &target_b);
+        let codes = manager.run(None, None, &target_b);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeB");
 
-        let codes = manager.run(None, &target_c);
+        let codes = manager.run(None, None, &target_c);
         assert_eq!(codes.len(), 0);
     }
 }

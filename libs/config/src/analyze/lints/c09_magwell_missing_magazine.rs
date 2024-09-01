@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed},
+    reporting::{Code, Diagnostic, Label, Processed, Severity},
 };
 
 use crate::{Class, Config, Ident, Item, Property, Str, Value};
@@ -28,6 +28,10 @@ impl Lint for LintC09MagwellMissingMagazine {
         LintConfig::error()
     }
 
+    fn minimum_severity(&self) -> Severity {
+        Severity::Warning
+    }
+
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
         vec![Box::new(Runner)]
     }
@@ -36,13 +40,16 @@ impl Lint for LintC09MagwellMissingMagazine {
 struct Runner;
 impl LintRunner for Runner {
     type Target = Config;
-    fn run_processed(
+    fn run(
         &self,
         project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &Config,
     ) -> Vec<Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         let mut codes: Vec<Arc<dyn Code>> = Vec::new();
         let mut classes = Vec::new();
         let Some(Property::Class(Class::Local {

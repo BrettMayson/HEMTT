@@ -36,13 +36,16 @@ impl Lint for LintC02DuplicateProperty {
 struct Runner;
 impl LintRunner for Runner {
     type Target = Config;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &Config,
     ) -> Vec<Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
         duplicate_properties_inner("", &target.0, &mut seen);
         let mut codes: Vec<Arc<dyn Code>> = Vec::new();

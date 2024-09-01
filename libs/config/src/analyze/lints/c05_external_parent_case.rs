@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed},
+    reporting::{Code, Diagnostic, Label, Processed, Severity},
 };
 
 use crate::{Class, Property};
@@ -28,6 +28,10 @@ impl Lint for LintC05ExternalParentCase {
         LintConfig::warning()
     }
 
+    fn minimum_severity(&self) -> Severity {
+        Severity::Note
+    }
+
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
         vec![Box::new(Runner)]
     }
@@ -36,13 +40,16 @@ impl Lint for LintC05ExternalParentCase {
 struct Runner;
 impl LintRunner for Runner {
     type Target = Class;
-    fn run_processed(
+    fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
-        processed: &Processed,
+        processed: Option<&Processed>,
         target: &Class,
     ) -> Vec<std::sync::Arc<dyn Code>> {
+        let Some(processed) = processed else {
+            return vec![];
+        };
         check(target.properties(), &mut HashMap::new(), processed)
     }
 }
