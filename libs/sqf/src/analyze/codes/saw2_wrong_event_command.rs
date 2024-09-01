@@ -104,7 +104,7 @@ impl WrongEventCommand {
                         .filter(|c| c.contains(&prefix))
                         .for_each(|c| {
                             alternatives.push(((*c).to_string(), {
-                                database.wiki().commands().get(*c).map_or(false, |c| {
+                                database.wiki().commands().get(c).map_or(false, |c| {
                                     c.syntax().first().map_or(false, |s| s.call().is_binary())
                                 })
                             }));
