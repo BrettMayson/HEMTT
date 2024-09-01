@@ -45,7 +45,7 @@ pub fn parse(
             let mut manager = LintManager::new(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
             );
-            manager.extend(analyze::lints::list());
+            manager.extend(analyze::lints::list())?;
             Ok(ConfigReport {
                 codes: config.analyze(project, processed, &manager),
                 patches: config.get_patches(),

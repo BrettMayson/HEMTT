@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use codespan_reporting::diagnostic::Severity;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 
-use crate::reporting::{Code, Processed};
+use crate::reporting::{Code, Diagnostic, Processed};
 
 pub trait Lint {
     fn ident(&self) -> &str;
@@ -72,50 +72,61 @@ impl LintManager {
         }
     }
 
-    pub fn push(&mut self, lint: Box<dyn Lint>) -> Option<Vec<hemtt_common::Error>> {
+    /// Push a lint into the manager
+    ///
+    /// # Errors
+    /// Returns a list of codes if the lint config is invalid
+    pub fn push(&mut self, lint: Box<dyn Lint>) -> Result<(), Vec<Arc<dyn Code>>> {
         let lints = vec![lint];
-        if let Some(code) = self.check(&lints) {
-            return Some(code);
-        }
+        self.check(&lints)?;
         self.lints.extend(lints);
-        None
+        Ok(())
     }
 
-    pub fn extend(&mut self, lints: Vec<Box<dyn Lint>>) -> Option<Vec<hemtt_common::Error>> {
-        if let Some(code) = self.check(&lints) {
-            return Some(code);
-        }
+    /// Extend the manager with a list of lints
+    ///
+    /// # Errors
+    /// Returns a list of codes if the lint config is invalid
+    pub fn extend(&mut self, lints: Vec<Box<dyn Lint>>) -> Result<(), Vec<Arc<dyn Code>>> {
+        self.check(&lints)?;
         self.lints.extend(lints);
-        None
+        Ok(())
     }
 
-    #[must_use]
-    pub fn check(&self, lints: &[Box<dyn Lint>]) -> Option<Vec<hemtt_common::Error>> {
-        let mut errors = vec![];
+    /// Check if the lints are valid
+    ///
+    /// # Errors
+    /// Returns a list of codes if the lint config is invalid
+    pub fn check(&self, lints: &[Box<dyn Lint>]) -> Result<(), Vec<Arc<dyn Code>>> {
+        let mut errors: Vec<Arc<dyn Code>> = vec![];
         for lint in lints {
             if self.lints.iter().any(|l| l.ident() == lint.ident()) {
-                errors.push(hemtt_common::Error::ConfigInvalid(format!(
-                    "Lint {} already exists",
-                    lint.ident()
-                )));
+                errors.push(Arc::new(InvalidLintConfig {
+                    message: format!("Lint `{}` already exists", lint.ident()),
+                }));
             }
             if let Some(config) = self.configs.get(lint.ident()) {
                 if config.severity() < lint.minimum_severity() {
-                    errors.push(hemtt_common::Error::ConfigInvalid(format!(
-                        "Lint `{}` severity is lower than minimum severity {:?}",
-                        lint.ident(),
-                        lint.minimum_severity(),
-                    )));
+                    errors.push(Arc::new(InvalidLintConfig {
+                        message: format!(
+                            "Lint `{}` severity is lower than minimum severity of {:?}",
+                            lint.ident(),
+                            lint.minimum_severity(),
+                        ),
+                    }));
                 }
                 if !config.enabled() && lint.minimum_severity() == Severity::Error {
-                    errors.push(hemtt_common::Error::ConfigInvalid(format!(
-                        "Lint `{}` cannot be disabled",
-                        lint.ident(),
-                    )));
+                    errors.push(Arc::new(InvalidLintConfig {
+                        message: format!("Lint `{}` cannot be disabled", lint.ident()),
+                    }));
                 }
             }
         }
-        errors.is_empty().then_some(errors)
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 
     pub fn run(
@@ -141,6 +152,23 @@ impl LintManager {
                     .collect::<Vec<Arc<dyn Code>>>()
             })
             .collect()
+    }
+}
+
+struct InvalidLintConfig {
+    message: String,
+}
+impl Code for InvalidLintConfig {
+    fn ident(&self) -> &'static str {
+        "ILC"
+    }
+
+    fn message(&self) -> String {
+        self.message.clone()
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
     }
 }
 
