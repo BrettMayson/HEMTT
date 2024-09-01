@@ -68,3 +68,4 @@ analyze!(saa3_typename);
 analyze!(saa4_str_format);
 analyze!(saa5_select_parse_number);
 analyze!(saa6_command_case);
+analyze!(saa7_format_args);
