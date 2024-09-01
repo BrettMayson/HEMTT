@@ -310,6 +310,16 @@ impl Expression {
     }
 
     #[must_use]
+    pub fn command_name(&self) -> Option<&str> {
+        match self {
+            Self::NularCommand(command, _) => Some(command.as_str()),
+            Self::UnaryCommand(command, _, _) => Some(command.as_str()),
+            Self::BinaryCommand(command, _, _, _) => Some(command.as_str()),
+            _ => None,
+        }
+    }
+
+    #[must_use]
     pub const fn is_code(&self) -> bool {
         matches!(self, Self::Code(_))
     }

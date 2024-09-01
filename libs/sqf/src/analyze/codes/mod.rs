@@ -9,3 +9,5 @@ pub mod saa2_find_in_str;
 pub mod saa3_typename;
 pub mod saa4_str_format;
 pub mod saa5_select_parse_number;
+pub mod saa6_command_case;
+pub mod saa7_format_args;
