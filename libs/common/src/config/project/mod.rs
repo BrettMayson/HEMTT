@@ -185,7 +185,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             return Err(Error::Prefix(crate::prefix::Error::Empty));
         }
 
-        Ok(Self {
+        let ret = Self {
             hemtt: file.hemtt.into_config(&file.meta_path, &file.prefix)?,
             name: file.name,
             prefix: file.prefix,
@@ -195,6 +195,29 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             files: file.files.into(),
             lints: file.lints.into(),
             signing: file.signing.into(),
+        };
+
+        let mut lints_path = file.meta_path;
+        lints_path.set_file_name("lints.toml");
+        let lints_source = if lints_path.exists() {
+            if ret.lints.is_empty() {
+                let lints_source = std::fs::read_to_string(&lints_path)?;
+                if lints_source.contains("[lints.") {
+                    return Err(Error::ConfigInvalid(
+                        "Configs in `lints.toml` do not need to be under `[lints.*]`.".to_string(),
+                    ));
+                }
+                toml::from_str::<lint::LintSectionFile>(&lints_source)?.into()
+            } else {
+                return Err(Error::LintsConfigConflict);
+            }
+        } else {
+            ret.lints
+        };
+
+        Ok(Self {
+            lints: lints_source,
+            ..ret
         })
     }
 }
