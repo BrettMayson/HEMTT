@@ -9,6 +9,7 @@
 - [Configuration](configuration/index.md)
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
+  - [Lints](configuration/lints.md)
   - [Addon](configuration/addon.md)
   - [P Drive](configuration/p-drive.md)
   - [Custom Commands](configuration/custom-commands.md)

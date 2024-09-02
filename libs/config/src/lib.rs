@@ -24,6 +24,20 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Processed, Severity},
 };
 
+#[must_use]
+pub fn lint_check(project: &ProjectConfig) -> Codes {
+    let mut manager = LintManager::new(project.lints().config().clone(), ());
+    if let Err(e) = manager.extend(
+        CONFIG_LINTS
+            .iter()
+            .map(|l| (**l).clone())
+            .collect::<Vec<_>>(),
+    ) {
+        return e;
+    }
+    vec![]
+}
+
 /// Parse a config file
 ///
 /// # Errors

@@ -6,7 +6,7 @@ use std::sync::{
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
-    analyze::analyze,
+    analyze::{analyze, lint_check},
     parser::{database::Database, ParserError},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
@@ -43,6 +43,18 @@ impl Module for SQFCompiler {
             false,
         )?));
         Ok(Report::new())
+    }
+
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.extend(lint_check(
+            ctx.config(),
+            self.database
+                .as_ref()
+                .expect("database not initialized")
+                .clone(),
+        ));
+        Ok(report)
     }
 
     #[allow(clippy::too_many_lines)]

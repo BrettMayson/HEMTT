@@ -21,7 +21,19 @@ impl Lint<SqfLintData> for LintS04CommandCase {
     }
 
     fn documentation(&self) -> &str {
-"### Example
+r#"### Configuration
+
+- **ignore**: An array of commands to ignore
+
+```toml
+[lints.sqf.command_case]
+options.ignore = [
+    "ASLtoAGL",
+    "AGLtoASL",
+]
+```
+
+### Example
 
 **Incorrect**
 ```sqf
@@ -30,7 +42,7 @@ private _leaky = getwaterleakiness vehicle player;
 **Correct**
 ```sqf
 private _leaky = getWaterLeakiness vehicle player;
-```"
+```"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -60,6 +72,11 @@ impl LintRunner<SqfLintData> for Runner {
         let Some(command) = target.command_name() else {
             return Vec::new();
         };
+        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
+            if ignore.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
+                return Vec::new();
+            }
+        }
         let Some(wiki) = data.1.wiki().commands().get(&command.to_lowercase()) else {
             return Vec::new();
         };

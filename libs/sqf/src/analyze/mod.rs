@@ -38,6 +38,30 @@ macro_rules! lint {
 }
 
 #[must_use]
+pub fn lint_check(project: &ProjectConfig, database: Arc<Database>) -> Codes {
+    let mut manager: LintManager<SqfLintData> = LintManager::new(
+        project.lints().sqf().clone(),
+        (Arc::new(Addon::test_addon()), database),
+    );
+    if let Err(lint_errors) =
+        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
+    {
+        return lint_errors;
+    }
+    if let Err(lint_errors) = manager.push_group(
+        vec![
+            Arc::new(Box::new(LintS02EventUnknown)),
+            Arc::new(Box::new(LintS02EventIncorrectCommand)),
+            Arc::new(Box::new(LintS02EventInsufficientVersion)),
+        ],
+        Box::new(EventHandlerRunner),
+    ) {
+        return lint_errors;
+    }
+    vec![]
+}
+
+#[must_use]
 pub fn analyze(
     statements: &Statements,
     project: Option<&ProjectConfig>,
@@ -46,7 +70,7 @@ pub fn analyze(
     database: Arc<Database>,
 ) -> Codes {
     let mut manager: LintManager<SqfLintData> = LintManager::new(
-        project.map_or_else(Default::default, |project| project.lints().config().clone()),
+        project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
         (addon, database),
     );
     if let Err(lint_errors) =

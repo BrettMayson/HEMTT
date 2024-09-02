@@ -79,7 +79,17 @@ impl Lint<SqfLintData> for LintS02EventUnknown {
     }
 
     fn documentation(&self) -> &str {
-r#"### Example
+r#"### Configuration
+
+- **ignore**: List of unknown event names to ignore
+
+```toml
+[lints.sqf.event_unknown]
+options.ignore = [
+    "HealingReceived",
+]
+
+### Example
 
 **Incorrect**
 ```sqf

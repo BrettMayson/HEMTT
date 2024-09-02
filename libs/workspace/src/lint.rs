@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use codespan_reporting::diagnostic::Severity;
-use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_common::config::{LintConfig, LintConfigOverride, ProjectConfig};
 
 use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
@@ -116,13 +116,13 @@ pub type Lints<D> = Vec<Arc<Box<dyn Lint<D>>>>;
 pub struct LintManager<D> {
     lints: Lints<D>,
     groups: Vec<(Lints<D>, Box<dyn AnyLintGroupRunner<D>>)>,
-    configs: HashMap<String, LintConfig>,
+    configs: HashMap<String, LintConfigOverride>,
     data: D,
 }
 
 impl<D> LintManager<D> {
     #[must_use]
-    pub fn new(configs: HashMap<String, LintConfig>, data: D) -> Self {
+    pub fn new(configs: HashMap<String, LintConfigOverride>, data: D) -> Self {
         Self {
             lints: vec![],
             groups: vec![],
@@ -179,6 +179,7 @@ impl<D> LintManager<D> {
                 }));
             }
             if let Some(config) = self.configs.get(lint.ident()) {
+                let config = config.apply(lint.default_config());
                 if config.severity() < lint.minimum_severity() {
                     errors.push(Arc::new(InvalidLintConfig {
                         message: format!(
@@ -215,7 +216,7 @@ impl<D> LintManager<D> {
                     .configs
                     .get(lint.ident())
                     .cloned()
-                    .unwrap_or_else(|| lint.default_config());
+                    .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
                 if !config.enabled() {
                     return vec![];
                 }
@@ -231,7 +232,7 @@ impl<D> LintManager<D> {
                         .configs
                         .get(lint.ident())
                         .cloned()
-                        .unwrap_or_else(|| lint.default_config());
+                        .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
                     if config.enabled() {
                         configs.insert(lint.ident().to_string(), config);
                     }

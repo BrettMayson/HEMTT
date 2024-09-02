@@ -3,7 +3,7 @@ use std::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_config::{parse, rapify::Rapify};
+use hemtt_config::{lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{addons::Addon, WorkspacePath};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -21,6 +21,12 @@ pub struct Rapifier;
 impl Module for Rapifier {
     fn name(&self) -> &'static str {
         "Rapifier"
+    }
+
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.extend(lint_check(ctx.config()));
+        Ok(report)
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
