@@ -1,8 +1,8 @@
 # Lint Configuration
 
-HEMTT runs lints against your config and SQF files to check for errors, common mistakes, and improvements.
+HEMTT runs lints against your config and SQF files to check for errors, common mistakes, and improvements. Some lints can be disabled, configured, or changed in severity.
 
-Some lints can be disabled, configured, or changed in severity.
+Lints can be kept in the `project.toml` file under the `lints` section, or in a separate `.hemttout/lints.toml` file. When kept in `lints.toml`, the `lints.` prefix is not required.
 
 See the Analysis section for [Config](../analysis/config.md) and [SQF](../analysis/sqf.md) lints.
 

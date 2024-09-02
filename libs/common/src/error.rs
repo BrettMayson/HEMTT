@@ -20,6 +20,9 @@ pub enum Error {
     #[error("Launch configuration source conflct. They can exist in either `project.toml` or `launch.toml`, not both.")]
     LaunchConfigConflict,
 
+    #[error("Lints configuration source conflct. They can exist in either `project.toml` or `lints.toml`, not both.")]
+    LintsConfigConflict,
+
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
     #[error("IO Error: {0}")]
