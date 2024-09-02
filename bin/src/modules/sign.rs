@@ -43,7 +43,7 @@ impl Module for Sign {
                 .collect::<Result<Vec<_>, _>>()
                 .expect("files valid");
             if entries.is_empty() {
-                report.error(EmptyAddon::code(addon.folder()));
+                report.push(EmptyAddon::code(addon.folder()));
             } else if entries.len() == 1 {
                 // prefix files won't end up in the PBO, so we need to ignore them
                 if FILES.contains(
@@ -54,7 +54,7 @@ impl Module for Sign {
                         .to_lowercase()
                         .as_str(),
                 ) {
-                    report.error(EmptyAddon::code(addon.folder()));
+                    report.push(EmptyAddon::code(addon.folder()));
                 }
             }
         });

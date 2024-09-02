@@ -115,6 +115,7 @@ impl Executor {
             });
             if report.failed() {
                 trace!("phase: {} ({}) (failed)", phase, module.name());
+                trace!("report: {:#?}", report);
                 break;
             }
             trace!("phase: {} ({}) (done)", phase, module.name());

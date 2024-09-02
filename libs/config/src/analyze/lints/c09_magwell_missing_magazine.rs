@@ -3,15 +3,14 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
 use crate::{Class, Config, Ident, Item, Property, Str, Value};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC09MagwellMissingMagazine;
+crate::lint!(LintC09MagwellMissingMagazine);
 
-impl Lint for LintC09MagwellMissingMagazine {
+impl Lint<()> for LintC09MagwellMissingMagazine {
     fn ident(&self) -> &str {
         "magwell_missing_magazine"
     }
@@ -32,13 +31,13 @@ impl Lint for LintC09MagwellMissingMagazine {
         Severity::Warning
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -46,11 +45,12 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-    ) -> Vec<Arc<dyn Code>> {
+        _data: &(),
+    ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
-        let mut codes: Vec<Arc<dyn Code>> = Vec::new();
+        let mut codes: Codes = Vec::new();
         let mut classes = Vec::new();
         let Some(Property::Class(Class::Local {
             properties: magwells,

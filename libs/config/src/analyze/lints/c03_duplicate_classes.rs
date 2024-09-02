@@ -3,15 +3,14 @@ use std::{collections::HashMap, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed},
+    reporting::{Code, Codes, Diagnostic, Label, Processed},
 };
 
 use crate::{Class, Config, Property};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC03DuplicateClasses;
+crate::lint!(LintC03DuplicateClasses);
 
-impl Lint for LintC03DuplicateClasses {
+impl Lint<()> for LintC03DuplicateClasses {
     fn ident(&self) -> &str {
         "duplicate_classes"
     }
@@ -28,13 +27,13 @@ impl Lint for LintC03DuplicateClasses {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -42,7 +41,8 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-    ) -> Vec<Arc<dyn Code>> {
+        _data: &(),
+    ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
@@ -50,7 +50,7 @@ impl LintRunner for Runner {
     }
 }
 
-pub fn check(properties: &[Property], processed: &Processed) -> Vec<Arc<dyn Code>> {
+pub fn check(properties: &[Property], processed: &Processed) -> Codes {
     let mut defined: HashMap<String, Vec<Class>> = HashMap::new();
     let mut codes = Vec::new();
     for property in properties {

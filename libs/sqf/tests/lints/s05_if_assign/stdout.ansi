@@ -1,4 +1,4 @@
-[0m[1m[38;5;14mhelp[SAA1][0m[1m: assignment to if can be replaced with select[0m
+[0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m source.sqf:1:24
   [0m[36m│[0m
 [0m[36m1[0m [0m[36m│[0m private _workingArms = [0m[36mif (alive player) then { 2 } else { 0 }[0m;
@@ -9,7 +9,7 @@
   [0m[36m=[0m [32mtry[0m: [0, 2] select (alive player)
 
 
-[0m[1m[38;5;14mhelp[SAA1][0m[1m: assignment to if can be replaced with select[0m
+[0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m source.sqf:4:22
   [0m[36m│[0m
 [0m[36m4[0m [0m[36m│[0m     private _thing = [0m[36mif (alive player) then { 2 } else { 0 }[0m;
@@ -20,7 +20,7 @@
   [0m[36m=[0m [32mtry[0m: [0, 2] select (alive player)
 
 
-[0m[1m[38;5;14mhelp[SAA1][0m[1m: assignment to if can be replaced with select[0m
+[0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m source.sqf:7:5
   [0m[36m│[0m
 [0m[36m7[0m [0m[36m│[0m     [0m[36mif (alive player) then { "torso" } else { "legs" }[0m,
@@ -31,7 +31,7 @@
   [0m[36m=[0m [32mtry[0m: ["legs", "torso"] select (alive player)
 
 
-[0m[1m[38;5;14mhelp[SAA1][0m[1m: assignment to if can be replaced with select[0m
+[0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m source.sqf:8:5
   [0m[36m│[0m
 [0m[36m8[0m [0m[36m│[0m     [0m[36mif (alive player) then { "torso" } else { "legs" }[0m,

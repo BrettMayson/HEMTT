@@ -3,15 +3,14 @@ use std::{collections::HashMap, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
 use crate::{Class, Property};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC05ExternalParentCase;
+crate::lint!(LintC05ExternalParentCase);
 
-impl Lint for LintC05ExternalParentCase {
+impl Lint<()> for LintC05ExternalParentCase {
     fn ident(&self) -> &str {
         "external_parent_case"
     }
@@ -32,13 +31,13 @@ impl Lint for LintC05ExternalParentCase {
         Severity::Note
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = Class;
     fn run(
         &self,
@@ -46,6 +45,7 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Class,
+        _data: &(),
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -58,8 +58,8 @@ fn check(
     properties: &[Property],
     defined: &mut HashMap<String, Class>,
     processed: &Processed,
-) -> Vec<Arc<dyn Code>> {
-    let mut codes: Vec<Arc<dyn Code>> = Vec::new();
+) -> Codes {
+    let mut codes: Codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {

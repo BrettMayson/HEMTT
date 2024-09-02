@@ -210,6 +210,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 
 [[package]]
+name = "automod"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edf3ee19dbc0a46d740f6f0926bde8c50f02bdbc7b536842da28f6ac56513a8b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "av1-grain"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1180,11 +1191,13 @@ dependencies = [
 name = "hemtt-config"
 version = "1.0.0"
 dependencies = [
+ "automod",
  "byteorder",
  "chumsky",
  "hemtt-common",
  "hemtt-preprocessor",
  "hemtt-workspace",
+ "linkme",
  "lsp-types 0.97.0",
  "paste",
  "vfs",
@@ -1291,6 +1304,7 @@ name = "hemtt-sqf"
 version = "1.0.0"
 dependencies = [
  "arma3-wiki",
+ "automod",
  "byteorder",
  "chumsky",
  "float-ord",
@@ -1298,7 +1312,9 @@ dependencies = [
  "hemtt-lzo",
  "hemtt-preprocessor",
  "hemtt-workspace",
+ "linkme",
  "paste",
+ "toml",
  "tracing",
 ]
 
@@ -1713,6 +1729,26 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "linkme"
+version = "0.3.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c943daedff228392b791b33bba32e75737756e80a613e32e246c6ce9cbab20a"
+dependencies = [
+ "linkme-impl",
+]
+
+[[package]]
+name = "linkme-impl"
+version = "0.3.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb26336e6dc7cc76e7927d2c9e7e3bb376d7af65a6f56a0b16c47d18a9b1abc5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

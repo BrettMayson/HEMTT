@@ -3,15 +3,14 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Processed},
+    reporting::{Code, Codes, Diagnostic, Processed},
 };
 
 use crate::{Item, Value};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC01InvalidValue;
+crate::lint!(LintC01InvalidValue);
 
-impl Lint for LintC01InvalidValue {
+impl Lint<()> for LintC01InvalidValue {
     fn ident(&self) -> &str {
         "invalid_value"
     }
@@ -28,14 +27,14 @@ impl Lint for LintC01InvalidValue {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(RunnerValue), Box::new(RunnerItem)]
     }
 }
 
 struct RunnerValue;
 
-impl LintRunner for RunnerValue {
+impl LintRunner<()> for RunnerValue {
     type Target = Value;
     fn run(
         &self,
@@ -43,7 +42,8 @@ impl LintRunner for RunnerValue {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Value,
-    ) -> Vec<Arc<dyn Code>> {
+        _data: &(),
+    ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
@@ -63,7 +63,7 @@ impl LintRunner for RunnerValue {
 }
 
 struct RunnerItem;
-impl LintRunner for RunnerItem {
+impl LintRunner<()> for RunnerItem {
     type Target = Item;
     fn run(
         &self,
@@ -71,7 +71,8 @@ impl LintRunner for RunnerItem {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Item,
-    ) -> Vec<Arc<dyn Code>> {
+        _data: &(),
+    ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };

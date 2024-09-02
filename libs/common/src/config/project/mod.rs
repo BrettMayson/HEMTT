@@ -199,7 +199,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
     }
 }
 
-mod tests {
+mod test_helper {
     use std::collections::HashMap;
 
     use super::{files, hemtt, lint, signing, version};

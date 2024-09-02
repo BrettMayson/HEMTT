@@ -3,15 +3,14 @@ use std::{collections::HashMap, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed},
+    reporting::{Code, Codes, Diagnostic, Label, Processed},
 };
 
 use crate::{Class, Config, Ident, Property};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC02DuplicateProperty;
+crate::lint!(LintC02DuplicateProperty);
 
-impl Lint for LintC02DuplicateProperty {
+impl Lint<()> for LintC02DuplicateProperty {
     fn ident(&self) -> &str {
         "duplicate_property"
     }
@@ -28,13 +27,13 @@ impl Lint for LintC02DuplicateProperty {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -42,13 +41,14 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-    ) -> Vec<Arc<dyn Code>> {
+        _data: &(),
+    ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
         let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
         duplicate_properties_inner("", &target.0, &mut seen);
-        let mut codes: Vec<Arc<dyn Code>> = Vec::new();
+        let mut codes: Codes = Vec::new();
         for (_, idents) in seen {
             if idents.len() > 1 && !idents.iter().all(|(class, _)| *class) {
                 codes.push(Arc::new(CodeC02DuplicateProperty::new(

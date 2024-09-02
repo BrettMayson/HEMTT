@@ -49,6 +49,15 @@ impl LintConfig {
     }
 
     #[must_use]
+    pub fn help() -> Self {
+        Self {
+            enabled: true,
+            severity: Severity::Help,
+            options: HashMap::new(),
+        }
+    }
+
+    #[must_use]
     pub const fn new(severity: Severity, options: HashMap<String, toml::Value>) -> Self {
         Self {
             severity,

@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Code, Output, Processed, Symbol, Token},
+    reporting::{Codes, Output, Processed, Symbol, Token},
     WorkspacePath,
 };
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -47,7 +47,7 @@ pub struct Processor {
     pub(crate) usage: HashMap<Position, Vec<Position>>,
 
     /// Warnings
-    pub(crate) warnings: Vec<Arc<dyn Code>>,
+    pub(crate) warnings: Codes,
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,

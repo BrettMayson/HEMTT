@@ -8,10 +8,9 @@ use hemtt_workspace::{
 
 use crate::{Property, Value};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC07ExpectedArray;
+crate::lint!(LintC07ExpectedArray);
 
-impl Lint for LintC07ExpectedArray {
+impl Lint<()> for LintC07ExpectedArray {
     fn ident(&self) -> &str {
         "expected_array"
     }
@@ -28,13 +27,13 @@ impl Lint for LintC07ExpectedArray {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -42,6 +41,7 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
+        _data: &(),
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

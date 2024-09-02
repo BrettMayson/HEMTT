@@ -3,15 +3,14 @@ use std::{collections::HashSet, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Processed},
+    reporting::{Code, Codes, Diagnostic, Processed},
 };
 
 use crate::{Class, Config, Property};
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintC04ExternalMissing;
+crate::lint!(LintC04ExternalMissing);
 
-impl Lint for LintC04ExternalMissing {
+impl Lint<()> for LintC04ExternalMissing {
     fn ident(&self) -> &str {
         "external_missing"
     }
@@ -28,13 +27,13 @@ impl Lint for LintC04ExternalMissing {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner for Runner {
+impl LintRunner<()> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -42,6 +41,7 @@ impl LintRunner for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
+        _data: &(),
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -50,12 +50,8 @@ impl LintRunner for Runner {
     }
 }
 
-fn check(
-    properties: &[Property],
-    defined: &mut HashSet<String>,
-    processed: &Processed,
-) -> Vec<Arc<dyn Code>> {
-    let mut codes: Vec<Arc<dyn Code>> = Vec::new();
+fn check(properties: &[Property], defined: &mut HashSet<String>, processed: &Processed) -> Codes {
+    let mut codes: Codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {

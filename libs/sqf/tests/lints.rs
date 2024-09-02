@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use std::io::Read;
+use std::{io::Read, sync::Arc};
 
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
 
-const ROOT: &str = "tests/analyze/";
+const ROOT: &str = "tests/lints/";
 
 macro_rules! analyze {
     ($dir:ident) => {
@@ -27,12 +27,18 @@ fn test_analyze(dir: &str) {
         .unwrap();
     let source = workspace.join("source.sqf").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let database = Database::a3(false);
+    let database = Arc::new(Database::a3(false));
     let workspace_files = WorkspaceFiles::new();
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let (warnings, _errors) = analyze(&sqf, None, &processed, None, &database);
-            let stdout = warnings
+            let codes = analyze(
+                &sqf,
+                None,
+                &processed,
+                Arc::new(Addon::test_addon()),
+                database.clone(),
+            );
+            let stdout = codes
                 .iter()
                 .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
                 .collect::<Vec<_>>()
@@ -62,10 +68,9 @@ fn test_analyze(dir: &str) {
     };
 }
 
-analyze!(saa1_if_assign);
-analyze!(saa2_find_in_str);
-analyze!(saa3_typename);
-analyze!(saa4_str_format);
-analyze!(saa5_select_parse_number);
-analyze!(saa6_command_case);
-analyze!(saa7_format_args);
+analyze!(s03_static_typename);
+analyze!(s04_command_case);
+analyze!(s05_if_assign);
+analyze!(s06_find_in_str);
+analyze!(s07_select_parse_number);
+analyze!(s08_format_args);

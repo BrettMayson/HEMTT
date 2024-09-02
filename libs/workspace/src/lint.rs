@@ -3,9 +3,9 @@ use std::{collections::HashMap, sync::Arc};
 use codespan_reporting::diagnostic::Severity;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 
-use crate::reporting::{Code, Diagnostic, Processed};
+use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
-pub trait Lint {
+pub trait Lint<D>: Sync + Send {
     fn ident(&self) -> &str;
     fn description(&self) -> &str;
     fn documentation(&self) -> &str;
@@ -13,11 +13,11 @@ pub trait Lint {
     fn minimum_severity(&self) -> Severity {
         self.default_config().severity()
     }
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner>>;
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<D>>>;
 }
 
 #[allow(unused_variables, clippy::module_name_repetitions)]
-pub trait LintRunner {
+pub trait LintRunner<D> {
     type Target: std::any::Any;
 
     fn run(
@@ -26,49 +26,102 @@ pub trait LintRunner {
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
-    ) -> Vec<Arc<dyn Code>> {
+        data: &D,
+    ) -> Codes {
         vec![]
     }
 }
 
-pub trait AnyLintRunner {
+pub trait AnyLintRunner<D> {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>>;
+        data: &D,
+    ) -> Codes;
 }
 
-impl<T: LintRunner> AnyLintRunner for T {
+impl<T: LintRunner<D>, D> AnyLintRunner<D> for T {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>> {
+        data: &D,
+    ) -> Codes {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, config, processed, target)
+                self.run(project, config, processed, target, data)
             })
     }
 }
 
-#[allow(clippy::module_name_repetitions)]
-pub struct LintManager {
-    lints: Vec<Box<dyn Lint>>,
-    configs: HashMap<String, LintConfig>,
+#[allow(unused_variables, clippy::module_name_repetitions)]
+pub trait LintGroupRunner<D> {
+    type Target: std::any::Any;
+
+    fn run(
+        &self,
+        project: Option<&ProjectConfig>,
+        config: HashMap<String, LintConfig>,
+        processed: Option<&Processed>,
+        target: &Self::Target,
+        data: &D,
+    ) -> Codes {
+        vec![]
+    }
 }
 
-impl LintManager {
+pub trait AnyLintGroupRunner<D> {
+    fn run(
+        &self,
+        project: Option<&ProjectConfig>,
+        config: HashMap<String, LintConfig>,
+        processed: Option<&Processed>,
+        target: &dyn std::any::Any,
+        data: &D,
+    ) -> Codes;
+}
+
+impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
+    fn run(
+        &self,
+        project: Option<&ProjectConfig>,
+        config: HashMap<String, LintConfig>,
+        processed: Option<&Processed>,
+        target: &dyn std::any::Any,
+        data: &D,
+    ) -> Codes {
+        target
+            .downcast_ref::<T::Target>()
+            .map_or_else(std::vec::Vec::new, |target| {
+                self.run(project, config, processed, target, data)
+            })
+    }
+}
+
+type Lints<D> = Vec<Arc<Box<dyn Lint<D>>>>;
+
+#[allow(clippy::module_name_repetitions)]
+pub struct LintManager<D> {
+    lints: Lints<D>,
+    groups: Vec<(Lints<D>, Box<dyn AnyLintGroupRunner<D>>)>,
+    configs: HashMap<String, LintConfig>,
+    data: D,
+}
+
+impl<D> LintManager<D> {
     #[must_use]
-    pub fn new(configs: HashMap<String, LintConfig>) -> Self {
+    pub fn new(configs: HashMap<String, LintConfig>, data: D) -> Self {
         Self {
             lints: vec![],
+            groups: vec![],
             configs,
+            data,
         }
     }
 
@@ -76,8 +129,8 @@ impl LintManager {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn push(&mut self, lint: Box<dyn Lint>) -> Result<(), Vec<Arc<dyn Code>>> {
-        let lints = vec![lint];
+    pub fn push(&mut self, lint: Arc<Box<dyn Lint<D>>>) -> Result<(), Codes> {
+        let lints: Lints<D> = vec![lint];
         self.check(&lints)?;
         self.lints.extend(lints);
         Ok(())
@@ -87,9 +140,23 @@ impl LintManager {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn extend(&mut self, lints: Vec<Box<dyn Lint>>) -> Result<(), Vec<Arc<dyn Code>>> {
+    pub fn extend(&mut self, lints: Lints<D>) -> Result<(), Codes> {
         self.check(&lints)?;
         self.lints.extend(lints);
+        Ok(())
+    }
+
+    /// Push a group of lints into the manager
+    ///
+    /// # Errors
+    /// Returns a list of codes if the lint config is invalid
+    pub fn push_group(
+        &mut self,
+        lints: Lints<D>,
+        runner: Box<dyn AnyLintGroupRunner<D>>,
+    ) -> Result<(), Codes> {
+        self.check(&lints)?;
+        self.groups.push((lints, runner));
         Ok(())
     }
 
@@ -97,8 +164,8 @@ impl LintManager {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn check(&self, lints: &[Box<dyn Lint>]) -> Result<(), Vec<Arc<dyn Code>>> {
-        let mut errors: Vec<Arc<dyn Code>> = vec![];
+    pub fn check(&self, lints: &Lints<D>) -> Result<(), Codes> {
+        let mut errors: Codes = vec![];
         for lint in lints {
             if self.lints.iter().any(|l| l.ident() == lint.ident()) {
                 errors.push(Arc::new(InvalidLintConfig {
@@ -134,7 +201,7 @@ impl LintManager {
         project: Option<&ProjectConfig>,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
-    ) -> Vec<Arc<dyn Code>> {
+    ) -> Codes {
         self.lints
             .iter()
             .flat_map(|lint| {
@@ -148,9 +215,26 @@ impl LintManager {
                 }
                 lint.runners()
                     .iter()
-                    .flat_map(|runner| runner.run(project, &config, processed, target))
-                    .collect::<Vec<Arc<dyn Code>>>()
+                    .flat_map(|runner| runner.run(project, &config, processed, target, &self.data))
+                    .collect::<Codes>()
             })
+            .chain(self.groups.iter().flat_map(|(lints, runner)| {
+                let mut configs = HashMap::new();
+                for lint in lints {
+                    let config = self
+                        .configs
+                        .get(lint.ident())
+                        .cloned()
+                        .unwrap_or_else(|| lint.default_config());
+                    if config.enabled() {
+                        configs.insert(lint.ident().to_string(), config);
+                    }
+                }
+                if configs.is_empty() {
+                    return vec![];
+                }
+                runner.run(project, configs, processed, target, &self.data)
+            }))
             .collect()
     }
 }
@@ -219,7 +303,7 @@ mod tests {
     }
 
     struct LintA;
-    impl Lint for LintA {
+    impl Lint<()> for LintA {
         fn ident(&self) -> &str {
             "LintA"
         }
@@ -240,13 +324,13 @@ mod tests {
             Severity::Error
         }
 
-        fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+        fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
             vec![Box::new(LintARunner)]
         }
     }
 
     struct LintARunner;
-    impl LintRunner for LintARunner {
+    impl LintRunner<()> for LintARunner {
         type Target = TypeA;
 
         fn run(
@@ -255,13 +339,14 @@ mod tests {
             _config: &LintConfig,
             _processed: Option<&Processed>,
             _target: &TypeA,
-        ) -> Vec<Arc<dyn Code>> {
+            _data: &(),
+        ) -> Codes {
             vec![Arc::new(CodeA)]
         }
     }
 
     struct LintB;
-    impl Lint for LintB {
+    impl Lint<()> for LintB {
         fn ident(&self) -> &str {
             "LintB"
         }
@@ -282,13 +367,13 @@ mod tests {
             Severity::Error
         }
 
-        fn runners(&self) -> Vec<Box<dyn AnyLintRunner>> {
+        fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
             vec![Box::new(LintBRunner)]
         }
     }
 
     struct LintBRunner;
-    impl LintRunner for LintBRunner {
+    impl LintRunner<()> for LintBRunner {
         type Target = TypeB;
 
         fn run(
@@ -297,7 +382,8 @@ mod tests {
             _config: &LintConfig,
             _processed: Option<&Processed>,
             _target: &TypeB,
-        ) -> Vec<Arc<dyn Code>> {
+            _data: &(),
+        ) -> Codes {
             vec![Arc::new(CodeB)]
         }
     }
@@ -305,8 +391,10 @@ mod tests {
     #[test]
     fn test_lint_manager() {
         let manager = LintManager {
-            lints: vec![Box::new(LintA), Box::new(LintB)],
+            lints: vec![Arc::new(Box::new(LintA)), Arc::new(Box::new(LintB))],
+            groups: vec![],
             configs: HashMap::new(),
+            data: (),
         };
 
         let target_a = TypeA;

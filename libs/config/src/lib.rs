@@ -9,14 +9,14 @@ mod model;
 
 use std::sync::Arc;
 
-use analyze::{Analyze, CfgPatch, ChumskyCode};
+use analyze::{Analyze, CfgPatch, ChumskyCode, CONFIG_LINTS};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     lint::LintManager,
-    reporting::{Code, Processed, Severity},
+    reporting::{Code, Codes, Processed, Severity},
 };
 pub use model::*;
 pub mod parse;
@@ -29,7 +29,7 @@ pub mod rapify;
 pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
-) -> Result<ConfigReport, Vec<Arc<dyn Code>>> {
+) -> Result<ConfigReport, Codes> {
     let (config, errors) = parse::config().parse_recovery(processed.as_str());
     config.map_or_else(
         || {
@@ -44,8 +44,9 @@ pub fn parse(
         |config| {
             let mut manager = LintManager::new(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
+                (),
             );
-            manager.extend(analyze::lints::list())?;
+            manager.extend(CONFIG_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())?;
             Ok(ConfigReport {
                 codes: config.analyze(project, processed, &manager),
                 patches: config.get_patches(),
@@ -58,7 +59,7 @@ pub fn parse(
 /// A parsed config file with warnings and errors
 pub struct ConfigReport {
     config: Config,
-    codes: Vec<Arc<dyn Code>>,
+    codes: Codes,
     patches: Vec<CfgPatch>,
 }
 

@@ -1,14 +1,29 @@
-use std::sync::Arc;
-
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
-    lint::LintManager,
-    reporting::{Code, Processed},
+    lint::{Lint, LintManager},
+    reporting::{Codes, Processed},
 };
 
 mod cfgpatch;
 mod chumsky;
-pub mod lints;
+
+pub mod lints {
+    automod::dir!(pub "src/analyze/lints");
+}
+
+#[linkme::distributed_slice]
+pub static CONFIG_LINTS: [std::sync::LazyLock<std::sync::Arc<Box<dyn Lint<()>>>>];
+
+#[macro_export]
+macro_rules! lint {
+    ($name:ident) => {
+        #[allow(clippy::module_name_repetitions)]
+        pub struct $name;
+        #[linkme::distributed_slice($crate::analyze::CONFIG_LINTS)]
+        static LINT_ADD: std::sync::LazyLock<std::sync::Arc<Box<dyn Lint<()>>>> =
+            std::sync::LazyLock::new(|| std::sync::Arc::new(Box::new($name)));
+    };
+}
 
 pub use cfgpatch::CfgPatch;
 pub use chumsky::ChumskyCode;
@@ -21,8 +36,8 @@ pub trait Analyze: Sized + 'static {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes
@@ -38,8 +53,8 @@ impl Analyze for Config {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(manager.run(project, Some(processed), &self.to_class()));
@@ -57,8 +72,8 @@ impl Analyze for Class {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
@@ -77,8 +92,8 @@ impl Analyze for Property {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
@@ -95,8 +110,8 @@ impl Analyze for Value {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
@@ -117,8 +132,8 @@ impl Analyze for Array {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(
@@ -135,8 +150,8 @@ impl Analyze for Item {
         &self,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager,
-    ) -> Vec<Arc<dyn Code>> {
+        manager: &LintManager<()>,
+    ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(project, Some(processed), self));
         codes.extend(match self {
