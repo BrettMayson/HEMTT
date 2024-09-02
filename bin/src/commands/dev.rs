@@ -47,9 +47,9 @@ pub fn add_args(cmd: Command) -> Command {
             .action(ArgAction::SetTrue),
     )
     .arg(
-        clap::Arg::new("expsqfc")
-            .long("expsqfc")
-            .help("Use HEMTT's experimental SQF compiler")
+        clap::Arg::new("asc")
+            .long("asc")
+            .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
             .action(ArgAction::SetTrue),
     )
     .arg(
@@ -125,7 +125,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
         }
     }
 
-    let expsqfc = matches.get_one::<bool>("expsqfc") == Some(&true);
+    let use_asc = matches.get_one::<bool>("asc") == Some(&true);
 
     let mut executor = Executor::new(ctx);
 
@@ -135,9 +135,9 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::new(expsqfc)));
+    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
     #[cfg(not(target_os = "macos"))]
-    if !expsqfc {
+    if use_asc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());
     }
     executor.add_module(Box::<Files>::default());
