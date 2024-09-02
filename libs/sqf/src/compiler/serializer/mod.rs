@@ -264,6 +264,7 @@ pub enum Constant {
     Scalar(f32),
     Boolean(bool),
     Array(Vec<Self>),
+    ConsumeableArray(Vec<Self>),
     NularCommand(Arc<str>),
 }
 
@@ -283,7 +284,7 @@ impl Constant {
             Self::String(..) => 1,
             Self::Scalar(..) => 2,
             Self::Boolean(..) => 3,
-            Self::Array(..) => 4,
+            Self::Array(..) | Self::ConsumeableArray(..) => 4,
             Self::NularCommand(..) => 5,
         }
     }
@@ -309,7 +310,7 @@ impl Constant {
             Self::Boolean(value) => {
                 writer.write_u8(u8::from(value))?;
             }
-            Self::Array(ref array) => {
+            Self::Array(ref array) | Self::ConsumeableArray(ref array) => {
                 let array_len = try_truncate_or(array.len(), SerializeError::ArrayTooLong)?;
                 writer.write_u32::<LE>(array_len)?;
                 for constant in array {

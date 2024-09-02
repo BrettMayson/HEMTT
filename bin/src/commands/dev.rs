@@ -53,6 +53,12 @@ pub fn add_args(cmd: Command) -> Command {
             .action(ArgAction::SetTrue),
     )
     .arg(
+        clap::Arg::new("expopti")
+            .long("expopti")
+            .help("Use SQFC Optimizer")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
         clap::Arg::new("no-rap")
             .long("no-rap")
             .help("Do not rapify (cpp, rvmat)")
@@ -131,6 +137,7 @@ pub fn context(
     }
 
     let use_asc = matches.get_one::<bool>("asc") == Some(&true);
+    let use_optimizer = matches.get_one::<bool>("expopti") == Some(&true);
 
     let mut executor = Executor::new(ctx);
 
@@ -140,7 +147,7 @@ pub fn context(
     if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
+    executor.add_module(Box::new(SQFCompiler::new(!use_asc, use_optimizer)));
     #[cfg(not(target_os = "macos"))]
     if use_asc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());

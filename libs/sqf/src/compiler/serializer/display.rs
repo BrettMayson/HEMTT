@@ -84,7 +84,7 @@ impl<'a> fmt::Display for DisplayConstant<'a> {
             Constant::String(string) => write!(f, "{string:?}")?,
             Constant::Scalar(scalar) => write!(f, "{scalar:?}")?,
             Constant::Boolean(boolean) => write!(f, "{boolean}")?,
-            Constant::Array(array) => {
+            Constant::Array(array) | Constant::ConsumeableArray(array) => {
                 f.write_str("[")?;
                 for (i, constant) in array.iter().enumerate() {
                     if i != 0 {
