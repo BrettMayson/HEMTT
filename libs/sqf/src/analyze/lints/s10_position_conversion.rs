@@ -48,7 +48,7 @@ impl LintRunner<SqfLintData> for Runner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
-        _config: &LintConfig,
+        config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
         _data: &SqfLintData,
@@ -76,7 +76,7 @@ impl LintRunner<SqfLintData> for Runner {
         
         let span = span.start .. expression.span().end;
 
-        vec![Arc::new(CodeS10PositionConversion::new(span, combination[2].to_string(), processed, Severity::Warning))]
+        vec![Arc::new(CodeS10PositionConversion::new(span, combination[2].to_string(), processed, config.severity()))]
     }
 }
 
