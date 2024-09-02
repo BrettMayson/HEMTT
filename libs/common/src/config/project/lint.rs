@@ -24,6 +24,10 @@ impl LintGroupConfig {
     pub const fn sqf(&self) -> &HashMap<String, LintConfigOverride> {
         &self.sqf
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.config.is_empty() && self.sqf.is_empty()
+    }
 }
 
 #[allow(clippy::module_name_repetitions)]
