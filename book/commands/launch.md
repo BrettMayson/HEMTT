@@ -93,6 +93,7 @@ parameters = [
 executable = "arma3" # Default: "arma3_x64"
 file_patching = false # Default: true
 binarize = true # Default: false
+rapify = false # Default: true
 
 # Launched with `hemtt launch vn`
 [hemtt.launch.vn]
@@ -170,11 +171,15 @@ The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x
 
 ### file_patching
 
-Whether to launch Arma 3 with `-filePatching`.
+Whether to launch Arma 3 with `-filePatching`. Equivalent to `--no-filepatching` or `-F`.
 
 ### binarize
 
-Whether to use BI's binarize on supported files.
+Whether to use BI's binarize on supported files. Equivalent to `--binarize`.
+
+### rapify
+
+Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
 
 ## Options
 
