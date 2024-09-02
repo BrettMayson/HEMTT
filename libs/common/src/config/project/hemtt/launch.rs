@@ -26,6 +26,18 @@ pub struct LaunchOptions {
 
     /// Binary to launch
     executable: Option<String>,
+
+    // Should HEMTT run binarize
+    binarize: Option<bool>,
+
+    // Should HEMTT use file-patching
+    file_patching: Option<bool>,
+
+    // Should HEMTT use multiple instances
+    instances: Option<u8>,
+
+    // Should HEMTT rapify
+    rapify: Option<bool>,
 }
 
 impl LaunchOptions {
@@ -81,6 +93,34 @@ impl LaunchOptions {
     }
 
     #[must_use]
+    /// Should HEMTT run binarize
+    /// Defaults to `false`
+    pub fn binarize(&self) -> bool {
+        self.binarize.unwrap_or(false)
+    }
+
+    #[must_use]
+    /// Should HEMTT use file-patching
+    /// Defaults to `true`
+    pub fn file_patching(&self) -> bool {
+        self.file_patching.unwrap_or(true)
+    }
+
+    #[must_use]
+    /// Should HEMTT use multiple instances
+    /// Defaults to `1`
+    pub fn instances(&self) -> u8 {
+        self.instances.unwrap_or(1)
+    }
+
+    #[must_use]
+    /// Should HEMTT rapify
+    /// Defaults to `true`
+    pub fn rapify(&self) -> bool {
+        self.rapify.unwrap_or(true)
+    }
+
+    #[must_use]
     /// Overlay two launch options  
     /// Other will take precedence
     pub fn overlay(self, other: Self) -> Self {
@@ -95,6 +135,18 @@ impl LaunchOptions {
         }
         if let Some(mission) = other.mission {
             base.mission = Some(mission);
+        }
+        if let Some(binarize) = other.binarize {
+            base.binarize = Some(binarize);
+        }
+        if let Some(file_patching) = other.file_patching {
+            base.file_patching = Some(file_patching);
+        }
+        if let Some(instances) = other.instances {
+            base.instances = Some(instances);
+        }
+        if let Some(rapify) = other.rapify {
+            base.rapify = Some(rapify);
         }
         base
     }
@@ -127,6 +179,18 @@ pub struct LaunchOptionsFile {
 
     #[serde(default)]
     executable: Option<String>,
+
+    #[serde(default)]
+    binarize: Option<bool>,
+
+    #[serde(default)]
+    file_patching: Option<bool>,
+
+    #[serde(default)]
+    instances: Option<u8>,
+
+    #[serde(default)]
+    rapify: Option<bool>,
 }
 
 impl LaunchOptionsFile {
@@ -170,6 +234,10 @@ impl From<LaunchOptionsFile> for LaunchOptions {
             mission: file.mission,
             parameters: file.parameters,
             executable: file.executable,
+            binarize: file.binarize,
+            file_patching: file.file_patching,
+            instances: file.instances,
+            rapify: file.rapify,
         }
     }
 }
