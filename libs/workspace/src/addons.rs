@@ -269,6 +269,23 @@ impl BuildData {
     }
 }
 
+mod test_helper {
+    impl super::Addon {
+        #[must_use]
+        /// # Panics
+        /// Panics if the prefix cannot be created
+        pub fn test_addon() -> Self {
+            Self {
+                name: "test".to_string(),
+                location: super::Location::Addons,
+                config: None,
+                prefix: super::Prefix::new("test").expect("test prefix"),
+                build_data: super::BuildData::new(),
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

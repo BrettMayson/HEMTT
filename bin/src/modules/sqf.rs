@@ -6,10 +6,10 @@ use std::sync::{
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
-    analyze::analyze,
+    analyze::{analyze, lint_check},
     parser::{database::Database, ParserError},
 };
-use hemtt_workspace::reporting::{Code, Diagnostic, Severity};
+use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{context::Context, error::Error, report::Report};
@@ -20,7 +20,7 @@ use super::Module;
 pub struct SQFCompiler {
     pub compile: bool,
     pub optimze: bool,
-    pub database: Option<Database>,
+    pub database: Option<Arc<Database>>,
 }
 
 impl SQFCompiler {
@@ -40,8 +40,23 @@ impl Module for SQFCompiler {
     }
 
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        self.database = Some(Database::a3_with_workspace(ctx.workspace_path(), false)?);
+        self.database = Some(Arc::new(Database::a3_with_workspace(
+            ctx.workspace_path(),
+            false,
+        )?));
         Ok(Report::new())
+    }
+
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.extend(lint_check(
+            ctx.config(),
+            self.database
+                .as_ref()
+                .expect("database not initialized")
+                .clone(),
+        ));
+        Ok(report)
     }
 
     #[allow(clippy::too_many_lines)]
@@ -51,16 +66,21 @@ impl Module for SQFCompiler {
         let counter = AtomicU16::new(0);
         let mut entries = Vec::new();
         for addon in ctx.addons() {
+            let addon = Arc::new(addon.clone());
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
                         continue;
                     }
-                    entries.push((addon, entry));
+                    entries.push((addon.clone(), entry));
                 }
             }
         }
-        let database = self.database.as_ref().expect("database not initialized");
+        let database = self
+            .database
+            .as_ref()
+            .expect("database not initialized")
+            .clone();
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
@@ -68,16 +88,18 @@ impl Module for SQFCompiler {
                 let mut report = Report::new();
                 let processed = Processor::run(entry).map_err(|(_, e)| e)?;
                 for warning in processed.warnings() {
-                    report.warn(warning.clone());
+                    report.push(warning.clone());
                 }
-                match hemtt_sqf::parser::run(database, &processed) {
+                match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (warnings, errors) =
-                            analyze(&sqf, Some(ctx.config()), &processed, Some(addon), database);
-                        for warning in warnings {
-                            report.warn(warning);
-                        }
-                        if errors.is_empty() {
+                        let codes = analyze(
+                            &sqf,
+                            Some(ctx.config()),
+                            &processed,
+                            addon.clone(),
+                            database.clone(),
+                        );
+                        if !codes.failed() {
                             if self.compile {
                                 let mut out = entry.with_extension("sqfc")?.create_file()?;
                                 let sqf_to_write = if self.optimze { sqf.optimize() } else { sqf };
@@ -85,8 +107,8 @@ impl Module for SQFCompiler {
                             }
                             counter.fetch_add(1, Ordering::Relaxed);
                         }
-                        for error in errors {
-                            report.error(error);
+                        for code in codes {
+                            report.push(code);
                         }
                         Ok(report)
                     }
@@ -97,14 +119,14 @@ impl Module for SQFCompiler {
                             warn!("skipping apparent CBA settings file: {}", entry);
                         } else {
                             for error in e {
-                                report.error(error);
+                                report.push(error);
                             }
                         }
                         Ok(report)
                     }
                     Err(ParserError::LexingError(e)) => {
                         for error in e {
-                            report.error(error);
+                            report.push(error);
                         }
                         Ok(report)
                     }
@@ -153,7 +175,7 @@ impl Module for SQFCompiler {
             u8::try_from(required_version.minor()).unwrap_or_default(),
         );
         if database.wiki().version() < &wiki_version {
-            report.warn(Arc::new(RequiresFutureVersion::new(
+            report.push(Arc::new(RequiresFutureVersion::new(
                 wiki_version,
                 required_by,
                 *database.wiki().version(),

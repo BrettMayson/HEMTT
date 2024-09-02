@@ -101,7 +101,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
-        report.error(MissingMainPrefix::code());
+        report.push(MissingMainPrefix::code());
         return Ok(report);
     };
 
@@ -121,7 +121,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(|c| {
             config.hemtt().launch().get(c).cloned().map_or_else(
                 || {
-                    report.error(LaunchConfigNotFound::code(
+                    report.push(LaunchConfigNotFound::code(
                         c.to_string(),
                         &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                     ));
@@ -143,7 +143,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     trace!("launch config: {:?}", launch);
 
     let Some(arma3dir) = steam::find_app(107_410) else {
-        report.error(ArmaNotFound::code());
+        report.push(ArmaNotFound::code());
         return Ok(report);
     };
 
@@ -179,7 +179,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         trace!("Loading preset: {}", preset);
         let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            report.error(PresetNotFound::code(preset.to_string(), &presets));
+            report.push(PresetNotFound::code(preset.to_string(), &presets));
             continue;
         }
         let html = std::fs::read_to_string(html)?;
@@ -202,16 +202,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     // climb to the workshop folder
     if !workshop.is_empty() {
         let Some(common) = arma3dir.parent() else {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         let Some(root) = common.parent() else {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         let workshop_folder = root.join("workshop").join("content").join("107410");
         if !workshop_folder.exists() {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         for load_mod in workshop {
@@ -224,7 +224,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             }
             let mod_path = workshop_folder.join(&load_mod);
             if !mod_path.exists() {
-                report.error(WorkshopModNotFound::code(load_mod));
+                report.push(WorkshopModNotFound::code(load_mod));
             };
             mods.push(mod_path.display().to_string());
         }
@@ -260,7 +260,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut path = PathBuf::from(mission);
 
         if path.is_absolute() {
-            report.error(MissionAbsolutePath::code(mission.to_string()));
+            report.push(MissionAbsolutePath::code(mission.to_string()));
             return Ok(report);
         }
         path = std::env::current_dir()?.join(mission);
@@ -280,7 +280,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         if path.is_file() {
             args.push(format!("\"{}\"", path.display()));
         } else {
-            report.error(MissionNotFound::code(
+            report.push(MissionNotFound::code(
                 mission.to_string(),
                 &std::env::current_dir()?,
             ));
@@ -291,7 +291,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     if matches.get_flag("no-build") {
         warn!("Using Quick Launch! HEMTT will not rebuild the project");
         if !std::env::current_dir()?.join(".hemttout/dev").exists() {
-            report.error(CanNotQuickLaunch::code(
+            report.push(CanNotQuickLaunch::code(
                 "no dev build found in .hemttout/dev".to_string(),
             ));
             return Ok(report);
@@ -300,7 +300,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let prefix_folder = arma3dir.join(mainprefix);
         let link = prefix_folder.join(config.prefix());
         if !prefix_folder.exists() || !link.exists() {
-            report.error(CanNotQuickLaunch::code(
+            report.push(CanNotQuickLaunch::code(
                 "link does not exist in the Arma 3 folder".to_string(),
             ));
             return Ok(report);

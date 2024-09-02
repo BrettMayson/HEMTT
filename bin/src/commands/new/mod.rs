@@ -40,7 +40,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let test_mode = !cfg!(not(debug_assertions)) && matches.get_flag("in-test");
 
     if !test_mode && !std::io::stdin().is_terminal() {
-        report.error(TerminalNotInput::code());
+        report.push(TerminalNotInput::code());
         return Ok(report);
     }
 
@@ -49,7 +49,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .expect("name to be set as required");
     let path = Path::new(&name);
     if path.exists() {
-        report.error(FolderExists::code(name.to_string()));
+        report.push(FolderExists::code(name.to_string()));
         return Ok(report);
     }
 

@@ -6,7 +6,7 @@ Returns the project version.
 
 `.build()` will return `0` if the build number is not set.
 
-```ts
+```js
 HEMTT.project().version().to_string(); // "1.3.0.1052"
 HEMTT.project().version().to_string_short(); // "1.3.0"
 HEMTT.project().version().major(); // 1
@@ -19,7 +19,7 @@ HEMTT.project().version().build(); // 1052
 
 Returns the project name.
 
-```ts
+```js
 HEMTT.project().name(); // "Advanced Banana Environment"
 ```
 
@@ -27,7 +27,7 @@ HEMTT.project().name(); // "Advanced Banana Environment"
 
 Returns the project prefix.
 
-```ts
+```js
 HEMTT.project().prefix(); // "abe"
 ```
 
@@ -35,6 +35,6 @@ HEMTT.project().prefix(); // "abe"
 
 Returns the project main prefix, empty if not set.
 
-```ts
+```js
 HEMTT.project().mainprefix(); // "z"
 ```

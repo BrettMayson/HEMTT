@@ -62,11 +62,11 @@ impl Module for Binarize {
             trace!("Using Binarize path from registry");
             let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
             let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-                report.warn(ToolsNotFound::code());
+                report.push(ToolsNotFound::code());
                 return Ok(report);
             };
             let Ok(path) = key.get_value::<String, _>("path") else {
-                report.warn(ToolsNotFound::code());
+                report.push(ToolsNotFound::code());
                 return Ok(report);
             };
             PathBuf::from(path)
@@ -75,7 +75,7 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         } else {
-            report.warn(ToolsNotFound::code());
+            report.push(ToolsNotFound::code());
         }
         Ok(report)
     }
@@ -83,7 +83,7 @@ impl Module for Binarize {
     #[cfg(not(windows))]
     fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.warn(PlatformNotSupported::code());
+        report.push(PlatformNotSupported::code());
         Ok(report)
     }
 
@@ -102,7 +102,7 @@ impl Module for Binarize {
         if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
         } else if pdrive_option == &PDriveOption::Require {
-            report.error(MissingPDrive::code());
+            report.push(MissingPDrive::code());
         }
         for addon in ctx.addons() {
             if let Some(config) = addon.config() {
@@ -172,30 +172,20 @@ impl Module for Binarize {
                         let (missing_textures, missing_materials) =
                             p3d.missing(ctx.workspace_path(), &search_cache)?;
                         if !missing_textures.is_empty() {
-                            let warn = *pdrive_option == PDriveOption::Ignore;
                             let diag = MissingTextures::code(
                                 entry.as_str().to_string(),
                                 missing_textures,
-                                warn,
+                                *pdrive_option == PDriveOption::Ignore,
                             );
-                            if warn {
-                                report.warn(diag);
-                            } else {
-                                report.error(diag);
-                            }
+                            report.push(diag);
                         }
                         if !missing_materials.is_empty() {
-                            let warn = *pdrive_option == PDriveOption::Ignore;
                             let diag = MissingMaterials::code(
                                 entry.as_str().to_string(),
                                 missing_materials,
-                                warn,
+                                *pdrive_option == PDriveOption::Ignore,
                             );
-                            if warn {
-                                report.warn(diag);
-                            } else {
-                                report.error(diag);
-                            }
+                            report.push(diag);
                         }
                     }
 
@@ -289,7 +279,7 @@ impl Module for Binarize {
             .into_iter()
             .flatten()
             .for_each(|error| {
-                report.error(error);
+                report.push(error);
             });
 
         info!("Binarized {} files", counter.load(Ordering::Relaxed));

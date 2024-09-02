@@ -8,6 +8,15 @@ pub struct Config(pub Vec<Property>);
 
 impl Config {
     #[must_use]
+    pub fn to_class(&self) -> Class {
+        Class::Root {
+            properties: self.0.clone(),
+        }
+    }
+}
+
+impl Config {
+    #[must_use]
     /// Get the patches
     pub fn get_patches(&self) -> Vec<CfgPatch> {
         let mut patches = Vec::new();

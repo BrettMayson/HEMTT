@@ -1,11 +1,12 @@
 use std::{collections::HashMap, ops::Range, rc::Rc, sync::Arc};
+use tracing::warn;
 
 use crate::{
     position::{LineCol, Position},
     Error, WorkspacePath,
 };
 
-use super::{Code, Output, Token};
+use super::{Code, Codes, Output, Token};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
@@ -38,7 +39,7 @@ pub struct Processed {
     total: usize,
 
     /// Warnings
-    warnings: Vec<Arc<dyn Code>>,
+    warnings: Codes,
 
     /// The preprocessor was able to check the file, but it should not be rapified
     no_rapify: bool,
@@ -180,7 +181,7 @@ impl Processed {
         output: Vec<Output>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
-        warnings: Vec<Arc<dyn Code>>,
+        warnings: Codes,
         no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
@@ -272,7 +273,8 @@ impl Processed {
     #[must_use]
     /// Return a string with the source from the span
     pub fn extract(&self, span: Range<usize>) -> Arc<str> {
-        if span.start + 1 == span.end {
+        if span.start == span.end {
+            warn!("tried to extract an invalid span");
             return Arc::from("");
         }
         let mut real_start = 0;

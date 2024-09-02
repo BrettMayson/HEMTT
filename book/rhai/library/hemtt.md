@@ -7,10 +7,10 @@ The `HEMTT` constant gives access to information and the ability to modify the b
 Returns the version of HEMTT.
 
 ```js
-HEMTT.version().to_string(); // "1.12.6"
+HEMTT.version().to_string(); // "1.13.0"
 HEMTT.version().major(); // 1
-HEMTT.version().minor(); // 12
-HEMTT.version().patch(); // 6
+HEMTT.version().minor(); // 13
+HEMTT.version().patch(); // 0
 HEMTT.version().build(); // ""
 ```
 

@@ -12,7 +12,11 @@ mod project;
 
 pub use addon::AddonConfig;
 pub use pdrive::PDriveOption;
-pub use project::{hemtt::launch::LaunchOptions, ProjectConfig};
+pub use project::{
+    hemtt::launch::LaunchOptions,
+    lint::{LintConfig, LintConfigOverride},
+    ProjectConfig,
+};
 
 fn deprecated(file: &Path, key: &str, replacement: &str, info: Option<&str>) {
     warn!(

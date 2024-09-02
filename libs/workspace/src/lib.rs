@@ -12,6 +12,7 @@ use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
 pub mod addons;
 pub mod error;
+pub mod lint;
 pub mod path;
 pub mod pdrive;
 pub mod position;

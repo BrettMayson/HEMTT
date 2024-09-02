@@ -62,4 +62,13 @@ impl Class {
             Self::Local { parent, .. } => parent.as_ref(),
         }
     }
+
+    #[must_use]
+    /// Get the properties of the class
+    pub fn properties(&self) -> &[Property] {
+        match self {
+            Self::Root { properties } | Self::Local { properties, .. } => properties,
+            Self::External { .. } => &[],
+        }
+    }
 }

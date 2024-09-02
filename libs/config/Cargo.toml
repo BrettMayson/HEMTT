@@ -16,8 +16,10 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0", features = ["lsp"] }
 hemtt-workspace = { path = "../workspace", version = "1.0.0", features = ["lsp"] }
 
+automod = { workspace = true }
 byteorder = { workspace = true }
 chumsky = { workspace = true }
+linkme = { workspace = true }
 lsp-types = { workspace = true }
 vfs = { workspace = true }
 
