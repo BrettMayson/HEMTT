@@ -12,8 +12,6 @@ See the Analysis section for [Config](../analysis/config.md) and [SQF](../analys
 Some lints are not able to be disabled or reduced in severity. These are usually critical lints that are required for your project to work correctly.
 ```
 
-Lint configuration is done in the `hemtt.toml` file in the root of your project.
-
 There are 3 ways to configure a lint:
 
 ### Disabling
