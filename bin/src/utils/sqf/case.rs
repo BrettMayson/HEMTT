@@ -165,6 +165,8 @@ fn file(file: &Path) -> Result<bool, Error> {
             }
         }
     }
+    // flush buffer if we ended on non-whitepsace
+    check_buffer(&mut out, &mut buffer, &wiki);
 
     // Write the file
     if content != out {
