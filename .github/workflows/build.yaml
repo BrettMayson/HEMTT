@@ -66,7 +66,7 @@ jobs:
           - repo: acemod/ACE3
             commit: 337222aa40bcfcd9e1565018cf61ac6c59ae2fc8
           - repo: ArmaForces/Mods
-            commit: c54d78e3da3163ee9b1baad847ec662dbaf3566e
+            commit: 8951cfc84765d1b0dc2b1bf953f903c3f4b80b0d
           - repo: Theseus-Aegis/Mods
             commit: 943906d18817a7f0829742f0c91cdad34456c594
           - repo: SynixeContractors/Mod
