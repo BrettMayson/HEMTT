@@ -88,6 +88,7 @@ r#"### Configuration
 options.ignore = [
     "HealingReceived",
 ]
+```
 
 ### Example
 
