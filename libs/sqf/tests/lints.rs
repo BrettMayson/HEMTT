@@ -74,3 +74,4 @@ analyze!(s05_if_assign);
 analyze!(s06_find_in_str);
 analyze!(s07_select_parse_number);
 analyze!(s08_format_args);
+analyze!(s09_banned_command);
