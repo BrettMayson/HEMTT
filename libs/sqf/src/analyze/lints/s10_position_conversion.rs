@@ -29,14 +29,14 @@ impl Lint<SqfLintData> for LintS10PositionConversion {
     }
 }
 
-static COMBINATIONS: [[&str; 3]; 9] = [
-    ["agltoasl",     "getpos",          "getPosASL"],
-    ["agltoatl",     "getpos",          "getPosATL"],
-    // ["asltoagl",     "getposasl",       "getPos"], // AGL vs AGLS :|
+static COMBINATIONS: [[&str; 3]; 6] = [
+    // ["agltoasl",     "getpos",          "getPosASL"], // AGL vs AGLS :|
+    // ["agltoatl",     "getpos",          "getPosATL"],
+    // ["asltoagl",     "getposasl",       "getPos"],
     // ["atltoagl",     "getposatl",       "getPos"],
     ["asltoatl",    "getposasl",       "getPosATL"],
     ["atltoasl",    "getposatl",       "getPosASL"],
-    ["agltoasl",    "visibleposition", "visiblePositionASL"],
+    // ["agltoasl",    "visibleposition", "visiblePositionASL"],
     ["setpos",      "asltoagl",        "setPosASL"],
     ["setpos",      "atltoagl",        "setPosATL"],
     ["setposatl",   "asltoatl",        "setPosATL"],
@@ -64,7 +64,12 @@ impl LintRunner<SqfLintData> for Runner {
         ) = target else {
             return Vec::new()
         };
-        
+        let binary = matches!(target, Expression::BinaryCommand(_, _, _, _));
+
+        if binary && target.command_name().map(str::to_lowercase) != Some("getpos".to_string()) {
+            return Vec::new();
+        }
+
         let Some(conversion) = expression.command_name() else {
             return Vec::new();
         };
@@ -112,7 +117,8 @@ impl Code for CodeS10PositionConversion {
         "Unnecessary conversion".to_string()
     }
 
-    fn suggestion(&self) -> Option<String> {
+    /// In order to be a suggestion, it must deal with parenthesis and left side arguments
+    fn help(&self) -> Option<String> {
         Some(self.suggestion.clone())
     }
 
