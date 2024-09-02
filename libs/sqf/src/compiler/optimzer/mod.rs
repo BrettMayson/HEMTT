@@ -310,7 +310,7 @@ impl Expression {
         if let Self::String(left_string, _, ref _left_wrapper) = left {
             if let Self::String(right_string, _, ref right_wrapper) = right {
                 if right_string.is_ascii() && left_string.is_ascii() {
-                    let new_string = op(left_string.as_ref(), left_string.as_ref());
+                    let new_string = op(left_string.as_ref(), right_string.as_ref());
                     trace!(
                         "optimizing [B:{}] ({}) => {}",
                         op_type.as_str(),
