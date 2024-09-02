@@ -99,6 +99,7 @@ pub struct CodeS04CommandCase {
     used: String,
     wiki: String,
 
+    include: bool,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -106,6 +107,10 @@ pub struct CodeS04CommandCase {
 impl Code for CodeS04CommandCase {
     fn ident(&self) -> &'static str {
         "L-S04"
+    }
+
+    fn include(&self) -> bool {
+        self.include
     }
 
     fn link(&self) -> Option<&str> {
@@ -137,12 +142,15 @@ impl CodeS04CommandCase {
     #[must_use]
     pub fn new(span: Range<usize>, used: String, wiki: String, processed: &Processed, severity: Severity) -> Self {
         Self {
+            include: processed.mappings(span.end).first().is_some_and(|mapping| {
+                mapping.original().path().is_include()
+            }),
+            severity,
+            diagnostic: None,
+            
             span,
             used,
             wiki,
-
-            severity,
-            diagnostic: None,
         }
         .generate_processed(processed)
     }

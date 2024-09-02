@@ -37,6 +37,10 @@ pub trait Code: Send + Sync {
     fn token(&self) -> Option<&Token> {
         None
     }
+    /// Was the code from an include
+    fn include(&self) -> bool {
+        false
+    }
     /// The code identifier
     fn ident(&self) -> &'static str;
     fn link(&self) -> Option<&str> {
