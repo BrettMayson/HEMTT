@@ -13,6 +13,13 @@ impl Code for WorkshopNotFound {
         "Arma 3 workshop not found.".to_string()
     }
 
+    fn help(&self) -> Option<String> {
+        Some(
+            "Run Arma 3 at least once from Steam before attempting to use `hemtt launch`."
+                .to_string(),
+        )
+    }
+
     fn diagnostic(&self) -> Option<Diagnostic> {
         Some(Diagnostic::simple(self))
     }

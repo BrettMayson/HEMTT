@@ -125,8 +125,9 @@ fn filter_codes(
             if includes == WithIncludes::Yes {
                 true
             } else {
-                c.diagnostic()
-                    .map_or(true, |d| !d.labels.iter().any(|l| l.file().is_include()))
+                !c.include()
+                    && c.diagnostic()
+                        .map_or(true, |d| !d.labels.iter().any(|l| l.file().is_include()))
             }
         })
         .cloned()

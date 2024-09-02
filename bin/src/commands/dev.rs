@@ -71,7 +71,7 @@ pub fn add_args(cmd: Command) -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Report, Error> {
-    let mut executor = context(matches, launch_optionals)?;
+    let mut executor = context(matches, launch_optionals, false, true)?;
     executor.run()
 }
 
@@ -79,7 +79,12 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Repo
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Executor, Error> {
+pub fn context(
+    matches: &ArgMatches,
+    launch_optionals: &[String],
+    force_binarize: bool,
+    rapify: bool,
+) -> Result<Executor, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches
         .get_many::<String>("optional")
@@ -139,7 +144,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     executor.collapse(Collapse::Yes);
 
     executor.add_module(Box::<Hooks>::default());
-    if matches.get_one::<bool>("no-rap") != Some(&true) {
+    if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
     executor.add_module(Box::new(SQFCompiler::new(!use_asc, use_optimizer)));
@@ -149,7 +154,7 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     }
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
-    if matches.get_one::<bool>("binarize") == Some(&true) {
+    if force_binarize || matches.get_one::<bool>("binarize") == Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
 

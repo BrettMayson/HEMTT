@@ -18,6 +18,10 @@ impl Code for ScriptNotFound {
         "BHE1"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/rhai/scripts/index.html")
+    }
+
     fn message(&self) -> String {
         format!("Script not found: {}", self.script)
     }

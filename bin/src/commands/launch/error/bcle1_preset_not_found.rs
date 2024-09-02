@@ -13,6 +13,10 @@ impl Code for PresetNotFound {
         "BCLE1"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#presets")
+    }
+
     fn message(&self) -> String {
         format!("Preset `{}` not found.", self.name)
     }

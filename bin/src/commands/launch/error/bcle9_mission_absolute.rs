@@ -11,6 +11,10 @@ impl Code for MissionAbsolutePath {
         "BCLE9"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#mission")
+    }
+
     fn message(&self) -> String {
         "Missions can not be absolute paths.".to_string()
     }

@@ -9,6 +9,10 @@ impl Code for MissingMainPrefix {
         "BCLE5"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/configuration/index.html#main-prefix")
+    }
+
     fn message(&self) -> String {
         "Missing `mainprefix` in project.toml.".to_string()
     }
