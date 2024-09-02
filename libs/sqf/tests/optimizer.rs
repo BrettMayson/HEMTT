@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 pub use float_ord::FloatOrd as Scalar;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{parser::database::Database, Statements};
