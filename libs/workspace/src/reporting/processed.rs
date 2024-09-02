@@ -277,6 +277,9 @@ impl Processed {
             warn!("tried to extract an invalid span");
             return Arc::from("");
         }
+        if span.start + 1 == span.end {
+            return Arc::from("");
+        }
         let mut real_start = 0;
         let mut real_end = 0;
         self.output.char_indices().for_each(|(p, c)| {
