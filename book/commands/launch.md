@@ -91,6 +91,8 @@ parameters = [
     "-filePatching",
 ]
 executable = "arma3" # Default: "arma3_x64"
+file_patching = false # Default: true
+binarize = true # Default: false
 
 # Launched with `hemtt launch vn`
 [hemtt.launch.vn]
@@ -165,6 +167,14 @@ A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Start
 ### executable
 
 The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x64`. Do not include the `.exe` extension, it will be added automatically on Windows. Only paths relative to the Arma 3 directory are supported.
+
+### file_patching
+
+Whether to launch Arma 3 with `-filePatching`.
+
+### binarize
+
+Whether to use BI's binarize on supported files.
 
 ## Options
 

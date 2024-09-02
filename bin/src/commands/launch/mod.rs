@@ -47,20 +47,12 @@ pub fn cli() -> Command {
                     .raw(true)
                     .help("Passthrough additional arguments to Arma 3"),
             )
-            // .arg(
-            //     clap::Arg::new("server")
-            //         .long("with-server")
-            //         .short('S')
-            //         .help("Launches a dedicated server alongside the client")
-            //         .action(ArgAction::SetTrue),
-            // )
             .arg(
                 clap::Arg::new("instances")
                     .long("instances")
                     .short('i')
                     .help("Launches multiple instances of the game")
-                    .action(ArgAction::Set)
-                    .default_value("1"),
+                    .action(ArgAction::Set),
             )
             .arg(
                 clap::Arg::new("no-build")
@@ -88,16 +80,6 @@ pub fn cli() -> Command {
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    let Ok(instance_count) = matches
-        .get_one::<String>("instances")
-        .expect("default exists")
-        .parse::<usize>()
-    else {
-        // maybe a pretty error message here
-        eprintln!("Invalid instance count");
-        std::process::exit(1);
-    };
-
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
@@ -141,6 +123,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     };
 
     trace!("launch config: {:?}", launch);
+
+    let instance_count = matches.get_one::<String>("instances").map_or_else(
+        || launch.instances() as usize,
+        |instances| {
+            instances.parse::<usize>().unwrap_or_else(|_| {
+                error!("Invalid instance count: {}", instances);
+                std::process::exit(1);
+            })
+        },
+    );
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.push(ArmaNotFound::code());
@@ -306,7 +298,12 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             return Ok(report);
         }
     } else {
-        let mut executor = super::dev::context(matches, launch.optionals())?;
+        let mut executor = super::dev::context(
+            matches,
+            launch.optionals(),
+            launch.binarize(),
+            launch.rapify(),
+        )?;
 
         report.merge(executor.run()?);
 
@@ -341,7 +338,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = args.clone();
         if with_server {
             args.push("-connect=127.0.0.1".to_string());
-        } else if !matches.get_flag("no-filepatching") {
+        } else if launch.file_patching() && !matches.get_flag("no-filepatching") {
             args.push("-filePatching".to_string());
         }
         instances.push(args);
