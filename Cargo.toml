@@ -2,6 +2,8 @@
 members = [
     "bin",
 
+    "book-lints",
+
     "hls",
 
     "libs/common",

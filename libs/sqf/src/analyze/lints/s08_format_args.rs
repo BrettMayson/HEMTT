@@ -12,12 +12,37 @@ impl Lint<SqfLintData> for LintS08FormatArgs {
         "format_args"
     }
 
+    fn sort(&self) -> u32 {
+        80
+    }
+
     fn description(&self) -> &str {
-        "Format args"
+        "Checks for format commands with incorrect argument counts"
     }
 
     fn documentation(&self) -> &str {
-        "The format command is used with arguments"
+r#"### Example
+
+**Incorrect**
+```sqf
+private _text = format ["%1", "Hello", "World"];
+```
+**Correct**
+```sqf
+private _text = format ["%1", "Hello World"];
+```
+**Incorrect**
+```sqf
+private _text = format ["%1 %2", "Hello World"];
+```
+**Correct**
+```sqf
+private _text = format ["%1 %2", "Hello", "World"];
+```
+
+### Explanation
+
+The `format` command requires the correct number of arguments to match the format string."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -147,6 +172,10 @@ pub struct CodeS08FormatArgs {
 impl Code for CodeS08FormatArgs {
     fn ident(&self) -> &'static str {
         "L-S08"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#format_args")
     }
 
     fn severity(&self) -> Severity {

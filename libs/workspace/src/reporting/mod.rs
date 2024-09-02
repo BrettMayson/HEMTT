@@ -39,6 +39,9 @@ pub trait Code: Send + Sync {
     }
     /// The code identifier
     fn ident(&self) -> &'static str;
+    fn link(&self) -> Option<&str> {
+        None
+    }
     /// Message explaining the error
     fn message(&self) -> String;
     /// Message explaining the error, applied to the label

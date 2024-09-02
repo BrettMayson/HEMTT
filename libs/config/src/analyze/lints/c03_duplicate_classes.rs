@@ -15,12 +15,43 @@ impl Lint<()> for LintC03DuplicateClasses {
         "duplicate_classes"
     }
 
+    fn sort(&self) -> u32 {
+        30
+    }
+
     fn description(&self) -> &str {
-        "Duplicate classes"
+        "Reports on duplicated child classes."
     }
 
     fn documentation(&self) -> &str {
-        "The class is duplicated"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    class data {
+        value = 1;
+    };
+    class data {
+        value = 2;
+    };
+};
+```
+
+**Incorrect**
+```hpp
+class MyClass {
+    class child;
+    class child {
+        value = 1;
+    };
+};
+```
+
+### Explanation
+
+Children classes can only be defined once in a class.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -98,6 +129,10 @@ pub struct CodeC03DuplicateClasses {
 impl Code for CodeC03DuplicateClasses {
     fn ident(&self) -> &'static str {
         "L-C03"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#duplicate_classes")
     }
 
     fn message(&self) -> String {

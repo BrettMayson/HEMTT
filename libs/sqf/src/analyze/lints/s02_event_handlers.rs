@@ -8,19 +8,46 @@ use hemtt_workspace::{
 
 use crate::{analyze::{extract_constant, SqfLintData}, parser::database::Database, BinaryCommand, Expression, Statements, UnaryCommand};
 
-pub struct LintS02EventRequiredVersion;
+pub struct LintS02EventInsufficientVersion;
 
-impl Lint<SqfLintData> for LintS02EventRequiredVersion {
+impl Lint<SqfLintData> for LintS02EventInsufficientVersion {
     fn ident(&self) -> &str {
-        "event_required_version"
+        "event_insufficient_version"
+    }
+
+    fn sort(&self) -> u32 {
+        20
+    }
+
+    fn doc_ident(&self) -> String {
+        "02IV".to_string()
     }
 
     fn description(&self) -> &str {
-        "Event required version"
+        "Checks for event handlers that require a newer version than specified in CfgPatches"
     }
 
     fn documentation(&self) -> &str {
-        "The required version of the event is newer than the version specified in CfgPatches"
+r#"### Example
+
+**Incorrect**
+```hpp
+class CfgPatches {
+    class MyAddon {
+        units[] = {};
+        weapons[] = {};
+        requiredVersion = 2.00;
+    };
+};
+```
+```sqf
+_this addEventHandler ["OpticsModeChanged", { // Requires 2.10
+    hint 'Optics mode changed';
+}];
+```
+
+Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to see what in version events were introduced.
+"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -39,12 +66,30 @@ impl Lint<SqfLintData> for LintS02EventUnknown {
         "event_unknown"
     }
 
+    fn sort(&self) -> u32 {
+        21
+    }
+
+    fn doc_ident(&self) -> String {
+        "02UE".to_string()
+    }
+
     fn description(&self) -> &str {
-        "Event unknown"
+        "Checks for unknown event used in event handlers"
     }
 
     fn documentation(&self) -> &str {
-        "The event is unknown"
+r#"### Example
+
+**Incorrect**
+```sqf
+_this addEventHandler ["HealingReceived", { // HealingReceived is not a valid event
+    hint 'Healing received';
+}];
+```
+
+Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to see what events are available.
+"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -63,12 +108,34 @@ impl Lint<SqfLintData> for LintS02EventIncorrectCommand {
         "event_incorrect_command"
     }
 
+    fn sort(&self) -> u32 {
+        22
+    }
+
+    fn doc_ident(&self) -> String {
+        "02IC".to_string()
+    }
+
     fn description(&self) -> &str {
-        "Event incorrect command"
+        "Checks for event handlers used with incorrect commands"
     }
 
     fn documentation(&self) -> &str {
-        "The event is not supported by the command"
+r#"### Example
+
+**Incorrect**
+```sqf
+_this addEventHandler ["MPHit", {
+    hint 'Hit';
+}];
+```
+**Correct**
+```sqf
+_this addMPEventHandler ["MPHit", {
+    hint 'Hit';
+}];
+```
+"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -276,6 +343,10 @@ impl Code for CodeS02UnknownEvent {
         "L-S02UE"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#event_unknown")
+    }
+
     fn severity(&self) -> Severity {
         if self.id.to_lowercase() == "damaged" {
             Severity::Error
@@ -372,6 +443,10 @@ pub struct CodeS02IncorrectCommand {
 impl Code for CodeS02IncorrectCommand {
     fn ident(&self) -> &'static str {
         "L-S02IC"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#event_incorrect_command")
     }
 
     fn severity(&self) -> Severity {
@@ -491,6 +566,10 @@ pub struct CodeS02InsufficientVersion {
 impl Code for CodeS02InsufficientVersion {
     fn ident(&self) -> &'static str {
         "L-S02IV"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#event_insufficient_version")
     }
 
     fn message(&self) -> String {

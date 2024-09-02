@@ -13,12 +13,29 @@ impl Lint<SqfLintData> for LintS06FindInStr {
         "find_in_str"
     }
 
+    fn sort(&self) -> u32 {
+        60
+    }
+
     fn description(&self) -> &str {
-        "Find in string"
+        "Checks for `find` commands that can be replaced with `in`"
     }
 
     fn documentation(&self) -> &str {
-        "The find_in_str command is used"
+"### Example
+
+**Incorrect**
+```sqf
+if (_haystack find _needle > -1) ...
+```
+**Correct**
+```sqf
+if (_needle in _haystack) ...
+```
+
+### Explanation
+
+The `in` command is faster than `find` when searching for a substring in a string."
     }
 
     fn default_config(&self) -> LintConfig {
@@ -98,6 +115,10 @@ pub struct CodeS06FindInStr {
 impl Code for CodeS06FindInStr {
     fn ident(&self) -> &'static str {
         "L-S06"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#find_in_str")
     }
 
     fn severity(&self) -> Severity {

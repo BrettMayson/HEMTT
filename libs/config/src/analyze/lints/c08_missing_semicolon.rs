@@ -15,12 +15,49 @@ impl Lint<()> for LintC08MissingSemicolon {
         "missing_semicolon"
     }
 
+    fn sort(&self) -> u32 {
+        80
+    }
+
     fn description(&self) -> &str {
-        "Missing semicolon"
+        "Reports on properties that are missing a semicolon"
     }
 
     fn documentation(&self) -> &str {
-        "The property is missing a semicolon"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = 1
+};
+```
+
+**Correct**
+```hpp
+class MyClass {
+    data = 1;
+};
+```
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = 1;
+}
+```
+
+**Correct**
+```hpp
+class MyClass {
+    data = 1;
+};
+```
+
+### Explanation
+
+All properties must end with a semicolon, including classes.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -66,6 +103,10 @@ pub struct Code08MissingSemicolon {
 impl Code for Code08MissingSemicolon {
     fn ident(&self) -> &'static str {
         "L-C08"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#missing_semicolon")
     }
 
     fn message(&self) -> String {

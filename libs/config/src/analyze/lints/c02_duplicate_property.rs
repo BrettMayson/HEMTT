@@ -15,12 +15,39 @@ impl Lint<()> for LintC02DuplicateProperty {
         "duplicate_property"
     }
 
+    fn sort(&self) -> u32 {
+        20
+    }
+
     fn description(&self) -> &str {
-        "Duplicate property"
+        "Reports on duplicated properties."
     }
 
     fn documentation(&self) -> &str {
-        "The property is duplicated"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = 1;
+    data = 2;
+};
+```
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = 1;
+    class data {
+        value = 1;
+    };
+};
+```
+
+### Explanation
+
+Properties on a class must be unique, regardless of the type of property.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -101,6 +128,10 @@ pub struct CodeC02DuplicateProperty {
 impl Code for CodeC02DuplicateProperty {
     fn ident(&self) -> &'static str {
         "L-C02"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#duplicate_property")
     }
 
     fn message(&self) -> String {

@@ -15,12 +15,35 @@ impl Lint<()> for LintC06UnexpectedArray {
         "unexpected_array"
     }
 
+    fn sort(&self) -> u32 {
+        60
+    }
+
     fn description(&self) -> &str {
-        "Unexpected array"
+        "Reports on properties that are not expected to be arrays, but are defined as arrays"
     }
 
     fn documentation(&self) -> &str {
-        "The property is an unexpected array"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = {1, 2, 3};
+};
+```
+
+**Correct**
+```hpp
+class MyClass {
+    data[] = {1, 2, 3};
+};
+```
+
+### Explanation
+
+Arrays in Arma configs are denoted by `[]` after the property name.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -69,6 +92,10 @@ pub struct Code06UnexpectedArray {
 impl Code for Code06UnexpectedArray {
     fn ident(&self) -> &'static str {
         "L-C06"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#unexpected_array")
     }
 
     fn message(&self) -> String {

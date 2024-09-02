@@ -17,12 +17,33 @@ impl Lint<SqfLintData> for LintS01CommandRequiredVersion {
         "required_version"
     }
 
+    fn sort(&self) -> u32 {
+        10
+    }
+
     fn description(&self) -> &str {
-        "Required version"
+        "Checks for command usage that requires a newer version than specified in CfgPatches"
     }
 
     fn documentation(&self) -> &str {
-        "The required version of the command is newer than the version specified in CfgPatches"
+"### Example
+
+**Incorrect**
+```hpp
+class CfgPatches {
+    class MyAddon {
+        units[] = {};
+        weapons[] = {};
+        requiredVersion = 2.00;
+    };
+};
+```
+```sqf
+private _leaky = getWaterLeakiness vehicle player; // getWaterLeakiness requires 2.16
+```
+
+Check [the wiki](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3) to see what in version commands were introduced.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -88,6 +109,10 @@ pub struct CodeS01CommandRequiredVersion {
 impl Code for CodeS01CommandRequiredVersion {
     fn ident(&self) -> &'static str {
         "L-S01"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#required_version")
     }
 
     fn message(&self) -> String {

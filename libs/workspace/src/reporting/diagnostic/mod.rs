@@ -20,6 +20,7 @@ mod label;
 pub struct Diagnostic {
     pub severity: Severity,
     pub code: String,
+    pub link: Option<String>,
     pub message: String,
     pub labels: Vec<Label>,
     pub notes: Vec<String>,
@@ -33,6 +34,7 @@ impl Diagnostic {
         Self {
             severity: Severity::Error,
             code: code.into(),
+            link: None,
             message: message.into(),
             labels: Vec::new(),
             notes: Vec::new(),
@@ -63,6 +65,7 @@ impl Diagnostic {
             )
             .with_message(code.label_message()),
         );
+        diag.link = code.link().map(std::string::ToString::to_string);
         if let Some(note) = code.note() {
             diag.notes.push(note);
         }
@@ -77,6 +80,7 @@ impl Diagnostic {
 
     pub fn simple(code: &impl Code) -> Self {
         let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
+        diag.link = code.link().map(std::string::ToString::to_string);
         if let Some(note) = code.note() {
             diag.notes.push(note);
         }
@@ -157,7 +161,28 @@ impl Diagnostic {
 
     fn to_codespan(&self) -> codespan_reporting::diagnostic::Diagnostic<&WorkspacePath> {
         codespan_reporting::diagnostic::Diagnostic::new(self.severity)
-            .with_code(&self.code)
+            .with_code(
+                if supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
+                    self.link.as_ref().map_or_else(
+                        || self.code.clone(),
+                        |link| {
+                            format!(
+                                "{}",
+                                terminal_link::Link::new(
+                                    &self.code,
+                                    &if link.starts_with("http") {
+                                        link.to_string()
+                                    } else {
+                                        format!("https://brettmayson.github.io/HEMTT{link}")
+                                    }
+                                )
+                            )
+                        },
+                    )
+                } else {
+                    self.code.clone()
+                },
+            )
             .with_message(&self.message)
             .with_labels(self.labels.iter().map(|l| l.to_codespan()).collect())
             .with_notes({

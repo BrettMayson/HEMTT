@@ -7,6 +7,12 @@ use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
 pub trait Lint<D>: Sync + Send {
     fn ident(&self) -> &str;
+    fn sort(&self) -> u32 {
+        0
+    }
+    fn doc_ident(&self) -> String {
+        format!("{:02}", (self.sort() / 10))
+    }
     fn description(&self) -> &str;
     fn documentation(&self) -> &str;
     fn default_config(&self) -> LintConfig;
@@ -104,7 +110,7 @@ impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
     }
 }
 
-type Lints<D> = Vec<Arc<Box<dyn Lint<D>>>>;
+pub type Lints<D> = Vec<Arc<Box<dyn Lint<D>>>>;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct LintManager<D> {

@@ -15,12 +15,34 @@ impl Lint<()> for LintC01InvalidValue {
         "invalid_value"
     }
 
+    fn sort(&self) -> u32 {
+        10
+    }
+
     fn description(&self) -> &str {
-        "Invalid value"
+        "Reports on any values in the config that could not be parsed into a valid config value."
     }
 
     fn documentation(&self) -> &str {
-        "The value is invalid"
+r#"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    data = 1.0.0; // invalid value, should be quoted
+};
+```
+**Correct**
+```hpp
+class MyClass {
+    data = "1.0.0";
+};
+```
+
+### Explanation
+
+Arma configs only support Strings, Numbers, and Arrays. While other tools would guess that `1.0.0` is a string (often called auto-quote), this behaviour can introduce unintentional mistakes and is not supported by HEMTT.
+"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -102,6 +124,10 @@ impl Code for CodeC01InvalidValue {
         "L-C01"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#invalid_value")
+    }
+
     fn message(&self) -> String {
         "property's value could not be parsed".to_string()
     }
@@ -142,6 +168,10 @@ pub struct CodeC01InvalidValueMacro {
 impl Code for CodeC01InvalidValueMacro {
     fn ident(&self) -> &'static str {
         "L-C01M"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#invalid_value")
     }
 
     fn message(&self) -> String {

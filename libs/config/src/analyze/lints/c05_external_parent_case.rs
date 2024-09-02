@@ -15,12 +15,34 @@ impl Lint<()> for LintC05ExternalParentCase {
         "external_parent_case"
     }
 
+    fn sort(&self) -> u32 {
+        50
+    }
+
     fn description(&self) -> &str {
-        "External parent case"
+        "Reports on uses of base classes with incorrect case compared to the parent definition"
     }
 
     fn documentation(&self) -> &str {
-        "The external parent case is incorrect"
+"### Example
+
+**Incorrect**
+```hpp
+class BaseClass {};
+class MyClass: baseclass {};
+```
+
+**Correct**
+```hpp
+class BaseClass {};
+class MyClass: BaseClass {};
+```
+
+### Explanation
+
+While Arma does not care about the case of class names, HEMTT wants you to have pretty code.
+"
+
     }
 
     fn default_config(&self) -> LintConfig {
@@ -28,7 +50,7 @@ impl Lint<()> for LintC05ExternalParentCase {
     }
 
     fn minimum_severity(&self) -> Severity {
-        Severity::Note
+        Severity::Help
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
@@ -114,6 +136,10 @@ pub struct Code05ExternalParentCase {
 impl Code for Code05ExternalParentCase {
     fn ident(&self) -> &'static str {
         "L-C05"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#external_parent_case")
     }
 
     fn message(&self) -> String {

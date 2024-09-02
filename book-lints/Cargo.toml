@@ -1,0 +1,15 @@
+[package]
+name = "hemtt-book-lints"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hemtt-common = { path = "../libs/common" }
+hemtt-config = { path = "../libs/config" }
+hemtt-sqf = { path = "../libs/sqf" }
+hemtt-workspace = { path = "../libs/workspace" }
+
+arma3-wiki = { workspace = true }
+
+mdbook = "0.4.40"
+serde_json = "1.0.127"

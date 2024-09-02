@@ -12,12 +12,25 @@ impl Lint<SqfLintData> for LintS04CommandCase {
         "command_case"
     }
 
+    fn sort(&self) -> u32 {
+        40
+    }
+
     fn description(&self) -> &str {
-        "Command case"
+        "Checks command usage for casing that matches the wiki"
     }
 
     fn documentation(&self) -> &str {
-        "The command does not match the wiki's case"
+"### Example
+
+**Incorrect**
+```sqf
+private _leaky = getwaterleakiness vehicle player;
+```
+**Correct**
+```sqf
+private _leaky = getWaterLeakiness vehicle player;
+```"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -76,6 +89,10 @@ pub struct CodeS04CommandCase {
 impl Code for CodeS04CommandCase {
     fn ident(&self) -> &'static str {
         "L-S04"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#command_case")
     }
 
     fn severity(&self) -> Severity {

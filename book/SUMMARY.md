@@ -43,7 +43,9 @@
 # Reference
 
 - [Analysis](analysis/index.md)
+  - [Preprocessor](analysis/preprocessor.md)
   - [Config](analysis/config.md)
+  - [SQF](analysis/sqf.md)
 
 <!--
 # Modding Guide

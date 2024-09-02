@@ -12,12 +12,37 @@ impl Lint<SqfLintData> for LintS05IfAssign {
         "if_assign"
     }
 
+    fn sort(&self) -> u32 {
+        50
+    }
+
     fn description(&self) -> &str {
-        "If assign"
+        "Checks if statements that are used as assignments when select or parseNumber would be more appropriate"
     }
 
     fn documentation(&self) -> &str {
-        "The if statement is an assignment"
+r#"### Example
+
+**Incorrect**
+```sqf
+private _x = if (_myVar) then {1} else {0};
+```
+**Correct**
+```sqf
+private _x = parseNumber _myVar;
+```
+**Incorrect**
+```sqf
+private _x = if (_myVar) then {"apple"} else {"orange"};
+```
+**Correct**
+```sqf
+private _x = ["orange", "apple"] select _myVar;
+```
+
+### Explanation
+
+`if` statements that are used as assignments and only return a static value can be replaced with the faster `select` or `parseNumber` commands."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -91,6 +116,10 @@ pub struct CodeS05IfAssign {
 impl Code for CodeS05IfAssign {
     fn ident(&self) -> &'static str {
         "L-S05"
+    }
+    
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#if_assign")
     }
 
     fn severity(&self) -> Severity {

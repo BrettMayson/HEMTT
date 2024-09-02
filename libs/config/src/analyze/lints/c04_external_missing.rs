@@ -15,12 +15,38 @@ impl Lint<()> for LintC04ExternalMissing {
         "external_missing"
     }
 
+    fn sort(&self) -> u32 {
+        40
+    }
+
     fn description(&self) -> &str {
-        "External class is missing"
+        "Reports on classes that extend an external class that is not present in the config"
     }
 
     fn documentation(&self) -> &str {
-        "The external class is missing"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass: ExternalClass {
+    value = 1;
+};
+```
+
+**Correct**
+```hpp
+class ExternalClass;
+class MyClass: ExternalClass {
+    value = 1;
+};
+```
+
+### Explanation
+
+Classes that extend an external class must be declared in the config.
+
+Read more about [class inheritance](https://community.bistudio.com/wiki/Class_Inheritance).
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -92,6 +118,10 @@ pub struct CodeC04ExternalMissing {
 impl Code for CodeC04ExternalMissing {
     fn ident(&self) -> &'static str {
         "L-C04"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#external_missing")
     }
 
     fn message(&self) -> String {

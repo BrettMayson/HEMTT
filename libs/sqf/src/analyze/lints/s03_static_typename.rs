@@ -13,12 +13,33 @@ impl Lint<SqfLintData> for LintS03StaticTypename {
         "static_typename"
     }
 
+    fn sort(&self) -> u32 {
+        30
+    }
+
     fn description(&self) -> &str {
-        "Static typename"
+        "Checks for `typeName` on static values, which can be replaced with the string type directly"
     }
 
     fn documentation(&self) -> &str {
-        "The typename is static and can be replaced with a static reference"
+r#"### Example
+
+**Incorrect**
+```sqf
+if (typeName _myVar == typeName "") then {
+    hint "String";
+};
+```
+**Correct**
+```sqf
+if (typeName _myVar == "STRING") then {
+    hint "String";
+};
+```
+
+### Explanation
+
+`typeName` is a command that returns the type of a variable. When used on a constant value, it is slower than using the type directly."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -113,6 +134,10 @@ pub struct CodeS03StaticTypename {
 impl Code for CodeS03StaticTypename {
     fn ident(&self) -> &'static str {
         "L-S03"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#static_typename")
     }
 
     fn severity(&self) -> Severity {

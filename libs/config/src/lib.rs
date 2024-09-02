@@ -4,12 +4,17 @@
 //!
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
-mod analyze;
-mod model;
-
 use std::sync::Arc;
 
-use analyze::{Analyze, CfgPatch, ChumskyCode, CONFIG_LINTS};
+mod analyze;
+mod model;
+pub use model::*;
+pub mod parse;
+pub mod rapify;
+
+pub use analyze::CONFIG_LINTS;
+
+use analyze::{Analyze, CfgPatch, ChumskyCode};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
@@ -18,9 +23,6 @@ use hemtt_workspace::{
     lint::LintManager,
     reporting::{Code, Codes, Processed, Severity},
 };
-pub use model::*;
-pub mod parse;
-pub mod rapify;
 
 /// Parse a config file
 ///

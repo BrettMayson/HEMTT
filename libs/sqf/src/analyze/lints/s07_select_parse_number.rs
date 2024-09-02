@@ -14,12 +14,37 @@ impl Lint<SqfLintData> for LintS07SelectParseNumber {
         "select_parse_number"
     }
 
+    fn sort(&self) -> u32 {
+        70
+    }
+
     fn description(&self) -> &str {
-        "Select parse number"
+        "Checks for `select` commands that can be replaced with `parseNumber`"
     }
 
     fn documentation(&self) -> &str {
-        "The select command is used to parse a number"
+"### Example
+
+**Incorrect**
+```sqf
+private _isWater = [0, 1] select (surfaceIsWater getPos player);
+```
+**Correct**
+```sqf
+private _isWater = parseNumber (surfaceIsWater getPos player);
+```
+**Incorrect**
+```sqf
+private _isLand = [1, 0] select (surfaceIsWater getPos player);
+```
+**Correct**
+```sqf
+private _isLand = parseNumber !(surfaceIsWater getPos player);
+```
+
+### Explanation
+
+Using `select` on an array with 0 and 1 can be replaced with `parseNumber` for better performance."
     }
 
     fn default_config(&self) -> LintConfig {
@@ -125,6 +150,10 @@ pub struct CodeS07SelectParseNumber {
 impl Code for CodeS07SelectParseNumber {
     fn ident(&self) -> &'static str {
         "L-S07"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/sqf.html#select_parse_number")
     }
 
     fn severity(&self) -> Severity {

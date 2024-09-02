@@ -15,12 +15,55 @@ impl Lint<()> for LintC09MagwellMissingMagazine {
         "magwell_missing_magazine"
     }
 
+    fn sort(&self) -> u32 {
+        90
+    }
+
     fn description(&self) -> &str {
-        "Magwell missing magazine"
+        "Reports on magazines that are defined in CfgMagazineWells but not in CfgMagazines"
     }
 
     fn documentation(&self) -> &str {
-        "The magwell is missing a magazine"
+r#"### Example
+
+**Incorrect**
+```hpp
+class CfgMagazineWells {
+    class abe_banana_shooter {
+        abe_main[] = {
+            "abe_cavendish",
+            "abe_plantain",
+            "external_banana"
+        };
+    };
+};
+class CfgMagazines {
+    class abe_cavendish {};
+};
+```
+
+**Correct**
+```hpp
+class CfgMagazineWells {
+    class abe_banana_shooter {
+        abe_main[] = {
+            "abe_cavendish",
+            "abe_plantain",
+            "external_banana"
+        };
+    };
+};
+class CfgMagazines {
+    class abe_cavendish {};
+    class abe_plantain {};
+};
+```
+
+### Explanation
+
+Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe in this case) must be defined in `CfgMagazines` as well. This is to prevent accidental typos or forgotten magazines.
+"#
+
     }
 
     fn default_config(&self) -> LintConfig {
@@ -131,6 +174,10 @@ pub struct Code09MagwellMissingMagazine {
 impl Code for Code09MagwellMissingMagazine {
     fn ident(&self) -> &'static str {
         "L-C09"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#magwell_missing_magazine")
     }
 
     fn message(&self) -> String {

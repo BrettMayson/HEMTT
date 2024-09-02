@@ -4,7 +4,7 @@
 
 **.hemtt/scripts/bump_minor.rhai**
 
-```ts
+```js
 // Read the current contents of script_version.hpp
 let script_version = HEMTT_RFS.join("addons")
     .join("main")

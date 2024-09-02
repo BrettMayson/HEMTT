@@ -1,4 +1,4 @@
-mod lints {
+pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
@@ -11,7 +11,7 @@ use hemtt_workspace::{
     reporting::{Codes, Processed},
 };
 use lints::s02_event_handlers::{
-    EventHandlerRunner, LintS02EventIncorrectCommand, LintS02EventRequiredVersion,
+    EventHandlerRunner, LintS02EventIncorrectCommand, LintS02EventInsufficientVersion,
     LintS02EventUnknown,
 };
 
@@ -58,7 +58,7 @@ pub fn analyze(
         vec![
             Arc::new(Box::new(LintS02EventUnknown)),
             Arc::new(Box::new(LintS02EventIncorrectCommand)),
-            Arc::new(Box::new(LintS02EventRequiredVersion)),
+            Arc::new(Box::new(LintS02EventInsufficientVersion)),
         ],
         Box::new(EventHandlerRunner),
     ) {
@@ -67,7 +67,7 @@ pub fn analyze(
     statements.analyze(project, processed, &manager)
 }
 
-type SqfLintData = (Arc<Addon>, Arc<Database>);
+pub type SqfLintData = (Arc<Addon>, Arc<Database>);
 
 pub trait Analyze: Sized + 'static {
     fn analyze(

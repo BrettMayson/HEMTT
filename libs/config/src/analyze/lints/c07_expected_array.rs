@@ -15,12 +15,35 @@ impl Lint<()> for LintC07ExpectedArray {
         "expected_array"
     }
 
+    fn sort(&self) -> u32 {
+        70
+    }
+
     fn description(&self) -> &str {
-        "Expected array"
+        "Reports on properties that are expected to be arrays, but are not defined as arrays"
     }
 
     fn documentation(&self) -> &str {
-        "The property is expected to be an array"
+"### Example
+
+**Incorrect**
+```hpp
+class MyClass {
+    data[] = 1;
+};
+```
+
+**Correct**
+```hpp
+class MyClass {
+    data = 1;
+};
+```
+
+### Explanation
+
+Only properties that are arrays must have `[]` after the property name.
+"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -80,6 +103,10 @@ pub struct Code07ExpectedArray {
 impl Code for Code07ExpectedArray {
     fn ident(&self) -> &'static str {
         "L-C07"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/analysis/config.html#expected_array")
     }
 
     fn message(&self) -> String {
