@@ -5,31 +5,34 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, Expression};
 
-crate::lint!(LintS04CommandCase);
+crate::lint!(LintS09BannedCommand);
 
-impl Lint<SqfLintData> for LintS04CommandCase {
+impl Lint<SqfLintData> for LintS09BannedCommand {
     fn ident(&self) -> &str {
-        "command_case"
+        "banned_commands"
     }
 
     fn sort(&self) -> u32 {
-        40
+        90
     }
 
     fn description(&self) -> &str {
-        "Checks command usage for casing that matches the wiki"
+        "Checks for broken or banned commands."
     }
 
     fn documentation(&self) -> &str {
 r#"### Configuration
 
+- **banned**: Additional commands to check for
 - **ignore**: An array of commands to ignore
 
 ```toml
-[lints.sqf.command_case]
+[lints.sqf.banned_commands]
+options.banned = [
+    "execVM",
+]
 options.ignore = [
-    "ASLtoAGL",
-    "AGLtoASL",
+    "echo",
 ]
 ```
 
@@ -37,16 +40,20 @@ options.ignore = [
 
 **Incorrect**
 ```sqf
-private _leaky = getwaterleakiness vehicle player;
+echo "Hello World"; // Doesn't exist in the retail game
 ```
-**Correct**
-```sqf
-private _leaky = getWaterLeakiness vehicle player;
-```"#
+
+### Explanation
+
+Checks for usage of broken or banned commands."#
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::error()
+    }
+
+    fn minimum_severity(&self) -> Severity {
+        Severity::Warning
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
@@ -80,36 +87,47 @@ impl LintRunner<SqfLintData> for Runner {
         let Some(wiki) = data.1.wiki().commands().get(command) else {
             return Vec::new();
         };
-        if command != wiki.name() {
-            return vec![Arc::new(CodeS04CommandCase::new(
+        if wiki.groups().contains(&String::from("Broken Commands")) {
+            return vec![Arc::new(CodeS09BannedCommand::new(
                 target.span(),
                 command.to_string(),
-                wiki.name().to_string(),
                 processed,
                 config.severity(),
+                true,
             ))];
+        }
+        if let Some(toml::Value::Array(banned)) = config.option("banned") {
+            if banned.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
+                return vec![Arc::new(CodeS09BannedCommand::new(
+                    target.span(),
+                    command.to_string(),
+                    processed,
+                    config.severity(),
+                    false,
+                ))];
+            }
         }
         Vec::new()
     }
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeS04CommandCase {
+pub struct CodeS09BannedCommand {
     span: Range<usize>,
-    used: String,
-    wiki: String,
+    command: String,
+    from_wiki: bool,
 
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS04CommandCase {
+impl Code for CodeS09BannedCommand {
     fn ident(&self) -> &'static str {
-        "L-S04"
+        "L-S09"
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#command_case")
+        Some("/analysis/sqf.html#banned_commands")
     }
 
     fn severity(&self) -> Severity {
@@ -117,15 +135,19 @@ impl Code for CodeS04CommandCase {
     }
 
     fn message(&self) -> String {
-        format!("`{}` does not match the wiki's case", self.used)
+        if self.from_wiki {
+            format!("`{}` is marked as a broken command on the wiki", self.command)
+        } else {
+            format!("`{}` is banned by the project", self.command)
+        }
     }
 
     fn label_message(&self) -> String {
-        "non-standard command case".to_string()
-    }
-
-    fn suggestion(&self) -> Option<String> {
-        Some(format!("\"{}\"", self.wiki))
+        if self.from_wiki {
+            "broken command".to_string()
+        } else {
+            "banned command".to_string()
+        }
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -133,16 +155,16 @@ impl Code for CodeS04CommandCase {
     }
 }
 
-impl CodeS04CommandCase {
+impl CodeS09BannedCommand {
     #[must_use]
-    pub fn new(span: Range<usize>, used: String, wiki: String, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(span: Range<usize>, command: String, processed: &Processed, severity: Severity, from_wiki: bool) -> Self {
         Self {
             span,
-            used,
-            wiki,
+            command,
 
             severity,
             diagnostic: None,
+            from_wiki,
         }
         .generate_processed(processed)
     }
