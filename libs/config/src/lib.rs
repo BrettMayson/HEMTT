@@ -46,7 +46,12 @@ pub fn parse(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
                 (),
             );
-            manager.extend(CONFIG_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())?;
+            manager.extend(
+                CONFIG_LINTS
+                    .iter()
+                    .map(|l| (**l).clone())
+                    .collect::<Vec<_>>(),
+            )?;
             Ok(ConfigReport {
                 codes: config.analyze(project, processed, &manager),
                 patches: config.get_patches(),
