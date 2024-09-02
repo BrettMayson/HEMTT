@@ -123,7 +123,7 @@ impl Hooks {
         let path = scripts.join(name)?.with_extension("rhai")?;
         trace!("running script: {}", path.as_str());
         if !path.exists()? {
-            report.error(ScriptNotFound::code(name.to_owned(), &scripts)?);
+            report.push(ScriptNotFound::code(name.to_owned(), &scripts)?);
             return Ok(report);
         }
         let res = Self::run(ctx, path, false);
@@ -172,11 +172,11 @@ impl Hooks {
                 .expect("told_to_fail mutex poisoned") = true;
         });
         if let Err(e) = engine.run_with_scope(&mut scope, &path.read_to_string()?) {
-            report.error(RuntimeError::code(path, &e));
+            report.push(RuntimeError::code(path, &e));
             return Ok(report);
         }
         if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
-            report.error(ScriptFatal::code(name));
+            report.push(ScriptFatal::code(name));
         }
         Ok(report)
     }
@@ -206,7 +206,7 @@ impl Module for Hooks {
                         .join(phase)?
                         .join(hook.file_name().to_str().expect("file name is valid utf-8"))?;
                     if let Err(e) = engine.compile(&path.read_to_string()?) {
-                        report.error(RhaiParseError::code(path, e.0, e.1));
+                        report.push(RhaiParseError::code(path, e.0, e.1));
                     }
                 }
             }

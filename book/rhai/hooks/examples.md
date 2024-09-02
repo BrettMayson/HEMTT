@@ -6,7 +6,7 @@ We want to modify the release zip to a different name format, we need to use the
 
 **.hemtt/hooks/post_release/rename_zip.rhai**
 
-```ts
+```js
 let releases = HEMTT_RFS.join("releases");
 let src = releases.join(HEMTT.project().prefix() + "-latest.zip"); // "prefix-latest.zip"
 let dst = releases.join("@" + HEMTT.project().prefix() + ".zip"); // "@prefix.zip"
@@ -26,7 +26,7 @@ Since we are using the virtual file system, the file on disk will not be modifie
 
 **.hemtt/hooks/pre_build/set_version.rhai**
 
-```ts
+```js
 let modcpp = HEMTT_VFS.join("mod.cpp").open_file().read(); // Read the contents of mod.cpp
 modcpp.replace("0.0.0", HEMTT.project().version().to_string_short()); // Replace the placeholder version with the actual version
 HEMTT_VFS.join("mod.cpp").create_file().write(modcpp); // Write the new contents over the old contents

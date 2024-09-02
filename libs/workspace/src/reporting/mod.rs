@@ -19,6 +19,18 @@ pub use symbol::Symbol;
 pub use token::Token;
 pub use whitespace::Whitespace;
 
+pub type Codes = Vec<std::sync::Arc<dyn Code>>;
+
+pub trait CodesExt {
+    fn failed(&self) -> bool;
+}
+
+impl CodesExt for Codes {
+    fn failed(&self) -> bool {
+        self.iter().any(|c| c.severity() == Severity::Error)
+    }
+}
+
 /// A coded error or warning
 pub trait Code: Send + Sync {
     /// The token of the code
@@ -27,6 +39,9 @@ pub trait Code: Send + Sync {
     }
     /// The code identifier
     fn ident(&self) -> &'static str;
+    fn link(&self) -> Option<&str> {
+        None
+    }
     /// Message explaining the error
     fn message(&self) -> String;
     /// Message explaining the error, applied to the label

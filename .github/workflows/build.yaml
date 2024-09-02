@@ -62,15 +62,15 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: 8bb83aa0283200070ff6c3da80a6e22dcf11b9f6
+            commit: dd56d22a30d362d977f28a6d85687cbe052376ee
           - repo: acemod/ACE3
-            commit: fd5e56ffbc534583b7d3ee5750ed168d5108e1b8
+            commit: 337222aa40bcfcd9e1565018cf61ac6c59ae2fc8
           - repo: ArmaForces/Mods
             commit: c54d78e3da3163ee9b1baad847ec662dbaf3566e
           - repo: Theseus-Aegis/Mods
             commit: 943906d18817a7f0829742f0c91cdad34456c594
           - repo: SynixeContractors/Mod
-            commit: 5afed7408ccbc8635e20e2e5e3e9eca99a9efbc4
+            commit: 6f3bb1fc8f8716085e138941e223163bd8229389
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v4

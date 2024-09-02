@@ -4,20 +4,39 @@
 //!
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
-mod analyze;
-mod model;
-
 use std::sync::Arc;
 
-use analyze::{codes::ChumskyCode, Analyze, CfgPatch};
+mod analyze;
+mod model;
+pub use model::*;
+pub mod parse;
+pub mod rapify;
+
+pub use analyze::CONFIG_LINTS;
+
+use analyze::{Analyze, CfgPatch, ChumskyCode};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
 use hemtt_common::config::ProjectConfig;
-use hemtt_workspace::reporting::{Code, Processed};
-pub use model::*;
-pub mod parse;
-pub mod rapify;
+use hemtt_workspace::{
+    lint::LintManager,
+    reporting::{Code, Codes, Processed, Severity},
+};
+
+#[must_use]
+pub fn lint_check(project: &ProjectConfig) -> Codes {
+    let mut manager = LintManager::new(project.lints().config().clone(), ());
+    if let Err(e) = manager.extend(
+        CONFIG_LINTS
+            .iter()
+            .map(|l| (**l).clone())
+            .collect::<Vec<_>>(),
+    ) {
+        return e;
+    }
+    vec![]
+}
 
 /// Parse a config file
 ///
@@ -26,7 +45,7 @@ pub mod rapify;
 pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
-) -> Result<ConfigReport, Vec<Arc<dyn Code>>> {
+) -> Result<ConfigReport, Codes> {
     let (config, errors) = parse::config().parse_recovery(processed.as_str());
     config.map_or_else(
         || {
@@ -39,9 +58,18 @@ pub fn parse(
                 .collect())
         },
         |config| {
+            let mut manager = LintManager::new(
+                project.map_or_else(Default::default, |project| project.lints().config().clone()),
+                (),
+            );
+            manager.extend(
+                CONFIG_LINTS
+                    .iter()
+                    .map(|l| (**l).clone())
+                    .collect::<Vec<_>>(),
+            )?;
             Ok(ConfigReport {
-                warnings: config.warnings(project, processed),
-                errors: config.errors(project, processed),
+                codes: config.analyze(project, processed, &manager),
                 patches: config.get_patches(),
                 config,
             })
@@ -52,8 +80,7 @@ pub fn parse(
 /// A parsed config file with warnings and errors
 pub struct ConfigReport {
     config: Config,
-    warnings: Vec<Arc<dyn Code>>,
-    errors: Vec<Arc<dyn Code>>,
+    codes: Codes,
     patches: Vec<CfgPatch>,
 }
 
@@ -71,15 +98,27 @@ impl ConfigReport {
     }
 
     #[must_use]
+    /// Get the codes
+    pub fn codes(&self) -> &[Arc<dyn Code>] {
+        &self.codes
+    }
+
+    #[must_use]
     /// Get the warnings
-    pub fn warnings(&self) -> &[Arc<dyn Code>] {
-        &self.warnings
+    pub fn warnings(&self) -> Vec<&Arc<dyn Code>> {
+        self.codes
+            .iter()
+            .filter(|c| c.severity() == Severity::Warning)
+            .collect::<Vec<_>>()
     }
 
     #[must_use]
     /// Get the errors
-    pub fn errors(&self) -> &[Arc<dyn Code>] {
-        &self.errors
+    pub fn errors(&self) -> Vec<&Arc<dyn Code>> {
+        self.codes
+            .iter()
+            .filter(|c| c.severity() == Severity::Error)
+            .collect::<Vec<_>>()
     }
 
     #[must_use]

@@ -9,6 +9,7 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
+codespan-reporting = { workspace = true }
 git2 = { workspace = true }
 serde = { workspace = true }
 steamlocate = "2.0.0-beta.2"

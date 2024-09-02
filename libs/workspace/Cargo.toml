@@ -13,9 +13,13 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-pbo = { path = "../pbo", version = "1.0.0" }
 
 ansi_term = "0.12.1"
-codespan-reporting = "0.11.1"
+codespan-reporting = { workspace = true, features = ["serialization"] }
 dirs = "5.0.1"
+serde = { workspace = true }
+terminal-link = "0.1.0"
+toml = { workspace = true }
 tracing = { workspace = true }
+supports-hyperlinks = "3.0.0"
 vfs = { workspace = true }
 
 tower-lsp = { workspace = true, optional = true }

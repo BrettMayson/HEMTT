@@ -29,7 +29,7 @@ patch = 3
 
 **.hemtt/hooks/pre_build/set_version.rhai**
 
-```ts
+```js
 // Get the path to the script_version.hpp file
 let version = HEMTT_VFS
         .join("addons")
@@ -58,7 +58,7 @@ When using the real file system, two additional constants are available. `HEMTT_
 
 **.hemtt/hooks/pre_release/set_version.rhai**
 
-```ts
+```js
 // Read the current contents of the docs/version.txt
 // file from the project source
 let version = HEMTT_RFS.join("docs").join("version.txt").open_file().read();
@@ -77,7 +77,7 @@ All the functions below are available on both the virtual and real file systems.
 
 Joins the path with the given string.
 
-```ts
+```js
 HEMTT_VFS.join("addons"); // Points to ./addons in the project folder
 HEMTT_VFS.join("addons").join("main"); // Points to ./addons/main in the project folder
 ```
@@ -86,7 +86,7 @@ HEMTT_VFS.join("addons").join("main"); // Points to ./addons/main in the project
 
 Returns `true` if the path exists.
 
-```ts
+```js
 HEMTT_VFS.join("addons").exists(); // true
 HEMTT_VFS.join(".hemtt").join("project.toml").exists(); // true
 ```
@@ -95,7 +95,7 @@ HEMTT_VFS.join(".hemtt").join("project.toml").exists(); // true
 
 Returns `true` if the path is a directory.
 
-```ts
+```js
 HEMTT_VFS.join("addons").is_dir(); // true
 HEMTT_VFS.join(".hemtt").join("project.toml").is_dir(); // false
 ```
@@ -104,7 +104,7 @@ HEMTT_VFS.join(".hemtt").join("project.toml").is_dir(); // false
 
 Returns `true` if the path is a file.
 
-```ts
+```js
 HEMTT_VFS.join("addons").is_file(); // false
 HEMTT_VFS.join(".hemtt").join("project.toml").is_file(); // true
 ```
@@ -115,7 +115,7 @@ Returns the parent directory of the path.
 Will panic if the path is root while using the real file system.  
 Will return the root path while using the virtual file system, if already at the root.
 
-```ts
+```js
 HEMTT_VFS.join("addons").parent(); // Points to ./
 HEMTT_VFS.join(".hemtt").join("project.toml").parent(); // Points to ./.hemtt
 ```
@@ -124,7 +124,7 @@ HEMTT_VFS.join(".hemtt").join("project.toml").parent(); // Points to ./.hemtt
 
 Returns the file name of the path.
 
-```ts
+```js
 HEMTT_VFS.join("addons").file_name(); // addons
 HEMTT_VFS.join(".hemtt").join("project.toml").file_name(); // project.toml
 ```
@@ -133,7 +133,7 @@ HEMTT_VFS.join(".hemtt").join("project.toml").file_name(); // project.toml
 
 Copies the file or directory to the given path.
 
-```ts
+```js
 HEMTT_VFS.join("docs").copy(HEMTT_OUT.join("docs")); // Copies the docs folder to the build output
 ```
 
@@ -141,7 +141,7 @@ HEMTT_VFS.join("docs").copy(HEMTT_OUT.join("docs")); // Copies the docs folder t
 
 Moves the file or directory to the given path.
 
-```ts
+```js
 HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")); // Moves the docs folder to the build output
 ```
 
@@ -149,7 +149,7 @@ HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")); // Moves the docs folder to
 
 Lists the contents of the directory. If the path is a file, returns an empty array.
 
-```ts
+```js
 HEMTT_VFS.join("docs").list(); // Returns an array of paths of files and directories in the docs folder
 ```
 
@@ -157,7 +157,7 @@ HEMTT_VFS.join("docs").list(); // Returns an array of paths of files and directo
 
 Opens the file for reading.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("readme.md").open_file(); // Returns a File object
 ```
 
@@ -165,7 +165,7 @@ HEMTT_VFS.join("docs").join("readme.md").open_file(); // Returns a File object
 
 Creates the file for writing. Overwrites the file if it exists.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("readme.md").create_file(); // Returns a File object
 ```
 
@@ -173,7 +173,7 @@ HEMTT_VFS.join("docs").join("readme.md").create_file(); // Returns a File object
 
 Removes the file.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("readme.md").remove_file(); // Removes the file
 ```
 
@@ -181,7 +181,7 @@ HEMTT_VFS.join("docs").join("readme.md").remove_file(); // Removes the file
 
 Reads the contents of the file.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("readme.md").open_file().read(); // Returns a string containing the contents of the file
 ```
 
@@ -189,7 +189,7 @@ HEMTT_VFS.join("docs").join("readme.md").open_file().read(); // Returns a string
 
 Writes the string to the file. Can be called multiple times to append to the file.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("readme.md").create_file().write("Hello World!"); // Writes "Hello World!" to the file
 ```
 
@@ -197,7 +197,7 @@ HEMTT_VFS.join("docs").join("readme.md").create_file().write("Hello World!"); //
 
 Creates the directory.
 
-```ts
+```js
 HEMTT_VFS.join("docs").create_dir(); // Creates the docs folder
 ```
 
@@ -205,7 +205,7 @@ HEMTT_VFS.join("docs").create_dir(); // Creates the docs folder
 
 Creates the directory and all parent directories.
 
-```ts
+```js
 HEMTT_VFS.join("docs").join("images").create_dir_all(); // Creates the images folder and the docs folder if they don't exist
 ```
 
@@ -213,7 +213,7 @@ HEMTT_VFS.join("docs").join("images").create_dir_all(); // Creates the images fo
 
 Removes the directory.
 
-```ts
+```js
 HEMTT_VFS.join("docs").remove_dir(); // Removes the docs folder
 ```
 
@@ -221,6 +221,6 @@ HEMTT_VFS.join("docs").remove_dir(); // Removes the docs folder
 
 Removes the directory and all its contents.
 
-```ts
+```js
 HEMTT_VFS.join("docs").remove_dir_all(); // Removes the docs folder and all its contents
 ```

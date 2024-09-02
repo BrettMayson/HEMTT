@@ -1,79 +1,183 @@
-pub mod codes;
-
-mod command_case;
-mod event_handlers;
-mod find_in_str;
-mod format_args;
-mod if_assign;
-mod required_version;
-mod select_parse_number;
-mod str_format;
-mod typename;
+pub mod lints {
+    automod::dir!(pub "src/analyze/lints");
+}
 
 use std::sync::Arc;
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::Addon,
-    reporting::{Code, Processed},
+    lint::LintManager,
+    reporting::{Codes, Processed},
+};
+use lints::s02_event_handlers::{
+    EventHandlerRunner, LintS02EventIncorrectCommand, LintS02EventInsufficientVersion,
+    LintS02EventUnknown,
 };
 
-use crate::{parser::database::Database, Expression, Statement, Statements};
+use crate::{
+    parser::database::Database, BinaryCommand, Expression, NularCommand, Statement, Statements,
+    UnaryCommand,
+};
 
-type Codes = Vec<Arc<dyn Code>>;
-type WarningAndErrors = (Codes, Codes);
+#[linkme::distributed_slice]
+pub static SQF_LINTS: [std::sync::LazyLock<
+    std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<SqfLintData>>>,
+>];
 
-pub trait Analyze {
-    /// Check if the object is valid and can be rapified
-    fn valid(&self, project: Option<&ProjectConfig>) -> bool;
+#[macro_export]
+macro_rules! lint {
+    ($name:ident) => {
+        #[allow(clippy::module_name_repetitions)]
+        pub struct $name;
+        #[linkme::distributed_slice($crate::analyze::SQF_LINTS)]
+        static LINT_ADD: std::sync::LazyLock<
+            std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<$crate::analyze::SqfLintData>>>,
+        > = std::sync::LazyLock::new(|| std::sync::Arc::new(Box::new($name)));
+    };
+}
 
-    fn warnings(
-        &self,
-        project: Option<&ProjectConfig>,
-        processed: &Processed,
-        addon: Option<&Addon>,
-        database: &Database,
-    ) -> Codes;
-
-    fn errors(
-        &self,
-        project: Option<&ProjectConfig>,
-        processed: &Processed,
-        addon: Option<&Addon>,
-        database: &Database,
-    ) -> Codes;
+#[must_use]
+pub fn lint_check(project: &ProjectConfig, database: Arc<Database>) -> Codes {
+    let mut manager: LintManager<SqfLintData> = LintManager::new(
+        project.lints().sqf().clone(),
+        (Arc::new(Addon::test_addon()), database),
+    );
+    if let Err(lint_errors) =
+        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
+    {
+        return lint_errors;
+    }
+    if let Err(lint_errors) = manager.push_group(
+        vec![
+            Arc::new(Box::new(LintS02EventUnknown)),
+            Arc::new(Box::new(LintS02EventIncorrectCommand)),
+            Arc::new(Box::new(LintS02EventInsufficientVersion)),
+        ],
+        Box::new(EventHandlerRunner),
+    ) {
+        return lint_errors;
+    }
+    vec![]
 }
 
 #[must_use]
 pub fn analyze(
     statements: &Statements,
-    _project: Option<&ProjectConfig>,
+    project: Option<&ProjectConfig>,
     processed: &Processed,
-    addon: Option<&Addon>,
-    database: &Database,
-) -> (Codes, Codes) {
-    let (mut warnings, mut errors) =
-        event_handlers::event_handlers(addon, statements, processed, database);
-    (
-        {
-            warnings.extend(if_assign::if_assign(statements, processed));
-            warnings.extend(find_in_str::find_in_str(statements, processed));
-            warnings.extend(typename::typename(statements, processed));
-            // warnings.extend(str_format::str_format(statements, processed)); // Too many false positives for now
-            warnings.extend(format_args::format_args(statements, processed));
-            warnings.extend(select_parse_number::select_parse_number(
-                statements, processed, database,
-            ));
-            warnings.extend(command_case::command_case(statements, processed, database));
-            warnings
-        },
-        {
-            errors.extend(required_version::required_version(
-                statements, processed, addon, database,
-            ));
-            errors
-        },
-    )
+    addon: Arc<Addon>,
+    database: Arc<Database>,
+) -> Codes {
+    let mut manager: LintManager<SqfLintData> = LintManager::new(
+        project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
+        (addon, database),
+    );
+    if let Err(lint_errors) =
+        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
+    {
+        return lint_errors;
+    }
+    if let Err(lint_errors) = manager.push_group(
+        vec![
+            Arc::new(Box::new(LintS02EventUnknown)),
+            Arc::new(Box::new(LintS02EventIncorrectCommand)),
+            Arc::new(Box::new(LintS02EventInsufficientVersion)),
+        ],
+        Box::new(EventHandlerRunner),
+    ) {
+        return lint_errors;
+    }
+    statements.analyze(project, processed, &manager)
+}
+
+pub type SqfLintData = (Arc<Addon>, Arc<Database>);
+
+pub trait Analyze: Sized + 'static {
+    fn analyze(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<SqfLintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(project, Some(processed), self));
+        codes
+    }
+}
+
+impl Analyze for NularCommand {}
+impl Analyze for UnaryCommand {}
+impl Analyze for BinaryCommand {}
+
+impl Analyze for Statements {
+    fn analyze(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<SqfLintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(project, Some(processed), self));
+        for statement in self.content() {
+            codes.extend(statement.analyze(project, processed, manager));
+        }
+        codes
+    }
+}
+
+impl Analyze for Statement {
+    fn analyze(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<SqfLintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(project, Some(processed), self));
+        match self {
+            Self::Expression(exp, _)
+            | Self::AssignLocal(_, exp, _)
+            | Self::AssignGlobal(_, exp, _) => {
+                codes.extend(exp.analyze(project, processed, manager));
+            }
+        }
+        codes
+    }
+}
+
+impl Analyze for Expression {
+    fn analyze(
+        &self,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<SqfLintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(project, Some(processed), self));
+        match self {
+            Self::Array(exp, _) => {
+                for e in exp {
+                    codes.extend(e.analyze(project, processed, manager));
+                }
+            }
+            Self::Code(s) => codes.extend(s.analyze(project, processed, manager)),
+            Self::NularCommand(nc, _) => {
+                codes.extend(nc.analyze(project, processed, manager));
+            }
+            Self::UnaryCommand(uc, exp, _) => {
+                codes.extend(uc.analyze(project, processed, manager));
+                codes.extend(exp.analyze(project, processed, manager));
+            }
+            Self::BinaryCommand(bc, exp_left, exp_right, _) => {
+                codes.extend(bc.analyze(project, processed, manager));
+                codes.extend(exp_left.analyze(project, processed, manager));
+                codes.extend(exp_right.analyze(project, processed, manager));
+            }
+            _ => {}
+        }
+        codes
+    }
 }
 
 /// Extracts a constant from an expression

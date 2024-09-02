@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Code, Output, Processed, Symbol, Token},
+    reporting::{Codes, Output, Processed, Symbol, Token},
     WorkspacePath,
 };
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -47,7 +47,7 @@ pub struct Processor {
     pub(crate) usage: HashMap<Position, Vec<Position>>,
 
     /// Warnings
-    pub(crate) warnings: Vec<Arc<dyn Code>>,
+    pub(crate) warnings: Codes,
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,
@@ -324,26 +324,4 @@ pub mod tests {
             .unwrap();
         crate::parse::parse(&test).unwrap().into_iter().peekmore()
     }
-
-    // pub fn setup(content: &str) -> Processed {
-    //     let workspace = hemtt_workspace::Workspace::builder()
-    //         .memory()
-    //         .finish()
-    //         .unwrap();
-    //     let test = workspace.join("test.hpp").unwrap();
-    //     test.create_file()
-    //         .unwrap()
-    //         .write_all(content.as_bytes())
-    //         .unwrap();
-    //     Processed::new(&test).unwrap()
-    // }
-
-    // #[test]
-    // fn simple_define() {
-    //     let processed = setup("#define number 1\nvalue = number;");
-    //     assert_eq!(processed.as_string(), "value = 1;");
-    //     let mapping = processed.mapping(9);
-    //     println!("{:?}", mapping);
-    //     println!("{:?}", processed.usage);
-    // }
 }
