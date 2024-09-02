@@ -13,6 +13,10 @@ impl Code for MissionNotFound {
         "BCLE8"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#mission")
+    }
+
     fn message(&self) -> String {
         format!("Mission `{}` not found.", self.name)
     }

@@ -13,6 +13,10 @@ impl Code for LaunchConfigNotFound {
         "BCLE6"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#configuration")
+    }
+
     fn message(&self) -> String {
         format!("Launch config `{}` not found.", self.config)
     }
