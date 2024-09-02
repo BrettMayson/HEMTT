@@ -36,9 +36,9 @@ arma3-wiki = "0.3.2"
 byteorder = "1.5.0"
 codespan-reporting = "0.11.1"
 chumsky = "0.9.3"
-clap = "4.5.13"
+clap = "4.5.16"
 git2 = "0.19.0"
-indexmap = "2.3.0"
+indexmap = "2.5.0"
 linkme = "0.3.28"
 lsp-types = "0.97.0"
 paste = "1.0.15"
@@ -46,7 +46,7 @@ peekmore = "1.3.0"
 pest = "2.7.11"
 pest_derive = "2.7.11"
 regex = "1.10.5"
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 serde_json = "1.0.122"
 sha-1 = "0.10.1"
 strsim = "0.11.1"
@@ -56,7 +56,7 @@ tower-lsp = "0.20.0"
 tracing = { version = "0.1.40", features = ["attributes"] }
 vfs = "0.12.0"
 walkdir = "2.5.0"
-zip = "2.1.6"
+zip = "2.2.0"
 
 [profile.bench]
 lto = true
