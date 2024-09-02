@@ -51,7 +51,8 @@ pub fn add_args(cmd: Command) -> Command {
             .long("asc")
             .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
             .action(ArgAction::SetTrue),
-    ).arg(
+    )
+    .arg(
         clap::Arg::new("expopti")
             .long("expopti")
             .help("Use SQFC Optimizer")

@@ -15,5 +15,6 @@ fn build_alpha() {
 fn build_bravo() {
     std::env::set_current_dir(format!("{}/tests/bravo", env!("CARGO_MANIFEST_DIR"))).unwrap();
     hemtt::execute(&cli().get_matches_from(vec!["hemtt", "script", "test"])).unwrap();
-    hemtt::execute(&cli().get_matches_from(vec!["hemtt", "release", "--in-test", "--expopti"])).unwrap();
+    hemtt::execute(&cli().get_matches_from(vec!["hemtt", "release", "--in-test", "--expopti"]))
+        .unwrap();
 }
