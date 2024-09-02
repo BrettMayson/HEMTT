@@ -1,3 +1,3 @@
-private _posASL = AGLToASL getPos player;
+private _posASL = ATLToASL getPosATL player;
 
-player setPos ASLToAGL _posASL;
+player setPosATL ASLToATL _posASL;

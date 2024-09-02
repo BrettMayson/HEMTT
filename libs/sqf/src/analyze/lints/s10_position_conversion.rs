@@ -30,15 +30,17 @@ impl Lint<SqfLintData> for LintS10PositionConversion {
 }
 
 static COMBINATIONS: [[&str; 3]; 9] = [
-    ["agltoasl", "getpos",          "getPosASL"],
-    ["agltoatl", "getpos",          "getPosATL"],
-    ["asltoagl", "getposasl",       "getPos"],
-    ["atltoagl", "getposatl",       "getPos"],
-    ["asltoatl", "getposasl",       "getPosATL"],
-    ["atltoasl", "getposatl",       "getPosASL"],
-    ["agltoasl", "visibleposition", "visiblePositionASL"],
-    ["setpos",   "asltoagl",        "setPosASL"],
-    ["setpos",   "atltoagl",        "setPosATL"],
+    ["agltoasl",     "getpos",          "getPosASL"],
+    ["agltoatl",     "getpos",          "getPosATL"],
+    // ["asltoagl",     "getposasl",       "getPos"], // AGL vs AGLS :|
+    // ["atltoagl",     "getposatl",       "getPos"],
+    ["asltoatl",    "getposasl",       "getPosATL"],
+    ["atltoasl",    "getposatl",       "getPosASL"],
+    ["agltoasl",    "visibleposition", "visiblePositionASL"],
+    ["setpos",      "asltoagl",        "setPosASL"],
+    ["setpos",      "atltoagl",        "setPosATL"],
+    ["setposatl",   "asltoatl",        "setPosATL"],
+    ["setposasl",   "atltoasl",        "setPosASL"],
 ];
 
 struct Runner;
