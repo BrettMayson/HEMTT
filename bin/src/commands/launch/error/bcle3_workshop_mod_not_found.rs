@@ -11,6 +11,10 @@ impl Code for WorkshopModNotFound {
         "BCLE2"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#workshop")
+    }
+
     fn message(&self) -> String {
         format!("Arma 3 workshop mod `{}` not found.", self.id)
     }
