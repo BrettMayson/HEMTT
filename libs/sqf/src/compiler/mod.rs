@@ -7,7 +7,7 @@
 //! The main entrypoint to this is the [`Statements`][crate::Statements] struct, which can be
 //! converted to a serializable [`Compiled`] via [`Statements::compile`][crate::Statements].
 
-pub mod optimzer;
+pub mod optimizer;
 pub mod serializer;
 
 use std::{ops::Range, sync::Arc};

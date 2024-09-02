@@ -19,16 +19,16 @@ use super::Module;
 #[derive(Default)]
 pub struct SQFCompiler {
     pub compile: bool,
-    pub optimze: bool,
+    pub optimize: bool,
     pub database: Option<Arc<Database>>,
 }
 
 impl SQFCompiler {
     #[must_use]
-    pub const fn new(compile: bool) -> Self {
+    pub const fn new(compile: bool, optimize: bool) -> Self {
         Self {
             compile,
-            optimze: true,
+            optimize,
             database: None,
         }
     }
@@ -102,7 +102,7 @@ impl Module for SQFCompiler {
                         if !codes.failed() {
                             if self.compile {
                                 let mut out = entry.with_extension("sqfc")?.create_file()?;
-                                let sqf_to_write = if self.optimze { sqf.optimize() } else { sqf };
+                                let sqf_to_write = if self.optimize { sqf.optimize() } else { sqf };
                                 sqf_to_write.compile_to_writer(&processed, &mut out)?;
                             }
                             counter.fetch_add(1, Ordering::Relaxed);
@@ -139,7 +139,7 @@ impl Module for SQFCompiler {
         info!(
             "{} {} sqf files",
             if self.compile {
-                if self.optimze {
+                if self.optimize {
                     "Compiled [Optimized]"
                 } else {
                     "Compiled"
