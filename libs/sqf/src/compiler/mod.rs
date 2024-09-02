@@ -78,7 +78,11 @@ impl Statements {
                 .expect("first statement not in mapping");
             let offset = start.processed_start().offset() as u32;
             let source = processed.extract(self.span.clone());
-            let length = source.len() as u32;
+            let length = if self.content.is_empty() {
+                0
+            } else {
+                source.len() as u32
+            };
             CodePointer::Source { offset, length }
         };
         Ok(Instructions {
