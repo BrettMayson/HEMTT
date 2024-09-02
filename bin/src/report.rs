@@ -95,7 +95,9 @@ impl Report {
 
     #[must_use]
     pub fn helps(&self, includes: WithIncludes) -> Vec<Arc<dyn Code>> {
-        filter_codes(&self.codes, Severity::Help, includes)
+        let mut help = filter_codes(&self.codes, Severity::Help, includes);
+        help.extend(filter_codes(&self.codes, Severity::Note, includes));
+        help
     }
 
     #[must_use]
