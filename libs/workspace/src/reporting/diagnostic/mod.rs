@@ -162,7 +162,9 @@ impl Diagnostic {
     fn to_codespan(&self) -> codespan_reporting::diagnostic::Diagnostic<&WorkspacePath> {
         codespan_reporting::diagnostic::Diagnostic::new(self.severity)
             .with_code(
-                if supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
+                if std::env::args().nth(0) == Some("hemtt".to_string())
+                    && supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout)
+                {
                     self.link.as_ref().map_or_else(
                         || self.code.clone(),
                         |link| {
