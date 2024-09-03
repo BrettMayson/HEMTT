@@ -13,7 +13,7 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-pbo = { path = "../pbo", version = "1.0.0" }
 
 ansi_term = "0.12.1"
-codespan-reporting = { workspace = true, features = ["serialization"] }
+codespan-reporting = { workspace = true }
 dirs = "5.0.1"
 serde = { workspace = true }
 terminal-link = "0.1.0"

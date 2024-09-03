@@ -2,8 +2,6 @@
 
 //! Read the project configuration into a [`ProjectConfig`] struct
 
-use std::path::Path;
-
 use tracing::warn;
 
 mod addon;
@@ -18,11 +16,11 @@ pub use project::{
     ProjectConfig,
 };
 
-fn deprecated(file: &Path, key: &str, replacement: &str, info: Option<&str>) {
+fn deprecated(file: &str, key: &str, replacement: &str, info: Option<&str>) {
     warn!(
         "Use of deprecated key '{}' in '{}'. Use '{}' instead.{}",
         key,
-        file.display(),
+        file,
         replacement,
         info.map(|i| format!("\n  {i}")).unwrap_or_default()
     );

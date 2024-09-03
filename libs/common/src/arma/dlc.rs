@@ -153,4 +153,16 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn toml_deserialize() {
+        let dlc: std::collections::HashMap<String, super::DLC> =
+            toml::from_str(r#"dlc = "contact""#).expect("failed to deserialize");
+        assert_eq!(dlc.get("dlc"), Some(&super::DLC::Contact));
+    }
+
+    #[test]
+    fn invalid() {
+        assert!(super::DLC::try_from("invalid".to_string()).is_err());
+    }
 }

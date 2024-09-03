@@ -89,28 +89,26 @@ static DEPRECATION: Once = Once::new();
 
 impl AddonFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
-        let file = std::fs::read_to_string(path)?;
+        Self::from_str(&std::fs::read_to_string(path)?, &path.display().to_string())
+    }
 
-        let config: Self = toml::from_str(&file)?;
+    pub fn from_str(content: &str, path: &str) -> Result<Self, Error> {
+        let config: Self = toml::from_str(content)?;
 
         let see_more =
             "See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.";
 
-        if file.contains("preprocess = ") {
+        if content.contains("preprocess = ") || content.contains("preprocess=") {
             return Err(Error::ConfigInvalid(format!("`preprocess = {{}}` is deprecated, use `[rapify] enabled = false` instead. {see_more}")));
         }
 
         DEPRECATION.call_once(|| {
-            if file.contains("[preprocess]") {
+            if content.contains("[preprocess]") {
                 deprecated(path, "[preprocess]", "[rapify]", Some(see_more));
             }
 
-            if file.contains("no_bin") {
+            if content.contains("no_bin") {
                 deprecated(path, "no_bin", "binarize.exclude", Some(see_more));
-            }
-
-            if file.contains("preprocess") {
-                deprecated(path, "preprocess", "rapify", Some(see_more));
             }
 
             if !config.exclude.is_empty() {
@@ -138,5 +136,81 @@ impl From<AddonFile> for AddonConfig {
                 files
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+[rapify]
+enabled = true
+
+[binarize]
+enabled = true
+
+[properties]
+test = "test"
+
+[files]
+exclude = ["test"]
+
+"#;
+        let file: AddonFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = AddonConfig::from(file);
+        assert!(config.rapify().enabled());
+        assert!(config.binarize().enabled());
+        assert_eq!(config.properties().get("test"), Some(&"test".to_string()));
+        assert_eq!(config.files().exclude(), &["test"]);
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: AddonFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = AddonConfig::from(file);
+        assert!(config.rapify().enabled());
+        assert!(config.binarize().enabled());
+        assert!(config.properties().is_empty());
+        assert!(config.files().exclude().is_empty());
+    }
+
+    #[test]
+    #[tracing_test::traced_test]
+    fn deprecated() {
+        let toml = r#"
+no_bin = ["test"]
+exclude = ["test"]
+
+[binarize]
+enabled = true
+
+[properties]
+test = "test"
+
+[preprocess]
+enabled = true
+"#;
+        let file = AddonFile::from_str(toml, "test").expect("failed to deserialize");
+        let config = AddonConfig::from(file);
+        assert!(config.rapify().enabled());
+        assert!(config.binarize().enabled());
+        assert_eq!(config.properties().get("test"), Some(&"test".to_string()));
+        assert_eq!(config.files().exclude(), &["test"]);
+
+        assert!(logs_contain("Use of deprecated key '[preprocess]'"));
+        assert!(logs_contain("Use of deprecated key 'no_bin'"));
+        assert!(logs_contain("Use of deprecated key 'exclude'"));
+    }
+
+    #[test]
+    fn deprecated_preprocess() {
+        let toml = "
+preprocess = true
+";
+        assert!(AddonFile::from_str(toml, "test").is_err());
     }
 }

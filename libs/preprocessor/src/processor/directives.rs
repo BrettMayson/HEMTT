@@ -484,7 +484,7 @@ mod tests {
     };
 
     #[test]
-    fn test_directive_define_unit() {
+    fn directive_define_unit() {
         let mut stream = tests::setup("#define FLAG");
         let mut processor = Processor::default();
         processor
@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn test_directive_define_value() {
+    fn directive_define_value() {
         let mut stream = tests::setup("#define FLAG 1");
         let mut processor = Processor::default();
         processor

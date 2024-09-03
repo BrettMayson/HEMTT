@@ -263,6 +263,10 @@ pub enum Error {
     #[error("Not a valid component: {0}")]
     /// HEMTT found an invalid version component
     InvalidComponent(String),
+
+    #[error("Version definition conflict, can define either a path or components")]
+    /// HEMTT found a conflict between a version path and version components
+    VersionPathConflict,
 }
 
 #[cfg(test)]

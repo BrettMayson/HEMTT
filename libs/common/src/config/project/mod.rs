@@ -152,26 +152,28 @@ static DEPRECATION: Once = Once::new();
 
 impl ProjectFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
-        let file = std::fs::read_to_string(path)?;
+        Self::from_str(&std::fs::read_to_string(path)?, &path.display().to_string())
+    }
 
+    pub fn from_str(content: &str, path: &str) -> Result<Self, Error> {
         DEPRECATION.call_once(|| {
-            if file.contains("[hemtt.launch]") {
+            if content.contains("[hemtt.launch]") {
                 deprecated(path, "[hemtt.launch]", "[hemtt.launch.default]", None);
             }
 
-            if file.contains("[asc]") {
+            if content.contains("[asc]") {
                 warn!("ASC config is no longer used");
             }
 
-            if file.contains("[lint]") {
+            if content.contains("[lint]") {
                 warn!("lint config is no longer used");
             }
         });
 
         let mut config: Self =
-            toml::from_str(&file.replace("[hemtt.launch]", "[hemtt.launch.default]"))?;
+            toml::from_str(&content.replace("[hemtt.launch]", "[hemtt.launch.default]"))?;
 
-        config.meta_path = path.to_path_buf();
+        config.meta_path = PathBuf::from(path);
 
         Ok(config)
     }

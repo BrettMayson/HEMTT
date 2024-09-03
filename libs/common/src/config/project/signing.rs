@@ -37,3 +37,29 @@ impl From<SigningSectionFile> for SigningConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+version = 2
+authority = "test"
+"#;
+        let file: SigningSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = SigningConfig::from(file);
+        assert_eq!(config.version(), BISignVersion::V2);
+        assert_eq!(config.authority(), Some(&"test".to_string()));
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: SigningSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = SigningConfig::from(file);
+        assert_eq!(config.version(), BISignVersion::V3);
+        assert!(config.authority().is_none());
+    }
+}

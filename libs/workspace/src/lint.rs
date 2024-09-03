@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    fn test_lint_manager() {
+    fn lint_manager() {
         let manager = LintManager {
             lints: vec![Arc::new(Box::new(LintA)), Arc::new(Box::new(LintB))],
             groups: vec![],

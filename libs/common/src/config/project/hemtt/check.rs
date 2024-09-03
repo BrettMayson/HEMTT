@@ -31,3 +31,26 @@ impl From<CheckOptionsFile> for CheckOptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+pdrive = "disallow"
+"#;
+        let file: CheckOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = CheckOptions::from(file);
+        assert_eq!(config.pdrive(), &PDriveOption::Disallow);
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: CheckOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = CheckOptions::from(file);
+        assert_eq!(config.pdrive(), &PDriveOption::Ignore);
+    }
+}

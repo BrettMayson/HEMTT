@@ -107,6 +107,7 @@ impl LintConfig {
 pub struct LintConfigOverride {
     enabled: Option<bool>,
     severity: Option<Severity>,
+    #[serde(default)]
     options: HashMap<String, toml::Value>,
 }
 impl Eq for LintConfigOverride {}
@@ -196,5 +197,84 @@ impl From<LintConfigFile> for LintConfigOverride {
             },
             LintConfigFile::Full(config) => config,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn disabled() {
+        let toml = "
+[sqf]
+example = false
+";
+        let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LintGroupConfig::from(file);
+        assert_eq!(
+            config
+                .sqf()
+                .get("example")
+                .expect("example exists")
+                .enabled(),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn severity() {
+        let toml = r#"
+[sqf]
+example = "Warning"
+"#;
+        let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LintGroupConfig::from(file);
+        assert_eq!(
+            config
+                .sqf()
+                .get("example")
+                .expect("example exists")
+                .severity(),
+            Some(Severity::Warning)
+        );
+    }
+
+    #[test]
+    fn full() {
+        let toml = r#"
+[sqf.example]
+enabled = false
+severity = "Warning"
+options.test = true
+"#;
+        let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LintGroupConfig::from(file);
+        let example = config.sqf().get("example").expect("example exists");
+        assert_eq!(example.enabled(), Some(false));
+        assert_eq!(example.severity(), Some(Severity::Warning));
+        assert_eq!(example.option("test"), Some(&toml::Value::Boolean(true)));
+    }
+
+    #[test]
+    fn empty() {
+        let toml = "";
+        let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LintGroupConfig::from(file);
+        assert!(config.is_empty());
+    }
+
+    #[test]
+    fn default() {
+        let toml = "
+[sqf.example]
+enabled = true
+";
+        let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LintGroupConfig::from(file);
+        let example = config.sqf().get("example").expect("example exists");
+        assert_eq!(example.enabled(), Some(true));
+        assert_eq!(example.severity(), None);
+        assert!(example.option("test").is_none());
     }
 }

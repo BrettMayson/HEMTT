@@ -78,7 +78,7 @@ mod tests {
     use crate::processor::{tests, Processor};
 
     #[test]
-    fn test_skip_whitespace_space() {
+    fn skip_whitespace_space() {
         let mut stream = tests::setup("  a");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_tab() {
+    fn skip_whitespace_tab() {
         let mut stream = tests::setup("\ta");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_newline() {
+    fn skip_whitespace_newline() {
         let mut stream = tests::setup("\na");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_eoi() {
+    fn skip_whitespace_eoi() {
         let mut stream = tests::setup("");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_to_after_newline() {
+    fn skip_to_after_newline() {
         let mut stream = tests::setup("a\nb");
         let mut processor = Processor::default();
         processor.skip_to_after_newline(&mut stream, None);
@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn test_expect_nothing_to_newline_whitespace() {
+    fn expect_nothing_to_newline_whitespace() {
         let mut stream = tests::setup("  \nb");
         Processor::expect_nothing_to_newline(&mut stream).unwrap();
     }

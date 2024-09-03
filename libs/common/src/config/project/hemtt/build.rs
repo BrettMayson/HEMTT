@@ -40,3 +40,29 @@ impl From<BuildOptionsFile> for BuildOptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+optional_mod_folders = false
+pdrive = "disallow"
+"#;
+        let file: BuildOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BuildOptions::from(file);
+        assert!(!config.optional_mod_folders());
+        assert_eq!(config.pdrive(), &PDriveOption::Disallow);
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: BuildOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BuildOptions::from(file);
+        assert!(config.optional_mod_folders());
+        assert_eq!(config.pdrive(), &PDriveOption::Ignore);
+    }
+}

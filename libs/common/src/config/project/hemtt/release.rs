@@ -52,3 +52,32 @@ impl ReleaseOptionsFile {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+folder = "test"
+sign = false
+archive = false
+"#;
+        let file: ReleaseOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = file.into_config("test");
+        assert_eq!(config.folder(), "test");
+        assert!(!config.sign());
+        assert!(!config.archive());
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: ReleaseOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = file.into_config("test");
+        assert_eq!(config.folder(), "test");
+        assert!(config.sign());
+        assert!(config.archive());
+    }
+}

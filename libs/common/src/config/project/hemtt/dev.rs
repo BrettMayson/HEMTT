@@ -29,3 +29,26 @@ impl From<DevOptionsFile> for DevOptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+exclude = ["test"]
+"#;
+        let file: DevOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = DevOptions::from(file);
+        assert_eq!(config.exclude(), &["test"]);
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: DevOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = DevOptions::from(file);
+        assert!(config.exclude().is_empty());
+    }
+}

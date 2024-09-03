@@ -125,3 +125,73 @@ impl HemttSectionFile {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::arma::dlc::DLC;
+
+    use super::*;
+
+    #[test]
+    fn extends() {
+        let toml = r#"
+[launch.base]
+workshop = ["123456"]
+dlc = ["contact"]
+
+[launch.test]
+extends = "base"
+mission = "test"
+workshop = ["654321"]
+dlc = ["spe"]
+"#;
+        let file: HemttSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = file
+            .into_config(Path::new("."), "test")
+            .expect("failed to convert");
+        assert_eq!(
+            config
+                .launch()
+                .get("test")
+                .expect("has test preset")
+                .workshop(),
+            &["123456", "654321"]
+        );
+        assert_eq!(
+            config.launch().get("test").expect("has test preset").dlc(),
+            &[DLC::Contact, DLC::Spearhead1944]
+        );
+        assert_eq!(
+            config
+                .launch()
+                .get("test")
+                .expect("has test preset")
+                .mission(),
+            Some(&"test".to_string())
+        );
+    }
+
+    #[test]
+    fn extends_missing() {
+        let toml = r#"
+[launch.test]
+extends = "base"
+mission = "test"
+"#;
+        let file: HemttSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = file.into_config(Path::new("."), "test");
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn extends_self() {
+        let toml = r#"
+[launch.test]
+extends = "test"
+mission = "test"
+"#;
+        let file: HemttSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = file.into_config(Path::new("."), "test");
+        assert!(config.is_err());
+    }
+}

@@ -12,28 +12,28 @@ pub fn ident() -> impl Parser<char, Ident, Error = Simple<char>> {
 
 #[cfg(test)]
 mod tests {
+    use chumsky::Parser;
+
     use crate::Ident;
 
-    use super::*;
-
     #[test]
-    fn test_ident() {
+    fn ident() {
         assert_eq!(
-            ident().parse("abc"),
+            super::ident().parse("abc"),
             Ok(Ident {
                 value: "abc".to_string(),
                 span: 0..3,
             })
         );
         assert_eq!(
-            ident().parse("abc123"),
+            super::ident().parse("abc123"),
             Ok(Ident {
                 value: "abc123".to_string(),
                 span: 0..6,
             })
         );
         assert_eq!(
-            ident().parse("abc_123"),
+            super::ident().parse("abc_123"),
             Ok(Ident {
                 value: "abc_123".to_string(),
                 span: 0..7,

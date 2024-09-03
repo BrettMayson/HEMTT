@@ -40,3 +40,29 @@ impl From<RapifySectionFile> for RapifyConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+enabled = false
+exclude = ["test"]
+"#;
+        let file: RapifySectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = RapifyConfig::from(file);
+        assert!(!config.enabled());
+        assert_eq!(config.exclude(), &["test"]);
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: RapifySectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = RapifyConfig::from(file);
+        assert!(config.enabled());
+        assert!(config.exclude().is_empty());
+    }
+}

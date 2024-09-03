@@ -241,3 +241,56 @@ impl From<LaunchOptionsFile> for LaunchOptions {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+workshop = ["123456"]
+dlc = ["contact"]
+presets = ["test"]
+optionals = ["test"]
+mission = "test"
+parameters = ["test"]
+executable = "test"
+binarize = true
+file_patching = false
+instances = 2
+rapify = false
+"#;
+        let file: LaunchOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LaunchOptions::from(file);
+        assert_eq!(config.workshop(), &["123456"]);
+        assert_eq!(config.dlc(), &[DLC::Contact]);
+        assert_eq!(config.presets(), &["test"]);
+        assert_eq!(config.optionals(), &["test"]);
+        assert_eq!(config.mission(), Some(&"test".to_string()));
+        assert_eq!(config.parameters(), &["test"]);
+        assert_eq!(config.executable(), "test");
+        assert!(config.binarize());
+        assert!(!config.file_patching());
+        assert_eq!(config.instances(), 2);
+        assert!(!config.rapify());
+    }
+
+    #[test]
+    fn default() {
+        let toml = "";
+        let file: LaunchOptionsFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = LaunchOptions::from(file);
+        assert!(config.workshop().is_empty());
+        assert!(config.dlc().is_empty());
+        assert!(config.presets().is_empty());
+        assert!(config.optionals().is_empty());
+        assert!(config.mission().is_none());
+        assert!(config.parameters().is_empty());
+        assert_eq!(config.executable(), "arma3_x64");
+        assert!(!config.binarize());
+        assert!(config.file_patching());
+        assert_eq!(config.instances(), 1);
+        assert!(config.rapify());
+    }
+}

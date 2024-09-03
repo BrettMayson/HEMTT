@@ -115,6 +115,11 @@ pub struct VersionSectionFile {
 impl TryFrom<VersionSectionFile> for VersionConfig {
     type Error = Error;
     fn try_from(file: VersionSectionFile) -> Result<Self, Self::Error> {
+        if (file.major.is_some() || file.minor.is_some() || file.patch.is_some())
+            && file.path.is_some()
+        {
+            return Err(Error::Version(crate::version::Error::VersionPathConflict));
+        }
         if file.major.is_none() && (file.minor.is_some() || file.patch.is_some()) {
             return Err(Error::Version(crate::version::Error::ExpectedMajor));
         }
@@ -137,5 +142,91 @@ impl TryFrom<VersionSectionFile> for VersionConfig {
                 .map_err(Error::Version)?,
             git_hash: file.git_hash.unwrap_or(8),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = "
+major = 1
+minor = 2
+patch = 3
+build = 4
+git_hash = 4
+";
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file).expect("failed to convert");
+        assert_eq!(config.path(), "addons/main/script_version.hpp");
+        assert_eq!(config.git_hash(), Some(4));
+    }
+
+    #[test]
+    fn path() {
+        let toml = r#"
+path = "test.hpp"
+"#;
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file).expect("failed to convert");
+        assert_eq!(config.path(), "test.hpp");
+    }
+
+    #[test]
+    fn git_hash() {
+        let toml = "
+git_hash = 0
+";
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file).expect("failed to convert");
+        assert_eq!(config.git_hash(), None);
+    }
+
+    #[test]
+    fn missing_major() {
+        let toml = "
+minor = 2
+patch = 3
+";
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file);
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn missing_minor() {
+        let toml = "
+major = 1
+patch = 3
+";
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file);
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn missing_patch() {
+        let toml = "
+major = 1
+minor = 2
+";
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file);
+        assert!(config.is_err());
+    }
+
+    #[test]
+    fn path_conflict() {
+        let toml = r#"
+path = "test.hpp"
+major = 1
+minor = 2
+patch = 3
+"#;
+        let file: VersionSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = VersionConfig::try_from(file);
+        assert!(config.is_err());
     }
 }

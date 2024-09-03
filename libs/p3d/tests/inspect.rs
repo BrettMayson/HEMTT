@@ -15,3 +15,14 @@ fn ace_gunbag() {
     }
     assert_eq!(textures.len(), 4);
 }
+
+#[test]
+fn kat_iv() {
+    assert_eq!(
+        format!(
+            "{:?}",
+            P3D::read(&mut std::fs::File::open("tests/kat_iv.p3d").unwrap())
+        ),
+        "Err(UnsupportedLODType(\"SP3X\"))"
+    );
+}

@@ -46,3 +46,56 @@ impl From<BinarizeSectionFile> for BinarizeConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fully_defined() {
+        let toml = r#"
+enabled = false
+exclude = ["test"]
+"#;
+        let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BinarizeConfig::from(file);
+        assert!(!config.enabled());
+        assert_eq!(config.exclude(), &["test".to_string()]);
+    }
+
+    #[test]
+    fn exlucde_defined() {
+        let toml = r#"exclude = ["test"]"#;
+        let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BinarizeConfig::from(file);
+        assert!(config.enabled());
+        assert_eq!(config.exclude(), &["test".to_string()]);
+    }
+
+    #[test]
+    fn enabled_defined_false() {
+        let toml = r"enabled = false";
+        let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BinarizeConfig::from(file);
+        assert!(!config.enabled());
+        assert!(config.exclude().is_empty());
+    }
+
+    #[test]
+    fn enabled_defined_true() {
+        let toml = r"enabled = true";
+        let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BinarizeConfig::from(file);
+        assert!(config.enabled());
+        assert!(config.exclude().is_empty());
+    }
+
+    #[test]
+    fn empty() {
+        let toml = "";
+        let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
+        let config = BinarizeConfig::from(file);
+        assert!(config.enabled());
+        assert!(config.exclude().is_empty());
+    }
+}

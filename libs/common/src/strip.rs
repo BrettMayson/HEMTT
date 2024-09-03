@@ -27,7 +27,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_strip_prefix_insensitive() {
+    fn strip_prefix_insensitive() {
         assert_eq!("foobar".strip_prefix_insensitive("foo"), Some("bar"));
         assert_eq!("foobar".strip_prefix_insensitive("FOO"), Some("bar"));
         assert_eq!("foobar".strip_prefix_insensitive("bar"), None);

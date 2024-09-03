@@ -130,6 +130,13 @@ mod tests {
         assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
         assert_eq!(prefix.main_prefix(), "z");
         assert_eq!(prefix.mod_prefix().unwrap(), "test");
+        assert_eq!(
+            prefix.as_pathbuf().display().to_string(),
+            std::path::PathBuf::from("z/test/addons/main")
+                .display()
+                .to_string()
+        );
+        assert_eq!(prefix.into_inner(), vec!["z", "test", "addons", "main"]);
         assert!(Prefix::new("z/test/addons/main").is_err());
         assert!(Prefix::new("\\z\\test\\addons\\main").is_err());
     }
@@ -160,5 +167,10 @@ mod tests {
         assert_eq!(prefix.to_string(), "test");
         assert_eq!(prefix.main_prefix(), "test");
         assert!(prefix.mod_prefix().is_none());
+    }
+
+    #[test]
+    fn empty() {
+        assert!(Prefix::new("").is_err());
     }
 }
