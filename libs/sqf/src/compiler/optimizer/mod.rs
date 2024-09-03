@@ -44,35 +44,37 @@ impl Expression {
                 let right_o = right.clone().optimize();
                 match op_type {
                     UnaryCommand::Minus => {
-                        fn op(r: f32) -> f32 {
-                            -r
-                        }
-                        if let Some(eval) = self.op_uni_float(op_type, range, &right_o, op) {
+                        if let Some(eval) =
+                            self.op_uni_float(op_type, range, &right_o, std::ops::Neg::neg)
+                        {
                             return eval;
                         }
                     }
                     UnaryCommand::Named(op_name) => match op_name.to_lowercase().as_str() {
                         "tolower" | "toloweransi" => {
-                            fn op(r: &str) -> String {
-                                r.to_ascii_lowercase()
-                            }
-                            if let Some(eval) = self.op_uni_string(op_type, range, &right_o, op) {
+                            if let Some(eval) = self.op_uni_string(
+                                op_type,
+                                range,
+                                &right_o,
+                                str::to_ascii_lowercase,
+                            ) {
                                 return eval;
                             }
                         }
                         "toupper" | "toupperansi" => {
-                            fn op(r: &str) -> String {
-                                r.to_ascii_uppercase()
-                            }
-                            if let Some(eval) = self.op_uni_string(op_type, range, &right_o, op) {
+                            if let Some(eval) = self.op_uni_string(
+                                op_type,
+                                range,
+                                &right_o,
+                                str::to_ascii_uppercase,
+                            ) {
                                 return eval;
                             }
                         }
                         "sqrt" => {
-                            fn op(r: f32) -> f32 {
-                                r.sqrt()
-                            }
-                            if let Some(eval) = self.op_uni_float(op_type, range, &right_o, op) {
+                            if let Some(eval) =
+                                self.op_uni_float(op_type, range, &right_o, f32::sqrt)
+                            {
                                 return eval;
                             }
                         }
@@ -130,59 +132,43 @@ impl Expression {
                         _ => {}
                     },
                     BinaryCommand::Add => {
+                        if let Some(eval) =
+                            self.op_bin_float(op_type, range, &left_o, &right_o, std::ops::Add::add)
                         {
-                            fn op(l: f32, r: f32) -> f32 {
-                                l + r
-                            }
-                            if let Some(eval) =
-                                self.op_bin_float(op_type, range, &left_o, &right_o, op)
-                            {
-                                return eval;
-                            }
+                            return eval;
                         }
-                        {
-                            fn op(l: &str, r: &str) -> String {
+                        if let Some(eval) =
+                            self.op_bin_string(op_type, range, &left_o, &right_o, |l, r| {
                                 format!("{l}{r}")
-                            }
-                            if let Some(eval) =
-                                self.op_bin_string(op_type, range, &left_o, &right_o, op)
-                            {
-                                return eval;
-                            }
+                            })
+                        {
+                            return eval;
                         }
                     }
                     BinaryCommand::Sub => {
-                        fn op(l: f32, r: f32) -> f32 {
-                            l - r
-                        }
-                        if let Some(eval) = self.op_bin_float(op_type, range, &left_o, &right_o, op)
+                        if let Some(eval) =
+                            self.op_bin_float(op_type, range, &left_o, &right_o, std::ops::Sub::sub)
                         {
                             return eval;
                         }
                     }
                     BinaryCommand::Mul => {
-                        fn op(l: f32, r: f32) -> f32 {
-                            l * r
-                        }
-                        if let Some(eval) = self.op_bin_float(op_type, range, &left_o, &right_o, op)
+                        if let Some(eval) =
+                            self.op_bin_float(op_type, range, &left_o, &right_o, std::ops::Mul::mul)
                         {
                             return eval;
                         }
                     }
                     BinaryCommand::Div => {
-                        fn op(l: f32, r: f32) -> f32 {
-                            l / r
-                        }
-                        if let Some(eval) = self.op_bin_float(op_type, range, &left_o, &right_o, op)
+                        if let Some(eval) =
+                            self.op_bin_float(op_type, range, &left_o, &right_o, std::ops::Div::div)
                         {
                             return eval;
                         }
                     }
                     BinaryCommand::Rem | BinaryCommand::Mod => {
-                        fn op(l: f32, r: f32) -> f32 {
-                            l % r
-                        }
-                        if let Some(eval) = self.op_bin_float(op_type, range, &left_o, &right_o, op)
+                        if let Some(eval) =
+                            self.op_bin_float(op_type, range, &left_o, &right_o, std::ops::Rem::rem)
                         {
                             return eval;
                         }
@@ -270,6 +256,7 @@ impl Expression {
         }
         None
     }
+
     #[must_use]
     fn op_uni_float(
         &self,
@@ -298,6 +285,7 @@ impl Expression {
         }
         None
     }
+
     #[must_use]
     fn op_bin_string(
         &self,
@@ -333,6 +321,7 @@ impl Expression {
         }
         None
     }
+
     #[must_use]
     fn op_bin_float(
         &self,
