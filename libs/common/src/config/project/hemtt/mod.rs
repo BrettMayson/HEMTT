@@ -170,13 +170,11 @@ file_patching = false
                 .mission(),
             Some(&"test".to_string())
         );
-        assert!(
-            !config
-                .launch()
-                .get("test")
-                .expect("has test preset")
-                .file_patching()
-        );
+        assert!(!config
+            .launch()
+            .get("test")
+            .expect("has test preset")
+            .file_patching());
     }
 
     #[test]
