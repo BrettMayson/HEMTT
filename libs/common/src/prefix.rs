@@ -131,10 +131,11 @@ mod tests {
         assert_eq!(prefix.main_prefix(), "z");
         assert_eq!(prefix.mod_prefix().unwrap(), "test");
         assert_eq!(
-            prefix.as_pathbuf().display().to_string(),
-            std::path::PathBuf::from("z/test/addons/main")
-                .display()
-                .to_string()
+            prefix.as_pathbuf(),
+            std::path::PathBuf::from("z")
+                .join("test")
+                .join("addons")
+                .join("main")
         );
         assert_eq!(prefix.into_inner(), vec!["z", "test", "addons", "main"]);
         assert!(Prefix::new("z/test/addons/main").is_err());

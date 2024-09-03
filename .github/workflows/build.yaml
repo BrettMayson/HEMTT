@@ -62,9 +62,9 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: dd56d22a30d362d977f28a6d85687cbe052376ee
+            commit: b99dddf46aca7cea008bca56f5a553c5d7776219
           - repo: acemod/ACE3
-            commit: 337222aa40bcfcd9e1565018cf61ac6c59ae2fc8
+            commit: eb57fa49c404e662abcd18c7e52c1f7c4b67a9b0
           - repo: ArmaForces/Mods
             commit: 83561696a94aafdf0b4b770730d1fe716348d992
           - repo: Theseus-Aegis/Mods
