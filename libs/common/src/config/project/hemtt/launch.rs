@@ -194,7 +194,7 @@ pub struct LaunchOptionsFile {
 }
 
 impl LaunchOptionsFile {
-    pub fn overlay(self, other: Self) -> Self {
+    pub fn extend(self, other: Self) -> Self {
         let mut other = other;
         other.workshop.extend(self.workshop);
         other.dlc.extend(self.dlc);
@@ -206,6 +206,18 @@ impl LaunchOptionsFile {
         }
         if let Some(mission) = self.mission {
             other.mission = Some(mission);
+        }
+        if let Some(binarize) = self.binarize {
+            other.binarize = Some(binarize);
+        }
+        if let Some(file_patching) = self.file_patching {
+            other.file_patching = Some(file_patching);
+        }
+        if let Some(instances) = self.instances {
+            other.instances = Some(instances);
+        }
+        if let Some(rapify) = self.rapify {
+            other.rapify = Some(rapify);
         }
         other
     }

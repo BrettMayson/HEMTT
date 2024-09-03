@@ -107,7 +107,7 @@ impl HemttSectionFile {
                                 return Err(Error::LaunchConfigExtendsSelf(k));
                             }
                             if let Some(extends) = launch_source.get(extends) {
-                                base = base.overlay(extends.clone());
+                                base = base.extend(extends.clone());
                             } else {
                                 return Err(Error::LaunchConfigExtendsMissing(
                                     k,
@@ -144,6 +144,7 @@ extends = "base"
 mission = "test"
 workshop = ["654321"]
 dlc = ["spe"]
+file_patching = false
 "#;
         let file: HemttSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = file
@@ -168,6 +169,13 @@ dlc = ["spe"]
                 .expect("has test preset")
                 .mission(),
             Some(&"test".to_string())
+        );
+        assert!(
+            !config
+                .launch()
+                .get("test")
+                .expect("has test preset")
+                .file_patching()
         );
     }
 
