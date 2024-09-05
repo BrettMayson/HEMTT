@@ -128,6 +128,22 @@ impl WorkspacePath {
     }
 
     #[must_use]
+    /// Get the arma path as a [`String`]
+    pub fn as_virtual_str(&self) -> String {
+        let mut path = self.data.path.as_str().replace('\\', "/");
+        let path_lower = path.to_lowercase();
+        if let Some((base, root)) =
+            self.data.workspace.pointers.iter().find(|(_, vfs)| {
+                path_lower.starts_with(&format!("{}/", vfs.as_str().to_lowercase()))
+            })
+        {
+            path = format!("{}{}", base, &path[root.as_str().len()..].to_string());
+        }
+
+        path
+    }
+
+    #[must_use]
     /// Get the parent of the path
     pub fn parent(&self) -> Self {
         Self {

@@ -41,7 +41,7 @@ impl Statements {
             file_names: processed
                 .sources()
                 .iter()
-                .map(|(s, _)| s.as_str().into())
+                .map(|(s, _)| s.as_virtual_str().into())
                 .collect(),
         })
     }
