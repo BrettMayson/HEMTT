@@ -1,11 +1,15 @@
 -5;
-"A" + "B";
-1 + 1;
+toLower "A" + toUpper "b" + toUpperAnsi "C" + toLowerAnsi "d";
+1 + (2 * 2) + (36 % 31) + (36 / 6) + (sqrt 100) - 3;
 z + z;
 params ["_a", "_b"];
 params ["_a", "_b", ["_c", []]];
 missionNamespace getVariable ["a", -1];
-z getVariable ["b", []];
+z setVariable ["b", [], true];
 [1,0] vectorAdd p;
 positionCameraToWorld [10000, 0, 10000];
 random [0, _x, 1];
+private _z = if (time > 10) then { 1;2;3;4; } else { -1;-2; };
+sqrt -100;
+param ["_d"];
+[] param ["_e"];
