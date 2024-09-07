@@ -4,3 +4,8 @@
 z + z;
 params ["_a", "_b"];
 params ["_a", "_b", ["_c", []]];
+missionNamespace getVariable ["a", -1];
+z getVariable ["b", []];
+[1,0] vectorAdd p;
+positionCameraToWorld [10000, 0, 10000];
+random [0, _x, 1];

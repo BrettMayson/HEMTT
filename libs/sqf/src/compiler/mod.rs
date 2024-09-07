@@ -187,8 +187,10 @@ impl Expression {
                 push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
-                Self::Array(ref array, ref location)
-                | Self::ConsumeableArray(ref array, ref location) => {
+                Self::ConsumeableArray(..) => {
+                    panic!("couldn't make ConsumeableArray a const");
+                }
+                Self::Array(ref array, ref location) => {
                     let array_len = array
                         .len()
                         .try_into()
