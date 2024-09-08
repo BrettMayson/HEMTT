@@ -1,0 +1,6 @@
+[0m[1m[38;5;14mhelp[L-S10][0m[1m: if ! else - consider removing not and swapping else[0m
+  [0m[36m┌─[0m source.sqf:2:1
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m [0m[36mif[0m (!alive player) then { player } else { objNull };
+  [0m[36m│[0m [0m[36m^^[0m [0m[36mif ! else - consider removing not and swapping else[0m
+
