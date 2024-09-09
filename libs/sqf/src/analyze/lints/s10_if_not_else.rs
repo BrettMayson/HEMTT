@@ -38,7 +38,7 @@ if (alive player) then { objNull } else { player };
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::pedantic()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
