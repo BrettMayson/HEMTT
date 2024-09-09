@@ -42,7 +42,7 @@ private _text = format ["%1 %2", "Hello", "World"];
 
 ### Explanation
 
-The `format` command requires the correct number of arguments to match the format string."#
+The `format` and `formatText` commands requires the correct number of arguments to match the format string."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -76,7 +76,7 @@ impl LintRunner<SqfLintData> for Runner {
         let Expression::UnaryCommand(UnaryCommand::Named(name), expression, _) = target else {
             return Vec::new();
         };
-        if name.to_lowercase() != "format" {
+        if name.to_lowercase() != "format" && name.to_lowercase() != "formattext" {
             return Vec::new();
         }
         let Expression::Array(args, _) = &**expression else {
