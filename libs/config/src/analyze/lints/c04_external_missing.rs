@@ -92,6 +92,7 @@ fn check(properties: &[Property], defined: &mut HashSet<String>, processed: &Pro
                     name,
                     parent,
                     properties,
+                    err_missing_braces: _,
                 } => {
                     let name = name.value.to_lowercase();
                     if let Some(parent) = parent {

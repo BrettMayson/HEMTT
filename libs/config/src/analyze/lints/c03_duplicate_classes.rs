@@ -100,6 +100,7 @@ pub fn check(properties: &[Property], processed: &Processed) -> Codes {
                     name,
                     parent: _,
                     properties,
+                    err_missing_braces: _,
                 } => {
                     codes.extend(check(properties, processed));
                     defined

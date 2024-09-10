@@ -125,6 +125,7 @@ mod tests {
                         expected_array: false,
                     },
                 ],
+                err_missing_braces: false,
             }),]),)
         );
     }
@@ -141,6 +142,7 @@ mod tests {
                 };"#,
             ),
             Ok(Config(vec![crate::Property::Class(crate::Class::Local {
+                err_missing_braces: false,
                 name: crate::Ident {
                     value: "Outer".to_string(),
                     span: 6..11,
@@ -176,6 +178,7 @@ mod tests {
                             expected_array: false,
                         },
                     ],
+                    err_missing_braces: false,
                 })],
             }),]),)
         );
