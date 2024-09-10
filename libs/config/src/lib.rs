@@ -7,10 +7,11 @@
 use std::sync::Arc;
 
 mod analyze;
+pub mod fmt;
 mod model;
-pub use model::*;
 pub mod parse;
 pub mod rapify;
+pub use model::*;
 
 pub use analyze::CONFIG_LINTS;
 
