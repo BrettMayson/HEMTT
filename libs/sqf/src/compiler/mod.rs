@@ -101,7 +101,7 @@ pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> Sou
     ).original();
     let offset = processed.get_byte_offset(location.start);
     SourceInfo {
-        offset: offset,
+        offset,
         file_index: processed
             .sources()
             .iter()

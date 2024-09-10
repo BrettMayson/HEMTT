@@ -259,10 +259,11 @@ impl Processed {
     }
 
     #[must_use]
+    #[allow(clippy::cast_possible_truncation)]
     /// Get offset as number of raw bytes into the output string
     pub fn get_byte_offset(&self, offset: usize) -> u32 {
-        let ret: usize = self.output.chars().take(offset).map(|c| c.len_utf8()).sum();
-        return ret as u32;
+        let ret: usize = self.output.chars().take(offset).map(char::len_utf8).sum();
+        ret as u32
     }
 
     #[must_use]
