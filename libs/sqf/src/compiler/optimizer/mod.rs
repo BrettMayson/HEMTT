@@ -136,7 +136,7 @@ impl Expression {
                             }
                         }
                         // commands that fully consume arrays and leave no crumbs
-                        "vectoradd" | "vectordiff" => {
+                        "vectoradd" | "vectordiff" | "vectorcrossproduct" | "vectordotproduct" => {
                             if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
                                 right_o = consumable;
                             }
@@ -215,7 +215,7 @@ impl Expression {
             Self::NularCommand(ref command, ..) => command.is_constant(),
             Self::Array(ref array, ..) => array.iter().all(Self::is_constant), // true on empty
             Self::ConsumeableArray(..) => {
-                panic!("should not be reachable");
+                unreachable!("should not be reachable");
             }
             _ => false,
         }

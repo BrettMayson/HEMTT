@@ -188,7 +188,7 @@ impl Expression {
             }
             None => match *self {
                 Self::ConsumeableArray(..) => {
-                    panic!("couldn't make ConsumeableArray a const");
+                    unreachable!("couldn't make ConsumeableArray a const");
                 }
                 Self::Array(ref array, ref location) => {
                     let array_len = array
