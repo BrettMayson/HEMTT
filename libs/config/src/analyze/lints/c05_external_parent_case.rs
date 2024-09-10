@@ -96,6 +96,7 @@ fn check(
                     name,
                     parent,
                     properties,
+                    err_missing_braces: _,
                 } => {
                     let name_lower = name.value.to_lowercase();
                     if let Some(parent) = parent {

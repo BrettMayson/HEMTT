@@ -78,3 +78,4 @@ bootstrap!(c06_unexpected_array);
 bootstrap!(c07_expected_array);
 bootstrap!(c08_missing_semicolon);
 bootstrap!(c09_magwell_missing_magazine);
+bootstrap!(c10_class_missing_braces);

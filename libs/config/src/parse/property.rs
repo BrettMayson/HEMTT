@@ -4,37 +4,54 @@ use crate::{Class, Property, Value};
 
 use super::{ident::ident, value::value};
 
+fn class_parent() -> impl Parser<char, crate::Ident, Error = Simple<char>> {
+    just(':')
+        .padded()
+        .ignore_then(ident().padded().labelled("class parent"))
+}
+
+fn class_missing_braces() -> impl Parser<char, Class, Error = Simple<char>> {
+    just("class ")
+        .padded()
+        .ignore_then(ident().padded().labelled("class name"))
+        .then(class_parent())
+        .padded()
+        .map(|(ident, parent)| Class::Local {
+            name: ident,
+            parent: Some(parent),
+            properties: vec![],
+            err_missing_braces: true,
+        })
+}
+
+#[allow(clippy::too_many_lines)]
 pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
     recursive(|rec| {
-        let class = just("class ")
+        let properties = rec
+            .labelled("class property")
+            .padded()
+            .repeated()
+            .padded()
+            .delimited_by(just('{'), just('}'));
+
+        let class_external = just("class ")
             .padded()
             .ignore_then(ident().padded().labelled("class name"))
-            .then(
-                (just(':')
-                    .padded()
-                    .ignore_then(ident().padded().labelled("class parent")))
-                .or_not(),
-            )
             .padded()
-            .then(
-                rec.labelled("class property")
-                    .padded()
-                    .repeated()
-                    .padded()
-                    .delimited_by(just('{'), just('}'))
-                    .or_not(),
-            )
-            .map(|((ident, parent), properties)| {
-                if let Some(properties) = properties {
-                    Class::Local {
-                        name: ident,
-                        parent,
-                        properties,
-                    }
-                } else {
-                    Class::External { name: ident }
-                }
+            .map(|ident| Class::External { name: ident });
+        let class_local = just("class ")
+            .padded()
+            .ignore_then(ident().padded().labelled("class name"))
+            .then(class_parent().or_not())
+            .padded()
+            .then(properties)
+            .map(|((ident, parent), properties)| Class::Local {
+                name: ident,
+                parent,
+                properties,
+                err_missing_braces: false,
             });
+        let class = choice((class_local, class_missing_braces(), class_external));
         choice((
             class.map(Property::Class),
             just("delete ")
@@ -357,7 +374,8 @@ mod tests {
                             span: 29..30,
                         }),
                         expected_array: false,
-                    }]
+                    }],
+                    err_missing_braces: false,
                 })),
                 vec![]
             )
@@ -425,6 +443,32 @@ mod tests {
                 },
                 0..9,
             ))
+        );
+    }
+
+    #[test]
+    fn invalid_external_with_parent() {
+        println!(
+            "{:?}",
+            class_missing_braces().parse("class MyClass: MyParent")
+        );
+        assert_eq!(
+            property().parse_recovery_verbose("class MyClass: MyParent;"),
+            (
+                Some(Property::Class(Class::Local {
+                    name: crate::Ident {
+                        value: "MyClass".to_string(),
+                        span: 6..13,
+                    },
+                    parent: Some(crate::Ident {
+                        value: "MyParent".to_string(),
+                        span: 15..23,
+                    }),
+                    properties: vec![],
+                    err_missing_braces: true,
+                })),
+                vec![]
+            )
         );
     }
 }
