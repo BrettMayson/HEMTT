@@ -448,10 +448,6 @@ mod tests {
 
     #[test]
     fn invalid_external_with_parent() {
-        println!(
-            "{:?}",
-            class_missing_braces().parse("class MyClass: MyParent")
-        );
         assert_eq!(
             property().parse_recovery_verbose("class MyClass: MyParent;"),
             (
