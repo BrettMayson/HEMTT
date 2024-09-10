@@ -325,6 +325,26 @@ mod tests {
     }
 
     #[test]
+    fn version_set_build() {
+        let mut version = Version::try_from("1.2.42").unwrap();
+        version.set_build("1a2b3c4d");
+        assert_eq!(version.major, 1);
+        assert_eq!(version.minor, 2);
+        assert_eq!(version.patch, 42);
+        assert_eq!(version.build, None);
+        assert_eq!(version.hash, Some("1a2b3c4d".to_string()));
+    }
+
+    #[test]
+    fn version_getters() {
+        let version = Version::try_from("1.2.42-1a2b3c4d").unwrap();
+        assert_eq!(version.major(), 1);
+        assert_eq!(version.minor(), 2);
+        assert_eq!(version.patch(), 42);
+        assert_eq!(version.build(), None);
+    }
+
+    #[test]
     fn version_invalid_component() {
         let version = Version::try_from("1.2.a");
         assert!(version.is_err());
@@ -332,6 +352,67 @@ mod tests {
             version.unwrap_err(),
             Error::InvalidComponent("a".to_string())
         );
+    }
+
+    #[test]
+    fn version_empty() {
+        let version = Version::try_from("");
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::UnknownVersion);
+    }
+
+    #[test]
+    fn version_dot() {
+        let version = Version::try_from(".");
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::InvalidComponent(String::new()));
+    }
+
+    #[test]
+    fn version_invalid_major() {
+        let version = Version::try_from("a.2.3");
+        assert!(version.is_err());
+        assert_eq!(
+            version.unwrap_err(),
+            Error::InvalidComponent("a".to_string())
+        );
+    }
+
+    #[test]
+    fn version_invalid_minor() {
+        let version = Version::try_from("1.a.3");
+        assert!(version.is_err());
+        assert_eq!(
+            version.unwrap_err(),
+            Error::InvalidComponent("a".to_string())
+        );
+    }
+
+    #[test]
+    fn version_invalid_patch() {
+        let version = Version::try_from("1.2.a");
+        assert!(version.is_err());
+        assert_eq!(
+            version.unwrap_err(),
+            Error::InvalidComponent("a".to_string())
+        );
+    }
+
+    #[test]
+    fn version_invalid_build() {
+        let version = Version::try_from("1.2.3.a");
+        assert!(version.is_err());
+        assert_eq!(
+            version.unwrap_err(),
+            Error::InvalidComponent("a".to_string())
+        );
+    }
+
+    #[test]
+    fn version_missing_major() {
+        let version = Version::try_from(".2.3");
+        assert!(version.is_err());
+        assert_eq!(version.unwrap_err(), Error::InvalidComponent(String::new()));
     }
 
     #[test]
@@ -472,5 +553,24 @@ mod tests {
         // Build
         assert!(Version::new(1, 1, 1, Some(2)) > Version::new(1, 1, 1, Some(1)));
         assert!(Version::new(1, 1, 1, Some(1)) < Version::new(1, 1, 1, Some(2)));
+        assert!(Version::new(1, 1, 1, Some(1)) > Version::new(1, 1, 1, None));
+        assert!(Version::new(1, 1, 1, None) < Version::new(1, 1, 1, Some(1)));
+    }
+
+    #[test]
+    fn serialize_and_deserialize() {
+        #[derive(Serialize, Deserialize)]
+        struct Wrapper {
+            version: Version,
+        }
+        for v in ["1.2.3", "1.2.3.4", "1.2.3.4-test", "1.2.3-test"] {
+            let version = Version::try_from(v).unwrap();
+            let serialized = toml::to_string(&Wrapper {
+                version: version.clone(),
+            })
+            .unwrap();
+            let deserialized: Wrapper = toml::from_str(&serialized).unwrap();
+            assert_eq!(deserialized.version, version);
+        }
     }
 }

@@ -2,7 +2,7 @@ use std::{fmt::Display, io::Read};
 
 use texpresso::Format;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PaXType {
     DXT1,
     DXT2,

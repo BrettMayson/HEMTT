@@ -32,6 +32,8 @@ pub enum Class {
         parent: Option<Ident>,
         /// The children of the class
         properties: Vec<Property>,
+        /// Was the class missing {}
+        err_missing_braces: bool,
     },
     /// An external class definition
     ///
