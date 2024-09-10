@@ -1,7 +1,10 @@
 use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
-use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
+use hemtt_workspace::{
+    lint::{AnyLintRunner, Lint, LintRunner},
+    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+};
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression, UnaryCommand};
 
@@ -13,7 +16,7 @@ impl Lint<SqfLintData> for LintS10IfNotElse {
     }
 
     fn sort(&self) -> u32 {
-        80
+        110
     }
 
     fn description(&self) -> &str {
@@ -21,7 +24,7 @@ impl Lint<SqfLintData> for LintS10IfNotElse {
     }
 
     fn documentation(&self) -> &str {
-r"### Example
+        r"### Example
 
 **Incorrect**
 ```sqf
@@ -31,14 +34,12 @@ if (!alive player) then { player } else { objNull };
 ```sqf
 if (alive player) then { objNull } else { player };
 ```
-
-### Explanation
-
+`!` can be removed and `else` order swapped
 "
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::pedantic()
+        LintConfig::pedantic() // disabled by default
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
@@ -48,8 +49,8 @@ if (alive player) then { objNull } else { player };
 
 struct Runner;
 impl LintRunner<SqfLintData> for Runner {
-                type Target = crate::Expression;
-    
+    type Target = crate::Expression;
+
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
@@ -58,21 +59,19 @@ impl LintRunner<SqfLintData> for Runner {
         target: &Self::Target,
         _data: &SqfLintData,
     ) -> Codes {
-
         let Some(processed) = processed else {
             return Vec::new();
         };
         if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target {
             if name.to_lowercase() == "then" {
-                let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
+                let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd
+                else {
                     return Vec::new();
                 };
                 if let Expression::BinaryCommand(BinaryCommand::Else, _, _, _) = &**code {
-                    if let Expression::UnaryCommand(UnaryCommand::Not, _, _) = &**condition
-                    {
-                    return vec![Arc::new(CodeS10IfNot::new(
-                            if_cmd.span(),
-                            "if ! else - consider removing not and swapping else".to_string(),
+                    if let Expression::UnaryCommand(UnaryCommand::Not, _, _) = &**condition {
+                        return vec![Arc::new(CodeS11IfNot::new(
+                            condition.span(),
                             processed,
                             config.severity(),
                         ))];
@@ -84,19 +83,16 @@ impl LintRunner<SqfLintData> for Runner {
     }
 }
 
-
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeS10IfNot {
+pub struct CodeS11IfNot {
     span: Range<usize>,
-    problem: String, //todo
-
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS10IfNot {
+impl Code for CodeS11IfNot {
     fn ident(&self) -> &'static str {
-        "L-S10"
+        "L-S11"
     }
 
     fn link(&self) -> Option<&str> {
@@ -108,7 +104,11 @@ impl Code for CodeS10IfNot {
     }
 
     fn message(&self) -> String {
-        self.problem.clone()
+        "Unneeded not in if".to_string()
+    }
+
+    fn label_message(&self) -> String {
+        "Consider removing and swapping order of else statements".to_string()
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -116,13 +116,11 @@ impl Code for CodeS10IfNot {
     }
 }
 
-impl CodeS10IfNot {
+impl CodeS11IfNot {
     #[must_use]
-    pub fn new(span: Range<usize>, problem: String, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
             span,
-            problem,
-
             severity,
             diagnostic: None,
         }
