@@ -259,6 +259,13 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get offset as number of raw bytes into the output string
+    pub fn get_byte_offset(&self, offset: usize) -> u32 {
+        let ret: usize = self.output.chars().take(offset).map(|c| c.len_utf8()).sum();
+        return ret as u32;
+    }
+
+    #[must_use]
     /// Returns the warnings
     pub fn warnings(&self) -> &[Arc<dyn Code>] {
         &self.warnings
