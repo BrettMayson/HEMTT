@@ -46,7 +46,7 @@ class MyClass: AlsoExternal {
 
 ### Explanation
 
-All classes uses inheritance with a parent class must use braces `{}`, even if the class has no properties.
+All classes using inheritance with a parent class must use braces `{}`, even if the class has no properties.
 "
     }
 
