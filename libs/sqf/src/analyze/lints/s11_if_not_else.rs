@@ -39,8 +39,7 @@ if (alive player) then { objNull } else { player };
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
-            .with_enabled(false)
+        LintConfig::help().with_enabled(false)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
@@ -63,24 +62,26 @@ impl LintRunner<SqfLintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target {
-            if name.to_lowercase() == "then" {
-                let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd
-                else {
-                    return Vec::new();
-                };
-                if let Expression::BinaryCommand(BinaryCommand::Else, _, _, _) = &**code {
-                    if let Expression::UnaryCommand(UnaryCommand::Not, _, _) = &**condition {
-                        return vec![Arc::new(CodeS11IfNot::new(
-                            condition.span(),
-                            processed,
-                            config.severity(),
-                        ))];
-                    }
-                }
-            }
+        let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target else {
+            return Vec::new();
+        };
+        if name.to_lowercase() != "then" {
+            return Vec::new();
         }
-        Vec::new()
+        let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
+            return Vec::new();
+        };
+        let Expression::BinaryCommand(BinaryCommand::Else, _, _, _) = &**code else {
+            return Vec::new();
+        };
+        let Expression::UnaryCommand(UnaryCommand::Not, _, _) = &**condition else {
+            return Vec::new();
+        };
+        vec![Arc::new(CodeS11IfNot::new(
+            condition.span(),
+            processed,
+            config.severity(),
+        ))]
     }
 }
 

@@ -68,15 +68,6 @@ impl LintConfig {
     }
 
     #[must_use]
-    pub fn pedantic() -> Self {
-        Self {
-            enabled: false,
-            severity: Severity::Note,
-            options: HashMap::new(),
-        }
-    }
-
-    #[must_use]
     pub const fn new(severity: Severity, options: HashMap<String, toml::Value>) -> Self {
         Self {
             severity,
