@@ -274,7 +274,7 @@ impl Expression {
         }
     }
 
-    /// Boilerplate for uniary string operations
+    /// Boilerplate for unary string operations
     #[must_use]
     fn op_uni_string(
         &self,
@@ -308,7 +308,7 @@ impl Expression {
         None
     }
 
-    /// Boilerplate for uniary float operations
+    /// Boilerplate for unary float operations
     #[must_use]
     fn op_uni_float(
         &self,
