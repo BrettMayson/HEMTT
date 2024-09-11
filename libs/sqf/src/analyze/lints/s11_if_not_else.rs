@@ -109,7 +109,7 @@ impl Code for CodeS11IfNot {
     }
 
     fn label_message(&self) -> String {
-        "Consider removing and swapping order of else statements".to_string()
+        "unnecessary `!` operation".to_string()
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
