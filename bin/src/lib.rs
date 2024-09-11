@@ -164,7 +164,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     };
     if let Some(report) = report? {
         report.write_to_stdout();
-        if !matches.subcommand_name().is_some_and(|s| s == "new" || s == "utils") {
+        if !matches
+            .subcommand_name()
+            .is_some_and(|s| s == "new" || s == "utils")
+        {
             report.write_ci_annotations()?;
         }
         if report.failed() {
