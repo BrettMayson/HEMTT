@@ -1,7 +1,8 @@
 # hemtt utils sqf case
 
-> [!WARNING]
-> This command requires **manual review**. It can have lots of false positives so you **strongly encouraged** to check each modified file to ensure it is correct.
+```admonish danger
+This command requires **manual review**. It can have lots of false positives so you are **strongly encouraged** to check each modified file to ensure it is correct.
+```
 
 <pre><code>Fix capitalization in SQF commands
 
@@ -15,9 +16,6 @@ Options:
     -t, --threads
         Number of threads, defaults to # of CPUs
 
-    <a href="../../commands/index.md#-v">-v...</a>
-        Verbosity level
-
     -h, --help
         Print help information (use `-h` for a summary)
 </code>
@@ -25,7 +23,7 @@ Options:
 
 This will recursively correct all capitalization mistakes in SQF commands.
 
-For example:
+## Example
 
 ```sqf
 private _positionASL = GetPosasl Player;
@@ -33,7 +31,12 @@ private _positionASL = GetPosasl Player;
 private _positionASL = getPosASL player;
 ```
 
-False positive example:
+## False Positives
+
+This command does not full parse your SQF files.
+
+It will not change words in strings in comments, but it may change words that will break your program
+
 ```sqf
 // script_macros.hpp
 #define FALSE 0
@@ -43,4 +46,10 @@ False positive example:
 if (getNumber (configFile >> "someClass" >= TRUE)) then {...};
 // becomes
 if (getNumber (configFile >> "someClass" >= true)) then {...};
+```
+
+```sqf
+private _value = player getVariable [QGVAR(showHud), false];
+// becomes
+private _value = player getVariable [QGVAR(showHUD), false];
 ```
