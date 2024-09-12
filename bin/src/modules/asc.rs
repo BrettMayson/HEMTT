@@ -1,6 +1,7 @@
 use std::{
     fs::{create_dir_all, File},
     io::{Read, Write},
+    path::Path,
     process::Command,
     sync::{
         atomic::{AtomicU16, Ordering},
@@ -56,22 +57,7 @@ impl Module for ArmaScriptCompiler {
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
-        for file in SOURCE {
-            let out = tmp.join(file);
-            let _ = std::fs::create_dir_all(out.parent().expect("must have parent"));
-            trace!("unpacking {:?} to {:?}", file, out.display());
-            let mut f = File::create(&out)?;
-            f.write_all(
-                &Distributables::get(file)
-                    .expect("dist files should exist")
-                    .data,
-            )?;
-            #[cfg(target_os = "linux")]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
-            }
-        }
+        install(&tmp)?;
         let sqf_ext = Some(String::from("sqf"));
         let files = Arc::new(RwLock::new(Vec::new()));
         let start = Instant::now();
@@ -237,4 +223,31 @@ impl ASCConfig {
     pub fn set_worker_threads(&mut self, threads: usize) {
         self.worker_threads = threads;
     }
+}
+
+/// Install Arma Script Compiler
+///
+/// # Errors
+/// [`Error::Io`] if the file couldn't be created or written to
+///
+/// # Panics
+/// If an expected file didn't get packed into the binary
+pub fn install(path: &Path) -> Result<(), Error> {
+    let _ = std::fs::create_dir_all(path);
+    for file in SOURCE {
+        let out = path.join(file);
+        trace!("unpacking {:?} to {:?}", file, out.display());
+        let mut f = File::create(&out)?;
+        f.write_all(
+            &Distributables::get(file)
+                .expect("dist files should exist")
+                .data,
+        )?;
+        #[cfg(target_os = "linux")]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
+        }
+    }
+    Ok(())
 }
