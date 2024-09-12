@@ -1,7 +1,7 @@
 //! A simple way to test SQF with various compilation
-//! 
+//!
 //! Requires a running instance of the `arma-bench` server. <https://github.com/brettmayson/arma-bench>
-//! 
+//!
 //! I don't know how we want to use this yet, but at least it is easier than launching Arma
 
 use arma_bench::{Client, ServerConfig};
