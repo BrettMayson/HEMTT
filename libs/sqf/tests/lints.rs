@@ -2,6 +2,7 @@
 
 use std::{io::Read, sync::Arc};
 
+use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
 use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
@@ -29,11 +30,15 @@ fn test_analyze(dir: &str) {
     let processed = Processor::run(&source).unwrap();
     let database = Arc::new(Database::a3(false));
     let workspace_files = WorkspaceFiles::new();
+
+    let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
+    let config = ProjectConfig::from_file(&config_path_full).unwrap();
+
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
             let codes = analyze(
                 &sqf,
-                None,
+                Some(&config),
                 &processed,
                 Arc::new(Addon::test_addon()),
                 database.clone(),
@@ -75,3 +80,4 @@ analyze!(s06_find_in_str);
 analyze!(s07_select_parse_number);
 analyze!(s08_format_args);
 analyze!(s09_banned_command);
+analyze!(s11_if_not_else);
