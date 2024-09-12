@@ -8,9 +8,9 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression, UnaryCommand};
 
-crate::lint!(LintS10IfNotElse);
+crate::lint!(LintS11IfNotElse);
 
-impl Lint<SqfLintData> for LintS10IfNotElse {
+impl Lint<SqfLintData> for LintS11IfNotElse {
     fn ident(&self) -> &str {
         "if_not_else"
     }
