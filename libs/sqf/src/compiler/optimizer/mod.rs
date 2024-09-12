@@ -1,23 +1,24 @@
-/// Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
-///
-/// `ToDo`: Any command that "consumes" an array could be upgraded
-/// e.g. x = y vectorAdd [0,0,1];
-///
+//! Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
+//! `ToDo`: what commands consume arrays
+//! `ToDo`: reduce logging when stable
+//!
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
 use std::ops::Range;
 use tracing::{trace, warn};
 
 impl Statements {
+    /// optimize Statements
     #[must_use]
     pub fn optimize(mut self) -> Self {
-        self.content = self.content.into_iter().map(Statement::optimise).collect();
+        self.content = self.content.into_iter().map(Statement::optimize).collect();
         self
     }
 }
 
 impl Statement {
+    /// optimize Statement
     #[must_use]
-    pub fn optimise(self) -> Self {
+    pub fn optimize(self) -> Self {
         match self {
             Self::AssignGlobal(left, expression, right) => {
                 Self::AssignGlobal(left, expression.optimize(), right)
@@ -31,6 +32,7 @@ impl Statement {
 }
 
 impl Expression {
+    /// optimize Expression
     #[must_use]
     #[allow(clippy::too_many_lines)]
     fn optimize(self) -> Self {
@@ -41,7 +43,7 @@ impl Expression {
                 Self::Array(array_new, range.clone())
             }
             Self::UnaryCommand(op_type, right, range) => {
-                let right_o = right.clone().optimize();
+                let mut right_o = right.clone().optimize(); // Optimized RHS
                 match op_type {
                     UnaryCommand::Minus => {
                         if let Some(eval) =
@@ -78,23 +80,29 @@ impl Expression {
                                 return eval;
                             }
                         }
+                        // could return part of the rhs's default value
                         "params" => {
-                            if let Self::Array(a_array, a_range) = &right_o {
-                                if a_array.iter().all(Self::is_safe_param) {
-                                    trace!(
-                                        "optimizing [U:{}] ({}) => ConsumeableArray",
-                                        op_type.as_str(),
-                                        self.source()
-                                    );
-                                    return Self::UnaryCommand(
-                                        UnaryCommand::Named(op_name.clone()),
-                                        Box::new(Self::ConsumeableArray(
-                                            a_array.clone(),
-                                            a_range.clone(),
-                                        )),
-                                        range.clone(),
-                                    );
+                            if let Self::Array(r_array, _) = &right_o {
+                                let direct = r_array.iter().all(Self::is_not_array_default_value);
+                                if let Some(consumable) =
+                                    right_o.get_consumable_array(direct, op_name)
+                                {
+                                    right_o = consumable;
                                 }
+                            }
+                        }
+                        // could return part of the rhs's default value
+                        "param" => {
+                            let direct = right_o.is_not_array_default_value();
+                            if let Some(consumable) = right_o.get_consumable_array(direct, op_name)
+                            {
+                                right_o = consumable;
+                            }
+                        }
+                        // commands that fully consume arrays and leave no crumbs
+                        "positioncameratoworld" | "random" => {
+                            if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
+                                right_o = consumable;
                             }
                         }
                         _ => {}
@@ -104,29 +112,36 @@ impl Expression {
                 Self::UnaryCommand(op_type.clone(), Box::new(right_o), range.clone())
             }
             Self::BinaryCommand(op_type, left, right, range) => {
-                let left_o = left.clone().optimize();
-                let right_o = right.clone().optimize();
+                let mut left_o = left.clone().optimize(); // Optimized LHS
+                let mut right_o = right.clone().optimize(); // Optimized RHS
                 match op_type {
-                    #[allow(clippy::single_match)]
                     BinaryCommand::Named(op_name) => match op_name.to_lowercase().as_str() {
+                        // could return part of the rhs's default value
                         "params" => {
-                            if let Self::Array(a_array, a_range) = &right_o {
-                                if a_array.iter().all(Self::is_safe_param) {
-                                    trace!(
-                                        "optimizing [B:{}] ({}) => ConsumeableArray",
-                                        op_type.as_str(),
-                                        self.source()
-                                    );
-                                    return Self::BinaryCommand(
-                                        BinaryCommand::Named(op_name.clone()),
-                                        Box::new(left_o),
-                                        Box::new(Self::ConsumeableArray(
-                                            a_array.clone(),
-                                            a_range.clone(),
-                                        )),
-                                        range.clone(),
-                                    );
+                            if let Self::Array(r_array, _) = &right_o {
+                                let direct = r_array.iter().all(Self::is_not_array_default_value);
+                                if let Some(consumable) =
+                                    right_o.get_consumable_array(direct, op_name)
+                                {
+                                    right_o = consumable;
                                 }
+                            }
+                        }
+                        // could return part of the rhs's default value (all use 2nd arg as default value)
+                        "param" | "getvariable" | "setvariable" | "getordefault" => {
+                            let direct = right_o.is_not_array_default_value();
+                            if let Some(consumable) = right_o.get_consumable_array(direct, op_name)
+                            {
+                                right_o = consumable;
+                            }
+                        }
+                        // commands that fully consume arrays and leave no crumbs
+                        "vectoradd" | "vectordiff" | "vectorcrossproduct" | "vectordotproduct" => {
+                            if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
+                                right_o = consumable;
+                            }
+                            if let Some(consumable) = left_o.get_consumable_array(true, op_name) {
+                                left_o = consumable;
                             }
                         }
                         _ => {}
@@ -174,13 +189,9 @@ impl Expression {
                         }
                     }
                     BinaryCommand::Else => {
-                        if let Self::Code(_) = left_o {
-                            if let Self::Code(_) = right_o {
-                                return Self::ConsumeableArray(
-                                    vec![left_o, right_o],
-                                    range.clone(),
-                                );
-                            }
+                        if let (Self::Code(_), Self::Code(_)) = (&left_o, &right_o) {
+                            trace!("optimizing [B:{}] => ConsumeableArray", op_type.as_str());
+                            return Self::ConsumeableArray(vec![left_o, right_o], range.clone());
                         }
                     }
                     _ => {}
@@ -196,34 +207,74 @@ impl Expression {
         }
     }
 
-    /*
-    Don't present a consumable array that could be modified: Check if param will return an array as a default value
-    sqfc = {
-        params [["_a", []]];
-        x = _a;
-    };
-    call sqfc;
-    x pushBack 5;
-    call sqfc
-    x is now [5] - the const has been modified
-    */
+    /// Is the expression fully constant and something that can be pushed
     #[must_use]
-    fn is_safe_param(&self) -> bool {
-        #[allow(clippy::single_match)]
+    fn is_constant(&self) -> bool {
         match self {
-            Self::Array(array, _) => {
-                if let Some(param_default) = array.get(1) {
-                    if param_default.is_array() {
-                        return false;
-                    }
-                }
+            Self::Code(..) | Self::String(..) | Self::Number(..) | Self::Boolean(..) => true,
+            Self::NularCommand(ref command, ..) => command.is_constant(),
+            Self::Array(ref array, ..) => array.iter().all(Self::is_constant), // true on empty
+            Self::ConsumeableArray(..) => {
+                unreachable!("should not be reachable");
             }
-            _ => {}
+            _ => false,
         }
-        true // every other check (for constness) will be handled by the serializer
     }
 
-    // Boilerplate for uniary and binary ops
+    /// Checks if the expresion is not an array that has an array type in index 1
+    /// This is the default-value for both param(s) and getVariable
+    /// Prevents the following error
+    /// ```sqf
+    /// sqfc = {
+    ///    params [["_a", []]];
+    ///     x = _a;
+    /// };
+    /// call sqfc;
+    /// x pushBack 5;
+    /// call sqfc // x is now [5] - the const has been modified
+    /// ```
+    #[must_use]
+    fn is_not_array_default_value(&self) -> bool {
+        if let Self::Array(array, _) = self {
+            if let Some(param_default) = array.get(1) {
+                if param_default.is_array() {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    /// Trys to get a consumable array from an existing array if it can be made a constant
+    #[must_use]
+    fn get_consumable_array(&self, direct: bool, op: &String) -> Option<Self> {
+        if let Self::Array(array, range) = &self {
+            if !self.is_constant() {
+                // println!("debug: not const {op}");
+                return None;
+            }
+            if array.is_empty() {
+                println!("debug: pointless to optimize {op}");
+                return None;
+            }
+            if direct {
+                trace!("optimizing [{op}]'s arg => ConsumeableArray");
+                Some(Self::ConsumeableArray(array.clone(), range.clone()))
+            } else {
+                // make a copy of the array so the original cannot be modified
+                trace!("optimizing [{op}]'s arg => +ConsumeableArray (copy)");
+                Some(Self::UnaryCommand(
+                    UnaryCommand::Plus,
+                    Box::new(Self::ConsumeableArray(array.clone(), range.clone())),
+                    range.clone(),
+                ))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Boilerplate for unary string operations
     #[must_use]
     fn op_uni_string(
         &self,
@@ -257,6 +308,7 @@ impl Expression {
         None
     }
 
+    /// Boilerplate for unary float operations
     #[must_use]
     fn op_uni_float(
         &self,
@@ -286,6 +338,7 @@ impl Expression {
         None
     }
 
+    /// Boilerplate for binary string operations
     #[must_use]
     fn op_bin_string(
         &self,
@@ -322,6 +375,7 @@ impl Expression {
         None
     }
 
+    /// Boilerplate for binary float operations
     #[must_use]
     fn op_bin_float(
         &self,

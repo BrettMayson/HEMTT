@@ -50,6 +50,7 @@ impl Module for ArmaScriptCompiler {
     }
 
     #[allow(clippy::too_many_lines)]
+    #[allow(dependency_on_unit_never_type_fallback)] // ToDo: https://doc.rust-lang.org/nightly/edition-guide/rust-2024/never-type-fallback.html
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut out_file =
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
