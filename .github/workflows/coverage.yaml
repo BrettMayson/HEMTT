@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   coverage:
     name: ${{ matrix.os.name }} / tests
@@ -28,8 +31,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools-preview
-      - name: cargo install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: taiki-e/install-action@nextest
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
@@ -39,7 +42,7 @@ jobs:
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: cargo llvm-cov
-        run: cargo llvm-cov --locked --all-features --lcov --output-path out.lcov
+        run: cargo llvm-cov nextest --locked --all-features --lcov --output-path out.lcov
       - name: Upload Coverage to GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
