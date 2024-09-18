@@ -31,7 +31,7 @@ impl Code for IncludeCase {
     }
 
     fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_label(
+        diag.clear_labels().with_label(
             Label::primary(
                 self.tokens
                     .first()
