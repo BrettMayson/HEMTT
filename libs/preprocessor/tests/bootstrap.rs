@@ -74,7 +74,6 @@ bootstrap!(if_read);
 bootstrap!(if_value);
 bootstrap!(ignore_if_has_include);
 bootstrap!(ignore_quoted);
-bootstrap!(include_case);
 bootstrap!(include_empty);
 bootstrap!(include);
 bootstrap!(join_digit);
