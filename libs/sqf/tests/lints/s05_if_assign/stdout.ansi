@@ -34,7 +34,7 @@
 [0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m source.sqf:8:5
   [0m[36m│[0m
-[0m[36m8[0m [0m[36m│[0m     [0m[36mif (alive player) then { "torso" } else { "legs" }[0m,
+[0m[36m8[0m [0m[36m│[0m     [0m[36mif (alive player) then { "torso" } else { "legs" }[0m
   [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse select[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
