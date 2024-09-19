@@ -97,7 +97,6 @@ fn statements<'a>(
             let array = expression
                 .clone()
                 .separated_by(just(Token::Control(Control::Separator)))
-                .allow_trailing()
                 .map_with_span(Expression::Array)
                 .delimited_by(array_open, array_close);
 
