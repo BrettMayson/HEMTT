@@ -35,11 +35,13 @@
 # Utilities
 
 - [Inspect](utilities/inspect.md)
-- [Verify](utilities/signing/verify.md)
 - [PBO]()
   - [Inspect](utilities/pbo/inspect.md)
   - [Extract](utilities/pbo/extract.md)
   - [Unpack](utilities/pbo/unpack.md)
+- [SQF]()
+  - [Case](utilities/sqf/case.md)
+- [Verify](utilities/signing/verify.md)
 
 # Reference
 
