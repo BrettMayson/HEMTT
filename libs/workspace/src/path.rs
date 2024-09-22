@@ -194,28 +194,43 @@ impl WorkspacePath {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
-    pub fn locate(&self, path: &str) -> Result<Option<Self>, Error> {
+    pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
         if path_lower.starts_with("/a3/") {
             if let Some(pdrive) = &self.workspace().pdrive {
                 if let Some(pdrive_path) = pdrive.path_to(&path) {
-                    return Ok(Some(Self {
-                        data: Arc::new(WorkspacePathData {
-                            path: pdrive_path,
-                            workspace: self.data.workspace.clone(),
-                        }),
+                    return Ok(Some(LocateResult {
+                        case_mismatch: if pdrive_path.as_str() == path {
+                            Some(pdrive_path.as_str().to_string())
+                        } else {
+                            None
+                        },
+                        path: Self {
+                            data: Arc::new(WorkspacePathData {
+                                path: pdrive_path,
+                                workspace: self.data.workspace.clone(),
+                            }),
+                        },
                     }));
                 }
             }
         }
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
-                return Ok(Some(Self {
-                    data: Arc::new(WorkspacePathData {
-                        path: self.data.workspace.vfs.join(path)?,
-                        workspace: self.data.workspace.clone(),
-                    }),
+                let ret_path = self.data.workspace.vfs.join(&path)?;
+                return Ok(Some(LocateResult {
+                    case_mismatch: if ret_path.as_str() == path {
+                        Some(ret_path.as_str().to_string())
+                    } else {
+                        None
+                    },
+                    path: Self {
+                        data: Arc::new(WorkspacePathData {
+                            path: ret_path,
+                            workspace: self.data.workspace.clone(),
+                        }),
+                    },
                 }));
             }
             if let Some((base, root)) = self
@@ -228,7 +243,7 @@ impl WorkspacePath {
                 // Windows needs case insensitivity because p3ds are a
                 // disaster. On Linux we'll be more strict to avoid
                 // pain and suffering.
-                let path = if cfg!(windows) {
+                let ret_path = if cfg!(windows) {
                     root.join(
                         path_lower
                             .strip_prefix(&base.to_lowercase())
@@ -244,23 +259,37 @@ impl WorkspacePath {
                             .unwrap_or(&path),
                     )?
                 };
-                if path.exists()? {
-                    return Ok(Some(Self {
-                        data: Arc::new(WorkspacePathData {
-                            path,
-                            workspace: self.data.workspace.clone(),
-                        }),
+                if ret_path.exists()? {
+                    return Ok(Some(LocateResult {
+                        case_mismatch: if ret_path.as_str() == path {
+                            Some(ret_path.as_str().to_string())
+                        } else {
+                            None
+                        },
+                        path: Self {
+                            data: Arc::new(WorkspacePathData {
+                                path: ret_path,
+                                workspace: self.data.workspace.clone(),
+                            }),
+                        },
                     }));
                 }
             }
         }
-        let path = self.data.path.parent().join(path)?;
-        if path.exists()? {
-            Ok(Some(Self {
-                data: Arc::new(WorkspacePathData {
-                    path,
-                    workspace: self.data.workspace.clone(),
-                }),
+        let ret_path = self.data.path.parent().join(&path)?;
+        if ret_path.exists()? {
+            Ok(Some(LocateResult {
+                case_mismatch: if ret_path.as_str() == path {
+                    Some(ret_path.as_str().to_string())
+                } else {
+                    None
+                },
+                path: Self {
+                    data: Arc::new(WorkspacePathData {
+                        path: ret_path,
+                        workspace: self.data.workspace.clone(),
+                    }),
+                },
             }))
         } else {
             Ok(None)
@@ -354,4 +383,9 @@ impl std::fmt::Debug for WorkspacePath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.data.path.as_str().fmt(f)
     }
+}
+
+pub struct LocateResult {
+    pub path: WorkspacePath,
+    pub case_mismatch: Option<String>,
 }

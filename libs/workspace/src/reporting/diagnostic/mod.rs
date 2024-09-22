@@ -112,6 +112,12 @@ impl Diagnostic {
     }
 
     #[must_use]
+    pub fn clear_labels(mut self) -> Self {
+        self.labels.clear();
+        self
+    }
+
+    #[must_use]
     pub fn with_labels(mut self, labels: Vec<Label>) -> Self {
         self.labels.extend(labels);
         self

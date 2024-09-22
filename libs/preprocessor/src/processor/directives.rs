@@ -1,6 +1,7 @@
 use std::{rc::Rc, sync::Arc};
 
 use hemtt_workspace::{
+    path::LocateResult,
     position::Position,
     reporting::{Output, Symbol, Token},
 };
@@ -17,7 +18,7 @@ use crate::{
         pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
         pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
         pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
-        pw1_redefine::RedefineMacro,
+        pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
     defines::{DefineSource, Defines},
     definition::{Definition, FunctionDefinition},
@@ -202,13 +203,26 @@ impl Processor {
             .file_stack
             .last()
             .expect("root file should always be present");
-        let Ok(Some(path)) = current.locate(
-            &path
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<String>(),
-        ) else {
-            return Err(IncludeNotFound::code(path));
+        let path = {
+            let Ok(Some(LocateResult {
+                path: found_path,
+                case_mismatch,
+            })) = current.locate(
+                &path
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<String>(),
+            )
+            else {
+                return Err(IncludeNotFound::code(path));
+            };
+            if let Some(case_mismatch) = case_mismatch {
+                self.warnings.push(Arc::new(IncludeCase::new(
+                    path.iter().map(|t| t.as_ref().clone()).collect(),
+                    case_mismatch,
+                )));
+            }
+            found_path
         };
         let tokens = crate::parse::parse(&path)?;
         self.file_stack.push(path.clone());

@@ -30,3 +30,4 @@ pub mod pe9_function_call_argument_count;
 pub mod pw1_redefine;
 pub mod pw2_invalid_config_case;
 pub mod pw3_padded_arg;
+pub mod pw4_include_case;
