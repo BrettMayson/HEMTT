@@ -22,11 +22,13 @@ byteorder = { workspace = true, optional = true }
 chumsky = { workspace = true, optional = true}
 float-ord = "0.3.2"
 linkme = { workspace = true }
+rust-embed = { workspace = true, optional = true }
 toml = { workspace = true }
 tracing = { workspace = true }
 
 [features]
-default = ["compiler", "parser"]
+default = ["asc", "compiler", "parser"]
+asc = ["rust-embed"]
 compiler = ["byteorder", "hemtt-lzo"]
 parser = ["chumsky"]
 

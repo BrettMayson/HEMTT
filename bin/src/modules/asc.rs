@@ -1,7 +1,6 @@
 use std::{
     fs::{create_dir_all, File},
     io::{Read, Write},
-    path::Path,
     process::Command,
     sync::{
         atomic::{AtomicU16, Ordering},
@@ -11,7 +10,6 @@ use std::{
 
 use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use rust_embed::RustEmbed;
 use serde::Serialize;
 use std::time::Instant;
 
@@ -19,24 +17,8 @@ use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
-#[cfg(windows)]
-#[derive(RustEmbed)]
-#[folder = "dist/asc/windows"]
-struct Distributables;
-
-#[cfg(not(windows))]
-#[derive(RustEmbed)]
-#[folder = "dist/asc/linux"]
-struct Distributables;
-
 #[derive(Default)]
 pub struct ArmaScriptCompiler;
-
-#[cfg(windows)]
-const SOURCE: [&str; 1] = ["asc.exe"];
-
-#[cfg(not(windows))]
-const SOURCE: [&str; 1] = ["asc"];
 
 impl Module for ArmaScriptCompiler {
     fn name(&self) -> &'static str {
@@ -57,7 +39,7 @@ impl Module for ArmaScriptCompiler {
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
-        install(&tmp)?;
+        hemtt_sqf::asc::install(&tmp)?;
         let sqf_ext = Some(String::from("sqf"));
         let files = Arc::new(RwLock::new(Vec::new()));
         let start = Instant::now();
@@ -137,7 +119,7 @@ impl Module for ArmaScriptCompiler {
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
         std::env::set_current_dir(&tmp)?;
         let start = Instant::now();
-        let command = Command::new(tmp.join(SOURCE[0])).output()?;
+        let command = Command::new(tmp.join(hemtt_sqf::asc::command())).output()?;
         out_file.write_all(&command.stdout)?;
         out_file.write_all(&command.stderr)?;
         if String::from_utf8(command.stdout.clone())
@@ -223,31 +205,4 @@ impl ASCConfig {
     pub fn set_worker_threads(&mut self, threads: usize) {
         self.worker_threads = threads;
     }
-}
-
-/// Install Arma Script Compiler
-///
-/// # Errors
-/// [`Error::Io`] if the file couldn't be created or written to
-///
-/// # Panics
-/// If an expected file didn't get packed into the binary
-pub fn install(path: &Path) -> Result<(), Error> {
-    let _ = std::fs::create_dir_all(path);
-    for file in SOURCE {
-        let out = path.join(file);
-        trace!("unpacking {:?} to {:?}", file, out.display());
-        let mut f = File::create(&out)?;
-        f.write_all(
-            &Distributables::get(file)
-                .expect("dist files should exist")
-                .data,
-        )?;
-        #[cfg(target_os = "linux")]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
-        }
-    }
-    Ok(())
 }

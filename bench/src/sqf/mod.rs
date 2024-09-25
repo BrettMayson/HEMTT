@@ -3,7 +3,7 @@ use std::{fs::File, io::Write, process::Command};
 use arma_bench::{Client, CompareRequest, CompareResult};
 use hemtt::modules::asc::ASCConfig;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::database::Database;
+use hemtt_sqf::{asc::install, parser::database::Database};
 use hemtt_workspace::reporting::Processed;
 
 pub fn compare(client: &Client, content: &str) -> Result<Vec<CompareResult>, String> {
@@ -79,7 +79,7 @@ fn hemtt(processed: &Processed) -> (Vec<u8>, Vec<u8>) {
 fn asc(processed: &Processed) -> Result<Vec<u8>, String> {
     let asc_dir = std::env::temp_dir().join("hemtt_bench_asc");
     if !asc_dir.exists() {
-        hemtt::modules::asc::install(&asc_dir).expect("Failed to install ASC");
+        install(&asc_dir).expect("Failed to install ASC");
     }
     let source = asc_dir.join("source");
     let _ = std::fs::create_dir_all(&source);
