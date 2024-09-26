@@ -9,33 +9,16 @@ use std::{
 };
 
 use hemtt_preprocessor::Processor;
+use hemtt_sqf::asc::ASCConfig;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use rust_embed::RustEmbed;
-use serde::Serialize;
 use std::time::Instant;
 
 use crate::{context::Context, error::Error, report::Report};
 
 use super::Module;
 
-#[cfg(windows)]
-#[derive(RustEmbed)]
-#[folder = "dist/asc/windows"]
-struct Distributables;
-
-#[cfg(not(windows))]
-#[derive(RustEmbed)]
-#[folder = "dist/asc/linux"]
-struct Distributables;
-
 #[derive(Default)]
 pub struct ArmaScriptCompiler;
-
-#[cfg(windows)]
-const SOURCE: [&str; 1] = ["asc.exe"];
-
-#[cfg(not(windows))]
-const SOURCE: [&str; 1] = ["asc"];
 
 impl Module for ArmaScriptCompiler {
     fn name(&self) -> &'static str {
@@ -56,22 +39,7 @@ impl Module for ArmaScriptCompiler {
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
         let mut config = ASCConfig::new();
         let tmp = ctx.tmp().join("asc");
-        for file in SOURCE {
-            let out = tmp.join(file);
-            let _ = std::fs::create_dir_all(out.parent().expect("must have parent"));
-            trace!("unpacking {:?} to {:?}", file, out.display());
-            let mut f = File::create(&out)?;
-            f.write_all(
-                &Distributables::get(file)
-                    .expect("dist files should exist")
-                    .data,
-            )?;
-            #[cfg(target_os = "linux")]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(out, PermissionsExt::from_mode(0o744))?;
-            }
-        }
+        hemtt_sqf::asc::install(&tmp)?;
         let sqf_ext = Some(String::from("sqf"));
         let files = Arc::new(RwLock::new(Vec::new()));
         let start = Instant::now();
@@ -151,7 +119,7 @@ impl Module for ArmaScriptCompiler {
         f.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
         std::env::set_current_dir(&tmp)?;
         let start = Instant::now();
-        let command = Command::new(tmp.join(SOURCE[0])).output()?;
+        let command = Command::new(tmp.join(hemtt_sqf::asc::command())).output()?;
         out_file.write_all(&command.stdout)?;
         out_file.write_all(&command.stderr)?;
         if String::from_utf8(command.stdout.clone())
@@ -186,55 +154,5 @@ impl Module for ArmaScriptCompiler {
         }
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(Report::new())
-    }
-}
-
-#[derive(Default, Serialize)]
-pub struct ASCConfig {
-    #[serde(rename = "inputDirs")]
-    input_dirs: Vec<String>,
-    #[serde(rename = "outputDir")]
-    output_dir: String,
-    #[serde(rename = "includePaths")]
-    include_dirs: Vec<String>,
-    #[serde(rename = "excludeList")]
-    exclude_list: Vec<String>,
-    #[serde(rename = "workerThreads")]
-    worker_threads: usize,
-}
-
-impl ASCConfig {
-    #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            input_dirs: vec![],
-            output_dir: String::new(),
-            include_dirs: vec![],
-            exclude_list: vec![],
-            worker_threads: 2,
-        }
-    }
-
-    pub fn add_input_dir(&mut self, dir: String) {
-        if self.input_dirs.contains(&dir) {
-            return;
-        }
-        self.input_dirs.push(dir);
-    }
-
-    pub fn set_output_dir(&mut self, dir: String) {
-        self.output_dir = dir;
-    }
-
-    pub fn add_include_dir(&mut self, dir: String) {
-        self.include_dirs.push(dir);
-    }
-
-    pub fn add_exclude(&mut self, dir: &str) {
-        self.exclude_list.push(dir.replace('/', "\\"));
-    }
-
-    pub fn set_worker_threads(&mut self, threads: usize) {
-        self.worker_threads = threads;
     }
 }

@@ -10,7 +10,7 @@ use super::{Code, Codes, Output, Token};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 /// A processed file
 pub struct Processed {
     sources: Sources,
@@ -299,7 +299,7 @@ impl Processed {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 /// A mapping from the stringified output to the original source
 pub struct Mapping {
     source: usize,

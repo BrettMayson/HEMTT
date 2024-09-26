@@ -2,6 +2,9 @@ use hemtt_common::error::thiserror;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[cfg(feature = "asc")]
+    #[error(transparent)]
+    AscError(#[from] crate::asc::Error),
     #[error(transparent)]
     ParserError(#[from] crate::parser::ParserError),
     #[cfg(feature = "compiler")]
