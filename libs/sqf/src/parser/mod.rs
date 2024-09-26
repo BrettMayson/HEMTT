@@ -43,6 +43,7 @@ pub fn run(database: &Database, processed: &Processed) -> Result<Statements, Par
         ParserError::ParsingError(errors)
     })?;
     statements.source = processed.as_str().into();
+    statements.top_level = true;
     Ok(statements)
 }
 
@@ -228,6 +229,7 @@ fn statements<'a>(
                 source: processed.extract(span.clone()),
                 span,
                 content,
+                top_level: false,
             })
     })
 }

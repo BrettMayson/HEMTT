@@ -2,6 +2,8 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
+pub mod inspector;
+
 use std::sync::Arc;
 
 use hemtt_common::config::ProjectConfig;

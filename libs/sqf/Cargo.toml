@@ -24,6 +24,7 @@ float-ord = "0.3.2"
 linkme = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
+regex = { workspace = true }
 
 [features]
 default = ["compiler", "parser"]

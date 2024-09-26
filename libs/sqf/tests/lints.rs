@@ -81,3 +81,4 @@ analyze!(s07_select_parse_number);
 analyze!(s08_format_args);
 analyze!(s09_banned_command);
 analyze!(s11_if_not_else);
+analyze!(s12_inspector);

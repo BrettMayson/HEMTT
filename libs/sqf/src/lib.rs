@@ -23,6 +23,7 @@ pub struct Statements {
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
     source: Arc<str>,
     span: Range<usize>,
+    top_level: bool,
 }
 
 impl Statements {

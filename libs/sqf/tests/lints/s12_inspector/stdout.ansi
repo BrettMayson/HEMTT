@@ -1,0 +1,13 @@
+[0m[1m[38;5;14mhelp[L-S12][0m[1m: Inspector - Bad Args: [B:setFuel][0m
+  [0m[36m┌─[0m source.sqf:1:3
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m x [0m[36msetFuel[0m true; // args: takes number 0-1
+  [0m[36m│[0m   [0m[36m^^^^^^^[0m
+
+
+[0m[1m[38;5;14mhelp[L-S12][0m[1m: Inspector - Shadowed: _var1[0m
+  [0m[36m┌─[0m source.sqf:4:1
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m [0m[36mprivate _var1 = 7[0m;
+  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^[0m
+

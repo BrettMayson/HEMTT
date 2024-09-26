@@ -6,5 +6,8 @@ options.ignore = [
     "addPublicVariableEventHandler",
 ]
 
+[lints.sqf.inspector]
+options.check_shadow = true
+
 [lints.sqf]
 if_not_else = true
