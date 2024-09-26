@@ -1455,7 +1455,6 @@ version = "1.0.0"
 dependencies = [
  "arma-bench",
  "automod",
- "hemtt",
  "hemtt-common",
  "hemtt-preprocessor",
  "hemtt-sqf",
@@ -1622,6 +1621,7 @@ dependencies = [
  "linkme",
  "paste",
  "rust-embed",
+ "serde",
  "toml 0.8.19",
  "tracing",
 ]

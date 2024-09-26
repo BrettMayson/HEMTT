@@ -1,9 +1,11 @@
 use std::{fs::File, io::Write, process::Command};
 
 use arma_bench::{Client, CompareRequest, CompareResult};
-use hemtt::modules::asc::ASCConfig;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::{asc::install, parser::database::Database};
+use hemtt_sqf::{
+    asc::{install, ASCConfig},
+    parser::database::Database,
+};
 use hemtt_workspace::reporting::Processed;
 
 pub fn compare(client: &Client, content: &str) -> Result<Vec<CompareResult>, String> {

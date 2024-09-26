@@ -12,8 +12,6 @@ hemtt-sqf = { path = "../libs/sqf" }
 hemtt-preprocessor = { path = "../libs/preprocessor" }
 hemtt-workspace = { path = "../libs/workspace" }
 
-hemtt = { path = "../bin" }
-
 automod = { workspace = true }
 arma-bench = { git = "https://github.com/brettmayson/arma-bench", branch = "main" }
 serde_json = { workspace = true }

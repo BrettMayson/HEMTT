@@ -9,8 +9,8 @@ use std::{
 };
 
 use hemtt_preprocessor::Processor;
+use hemtt_sqf::asc::ASCConfig;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use serde::Serialize;
 use std::time::Instant;
 
 use crate::{context::Context, error::Error, report::Report};
@@ -154,55 +154,5 @@ impl Module for ArmaScriptCompiler {
         }
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(Report::new())
-    }
-}
-
-#[derive(Default, Serialize)]
-pub struct ASCConfig {
-    #[serde(rename = "inputDirs")]
-    input_dirs: Vec<String>,
-    #[serde(rename = "outputDir")]
-    output_dir: String,
-    #[serde(rename = "includePaths")]
-    include_dirs: Vec<String>,
-    #[serde(rename = "excludeList")]
-    exclude_list: Vec<String>,
-    #[serde(rename = "workerThreads")]
-    worker_threads: usize,
-}
-
-impl ASCConfig {
-    #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            input_dirs: vec![],
-            output_dir: String::new(),
-            include_dirs: vec![],
-            exclude_list: vec![],
-            worker_threads: 2,
-        }
-    }
-
-    pub fn add_input_dir(&mut self, dir: String) {
-        if self.input_dirs.contains(&dir) {
-            return;
-        }
-        self.input_dirs.push(dir);
-    }
-
-    pub fn set_output_dir(&mut self, dir: String) {
-        self.output_dir = dir;
-    }
-
-    pub fn add_include_dir(&mut self, dir: String) {
-        self.include_dirs.push(dir);
-    }
-
-    pub fn add_exclude(&mut self, dir: &str) {
-        self.exclude_list.push(dir.replace('/', "\\"));
-    }
-
-    pub fn set_worker_threads(&mut self, threads: usize) {
-        self.worker_threads = threads;
     }
 }
