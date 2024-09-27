@@ -46,3 +46,33 @@ if (z) then {
 if (y) then {
     setObjectViewDistance somePFEH;
 };
+
+private _condition =
+    {
+        [_player, _target] call y
+    };
+[
+    "",
+    localize "STR_A3_Arsenal",
+    "",
+    {
+        x ctrlSetText _player; // bad arg type
+        [_target, _player] call z;
+    },
+    _condition
+] call ace_interact_menu_fnc_createAction;
+
+private _hash = [] call CBA_fnc_hashCreate;
+private _dumpHash = {
+    diag_log format ["Key: %1, Value: %2", _key, _value];
+};
+[_hash, _dumpHash] call CBA_fnc_hashEachPair;
+
+private _myLocalVar1 = 555;
+_myLocalVar1 = _myLocalVar1 + 1;
+[{
+    systemChat str _myLocalVar1; // invalid
+}, 0, []] call CBA_fnc_addPerFrameHandler;
+
+private _myLocalVar2 = 55;
+[{systemChat str _myLocalVar2}] call CBA_fnc_directCall; // fine
