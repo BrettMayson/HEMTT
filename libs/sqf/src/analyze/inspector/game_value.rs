@@ -9,14 +9,14 @@ use crate::{parser::database::Database, Expression};
 pub enum GameValue {
     Anything,
     // Assignment, // as in z = call {x=1}???
-    Array(Option<Expression>),
+    Array(Option<Vec<Vec<GameValue>>>),
     Boolean(Option<Expression>),
     Code(Option<Expression>),
     Config,
     Control,
     DiaryRecord,
     Display,
-    ForType(Option<Expression>),
+    ForType(Option<Vec<Expression>>),
     Group,
     HashMap,
     IfType,
@@ -51,6 +51,7 @@ impl GameValue {
         };
 
         for syntax in command.syntax() {
+            // println!("syntax {:?}", syntax.call());
             match syntax.call() {
                 Call::Nular => {
                     if !matches!(expression, Expression::NularCommand(..)) {
@@ -60,7 +61,8 @@ impl GameValue {
                 Call::Unary(rhs_arg) => {
                     if !matches!(expression, Expression::UnaryCommand(..))
                         || !Self::match_set_to_arg(
-                            rhs_set.expect("u args"),
+                            cmd_name,
+                            rhs_set.expect("unary rhs"),
                             rhs_arg,
                             syntax.params(),
                         )
@@ -71,12 +73,14 @@ impl GameValue {
                 Call::Binary(lhs_arg, rhs_arg) => {
                     if !matches!(expression, Expression::BinaryCommand(..))
                         || !Self::match_set_to_arg(
-                            lhs_set.expect("b args"),
+                            cmd_name,
+                            lhs_set.expect("binary lhs"),
                             lhs_arg,
                             syntax.params(),
                         )
                         || !Self::match_set_to_arg(
-                            rhs_set.expect("b args"),
+                            cmd_name,
+                            rhs_set.expect("binary rhs"),
                             rhs_arg,
                             syntax.params(),
                         )
@@ -86,9 +90,12 @@ impl GameValue {
                 }
             }
             let value = &syntax.ret().0;
+            // println!("match syntax {syntax:?}");
             return_types.insert(Self::from_wiki_value(value));
         }
-        // trace!(
+        // println!("lhs_set {lhs_set:?}");
+        // println!("rhs_set {rhs_set:?}");
+        // println!(
         //     "cmd [{}] = {}:{:?}",
         //     cmd_name,
         //     return_types.len(),
@@ -98,25 +105,83 @@ impl GameValue {
     }
 
     #[must_use]
-    pub fn match_set_to_arg(set: &HashSet<Self>, arg: &Arg, params: &[Param]) -> bool {
+    pub fn match_set_to_arg(
+        cmd_name: &str,
+        set: &HashSet<Self>,
+        arg: &Arg,
+        params: &[Param],
+    ) -> bool {
         match arg {
             Arg::Item(name) => {
-                // trace!("looking for {name} in {params:?}");
                 let Some(param) = params.iter().find(|p| p.name() == name) else {
-                    warn!("param not found");
+                    /// Varadic cmds which will be missing wiki param matches
+                    const WIKI_CMDS_IGNORE_MISSING_PARAM: &[&str] = &[
+                        "format",
+                        "formatText",
+                        "param",
+                        "params",
+                        "setGroupId",
+                        "setGroupIdGlobal",
+                        "set3DENMissionAttributes",
+                        "setPiPEffect",
+                    ];
+                    if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
+                        warn!("cmd {cmd_name} - param {name} not found");
+                    }
                     return true;
                 };
+                // println!(
+                //     "[arg {name}] typ: {:?}, opt: {:?}",
+                //     param.typ(),
+                //     param.optional()
+                // );
+                if param.optional() {
+                    // todo: maybe still check type if opt and not empty/nil?
+                    return true;
+                }
                 Self::match_set_to_value(set, param.typ())
             }
-            Arg::Array(_vec_arg) => {
-                // todo: each individual array arg
-                Self::match_set_to_value(set, &Value::ArrayUnknown)
+            Arg::Array(arg_array) => {
+                const WIKI_CMDS_IGNORE_ARGS: &[&str] = &["createHashMapFromArray"];
+                if WIKI_CMDS_IGNORE_ARGS.contains(&cmd_name) {
+                    return true;
+                }
+
+                let test = set.iter().any(|s| {
+                    match s {
+                        Self::Anything | Self::Array(None) => {
+                            // println!("array (any/generic) pass");
+                            true
+                        }
+                        Self::Array(Some(gv_array)) => {
+                            // println!("array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
+                            // if gv_array.len() > arg_array.len() {
+                            //  not really an error, some syntaxes take more than others
+                            // }
+                            for (index, arg) in arg_array.iter().enumerate() {
+                                let possible = if index < gv_array.len() {
+                                    gv_array[index].iter().cloned().collect()
+                                } else {
+                                    HashSet::new()
+                                };
+                                if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
+                                    return false;
+                                }
+                            }
+                            true
+                        }
+                        _ => false,
+                    }
+                });
+
+                test
             }
         }
     }
 
     #[must_use]
     pub fn match_set_to_value(set: &HashSet<Self>, right_wiki: &Value) -> bool {
+        // println!("Checking {:?} against {:?}", set, right_wiki);
         let right = Self::from_wiki_value(right_wiki);
         set.iter().any(|gv| Self::match_values(gv, &right))
     }
@@ -189,9 +254,9 @@ impl GameValue {
             //     format!("Assignment")
             // }
             Self::Anything => "Anything".to_string(),
-            Self::ForType(expression) => {
-                if let Some(Expression::String(str, _, _)) = expression {
-                    format!("ForType(var {str})")
+            Self::ForType(for_args_array) => {
+                if for_args_array.is_some() {
+                    format!("ForType(var {for_args_array:?})")
                 } else {
                     "ForType(GENERIC)".to_string()
                 }
@@ -217,9 +282,11 @@ impl GameValue {
                     "Boolean(GENERIC)".to_string()
                 }
             }
-            Self::Array(expression) => {
-                if let Some(Expression::Array(array, _)) = expression {
-                    format!("ArrayExp(len {})", array.len())
+            Self::Array(gv_array_option) =>
+            {
+                #[allow(clippy::option_if_let_else)]
+                if let Some(gv_array) = gv_array_option {
+                    format!("ArrayExp(len {})", gv_array.len())
                 } else {
                     "ArrayExp(GENERIC)".to_string()
                 }

@@ -31,7 +31,8 @@ future_incompatible = "warn"
 nonstandard_style = "warn"
 
 [workspace.dependencies]
-arma3-wiki = "0.3.2"
+#arma3-wiki = "0.3.2"
+arma3-wiki = { git = "https://github.com/acemod/arma3-wiki.git", rev = "cd147399fecd21253cba1e5348b7f0e7d7837948" }
 automod =  "1.0.14"
 byteorder = "1.5.0"
 chumsky = "0.9.3"

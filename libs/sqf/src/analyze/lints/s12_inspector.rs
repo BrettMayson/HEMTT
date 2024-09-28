@@ -1,6 +1,6 @@
 use crate::{
     analyze::{
-        inspector::{self, Issue},
+        inspector::{self, Issue, VarSource},
         SqfLintData,
     },
     Statements,
@@ -90,7 +90,7 @@ impl LintRunner<SqfLintData> for Runner {
                 if let Some(toml::Value::Boolean(b)) = config.option("check_child_scripts") {
                     *b
                 } else {
-                    false // can cause false positives
+                    true // can cause false positives
                 };
         let check_undefined =
             if let Some(toml::Value::Boolean(b)) = config.option("check_undefined") {
@@ -109,13 +109,13 @@ impl LintRunner<SqfLintData> for Runner {
             if let Some(toml::Value::Boolean(b)) = config.option("check_unused") {
                 *b
             } else {
-                false
+                true
             };
         let check_shadow =
             if let Some(toml::Value::Boolean(b)) = config.option("check_shadow") {
                 *b
             } else {
-                false
+                true
             };
 
         let mut errors: Codes = Vec::new();
@@ -158,7 +158,8 @@ impl LintRunner<SqfLintData> for Runner {
                         )));
                     }
                 }
-                Issue::Unused(var, range) => {
+                Issue::Unused(var, source) => {
+                    let VarSource::Assignment(range) = source else { continue };
                     if check_unused {
                         errors.push(Arc::new(CodeS12Inspector::new(
                             range,

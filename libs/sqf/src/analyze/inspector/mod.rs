@@ -24,30 +24,33 @@ mod game_value;
 pub enum Issue {
     InvalidArgs(String, Range<usize>),
     Undefined(String, Range<usize>, bool),
-    Unused(String, Range<usize>),
+    Unused(String, VarSource),
     Shadowed(String, Range<usize>),
     NotPrivate(String, Range<usize>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum VarSource {
-    Real(Range<usize>),
+    Assignment(Range<usize>),
+    ForLoop(Range<usize>),
+    Params(Range<usize>),
+    Private(Range<usize>),
     Magic(Range<usize>),
     Ignore,
 }
 impl VarSource {
     #[must_use]
-    pub const fn check_unused(&self) -> bool {
-        matches!(self, Self::Real(..))
-    }
-    #[must_use]
-    pub const fn check_shadow(&self) -> bool {
-        matches!(self, Self::Real(..))
+    pub const fn skip_errors(&self) -> bool {
+        matches!(self, Self::Magic(..)) || matches!(self, Self::Ignore)
     }
     #[must_use]
     pub fn get_range(&self) -> Option<Range<usize>> {
         match self {
-            Self::Real(range) | Self::Magic(range) => Some(range.clone()),
+            Self::Assignment(range)
+            | Self::ForLoop(range)
+            | Self::Params(range)
+            | Self::Private(range)
+            | Self::Magic(range) => Some(range.clone()),
             Self::Ignore => None,
         }
     }
@@ -129,10 +132,10 @@ impl SciptScope {
     pub fn pop(&mut self) {
         for (var, holder) in self.local.pop().unwrap_or_default() {
             // trace!("-- Stack Pop {}:{} ", var, holder.usage);
-            if holder.usage == 0 && holder.source.check_unused() {
+            if holder.usage == 0 && !holder.source.skip_errors() {
                 self.errors.insert(Issue::Unused(
                     var,
-                    holder.source.get_range().unwrap_or_default(),
+                    holder.source,
                 ));
             }
         }
@@ -172,7 +175,7 @@ impl SciptScope {
             }
         } else if local {
             // Only check shadowing inside the same scope-level (could make an option)
-            if source.check_shadow() && stack_level_search.unwrap_or_default() == 0 {
+            if stack_level_search.unwrap_or_default() == 0 && !source.skip_errors() {
                 self.errors.insert(Issue::Shadowed(
                     var.to_owned(),
                     source.get_range().unwrap_or_default(),
@@ -254,10 +257,11 @@ impl SciptScope {
             }
             Expression::String(..) => HashSet::from([GameValue::String(Some(expression.clone()))]),
             Expression::Array(array, _) => {
-                for e in array {
-                    let _ = self.eval_expression(e);
-                }
-                HashSet::from([GameValue::Array(Some(expression.clone()))])
+                let gv_array: Vec<Vec<GameValue>> = array
+                    .iter()
+                    .map(|e| self.eval_expression(e).into_iter().collect())
+                    .collect();
+                HashSet::from([GameValue::Array(Some(gv_array))])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
@@ -394,13 +398,23 @@ impl SciptScope {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self.eval_expression(expression);
-                    self.var_assign(var, false, possible_values, VarSource::Real(source.clone()));
+                    self.var_assign(
+                        var,
+                        false,
+                        possible_values,
+                        VarSource::Assignment(source.clone()),
+                    );
                     // return_value = vec![GameValue::Assignment()];
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
                     let possible_values = self.eval_expression(expression);
-                    self.var_assign(var, true, possible_values, VarSource::Real(source.clone()));
+                    self.var_assign(
+                        var,
+                        true,
+                        possible_values,
+                        VarSource::Assignment(source.clone()),
+                    );
                     // return_value = vec![GameValue::Assignment()];
                 }
                 Statement::Expression(expression, _) => {

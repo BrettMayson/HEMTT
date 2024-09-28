@@ -1,7 +1,6 @@
 use std::{collections::HashSet, ops::Range};
 
 use crate::{analyze::inspector::VarSource, Expression};
-use tracing::error;
 
 use super::{game_value::GameValue, SciptScope};
 
@@ -21,20 +20,23 @@ impl SciptScope {
                     &var.to_string(),
                     true,
                     HashSet::from([GameValue::Nothing]),
-                    VarSource::Real(source.clone()),
+                    VarSource::Private(source.clone()),
                 );
             }
         }
         for possible in rhs {
-            if let GameValue::Array(Some(Expression::Array(array, _))) = possible {
-                for element in array {
-                    let Expression::String(var, source, _) = element else {
-                        continue;
-                    };
-                    if var.is_empty() {
-                        continue;
+            if let GameValue::Array(Some(gv_array)) = possible {
+                for gv_index in gv_array {
+                    for element in gv_index {
+                        let GameValue::String(Some(Expression::String(var, source, _))) = element
+                        else {
+                            continue;
+                        };
+                        if var.is_empty() {
+                            continue;
+                        }
+                        push_var(self, &var.to_string(), source);
                     }
-                    push_var(self, &var.to_string(), source);
                 }
             }
             if let GameValue::String(Some(Expression::String(var, source, _))) = possible {
@@ -49,39 +51,46 @@ impl SciptScope {
     #[must_use]
     pub fn cmd_generic_params(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
         for possible in rhs {
-            let GameValue::Array(Some(Expression::Array(array, _))) = possible else {
+            let GameValue::Array(Some(gv_array)) = possible else {
                 continue;
             };
 
-            for entry in array {
-                match entry {
-                    Expression::String(var, source, _) => {
-                        if var.is_empty() {
-                            continue;
+            for gv_index in gv_array {
+                for element in gv_index {
+                    match element {
+                        GameValue::String(Some(Expression::String(var, source, _))) => {
+                            if var.is_empty() {
+                                continue;
+                            }
+                            self.var_assign(
+                                var.as_ref(),
+                                true,
+                                HashSet::from([GameValue::Anything]),
+                                VarSource::Params(source.clone()),
+                            );
                         }
-                        self.var_assign(
-                            var.as_ref(),
-                            true,
-                            HashSet::from([GameValue::Anything]),
-                            VarSource::Real(source.clone()),
-                        );
-                    }
-                    Expression::Array(var_array, _) => {
-                        if !var_array.is_empty() {
-                            if let Expression::String(var, source, _) = &var_array[0] {
-                                if var.is_empty() {
-                                    continue;
+                        GameValue::Array(Some(gv_array)) => {
+                            if gv_array.is_empty() {
+                                continue;
+                            }
+                            for element in &gv_array[0] {
+                                if let GameValue::String(Some(Expression::String(var, source, _))) =
+                                    element
+                                {
+                                    if var.is_empty() {
+                                        continue;
+                                    }
+                                    self.var_assign(
+                                        var.as_ref(),
+                                        true,
+                                        HashSet::from([GameValue::Anything]),
+                                        VarSource::Params(source.clone()),
+                                    );
                                 }
-                                self.var_assign(
-                                    var.as_ref(),
-                                    true,
-                                    HashSet::from([GameValue::Anything]),
-                                    VarSource::Real(source.clone()),
-                                );
                             }
                         }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
         }
@@ -123,39 +132,32 @@ impl SciptScope {
                 continue;
             }
             self.push();
-            // look for forType vars with valid strings (ignore old style code)
-            let mut do_run = true;
+            let mut do_run = false;
             for possible in lhs {
                 if let GameValue::ForType(option) = possible {
-                    match option {
-                        Some(Expression::String(var, source, _)) => {
-                            self.var_assign(
-                                var.as_ref(),
-                                true,
-                                HashSet::from([GameValue::Number(None)]),
-                                VarSource::Real(source.clone()),
-                            );
-                        }
-                        Some(Expression::Array(array, _)) => {
-                            if array.len() != 3 {
-                                error!("for wrong len");
-                                continue;
+                    let Some(for_args_array) = option else {
+                        continue;
+                    };
+                    do_run = true;
+                    for stage in for_args_array {
+                        match stage {
+                            Expression::String(var, source, _) => {
+                                self.var_assign(
+                                    var.as_ref(),
+                                    true,
+                                    HashSet::from([GameValue::Number(None)]),
+                                    VarSource::ForLoop(source.clone()),
+                                );
                             }
-                            for for_stage in array {
-                                let Expression::Code(for_statements) = for_stage else {
-                                    continue;
-                                };
-                                self.code_used.insert(for_stage.clone());
-                                self.eval_statements(for_statements);
+                            Expression::Code(stage_statement) => {
+                                self.code_used.insert(stage.clone());
+                                self.eval_statements(stage_statement);
                             }
-                        }
-                        None => {
-                            do_run = false;
-                        }
-                        _ => {
-                            unreachable!("");
+                            _ => {}
                         }
                     }
+                } else {
+                    do_run = true;
                 }
             }
             self.code_used.insert(expression.clone());
@@ -202,14 +204,35 @@ impl SciptScope {
     pub fn cmd_for(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
         let mut return_value = HashSet::new();
         for possible in rhs {
+            let mut possible_array = Vec::new();
             match possible {
-                GameValue::Array(option) | GameValue::String(option) => {
-                    return_value.insert(GameValue::ForType(option.clone()));
+                GameValue::String(option) => {
+                    let Some(expression) = option else {
+                        return_value.insert(GameValue::ForType(None));
+                        continue;
+                    };
+                    possible_array.push(expression.clone());
                 }
-                _ => {
-                    error!("shouldn't be reachable?");
-                    return_value.insert(GameValue::ForType(None));
+                GameValue::Array(option) => {
+                    let Some(for_stages) = option else {
+                        return_value.insert(GameValue::ForType(None));
+                        continue;
+                    };
+                    for stage in for_stages {
+                        for gv in stage {
+                            let GameValue::Code(Some(expression)) = gv else {
+                                continue;
+                            };
+                            possible_array.push(expression.clone());
+                        }
+                    }
                 }
+                _ => {}
+            }
+            if possible_array.is_empty() {
+                return_value.insert(GameValue::ForType(None));
+            } else {
+                return_value.insert(GameValue::ForType(Some(possible_array)));
             }
         }
         return_value
@@ -255,11 +278,15 @@ impl SciptScope {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(rhs));
             }
-            if let GameValue::Array(Some(Expression::Array(array, _))) = possible {
-                for expression in array {
-                    return_value.extend(self.cmd_generic_call(&HashSet::from([GameValue::Code(
-                        Some(expression.clone()),
-                    )])));
+            if let GameValue::Array(Some(gv_array)) = possible {
+                for gv_index in gv_array {
+                    for element in gv_index {
+                        if let GameValue::Code(Some(expression)) = element {
+                            return_value.extend(self.cmd_generic_call(&HashSet::from([
+                                GameValue::Code(Some(expression.clone())),
+                            ])));
+                        }
+                    }
                 }
             }
         }
@@ -283,14 +310,14 @@ impl SciptScope {
     #[must_use]
     pub fn cmd_b_get_or_default_call(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
         let mut possible_code = HashSet::new();
-        for possible in rhs {
-            let GameValue::Array(Some(Expression::Array(array, _))) = possible else {
+        for possible_outer in rhs {
+            let GameValue::Array(Some(gv_array)) = possible_outer else {
                 continue;
             };
-            if array.len() < 2 {
+            if gv_array.len() < 2 {
                 continue;
             }
-            possible_code.insert(GameValue::Code(Some(array[1].clone())));
+            possible_code.extend(gv_array[1].clone());
         }
         let _ = self.cmd_generic_call(&possible_code);
         HashSet::from([GameValue::Anything])

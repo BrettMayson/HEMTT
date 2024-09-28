@@ -14,10 +14,10 @@ fn get_statements(file: &str) -> (Processed, Statements, Arc<Database>) {
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-        .unwrap();
-    let source = workspace.join(file).unwrap();
-    let processed = Processor::run(&source).unwrap();
-    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+        .expect("for test");
+    let source = workspace.join(file).expect("for test");
+    let processed = Processor::run(&source).expect("for test");
+    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
     let database = Arc::new(Database::a3(false));
     (processed, statements, database)
 }
@@ -25,7 +25,7 @@ fn get_statements(file: &str) -> (Processed, Statements, Arc<Database>) {
 #[cfg(test)]
 mod tests {
     use crate::get_statements;
-    use hemtt_sqf::analyze::inspector::{self, Issue};
+    use hemtt_sqf::analyze::inspector::{self, Issue, VarSource};
 
     #[test]
     pub fn test_0() {
@@ -38,7 +38,7 @@ mod tests {
     pub fn test_1() {
         let (pro, sqf, database) = get_statements("test_1.sqf");
         let result = inspector::run_processed(&sqf, &pro, &database, true);
-        assert_eq!(result.len(), 8);
+        assert_eq!(result.len(), 11);
         // Order not guarenteed
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
@@ -49,28 +49,28 @@ mod tests {
         }));
         assert!(result.iter().any(|i| {
             if let Issue::Undefined(var, _, _) = i {
-                var == "_guy"
+                var == "_test2"
             } else {
                 false
             }
         }));
         assert!(result.iter().any(|i| {
             if let Issue::NotPrivate(var, _) = i {
-                var == "_z"
+                var == "_test3"
             } else {
                 false
             }
         }));
         assert!(result.iter().any(|i| {
-            if let Issue::Unused(var, _) = i {
-                var == "_c"
+            if let Issue::Unused(var, source) = i {
+                var == "_test4" && matches!(source, VarSource::Assignment(_))
             } else {
                 false
             }
         }));
         assert!(result.iter().any(|i| {
             if let Issue::Shadowed(var, _) = i {
-                var == "_var1"
+                var == "_test5"
             } else {
                 false
             }
@@ -91,10 +91,38 @@ mod tests {
         }));
         assert!(result.iter().any(|i| {
             if let Issue::Undefined(var, _, _) = i {
-                var == "_myLocalVar1"
+                var == "_test8"
             } else {
                 false
             }
         }));
+        assert!(result.iter().any(|i| {
+            if let Issue::Undefined(var, _, _) = i {
+                var == "_test9"
+            } else {
+                false
+            }
+        }));
+        assert!(result.iter().any(|i| {
+            if let Issue::Unused(var, source) = i {
+                var == "_test10" && matches!(source, VarSource::ForLoop(_))
+            } else {
+                false
+            }
+        }));
+        assert!(result.iter().any(|i| {
+            if let Issue::Unused(var, source) = i {
+                var == "_test11" && matches!(source, VarSource::Params(_))
+            } else {
+                false
+            }
+        }));
+    }
+
+    #[test]
+    pub fn test_2() {
+        let (pro, sqf, database) = get_statements("test_2.sqf");
+        let result = inspector::run_processed(&sqf, &pro, &database, true);
+        assert_eq!(result.len(), 0);
     }
 }
