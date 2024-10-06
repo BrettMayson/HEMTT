@@ -11,6 +11,7 @@ use std::{ops::Range, sync::Arc};
 
 pub use self::error::Error;
 
+use analyze::inspector::Issue;
 use arma3_wiki::model::Version;
 #[doc(no_inline)]
 pub use float_ord::FloatOrd as Scalar;
@@ -23,7 +24,7 @@ pub struct Statements {
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
     source: Arc<str>,
     span: Range<usize>,
-    top_level: bool,
+    issues: Vec<Issue>,
 }
 
 impl Statements {
@@ -42,6 +43,10 @@ impl Statements {
         self.span.clone()
     }
 
+    #[must_use]
+    pub const fn issues(&self) -> &Vec<Issue> {
+        &self.issues
+    }
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
@@ -104,6 +109,9 @@ impl Statements {
             }
         }
         (command, version, span)
+    }
+    pub fn testing_clear_issues(&mut self) {
+        self.issues.clear();
     }
 }
 

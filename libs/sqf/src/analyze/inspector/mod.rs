@@ -4,7 +4,6 @@ use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
     ops::Range,
-    sync::Arc,
     vec,
 };
 
@@ -66,32 +65,26 @@ pub struct VarHolder {
 pub type Stack = HashMap<String, VarHolder>;
 
 pub struct SciptScope {
-    database: Arc<Database>,
     errors: HashSet<Issue>,
     global: Stack,
     local: Vec<Stack>,
     code_seen: HashSet<Expression>,
     code_used: HashSet<Expression>,
-    is_child: bool,
+    is_orphan_scope: bool,
     ignored_vars: HashSet<String>,
 }
 
 impl SciptScope {
     #[must_use]
-    pub fn create(
-        ignored_vars: &HashSet<String>,
-        database: &Arc<Database>,
-        is_child: bool,
-    ) -> Self {
+    pub fn create(ignored_vars: &HashSet<String>, is_orphan_scope: bool) -> Self {
         // trace!("Creating ScriptScope");
         let mut scope = Self {
-            database: database.clone(),
             errors: HashSet::new(),
             global: Stack::new(),
             local: Vec::new(),
             code_seen: HashSet::new(),
             code_used: HashSet::new(),
-            is_child,
+            is_orphan_scope,
             ignored_vars: ignored_vars.clone(),
         };
         scope.push();
@@ -106,7 +99,7 @@ impl SciptScope {
         scope
     }
     #[must_use]
-    pub fn finish(&mut self, check_child_scripts: bool) -> HashSet<Issue> {
+    pub fn finish(&mut self, check_child_scripts: bool, database: &Database) -> HashSet<Issue> {
         self.pop();
         if check_child_scripts {
             let unused = &self.code_seen - &self.code_used;
@@ -116,10 +109,10 @@ impl SciptScope {
                     continue;
                 };
                 // trace!("-- Checking external scope");
-                let mut external_scope = Self::create(&self.ignored_vars, &self.database, true);
-                external_scope.eval_statements(&statements);
+                let mut external_scope = Self::create(&self.ignored_vars, true);
+                external_scope.eval_statements(&statements, database);
                 self.errors
-                    .extend(external_scope.finish(check_child_scripts));
+                    .extend(external_scope.finish(check_child_scripts, database));
             }
         }
         self.errors.clone()
@@ -133,10 +126,7 @@ impl SciptScope {
         for (var, holder) in self.local.pop().unwrap_or_default() {
             // trace!("-- Stack Pop {}:{} ", var, holder.usage);
             if holder.usage == 0 && !holder.source.skip_errors() {
-                self.errors.insert(Issue::Unused(
-                    var,
-                    holder.source,
-                ));
+                self.errors.insert(Issue::Unused(var, holder.source));
             }
         }
     }
@@ -215,7 +205,7 @@ impl SciptScope {
                     self.errors.insert(Issue::Undefined(
                         var.to_owned(),
                         source.clone(),
-                        self.is_child,
+                        self.is_orphan_scope,
                     ));
                 }
             } else {
@@ -247,7 +237,11 @@ impl SciptScope {
     #[must_use]
     #[allow(clippy::too_many_lines)]
     /// Evaluate expression in current scope
-    pub fn eval_expression(&mut self, expression: &Expression) -> HashSet<GameValue> {
+    pub fn eval_expression(
+        &mut self,
+        expression: &Expression,
+        database: &Database,
+    ) -> HashSet<GameValue> {
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
@@ -259,13 +253,13 @@ impl SciptScope {
             Expression::Array(array, _) => {
                 let gv_array: Vec<Vec<GameValue>> = array
                     .iter()
-                    .map(|e| self.eval_expression(e).into_iter().collect())
+                    .map(|e| self.eval_expression(e, database).into_iter().collect())
                     .collect();
                 HashSet::from([GameValue::Array(Some(gv_array))])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let cmd_set = GameValue::from_cmd(expression, None, None, &self.database);
+                let cmd_set = GameValue::from_cmd(expression, None, None, database);
                 if cmd_set.is_empty() {
                     // is this possible?
                     self.errors
@@ -275,8 +269,8 @@ impl SciptScope {
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
-                let rhs_set = self.eval_expression(rhs);
-                let cmd_set = GameValue::from_cmd(expression, None, Some(&rhs_set), &self.database);
+                let rhs_set = self.eval_expression(rhs, database);
+                let cmd_set = GameValue::from_cmd(expression, None, Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     self.errors
                         .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
@@ -285,10 +279,10 @@ impl SciptScope {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
                         "params" => Some(self.cmd_generic_params(&rhs_set)),
                         "private" => Some(self.cmd_u_private(&rhs_set)),
-                        "call" => Some(self.cmd_generic_call(&rhs_set)),
-                        "isnil" => Some(self.cmd_u_is_nil(&rhs_set)),
+                        "call" => Some(self.cmd_generic_call(&rhs_set, database)),
+                        "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
                         "while" | "waituntil" | "default" => {
-                            let _ = self.cmd_generic_call(&rhs_set);
+                            let _ = self.cmd_generic_call(&rhs_set, database);
                             None
                         }
                         "for" => Some(self.cmd_for(&rhs_set)),
@@ -302,10 +296,10 @@ impl SciptScope {
             }
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
-                let lhs_set = self.eval_expression(lhs);
-                let rhs_set = self.eval_expression(rhs);
+                let lhs_set = self.eval_expression(lhs, database);
+                let rhs_set = self.eval_expression(rhs, database);
                 let cmd_set =
-                    GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), &self.database);
+                    GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
                     self.errors
@@ -314,57 +308,60 @@ impl SciptScope {
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
                         // the : from case
-                        let _ = self.cmd_generic_call(&rhs_set);
+                        let _ = self.cmd_generic_call(&rhs_set, database);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
-                        let _ = self.cmd_generic_call(&rhs_set);
+                        let _ = self.cmd_generic_call(&rhs_set, database);
                         None
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
                         "params" => Some(self.cmd_generic_params(&rhs_set)),
                         "call" => {
-                            self.external_function(&lhs_set, rhs);
-                            Some(self.cmd_generic_call(&rhs_set))
+                            self.external_function(&lhs_set, rhs, database);
+                            Some(self.cmd_generic_call(&rhs_set, database))
                         }
                         "exitwith" => {
                             // todo: handle scope exits
-                            Some(self.cmd_generic_call(&rhs_set))
+                            Some(self.cmd_generic_call(&rhs_set, database))
                         }
                         "do" => {
                             // from While, With, For, and Switch
-                            Some(self.cmd_b_do(&lhs_set, &rhs_set))
+                            Some(self.cmd_b_do(&lhs_set, &rhs_set, database))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
-                        "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set)),
+                        "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set, database)),
                         "foreach" | "foreachreversed" => Some(self.cmd_generic_call_magic(
                             &lhs_set,
-                            &vec![
-                                "_x".to_string(),
-                                "_y".to_string(),
-                                "_forEachIndex".to_string(),
-                            ],
+                            &vec!["_x", "_y", "_forEachIndex"],
                             source,
+                            database,
                         )),
                         "count" => {
                             let _ = self.cmd_generic_call_magic(
                                 &lhs_set,
-                                &vec!["_x".to_string()],
+                                &vec!["_x"],
                                 source,
+                                database,
                             );
                             None
                         }
-                        "findif" | "apply" | "select" => {
-                            //todo handle (array select number) or (string select [1,2]);
+                        "findif" | "apply" => {
                             let _ = self.cmd_generic_call_magic(
                                 &rhs_set,
-                                &vec!["_x".to_string()],
+                                &vec!["_x"],
                                 source,
+                                database,
                             );
                             None
                         }
-                        "getordefaultcall" => Some(self.cmd_b_get_or_default_call(&rhs_set)),
+                        "getordefaultcall" => {
+                            Some(self.cmd_b_get_or_default_call(&rhs_set, database))
+                        }
+                        "select" => {
+                            Some(self.cmd_b_select(&lhs_set, &rhs_set, &cmd_set, source, database))
+                        }
                         _ => None,
                     },
                     _ => None,
@@ -391,13 +388,13 @@ impl SciptScope {
     }
 
     /// Evaluate statements in the current scope
-    fn eval_statements(&mut self, statements: &Statements) {
+    fn eval_statements(&mut self, statements: &Statements, database: &Database) {
         // let mut return_value = HashSet::new();
         for statement in statements.content() {
             match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
-                    let possible_values = self.eval_expression(expression);
+                    let possible_values = self.eval_expression(expression, database);
                     self.var_assign(
                         var,
                         false,
@@ -408,7 +405,7 @@ impl SciptScope {
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
-                    let possible_values = self.eval_expression(expression);
+                    let possible_values = self.eval_expression(expression, database);
                     self.var_assign(
                         var,
                         true,
@@ -418,7 +415,7 @@ impl SciptScope {
                     // return_value = vec![GameValue::Assignment()];
                 }
                 Statement::Expression(expression, _) => {
-                    let _possible_values = self.eval_expression(expression);
+                    let _possible_values = self.eval_expression(expression, database);
                     // return_value = possible_values;
                 }
             }
@@ -432,8 +429,7 @@ impl SciptScope {
 pub fn run_processed(
     statements: &Statements,
     processed: &Processed,
-    database: &Arc<Database>,
-    check_child_scripts: bool,
+    database: &Database,
 ) -> Vec<Issue> {
     let mut ignored_vars = HashSet::new();
     ignored_vars.insert("_this".to_string());
@@ -451,7 +447,7 @@ pub fn run_processed(
         }
     }
 
-    let mut scope = SciptScope::create(&ignored_vars, database, false);
-    scope.eval_statements(statements);
-    scope.finish(check_child_scripts).into_iter().collect()
+    let mut scope = SciptScope::create(&ignored_vars, false);
+    scope.eval_statements(statements, database);
+    scope.finish(true, database).into_iter().collect()
 }

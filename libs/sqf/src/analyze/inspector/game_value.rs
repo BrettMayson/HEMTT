@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::collections::HashSet;
 
 use arma3_wiki::model::{Arg, Call, Param, Value};
 use tracing::{trace, warn};
@@ -37,16 +37,17 @@ pub enum GameValue {
 
 impl GameValue {
     #[must_use]
+    /// Gets cmd return types based on input types
     pub fn from_cmd(
         expression: &Expression,
         lhs_set: Option<&HashSet<Self>>,
         rhs_set: Option<&HashSet<Self>>,
-        database: &Arc<Database>,
+        database: &Database,
     ) -> HashSet<Self> {
         let mut return_types = HashSet::new();
         let cmd_name = expression.command_name().expect("has a name");
         let Some(command) = database.wiki().commands().get(cmd_name) else {
-            trace!("cmd {cmd_name} not in db?"); //ToDo: this can't find short cmds like &&, ||
+            println!("cmd {cmd_name} not in db?");
             return HashSet::from([Self::Anything]);
         };
 
@@ -124,6 +125,7 @@ impl GameValue {
                         "setGroupIdGlobal",
                         "set3DENMissionAttributes",
                         "setPiPEffect",
+                        "ppEffectCreate",
                     ];
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
                         warn!("cmd {cmd_name} - param {name} not found");
@@ -135,11 +137,7 @@ impl GameValue {
                 //     param.typ(),
                 //     param.optional()
                 // );
-                if param.optional() {
-                    // todo: maybe still check type if opt and not empty/nil?
-                    return true;
-                }
-                Self::match_set_to_value(set, param.typ())
+                Self::match_set_to_value(set, param.typ(), param.optional())
             }
             Arg::Array(arg_array) => {
                 const WIKI_CMDS_IGNORE_ARGS: &[&str] = &["createHashMapFromArray"];
@@ -180,8 +178,11 @@ impl GameValue {
     }
 
     #[must_use]
-    pub fn match_set_to_value(set: &HashSet<Self>, right_wiki: &Value) -> bool {
-        // println!("Checking {:?} against {:?}", set, right_wiki);
+    pub fn match_set_to_value(set: &HashSet<Self>, right_wiki: &Value, optional: bool) -> bool {
+        // println!("Checking {:?} against {:?} [O:{optional}]", set, right_wiki);
+        if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
+            return true;
+        }
         let right = Self::from_wiki_value(right_wiki);
         set.iter().any(|gv| Self::match_values(gv, &right))
     }
@@ -203,7 +204,7 @@ impl GameValue {
     /// Maps from Wiki:Value to Inspector:GameValue
     pub fn from_wiki_value(value: &Value) -> Self {
         match value {
-            Value::Anything => Self::Anything,
+            Value::Anything | Value::EdenEntity => Self::Anything,
             Value::ArrayColor
             | Value::ArrayColorRgb
             | Value::ArrayColorRgba

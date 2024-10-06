@@ -1,6 +1,6 @@
 use std::{collections::HashSet, ops::Range};
 
-use crate::{analyze::inspector::VarSource, Expression};
+use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
 
 use super::{game_value::GameValue, SciptScope};
 
@@ -97,7 +97,11 @@ impl SciptScope {
         HashSet::from([GameValue::Boolean(None)])
     }
     #[must_use]
-    pub fn cmd_generic_call(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_generic_call(
+        &mut self,
+        rhs: &HashSet<GameValue>,
+        database: &Database,
+    ) -> HashSet<GameValue> {
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
                 continue;
@@ -110,7 +114,7 @@ impl SciptScope {
             }
             self.push();
             self.code_used.insert(expression.clone());
-            self.eval_statements(statements);
+            self.eval_statements(statements, database);
             self.pop();
         }
         HashSet::from([GameValue::Anything])
@@ -120,6 +124,7 @@ impl SciptScope {
         &mut self,
         lhs: &HashSet<GameValue>,
         rhs: &HashSet<GameValue>,
+        database: &Database,
     ) -> HashSet<GameValue> {
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
@@ -151,7 +156,7 @@ impl SciptScope {
                             }
                             Expression::Code(stage_statement) => {
                                 self.code_used.insert(stage.clone());
-                                self.eval_statements(stage_statement);
+                                self.eval_statements(stage_statement, database);
                             }
                             _ => {}
                         }
@@ -162,7 +167,7 @@ impl SciptScope {
             }
             self.code_used.insert(expression.clone());
             if do_run {
-                self.eval_statements(statements);
+                self.eval_statements(statements, database);
             }
             self.pop();
         }
@@ -172,8 +177,9 @@ impl SciptScope {
     pub fn cmd_generic_call_magic(
         &mut self,
         code_possibilities: &HashSet<GameValue>,
-        magic: &Vec<String>,
+        magic: &Vec<&str>,
         source: &Range<usize>,
+        database: &Database,
     ) -> HashSet<GameValue> {
         for possible in code_possibilities {
             let GameValue::Code(Some(expression)) = possible else {
@@ -195,7 +201,7 @@ impl SciptScope {
                 );
             }
             self.code_used.insert(expression.clone());
-            self.eval_statements(statements);
+            self.eval_statements(statements, database);
             self.pop();
         }
         HashSet::from([GameValue::Anything])
@@ -247,7 +253,11 @@ impl SciptScope {
         lhs.clone()
     }
     #[must_use]
-    pub fn cmd_u_is_nil(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_u_is_nil(
+        &mut self,
+        rhs: &HashSet<GameValue>,
+        database: &Database,
+    ) -> HashSet<GameValue> {
         let mut non_string = false;
         for possible in rhs {
             let GameValue::String(possible) = possible else {
@@ -263,7 +273,7 @@ impl SciptScope {
             let _ = self.var_retrieve(var, &expression.span(), true);
         }
         if non_string {
-            let _ = self.cmd_generic_call(rhs);
+            let _ = self.cmd_generic_call(rhs, database);
         }
         HashSet::from([GameValue::Boolean(None)])
     }
@@ -272,19 +282,21 @@ impl SciptScope {
         &mut self,
         _lhs: &HashSet<GameValue>,
         rhs: &HashSet<GameValue>,
+        database: &Database,
     ) -> HashSet<GameValue> {
         let mut return_value = HashSet::new();
         for possible in rhs {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
-                return_value.extend(self.cmd_generic_call(rhs));
+                return_value.extend(self.cmd_generic_call(rhs, database));
             }
             if let GameValue::Array(Some(gv_array)) = possible {
                 for gv_index in gv_array {
                     for element in gv_index {
                         if let GameValue::Code(Some(expression)) = element {
-                            return_value.extend(self.cmd_generic_call(&HashSet::from([
-                                GameValue::Code(Some(expression.clone())),
-                            ])));
+                            return_value.extend(self.cmd_generic_call(
+                                &HashSet::from([GameValue::Code(Some(expression.clone()))]),
+                                database,
+                            ));
                         }
                     }
                 }
@@ -308,7 +320,11 @@ impl SciptScope {
         return_value
     }
     #[must_use]
-    pub fn cmd_b_get_or_default_call(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_b_get_or_default_call(
+        &mut self,
+        rhs: &HashSet<GameValue>,
+        database: &Database,
+    ) -> HashSet<GameValue> {
         let mut possible_code = HashSet::new();
         for possible_outer in rhs {
             let GameValue::Array(Some(gv_array)) = possible_outer else {
@@ -319,7 +335,7 @@ impl SciptScope {
             }
             possible_code.extend(gv_array[1].clone());
         }
-        let _ = self.cmd_generic_call(&possible_code);
+        let _ = self.cmd_generic_call(&possible_code, database);
         HashSet::from([GameValue::Anything])
     }
     #[must_use]
@@ -335,5 +351,34 @@ impl SciptScope {
             self.code_used.insert(expression.clone());
         }
         HashSet::from([GameValue::String(None)])
+    }
+    #[must_use]
+    pub fn cmd_b_select(
+        &mut self,
+        lhs: &HashSet<GameValue>,
+        rhs: &HashSet<GameValue>,
+        cmd_set: &HashSet<GameValue>,
+        source: &Range<usize>,
+        database: &Database,
+    ) -> HashSet<GameValue> {
+        let mut return_value = cmd_set.clone();
+        // Check: `array select expression`
+        let _ = self.cmd_generic_call_magic(rhs, &vec!["_x"], source, database);
+        // if lhs is array, and rhs is bool/number then put array into return
+        if lhs.len() == 1
+            && rhs
+                .iter()
+                .any(|r| matches!(r, GameValue::Boolean(..)) || matches!(r, GameValue::Number(..)))
+        {
+            if let Some(GameValue::Array(Some(gv_array))) = lhs.iter().next() {
+                // return_value.clear(); // todo: could clear if we handle pushBack
+                for gv_index in gv_array {
+                    for element in gv_index {
+                        return_value.insert(element.clone());
+                    }
+                }
+            }
+        }
+        return_value
     }
 }

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use hemtt_sqf::Statements;
 use hemtt_workspace::reporting::Processed;
 
@@ -9,7 +7,7 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::LayerType;
 const ROOT: &str = "tests/inspector/";
 
-fn get_statements(file: &str) -> (Processed, Statements, Arc<Database>) {
+fn get_statements(file: &str) -> (Processed, Statements, Database) {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -18,27 +16,28 @@ fn get_statements(file: &str) -> (Processed, Statements, Arc<Database>) {
     let source = workspace.join(file).expect("for test");
     let processed = Processor::run(&source).expect("for test");
     let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
-    let database = Arc::new(Database::a3(false));
+    let database = Database::a3(false);
     (processed, statements, database)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::get_statements;
-    use hemtt_sqf::analyze::inspector::{self, Issue, VarSource};
+    use hemtt_sqf::analyze::inspector::{Issue, VarSource};
 
     #[test]
     pub fn test_0() {
-        let (pro, sqf, database) = get_statements("test_0.sqf");
-        let result = inspector::run_processed(&sqf, &pro, &database, true);
+        let (_pro, sqf, _database) = get_statements("test_0.sqf");
+        // let result = inspector::run_processed(&sqf, &pro, &database);
+        let result = sqf.issues();
         println!("done: {}, {result:?}", result.len());
     }
 
     #[test]
     pub fn test_1() {
-        let (pro, sqf, database) = get_statements("test_1.sqf");
-        let result = inspector::run_processed(&sqf, &pro, &database, true);
-        assert_eq!(result.len(), 11);
+        let (_pro, sqf, _database) = get_statements("test_1.sqf");
+        let result = sqf.issues();
+        assert_eq!(result.len(), 12);
         // Order not guarenteed
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
@@ -117,12 +116,19 @@ mod tests {
                 false
             }
         }));
+        assert!(result.iter().any(|i| {
+            if let Issue::InvalidArgs(cmd, _) = i {
+                cmd == "[B:drawIcon]"
+            } else {
+                false
+            }
+        }));
     }
 
     #[test]
     pub fn test_2() {
-        let (pro, sqf, database) = get_statements("test_2.sqf");
-        let result = inspector::run_processed(&sqf, &pro, &database, true);
+        let (_pro, sqf, _database) = get_statements("test_2.sqf");
+        let result = sqf.issues();
         assert_eq!(result.len(), 0);
     }
 }

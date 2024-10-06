@@ -10,17 +10,17 @@ use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
 const ROOT: &str = "tests/lints/";
 
 macro_rules! analyze {
-    ($dir:ident) => {
+    ($dir:ident, $ignore:expr) => {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                test_analyze(stringify!($dir));
+                test_analyze(stringify!($dir), $ignore);
             }
         }
     };
 }
 
-fn test_analyze(dir: &str) {
+fn test_analyze(dir: &str, ignore_inspector: bool) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -35,7 +35,10 @@ fn test_analyze(dir: &str) {
     let config = ProjectConfig::from_file(&config_path_full).unwrap();
 
     match hemtt_sqf::parser::run(&database, &processed) {
-        Ok(sqf) => {
+        Ok(mut sqf) => {
+            if ignore_inspector {
+                sqf.testing_clear_issues();
+            }
             let codes = analyze(
                 &sqf,
                 Some(&config),
@@ -73,12 +76,16 @@ fn test_analyze(dir: &str) {
     };
 }
 
-analyze!(s03_static_typename);
-analyze!(s04_command_case);
-analyze!(s05_if_assign);
-analyze!(s06_find_in_str);
-analyze!(s07_select_parse_number);
-analyze!(s08_format_args);
-analyze!(s09_banned_command);
-analyze!(s11_if_not_else);
-analyze!(s12_inspector);
+analyze!(s03_static_typename, true);
+analyze!(s04_command_case, true);
+analyze!(s05_if_assign, true);
+analyze!(s06_find_in_str, true);
+analyze!(s07_select_parse_number, true);
+analyze!(s08_format_args, true);
+analyze!(s09_banned_command, true);
+analyze!(s11_if_not_else, true);
+analyze!(s12_invalid_args, false);
+analyze!(s13_undefined, false);
+analyze!(s14_unused, false);
+analyze!(s15_shadowed, false);
+analyze!(s16_not_private, false);
