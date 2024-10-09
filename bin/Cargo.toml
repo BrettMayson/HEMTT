@@ -50,6 +50,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
+webbrowser = "1.0.2"
 whoami = "1.5.2"
 zip = { workspace = true }
 

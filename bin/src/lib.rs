@@ -23,6 +23,7 @@ pub fn cli() -> Command {
         .version(env!("HEMTT_VERSION"))
         .subcommand_required(false)
         .arg_required_else_help(true)
+        .subcommand(commands::book::cli())
         .subcommand(commands::new::cli())
         .subcommand(commands::check::cli())
         .subcommand(commands::dev::cli())
@@ -133,6 +134,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
     let report = match matches.subcommand() {
+        Some(("book", matches)) => commands::book::execute(matches).map(Some),
         Some(("new", matches)) => commands::new::execute(matches).map(Some),
         Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
         Some(("check", _matches)) => commands::check::execute().map(Some),
@@ -166,7 +168,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         report.write_to_stdout();
         if !matches
             .subcommand_name()
-            .is_some_and(|s| s == "new" || s == "utils")
+            .is_some_and(|s| s == "new" || s == "utils" || s == "wiki" || s == "book")
         {
             report.write_ci_annotations()?;
         }
