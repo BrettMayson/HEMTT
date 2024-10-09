@@ -29,6 +29,9 @@ impl Code for RedefineMacro {
     }
 
     fn help(&self) -> Option<String> {
+        if self.token.position() == self.original.position() {
+            return Some("A file is being included multiple times".to_string());
+        }
         Some("`#undef` macros before redefining them".to_string())
     }
 

@@ -14,5 +14,5 @@
           Second from
            /source.hpp
            └── /b.hpp
-  [0m[36m=[0m [33mhelp[0m: `#undef` macros before redefining them
+  [0m[36m=[0m [33mhelp[0m: A file is being included multiple times
 
