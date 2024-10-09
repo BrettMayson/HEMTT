@@ -31,30 +31,29 @@ impl Module for BOMCheck {
                 .collect::<Vec<_>>()
         }
         let mut report = Report::new();
-        let mut files = Vec::new();
         for folder in ["addons", "optionals"] {
             let folder = ctx.project_folder().join(folder);
             if !folder.exists() {
                 continue;
             }
-            files.extend(files_to_check(&folder));
-        }
-        for path in files {
-            let mut buffer = [0; 3];
-            let mut file = std::fs::File::open(&path)?;
-            if file.read_exact(&mut buffer).is_err() {
-                continue;
-            }
-            if buffer == [0xEF, 0xBB, 0xBF] {
-                report.push(Arc::new(BOMError {
-                    file: {
-                        path.display()
-                            .to_string()
-                            .strip_prefix(&ctx.project_folder().display().to_string())
-                            .unwrap_or_default()
-                            .to_string()
-                    },
-                }));
+            let files = files_to_check(&folder);
+            for path in files {
+                let mut buffer = [0; 3];
+                let mut file = std::fs::File::open(&path)?;
+                if file.read_exact(&mut buffer).is_err() {
+                    continue;
+                }
+                if buffer == [0xEF, 0xBB, 0xBF] {
+                    report.push(Arc::new(BOMError {
+                        file: {
+                            path.display()
+                                .to_string()
+                                .strip_prefix(&ctx.project_folder().display().to_string())
+                                .unwrap_or_default()
+                                .to_string()
+                        },
+                    }));
+                }
             }
         }
         Ok(report)
