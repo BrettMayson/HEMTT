@@ -4,7 +4,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Hooks, Rapifier, SQFCompiler},
+    modules::{bom::BOMCheck, pbo::Collapse, Binarize, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
 
@@ -28,6 +28,7 @@ pub fn execute() -> Result<Report, Error> {
 
     executor.collapse(Collapse::Yes);
 
+    executor.add_module(Box::<BOMCheck>::default());
     executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<SQFCompiler>::default());

@@ -5,7 +5,9 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{
+        bom::BOMCheck, pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler,
+    },
     report::Report,
 };
 
@@ -136,6 +138,7 @@ pub fn context(
 
     executor.collapse(Collapse::Yes);
 
+    executor.add_module(Box::<BOMCheck>::default());
     executor.add_module(Box::<Hooks>::default());
     if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());

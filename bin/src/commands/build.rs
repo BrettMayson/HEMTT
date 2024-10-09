@@ -4,7 +4,7 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{bom::BOMCheck, pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
 
@@ -96,6 +96,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
 
     executor.collapse(Collapse::No);
 
+    executor.add_module(Box::<BOMCheck>::default());
     executor.add_module(Box::<Hooks>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
