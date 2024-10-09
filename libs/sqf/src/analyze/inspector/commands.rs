@@ -177,7 +177,7 @@ impl SciptScope {
     pub fn cmd_generic_call_magic(
         &mut self,
         code_possibilities: &HashSet<GameValue>,
-        magic: &Vec<&str>,
+        magic: Vec<(&str, GameValue)>,
         source: &Range<usize>,
         database: &Database,
     ) -> HashSet<GameValue> {
@@ -192,11 +192,11 @@ impl SciptScope {
                 continue;
             }
             self.push();
-            for var in magic {
+            for (var, value) in magic.iter() {
                 self.var_assign(
                     var,
                     true,
-                    HashSet::from([GameValue::Anything]),
+                    HashSet::from([value.clone()]),
                     VarSource::Magic(source.clone()),
                 );
             }
@@ -363,7 +363,7 @@ impl SciptScope {
     ) -> HashSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
-        let _ = self.cmd_generic_call_magic(rhs, &vec!["_x"], source, database);
+        let _ = self.cmd_generic_call_magic(rhs, vec![("_x", GameValue::Anything)], source, database);
         // if lhs is array, and rhs is bool/number then put array into return
         if lhs.len() == 1
             && rhs

@@ -334,14 +334,14 @@ impl SciptScope {
                         "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set, database)),
                         "foreach" | "foreachreversed" => Some(self.cmd_generic_call_magic(
                             &lhs_set,
-                            &vec!["_x", "_y", "_forEachIndex"],
+                            vec![("_x", GameValue::Anything), ("_y", GameValue::Anything), ("_forEachIndex", GameValue::Number(None))],
                             source,
                             database,
                         )),
                         "count" => {
                             let _ = self.cmd_generic_call_magic(
                                 &lhs_set,
-                                &vec!["_x"],
+                                vec![("_x", GameValue::Anything)],
                                 source,
                                 database,
                             );
@@ -350,7 +350,7 @@ impl SciptScope {
                         "findif" | "apply" => {
                             let _ = self.cmd_generic_call_magic(
                                 &rhs_set,
-                                &vec!["_x"],
+                                vec![("_x", GameValue::Anything)],
                                 source,
                                 database,
                             );
