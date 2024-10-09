@@ -642,8 +642,8 @@ impl CodeS02InsufficientVersion {
         self.diagnostic = Some(diag.with_label(
             Label::secondary(self.required.1.clone(), self.required.2.clone()).with_message(
                 self.required.0.map_or_else(
-                    || "CfgPatch doesn't specify `requiredVersion`".to_string(),
-                    |required| format!("CfgPatch requires version {required}"),
+                    || "CfgPatches entry doesn't specify `requiredVersion`".to_string(),
+                    |required| format!("CfgPatches entry requires version {required}"),
                 ),
             ),
         ));
