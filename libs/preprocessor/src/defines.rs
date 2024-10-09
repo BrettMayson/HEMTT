@@ -160,11 +160,21 @@ impl Defines {
                         ));
                     }
                     "__FILE_SHORT__" => {
+                        // drop the last extension, `test.inc.sqf` -> `test.inc`
                         let path = site.path().filename();
+                        let path = path
+                            .chars()
+                            .rev()
+                            .skip_while(|c| *c != '.')
+                            .skip(1)
+                            .collect::<Vec<_>>()
+                            .iter()
+                            .rev()
+                            .collect::<String>();
                         return Some((
                             key.clone(),
                             Definition::Value(vec![Rc::new(Token::new(
-                                Symbol::Word(path.split('.').next().unwrap_or("").to_string()),
+                                Symbol::Word(path),
                                 key.position().clone(),
                             ))]),
                             DefineSource::Generated,
