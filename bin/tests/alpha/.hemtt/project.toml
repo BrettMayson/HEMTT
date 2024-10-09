@@ -11,7 +11,7 @@ git_hash = 0
 [asc]
 enabled = true
 
-[hemtt.launch]
+[hemtt.launch.default]
 dlc = [
     "ws"
 ]
