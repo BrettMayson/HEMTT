@@ -1,4 +1,4 @@
-use std::{io::Read, sync::Arc};
+use std::{io::Read, path::PathBuf, sync::Arc};
 
 use hemtt_workspace::reporting::Code;
 
@@ -15,20 +15,30 @@ impl Module for BOMCheck {
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, crate::Error> {
+        fn files_to_check(root: &PathBuf) -> Vec<PathBuf> {
+            walkdir::WalkDir::new(root)
+                .into_iter()
+                .filter_map(std::result::Result::ok)
+                .filter(|e| e.file_type().is_file())
+                .filter(|e| !e.path().display().to_string().contains(".hemttout"))
+                .filter(|e| {
+                    e.path().extension().map_or(false, |e| {
+                        !IGNORED_EXTENSIONS.contains(&e.to_str().unwrap_or_default())
+                    })
+                })
+                .map(|e| e.path().to_path_buf())
+                .collect::<Vec<_>>()
+        }
         const IGNORED_EXTENSIONS: [&str; 4] = ["p3d", "rtm", "bin", "paa"];
         let mut report = Report::new();
-        let files = walkdir::WalkDir::new(ctx.project_folder().join("addons"))
-            .into_iter()
-            .filter_map(std::result::Result::ok)
-            .filter(|e| e.file_type().is_file())
-            .filter(|e| !e.path().display().to_string().contains(".hemttout"))
-            .filter(|e| {
-                e.path().extension().map_or(false, |e| {
-                    !IGNORED_EXTENSIONS.contains(&e.to_str().unwrap_or_default())
-                })
-            })
-            .map(|e| e.path().to_path_buf())
-            .collect::<Vec<_>>();
+        let mut files = Vec::new();
+        for folder in ["addons", "optionals"] {
+            let folder = ctx.project_folder().join(folder);
+            if !folder.exists() {
+                continue;
+            }
+            files.extend(files_to_check(&folder));
+        }
         for path in files {
             let mut buffer = [0; 3];
             let mut file = std::fs::File::open(&path)?;
