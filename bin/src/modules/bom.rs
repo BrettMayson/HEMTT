@@ -16,6 +16,7 @@ impl Module for BOMCheck {
 
     fn check(&self, ctx: &Context) -> Result<Report, crate::Error> {
         fn files_to_check(root: &PathBuf) -> Vec<PathBuf> {
+            const IGNORED_EXTENSIONS: [&str; 4] = ["p3d", "rtm", "bin", "paa"];
             walkdir::WalkDir::new(root)
                 .into_iter()
                 .filter_map(std::result::Result::ok)
@@ -29,7 +30,6 @@ impl Module for BOMCheck {
                 .map(|e| e.path().to_path_buf())
                 .collect::<Vec<_>>()
         }
-        const IGNORED_EXTENSIONS: [&str; 4] = ["p3d", "rtm", "bin", "paa"];
         let mut report = Report::new();
         let mut files = Vec::new();
         for folder in ["addons", "optionals"] {
