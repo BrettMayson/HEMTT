@@ -38,7 +38,7 @@ glob = "0.3.1"
 num_cpus = "1.16.0"
 rayon = "1.10.0"
 regex = { workspace = true }
-reqwest = { version = "0.12.7", features = ["blocking", "json"] }
+reqwest = { version = "0.12.8", features = ["blocking", "json"] }
 rhai = "1.19.0"
 rust-embed = "8.5.0"
 semver = "1.0.23"
@@ -50,7 +50,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-whoami = "1.5.1"
+whoami = "1.5.2"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
