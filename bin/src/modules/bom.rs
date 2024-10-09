@@ -17,7 +17,7 @@ impl Module for BOMCheck {
     fn check(&self, ctx: &Context) -> Result<Report, crate::Error> {
         const IGNORED_EXTENSIONS: [&str; 4] = ["p3d", "rtm", "bin", "paa"];
         let mut report = Report::new();
-        let files = walkdir::WalkDir::new(ctx.project_folder())
+        let files = walkdir::WalkDir::new(ctx.project_folder().join("addons"))
             .into_iter()
             .filter_map(std::result::Result::ok)
             .filter(|e| e.file_type().is_file())
