@@ -32,6 +32,7 @@ impl Code for InvalidConfigCase {
 }
 
 impl InvalidConfigCase {
+    #[must_use]
     pub const fn new(path: WorkspacePath) -> Self {
         Self { path }
     }

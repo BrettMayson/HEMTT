@@ -10,10 +10,10 @@ use hemtt_workspace::{
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::codes::pe18_eoi_ifstate::EoiIfState;
 use crate::codes::pe2_unexpected_eof::UnexpectedEOF;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
+use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
 use crate::Error;
@@ -152,6 +152,9 @@ impl Processor {
         while let Some(token) = stream.peek() {
             match (token.symbol(), in_quotes) {
                 (Symbol::Word(w), false) => {
+                    if w == "__EXEC" {
+                        return Err(ExecNotSupported::code((**token).clone()));
+                    }
                     just_whitespace = false;
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();

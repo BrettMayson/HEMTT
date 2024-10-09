@@ -52,10 +52,12 @@ impl Code for UnexpectedToken {
 }
 
 impl UnexpectedToken {
+    #[must_use]
     pub const fn new(token: Box<Token>, expected: Vec<String>) -> Self {
         Self { token, expected }
     }
 
+    #[must_use]
     pub fn code(token: Token, expected: Vec<String>) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), expected)))
     }

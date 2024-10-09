@@ -42,6 +42,7 @@ impl Code for FunctionAsValue {
 }
 
 impl FunctionAsValue {
+    #[must_use]
     pub const fn new(token: Box<Token>, source: Box<Token>) -> Self {
         Self {
             token,
@@ -50,6 +51,7 @@ impl FunctionAsValue {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, source: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), Box::new(source))))
     }

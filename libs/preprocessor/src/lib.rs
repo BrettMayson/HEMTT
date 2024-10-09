@@ -1,6 +1,9 @@
 //! HEMTT - Arma 3 Preprocessor
 
-mod codes;
+pub mod codes {
+    automod::dir!(pub "src/codes");
+}
+
 mod defines;
 mod definition;
 mod error;
