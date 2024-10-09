@@ -37,6 +37,7 @@ impl Code for ParsingFailed {
 }
 
 impl ParsingFailed {
+    #[must_use]
     pub fn new(error: pest::error::Error<Rule>, file: WorkspacePath) -> Self {
         let content = file.read_to_string().unwrap_or_default();
         let span = match &error.location {
@@ -53,6 +54,7 @@ impl ParsingFailed {
         }
     }
 
+    #[must_use]
     pub fn code(error: pest::error::Error<Rule>, file: WorkspacePath) -> Error {
         Error::Code(Arc::new(Self::new(error, file)))
     }

@@ -1519,6 +1519,7 @@ dependencies = [
 name = "hemtt-preprocessor"
 version = "1.0.0"
 dependencies = [
+ "automod",
  "criterion",
  "hemtt-common",
  "hemtt-workspace",

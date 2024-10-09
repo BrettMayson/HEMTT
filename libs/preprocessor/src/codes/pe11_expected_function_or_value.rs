@@ -50,6 +50,7 @@ impl Code for ExpectedFunctionOrValue {
 }
 
 impl ExpectedFunctionOrValue {
+    #[must_use]
     pub const fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
         Self {
             token,
@@ -58,6 +59,7 @@ impl ExpectedFunctionOrValue {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, source: Token, likely_function: bool) -> Error {
         Error::Code(Arc::new(Self::new(
             Box::new(token),

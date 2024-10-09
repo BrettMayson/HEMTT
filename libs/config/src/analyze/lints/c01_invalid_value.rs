@@ -117,6 +117,7 @@ impl LintRunner<()> for RunnerItem {
 pub struct CodeC01InvalidValue {
     span: Range<usize>,
     diagnostic: Option<Diagnostic>,
+    value: String,
 }
 
 impl Code for CodeC01InvalidValue {
@@ -137,7 +138,16 @@ impl Code for CodeC01InvalidValue {
     }
 
     fn help(&self) -> Option<String> {
-        Some("use quotes `\"` around the value".to_string())
+        match self.value.as_str() {
+            "true" | "false" => Some("use quotes `\"`, or 0 for false and 1 for true".to_string()),
+            _ => {
+                if self.value.starts_with('\'') && self.value.ends_with('\'') {
+                    Some("quotes need to be `\"` instead of `'`".to_string())
+                } else {
+                    Some("use quotes `\"` around the value".to_string())
+                }
+            }
+        }
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -148,6 +158,7 @@ impl Code for CodeC01InvalidValue {
 impl CodeC01InvalidValue {
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
+            value: processed.as_str()[span.clone()].to_string(),
             span,
             diagnostic: None,
         }

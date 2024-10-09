@@ -71,6 +71,7 @@ impl Code for FunctionCallArgumentCount {
 }
 
 impl FunctionCallArgumentCount {
+    #[must_use]
     pub fn new(token: Box<Token>, expected: usize, got: usize, defines: &Defines) -> Self {
         Self {
             expected,
@@ -99,6 +100,7 @@ impl FunctionCallArgumentCount {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, expected: usize, got: usize, defines: &Defines) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), expected, got, defines)))
     }

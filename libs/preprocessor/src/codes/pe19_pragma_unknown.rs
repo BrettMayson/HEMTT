@@ -60,10 +60,12 @@ impl Code for PragmaUnknown {
 }
 
 impl PragmaUnknown {
+    #[must_use]
     pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 
+    #[must_use]
     pub fn code(token: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token))))
     }

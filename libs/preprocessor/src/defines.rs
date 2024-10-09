@@ -3,14 +3,15 @@ use std::{collections::HashMap, rc::Rc, sync::Arc};
 use hemtt_workspace::{
     position::Position,
     reporting::{Symbol, Token},
+    WorkspacePath,
 };
 use strsim::levenshtein;
 
 use crate::definition::Definition;
 
-#[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum DefineSource {
-    Source,
+    Source(Vec<WorkspacePath>),
     Generated,
     Argument,
 }

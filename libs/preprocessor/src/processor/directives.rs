@@ -237,10 +237,14 @@ impl Processor {
         if Defines::is_builtin(&ident_string) {
             return Err(ChangeBuiltin::code(ident.as_ref().clone()));
         }
-        if let Some((original, _, _)) = self.defines.remove(&ident_string) {
+        if let Some((original, _, DefineSource::Source(file_stack))) =
+            self.defines.remove(&ident_string)
+        {
             self.warnings.push(Arc::new(RedefineMacro::new(
                 Box::new(ident.as_ref().clone()),
+                self.file_stack.clone(),
                 Box::new(original.as_ref().clone()),
+                file_stack,
             )));
         }
         let definition = match next.symbol() {
@@ -271,8 +275,14 @@ impl Processor {
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
-        self.defines
-            .insert(&ident_string, (ident, definition, DefineSource::Source));
+        self.defines.insert(
+            &ident_string,
+            (
+                ident,
+                definition,
+                DefineSource::Source(self.file_stack.clone()),
+            ),
+        );
         Ok(())
     }
 
