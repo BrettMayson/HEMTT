@@ -71,13 +71,13 @@ pub trait Code: Send + Sync {
 
     /// A diagnostic for the LSP / terminal
     fn diagnostic(&self) -> Option<Diagnostic> {
-        let token = self.token()?;
-        let mut diag = Diagnostic::new(self.ident(), self.message())
-            .with_label(
+        let mut diag = Diagnostic::new(self.ident(), self.message()).set_severity(self.severity());
+        if let Some(token) = self.token() {
+            diag = diag.with_label(
                 Label::primary(token.position().path().clone(), token.position().span())
                     .with_message(self.label_message()),
-            )
-            .set_severity(self.severity());
+            );
+        }
         if let Some(note) = self.note() {
             diag = diag.with_note(note);
         }

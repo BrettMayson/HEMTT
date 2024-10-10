@@ -111,6 +111,7 @@ impl Code for IfIncompatibleType {
 }
 
 impl IfIncompatibleType {
+    #[must_use]
     pub fn new(
         left: (Vec<Rc<Token>>, bool),
         operator: Vec<Rc<Token>>,
@@ -129,6 +130,7 @@ impl IfIncompatibleType {
         }
     }
 
+    #[must_use]
     pub fn code(
         left: (Vec<Rc<Token>>, bool),
         operator: Vec<Rc<Token>>,

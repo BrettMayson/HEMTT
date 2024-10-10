@@ -61,10 +61,12 @@ impl Code for DefineMissingComma {
 }
 
 impl DefineMissingComma {
+    #[must_use]
     pub const fn new(current: Box<Token>, previous: Box<Token>) -> Self {
         Self { current, previous }
     }
 
+    #[must_use]
     pub fn code(current: Token, previous: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(current), Box::new(previous))))
     }

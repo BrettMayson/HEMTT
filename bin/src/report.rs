@@ -127,7 +127,7 @@ fn filter_codes(
             } else {
                 !c.include()
                     && c.diagnostic()
-                        .map_or(true, |d| !d.labels.iter().any(|l| l.file().is_include()))
+                        .map_or(true, |d| !d.labels.iter().all(|l| l.file().is_include()))
             }
         })
         .cloned()

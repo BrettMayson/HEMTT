@@ -4,15 +4,22 @@ use hemtt_workspace::reporting::{Code, Token};
 
 use crate::Error;
 
-/// Unexpected end of file
-pub struct UnexpectedEOF {
-    /// The token that was found
+#[allow(unused)]
+/// The EOI was reached while reading an `#if` [`IfState`]
+///
+/// ```cpp
+/// #if 1
+/// #else
+/// EOI
+/// ```
+pub struct ExecNotSupported {
+    /// The [`Token`] of the last `#if`
     token: Box<Token>,
 }
 
-impl Code for UnexpectedEOF {
+impl Code for ExecNotSupported {
     fn ident(&self) -> &'static str {
-        "PE2"
+        "PE25"
     }
 
     fn token(&self) -> Option<&Token> {
@@ -20,11 +27,11 @@ impl Code for UnexpectedEOF {
     }
 
     fn message(&self) -> String {
-        "unexpected end of file".to_string()
+        "__EXEC is not supported".to_string()
     }
 }
 
-impl UnexpectedEOF {
+impl ExecNotSupported {
     #[must_use]
     pub const fn new(token: Box<Token>) -> Self {
         Self { token }

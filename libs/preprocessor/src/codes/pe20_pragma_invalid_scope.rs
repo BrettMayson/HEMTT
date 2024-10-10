@@ -74,10 +74,12 @@ impl Code for PragmaInvalidScope {
 }
 
 impl PragmaInvalidScope {
+    #[must_use]
     pub const fn new(token: Box<Token>, root: bool) -> Self {
         Self { token, root }
     }
 
+    #[must_use]
     pub fn code(token: Token, root: bool) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), root)))
     }
