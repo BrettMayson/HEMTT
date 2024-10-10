@@ -8,3 +8,13 @@ options.ignore = [
 
 [lints.sqf]
 if_not_else = true
+shadowed = true
+not_private = true
+
+[lints.sqf.unused]
+enabled = true
+options.check_params = false
+
+[lints.sqf.undefined]
+enabled = true
+options.check_oprhan_code = true
