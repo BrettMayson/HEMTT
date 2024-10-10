@@ -73,6 +73,7 @@ fn test_analyze(dir: &str) {
     };
 }
 
+analyze!(s02_event_handler_case);
 analyze!(s03_static_typename);
 analyze!(s04_command_case);
 analyze!(s05_if_assign);
