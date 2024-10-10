@@ -8,3 +8,9 @@ options.ignore = [
 
 [lints.sqf]
 if_not_else = true
+
+[lints.sqf.var_all_caps]
+enabled = true
+options.ignore = [
+    "AM_IGNORED",
+]
