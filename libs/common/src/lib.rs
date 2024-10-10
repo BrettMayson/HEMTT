@@ -22,10 +22,9 @@ pub fn similar_values<'a>(search: &str, haystack: &'a [&str]) -> Vec<&'a str> {
         .iter()
         .map(|v| (*v, v.to_lowercase()))
         .collect::<Vec<_>>();
-    let lower_case_search = search.to_lowercase();
     let mut similar = lower_case_haystack
         .iter()
-        .map(|(v, vl)| (v, strsim::levenshtein(vl.as_str(), &lower_case_search)))
+        .map(|(v, vl)| (v, strsim::levenshtein(vl.as_str(), &search.to_lowercase())))
         .collect::<Vec<_>>();
     similar.sort_by_key(|(_, v)| *v);
     similar.retain(|s| s.1 <= 3);
