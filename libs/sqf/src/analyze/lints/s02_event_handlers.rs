@@ -418,7 +418,7 @@ impl CodeS02UnknownEvent {
                         haystack.push(eh.id());
                     }
                 }
-                let mut similar: Vec<String> = similar_values(&id.to_lowercase(), &haystack)
+                let mut similar: Vec<String> = similar_values(&id, &haystack)
                     .into_iter()
                     .map(std::string::ToString::to_string)
                     .collect();
