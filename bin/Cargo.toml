@@ -44,7 +44,9 @@ rust-embed = "8.5.0"
 semver = "1.0.23"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+supports-hyperlinks = { workspace = true }
 term-table = "1.4.0"
+terminal-link = { workspace = true }
 time = { version = "0.3.36", features = ["formatting"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
