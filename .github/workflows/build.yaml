@@ -68,8 +68,10 @@ jobs:
             commit: b99dddf46aca7cea008bca56f5a553c5d7776219
           - repo: acemod/ACE3
             commit: eb57fa49c404e662abcd18c7e52c1f7c4b67a9b0
+          - repo: IDI-Systems/acre2
+            commit: e5c1bba58b63e18d03721a68d32efd39748af551
           - repo: ArmaForces/Mods
-            commit: 83561696a94aafdf0b4b770730d1fe716348d992
+            commit: 79d21ac395d16cb7ed1ed556b0da4cbc67af98c9
           - repo: Theseus-Aegis/Mods
             commit: 943906d18817a7f0829742f0c91cdad34456c594
           - repo: SynixeContractors/Mod
