@@ -73,6 +73,7 @@ fn test_analyze(dir: &str) {
     };
 }
 
+analyze!(s02_event_handler_case);
 analyze!(s03_static_typename);
 analyze!(s04_command_case);
 analyze!(s05_if_assign);
@@ -82,3 +83,4 @@ analyze!(s08_format_args);
 analyze!(s09_banned_command);
 analyze!(s11_if_not_else);
 analyze!(s17_var_all_caps);
+analyze!(s18_in_vehicle_check);

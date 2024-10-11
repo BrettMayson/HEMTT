@@ -1,4 +1,5 @@
 //! This module contains the minimum required for the serializing SQFC files.
+//!
 //! The entrypoint to this is [`Compiled`], however it contains raw lists of constants and variable names,
 //! which can be cumbersome to manage. For this reason, you should use structs from the
 //! [`compiler`][crate::compiler] module instead.
