@@ -139,7 +139,7 @@ impl Code for Code18InVehicleCheck {
 
     fn suggestion(&self) -> Option<String> {
         Some(
-            format!("{} objectParent {}", if self.negated { "isNotNull" } else { "isNull" }, self.var),
+            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, self.var),
         )
     }
 
