@@ -195,13 +195,17 @@ impl WorkspacePath {
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
     pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
+        fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
+            let on_disk = on_disk.as_str().replace('\\', "/");
+            on_disk.to_lowercase() == requested.to_lowercase() && on_disk != requested
+        }
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
         if path_lower.starts_with("/a3/") {
             if let Some(pdrive) = &self.workspace().pdrive {
                 if let Some(pdrive_path) = pdrive.path_to(&path) {
                     return Ok(Some(LocateResult {
-                        case_mismatch: if pdrive_path.as_str().replace('\\', "/") == path {
+                        case_mismatch: if is_wrong_case(&pdrive_path, &path) {
                             Some(pdrive_path.as_str().to_string())
                         } else {
                             None
@@ -220,7 +224,7 @@ impl WorkspacePath {
             if self.data.workspace.vfs.join(&path)?.exists()? {
                 let ret_path = self.data.workspace.vfs.join(&path)?;
                 return Ok(Some(LocateResult {
-                    case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
+                    case_mismatch: if is_wrong_case(&ret_path, &path) {
                         Some(ret_path.as_str().to_string())
                     } else {
                         None
@@ -261,7 +265,7 @@ impl WorkspacePath {
                 };
                 if ret_path.exists()? {
                     return Ok(Some(LocateResult {
-                        case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
+                        case_mismatch: if is_wrong_case(&ret_path, &path) {
                             Some(ret_path.as_str().to_string())
                         } else {
                             None
@@ -279,7 +283,7 @@ impl WorkspacePath {
         let ret_path = self.data.path.parent().join(&path)?;
         if ret_path.exists()? {
             Ok(Some(LocateResult {
-                case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
+                case_mismatch: if is_wrong_case(&ret_path, &path) {
                     Some(ret_path.as_str().to_string())
                 } else {
                     None
