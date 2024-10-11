@@ -61,6 +61,7 @@ impl Code for IncludeCase {
 }
 
 impl IncludeCase {
+    #[must_use]
     pub const fn new(tokens: Vec<Token>, ident: String) -> Self {
         Self { tokens, ident }
     }

@@ -201,7 +201,7 @@ impl WorkspacePath {
             if let Some(pdrive) = &self.workspace().pdrive {
                 if let Some(pdrive_path) = pdrive.path_to(&path) {
                     return Ok(Some(LocateResult {
-                        case_mismatch: if pdrive_path.as_str() == path {
+                        case_mismatch: if pdrive_path.as_str().replace('\\', "/") == path {
                             Some(pdrive_path.as_str().to_string())
                         } else {
                             None
@@ -220,7 +220,7 @@ impl WorkspacePath {
             if self.data.workspace.vfs.join(&path)?.exists()? {
                 let ret_path = self.data.workspace.vfs.join(&path)?;
                 return Ok(Some(LocateResult {
-                    case_mismatch: if ret_path.as_str() == path {
+                    case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
                         Some(ret_path.as_str().to_string())
                     } else {
                         None
@@ -261,7 +261,7 @@ impl WorkspacePath {
                 };
                 if ret_path.exists()? {
                     return Ok(Some(LocateResult {
-                        case_mismatch: if ret_path.as_str() == path {
+                        case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
                             Some(ret_path.as_str().to_string())
                         } else {
                             None
@@ -279,7 +279,7 @@ impl WorkspacePath {
         let ret_path = self.data.path.parent().join(&path)?;
         if ret_path.exists()? {
             Ok(Some(LocateResult {
-                case_mismatch: if ret_path.as_str() == path {
+                case_mismatch: if ret_path.as_str().replace('\\', "/") == path {
                     Some(ret_path.as_str().to_string())
                 } else {
                     None
