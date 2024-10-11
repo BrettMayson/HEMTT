@@ -52,10 +52,12 @@ impl Code for IfInvalidOperator {
 }
 
 impl IfInvalidOperator {
+    #[must_use]
     pub const fn new(tokens: Vec<Token>) -> Self {
         Self { tokens }
     }
 
+    #[must_use]
     pub fn code(tokens: Vec<Token>) -> Error {
         Error::Code(Arc::new(Self::new(tokens)))
     }

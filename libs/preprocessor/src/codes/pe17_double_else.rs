@@ -58,6 +58,7 @@ impl Code for DoubleElse {
 }
 
 impl DoubleElse {
+    #[must_use]
     pub const fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
         Self {
             token,
@@ -66,6 +67,7 @@ impl DoubleElse {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, previous: Token, if_token: Token) -> Error {
         Error::Code(Arc::new(Self::new(
             Box::new(token),

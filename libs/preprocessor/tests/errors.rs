@@ -77,3 +77,4 @@ bootstrap!(pe21_pragma_invalid_suppress);
 bootstrap!(pe22_pragma_invalid_flag);
 bootstrap!(pe23_if_has_include);
 bootstrap!(pe24_parsing_failed);
+bootstrap!(pe25_exec);

@@ -72,6 +72,7 @@ impl Code for IncludeNotEncased {
 }
 
 impl IncludeNotEncased {
+    #[must_use]
     pub fn new(token: Box<Token>, path: Vec<Rc<Token>>, start: Option<Token>) -> Self {
         Self {
             token,
@@ -80,6 +81,7 @@ impl IncludeNotEncased {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, path: Vec<Rc<Token>>, start: Option<Token>) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), path, start)))
     }

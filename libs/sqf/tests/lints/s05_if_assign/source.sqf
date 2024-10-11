@@ -5,5 +5,5 @@ if (alivePlayer) then {
 };
 private _limbs = [
     if (alive player) then { "torso" } else { "legs" },
-    if (alive player) then { "torso" } else { "legs" },
+    if (alive player) then { "torso" } else { "legs" }
 ];

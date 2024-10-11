@@ -73,6 +73,11 @@ impl Code for IfUnitOrFunction {
 }
 
 impl IfUnitOrFunction {
+    #[must_use]
+    /// Create a new instance of `IfUnitOrFunction`
+    /// 
+    /// # Panics
+    /// Panics if the token does not define anything in the defines
     pub fn new(token: Box<Token>, defines: &Defines) -> Self {
         Self {
             similar: defines
@@ -90,6 +95,7 @@ impl IfUnitOrFunction {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, defines: &Defines) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), defines)))
     }

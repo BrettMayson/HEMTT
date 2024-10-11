@@ -4,7 +4,7 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{bom::BOMCheck, pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
     report::Report,
 };
 
@@ -40,12 +40,6 @@ pub fn add_args(cmd: Command) -> Command {
         clap::Arg::new("asc")
             .long("asc")
             .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("expopti")
-            .long("expopti")
-            .help("Use SQFC Optimizer")
             .action(ArgAction::SetTrue),
     )
 }
@@ -99,15 +93,15 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     let mut executor = Executor::new(ctx);
 
     let use_asc = matches.get_one::<bool>("asc") == Some(&true);
-    let use_optimizer = matches.get_one::<bool>("expopti") == Some(&true);
 
     executor.collapse(Collapse::No);
 
+    executor.add_module(Box::<BOMCheck>::default());
     executor.add_module(Box::<Hooks>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::new(!use_asc, use_optimizer)));
+    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
     #[cfg(not(target_os = "macos"))]
     if use_asc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());
