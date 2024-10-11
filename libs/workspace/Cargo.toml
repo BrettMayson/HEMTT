@@ -16,10 +16,10 @@ ansi_term = "0.12.1"
 codespan-reporting = { workspace = true }
 dirs = "5.0.1"
 serde = { workspace = true }
-terminal-link = "0.1.0"
+terminal-link = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
-supports-hyperlinks = "3.0.0"
+supports-hyperlinks = { workspace = true }
 vfs = { workspace = true }
 
 tower-lsp = { workspace = true, optional = true }
