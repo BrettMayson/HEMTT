@@ -4,7 +4,7 @@
 [0m[36m1[0m [0m[36m│[0m if ([0m[36mvehicle player != player[0m) then {
   [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mInnefficient "in vehicle" check[0m
   [0m[36m│[0m
-  [0m[36m=[0m [32mtry[0m: isNotNull objectParent player
+  [0m[36m=[0m [32mtry[0m: !isNull objectParent player
 
 
 [0m[1m[38;5;14mhelp[L-S18][0m[1m: Using `vehicle` to check if a unit is in a vehicle is innefficient[0m
