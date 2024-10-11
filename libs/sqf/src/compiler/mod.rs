@@ -1,7 +1,7 @@
 #![allow(clippy::cast_possible_truncation)]
 
 //! Compiles a list of statements into an intermediate form that can be serialized.
-//! 
+//!
 //! Since [`Compiled`]'s names and constants lists can be difficult to manage,
 //! this module contains structs that allow for the creation of a sort of intermediate form
 //! which can generate these lists automatically.
