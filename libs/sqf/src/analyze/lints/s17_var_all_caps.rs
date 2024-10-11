@@ -24,16 +24,27 @@ impl Lint<SqfLintData> for LintS17VarAllCaps {
     }
 
     fn documentation(&self) -> &str {
-        r"### Example
+        r#"### Configuration
+
+- **ignore**: An array of vars to ignore
+
+```toml
+[lints.sqf.var_all_caps]
+options.ignore = [
+    "XMOD_TEST", "MYMOD_*",
+]
+```
+
+### Example
 
 **Incorrect**
 ```sqf
 private _z = _y + DO_NOT_EXIST;
 ```
-"
+."#
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::help()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
@@ -58,11 +69,21 @@ impl LintRunner<SqfLintData> for Runner {
         let Expression::Variable(var, span) = target else {
             return Vec::new();
         };
-        if var.starts_with('_') || &var.to_ascii_uppercase() != var || var == "SLX_XEH_COMPILE_NEW" {
+        if var.starts_with('_') || &var.to_ascii_uppercase() != var || var == "SLX_XEH_COMPILE_NEW"
+        {
             return Vec::new();
         }
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| i.as_str().unwrap_or_default() == var) {
+            if ignore.iter().any(|i| {
+                let s = i.as_str().unwrap_or_default();
+                if s == var {
+                    return true;
+                }
+                if s.ends_with('*') && var.starts_with(&s[0..s.len() - 1]) {
+                    return true;
+                }
+                false
+            }) {
                 return Vec::new();
             }
         }
@@ -98,7 +119,7 @@ impl Code for CodeS17VarAllCaps {
 
     fn message(&self) -> String {
         // print var again here if it's part of a macro
-        format!("Var all caps: {}",self.var)
+        format!("Var all caps: {}", self.var)
     }
 
     fn label_message(&self) -> String {
