@@ -76,13 +76,7 @@ impl LintRunner<SqfLintData> for Runner {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             if ignore.iter().any(|i| {
                 let s = i.as_str().unwrap_or_default();
-                if s == var {
-                    return true;
-                }
-                if s.ends_with('*') && var.starts_with(&s[0..s.len() - 1]) {
-                    return true;
-                }
-                false
+                s == var || (s.ends_with('*') && var.starts_with(&s[0..s.len() - 1]))
             }) {
                 return Vec::new();
             }
