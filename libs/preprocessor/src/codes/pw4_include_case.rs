@@ -23,7 +23,7 @@ impl Code for IncludeCase {
     }
 
     fn message(&self) -> String {
-        "including a file with a different case".to_string()
+        format!("on disk: `{}`", self.ident)
     }
 
     fn note(&self) -> Option<String> {
