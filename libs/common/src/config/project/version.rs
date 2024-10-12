@@ -2,7 +2,7 @@ use std::mem::MaybeUninit;
 
 use git2::Repository;
 use serde::{Deserialize, Serialize};
-use tracing::{error, trace};
+use tracing::trace;
 use vfs::VfsPath;
 
 use crate::{error::Error, version::Version};
@@ -71,7 +71,6 @@ impl VersionConfig {
             let content = path.read_to_string()?;
             return Version::try_from_script_version(&content).map_err(Into::into);
         }
-        error!("could not find version macro file: {:?}", path);
 
         Err(crate::version::Error::UnknownVersion.into())
     }

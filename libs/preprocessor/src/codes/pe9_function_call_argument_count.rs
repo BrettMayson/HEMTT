@@ -72,6 +72,10 @@ impl Code for FunctionCallArgumentCount {
 
 impl FunctionCallArgumentCount {
     #[must_use]
+    /// Create a new instance of `IfUnitOrFunction`
+    /// 
+    /// # Panics
+    /// Panics if the token does not define anything in the defines
     pub fn new(token: Box<Token>, expected: usize, got: usize, defines: &Defines) -> Self {
         Self {
             expected,
