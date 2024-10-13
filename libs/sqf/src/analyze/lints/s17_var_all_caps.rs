@@ -117,7 +117,6 @@ impl Code for CodeS17VarAllCaps {
     }
 
     fn message(&self) -> String {
-        // print var again here if it's part of a macro
         format!("Variable should not be all caps: {}", self.ident)
     }
 
@@ -162,12 +161,10 @@ impl CodeS17VarAllCaps {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        println!("{:?}", self.ident);
         let Some(mut diagnostic) = Diagnostic::new_for_processed(&self, self.span.clone(), processed) else {
             return self;
         };
         self.diagnostic = Some(diagnostic.clone());
-        // ignore the last mapping
         let mut mappings = processed.mappings(self.span.start);
         mappings.pop();
         let symbol = Symbol::Word(self.ident.clone());
