@@ -1,4 +1,3 @@
-#[cfg(feature = "lsp")]
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -35,6 +34,8 @@ pub struct Processor {
     file_stack: Vec<WorkspacePath>,
 
     pub(crate) token_count: usize,
+
+    macros: HashMap<String, Vec<Position>>,
 
     #[cfg(feature = "lsp")]
     /// Map of token usage to definition
@@ -94,10 +95,9 @@ impl Processor {
 
         Processed::new(
             buffer,
+            processor.macros,
             #[cfg(feature = "lsp")]
             processor.usage,
-            #[cfg(feature = "lsp")]
-            processor.declarations,
             processor.warnings,
             processor.no_rapify,
         )
