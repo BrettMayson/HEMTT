@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::{config::LintConfig, similar_values};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Label, Mapping, Processed, Severity, Symbol, Token},
+    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, Symbol},
 };
 
 use crate::{analyze::SqfLintData, Expression};
@@ -41,6 +41,10 @@ options.ignore = [
 ```sqf
 private _z = _y + DO_NOT_EXIST;
 ```
+
+### Explanation
+
+Variables that are all caps are usually reserved for macros. This should should help prevent any accidental typos or uses before definitions when using macros.
 ."#
     }
     fn default_config(&self) -> LintConfig {
