@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::{config::LintConfig, similar_values};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Label, Mapping, Processed, Severity, Symbol, Token},
 };
 
 use crate::{analyze::SqfLintData, Expression};
@@ -158,7 +158,31 @@ impl CodeS17VarAllCaps {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        println!("{:?}", self.ident);
+        let Some(mut diagnostic) = Diagnostic::new_for_processed(&self, self.span.clone(), processed) else {
+            return self;
+        };
+        self.diagnostic = Some(diagnostic.clone());
+        // ignore the last mapping
+        let mut mappings = processed.mappings(self.span.start);
+        mappings.pop();
+        let symbol = Symbol::Word(self.ident.clone());
+        let Some(mapping) = mappings
+            .iter()
+            .find(|m| {
+                m.token().symbol() == &symbol
+            }) else {
+            return self;
+            };
+        if let Some(l) = diagnostic.labels.get_mut(0) { *l = l.clone().with_message("Used in macro here"); }
+        diagnostic.labels.push(
+            Label::primary(
+                mapping.original().path().clone(),
+                mapping.original().span(),
+            )
+            .with_message("All caps variable"),
+        );
+        self.diagnostic = Some(diagnostic);
         self
     }
 }
