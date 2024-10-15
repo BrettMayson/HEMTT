@@ -22,11 +22,7 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
-    #[allow(dead_code)]
-    #[cfg(feature = "lsp")]
-    /// Map of token usage to definition
-    /// (token, definition)
-    declarations: HashMap<Position, Position>,
+    macros: HashMap<String, Vec<Position>>,
 
     #[allow(dead_code)]
     #[cfg(feature = "lsp")]
@@ -179,14 +175,13 @@ impl Processed {
     /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
+        macros: HashMap<String, Vec<Position>>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
-        #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Codes,
         no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
-            #[cfg(feature = "lsp")]
-            declarations,
+            macros,
             #[cfg(feature = "lsp")]
             usage,
             warnings,
@@ -256,6 +251,12 @@ impl Processed {
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
         self.mappings(offset).last().copied()
+    }
+
+    #[must_use]
+    /// Get the macros defined
+    pub const fn macros(&self) -> &HashMap<String, Vec<Position>> {
+        &self.macros
     }
 
     #[must_use]

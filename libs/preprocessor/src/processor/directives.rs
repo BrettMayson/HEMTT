@@ -289,6 +289,10 @@ impl Processor {
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
+        self.macros
+            .entry(ident_string.clone())
+            .or_default()
+            .push(ident.position().clone());
         self.defines.insert(
             &ident_string,
             (
