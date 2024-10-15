@@ -90,4 +90,4 @@ analyze!(s14_unused, false);
 analyze!(s15_shadowed, false);
 analyze!(s16_not_private, false);
 
-analyze!(s18_in_vehicle_check, false);
+analyze!(s18_in_vehicle_check, true);

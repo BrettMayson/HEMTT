@@ -114,3 +114,14 @@ _this select 0 drawIcon [ // invalidArgs
 private _varL = nil;
 call ([{_varL = 0;}, {_varL = 1;}] select (x == 1)); 
 ["A", "B"] select _varL;
+
+params xParams;
+params [];
+params [[""]];
+params [["_varM", "", [""]], ["_varN", 1, [0]], ["_varO", { systemChat _varM }]];
+_varM = _varM + "";
+_varN = _varN + 2;
+call _varO;
+
+params [["_someString", "abc", [""]], ["_someCode", { 60 setGusts _someString }]];
+call _someCode; // InvalidArgs for setGusts

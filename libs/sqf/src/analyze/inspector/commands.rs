@@ -69,25 +69,42 @@ impl SciptScope {
                                 VarSource::Params(source.clone()),
                             );
                         }
-                        GameValue::Array(Some(gv_array)) => {
-                            if gv_array.is_empty() {
+                        GameValue::Array(Some(arg_array)) => {
+                            if arg_array.is_empty() || arg_array[0].is_empty() {
                                 continue;
                             }
-                            for element in &gv_array[0] {
-                                if let GameValue::String(Some(Expression::String(var, source, _))) =
-                                    element
-                                {
-                                    if var.is_empty() {
-                                        continue;
+                            let GameValue::String(Some(Expression::String(var_name, source, _))) =
+                                &arg_array[0][0]
+                            else {
+                                continue;
+                            };
+                            if var_name.is_empty() {
+                                continue;
+                            }
+                            let mut var_types = HashSet::new();
+                            if arg_array.len() > 2 {
+                                for type_p in &arg_array[2] {
+                                    if let GameValue::Array(Some(type_array)) = type_p {
+                                        for type_i in type_array {
+                                            var_types.extend(type_i.iter().cloned());
+                                        }
                                     }
-                                    self.var_assign(
-                                        var.as_ref(),
-                                        true,
-                                        HashSet::from([GameValue::Anything]),
-                                        VarSource::Params(source.clone()),
-                                    );
                                 }
                             }
+                            if var_types.is_empty() {
+                                var_types.insert(GameValue::Anything);
+                            }
+                            // Add the default value to types
+                            // It should be possible to move this above the is_empty check but not always safe
+                            if arg_array.len() > 1 && !arg_array[1].is_empty() {
+                                var_types.insert(arg_array[1][0].clone());
+                            }
+                            self.var_assign(
+                                var_name.as_ref(),
+                                true,
+                                var_types,
+                                VarSource::Params(source.clone()),
+                            );
                         }
                         _ => {}
                     }
@@ -177,7 +194,7 @@ impl SciptScope {
     pub fn cmd_generic_call_magic(
         &mut self,
         code_possibilities: &HashSet<GameValue>,
-        magic: Vec<(&str, GameValue)>,
+        magic: &Vec<(&str, GameValue)>,
         source: &Range<usize>,
         database: &Database,
     ) -> HashSet<GameValue> {
@@ -192,7 +209,7 @@ impl SciptScope {
                 continue;
             }
             self.push();
-            for (var, value) in magic.iter() {
+            for (var, value) in magic {
                 self.var_assign(
                     var,
                     true,
@@ -363,7 +380,8 @@ impl SciptScope {
     ) -> HashSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
-        let _ = self.cmd_generic_call_magic(rhs, vec![("_x", GameValue::Anything)], source, database);
+        let _ =
+            self.cmd_generic_call_magic(rhs, &vec![("_x", GameValue::Anything)], source, database);
         // if lhs is array, and rhs is bool/number then put array into return
         if lhs.len() == 1
             && rhs

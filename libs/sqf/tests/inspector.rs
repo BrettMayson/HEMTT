@@ -37,7 +37,7 @@ mod tests {
     pub fn test_1() {
         let (_pro, sqf, _database) = get_statements("test_1.sqf");
         let result = sqf.issues();
-        assert_eq!(result.len(), 12);
+        assert_eq!(result.len(), 13);
         // Order not guarenteed
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
@@ -119,6 +119,13 @@ mod tests {
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
                 cmd == "[B:drawIcon]"
+            } else {
+                false
+            }
+        }));
+        assert!(result.iter().any(|i| {
+            if let Issue::InvalidArgs(cmd, _) = i {
+                cmd == "[B:setGusts]"
             } else {
                 false
             }
