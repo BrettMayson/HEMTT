@@ -123,7 +123,7 @@ impl Code for CodeS20BoolStaticComparison {
     }
 
     fn suggestion(&self) -> Option<String> {
-        let suggestion = if self.against_true {
+        Some(if self.against_true {
             if self.negated {
                 format!("!{}", self.ident)
             } else {
@@ -133,8 +133,7 @@ impl Code for CodeS20BoolStaticComparison {
             self.ident.clone()
         } else {
             format!("!{}", self.ident)
-        };
-        Some(suggestion)
+        })
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
