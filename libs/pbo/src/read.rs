@@ -15,6 +15,7 @@ use crate::{
 /// An existing PBO file that can be read from
 pub struct ReadablePbo<I: Seek + Read> {
     properties: IndexMap<String, String>,
+    vers_header: Header,
     headers: Vec<Header>,
     checksum: Checksum,
     input: I,
@@ -30,10 +31,12 @@ impl<I: Seek + Read> ReadablePbo<I> {
         let mut properties = IndexMap::new();
         let mut headers = Vec::new();
         let mut blob_start = 0;
+        let mut vers_header = None;
         loop {
             let (header, size) = Header::read_pbo(&mut input)?;
             blob_start += size as u64;
             if header.mime() == &Mime::Vers {
+                vers_header = Some(header);
                 loop {
                     let key = input.read_cstring()?;
                     blob_start += key.len() as u64 + 1;
@@ -51,6 +54,8 @@ impl<I: Seek + Read> ReadablePbo<I> {
             }
         }
 
+        let vers_header = vers_header.ok_or(Error::NoVersHeader)?;
+
         for header in &headers {
             input.seek(SeekFrom::Current(i64::from(header.size())))?;
         }
@@ -62,6 +67,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
         }
         Ok(Self {
             properties,
+            vers_header,
             headers,
             checksum,
             input,
@@ -171,7 +177,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     /// if a file does not exist, but a header for it does
     pub fn gen_checksum(&mut self) -> Result<Checksum, Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-        Header::property().write_pbo(&mut headers)?;
+        self.vers_header.write_pbo(&mut headers)?;
 
         if let Some(prefix) = self.properties.get("prefix") {
             headers.write_cstring(b"prefix")?;

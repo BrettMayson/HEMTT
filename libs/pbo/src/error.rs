@@ -7,6 +7,9 @@ pub enum Error {
     /// [`std::io::Error`]
     Io(#[from] std::io::Error),
 
+    #[error("Missing Vers header")]
+    /// Missing Vers header
+    NoVersHeader,
     #[error("HEMTT does not support the encountered PBO Mime type: {0}")]
     /// HEMTT does not support the encountered PBO Mime type
     UnsupportedMime(u32),
