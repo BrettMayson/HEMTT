@@ -1,26 +1,23 @@
 use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
-use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
-};
+use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression, NularCommand, UnaryCommand};
+use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 
-crate::lint!(LintS18InVehicleCheck);
+crate::lint!(LintS20BoolStaticComparison);
 
-impl Lint<SqfLintData> for LintS18InVehicleCheck {
+impl Lint<SqfLintData> for LintS20BoolStaticComparison {
     fn ident(&self) -> &str {
-        "in_vehicle_check"
+        "bool_static_comparison"
     }
 
     fn sort(&self) -> u32 {
-        180
+        200
     }
 
     fn description(&self) -> &str {
-        "Recommends using `isNull objectParent X` instead of `vehicle X == X`"
+        "Checks for a variable being compared to `true` or `false`"
     }
 
     fn documentation(&self) -> &str {
@@ -28,16 +25,14 @@ impl Lint<SqfLintData> for LintS18InVehicleCheck {
 
 **Incorrect**
 ```sqf
-if (vehicle player == player) then { ... };
+if (_x == true) then {};
+if (_y == false) then {};
 ```
 **Correct**
 ```sqf
-if (isNull objectParent player) then { ... };
+if (_x) then {};
+if (!_y) then {};
 ```
-
-### Explanation
-
-Using `isNull objectParent x` is faster and more reliable than `vehicle x == x` for checking if a unit is currently in a vehicle.
 "
     }
 
@@ -69,56 +64,50 @@ impl LintRunner<SqfLintData> for Runner {
             return Vec::new();
         };
         
-        let Some(check) = is_in_vehicle_check(lhs, rhs).or_else(|| is_in_vehicle_check(rhs, lhs)) else {
+        let Some((ident, against_true)) = is_static_comparison(lhs, rhs).or_else(|| is_static_comparison(rhs, lhs)) else {
             return Vec::new();
         };
 
-        vec![Arc::new(Code18InVehicleCheck::new(
+        vec![Arc::new(CodeS20BoolStaticComparison::new(
             target.full_span(),
             processed,
             config.severity(),
-            check,
+            ident,
+            against_true,
             matches!(target, Expression::BinaryCommand(BinaryCommand::NotEq, _, _, _)),
         ))]
     }
 }
 
-fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<String> {
-    // vehicle x == x
-    let Expression::UnaryCommand(UnaryCommand::Named(name), object, _) = lhs else {
-        return None;
-    };
-    if name.to_lowercase() != "vehicle" {
-        return None;
+fn is_static_comparison(lhs: &Expression, rhs: &Expression) -> Option<(String, bool)> {
+    match rhs {
+        Expression::Boolean(against_true, _) => {
+            match lhs {
+                Expression::Variable(var, _) => Some((var.clone(), *against_true)),
+                _ => None,
+            }
+        }
+        _ => None,
     }
-    let (Expression::Variable(var, _) | Expression::NularCommand(NularCommand { name: var}, _)) = &**object else {
-        return None;
-    };
-    let (Expression::Variable(var2, _) | Expression::NularCommand(NularCommand { name: var2}, _)) = rhs else {
-        return None;
-    };
-    if var == var2 {
-        return Some(var.clone());
-    }
-    None
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct Code18InVehicleCheck {
+pub struct CodeS20BoolStaticComparison {
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
     ident: String,
+    against_true: bool,
     negated: bool,
 }
 
-impl Code for Code18InVehicleCheck {
+impl Code for CodeS20BoolStaticComparison {
     fn ident(&self) -> &'static str {
-        "L-S18"
+        "L-S20"
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#in_vehicle_check")
+        Some("/analysis/sqf.html#bool_static_comparison")
     }
 
     fn severity(&self) -> Severity {
@@ -126,21 +115,25 @@ impl Code for Code18InVehicleCheck {
     }
 
     fn message(&self) -> String {
-        "Using `vehicle` to check if a unit is in a vehicle is innefficient".to_string()
+        "Variable compared to static boolean".to_string()
     }
 
     fn label_message(&self) -> String {
-        if self.negated {
-            "Innefficient \"in vehicle\" check".to_string()
-        } else {
-            "Innefficient \"not in vehicle\" check".to_string()
-        }
+        "compared to static boolean".to_string()
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(
-            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, self.ident),
-        )
+        Some(if self.against_true {
+            if self.negated {
+                format!("!{}", self.ident)
+            } else {
+                self.ident.clone()
+            }
+        } else if self.negated {
+            self.ident.clone()
+        } else {
+            format!("!{}", self.ident)
+        })
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -148,14 +141,15 @@ impl Code for Code18InVehicleCheck {
     }
 }
 
-impl Code18InVehicleCheck {
+impl CodeS20BoolStaticComparison {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, var: String, negated: bool) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, against_true: bool, negated: bool) -> Self {
         Self {
             span,
             severity,
             diagnostic: None,
-            ident: var,
+            ident,
+            against_true,
             negated,
         }
         .generate_processed(processed)
