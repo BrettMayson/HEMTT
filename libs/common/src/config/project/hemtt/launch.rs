@@ -78,17 +78,20 @@ impl LaunchOptions {
     }
 
     #[must_use]
-    /// Binary to launch, `.exe` is appended on Windows  
-    /// Defaults to `arma3_x64`
+    /// Binary to launch, with `.exe`
+    /// Defaults to `arma3_x64.exe`
     pub fn executable(&self) -> String {
         let executable = &self
             .executable
             .as_ref()
             .map_or_else(|| "arma3_x64", |e| e.as_str());
-        if cfg!(target_os = "windows") {
-            format!("{executable}.exe")
-        } else {
+        if std::path::Path::new(executable)
+            .extension()
+            .map_or(false, |ext| ext.eq_ignore_ascii_case("exe"))
+        {
             (*executable).to_string()
+        } else {
+            format!("{executable}.exe")
         }
     }
 
