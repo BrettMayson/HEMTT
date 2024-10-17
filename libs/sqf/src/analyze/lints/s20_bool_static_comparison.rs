@@ -60,10 +60,23 @@ impl LintRunner<SqfLintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::Eq | BinaryCommand::NotEq, lhs, rhs, _) = target else {
+        let Expression::BinaryCommand(cmd, lhs, rhs, _) = target else {
             return Vec::new();
         };
-        
+        let negated = match cmd {
+            BinaryCommand::Eq => false,
+            BinaryCommand::NotEq => true,
+            BinaryCommand::Named(name) => {
+                if name == "isEqualTo" {
+                    false
+                } else if name == "isNotEqualTo" {
+                    true
+                } else {
+                    return Vec::new();
+                }
+            }
+            _ => return Vec::new(),
+        };
         let Some((ident, against_true)) = is_static_comparison(lhs, rhs).or_else(|| is_static_comparison(rhs, lhs)) else {
             return Vec::new();
         };
@@ -74,7 +87,7 @@ impl LintRunner<SqfLintData> for Runner {
             config.severity(),
             ident,
             against_true,
-            matches!(target, Expression::BinaryCommand(BinaryCommand::NotEq, _, _, _)),
+            negated,
         ))]
     }
 }
