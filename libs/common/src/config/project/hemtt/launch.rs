@@ -284,14 +284,7 @@ rapify = false
         assert_eq!(config.optionals(), &["test"]);
         assert_eq!(config.mission(), Some(&"test".to_string()));
         assert_eq!(config.parameters(), &["test"]);
-        assert_eq!(
-            config.executable(),
-            if cfg!(target_os = "windows") {
-                "test.exe"
-            } else {
-                "test"
-            }
-        );
+        assert_eq!(config.executable(), "test.exe");
         assert!(config.binarize());
         assert!(!config.file_patching());
         assert_eq!(config.instances(), 2);
@@ -309,14 +302,7 @@ rapify = false
         assert!(config.optionals().is_empty());
         assert!(config.mission().is_none());
         assert!(config.parameters().is_empty());
-        assert_eq!(
-            config.executable(),
-            if cfg!(target_os = "windows") {
-                "arma3_x64.exe"
-            } else {
-                "arma3_x64"
-            }
-        );
+        assert_eq!(config.executable(), "arma3_x64.exe");
         assert!(!config.binarize());
         assert!(config.file_patching());
         assert_eq!(config.instances(), 1);
