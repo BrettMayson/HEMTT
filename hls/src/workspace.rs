@@ -1,8 +1,7 @@
 use std::{
     collections::HashMap,
-    mem::MaybeUninit,
     path::PathBuf,
-    sync::{atomic::AtomicBool, Arc, RwLock},
+    sync::{Arc, LazyLock, RwLock},
 };
 
 use hemtt_common::config::PDriveOption;
@@ -18,17 +17,10 @@ pub struct EditorWorkspaces {
 
 impl EditorWorkspaces {
     pub fn get() -> Self {
-        static mut SINGLETON: MaybeUninit<EditorWorkspaces> = MaybeUninit::uninit();
-        static mut INIT: AtomicBool = AtomicBool::new(false);
-        unsafe {
-            if !INIT.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                SINGLETON = MaybeUninit::new(Self {
-                    workspaces: Arc::new(RwLock::new(HashMap::new())),
-                });
-                INIT.store(true, std::sync::atomic::Ordering::SeqCst);
-            }
-            SINGLETON.assume_init_ref().clone()
-        }
+        static SINGLETON: LazyLock<EditorWorkspaces> = LazyLock::new(|| EditorWorkspaces {
+            workspaces: Arc::new(RwLock::new(HashMap::new())),
+        });
+        (*SINGLETON).clone()
     }
 
     pub fn initialize(&self, folders: Vec<WorkspaceFolder>) {

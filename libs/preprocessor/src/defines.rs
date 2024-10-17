@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     position::Position,
@@ -16,7 +16,7 @@ pub enum DefineSource {
     Argument,
 }
 
-type InnerDefines = HashMap<Arc<str>, (Rc<Token>, Definition, DefineSource)>;
+type InnerDefines = HashMap<Arc<str>, (Arc<Token>, Definition, DefineSource)>;
 
 #[derive(Clone, Default)]
 /// `HashMap` of all current defines
@@ -85,9 +85,9 @@ impl Defines {
     #[allow(clippy::too_many_lines)]
     pub fn get_with_gen(
         &mut self,
-        key: &Rc<Token>,
+        key: &Arc<Token>,
         site: Option<&Position>,
-    ) -> Option<(Rc<Token>, Definition, DefineSource)> {
+    ) -> Option<(Arc<Token>, Definition, DefineSource)> {
         let ident = key.to_string();
         if let Some(site) = site {
             if BUILTIN_GEN.contains(&ident.as_str()) {
@@ -97,7 +97,7 @@ impl Defines {
                         self.counter += 1;
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Rc::new(Token::new(
+                            Definition::Value(vec![Arc::new(Token::new(
                                 Symbol::Digit(counter.into()),
                                 key.position().clone(),
                             ))]),
@@ -113,8 +113,8 @@ impl Defines {
                         return Some((
                             key.clone(),
                             Definition::Value(vec![
-                                Rc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                                Rc::new(site.path().workspace().project().map_or_else(
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                                Arc::new(site.path().workspace().project().map_or_else(
                                     || {
                                         Token::new(
                                             Symbol::Word(path.clone()),
@@ -144,7 +144,7 @@ impl Defines {
                                         )
                                     },
                                 )),
-                                Rc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                             ]),
                             DefineSource::Generated,
                         ));
@@ -153,7 +153,7 @@ impl Defines {
                         let path = site.path().filename();
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Rc::new(Token::new(
+                            Definition::Value(vec![Arc::new(Token::new(
                                 Symbol::Word(path),
                                 key.position().clone(),
                             ))]),
@@ -174,7 +174,7 @@ impl Defines {
                             .collect::<String>();
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Rc::new(Token::new(
+                            Definition::Value(vec![Arc::new(Token::new(
                                 Symbol::Word(path),
                                 key.position().clone(),
                             ))]),
@@ -184,7 +184,7 @@ impl Defines {
                     "__LINE__" => {
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Rc::new(Token::new(
+                            Definition::Value(vec![Arc::new(Token::new(
                                 Symbol::Digit(site.start().1 .0),
                                 key.position().clone(),
                             ))]),
@@ -214,7 +214,7 @@ impl Defines {
         ret
     }
 
-    pub fn get_readonly(&self, key: &str) -> Option<(Rc<Token>, Definition, DefineSource)> {
+    pub fn get_readonly(&self, key: &str) -> Option<(Arc<Token>, Definition, DefineSource)> {
         self.stack
             .last()
             .as_ref()
@@ -224,7 +224,7 @@ impl Defines {
     }
 
     #[cfg(test)]
-    pub fn get_test(&self, key: &str) -> Option<&(Rc<Token>, Definition, DefineSource)> {
+    pub fn get_test(&self, key: &str) -> Option<&(Arc<Token>, Definition, DefineSource)> {
         self.stack
             .last()
             .as_ref()
@@ -235,8 +235,8 @@ impl Defines {
     pub fn insert(
         &mut self,
         key: &str,
-        value: (Rc<Token>, Definition, DefineSource),
-    ) -> Option<(Rc<Token>, Definition, DefineSource)> {
+        value: (Arc<Token>, Definition, DefineSource),
+    ) -> Option<(Arc<Token>, Definition, DefineSource)> {
         if let Some(stack) = self.stack.last_mut() {
             stack.1.insert(Arc::from(key), value)
         } else {
@@ -244,7 +244,7 @@ impl Defines {
         }
     }
 
-    pub fn remove(&mut self, key: &str) -> Option<(Rc<Token>, Definition, DefineSource)> {
+    pub fn remove(&mut self, key: &str) -> Option<(Arc<Token>, Definition, DefineSource)> {
         if let Some(scope) = self.stack.last_mut() {
             scope.1.remove(key)
         } else {

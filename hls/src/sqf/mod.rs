@@ -3,9 +3,7 @@ mod locate;
 
 use std::{
     collections::HashMap,
-    mem::MaybeUninit,
-    rc::Rc,
-    sync::{atomic::AtomicBool, RwLock},
+    sync::{Arc, LazyLock, RwLock},
 };
 
 use hemtt_preprocessor::Processor;
@@ -25,22 +23,15 @@ pub struct CacheBundle {
 
 #[derive(Clone)]
 pub struct SqfCache {
-    files: Rc<RwLock<HashMap<Url, CacheBundle>>>,
+    files: Arc<RwLock<HashMap<Url, CacheBundle>>>,
 }
 
 impl SqfCache {
     pub fn get() -> Self {
-        static mut SINGLETON: MaybeUninit<SqfCache> = MaybeUninit::uninit();
-        static mut INIT: AtomicBool = AtomicBool::new(false);
-        unsafe {
-            if !INIT.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                SINGLETON = MaybeUninit::new(Self {
-                    files: Rc::new(RwLock::new(HashMap::new())),
-                });
-                INIT.store(true, std::sync::atomic::Ordering::SeqCst);
-            }
-            SINGLETON.assume_init_ref().clone()
-        }
+        static SINGLETON: LazyLock<SqfCache> = LazyLock::new(|| SqfCache {
+            files: Arc::new(RwLock::new(HashMap::new())),
+        });
+        (*SINGLETON).clone()
     }
 
     pub async fn cache(url: Url) {

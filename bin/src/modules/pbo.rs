@@ -46,7 +46,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
         .to_vec()
         .iter()
         .map(|addon| {
-            _build(ctx, addon, collapse, &version, git_hash.as_ref())?;
+            internal_build(ctx, addon, collapse, &version, git_hash.as_ref())?;
             counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
@@ -55,7 +55,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     Ok(Report::new())
 }
 
-fn _build(
+fn internal_build(
     ctx: &Context,
     addon: &Addon,
     collapse: Collapse,
