@@ -8,6 +8,8 @@ Builds are available for Windows and Linux.
 
 ## Recommended Installation (Winget, Global)
 
+### Windows
+
 HEMTT can be installed using [Winget](https://github.com/microsoft/winget-cli).
 
 ```powershell
@@ -20,6 +22,16 @@ To update HEMTT with winget use:
 winget upgrade hemtt
 ```
 
+### Linux & MacOS
+
+HEMTT can be installed using an installer script.
+
+```bash
+curl -sSL https://hemtt.dev/install.sh | bash
+```
+
+The script can be ran again to update HEMTT.
+
 ## Manual Installation (Global)
 
 HEMTT can be installed globally on your system, and used from anywhere.
@@ -30,7 +42,7 @@ HEMTT can then be ran from any terminal with `hemtt`.
 
 ## Manual Installation (Project Local)
 
-The HEMTT executable can be placed in the root of your project, and used from there. 
+The HEMTT executable can be placed in the root of your project, and used from there.
 
 ```admonish warning
 It is strongly recommended not to add it to your version control system.

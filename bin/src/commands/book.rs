@@ -12,7 +12,7 @@ pub fn cli() -> Command {
 /// # Errors
 /// Will not return an error
 pub fn execute(_: &ArgMatches) -> Result<Report, Error> {
-    if let Err(e) = webbrowser::open("https://brettmayson.github.io/HEMTT/") {
+    if let Err(e) = webbrowser::open("https://hemtt.dev/") {
         eprintln!("Failed to open the HEMTT book: {e}");
     }
     Ok(Report::new())

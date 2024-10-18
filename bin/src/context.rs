@@ -232,11 +232,11 @@ fn version_check(
                 if supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
                     let link = terminal_link::Link::new(
                         "The HEMTT Book",
-                        "https://brettmayson.github.io/HEMTT/configuration/version.html",
+                        "https://hemtt.dev/configuration/version.html",
                     );
                     println!("\nRead more about Version Configuration in {link}");
                 } else {
-                    println!("\nRead more about Version Configuration at https://brettmayson.github.io/HEMTT/configuration/version.html");
+                    println!("\nRead more about Version Configuration at https://hemtt.dev/configuration/version.html");
                 }
             }
             hemtt_common::version::Error::ExpectedMajor => {

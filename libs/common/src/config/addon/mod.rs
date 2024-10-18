@@ -96,7 +96,7 @@ impl AddonFile {
         let config: Self = toml::from_str(content)?;
 
         let see_more =
-            "See <https://brettmayson.github.io/HEMTT/configuration/addon> for more information.";
+            "See <https://hemtt.dev/configuration/addon> for more information.";
 
         if content.contains("preprocess = ") || content.contains("preprocess=") {
             return Err(Error::ConfigInvalid(format!("`preprocess = {{}}` is deprecated, use `[rapify] enabled = false` instead. {see_more}")));

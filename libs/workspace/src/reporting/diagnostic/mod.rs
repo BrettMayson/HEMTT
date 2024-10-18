@@ -181,7 +181,7 @@ impl Diagnostic {
                                     &if link.starts_with("http") {
                                         link.to_string()
                                     } else {
-                                        format!("https://brettmayson.github.io/HEMTT{link}")
+                                        format!("https://hemtt.dev{link}")
                                     }
                                 )
                             )
