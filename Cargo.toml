@@ -19,6 +19,9 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+repository = "https://github.com/BrettMayson/HEMTT"
+
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
 nursery = { level = "deny", priority = -1 }

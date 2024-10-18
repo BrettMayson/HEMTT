@@ -5,6 +5,7 @@ version = "1.13.3"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
+repository.workspace = true
 
 [lints]
 workspace = true
