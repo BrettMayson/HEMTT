@@ -11,6 +11,7 @@ use std::{
 
 use hemtt_common::config::PDriveOption;
 use hemtt_p3d::SearchCache;
+use hemtt_workspace::reporting::Severity;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -74,7 +75,7 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         } else {
-            report.push(ToolsNotFound::code());
+            report.push(ToolsNotFound::code(Severity::Warning));
         }
         setup_tmp(ctx)?;
         Ok(report)
@@ -82,18 +83,31 @@ impl Module for Binarize {
 
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        use error::bbe7_wine_not_found::WineNotFound;
+
         let mut report = Report::new();
-        let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
-            report.push(PlatformNotSupported::code());
-            return Ok(report);
+        let tools_path = {
+            let default = PathBuf::from("~/.local/share/arma3tools");
+            if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
+                PathBuf::from(path)
+            } else {
+                if !default.exists() {
+                    report.push(PlatformNotSupported::code());
+                    return Ok(report);
+                }
+                default
+            }
         };
-        let path = PathBuf::from(tools_path)
-            .join("Binarize")
-            .join("binarize_x64.exe");
+        let path = tools_path.join("Binarize").join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
+            let mut cmd = Command::new("wine64");
+            cmd.arg("--version");
+            if cmd.output().is_err() {
+                report.push(WineNotFound::code());
+            }
         } else {
-            report.push(ToolsNotFound::code());
+            report.push(ToolsNotFound::code(Severity::Warning));
         }
         setup_tmp(ctx)?;
         Ok(report)
