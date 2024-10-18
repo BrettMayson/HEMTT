@@ -19,7 +19,7 @@ winget upgrade hemtt
 HEMTT can be installed using an installer script.
 
 ```bash
-curl -sSf https://hemtt.dev/install.sh | bash
+curl -sSf https://hemtt.dev/install.sh | sh
 ```
 
 The script can be ran again to update HEMTT.
