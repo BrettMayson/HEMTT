@@ -326,7 +326,6 @@ fn check_signature(buf: [u8; 4]) -> bool {
     buf == [0x4F, 0x50, 0x52, 0x57]
 }
 
-#[allow(dead_code)] // used in windows only
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     create_dir_all(ctx.tmp().join("output"))?;
     let tmp = ctx.tmp().join("source");

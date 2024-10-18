@@ -107,6 +107,6 @@ pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
         return Ok(());
     }
     trace!("symlink {:?} => {:?}", link, target);
-    std::os::unix::fs::symlink(target, link)?;
+    std::os::unix::fs::symlink(link, target)?;
     Ok(())
 }
