@@ -110,8 +110,7 @@ jobs:
         run: |
           cd mod && hemtt dev
       - name: Install Arma 3 Tools
-        if: startsWith(matrix.os.runner, 'windows')
-        uses: arma-actions/arma3-tools@python
+        uses: arma-actions/arma3-tools@typescript
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Install Wine

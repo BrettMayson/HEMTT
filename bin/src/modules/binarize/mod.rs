@@ -88,7 +88,7 @@ impl Module for Binarize {
 
         let mut report = Report::new();
         let tools_path = {
-            let default = PathBuf::from("~/.local/share/arma3tools");
+            let default = dirs::home_dir().expect("home directory exists").join(".local/share/arma3tools");
             if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
                 PathBuf::from(path)
             } else {
