@@ -85,3 +85,4 @@ analyze!(s11_if_not_else);
 analyze!(s17_var_all_caps);
 analyze!(s18_in_vehicle_check);
 analyze!(s20_bool_static_comparison);
+analyze!(s21_invalid_comparisons);
