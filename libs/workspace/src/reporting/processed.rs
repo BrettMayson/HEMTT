@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Range, rc::Rc, sync::Arc};
+use std::{collections::HashMap, ops::Range, sync::Arc};
 use tracing::warn;
 
 use crate::{
@@ -44,7 +44,7 @@ pub struct Processed {
 fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
-    token: Rc<Token>,
+    token: Arc<Token>,
 ) -> Result<(), Error> {
     let path = token.position().path().clone();
     let source = processed
@@ -306,7 +306,7 @@ pub struct Mapping {
     source: usize,
     processed: (LineCol, LineCol),
     original: Position,
-    token: Rc<Token>,
+    token: Arc<Token>,
     was_macro: bool,
 }
 
@@ -349,7 +349,7 @@ impl Mapping {
 
     #[must_use]
     /// Get the original token
-    pub const fn token(&self) -> &Rc<Token> {
+    pub const fn token(&self) -> &Arc<Token> {
         &self.token
     }
 

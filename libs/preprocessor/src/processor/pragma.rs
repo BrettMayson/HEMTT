@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::reporting::Token;
 
@@ -58,7 +58,7 @@ impl Pragma {
         self.suppress.contains_key(code)
     }
 
-    pub fn suppress(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
+    pub fn suppress(&mut self, token: &Arc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
         let Ok(suppress) = Suppress::try_from(code.as_str()) else {
             return Err(PragmaInvalidSuppress::code((**token).clone()));
@@ -76,7 +76,7 @@ impl Pragma {
         self.flags.contains_key(code)
     }
 
-    pub fn flag(&mut self, token: &Rc<Token>, scope: Scope) -> Result<(), Error> {
+    pub fn flag(&mut self, token: &Arc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
         let Ok(flag) = Flag::try_from(code.as_str()) else {
             return Err(PragmaInvalidFlag::code((**token).clone()));

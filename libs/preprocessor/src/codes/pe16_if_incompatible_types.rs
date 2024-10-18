@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
@@ -113,9 +113,9 @@ impl Code for IfIncompatibleType {
 impl IfIncompatibleType {
     #[must_use]
     pub fn new(
-        left: (Vec<Rc<Token>>, bool),
-        operator: Vec<Rc<Token>>,
-        right: (Vec<Rc<Token>>, bool),
+        left: (Vec<Arc<Token>>, bool),
+        operator: Vec<Arc<Token>>,
+        right: (Vec<Arc<Token>>, bool),
     ) -> Self {
         Self {
             left: (
@@ -132,9 +132,9 @@ impl IfIncompatibleType {
 
     #[must_use]
     pub fn code(
-        left: (Vec<Rc<Token>>, bool),
-        operator: Vec<Rc<Token>>,
-        right: (Vec<Rc<Token>>, bool),
+        left: (Vec<Arc<Token>>, bool),
+        operator: Vec<Arc<Token>>,
+        right: (Vec<Arc<Token>>, bool),
     ) -> Error {
         Error::Code(Arc::new(Self::new(left, operator, right)))
     }

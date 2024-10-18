@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
-    mem::MaybeUninit,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{Arc, LazyLock},
 };
 
 use hemtt_preprocessor::Processor;
@@ -26,17 +25,10 @@ pub struct ConfigCache {
 
 impl ConfigCache {
     pub fn get() -> Self {
-        static mut SINGLETON: MaybeUninit<ConfigCache> = MaybeUninit::uninit();
-        static mut INIT: AtomicBool = AtomicBool::new(false);
-        unsafe {
-            if !INIT.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                SINGLETON = MaybeUninit::new(Self {
-                    files: Arc::new(RwLock::new(HashMap::new())),
-                });
-                INIT.store(true, std::sync::atomic::Ordering::SeqCst);
-            }
-            SINGLETON.assume_init_ref().clone()
-        }
+        static SINGLETON: LazyLock<ConfigCache> = LazyLock::new(|| ConfigCache {
+            files: Arc::new(RwLock::new(HashMap::new())),
+        });
+        (*SINGLETON).clone()
     }
 }
 

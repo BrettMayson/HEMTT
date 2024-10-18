@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     mem::MaybeUninit,
-    sync::{atomic::AtomicBool, Arc, Mutex},
+    sync::{atomic::AtomicBool, Arc, Mutex, RwLock},
 };
 
 use dashmap::DashMap;
@@ -14,14 +14,20 @@ pub struct DiagManager {
     worker: Arc<DiagWorker>,
 }
 
-static mut SINGLETON: MaybeUninit<DiagManager> = MaybeUninit::uninit();
-static mut INIT: AtomicBool = AtomicBool::new(false);
+static SINGLETON: RwLock<MaybeUninit<DiagManager>> = RwLock::new(MaybeUninit::uninit());
+static INIT: AtomicBool = AtomicBool::new(false);
 
 impl DiagManager {
     pub fn get() -> Option<Self> {
         unsafe {
             if INIT.load(std::sync::atomic::Ordering::SeqCst) {
-                Some(SINGLETON.assume_init_ref().clone())
+                Some(
+                    SINGLETON
+                        .read()
+                        .expect("DiagManager poisoned")
+                        .assume_init_ref()
+                        .clone(),
+                )
             } else {
                 None
             }
@@ -29,17 +35,15 @@ impl DiagManager {
     }
 
     pub fn init(client: Client) {
-        unsafe {
-            if !INIT.swap(true, std::sync::atomic::Ordering::SeqCst) {
-                SINGLETON = MaybeUninit::new(Self {
-                    worker: Arc::new(DiagWorker {
-                        client,
-                        last_touched: Mutex::new(HashSet::new()),
-                        current: Arc::new(DashMap::new()),
-                    }),
-                });
-                INIT.store(true, std::sync::atomic::Ordering::SeqCst);
-            }
+        if !INIT.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            *SINGLETON.write().expect("DiagManager poisoned") = MaybeUninit::new(Self {
+                worker: Arc::new(DiagWorker {
+                    client,
+                    last_touched: Mutex::new(HashSet::new()),
+                    current: Arc::new(DashMap::new()),
+                }),
+            });
+            INIT.store(true, std::sync::atomic::Ordering::SeqCst);
         }
     }
 

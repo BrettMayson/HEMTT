@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use hemtt_workspace::{position::Position, reporting::Token};
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -9,7 +9,7 @@ pub enum Definition {
     /// A [`FunctionDefinition`] that takes parameters
     Function(FunctionDefinition),
     /// A value that is a list of [`Token`]s to be added at the call site
-    Value(Vec<Rc<Token>>),
+    Value(Vec<Arc<Token>>),
     /// A flag that can be checked with `#ifdef`
     Unit,
     /// A macro that changes the internal state, returning nothing
@@ -46,7 +46,7 @@ impl Definition {
 
     #[must_use]
     /// Get the value [`Token`]s if it is a value
-    pub fn as_value(&self) -> Option<&[Rc<Token>]> {
+    pub fn as_value(&self) -> Option<&[Arc<Token>]> {
         match self {
             Self::Value(v) => Some(v),
             _ => None,
@@ -67,14 +67,14 @@ impl Definition {
 /// ```
 pub struct FunctionDefinition {
     position: Position,
-    args: Vec<Rc<Token>>,
-    body: Vec<Rc<Token>>,
+    args: Vec<Arc<Token>>,
+    body: Vec<Arc<Token>>,
 }
 
 impl FunctionDefinition {
     #[must_use]
     /// Create a new [`FunctionDefinition`]
-    pub const fn new(position: Position, args: Vec<Rc<Token>>, body: Vec<Rc<Token>>) -> Self {
+    pub const fn new(position: Position, args: Vec<Arc<Token>>, body: Vec<Arc<Token>>) -> Self {
         Self {
             position,
             args,
@@ -84,13 +84,13 @@ impl FunctionDefinition {
 
     #[must_use]
     /// Get the parameter [`Token`]s
-    pub fn args(&self) -> &[Rc<Token>] {
+    pub fn args(&self) -> &[Arc<Token>] {
         &self.args
     }
 
     #[must_use]
     /// Get the body [`Token`]s
-    pub fn body(&self) -> &[Rc<Token>] {
+    pub fn body(&self) -> &[Arc<Token>] {
         &self.body
     }
 
@@ -102,7 +102,7 @@ impl FunctionDefinition {
 
     #[must_use]
     /// Get the body as a stream
-    pub fn stream(&self) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
+    pub fn stream(&self) -> PeekMoreIterator<impl Iterator<Item = Arc<Token>>> {
         self.body
             .clone()
             .into_iter()

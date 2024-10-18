@@ -353,9 +353,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             } else {
                 path.push(exe);
             }
-            if cfg!(windows) {
-                path.set_extension("exe");
-            }
+            path.set_extension("exe");
         } else {
             path.push(launch.executable());
         }
@@ -363,8 +361,11 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             windows_launch(&arma3dir, &path, &instance)?;
         }
     } else {
+        if launch.executable() != "arma3_x64.exe" {
+            warn!("Currently, only Windows supports specifying the executable");
+        }
         for instance in instances {
-            linux_launch(&arma3dir, &launch.executable(), &instance)?;
+            linux_launch(&instance)?;
         }
     }
 
@@ -420,7 +421,7 @@ fn windows_launch(arma3dir: &Path, executable: &PathBuf, args: &[String]) -> Res
     Ok(())
 }
 
-fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<(), Error> {
+fn linux_launch(args: &[String]) -> Result<(), Error> {
     // check if flatpak steam is installed
     let flatpak = std::process::Command::new("flatpak")
         .arg("list")
@@ -428,9 +429,10 @@ fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<()
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"))?;
     if flatpak {
-        warn!("A flatpak override will be created to grant access to the .hemttout directory");
+        warn!(
+            "A flatpak override will be created to grant Steam access to the .hemttout directory"
+        );
         info!("Using flatpak steam with:\n  {}", args.join("\n  "));
-        trace!("using flatpak override to grant access to the mod");
         std::process::Command::new("flatpak")
             .arg("override")
             .arg("--user")
@@ -454,8 +456,13 @@ fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<()
             .spawn()?;
     } else {
         info!("Using native steam with:\n  {}", args.join("\n  "));
-        std::process::Command::new(arma3dir.join(executable))
+        std::process::Command::new("steam")
+            .arg("-applaunch")
+            .arg("107410")
+            .arg("-nolauncher")
             .args(args)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .spawn()?;
     }
     Ok(())
