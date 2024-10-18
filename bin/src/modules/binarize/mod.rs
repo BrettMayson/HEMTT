@@ -246,7 +246,6 @@ impl Module for Binarize {
         if self.command.is_none() || self.check_only {
             return Ok(Report::new());
         }
-        setup_tmp(ctx)?;
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
         let tmp_source = ctx.tmp().join("source");
