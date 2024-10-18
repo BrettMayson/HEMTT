@@ -23,8 +23,10 @@ jobs:
             name: ubuntu
           - runner: windows-latest
             name: windows
+          - runner: macos-13
+            name: macos-x64
           - runner: macos-latest
-            name: macos
+            name: macos-arm
         toolchain:
           - stable
           - beta
