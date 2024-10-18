@@ -134,11 +134,19 @@ jobs:
           name: linux-x64
           path: release
 
+      - name: Rename Linux x64
+        run: |
+          cd release && mv hemtt linux-x64
+
       - name: Download Windows x64
         uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: release
+
+      - name: Rename Windows x64
+        run: |
+          cd release && mv hemtt.exe windows-x64
 
       - name: Download MacOS x64
         uses: actions/download-artifact@v4
@@ -146,27 +154,19 @@ jobs:
           name: macos-x64
           path: release
 
+      - name: Rename MacOS x64
+        run: |
+          cd release && mv hemtt darwin-x64
+
       - name: Download MacOS ARM64
         uses: actions/download-artifact@v4
         with:
           name: macos-arm64
           path: release
 
-      - name: Rename Linux x64
-        run: |
-          cd release && mv hemtt linux-x64
-
-      - name: Rename Windows x64
-        run: |
-          cd release && mv hemtt.exe windows-x64
-
-      - name: Rename MacOS x64
-        run: |
-          cd macos-x64 && mv hemtt darwin-x64
-
       - name: Rename MacOS ARM64
         run: |
-          cd macos-arm64 && mv hemtt darwin-arm64
+          cd release && mv hemtt darwin-arm64
 
       - name: Release
         uses: softprops/action-gh-release@v2
