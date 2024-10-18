@@ -37,7 +37,7 @@ call _my_function;
 
 ### Explanation
 
-When using `call`, the called code will inherit `_this` from the calling code. This means that `_this` is not necessary in the call, and can be omitted for better performance.
+When using `call`, the called code will inherit `_this` from the calling scope. This means that `_this` is not necessary in the call, and can be omitted for better performance.
 "
     }
 
@@ -114,7 +114,7 @@ impl Code for CodeS22ThisCall {
     }
 
     fn note(&self) -> Option<String> {
-        Some("`call` inherits `_this` from the calling code".to_string())
+        Some("`call` inherits `_this` from the calling scope".to_string())
     }
 
     fn help(&self) -> Option<String> {
