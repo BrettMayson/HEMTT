@@ -34,7 +34,7 @@ impl Config {
                             let mut required_version = Version::new(0, 0, 0, None);
                             for property in properties {
                                 if let Property::Entry { name, value, .. } = property {
-                                    if name.as_str().to_lowercase() == "requiredVersion" {
+                                    if name.as_str().to_lowercase() == "requiredversion" {
                                         if let Value::Number(Number::Float32 { value, .. }) = value
                                         {
                                             required_version = Version::from(*value);
