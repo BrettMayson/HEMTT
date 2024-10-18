@@ -91,7 +91,7 @@ impl Module for Binarize {
         };
         let path = PathBuf::from(tools_path)
             .join("Binarize")
-            .join("binarize.exe");
+            .join("binarize_x64.exe");
         println!("path: {:?} - {}", path, path.exists());
         if path.exists() {
             self.command = Some(path.display().to_string());
@@ -208,8 +208,7 @@ impl Module for Binarize {
                             .trim_start_matches('/')
                             .trim_start_matches(&addon.folder().to_string())
                             .trim_start_matches('/')
-                            .trim_end_matches(&entry.filename())
-                            .replace('/', "\\"),
+                            .trim_end_matches(&entry.filename()),
                     );
                     let tmp_outed = tmp_out.join(entry.parent().as_str().trim_start_matches('/'));
 
@@ -268,6 +267,8 @@ impl Module for Binarize {
                 } else {
                     let mut cmd = Command::new("wine");
                     cmd.arg(exe);
+                    cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
+                    std::fs::create_dir_all("/tmp/hemtt-wine").expect("should be able to create wine prefix");
                     cmd
                 };
                 cmd.args([
@@ -275,9 +276,9 @@ impl Module for Binarize {
                     "-always",
                     "-silent",
                     "-maxProcesses=0",
-                    &target.source,
-                    &target.output,
-                    &target.entry,
+                    &target.source.replace('/', "\\"),
+                    &target.output.replace('/', "\\"),
+                    &target.entry.replace('/', "\\"),
                 ])
                 .current_dir(&tmp_source);
                 trace!("{:?}", cmd);
