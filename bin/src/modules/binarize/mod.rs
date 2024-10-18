@@ -264,7 +264,7 @@ impl Module for Binarize {
                 let mut cmd = if cfg!(windows) {
                     Command::new(exe)
                 } else {
-                    let mut cmd = Command::new("wine");
+                    let mut cmd = Command::new("wine64");
                     cmd.arg(exe);
                     cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
                     std::fs::create_dir_all("/tmp/hemtt-wine")
