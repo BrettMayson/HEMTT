@@ -73,12 +73,6 @@ jobs:
           - runner: windows-latest
             name: windows
             artifact: windows-x64
-          - runner: macos-13
-            name: macos-x64
-            artifact: macos-x64
-          - runner: macos-latest
-            name: macos-arm
-            artifact: macos-arm64
         mod:
           - repo: CBATeam/CBA_A3
             commit: b99dddf46aca7cea008bca56f5a553c5d7776219
