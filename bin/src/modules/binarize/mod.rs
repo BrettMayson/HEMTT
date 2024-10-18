@@ -15,6 +15,7 @@ use hemtt_workspace::reporting::Severity;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
+#[allow(unused_imports)] // some are Linux only
 use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
@@ -62,11 +63,11 @@ impl Module for Binarize {
             trace!("Using Binarize path from registry");
             let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
             let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-                report.push(ToolsNotFound::code());
+                report.push(ToolsNotFound::code(Severity::Warning));
                 return Ok(report);
             };
             let Ok(path) = key.get_value::<String, _>("path") else {
-                report.push(ToolsNotFound::code());
+                report.push(ToolsNotFound::code(Severity::Warning));
                 return Ok(report);
             };
             PathBuf::from(path)
