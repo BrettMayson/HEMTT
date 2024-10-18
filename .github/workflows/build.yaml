@@ -129,10 +129,6 @@ jobs:
           HEMTT_BI_TOOLS: /tmp/arma3tools
         run: |
           cd mod && hemtt build
-      - name: Tree
-        if: always()
-        run: |
-          tree /tmp/hemtt/runner/runner_work_HEMTT_HEMTT_mod
 
   release:
     name: Release

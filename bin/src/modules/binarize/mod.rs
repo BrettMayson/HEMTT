@@ -108,8 +108,7 @@ impl Module for Binarize {
         };
 
         let mut report = Report::new();
-        let tmp_source = ctx.tmp().join("source");
-        let tmp_out = tmp_source.join("hemtt_binarize_output");
+        let tmp_out = ctx.tmp().join("hemtt_binarize_output");
         let search_cache = SearchCache::new();
         if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
@@ -201,7 +200,7 @@ impl Module for Binarize {
                         }
                     }
 
-                    let tmp_sourced = tmp_source.join(addon.prefix().as_pathbuf()).join(
+                    let tmp_sourced = ctx.tmp().join(addon.prefix().as_pathbuf()).join(
                         entry
                             .as_str()
                             .trim_start_matches('/')
@@ -245,7 +244,6 @@ impl Module for Binarize {
         }
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
-        let tmp_source = ctx.tmp().join("source");
         self.prechecked
             .read()
             .expect("can read in pre_build")
@@ -275,17 +273,17 @@ impl Module for Binarize {
                     "-maxProcesses=0",
                     &target
                         .source
-                        .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                        .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
                         .trim_start_matches('/')
                         .replace('/', "\\"),
                     &target
                         .output
-                        .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                        .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
                         .trim_start_matches('/')
                         .replace('/', "\\"),
                     &target.entry.replace('/', "\\"),
                 ])
-                .current_dir(&tmp_source);
+                .current_dir(ctx.tmp());
                 trace!("{:?}", cmd);
                 let output = cmd.output().expect("should be able to run binarize");
                 assert!(
@@ -329,15 +327,12 @@ fn check_signature(buf: [u8; 4]) -> bool {
 }
 
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    let tmp = ctx.tmp().join("source");
-    create_dir_all(&tmp)?;
-    create_dir_all(tmp.join("hemtt_binarize_output"))?;
+    create_dir_all(ctx.tmp())?;
+    create_dir_all(ctx.tmp().join("hemtt_binarize_output"))?;
     for addon in ctx.all_addons() {
-        let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
+        let tmp_addon = ctx.tmp().join(addon.prefix().as_pathbuf());
         create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
-        let target = ctx
-            .project_folder()
-            .join(addon.folder().as_str().trim_start_matches('/'));
+        let target = ctx.project_folder().join(addon.folder_pathbuf());
         create_link(&tmp_addon, &target)?;
     }
     // maybe replace with config or rhai in the future?
@@ -347,7 +342,9 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         if file.is_dir() {
             continue;
         }
-        let tmp_file = tmp.join(file.file_name().expect("file should have a name"));
+        let tmp_file = ctx
+            .tmp()
+            .join(file.file_name().expect("file should have a name"));
         if file.metadata()?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",
@@ -375,7 +372,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
             continue;
         }
         if outer_prefix.is_dir() {
-            let tmp_outer_prefix = tmp.join(
+            let tmp_outer_prefix = ctx.tmp().join(
                 outer_prefix
                     .file_name()
                     .expect("outer prefix should have a name"),
@@ -399,6 +396,6 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     let Some(pdrive) = ctx.workspace().pdrive() else {
         return Ok(());
     };
-    create_link(&tmp.join("a3"), &pdrive.link())?;
+    create_link(&ctx.tmp().join("a3"), &pdrive.link())?;
     Ok(())
 }
