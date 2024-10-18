@@ -274,8 +274,14 @@ impl Module for Binarize {
                     "-always",
                     "-silent",
                     "-maxProcesses=0",
-                    &target.source.replace('/', "\\"),
-                    &target.output.replace('/', "\\"),
+                    &target
+                        .source
+                        .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                        .replace('/', "\\"),
+                    &target
+                        .output
+                        .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                        .replace('/', "\\"),
                     &target.entry.replace('/', "\\"),
                 ])
                 .current_dir(&tmp_source);
