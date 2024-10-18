@@ -88,7 +88,9 @@ impl Module for Binarize {
 
         let mut report = Report::new();
         let tools_path = {
-            let default = dirs::home_dir().expect("home directory exists").join(".local/share/arma3tools");
+            let default = dirs::home_dir()
+                .expect("home directory exists")
+                .join(".local/share/arma3tools");
             if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
                 PathBuf::from(path)
             } else {
@@ -290,11 +292,13 @@ impl Module for Binarize {
                         .source
                         .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
                         .trim_start_matches('/')
+                        .trim_start_matches('\\')
                         .replace('/', "\\"),
                     &target
                         .output
                         .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
                         .trim_start_matches('/')
+                        .trim_start_matches('\\')
                         .replace('/', "\\"),
                     &target.entry.replace('/', "\\"),
                 ])
