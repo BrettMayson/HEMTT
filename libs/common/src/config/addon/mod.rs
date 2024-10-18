@@ -95,8 +95,7 @@ impl AddonFile {
     pub fn from_str(content: &str, path: &str) -> Result<Self, Error> {
         let config: Self = toml::from_str(content)?;
 
-        let see_more =
-            "See <https://hemtt.dev/configuration/addon> for more information.";
+        let see_more = "See <https://hemtt.dev/configuration/addon> for more information.";
 
         if content.contains("preprocess = ") || content.contains("preprocess=") {
             return Err(Error::ConfigInvalid(format!("`preprocess = {{}}` is deprecated, use `[rapify] enabled = false` instead. {see_more}")));
