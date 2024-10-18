@@ -1401,6 +1401,7 @@ dependencies = [
  "arma3-wiki",
  "clap",
  "dialoguer",
+ "dirs",
  "enable-ansi-support",
  "fs_extra",
  "git2",

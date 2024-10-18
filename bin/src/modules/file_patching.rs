@@ -28,11 +28,7 @@ impl Module for FilePatching {
                         .expect("build folder exists")
                         .join("addons")
                         .join(addon.name().replace('/', "\\")),
-                    &ctx.project_folder().join(if cfg!(windows) {
-                        addon.folder().replace('/', "\\")
-                    } else {
-                        addon.folder()
-                    }),
+                    &ctx.project_folder().join(addon.folder_pathbuf()),
                 )
             })
             .collect::<Result<(), Error>>()?;

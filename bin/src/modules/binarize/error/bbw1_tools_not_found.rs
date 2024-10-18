@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Code, Diagnostic, Severity};
 
-pub struct ToolsNotFound;
+pub struct ToolsNotFound {
+    severity: Severity,
+}
 
 impl Code for ToolsNotFound {
     fn ident(&self) -> &'static str {
@@ -10,7 +12,7 @@ impl Code for ToolsNotFound {
     }
 
     fn severity(&self) -> Severity {
-        Severity::Warning
+        self.severity
     }
 
     fn message(&self) -> String {
@@ -30,7 +32,7 @@ impl Code for ToolsNotFound {
 
 impl ToolsNotFound {
     #[allow(dead_code)] // used in windows only
-    pub fn code() -> Arc<dyn Code> {
-        Arc::new(Self)
+    pub fn code(severity: Severity) -> Arc<dyn Code> {
+        Arc::new(Self { severity })
     }
 }

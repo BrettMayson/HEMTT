@@ -2,7 +2,8 @@
 
 [Introduction](README.md)
 
-- [Installation](installation.md)
+- [Installation](installation/index.md)
+  - [Arma 3 Tools](installation/arma3tools.md)
 
 # Mod Projects
 
@@ -10,7 +11,7 @@
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
   - [Lints](configuration/lints.md)
-  - [Addon](configuration/addon.md)
+  - [Addon](configuration/addon.md)]
   - [P Drive](configuration/p-drive.md)
   - [Custom Commands](configuration/custom-commands.md)
 - [Commands](commands/index.md)
