@@ -14,7 +14,6 @@ use hemtt_p3d::SearchCache;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-#[allow(unused_imports)] // used in windows only
 use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
@@ -84,7 +83,6 @@ impl Module for Binarize {
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        println!("HEMTT_BI_TOOLS: {:?}", std::env::var("HEMTT_BI_TOOLS"));
         let Ok(tools_path) = std::env::var("HEMTT_BI_TOOLS") else {
             report.push(PlatformNotSupported::code());
             return Ok(report);
@@ -92,9 +90,10 @@ impl Module for Binarize {
         let path = PathBuf::from(tools_path)
             .join("Binarize")
             .join("binarize_x64.exe");
-        println!("path: {:?} - {}", path, path.exists());
         if path.exists() {
             self.command = Some(path.display().to_string());
+        } else {
+            report.push(ToolsNotFound::code());
         }
         setup_tmp(ctx)?;
         Ok(report)
@@ -110,7 +109,7 @@ impl Module for Binarize {
 
         let mut report = Report::new();
         let tmp_source = ctx.tmp().join("source");
-        let tmp_out = ctx.tmp().join("output");
+        let tmp_out = tmp_source.join("hemtt_binarize_output");
         let search_cache = SearchCache::new();
         if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
@@ -279,14 +278,11 @@ impl Module for Binarize {
                         .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
                         .trim_start_matches('/')
                         .replace('/', "\\"),
-                    &format!(
-                        "..\\{}",
-                        &target
-                            .output
-                            .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
-                            .trim_start_matches('/')
-                            .replace('/', "\\")
-                    ),
+                    &target
+                        .output
+                        .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                        .trim_start_matches('/')
+                        .replace('/', "\\"),
                     &target.entry.replace('/', "\\"),
                 ])
                 .current_dir(&tmp_source);
@@ -297,8 +293,6 @@ impl Module for Binarize {
                     "binarize failed with code {:?}",
                     output.status.code().unwrap_or(-1)
                 );
-                println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-                println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
                     counter.fetch_add(1, Ordering::Relaxed);
                     None
@@ -335,19 +329,15 @@ fn check_signature(buf: [u8; 4]) -> bool {
 }
 
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    create_dir_all(ctx.tmp().join("output"))?;
     let tmp = ctx.tmp().join("source");
     create_dir_all(&tmp)?;
+    create_dir_all(tmp.join("hemtt_binarize_output"))?;
     for addon in ctx.all_addons() {
         let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
         create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
-        let target = ctx.project_folder().join(
-            addon
-                .folder()
-                .as_str()
-                .trim_start_matches('/')
-                .replace('/', "\\"),
-        );
+        let target = ctx
+            .project_folder()
+            .join(addon.folder().as_str().trim_start_matches('/'));
         create_link(&tmp_addon, &target)?;
     }
     // maybe replace with config or rhai in the future?

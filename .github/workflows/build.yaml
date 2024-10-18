@@ -23,10 +23,10 @@ jobs:
             name: ubuntu
             artifact: linux-x64
             exe: hemtt
-          # - runner: windows-latest
-          #   name: windows
-          #   artifact: windows-x64
-          #   exe: hemtt.exe
+          - runner: windows-latest
+            name: windows
+            artifact: windows-x64
+            exe: hemtt.exe
             # Intel Mac
         #   - runner: macos-13
         #     name: macos-x64
@@ -70,9 +70,9 @@ jobs:
           - runner: ubuntu-latest
             name: ubuntu
             artifact: linux-x64
-          # - runner: windows-latest
-          #   name: windows
-          #   artifact: windows-x64
+          - runner: windows-latest
+            name: windows
+            artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
             commit: b99dddf46aca7cea008bca56f5a553c5d7776219
