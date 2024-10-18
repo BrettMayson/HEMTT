@@ -2,9 +2,9 @@
 
 use std::path::PathBuf;
 
-use hemtt_common::workspace::LayerType;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
+use hemtt_workspace::LayerType;
 
 const ROOT: &str = "tests/preprocessor/";
 
@@ -20,9 +20,9 @@ macro_rules! preprocess {
 }
 
 fn preprocess(file: &str) {
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
@@ -31,7 +31,7 @@ fn preprocess(file: &str) {
         processed.as_str(),
     )
     .unwrap();
-    let parsed = hemtt_sqf::parser::run(&Database::default(), &processed).unwrap();
+    let parsed = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
     assert_ne!(parsed.content().len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();

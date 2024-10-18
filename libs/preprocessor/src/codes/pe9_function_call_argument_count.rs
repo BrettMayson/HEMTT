@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::{defines::Defines, Error};
 
@@ -45,7 +45,7 @@ impl Code for FunctionCallArgumentCount {
             None
         } else {
             Some(format!(
-                "did you mean `{}`",
+                "did you mean `{}`?",
                 self.similar
                     .iter()
                     .map(std::string::ToString::to_string)
@@ -71,6 +71,11 @@ impl Code for FunctionCallArgumentCount {
 }
 
 impl FunctionCallArgumentCount {
+    #[must_use]
+    /// Create a new instance of `IfUnitOrFunction`
+    /// 
+    /// # Panics
+    /// Panics if the token does not define anything in the defines
     pub fn new(token: Box<Token>, expected: usize, got: usize, defines: &Defines) -> Self {
         Self {
             expected,
@@ -81,7 +86,7 @@ impl FunctionCallArgumentCount {
                 .map(std::string::ToString::to_string)
                 .collect(),
             defined: {
-                let (t, d) = defines
+                let (t, d, _) = defines
                     .get_readonly(token.symbol().to_string().trim())
                     .expect("define should exist on error about its type");
                 (
@@ -99,6 +104,7 @@ impl FunctionCallArgumentCount {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, expected: usize, got: usize, defines: &Defines) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), expected, got, defines)))
     }

@@ -43,7 +43,6 @@ unsafe extern "C" fn get_unaligned(p: *const ::std::os::raw::c_void) -> u32 {
 }
 
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 #[allow(clippy::similar_names)]
 unsafe extern "C" fn lzo1x_1_do_compress(
     in_: *const u8,
@@ -412,7 +411,6 @@ unsafe extern "C" fn lzo1x_1_do_compress(
 
 #[no_mangle]
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 #[allow(clippy::similar_names)]
 #[allow(clippy::module_name_repetitions)]
 pub unsafe extern "C" fn lzo1x_1_compress(

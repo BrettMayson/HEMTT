@@ -32,6 +32,8 @@ pub enum Class {
         parent: Option<Ident>,
         /// The children of the class
         properties: Vec<Property>,
+        /// Was the class missing {}
+        err_missing_braces: bool,
     },
     /// An external class definition
     ///
@@ -60,6 +62,15 @@ impl Class {
         match self {
             Self::External { .. } | Self::Root { .. } => None,
             Self::Local { parent, .. } => parent.as_ref(),
+        }
+    }
+
+    #[must_use]
+    /// Get the properties of the class
+    pub fn properties(&self) -> &[Property] {
+        match self {
+            Self::Root { properties } | Self::Local { properties, .. } => properties,
+            Self::External { .. } => &[],
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io::{Cursor, Read, Seek, SeekFrom, Write},
+    io::{BufWriter, Cursor, Read, Seek, SeekFrom, Write},
 };
 
 use hemtt_common::io::WriteExt;
@@ -74,7 +74,8 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Get a list of all files in the PBO
-    pub fn files(&mut self) -> std::vec::Vec<Header> {
+    #[must_use]
+    pub fn files(&self) -> Vec<Header> {
         let mut filenames = Vec::new();
         for (_, h) in self.files.values() {
             filenames.push(h.clone());
@@ -83,7 +84,8 @@ impl<I: Seek + Read> WritablePbo<I> {
     }
 
     /// Get a list of all files in the PBO sorted by name
-    pub fn files_sorted(&mut self) -> Vec<Header> {
+    #[must_use]
+    pub fn files_sorted(&self) -> Vec<Header> {
         let mut sorted = self.files();
         sorted.sort_by(|a, b| {
             a.filename()
@@ -127,7 +129,11 @@ impl<I: Seek + Read> WritablePbo<I> {
     ///
     /// # Panics
     /// if a file does not exist but a header is present
-    pub fn write<O: Write>(&mut self, output: &mut O, properties: bool) -> Result<(), Error> {
+    pub fn write<O: Write + Send>(
+        &mut self,
+        output: &mut O,
+        properties: bool,
+    ) -> Result<(), Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         if properties {
             Header::property().write_pbo(&mut headers)?;
@@ -158,20 +164,38 @@ impl<I: Seek + Read> WritablePbo<I> {
 
         let mut hasher = Sha1::new();
 
-        output.write_all(headers.get_ref())?;
+        let mut buffered_output = BufWriter::new(output);
+
+        buffered_output.write_all(headers.get_ref())?;
         hasher.update(headers.get_ref());
 
         for header in &files_sorted {
             let file = self
                 .file(header.filename())?
                 .expect("file with header should exist");
-            std::io::copy(file, output)?;
-            file.rewind()?;
-            std::io::copy(file, &mut hasher)?;
+            let mut buffer = Vec::with_capacity(header.size() as usize);
+            file.read_to_end(&mut buffer)?;
+
+            if header.size() > 1_000_000 {
+                // pay the paralellization cost for large files
+                std::thread::scope(|s| {
+                    s.spawn(|| {
+                        hasher.update(&*buffer);
+                    });
+                    s.spawn(|| {
+                        buffered_output
+                            .write_all(&buffer)
+                            .expect("failed to write file");
+                    });
+                });
+            } else {
+                buffered_output.write_all(&buffer)?;
+                hasher.update(&buffer);
+            }
         }
 
-        output.write_all(&[0])?;
-        output.write_all(&hasher.finalize())?;
+        buffered_output.write_all(&[0])?;
+        buffered_output.write_all(&hasher.finalize())?;
 
         Ok(())
     }

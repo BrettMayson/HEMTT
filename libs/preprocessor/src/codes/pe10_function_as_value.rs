@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -42,7 +42,8 @@ impl Code for FunctionAsValue {
 }
 
 impl FunctionAsValue {
-    pub fn new(token: Box<Token>, source: Box<Token>) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, source: Box<Token>) -> Self {
         Self {
             token,
             source,
@@ -50,6 +51,7 @@ impl FunctionAsValue {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, source: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), Box::new(source))))
     }

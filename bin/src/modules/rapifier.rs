@@ -3,9 +3,9 @@ use std::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_common::{addons::Addon, workspace::WorkspacePath};
-use hemtt_config::{parse, rapify::Rapify};
+use hemtt_config::{lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{addons::Addon, WorkspacePath};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
@@ -21,6 +21,12 @@ pub struct Rapifier;
 impl Module for Rapifier {
     fn name(&self) -> &'static str {
         "Rapifier"
+    }
+
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.extend(lint_check(ctx.config()));
+        Ok(report)
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
@@ -44,7 +50,7 @@ impl Module for Rapifier {
                         globs.push(glob::Pattern::new(file)?);
                     }
                 }
-                for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+                for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
                         && can_rapify(entry.as_str())
                     {
@@ -85,31 +91,31 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     let mut report = Report::new();
     let processed = match Processor::run(path) {
         Ok(processed) => processed,
-        Err(hemtt_preprocessor::Error::Code(e)) => {
-            report.error(e);
+        Err((_, hemtt_preprocessor::Error::Code(e))) => {
+            report.push(e);
             return Ok(report);
         }
-        Err(e) => {
+        Err((_, e)) => {
             return Err(e.into());
         }
     };
     for warning in processed.warnings() {
-        report.warn(warning.clone());
+        report.push(warning.clone());
     }
     let configreport = match parse(Some(ctx.config()), &processed) {
         Ok(configreport) => configreport,
         Err(errors) => {
             for e in &errors {
-                report.error(e.clone());
+                report.push(e.clone());
             }
             return Ok(report);
         }
     };
-    configreport.warnings().iter().for_each(|e| {
-        report.warn(e.clone());
+    configreport.warnings().into_iter().for_each(|e| {
+        report.push(e.clone());
     });
-    configreport.errors().iter().for_each(|e| {
-        report.error(e.clone());
+    configreport.errors().into_iter().for_each(|e| {
+        report.push(e.clone());
     });
     if !configreport.errors().is_empty() {
         return Ok(report);

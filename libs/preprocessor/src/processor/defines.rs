@@ -1,6 +1,6 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::Position,
     reporting::{Output, Symbol, Token},
 };
@@ -13,6 +13,7 @@ use crate::{
         pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
         pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
     },
+    defines::DefineSource,
     definition::Definition,
     Error,
 };
@@ -32,8 +33,8 @@ impl Processor {
         &mut self,
         callsite: &Position,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Result<Option<Vec<Vec<Rc<Token>>>>, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<Option<Vec<Vec<Arc<Token>>>>, Error> {
         if !stream
             .peek()
             .expect("peeked by caller")
@@ -64,7 +65,7 @@ impl Processor {
                         &mut inner
                             .into_iter()
                             .map(std::convert::Into::into)
-                            .collect::<Vec<Vec<Rc<Token>>>>()
+                            .collect::<Vec<Vec<Arc<Token>>>>()
                             .concat(),
                     );
                     continue;
@@ -99,8 +100,8 @@ impl Processor {
     ///
     /// The stream is left after the closing parenthesis
     pub(crate) fn define_read_args(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Result<Vec<Rc<Token>>, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<Vec<Arc<Token>>, Error> {
         if !stream
             .next()
             .expect("peeked by caller")
@@ -112,7 +113,7 @@ impl Processor {
                 stream.peek().expect("peeked above").symbol()
             );
         }
-        let mut args: Vec<Rc<Token>> = Vec::new();
+        let mut args: Vec<Arc<Token>> = Vec::new();
         let mut comma_next = false;
         while let Some(token) = stream.peek() {
             let symbol = token.symbol();
@@ -162,8 +163,8 @@ impl Processor {
     /// The stream is left at the start of the next line
     pub(crate) fn define_read_body(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Vec<Rc<Token>> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Vec<Arc<Token>> {
         self.skip_whitespace(stream, None);
         let mut body = Vec::new();
         for token in stream.by_ref() {
@@ -171,7 +172,7 @@ impl Processor {
             if symbol.is_newline() {
                 if body
                     .last()
-                    .map_or(false, |t: &Rc<Token>| t.symbol().is_escape())
+                    .map_or(false, |t: &Arc<Token>| t.symbol().is_escape())
                 {
                     // remove the backslash
                     body.pop();
@@ -196,12 +197,13 @@ impl Processor {
         &mut self,
         callsite: &Position,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let ident = Self::current_word(stream)?;
         let ident_string = ident.to_string();
-        let Some((source, body)) = self.defines.get_with_gen(&ident, Some(callsite)) else {
+        let Some((source, body, define_source)) = self.defines.get_with_gen(&ident, Some(callsite))
+        else {
             buffer.push(Output::Direct(ident));
             return Ok(());
         };
@@ -247,7 +249,11 @@ impl Processor {
                     }
                     arg_defines.insert(
                         Arc::from(arg.to_string().as_str()),
-                        (arg.clone(), Definition::Value(value)),
+                        (
+                            arg.clone(),
+                            Definition::Value(value),
+                            DefineSource::Argument,
+                        ),
                     );
                 }
                 self.defines.push(&ident_string, arg_defines);
@@ -259,21 +265,29 @@ impl Processor {
                     &mut function.stream(),
                     &mut layer,
                 )?;
-                buffer.push(Output::Macro(ident, layer));
+                buffer.push(Output::Macro(ident.clone(), layer));
                 self.defines.pop();
             }
             #[allow(clippy::needless_collect)] // causes recursion at runtime otherwise
             Definition::Value(body) => {
-                let mut layer = Vec::new();
-                let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
-                self.walk(
-                    Some(callsite),
-                    Some(&ident_string),
-                    pragma,
-                    &mut body.into_iter().peekmore(),
-                    &mut layer,
-                )?;
-                buffer.push(Output::Macro(ident, layer));
+                if define_source == DefineSource::Argument {
+                    // prevent infinite recursion
+                    buffer.push(Output::Macro(
+                        ident.clone(),
+                        body.into_iter().map(Output::Direct).collect(),
+                    ));
+                } else {
+                    let mut layer = Vec::new();
+                    let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
+                    self.walk(
+                        Some(callsite),
+                        Some(&ident_string),
+                        pragma,
+                        &mut body.into_iter().peekmore(),
+                        &mut layer,
+                    )?;
+                    buffer.push(Output::Macro(ident.clone(), layer));
+                }
             }
             Definition::Void => return Ok(()),
             Definition::Unit => {
@@ -308,7 +322,7 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_common::reporting::{Symbol, Whitespace};
+    use hemtt_workspace::reporting::{Symbol, Whitespace};
 
     use crate::processor::{pragma::Pragma, tests, Processor};
 

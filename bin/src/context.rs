@@ -4,8 +4,8 @@ use std::{
     path::PathBuf,
 };
 
-use hemtt_common::workspace::{LayerType, Workspace, WorkspacePath};
-use hemtt_common::{addons::Addon, project::ProjectConfig};
+use hemtt_common::config::ProjectConfig;
+use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
 
@@ -72,6 +72,9 @@ impl Context {
                 .expect("valid utf-8")
                 .replace(['\\', '/'], "_"),
         );
+        if tmp.exists() {
+            remove_dir_all(&tmp)?;
+        }
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
         trace!("using project folder: {:?}", root.display());
@@ -97,20 +100,16 @@ impl Context {
             }
             maybe_build_folder = Some(build_folder);
         };
-        let workspace = builder
-            .memory()
-            .finish(Some(config.clone()), folder.is_some())?;
-        {
-            let version = config.version().get(workspace.vfs());
-            if let Err(hemtt_common::project::Error::Git(_)) = version {
-                error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
-                println!("\n[version]\ngit_hash = 0\n");
-                std::process::exit(1);
-            };
-            if print_info {
-                info!("Config loaded for {} {}", config.name(), version?);
-            }
-        }
+        let workspace = builder.memory().finish(
+            Some(config.clone()),
+            folder.is_some(),
+            if folder == Some("check") {
+                config.hemtt().check().pdrive()
+            } else {
+                config.hemtt().build().pdrive()
+            },
+        )?;
+        version_check(&config, &workspace, print_info)?;
         let addons = Addon::scan(&root)?;
         Ok(Self {
             config,
@@ -168,8 +167,13 @@ impl Context {
     }
 
     #[must_use]
-    pub const fn workspace(&self) -> &WorkspacePath {
+    pub const fn workspace_path(&self) -> &WorkspacePath {
         &self.workspace
+    }
+
+    #[must_use]
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace.workspace()
     }
 
     #[must_use]
@@ -201,4 +205,69 @@ impl Context {
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp
     }
+}
+
+fn version_check(
+    config: &ProjectConfig,
+    workspace: &WorkspacePath,
+    print_info: bool,
+) -> Result<(), Error> {
+    let version = config.version().get(workspace.vfs());
+    if let Err(hemtt_common::Error::Git(_)) = version {
+        error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
+        println!("\n[version]\ngit_hash = 0\n");
+        std::process::exit(1);
+    };
+    if let Err(hemtt_common::Error::Version(e)) = version {
+        match e {
+            hemtt_common::version::Error::UnknownVersion => {
+                error!("HEMTT was not able to determine the version of your project.");
+                println!("\nThere are two ways to define the version of your project");
+                println!(
+                    "\n1. Macros inside `addons/main/script_version.hpp`, or a specified file"
+                );
+                println!("[version]\npath = \"addons/not_main/script_version.hpp\"");
+                println!("\n2. A `version` table in your project.toml");
+                println!("[version]\nmajor = 1\nminor = 0\npatch = 0\nbuild = 0\n");
+                if supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
+                    let link = terminal_link::Link::new(
+                        "The HEMTT Book",
+                        "https://hemtt.dev/configuration/version.html",
+                    );
+                    println!("\nRead more about Version Configuration in {link}");
+                } else {
+                    println!("\nRead more about Version Configuration at https://hemtt.dev/configuration/version.html");
+                }
+            }
+            hemtt_common::version::Error::ExpectedMajor => {
+                error!("HEMTT is not able to determine the MAJOR version of your project.");
+            }
+            hemtt_common::version::Error::ExpectedMinor => {
+                error!("HEMTT is not able to determine the MINOR version of your project.");
+            }
+            hemtt_common::version::Error::ExpectedPatch => {
+                error!("HEMTT is not able to determine the PATCH version of your project.");
+            }
+            hemtt_common::version::Error::ExpectedBuild => {
+                error!("HEMTT is not able to determine the BUILD version of your project.");
+            }
+            hemtt_common::version::Error::InvalidComponent(s) => {
+                error!("HEMTT is not able to determine the version of your project.");
+                println!("Encountered an invalid version component: {s}");
+            }
+            hemtt_common::version::Error::VersionPathConflict => {
+                // The version path is defined, and a version table is defined
+                error!("HEMTT is not able to determine the source of the version.");
+                println!("\nThere are two ways to define the version of your project");
+                println!("\n1. The `path` field in the `version` table in your project.toml");
+                println!("\n2. The `major`, `minor`, `patch`, and `build` fields in the `version` table in your project.toml");
+                println!("Currently both are defined, only one can be used.");
+            }
+        }
+        std::process::exit(1);
+    };
+    if print_info {
+        info!("Config loaded for {} {}", config.name(), version?);
+    }
+    Ok(())
 }

@@ -22,6 +22,7 @@ pub struct Statements {
     /// The source code string of this section of code.
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
     source: Arc<str>,
+    span: Range<usize>,
 }
 
 impl Statements {
@@ -36,27 +37,8 @@ impl Statements {
     }
 
     #[must_use]
-    /// Adds a source string to this code chunk.
-    pub fn with_source(self, source: Arc<str>) -> Self {
-        Self {
-            content: self.content,
-            source,
-        }
-    }
-
-    #[must_use]
     pub fn span(&self) -> Range<usize> {
-        let start = self
-            .content
-            .first()
-            .map(|s| s.span().start)
-            .unwrap_or_default();
-        let end = self
-            .content
-            .last()
-            .map(|s| s.span().end)
-            .unwrap_or_default();
-        start..end
+        self.span.clone()
     }
 
     #[must_use]
@@ -124,15 +106,6 @@ impl Statements {
     }
 }
 
-impl From<Vec<Statement>> for Statements {
-    fn from(content: Vec<Statement>) -> Self {
-        Self {
-            content,
-            source: "".into(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Statement {
     AssignGlobal(String, Expression, Range<usize>),
@@ -173,12 +146,29 @@ impl Statement {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum StringWrapper {
+    SingleQuote,
+    DoubleQuote,
+}
+
+impl StringWrapper {
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
+        match self {
+            Self::SingleQuote => "'",
+            Self::DoubleQuote => "\"",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expression {
     Code(Statements),
-    String(Arc<str>, Range<usize>),
+    String(Arc<str>, Range<usize>, StringWrapper),
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
+    ConsumeableArray(Vec<Self>, Range<usize>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
@@ -188,12 +178,28 @@ pub enum Expression {
 impl Expression {
     #[must_use]
     pub fn source(&self) -> String {
+        fn maybe_enclose(arg: &Expression) -> String {
+            let src = arg.source();
+            if arg.is_binary() {
+                format!("({src})")
+            } else {
+                src
+            }
+        }
         match self {
-            Self::Code(code) => code.source().to_string(),
-            Self::String(string, _) => format!("\"{string}\""),
+            Self::Code(code) => {
+                let mut out = String::new();
+                out.push('{');
+                out.push_str(code.source());
+                out.push('}');
+                out
+            }
+            Self::String(string, _, wrapper) => {
+                format!("{}{}{}", wrapper.as_str(), string, wrapper.as_str())
+            }
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
-            Self::Array(array, _) => {
+            Self::ConsumeableArray(array, _) | Self::Array(array, _) => {
                 let mut out = String::new();
                 out.push('[');
                 for (i, element) in array.iter().enumerate() {
@@ -207,10 +213,15 @@ impl Expression {
             }
             Self::NularCommand(command, _) => command.as_str().to_string(),
             Self::UnaryCommand(command, child, _) => {
-                format!("{} {}", command.as_str(), child.source())
+                format!("{} {}", command.as_str(), maybe_enclose(child))
             }
             Self::BinaryCommand(command, left, right, _) => {
-                format!("{} {} {}", left.source(), command.as_str(), right.source())
+                format!(
+                    "{} {} {}",
+                    maybe_enclose(left),
+                    command.as_str(),
+                    maybe_enclose(right)
+                )
             }
             Self::Variable(variable, _) => variable.to_string(),
         }
@@ -272,8 +283,8 @@ impl Expression {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::Array(_, span) => span.start - 1..span.end,
-            Self::String(_, span)
+            Self::ConsumeableArray(_, span) | Self::Array(_, span) => span.start - 1..span.end,
+            Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
             | Self::NularCommand(_, span)
@@ -287,8 +298,8 @@ impl Expression {
     pub fn full_span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::Array(_, _) => self.span(),
-            Self::String(_, span)
+            Self::ConsumeableArray(_, _) | Self::Array(_, _) => self.span(),
+            Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
             | Self::NularCommand(_, span)
@@ -297,11 +308,41 @@ impl Expression {
             Self::BinaryCommand(_, left, right, _) => left.full_span().start..right.full_span().end,
         }
     }
+
+    #[must_use]
+    pub fn command_name(&self) -> Option<&str> {
+        match self {
+            Self::NularCommand(command, _) => Some(command.as_str()),
+            Self::UnaryCommand(command, _, _) => Some(command.as_str()),
+            Self::BinaryCommand(command, _, _, _) => Some(command.as_str()),
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn is_code(&self) -> bool {
+        matches!(self, Self::Code(_))
+    }
+
+    #[must_use]
+    pub const fn is_array(&self) -> bool {
+        matches!(self, Self::Array(_, _))
+    }
+
+    #[must_use]
+    pub const fn is_string(&self) -> bool {
+        matches!(self, Self::String(_, _, _))
+    }
+
+    #[must_use]
+    pub const fn is_binary(&self) -> bool {
+        matches!(self, Self::BinaryCommand(_, _, _, _))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NularCommand {
-    pub name: String,
+    name: String,
 }
 
 impl NularCommand {

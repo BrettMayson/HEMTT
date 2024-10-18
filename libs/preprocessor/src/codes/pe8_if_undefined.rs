@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Token};
+use hemtt_workspace::reporting::{Code, Token};
 
 use crate::{defines::Defines, Error};
 
@@ -50,6 +50,7 @@ impl Code for IfUndefined {
 }
 
 impl IfUndefined {
+    #[must_use]
     pub fn new(token: Box<Token>, defines: &Defines) -> Self {
         Self {
             similar: defines
@@ -61,6 +62,7 @@ impl IfUndefined {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, defines: &Defines) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), defines)))
     }

@@ -2,9 +2,9 @@
 
 use std::path::PathBuf;
 
-use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
+use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/simple/";
 
@@ -20,14 +20,14 @@ macro_rules! simple {
 }
 
 fn simple(file: &str) {
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
     std::fs::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
-    let parsed = match hemtt_sqf::parser::run(&Database::default(), &processed) {
+    let parsed = match hemtt_sqf::parser::run(&Database::a3(false), &processed) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
             for error in e {

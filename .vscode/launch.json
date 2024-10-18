@@ -13,9 +13,6 @@
         "${workspaceRoot}/hls/dist/**/*.js"
       ],
       "preLaunchTask": "build hls",
-      "env": {
-        "SERVER_PATH": "${workspaceRoot}\\target\\debug\\hemtt-language-server"
-      },
     }
   ]
 }

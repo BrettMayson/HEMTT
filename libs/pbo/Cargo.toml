@@ -15,6 +15,6 @@ bench = false
 hemtt-common = { path = "../common", version = "1.0.0" }
 
 byteorder = { workspace = true }
-indexmap = "2.2.5"
+indexmap = { workspace = true }
 serde = { workspace = true }
 sha-1 = { workspace = true }

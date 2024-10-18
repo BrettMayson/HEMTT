@@ -12,7 +12,7 @@ use crate::{BinaryCommand, Expression, NularCommand, Statement, Statements, Unar
 use chumsky::prelude::*;
 use chumsky::Stream;
 use hemtt_common::error::thiserror::Error;
-use hemtt_common::reporting::{Code, Processed};
+use hemtt_workspace::reporting::{Code, Processed};
 
 /// Parses a SQF string into a list of statements.
 ///
@@ -81,7 +81,7 @@ fn statements<'a>(
         let expression = recursive(|expression| {
             let value = select! { |span|
                 Token::Number(number) => Expression::Number(number, span),
-                Token::String(string) => Expression::String(string, span),
+                Token::String(string, wrapper) => Expression::String(string, span, wrapper),
                 // i know you can *technically* redefine true and false to be something else in SQF,
                 // so this isn't *technically* correct, but if you're doing evil things like that,
                 // you don't deserve parity
@@ -97,7 +97,6 @@ fn statements<'a>(
             let array = expression
                 .clone()
                 .separated_by(just(Token::Control(Control::Separator)))
-                .allow_trailing()
                 .map_with_span(Expression::Array)
                 .delimited_by(array_open, array_close);
 
@@ -226,7 +225,8 @@ fn statements<'a>(
             .separated_by(just(Token::Control(Control::Terminator)))
             .allow_trailing()
             .map_with_span(|content, span| Statements {
-                source: processed.extract(span),
+                source: processed.extract(span.clone()),
+                span,
                 content,
             })
     })

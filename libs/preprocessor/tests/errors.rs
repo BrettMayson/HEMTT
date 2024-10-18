@@ -2,8 +2,8 @@
 
 use std::io::Read;
 
-use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/errors/";
 
@@ -20,9 +20,9 @@ macro_rules! bootstrap {
 
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source);
@@ -36,12 +36,12 @@ fn check(dir: &str) {
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
-            let error = e
-                .get_code()
-                .unwrap()
-                .diagnostic()
-                .unwrap()
-                .to_string(&WorkspaceFiles::new());
+            let error =
+                e.1.get_code()
+                    .unwrap()
+                    .diagnostic()
+                    .unwrap()
+                    .to_string(&WorkspaceFiles::new());
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
             }
@@ -77,3 +77,4 @@ bootstrap!(pe21_pragma_invalid_suppress);
 bootstrap!(pe22_pragma_invalid_flag);
 bootstrap!(pe23_if_has_include);
 bootstrap!(pe24_parsing_failed);
+bootstrap!(pe25_exec);

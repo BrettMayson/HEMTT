@@ -1,16 +1,16 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
-use hemtt_common::reporting::Token;
+use hemtt_workspace::reporting::Token;
 
 use crate::{codes::pe17_double_else::DoubleElse, Error};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum IfState {
-    ReadingIf(Rc<Token>),
-    PassingIf(Rc<Token>),
-    ReadingElse(Rc<Token>),
-    PassingElse(Rc<Token>),
-    PassingChild(Rc<Token>),
+    ReadingIf(Arc<Token>),
+    PassingIf(Arc<Token>),
+    ReadingElse(Arc<Token>),
+    PassingElse(Arc<Token>),
+    PassingChild(Arc<Token>),
 }
 
 impl IfState {
@@ -21,7 +21,7 @@ impl IfState {
         }
     }
 
-    pub const fn token(&self) -> &Rc<Token> {
+    pub const fn token(&self) -> &Arc<Token> {
         match self {
             Self::ReadingIf(t)
             | Self::PassingIf(t)
@@ -35,7 +35,7 @@ impl IfState {
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub struct IfStates {
     stack: Vec<IfState>,
-    did_else: Option<Rc<Token>>,
+    did_else: Option<Arc<Token>>,
 }
 
 impl IfStates {
@@ -48,7 +48,7 @@ impl IfStates {
         self.stack.push(s);
     }
 
-    pub fn push_if(&mut self, token: Rc<Token>, state: bool) {
+    pub fn push_if(&mut self, token: Arc<Token>, state: bool) {
         self.did_else = None;
         if state {
             self.push(IfState::ReadingIf(token));
@@ -62,7 +62,7 @@ impl IfStates {
         self.stack.pop()
     }
 
-    pub fn flip(&mut self, token: Rc<Token>) -> Result<(), Error> {
+    pub fn flip(&mut self, token: Arc<Token>) -> Result<(), Error> {
         if let Some(previous) = self.did_else.take() {
             return Err(DoubleElse::code(
                 token.as_ref().clone(),

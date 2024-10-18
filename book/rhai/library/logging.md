@@ -8,7 +8,7 @@ Rhai has two built in functions for logging, `print` and `debug`.
 
 Prints a string to the console.
 
-```ts
+```js
 print("Hello World!");
 ```
 
@@ -20,13 +20,13 @@ print("Hello World!");
 
 Prints a representation of the value to the console if the `--debug` flag is passed to HEMTT.
 
-```ts
+```js
 debug(HEMTT.version().to_string());
 debug(HEMTT.project().version.major());
 ```
 
 ```sh
-DEBUG [post_release/test.rhai] "1.11.3"
+DEBUG [post_release/test.rhai] "1.13.3"
 DEBUG [post_release/test.rhai] 1
 ```
 
@@ -38,7 +38,7 @@ HEMTT provides additional logging functions.
 
 Prints a string to the console. Same functionality as `print`.
 
-```ts
+```js
 info("Hello World!");
 ```
 
@@ -50,7 +50,7 @@ info("Hello World!");
 
 Prints a string to the console with a warning prefix.
 
-```ts
+```js
 warn("Hello World!");
 ```
 
@@ -62,7 +62,7 @@ warn("Hello World!");
 
 Prints a string to the console with an error prefix.
 
-```ts
+```js
 error("Hello World!");
 ```
 
@@ -74,7 +74,7 @@ ERROR [post_release/test.rhai] Hello World!
 
 Prints string to the console with an error prefix, HEMTT will mark the build as failed and exit.
 
-```ts
+```js
 fatal("Hello World!");
 ```
 

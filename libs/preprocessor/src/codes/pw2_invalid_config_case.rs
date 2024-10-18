@@ -1,6 +1,6 @@
-use hemtt_common::{
+use hemtt_workspace::{
     reporting::{Code, Severity},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 #[allow(unused)]
@@ -32,6 +32,7 @@ impl Code for InvalidConfigCase {
 }
 
 impl InvalidConfigCase {
+    #[must_use]
     pub const fn new(path: WorkspacePath) -> Self {
         Self { path }
     }

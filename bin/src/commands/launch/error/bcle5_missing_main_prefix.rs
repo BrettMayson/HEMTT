@@ -1,12 +1,16 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct MissingMainPrefix;
 
 impl Code for MissingMainPrefix {
     fn ident(&self) -> &'static str {
         "BCLE5"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/configuration/index.html#main-prefix")
     }
 
     fn message(&self) -> String {

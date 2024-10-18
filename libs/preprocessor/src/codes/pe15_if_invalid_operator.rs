@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
 
 use crate::Error;
 #[allow(unused)]
@@ -45,17 +45,19 @@ impl Code for IfInvalidOperator {
 
     fn expand_diagnostic(
         &self,
-        diag: hemtt_common::reporting::Diagnostic,
-    ) -> hemtt_common::reporting::Diagnostic {
+        diag: hemtt_workspace::reporting::Diagnostic,
+    ) -> hemtt_workspace::reporting::Diagnostic {
         diag
     }
 }
 
 impl IfInvalidOperator {
-    pub fn new(tokens: Vec<Token>) -> Self {
+    #[must_use]
+    pub const fn new(tokens: Vec<Token>) -> Self {
         Self { tokens }
     }
 
+    #[must_use]
     pub fn code(tokens: Vec<Token>) -> Error {
         Error::Code(Arc::new(Self::new(tokens)))
     }

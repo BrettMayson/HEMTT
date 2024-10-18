@@ -10,6 +10,8 @@
 use std::io;
 use std::io::{Read, Write};
 
+use tracing::trace;
+
 /// Read extension trait
 pub trait ReadExt: Read {
     /// Read a null-terminated string from the input.
@@ -35,7 +37,13 @@ impl<T: Read> ReadExt for T {
             bytes.push(b);
         }
 
-        Ok(String::from_utf8(bytes).expect("Invalid UTF-8"))
+        String::from_utf8(bytes).map_or_else(
+            |_| {
+                trace!("Failed to convert bytes to string");
+                Ok(String::new())
+            },
+            Ok,
+        )
     }
 
     fn read_compressed_int(&mut self) -> io::Result<u32> {
@@ -102,4 +110,22 @@ pub const fn compressed_int_len(x: u32) -> usize {
     }
 
     len + 1
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn compress_int() {
+        for i in 0..0x000f_ffff {
+            let expected_len = compressed_int_len(i);
+            let mut buf = Vec::new();
+            buf.write_compressed_int(i).expect("failed to write");
+            assert_eq!(buf.len(), expected_len);
+            let mut cursor = std::io::Cursor::new(buf);
+            let result = cursor.read_compressed_int().expect("failed to read");
+            assert_eq!(i, result);
+        }
+    }
 }

@@ -1,7 +1,8 @@
-use hemtt_common::error::tokens::LineCol;
+use hemtt_workspace::position::LineCol;
 use tower_lsp::lsp_types::Position;
 
 pub trait ToPosition {
+    #[allow(dead_code)]
     fn to_position(&self) -> Position;
 }
 

@@ -12,24 +12,25 @@ pub enum Error {
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
+
+    #[error("Project error: {0}")]
+    Common(#[from] hemtt_common::error::Error),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
     Prefix(#[from] hemtt_common::prefix::Error),
-    #[error("`a hemtt project file is invalid: {0}")]
-    Project(#[from] hemtt_common::project::Error),
     #[error("Signing error: {0}")]
     Signing(#[from] hemtt_signing::Error),
     #[error("Version Error: {0}")]
     Version(#[from] hemtt_common::version::Error),
     #[error("Workspace Error: {0}")]
-    Workspace(#[from] hemtt_common::workspace::Error),
+    Workspace(#[from] hemtt_workspace::Error),
     #[error("Sqf Error: {0}")]
     Sqf(#[from] hemtt_sqf::Error),
     #[error("Addon Error: {0}")]
-    Addon(#[from] hemtt_common::addons::Error),
+    Addon(#[from] hemtt_workspace::addons::Error),
 
     #[error("Update error: {0}")]
     Update(String),

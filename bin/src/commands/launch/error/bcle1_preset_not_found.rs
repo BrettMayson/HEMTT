@@ -1,9 +1,7 @@
 use std::{path::Path, sync::Arc};
 
-use hemtt_common::{
-    reporting::{Code, Diagnostic},
-    similar_values,
-};
+use hemtt_common::similar_values;
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct PresetNotFound {
     name: String,
@@ -13,6 +11,10 @@ pub struct PresetNotFound {
 impl Code for PresetNotFound {
     fn ident(&self) -> &'static str {
         "BCLE1"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#presets")
     }
 
     fn message(&self) -> String {
@@ -52,9 +54,6 @@ impl PresetNotFound {
                     .collect::<Vec<String>>()
             },
         );
-
-        // let position = std::fs::read_to_string(".hemtt/project.toml")
-        //     .map_or(None, |content| attempt_locate(&content, launch, &name));
 
         Arc::new(Self {
             similar: similar_values(

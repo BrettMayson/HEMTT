@@ -1,3 +1,4 @@
+pub mod book;
 pub mod build;
 pub mod check;
 pub mod dev;
@@ -7,3 +8,4 @@ pub mod release;
 pub mod script;
 pub mod utils;
 pub mod value;
+pub mod wiki;

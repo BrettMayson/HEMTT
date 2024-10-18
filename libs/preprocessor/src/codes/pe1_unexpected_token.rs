@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{diagnostic::Yellow, Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -52,10 +52,12 @@ impl Code for UnexpectedToken {
 }
 
 impl UnexpectedToken {
-    pub fn new(token: Box<Token>, expected: Vec<String>) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, expected: Vec<String>) -> Self {
         Self { token, expected }
     }
 
+    #[must_use]
     pub fn code(token: Token, expected: Vec<String>) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), expected)))
     }

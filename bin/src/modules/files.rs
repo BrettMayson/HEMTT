@@ -20,9 +20,9 @@ impl Module for Files {
         let mut copied = 0;
         let mut globs = Vec::new();
         for file in ctx.config().files().include() {
-            globs.push(glob::Pattern::new(&file)?);
+            globs.push(glob::Pattern::new(file)?);
         }
-        for entry in ctx.workspace().walk_dir()? {
+        for entry in ctx.workspace_path().walk_dir()? {
             if entry.as_str().starts_with("/.hemtt") {
                 continue;
             }

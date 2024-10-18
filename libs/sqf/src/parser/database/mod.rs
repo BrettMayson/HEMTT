@@ -6,7 +6,10 @@ use arma3_wiki::{
     model::{Call, Version},
     Wiki,
 };
-use tracing::{trace, warn};
+use hemtt_workspace::WorkspacePath;
+use tracing::{error, trace, warn};
+
+use crate::Error;
 
 /// The list of commands that are valid nular command constants for the compiler.
 pub const NULAR_COMMANDS_CONSTANTS: &[&str] = &[
@@ -54,13 +57,103 @@ pub struct Database {
 impl Database {
     #[must_use]
     /// An empty database with no entries.
-    pub fn new() -> Self {
+    pub fn empty(force_pull: bool) -> Self {
         Self {
             nular_commands: HashSet::new(),
             unary_commands: HashSet::new(),
             binary_commands: HashSet::new(),
-            wiki: load_wiki(),
+            wiki: load_wiki(force_pull),
         }
+    }
+
+    #[must_use]
+    pub fn a3(force_pull: bool) -> Self {
+        let mut nular_commands = HashSet::new();
+        let mut unary_commands = HashSet::new();
+        let mut binary_commands = HashSet::new();
+
+        let wiki = load_wiki(force_pull);
+
+        for command in wiki.commands().raw().values() {
+            for syntax in command.syntax() {
+                match syntax.call() {
+                    Call::Nular => {
+                        nular_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                    Call::Unary(_) => {
+                        unary_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                    Call::Binary(_, _) => {
+                        binary_commands.insert(command.name().to_ascii_lowercase());
+                    }
+                }
+            }
+        }
+
+        for &command in NULAR_COMMANDS_SPECIAL {
+            nular_commands.remove(command);
+        }
+        for &command in BINARY_COMMANDS_SPECIAL {
+            binary_commands.remove(command);
+        }
+
+        Self {
+            nular_commands,
+            unary_commands,
+            binary_commands,
+            wiki,
+        }
+    }
+
+    /// Creates a new database with the default commands and custom commands from the workspace.
+    ///
+    /// # Errors
+    /// [`Error::CustomCommandError`] if a custom command could not be parsed.
+    ///
+    /// # Panics
+    /// If the custom commands directory could not be read.
+    pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
+        let mut database = Self::a3(force_pull);
+        let custom_root = workspace.join("/.hemtt/commands");
+        if let Ok(custom_root) = custom_root {
+            if custom_root.exists().unwrap_or(false) {
+                for entry in custom_root
+                    .read_dir()
+                    .expect("failed to read custom commands dir")
+                {
+                    if !entry.is_file().unwrap_or(false) {
+                        continue;
+                    }
+                    let content = entry
+                        .read_to_string()
+                        .expect("failed to read custom command file");
+                    let command = database
+                        .wiki
+                        .add_custom_command_parse(&content)
+                        .map_err(Error::CustomCommandError)?;
+                    for syntax in command.syntax() {
+                        match syntax.call() {
+                            Call::Nular => {
+                                database
+                                    .nular_commands
+                                    .insert(command.name().to_ascii_lowercase());
+                            }
+                            Call::Unary(_) => {
+                                database
+                                    .unary_commands
+                                    .insert(command.name().to_ascii_lowercase());
+                            }
+                            Call::Binary(_, _) => {
+                                database
+                                    .binary_commands
+                                    .insert(command.name().to_ascii_lowercase());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(database)
     }
 
     pub fn add_nular_command(&mut self, command: &str) {
@@ -133,46 +226,6 @@ impl Database {
     }
 }
 
-impl Default for Database {
-    fn default() -> Self {
-        let mut nular_commands = HashSet::new();
-        let mut unary_commands = HashSet::new();
-        let mut binary_commands = HashSet::new();
-
-        let wiki = load_wiki();
-
-        for command in wiki.commands().values() {
-            for syntax in command.syntax() {
-                match syntax.call() {
-                    Call::Nular => {
-                        nular_commands.insert(command.name().to_ascii_lowercase());
-                    }
-                    Call::Unary(_) => {
-                        unary_commands.insert(command.name().to_ascii_lowercase());
-                    }
-                    Call::Binary(_, _) => {
-                        binary_commands.insert(command.name().to_ascii_lowercase());
-                    }
-                }
-            }
-        }
-
-        for &command in NULAR_COMMANDS_SPECIAL {
-            nular_commands.remove(command);
-        }
-        for &command in BINARY_COMMANDS_SPECIAL {
-            binary_commands.remove(command);
-        }
-
-        Self {
-            nular_commands,
-            unary_commands,
-            binary_commands,
-            wiki,
-        }
-    }
-}
-
 #[must_use]
 /// Whether or not this command is valid as a nular constant.
 ///
@@ -213,10 +266,14 @@ fn is_in(list: &[&str], item: &str) -> bool {
     list.iter().any(|i| i.eq_ignore_ascii_case(item))
 }
 
-fn load_wiki() -> Wiki {
-    Wiki::load_git().unwrap_or_else(|e| {
+fn load_wiki(force_pull: bool) -> Wiki {
+    Wiki::load_git(force_pull).unwrap_or_else(|e| {
         trace!(?e, "failed to load arma 3 wiki from git: {}", e);
-        warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+        if force_pull {
+            error!("Failed to update Arma 3 wiki from remote");
+        } else {
+            warn!("Failed to load Arma 3 wiki from git, falling back to bundled version");
+        }
         Wiki::load_dist()
     })
 }

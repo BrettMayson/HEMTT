@@ -1,4 +1,4 @@
-use hemtt_common::reporting::{Code, Diagnostic, Severity, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Severity, Token};
 
 #[allow(unused)]
 /// Unexpected token
@@ -36,7 +36,8 @@ impl Code for PaddedArg {
 }
 
 impl PaddedArg {
-    pub fn new(token: Box<Token>, ident: String) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, ident: String) -> Self {
         Self { token, ident }
     }
 }

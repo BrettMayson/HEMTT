@@ -28,6 +28,12 @@ Options:
 
     <a href="dev.md#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
+        
+    <a href="build.md#--no-rap">--no-rap</a>
+        Do not rapify files
+
+    <a href="--no-filepatching">--no-filepatching</a>
+        Do not enable filePatching
 
     <a href="dev.md#-o---optional">-o, --optional &lt;optional&gt;</a>
         Include an optional addon folder
@@ -49,11 +55,13 @@ Options:
 
 `hemtt launch` is used to build and launch a dev version of your mod. It will run the [`hemtt dev`](dev.md) command internally after a few checks, options are passed to the `dev` command.
 
-You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden.
+You can chain multiple configurations together, and they will be overlayed from left to right. Any arrays will be concatenated, and any duplicate keys will be overridden. With the below configuration, `hemtt launch default vn ace` would launch with all three configurations. Note that `default` must be specified when specifying additional configurations, `default` is only implied when no configurations are specified.
 
 ## Configuration
 
 `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
+
+Launch configurations can be stored in either `.hemtt/project.toml` under `hemtt.launch`, or in a separate file under `.hemtt/launch.toml`. The latter is useful for keeping your main configuration file clean. When using `launch.toml`, the `hemtt.launch` key is not required.
 
 **.hemtt/project.toml**
 
@@ -83,21 +91,37 @@ parameters = [
     "-filePatching",
 ]
 executable = "arma3" # Default: "arma3_x64"
+file_patching = false # Default: true
+binarize = true # Default: false
+rapify = false # Default: true
 
 # Launched with `hemtt launch vn`
 [hemtt.launch.vn]
-workshop = [
-    "450814997", # CBA_A3's Workshop ID
-]
+extends = "default"
 dlc = [
     "S.O.G. Prairie Fire",
 ]
 
-# Launched with `hemtt launch vn-ace
-[hemtt.launch.vn-ace]
-extends = "vn"
+# Launched with `hemtt launch ace`
+[hemtt.launch.ace]
+extends = "default"
 workshop = [
     "463939057", # ACE3's Workshop ID
+]
+```
+
+**.hemtt/launch.toml**
+
+```toml
+[default]
+workshop = [
+    "450814997", # CBA_A3's Workshop ID
+]
+
+[vn]
+extends = "default"
+dlc = [
+    "S.O.G. Prairie Fire",
 ]
 ```
 
@@ -127,6 +151,7 @@ Currently supported DLCs:
 | CSLA Iron Curtain   | csla       |
 | Western Sahara      | ws         |
 | Spearhead 1944      | spe        |
+| Reaction Forces     | rf         |
 
 ### optionals
 
@@ -143,6 +168,18 @@ A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Start
 ### executable
 
 The name of the Arma 3 executable to launch. This is usually `arma3` or `arma3_x64`. Do not include the `.exe` extension, it will be added automatically on Windows. Only paths relative to the Arma 3 directory are supported.
+
+### file_patching
+
+Whether to launch Arma 3 with `-filePatching`. Equivalent to `--no-filepatching` or `-F`.
+
+### binarize
+
+Whether to use BI's binarize on supported files. Equivalent to `--binarize`.
+
+### rapify
+
+Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
 
 ## Options
 
@@ -179,6 +216,10 @@ The Arma 3 executable to launch. Overrides the `executable` option in the config
 hemtt launch -e arma3profiling_x64 # Relative to the Arma 3 directory
 hemtt launch -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
 ```
+
+### --no-filepatching
+
+Do not launch Arma 3 with `-filePatching`.
 
 ## Passthrough Options
 

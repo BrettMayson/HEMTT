@@ -34,6 +34,9 @@ impl Prefix {
     /// If the prefix is invalid
     pub fn new(content: &str) -> Result<Self, Error> {
         let content = content.trim();
+        if content.is_empty() {
+            return Err(Error::Empty);
+        }
         if content.contains('/') {
             return Err(Error::InvalidPrefix(content.to_string()));
         }
@@ -108,6 +111,9 @@ impl Display for Prefix {
 #[derive(thiserror::Error, Clone, Debug, PartialEq, Eq)]
 /// An error that can occur when parsing a prefix
 pub enum Error {
+    #[error("Prefix can not be empty")]
+    /// Prefix can not be empty
+    Empty,
     #[error("Invalid prefix: {0}")]
     /// Invalid prefix
     InvalidPrefix(String),
@@ -124,6 +130,14 @@ mod tests {
         assert_eq!(prefix.to_string(), "z\\test\\addons\\main");
         assert_eq!(prefix.main_prefix(), "z");
         assert_eq!(prefix.mod_prefix().unwrap(), "test");
+        assert_eq!(
+            prefix.as_pathbuf(),
+            std::path::PathBuf::from("z")
+                .join("test")
+                .join("addons")
+                .join("main")
+        );
+        assert_eq!(prefix.into_inner(), vec!["z", "test", "addons", "main"]);
         assert!(Prefix::new("z/test/addons/main").is_err());
         assert!(Prefix::new("\\z\\test\\addons\\main").is_err());
     }
@@ -154,5 +168,10 @@ mod tests {
         assert_eq!(prefix.to_string(), "test");
         assert_eq!(prefix.main_prefix(), "test");
         assert!(prefix.mod_prefix().is_none());
+    }
+
+    #[test]
+    fn empty() {
+        assert!(Prefix::new("").is_err());
     }
 }

@@ -1,12 +1,6 @@
 # Installation
 
-## Download
-
-The latest HEMTT release can be downloaded from the [GitHub releases page](https://github.com/brettmayson/HEMTT/releases).
-
-Builds are available for Windows and Linux.
-
-## Installation (Winget)
+## Windows
 
 HEMTT can be installed using [Winget](https://github.com/microsoft/winget-cli).
 
@@ -14,19 +8,27 @@ HEMTT can be installed using [Winget](https://github.com/microsoft/winget-cli).
 winget install hemtt
 ```
 
-## Manual Installation (Global)
+To update HEMTT with winget use:
 
-HEMTT can be installed globally on your system, and used from anywhere.
+```powershell
+winget upgrade hemtt
+```
 
-The HEMTT executable can be placed in any directory on your system, and added to your `PATH` environment variable.
+## Linux & MacOS
 
-HEMTT can then be ran from any terminal with `hemtt`.
+HEMTT can be installed using an installer script.
 
-## Manual Installation (Project Local)
+```bash
+curl -sSf https://hemtt.dev/install.sh | sh
+```
 
-The HEMTT executable can be placed in the root of your project, and used from there. It is strongly recommended not to add it to your version control system.
+The script can be ran again to update HEMTT.
 
-HEMTT can then be ran from a terminal in the root of your project with `.\hemtt.exe` on Windows, or `./hemtt` on Linux.
+## Manual Download
+
+The latest HEMTT release can be downloaded from the [GitHub releases page](https://github.com/brettmayson/HEMTT/releases).
+
+Builds are available for Windows, Linux, and MacOS.
 
 ## Compile from Source
 

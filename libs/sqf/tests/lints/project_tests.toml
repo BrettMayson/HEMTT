@@ -1,0 +1,19 @@
+name = "My Mod"
+prefix = "test"
+
+[lints.sqf.banned_commands]
+options.ignore = [
+    "addPublicVariableEventHandler",
+]
+
+[lints.sqf]
+if_not_else = true
+
+[lints.sqf.var_all_caps]
+enabled = true
+options.ignore = [
+    "AM_IGNORED",
+]
+
+[lints.sqf.this_call]
+enabled = true

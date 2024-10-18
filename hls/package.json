@@ -1,18 +1,22 @@
 {
-  "name": "hemtt-language-server",
-  "description": "nano rust language server",
+  "name": "hemtt",
+  "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "1.5.0",
+  "version": "0.2.15",
+  "publisher": "brettmayson",
+  "icon": "icon.png",
   "categories": [],
   "keywords": [
     "language-server",
-    "tower-lsp"
+    "arma",
+    "sqf"
   ],
   "repository": {
-    "url": "https://github.com/IWANABETHATGUY/tower-lsp-boilerplate"
+    "type": "git",
+    "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
-    "vscode": "^1.66.0"
+    "vscode": "^1.88.0"
   },
   "enabledApiProposals": [],
   "activationEvents": [],
@@ -22,12 +26,12 @@
       {
         "language": "sqf",
         "scopeName": "sqf",
-        "path": "./languages/sqf.min.json"
+        "path": "./languages/sqf.json"
       },
       {
         "language": "arma-config",
         "scopeName": "config",
-        "path": "./languages/config.min.json"
+        "path": "./languages/config.json"
       }
     ],
     "languages": [
@@ -39,8 +43,7 @@
           "Arma SQF"
         ],
         "extensions": [
-          ".sqf",
-          ".sqm"
+          ".sqf"
         ],
         "configuration": "./languages/sqf.configuration.json"
       },
@@ -51,7 +54,8 @@
         ],
         "extensions": [
           ".ext",
-          ".hpp"
+          ".hpp",
+          ".sqm"
         ],
         "filenames": [
           "config.cpp"
@@ -80,32 +84,77 @@
           "description": "Traces the communication between VS Code and the language server."
         }
       }
+    },
+    "customEditors": [
+      {
+        "viewType": "hemtt.paa",
+        "displayName": "PAA",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.paa"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "hemtt.zoomIn",
+        "title": "Zoom In",
+        "category": "Image Preview"
+      },
+      {
+        "command": "hemtt.zoomOut",
+        "title": "Zoom Out%",
+        "category": "Image Preview"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "hemtt.zoomIn",
+          "when": "activeCustomEditorId == 'hemtt.previewEditor'",
+          "group": "1_imagePreview"
+        },
+        {
+          "command": "hemtt.zoomOut",
+          "when": "activeCustomEditorId == 'hemtt.previewEditor'",
+          "group": "1_imagePreview"
+        }
+      ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./vscode-src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "compile-lsp": "run-script-os",
+    "compile-lsp:darwin:linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
+    "compile-lsp:win32": "cargo build --release --bin hemtt-language-server && copy ..\\target\\release\\hemtt-language-server.exe .\\hemtt-language-server.exe",
+    "test-compile": "tsc -p ./",
     "lint": "eslint vscode-src --ext ts"
   },
   "devDependencies": {
-    "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.77.0",
-    "@types/ws": "^8.5.4",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
-    "@vscode/test-electron": "^2.3.0",
-    "eslint": "^8.39.0",
-    "glob": "^8.1.0",
-    "mocha": "^10.0.1",
-    "typescript": "^4.4.3",
-    "vscode-test": "^1.4.0",
-    "vscode-uri": "^3.0.2"
+    "@types/mocha": "^10.0.6",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.88.0",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^7.13.0",
+    "@typescript-eslint/parser": "^7.13.0",
+    "@vscode/test-electron": "^2.4.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^8.56.0",
+    "glob": "^10.4.1",
+    "mocha": "^10.4.0",
+    "run-script-os": "^1.1.6",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "vscode-uri": "^3.0.8"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.0.2"
+    "portfinder": "^1.0.32",
+    "vscode-languageclient": "^9.0.1"
   }
 }

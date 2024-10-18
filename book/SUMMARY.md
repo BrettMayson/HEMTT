@@ -9,7 +9,10 @@
 - [Configuration](configuration/index.md)
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
+  - [Lints](configuration/lints.md)
   - [Addon](configuration/addon.md)
+  - [P Drive](configuration/p-drive.md)
+  - [Custom Commands](configuration/custom-commands.md)
 - [Commands](commands/index.md)
   - [new](commands/new.md)
   - [dev](commands/dev.md)
@@ -32,16 +35,20 @@
 # Utilities
 
 - [Inspect](utilities/inspect.md)
-- [Verify](utilities/signing/verify.md)
 - [PBO]()
   - [Inspect](utilities/pbo/inspect.md)
   - [Extract](utilities/pbo/extract.md)
   - [Unpack](utilities/pbo/unpack.md)
+- [SQF]()
+  - [Case](utilities/sqf/case.md)
+- [Verify](utilities/signing/verify.md)
 
 # Reference
 
 - [Analysis](analysis/index.md)
+  - [Preprocessor](analysis/preprocessor.md)
   - [Config](analysis/config.md)
+  - [SQF](analysis/sqf.md)
 
 <!--
 # Modding Guide

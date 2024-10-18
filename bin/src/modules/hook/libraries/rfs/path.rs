@@ -47,7 +47,7 @@ pub mod path_functions {
         path.display().to_string().replace('\\', "/")
     }
 
-    #[rhai_fn(global, name = "copy", return_raw)]
+    #[rhai_fn(global, name = "copy", return_raw, pure)]
     pub fn copy(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir() {
             fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new())
@@ -61,7 +61,7 @@ pub mod path_functions {
         res.map_or_else(|| Ok(true), Err)
     }
 
-    #[rhai_fn(global, name = "move", return_raw)]
+    #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir() {
             fs_extra::dir::move_dir(path, other, &fs_extra::dir::CopyOptions::new())

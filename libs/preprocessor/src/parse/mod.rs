@@ -1,9 +1,9 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_workspace::{
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 use pest::Parser;
@@ -23,7 +23,7 @@ pub struct PreprocessorParser;
 ///
 /// # Panics
 /// If the file is invalid
-pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
+pub fn parse(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     let source = path.read_to_string()?;
     let pairs = PreprocessorParser::parse(Rule::file, &source)
         .map_err(|e| ParsingFailed::code(e, path.clone()))?;
@@ -31,7 +31,8 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
     let mut line = 1;
     let mut col = 0;
     let mut offset = 0;
-    let mut in_string = false;
+    let mut in_single_string = false;
+    let mut in_double_string = false;
     let mut skipping_comment = false;
     for pair in pairs {
         let start = LineCol(offset, (line, col));
@@ -44,9 +45,9 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
                 col = 0;
             }
             Rule::COMMENT => {
-                if in_string {
+                if in_single_string || in_double_string {
                     if !skipping_comment {
-                        tokens.push(Rc::new(Token::new(
+                        tokens.push(Arc::new(Token::new(
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
                                 start,
@@ -74,9 +75,15 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
                     }
                 }
             }
+            Rule::single_quote => {
+                if !skipping_comment && !in_double_string {
+                    in_single_string = !in_single_string;
+                    col += 1;
+                }
+            }
             Rule::double_quote => {
-                if !skipping_comment {
-                    in_string = !in_string;
+                if !skipping_comment && !in_single_string {
+                    in_double_string = !in_double_string;
                     col += 1;
                 }
             }
@@ -89,7 +96,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
             continue;
         }
         let end = LineCol(offset, (line, col));
-        tokens.push(Rc::new(Token::new(
+        tokens.push(Arc::new(Token::new(
             Symbol::to_symbol(pair),
             Position::new(start, end, path.clone()),
         )));
@@ -149,9 +156,9 @@ impl Parse for Symbol {
 mod tests {
     #[test]
     fn simple() {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -164,9 +171,9 @@ mod tests {
 
     #[test]
     fn unicode() {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         let content = "² ƒ ‡ Œ Š – µ œ š ˆ ˜ € º ¨ ¬ 🤔";

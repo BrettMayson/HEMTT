@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -50,7 +50,8 @@ impl Code for ExpectedFunctionOrValue {
 }
 
 impl ExpectedFunctionOrValue {
-    pub fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, source: Box<Token>, likely_function: bool) -> Self {
         Self {
             token,
             source,
@@ -58,6 +59,7 @@ impl ExpectedFunctionOrValue {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, source: Token, likely_function: bool) -> Error {
         Error::Code(Arc::new(Self::new(
             Box::new(token),

@@ -8,6 +8,15 @@ pub struct Config(pub Vec<Property>);
 
 impl Config {
     #[must_use]
+    pub fn to_class(&self) -> Class {
+        Class::Root {
+            properties: self.0.clone(),
+        }
+    }
+}
+
+impl Config {
+    #[must_use]
     /// Get the patches
     pub fn get_patches(&self) -> Vec<CfgPatch> {
         let mut patches = Vec::new();
@@ -16,7 +25,7 @@ impl Config {
                 name, properties, ..
             }) = property
             {
-                if name.as_str() == "CfgPatches" {
+                if name.as_str().to_lowercase() == "cfgpatches" {
                     for patch in properties {
                         if let Property::Class(Class::Local {
                             name, properties, ..
@@ -25,7 +34,7 @@ impl Config {
                             let mut required_version = Version::new(0, 0, 0, None);
                             for property in properties {
                                 if let Property::Entry { name, value, .. } = property {
-                                    if name.as_str() == "requiredVersion" {
+                                    if name.as_str().to_lowercase() == "requiredversion" {
                                         if let Value::Number(Number::Float32 { value, .. }) = value
                                         {
                                             required_version = Version::from(*value);

@@ -1,8 +1,11 @@
-.vscode
-node_modules
+.vscode/
+node_modules/
 out/
 src/
 tsconfig.json
 webpack.config.js
-client/**
-target
+target/
+languages-src
+build.rs
+Cargo.toml
+.eslintrc.js

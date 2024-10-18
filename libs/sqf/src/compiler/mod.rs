@@ -1,5 +1,7 @@
 #![allow(clippy::cast_possible_truncation)]
 
+//! Compiles a list of statements into an intermediate form that can be serialized.
+//!
 //! Since [`Compiled`]'s names and constants lists can be difficult to manage,
 //! this module contains structs that allow for the creation of a sort of intermediate form
 //! which can generate these lists automatically.
@@ -7,11 +9,14 @@
 //! The main entrypoint to this is the [`Statements`][crate::Statements] struct, which can be
 //! converted to a serializable [`Compiled`] via [`Statements::compile`][crate::Statements].
 
+pub mod optimizer;
 pub mod serializer;
 
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::{error::thiserror, reporting::Processed};
+use hemtt_common::error::thiserror;
+use hemtt_workspace::reporting::Processed;
+use serializer::CodePointer;
 
 use self::serializer::{Compiled, Constant, Instruction, Instructions, SourceInfo};
 use crate::{Error, Expression, Statement, Statements};
@@ -27,7 +32,7 @@ impl Statements {
             constants_cache: Vec::new(),
             names_cache: Vec::new(),
         };
-        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx)?;
+        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
         let entrypoint_index = ctx.constants_cache.len() as u16;
         ctx.constants_cache.push(Constant::Code(entrypoint_code));
         Ok(Compiled {
@@ -38,7 +43,7 @@ impl Statements {
             file_names: processed
                 .sources()
                 .iter()
-                .map(|(s, _)| s.as_str().into())
+                .map(|(s, _)| s.as_virtual_str().into())
                 .collect(),
         })
     }
@@ -59,16 +64,30 @@ impl Statements {
         &self,
         processed: &Processed,
         ctx: &mut Context,
+        is_root: bool,
     ) -> CompileResult<Instructions> {
         let mut instructions = Vec::new();
         for statement in &self.content {
             statement.compile_instructions(&mut instructions, processed, ctx)?;
         }
 
-        let source_string_index = ctx.add_constant(Constant::String(self.source.clone()))?;
+        let source_pointer = if is_root {
+            CodePointer::Constant(u64::from(
+                ctx.add_constant(Constant::String(self.source.clone()))?,
+            ))
+        } else {
+            let offset = processed.get_byte_offset(self.span.start);
+            let source = processed.extract(self.span.clone());
+            let length = if self.content.is_empty() {
+                0
+            } else {
+                source.len() as u32
+            };
+            CodePointer::Source { offset, length }
+        };
         Ok(Instructions {
             contents: instructions,
-            source_string_index,
+            source_pointer,
         })
     }
 }
@@ -82,8 +101,9 @@ pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> Sou
     let map = processed.mapping(location.start).expect(
         "location not in mapping, this should not happen as the location is from the processed file",
     ).original();
+    let offset = processed.get_byte_offset(location.start);
     SourceInfo {
-        offset: location.start as u32,
+        offset,
         file_index: processed
             .sources()
             .iter()
@@ -156,6 +176,9 @@ impl Expression {
                                 file_line: 0,
                             },
                         ));
+                    } else if let Constant::ConsumeableArray(_) = &constant {
+                        // Only safe because we know this array will be consumed on use and won't be modifieable
+                        instructions.push(Instruction::Push(ctx.add_constant(constant)?));
                     } else {
                         instructions.push(Instruction::Push(ctx.add_constant(constant)?));
                     }
@@ -164,6 +187,9 @@ impl Expression {
                 push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
+                Self::ConsumeableArray(..) => {
+                    unreachable!("couldn't make ConsumeableArray a const");
+                }
                 Self::Array(ref array, ref location) => {
                     let array_len = array
                         .len()
@@ -209,7 +235,10 @@ impl Expression {
                         location_to_source(processed, location),
                     ));
                 }
-                Self::Code(_) | Self::String(_, _) | Self::Number(_, _) | Self::Boolean(_, _) => {
+                Self::Code(_)
+                | Self::String(_, _, _)
+                | Self::Number(_, _)
+                | Self::Boolean(_, _) => {
                     unreachable!("constant should have been handled")
                 }
             },
@@ -225,9 +254,9 @@ impl Expression {
     ) -> CompileResult<Option<Constant>> {
         Ok(match *self {
             Self::Code(ref statements) => Some(Constant::Code(
-                statements.compile_to_instructions(processed, ctx)?,
+                statements.compile_to_instructions(processed, ctx, false)?,
             )),
-            Self::String(ref string, _) => Some(Constant::String(string.clone())),
+            Self::String(ref string, _, _) => Some(Constant::String(string.clone())),
             Self::Number(crate::Scalar(number), _) => Some(Constant::Scalar(number)),
             Self::Boolean(boolean, _) => Some(Constant::Boolean(boolean)),
             Self::Array(ref array, ..) => array
@@ -235,6 +264,11 @@ impl Expression {
                 .map(|value| value.clone().compile_constant(processed, ctx))
                 .collect::<CompileResult<Option<Vec<Constant>>>>()?
                 .map(Constant::Array),
+            Self::ConsumeableArray(ref array, ..) => array
+                .iter()
+                .map(|value| value.clone().compile_constant(processed, ctx))
+                .collect::<CompileResult<Option<Vec<Constant>>>>()?
+                .map(Constant::ConsumeableArray),
             Self::NularCommand(ref command, ..) if command.is_constant() => {
                 let command = try_normalize_name(&command.name)?;
                 debug_assert_ne!(

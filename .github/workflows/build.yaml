@@ -8,6 +8,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   build:
     name: ${{ matrix.os.name }}
@@ -24,13 +27,21 @@ jobs:
           #   name: windows
           #   artifact: windows-x64
           #   exe: hemtt.exe
+            # Intel Mac
+          - runner: macos-13
+            name: macos-x64
+            artifact: macos-x64
+            exe: hemtt
+            # ARM Mac
+          - runner: macos-latest
+            name: macos-arm
+            artifact: macos-arm64
+            exe: hemtt
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: stable
-          override: true
       - run: echo "RELEASE=true" >> $GITHUB_ENV
         if: startsWith(github.ref, 'refs/tags/') && matrix.os.name == 'ubuntu'
       - run: echo "RELEASE=true" >> $env:GITHUB_ENV
@@ -38,12 +49,9 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: build
+          key: build-${{ matrix.os.name }}
       - name: Compile
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
+        run: cargo build --release
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -67,15 +75,17 @@ jobs:
           #   artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: 8bb83aa0283200070ff6c3da80a6e22dcf11b9f6
+            commit: b99dddf46aca7cea008bca56f5a553c5d7776219
           - repo: acemod/ACE3
-            commit: fd5e56ffbc534583b7d3ee5750ed168d5108e1b8
+            commit: eb57fa49c404e662abcd18c7e52c1f7c4b67a9b0
+          - repo: IDI-Systems/acre2
+            commit: e5c1bba58b63e18d03721a68d32efd39748af551
           - repo: ArmaForces/Mods
-            commit: c54d78e3da3163ee9b1baad847ec662dbaf3566e
+            commit: 79d21ac395d16cb7ed1ed556b0da4cbc67af98c9
           - repo: Theseus-Aegis/Mods
             commit: 943906d18817a7f0829742f0c91cdad34456c594
           - repo: SynixeContractors/Mod
-            commit: 5afed7408ccbc8635e20e2e5e3e9eca99a9efbc4
+            commit: b04fb1ea3a291366017026e2ec94f95a0f28eb8b
     steps:
       - name: Download HEMTT
         uses: actions/download-artifact@v4
@@ -88,8 +98,8 @@ jobs:
           repository: ${{ matrix.mod.repo }}
           path: mod
           ref: ${{ matrix.mod.commit }}
-      - name: Install Linux
-        if: startsWith(matrix.os.runner, 'ubuntu')
+      - name: Install Linux & MacOS
+        if: startsWith(matrix.os.runner, 'ubuntu') || startsWith(matrix.os.runner, 'macos')
         run: |
           cd hemtt && cp hemtt /usr/local/bin/hemtt && chmod +x /usr/local/bin/hemtt
       - name: Install Windows
@@ -144,30 +154,39 @@ jobs:
           name: linux-x64
           path: release
 
+      - name: Rename Linux x64
+        run: |
+          cd release && mv hemtt linux-x64
+
       - name: Download Windows x64
         uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: release
 
-      - name: Zip Linux x64
-        run: |
-          cd release && zip linux-x64.zip hemtt && rm hemtt
-
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Pack for Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: pack .github/choco/hemtt.nuspec --version ${{ env.VERSION }} --outputdirectory release
-
       - name: Zip Windows x64
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+
+      - name: Download MacOS x64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64
+          path: release
+
+      - name: Rename MacOS x64
+        run: |
+          cd release && mv hemtt darwin-x64
+
+      - name: Download MacOS ARM64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
+          path: release
+
+      - name: Rename MacOS ARM64
+        run: |
+          cd release && mv hemtt darwin-arm64
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -177,26 +196,6 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  chocolatey:
-    needs:
-      - release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Download NuGet Package
-        uses: robinraju/release-downloader@v1.9
-        with:
-          releaseId: ${{ env.VERSION }}
-          fileName: '*.nupkg'
-      - name: Push to Chocolatey
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: push --source "https://push.chocolatey.org/" --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
 
   winget:
     needs:

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::{defines::Defines, Error};
 
@@ -58,12 +58,9 @@ impl Code for IfUnitOrFunction {
         }
     }
 
-    fn expand_diagnostic(
-        &self,
-        diag: hemtt_common::reporting::Diagnostic,
-    ) -> hemtt_common::reporting::Diagnostic {
+    fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
         diag.with_label(
-            hemtt_common::reporting::Label::secondary(
+            Label::secondary(
                 self.defined.0.position().path().clone(),
                 self.defined.0.position().span(),
             )
@@ -76,6 +73,11 @@ impl Code for IfUnitOrFunction {
 }
 
 impl IfUnitOrFunction {
+    #[must_use]
+    /// Create a new instance of `IfUnitOrFunction`
+    /// 
+    /// # Panics
+    /// Panics if the token does not define anything in the defines
     pub fn new(token: Box<Token>, defines: &Defines) -> Self {
         Self {
             similar: defines
@@ -84,7 +86,7 @@ impl IfUnitOrFunction {
                 .map(std::string::ToString::to_string)
                 .collect(),
             defined: {
-                let (t, d) = defines
+                let (t, d, _) = defines
                     .get_readonly(token.symbol().to_string().trim())
                     .expect("define should exist on error about its type");
                 (t.as_ref().clone(), d.is_unit())
@@ -93,6 +95,7 @@ impl IfUnitOrFunction {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, defines: &Defines) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), defines)))
     }

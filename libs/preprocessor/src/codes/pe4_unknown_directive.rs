@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Token};
+use hemtt_workspace::reporting::{Code, Token};
 
 use crate::Error;
 
@@ -33,10 +33,12 @@ impl Code for UnknownDirective {
 }
 
 impl UnknownDirective {
-    pub fn new(token: Box<Token>) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>) -> Self {
         Self { token }
     }
 
+    #[must_use]
     pub fn code(token: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token))))
     }

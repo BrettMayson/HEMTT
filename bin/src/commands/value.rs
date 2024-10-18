@@ -80,7 +80,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             );
         }
         "project.version.path" => {
-            println!("{}", ctx.config().version().path().map_or("", |p| p));
+            println!("{}", ctx.config().version().path());
         }
         "project.version.git_hash" => {
             println!("{}", ctx.config().version().git_hash().unwrap_or(0));
@@ -126,12 +126,9 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 fn version(ctx: &Context) -> Version {
     ctx.config()
         .version()
-        .get(ctx.workspace().vfs())
-        .map_or_else(
-            |_| {
-                println!("Unable to find version");
-                std::process::exit(1);
-            },
-            |v| v,
-        )
+        .get(ctx.workspace_path().vfs())
+        .unwrap_or_else(|_| {
+            println!("Unable to find version");
+            std::process::exit(1);
+        })
 }

@@ -5,12 +5,11 @@ use std::{
 
 use git2::Repository;
 use hemtt_common::{
-    addons::{Addon, Location},
     prefix::{Prefix, FILES},
     version::Version,
 };
 use hemtt_pbo::WritablePbo;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use hemtt_workspace::addons::{Addon, Location};
 use vfs::VfsFileType;
 
 use crate::{context::Context, error::Error, report::Report};
@@ -33,7 +32,7 @@ pub enum Collapse {
 /// [`Error::Git`] if the git hash is invalid
 /// [`Error::Pbo`] if the PBO fails to write
 pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
-    let version = ctx.config().version().get(ctx.workspace().vfs())?;
+    let version = ctx.config().version().get(ctx.workspace_path().vfs())?;
     let git_hash = {
         Repository::discover(".").map_or(None, |repo| {
             repo.revparse_single("HEAD").map_or(None, |rev| {
@@ -45,9 +44,9 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     let counter = AtomicU16::new(0);
     ctx.addons()
         .to_vec()
-        .par_iter()
+        .iter()
         .map(|addon| {
-            _build(ctx, addon, collapse, &version, git_hash.as_ref())?;
+            internal_build(ctx, addon, collapse, &version, git_hash.as_ref())?;
             counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
@@ -56,7 +55,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
     Ok(Report::new())
 }
 
-fn _build(
+fn internal_build(
     ctx: &Context,
     addon: &Addon,
     collapse: Collapse,
@@ -76,7 +75,10 @@ fn _build(
                     if ctx.config().hemtt().build().optional_mod_folders() {
                         target
                             .join("optionals")
-                            .join(format!("@{}", addon.pbo_name(&ctx.config().folder_name())))
+                            .join(format!(
+                                "@{}",
+                                addon.pbo_name(ctx.config().hemtt().release().folder())
+                            ))
                             .join("addons")
                             .join(pbo_name)
                     } else {
@@ -110,7 +112,7 @@ fn _build(
     pbo.add_property("hemtt", env!("HEMTT_VERSION"));
     pbo.add_property("version", version.to_string());
 
-    'entries: for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+    'entries: for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
         if entry.metadata()?.file_type == VfsFileType::File {
             if entry.filename() == "config.cpp" && entry.parent().join("config.bin")?.exists()? {
                 continue;
@@ -152,6 +154,7 @@ fn _build(
                 .trim_start_matches(&format!("/{}/", addon.folder()))
                 .replace('/', "\\");
             trace!("adding file {:?}", file);
+
             pbo.add_file(file, entry.open_file()?)?;
         }
     }

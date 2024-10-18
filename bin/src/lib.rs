@@ -23,6 +23,7 @@ pub fn cli() -> Command {
         .version(env!("HEMTT_VERSION"))
         .subcommand_required(false)
         .arg_required_else_help(true)
+        .subcommand(commands::book::cli())
         .subcommand(commands::new::cli())
         .subcommand(commands::check::cli())
         .subcommand(commands::dev::cli())
@@ -32,6 +33,7 @@ pub fn cli() -> Command {
         .subcommand(commands::script::cli())
         .subcommand(commands::utils::cli())
         .subcommand(commands::value::cli())
+        .subcommand(commands::wiki::cli())
         .arg(
             clap::Arg::new("threads")
                 .global(true)
@@ -52,6 +54,7 @@ pub fn cli() -> Command {
         global = global
             .arg(
                 clap::Arg::new("in-test")
+                    .hide(true)
                     .global(true)
                     .help("we are in a test")
                     .action(ArgAction::SetTrue)
@@ -76,6 +79,12 @@ pub fn cli() -> Command {
 /// # Panics
 /// If the number passed to `--threads` is not a valid number
 pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
+    // check for -v with no command and show version
+    if matches.subcommand().is_none() && matches.get_count("verbosity") > 0 {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("HEMTT_VERSION"));
+        return Ok(());
+    }
+
     if cfg!(not(debug_assertions)) || !matches.get_flag("in-test") {
         logging::init(
             matches.get_count("verbosity"),
@@ -90,6 +99,14 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         match update::check() {
             Ok(Some(version)) => {
                 info!("HEMTT {version} is available, please update");
+                if let Ok(path) = std::env::current_exe() {
+                    trace!("HEMTT is installed at: {}", path.display());
+                    if path.display().to_string().contains("\\Winget\\") {
+                        info!(
+                            "HEMTT is installed via winget, run `winget upgrade hemtt` to update"
+                        );
+                    }
+                }
             }
             Err(e) => {
                 error!("Failed to check for updates: {e}");
@@ -117,6 +134,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         }
     }
     let report = match matches.subcommand() {
+        Some(("book", matches)) => commands::book::execute(matches).map(Some),
         Some(("new", matches)) => commands::new::execute(matches).map(Some),
         Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
         Some(("check", _matches)) => commands::check::execute().map(Some),
@@ -138,11 +156,22 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         Some(("value", matches)) => commands::value::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),
-        _ => unreachable!(),
+        Some(("wiki", matches)) => commands::wiki::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
+        _ => {
+            cli().print_help().expect("Failed to print help");
+            Ok(None)
+        }
     };
     if let Some(report) = report? {
         report.write_to_stdout();
-        report.write_ci_annotations()?;
+        if !matches
+            .subcommand_name()
+            .is_some_and(|s| s == "new" || s == "utils" || s == "wiki" || s == "book")
+        {
+            report.write_ci_annotations()?;
+        }
         if report.failed() {
             std::process::exit(1);
         }

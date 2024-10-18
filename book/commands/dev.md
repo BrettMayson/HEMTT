@@ -7,6 +7,9 @@ Usage: hemtt dev [OPTIONS]
 Options:
     <a href="#-b---binarize">-b, --binarize</a>
         Use BI's binarize on supported files
+        
+    <a href="build.md#--no-rap">--no-rap</a>
+        Do not rapify files
 
     <a href="#-o---optional">-o, --optional &lt;optional&gt;</a>
         Include an optional addon folder

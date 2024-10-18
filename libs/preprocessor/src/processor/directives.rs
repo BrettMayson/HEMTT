@@ -1,6 +1,7 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_workspace::{
+    path::LocateResult,
     position::Position,
     reporting::{Output, Symbol, Token},
 };
@@ -17,9 +18,9 @@ use crate::{
         pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
         pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
         pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
-        pw1_redefine::RedefineMacro,
+        pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
-    defines::Defines,
+    defines::{DefineSource, Defines},
     definition::{Definition, FunctionDefinition},
     ifstate::IfState,
     processor::pragma::Flag,
@@ -35,7 +36,7 @@ impl Processor {
     pub(crate) fn directive(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
         if let Some(token) = stream.peek() {
@@ -55,7 +56,7 @@ impl Processor {
     pub(crate) fn directive_command(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let command = stream.next().expect("was peeked in directive()");
@@ -123,15 +124,15 @@ impl Processor {
 
     pub(crate) fn read_pragma(
         &mut self,
-        command: &Rc<Token>,
+        command: &Arc<Token>,
         pragma: &Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Result<(Rc<Token>, Scope), Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<(Arc<Token>, Scope), Error> {
         let code = self.next_word(stream, None)?;
         let mut hit_end = false;
         let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
             hit_end = true;
-            Rc::new(Token::new(
+            Arc::new(Token::new(
                 Symbol::Word("line".to_string()),
                 command.position().clone(),
             ))
@@ -152,7 +153,7 @@ impl Processor {
     pub(crate) fn directive_include(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, None);
@@ -199,28 +200,42 @@ impl Processor {
         }
 
         let current = self
-            .files
+            .file_stack
             .last()
             .expect("root file should always be present");
-        let Ok(Some(path)) = current.locate(
-            &path
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect::<String>(),
-        ) else {
-            return Err(IncludeNotFound::code(path));
+        let path = {
+            let Ok(Some(LocateResult {
+                path: found_path,
+                case_mismatch,
+            })) = current.locate(
+                &path
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<String>(),
+            )
+            else {
+                return Err(IncludeNotFound::code(path));
+            };
+            if let Some(case_mismatch) = case_mismatch {
+                self.warnings.push(Arc::new(IncludeCase::new(
+                    path.iter().map(|t| t.as_ref().clone()).collect(),
+                    case_mismatch,
+                )));
+            }
+            found_path
         };
         let tokens = crate::parse::parse(&path)?;
-        self.files.push(path);
+        self.file_stack.push(path.clone());
+        self.included_files.push(path);
         let mut stream = tokens.into_iter().peekmore();
         let ret = self.file(&mut pragma.child(), &mut stream, buffer);
-        self.files.pop();
+        self.file_stack.pop();
         ret
     }
 
     pub(crate) fn directive_define(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
@@ -236,17 +251,23 @@ impl Processor {
         if Defines::is_builtin(&ident_string) {
             return Err(ChangeBuiltin::code(ident.as_ref().clone()));
         }
-        if let Some((original, _)) = self.defines.remove(&ident_string) {
+        if let Some((original, _, DefineSource::Source(file_stack))) =
+            self.defines.remove(&ident_string)
+        {
             self.warnings.push(Arc::new(RedefineMacro::new(
                 Box::new(ident.as_ref().clone()),
+                self.file_stack.clone(),
                 Box::new(original.as_ref().clone()),
+                file_stack,
             )));
         }
         let definition = match next.symbol() {
             Symbol::LeftParenthesis => Definition::Function({
                 let args = Self::define_read_args(stream)?;
                 let body = self.define_read_body(stream);
-                let position = if body.first().is_some() {
+                let position = if body.is_empty() {
+                    ident.position().clone()
+                } else {
                     Position::new(
                         *body
                             .first()
@@ -260,8 +281,6 @@ impl Processor {
                             .end(),
                         ident.position().path().clone(),
                     )
-                } else {
-                    ident.position().clone()
                 };
                 FunctionDefinition::new(position, args, body)
             }),
@@ -270,13 +289,24 @@ impl Processor {
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
-        self.defines.insert(&ident_string, (ident, definition));
+        self.macros
+            .entry(ident_string.clone())
+            .or_default()
+            .push(ident.position().clone());
+        self.defines.insert(
+            &ident_string,
+            (
+                ident,
+                definition,
+                DefineSource::Source(self.file_stack.clone()),
+            ),
+        );
         Ok(())
     }
 
     pub(crate) fn directive_undef(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
@@ -291,11 +321,31 @@ impl Processor {
     pub(crate) fn directive_if(
         &mut self,
         pragma: &Pragma,
-        command: Rc<Token>,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        command: Arc<Token>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
-        fn value(defines: &mut Defines, token: Rc<Token>) -> Result<(Vec<Rc<Token>>, bool), Error> {
-            if let Some((_, definition)) = defines.get_with_gen(&token, Some(token.position())) {
+        fn read_value(
+            stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+        ) -> Vec<Arc<Token>> {
+            let mut tokens = Vec::new();
+            while stream.peek().is_some() {
+                let token = stream
+                    .peek()
+                    .expect("peeked in the if statement, so there should be a token")
+                    .clone();
+                if token.symbol().is_whitespace() || token.symbol().is_newline() {
+                    break;
+                }
+                tokens.push(token);
+                stream.next();
+            }
+            tokens
+        }
+        fn resolve_value(
+            defines: &mut Defines,
+            token: Arc<Token>,
+        ) -> Result<(Vec<Arc<Token>>, bool), Error> {
+            if let Some((_, definition, _)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
                 }
@@ -306,8 +356,15 @@ impl Processor {
             }
             Ok((vec![token], false))
         }
-        let left = self.next_value(stream, None)?;
-        if &Symbol::Word(String::from("__has_include")) == left.symbol() {
+        self.skip_whitespace(stream, None);
+        let left = read_value(stream);
+        if !left.is_empty()
+            && &Symbol::Word(String::from("__has_include"))
+                == left
+                    .first()
+                    .expect("left is not empty, must exist")
+                    .symbol()
+        {
             if pragma.is_flagged(&Flag::Pe23IgnoreIfHasInclude) {
                 debug!(
                     "ignoring __has_include due to pragma flag, this config will not be rapified"
@@ -317,11 +374,29 @@ impl Processor {
                 self.skip_to_after_newline(stream, None);
                 return Ok(());
             }
-            return Err(IfHasInclude::code(left.as_ref().clone()));
+            return Err(IfHasInclude::code(
+                left.first()
+                    .expect("left is not empty, must exist")
+                    .as_ref()
+                    .clone(),
+            ));
         }
-        let (left, left_defined) = value(&mut self.defines, left)?;
+        let (left, left_defined) = if left.len() == 1 {
+            resolve_value(
+                &mut self.defines,
+                left.into_iter()
+                    .next()
+                    .expect("length is 1, next will exist"),
+            )?
+        } else {
+            (left, false)
+        };
+        if left.is_empty() {
+            return Err(UnexpectedEOF::code(command.as_ref().clone()));
+        }
         self.skip_whitespace(stream, None);
-        let mut operators = Vec::with_capacity(2);
+        #[allow(unused_assignments)]
+        let mut operators = Vec::new();
         let (right, right_defined) = if stream.peek().map(|t| t.symbol()) == Some(&Symbol::Newline)
         {
             let pos = stream
@@ -332,35 +407,33 @@ impl Processor {
             if !left_defined {
                 return Err(IfUndefined::code(left[0].as_ref().clone(), &self.defines));
             }
-            let equals = Rc::new(Token::new(Symbol::Equals, pos.clone()));
+            let equals = Arc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (vec![Rc::new(Token::new(Symbol::Digit(1), pos))], false)
+            (vec![Arc::new(Token::new(Symbol::Digit(1), pos))], false)
         } else {
-            loop {
-                let Some(token) = stream.peek() else {
-                    return Err(UnexpectedEOF::code(
-                        left.last()
-                            .expect("left should exists at this point")
-                            .as_ref()
-                            .clone(),
-                    ));
-                };
-                if matches!(token.symbol(), Symbol::Whitespace(_)) {
-                    stream.next();
-                    break;
-                }
-                operators.push(token.clone());
-                stream.next();
-            }
-            let Some(right) = stream.next() else {
+            operators = read_value(stream);
+            self.skip_whitespace(stream, None);
+            let right = read_value(stream);
+            if right.is_empty() {
                 return Err(UnexpectedEOF::code(
-                    left.last()
-                        .expect("left should exists at this point")
+                    operators
+                        .last()
+                        .expect("right should exists at this point")
                         .as_ref()
                         .clone(),
                 ));
-            };
-            value(&mut self.defines, right)?
+            }
+            if right.len() == 1 {
+                resolve_value(
+                    &mut self.defines,
+                    right
+                        .into_iter()
+                        .next()
+                        .expect("length is 1, next will exist"),
+                )?
+            } else {
+                (right, false)
+            }
         };
         let operator = operators
             .iter()
@@ -413,9 +486,9 @@ impl Processor {
 
     pub(crate) fn directive_ifdef(
         &mut self,
-        command: Rc<Token>,
+        command: Arc<Token>,
         outcome: bool,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
@@ -431,7 +504,7 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_common::reporting::Symbol;
+    use hemtt_workspace::reporting::Symbol;
 
     use crate::{
         definition::Definition,
@@ -439,7 +512,7 @@ mod tests {
     };
 
     #[test]
-    fn test_directive_define_unit() {
+    fn directive_define_unit() {
         let mut stream = tests::setup("#define FLAG");
         let mut processor = Processor::default();
         processor
@@ -453,7 +526,7 @@ mod tests {
     }
 
     #[test]
-    fn test_directive_define_value() {
+    fn directive_define_value() {
         let mut stream = tests::setup("#define FLAG 1");
         let mut processor = Processor::default();
         processor

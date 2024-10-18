@@ -1,4 +1,5 @@
 //! This module contains the minimum required for the serializing SQFC files.
+//!
 //! The entrypoint to this is [`Compiled`], however it contains raw lists of constants and variable names,
 //! which can be cumbersome to manage. For this reason, you should use structs from the
 //! [`compiler`][crate::compiler] module instead.
@@ -45,6 +46,50 @@ impl SourceInfo {
             file_index,
             file_line,
         })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodePointer {
+    /// Points to a constant containing the source code for these instructions.
+    Constant(u64),
+    /// Points to an offset in the main code string
+    Source {
+        offset: u32,
+        /// Actually u31, a bit is used as a flag
+        length: u32,
+    },
+}
+
+impl CodePointer {
+    /// Serializes this code pointer to the given writer.
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if an error occurs while writing to the writer.
+    pub fn serialize(&self, writer: &mut impl Write) -> io::Result<()> {
+        match self {
+            Self::Constant(constant_index) => {
+                writer.write_u64::<LE>(*constant_index & 0x7FFF_FFFF)?;
+            }
+            Self::Source { offset, length } => {
+                writer.write_u32::<LE>(*offset)?;
+                writer.write_u32::<LE>(*length | 0x8000_0000)?;
+            }
+        };
+
+        Ok(())
+    }
+
+    pub(crate) fn deserialize(reader: &mut impl Read) -> io::Result<Self> {
+        let first = reader.read_u32::<LE>()?;
+        if first & 0x8000_0000 == 0 {
+            Ok(Self::Constant(u64::from(first)))
+        } else {
+            Ok(Self::Source {
+                offset: first & 0x7FFF_FFFF,
+                length: reader.read_u32::<LE>()?,
+            })
+        }
     }
 }
 
@@ -169,7 +214,7 @@ impl Instruction {
 pub struct Instructions {
     pub contents: Vec<Instruction>,
     /// Points to a constant containing the source code for these instructions.
-    pub source_string_index: u16,
+    pub source_pointer: CodePointer,
 }
 
 impl Instructions {
@@ -188,7 +233,7 @@ impl Instructions {
     /// [`std::io::Error`] if an error occurs while writing to the writer.
     /// [`SerializeError`] if the instructions contain an invalid index.
     pub fn serialize(&self, compiled: &Compiled, writer: &mut impl Write) -> SerializeResult {
-        writer.write_u64::<LE>(u64::from(self.source_string_index))?;
+        self.source_pointer.serialize(writer)?;
         let instructions_len =
             try_truncate_or(self.contents.len(), SerializeError::InstructionsLimit)?;
         writer.write_u32::<LE>(instructions_len)?;
@@ -201,19 +246,14 @@ impl Instructions {
 
     #[allow(dead_code)]
     pub(crate) fn deserialize(reader: &mut impl Read) -> DeserializeResult<Self> {
-        // if this panics, i've got no clue what's with your SQFC
-        // only 2^16 constants can be embedded anyways, so any value above that is probably technically invalid
-        let source_string_index: u16 = reader
-            .read_u64::<LE>()?
-            .try_into()
-            .expect("invalid source string index");
+        let source_string_index = CodePointer::deserialize(reader)?;
         let instructions_len = reader.read_u32::<LE>()? as usize;
         let instructions = (0..instructions_len)
             .map(|_| Instruction::deserialize(reader))
             .collect::<DeserializeResult<Vec<Instruction>>>()?;
         Ok(Self {
             contents: instructions,
-            source_string_index,
+            source_pointer: source_string_index,
         })
     }
 }
@@ -225,6 +265,7 @@ pub enum Constant {
     Scalar(f32),
     Boolean(bool),
     Array(Vec<Self>),
+    ConsumeableArray(Vec<Self>),
     NularCommand(Arc<str>),
 }
 
@@ -244,7 +285,7 @@ impl Constant {
             Self::String(..) => 1,
             Self::Scalar(..) => 2,
             Self::Boolean(..) => 3,
-            Self::Array(..) => 4,
+            Self::Array(..) | Self::ConsumeableArray(..) => 4,
             Self::NularCommand(..) => 5,
         }
     }
@@ -270,7 +311,7 @@ impl Constant {
             Self::Boolean(value) => {
                 writer.write_u8(u8::from(value))?;
             }
-            Self::Array(ref array) => {
+            Self::Array(ref array) | Self::ConsumeableArray(ref array) => {
                 let array_len = try_truncate_or(array.len(), SerializeError::ArrayTooLong)?;
                 writer.write_u32::<LE>(array_len)?;
                 for constant in array {

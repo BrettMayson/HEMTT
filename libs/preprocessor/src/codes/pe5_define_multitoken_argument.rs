@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -61,10 +61,12 @@ impl Code for DefineMissingComma {
 }
 
 impl DefineMissingComma {
-    pub fn new(current: Box<Token>, previous: Box<Token>) -> Self {
+    #[must_use]
+    pub const fn new(current: Box<Token>, previous: Box<Token>) -> Self {
         Self { current, previous }
     }
 
+    #[must_use]
     pub fn code(current: Token, previous: Token) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(current), Box::new(previous))))
     }

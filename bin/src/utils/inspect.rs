@@ -154,19 +154,37 @@ pub fn pbo(file: File) -> Result<(), Error> {
     let mut table = Table::new();
     table.style = TableStyle::thin();
     table.add_row(Row::new(vec![
-        TableCell::new_with_alignment("Filename", 1, Alignment::Center),
-        TableCell::new_with_alignment("Method", 1, Alignment::Center),
-        TableCell::new_with_alignment("Size", 1, Alignment::Center),
-        TableCell::new_with_alignment("Original", 1, Alignment::Center),
-        TableCell::new_with_alignment("Timestamp", 1, Alignment::Center),
+        TableCell::builder("Filename")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Method")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Size")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Original")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Timestamp")
+            .alignment(Alignment::Center)
+            .build(),
     ]));
     for file in files {
         let mut row = Row::new(vec![
             TableCell::new(file.filename()),
-            TableCell::new_with_alignment(file.mime().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(file.size().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(file.original().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(file.timestamp().to_string(), 1, Alignment::Right),
+            TableCell::builder(file.mime().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(file.size().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(file.original().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(file.timestamp().to_string())
+                .alignment(Alignment::Right)
+                .build(),
         ]);
         row.has_separator = table.rows.len() == 1;
         table.add_row(row);
@@ -194,19 +212,39 @@ pub fn paa(mut file: File) -> Result<(), Error> {
     let mut table = Table::new();
     table.style = TableStyle::thin();
     table.add_row(Row::new(vec![
-        TableCell::new_with_alignment("Width", 1, Alignment::Center),
-        TableCell::new_with_alignment("Height", 1, Alignment::Center),
-        TableCell::new_with_alignment("Size", 1, Alignment::Center),
-        TableCell::new_with_alignment("Format", 1, Alignment::Center),
-        TableCell::new_with_alignment("Compressed", 1, Alignment::Center),
+        TableCell::builder("Width")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Height")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Size")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Format")
+            .alignment(Alignment::Center)
+            .build(),
+        TableCell::builder("Compressed")
+            .alignment(Alignment::Center)
+            .build(),
     ]));
     for map in maps {
         let mut row = Row::new(vec![
-            TableCell::new_with_alignment(map.width().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(map.height().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(map.data().len().to_string(), 1, Alignment::Right),
-            TableCell::new_with_alignment(format!("{:?}", map.format()), 1, Alignment::Right),
-            TableCell::new_with_alignment(map.is_compressed(), 1, Alignment::Right),
+            TableCell::builder(map.width().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(map.height().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(map.data().len().to_string())
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(format!("{:?}", map.format()))
+                .alignment(Alignment::Right)
+                .build(),
+            TableCell::builder(map.is_compressed().to_string())
+                .alignment(Alignment::Right)
+                .build(),
         ]);
         row.has_separator = table.rows.len() == 1;
         table.add_row(row);

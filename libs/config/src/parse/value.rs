@@ -74,7 +74,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_str() {
+    fn str() {
         assert_eq!(
             value().parse("\"\""),
             Ok(Value::Str(Str {
@@ -106,16 +106,16 @@ mod tests {
     }
 
     #[test]
-    fn test_eval() {
+    fn eval() {
         assert_eq!(
-            eval().parse("__EVAL(1 + 2)"),
+            super::eval().parse("__EVAL(1 + 2)"),
             Ok(Expression {
                 value: "1 + 2".to_string(),
                 span: 0..13
             })
         );
         assert_eq!(
-            eval().parse("__EVAL(2 * (1 + 1))"),
+            super::eval().parse("__EVAL(2 * (1 + 1))"),
             Ok(Expression {
                 value: "2 * (1 + 1)".to_string(),
                 span: 0..19
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn test_number() {
+    fn number() {
         assert_eq!(
             value().parse("123"),
             Ok(Value::Number(Number::Int32 {
@@ -205,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn test_math() {
+    fn math() {
         assert_eq!(
             value().parse("1 + 2"),
             Ok(Value::Number(Number::Int32 {

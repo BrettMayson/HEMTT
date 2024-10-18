@@ -3,6 +3,8 @@
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_ptr_alignment)]
 
+use crate::LzoError;
+
 const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p.cast::<u8>();
     (*input.offset(0isize) as i32 | (*input.offset(1isize) as i32) << 8i32) as u16
@@ -10,7 +12,6 @@ const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) 
 
 #[no_mangle]
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 #[allow(clippy::similar_names)]
 pub unsafe extern "C" fn lzo1x_decompress_safe(
     in_: *const u8,
@@ -412,7 +413,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                     *out_len = ((op as isize).wrapping_sub(out as isize)
                         / ::std::mem::size_of::<u8>() as isize)
                         as usize;
-                    return -5i32;
+                    return LzoError::OutputOverrun as i32;
                 }
             }
             if current_block == 64 {

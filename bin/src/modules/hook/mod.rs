@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use ::rhai::{packages::Package, Engine, Scope};
-use hemtt_common::workspace::WorkspacePath;
+use hemtt_workspace::WorkspacePath;
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -29,7 +29,7 @@ mod time;
 pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
     let mut scope = Scope::new();
     if vfs {
-        scope.push_constant("HEMTT_VFS", ctx.workspace().vfs().clone());
+        scope.push_constant("HEMTT_VFS", ctx.workspace_path().vfs().clone());
     }
     scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
     scope.push_constant(
@@ -78,17 +78,22 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<(), Error> {
+    pub fn run_folder(self, ctx: &Context, name: &str, vfs: bool) -> Result<Report, Error> {
         if !self.0 {
-            return Ok(());
+            return Ok(Report::new());
         }
-        let folder = ctx.workspace().join(".hemtt")?.join("hooks")?.join(name)?;
+        let folder = ctx
+            .workspace_path()
+            .join(".hemtt")?
+            .join("hooks")?
+            .join(name)?;
         if !folder.exists()? {
             trace!("no {} hooks", name);
-            return Ok(());
+            return Ok(Report::new());
         }
         let mut entries = folder.read_dir()?;
         entries.sort_by_key(WorkspacePath::filename);
+        let mut report = Report::new();
         for file in entries {
             if !file.is_file()? {
                 continue;
@@ -97,10 +102,10 @@ impl Hooks {
                 "Running hook: {}",
                 file.as_str().trim_start_matches("/.hemtt/hooks/")
             );
-            Self::run(ctx, file, vfs)?;
+            report.merge(Self::run(ctx, file, vfs)?);
             ctx.config().version().invalidate();
         }
-        Ok(())
+        Ok(report)
     }
 
     /// Run a script
@@ -114,11 +119,11 @@ impl Hooks {
     /// If a file path is not a valid [`OsStr`] (UTF-8)
     pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
         let mut report = Report::new();
-        let scripts = ctx.workspace().join(".hemtt")?.join("scripts")?;
+        let scripts = ctx.workspace_path().join(".hemtt")?.join("scripts")?;
         let path = scripts.join(name)?.with_extension("rhai")?;
         trace!("running script: {}", path.as_str());
         if !path.exists()? {
-            report.error(ScriptNotFound::code(name.to_owned(), &scripts)?);
+            report.push(ScriptNotFound::code(name.to_owned(), &scripts)?);
             return Ok(report);
         }
         let res = Self::run(ctx, path, false);
@@ -167,11 +172,11 @@ impl Hooks {
                 .expect("told_to_fail mutex poisoned") = true;
         });
         if let Err(e) = engine.run_with_scope(&mut scope, &path.read_to_string()?) {
-            report.error(RuntimeError::code(path, &e));
+            report.push(RuntimeError::code(path, &e));
             return Ok(report);
         }
         if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
-            report.error(ScriptFatal::code(name));
+            report.push(ScriptFatal::code(name));
         }
         Ok(report)
     }
@@ -195,13 +200,13 @@ impl Module for Hooks {
                 for hook in dir.read_dir().expect("hooks folder should be readable") {
                     let hook = hook?;
                     let path = ctx
-                        .workspace()
+                        .workspace_path()
                         .join(".hemtt")?
                         .join("hooks")?
                         .join(phase)?
                         .join(hook.file_name().to_str().expect("file name is valid utf-8"))?;
                     if let Err(e) = engine.compile(&path.read_to_string()?) {
-                        report.error(RhaiParseError::code(path, e.0, e.1));
+                        report.push(RhaiParseError::code(path, e.0, e.1));
                     }
                 }
             }
@@ -212,22 +217,18 @@ impl Module for Hooks {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "pre_build", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "pre_build", true)
     }
 
     fn post_build(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "post_build", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "post_build", true)
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "pre_release", true)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "pre_release", true)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<Report, Error> {
-        self.run_folder(ctx, "post_release", false)?;
-        Ok(Report::new())
+        self.run_folder(ctx, "post_release", false)
     }
 }

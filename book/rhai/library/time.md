@@ -4,7 +4,7 @@
 
 Returns the current date in the given format.
 
-```ts
+```js
 date("[year]-[month]-[day] [hour]:[minute]:[second]"); // {{ time_1 }}
 date("[year repr:last_two][month][day]"); // {{ time_2 }}
 ```

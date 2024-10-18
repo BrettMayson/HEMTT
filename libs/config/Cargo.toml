@@ -13,14 +13,16 @@ bench = false
 
 [dependencies]
 hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0", features = ["lsp"] }
+hemtt-workspace = { path = "../workspace", version = "1.0.0", features = ["lsp"] }
 
-hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0" }
-
+automod = { workspace = true }
 byteorder = { workspace = true }
 chumsky = { workspace = true }
+linkme = { workspace = true }
 lsp-types = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
-paste = "1.0.14"
+paste = { workspace = true }

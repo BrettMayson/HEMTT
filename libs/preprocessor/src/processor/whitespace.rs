@@ -1,6 +1,6 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
-use hemtt_common::reporting::{Output, Token};
+use hemtt_workspace::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
 
 use crate::{codes::pe1_unexpected_token::UnexpectedToken, Error};
@@ -12,7 +12,7 @@ impl Processor {
     /// The stream is left after the whitespace
     pub(crate) fn skip_whitespace(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while let Some(token) = stream.peek() {
@@ -33,7 +33,7 @@ impl Processor {
     /// End of input will not cause an error
     pub(crate) fn skip_to_after_newline(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while stream.peek().is_some() {
@@ -53,7 +53,7 @@ impl Processor {
     /// Whitespace is allowed, but nothing else
     /// The stream is left after the newline
     pub(crate) fn expect_nothing_to_newline(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         for token in stream.by_ref() {
             if token.symbol().is_newline() || token.symbol().is_eoi() {
@@ -73,12 +73,12 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_common::reporting::Symbol;
+    use hemtt_workspace::reporting::Symbol;
 
     use crate::processor::{tests, Processor};
 
     #[test]
-    fn test_skip_whitespace_space() {
+    fn skip_whitespace_space() {
         let mut stream = tests::setup("  a");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_tab() {
+    fn skip_whitespace_tab() {
         let mut stream = tests::setup("\ta");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_newline() {
+    fn skip_whitespace_newline() {
         let mut stream = tests::setup("\na");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_whitespace_eoi() {
+    fn skip_whitespace_eoi() {
         let mut stream = tests::setup("");
         let mut processor = Processor::default();
         processor.skip_whitespace(&mut stream, None);
@@ -116,7 +116,7 @@ mod tests {
     }
 
     #[test]
-    fn test_skip_to_after_newline() {
+    fn skip_to_after_newline() {
         let mut stream = tests::setup("a\nb");
         let mut processor = Processor::default();
         processor.skip_to_after_newline(&mut stream, None);
@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn test_expect_nothing_to_newline_whitespace() {
+    fn expect_nothing_to_newline_whitespace() {
         let mut stream = tests::setup("  \nb");
         Processor::expect_nothing_to_newline(&mut stream).unwrap();
     }

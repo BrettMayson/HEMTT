@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use hemtt_common::{
-    reporting::{Code, Diagnostic},
-    similar_values,
-};
+use hemtt_common::similar_values;
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct LaunchConfigNotFound {
     config: String,
@@ -15,6 +13,10 @@ impl Code for LaunchConfigNotFound {
         "BCLE6"
     }
 
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#configuration")
+    }
+
     fn message(&self) -> String {
         format!("Launch config `{}` not found.", self.config)
     }
@@ -23,14 +25,7 @@ impl Code for LaunchConfigNotFound {
         if self.similar.is_empty() {
             None
         } else {
-            Some(format!(
-                "did you mean `{}`?",
-                self.similar
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join("`, `")
-            ))
+            Some(format!("did you mean `{}`?", self.similar.join("`, `")))
         }
     }
 

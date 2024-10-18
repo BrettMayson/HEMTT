@@ -4,6 +4,8 @@ use std::sync::Arc;
 use chumsky::prelude::*;
 use chumsky::text::ident;
 
+use crate::StringWrapper;
+
 pub type Tokens = Vec<(Token, Range<usize>)>;
 
 macro_rules! chain_collect {
@@ -44,7 +46,7 @@ pub enum Token {
     /// An identifier, keyword, or command.
     Identifier(String),
     /// A string literal.
-    String(Arc<str>),
+    String(Arc<str>, StringWrapper),
 }
 
 #[repr(u8)]
@@ -150,13 +152,12 @@ fn lexer() -> impl Parser<char, Tokens, Error = Simple<char>> {
 fn base() -> impl Parser<char, Token, Error = Simple<char>> {
     let number = number().map(Token::Number);
     let identifier = ident().map(Token::Identifier);
-    let string = string('\"')
-        .or(string('\''))
-        .map(|s| Token::String(s.into()));
+    let string_single = string('\'').map(|s| Token::String(s.into(), StringWrapper::SingleQuote));
+    let string_double = string('\"').map(|s| Token::String(s.into(), StringWrapper::DoubleQuote));
 
     // a constant (ident, number or string) must not be immediately followed
     // by another constant (without whitespace), or something is wrong
-    let constant = choice((number, identifier, string)).boxed();
+    let constant = choice((number, identifier, string_single, string_double)).boxed();
     let not_constant = constant.clone().not().ignored().or(end()).rewind();
 
     choice((

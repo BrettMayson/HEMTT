@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
-use hemtt_common::{reporting::WorkspaceFiles, workspace::LayerType};
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/bootstrap/";
 
@@ -18,16 +18,16 @@ macro_rules! bootstrap {
 
 fn check(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
-    let workspace = hemtt_common::workspace::Workspace::builder()
+    let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source);
     if let Err(e) = processed {
         panic!(
             "{}",
-            e.get_code()
+            e.1.get_code()
                 .unwrap()
                 .diagnostic()
                 .unwrap()
@@ -50,6 +50,7 @@ bootstrap!(addon_in_ifdef);
 bootstrap!(cba_is_admin);
 bootstrap!(cba_multiline);
 bootstrap!(comment_edgecase);
+bootstrap!(comment_in_quote);
 bootstrap!(define_builtin);
 bootstrap!(define_function_empty);
 bootstrap!(define_function_multiline);
@@ -61,9 +62,11 @@ bootstrap!(define_nested);
 bootstrap!(define_single);
 bootstrap!(define_undef);
 bootstrap!(define_use_define);
+bootstrap!(define_variable_recursion);
 bootstrap!(define_with_dash);
 bootstrap!(group_unit);
 bootstrap!(hashtag_outside_macro);
+bootstrap!(if_digits);
 bootstrap!(if_nested);
 bootstrap!(if_operators);
 bootstrap!(if_pass);

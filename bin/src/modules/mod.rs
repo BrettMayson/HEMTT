@@ -4,6 +4,7 @@ use crate::{context::Context, error::Error, report::Report};
 pub mod asc;
 
 pub mod archive;
+pub mod bom;
 pub mod hook;
 pub mod pbo;
 

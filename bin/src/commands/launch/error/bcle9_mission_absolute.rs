@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct MissionAbsolutePath {
     reason: String,
@@ -9,6 +9,10 @@ pub struct MissionAbsolutePath {
 impl Code for MissionAbsolutePath {
     fn ident(&self) -> &'static str {
         "BCLE9"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/commands/launch.html#mission")
     }
 
     fn message(&self) -> String {

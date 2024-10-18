@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_common::reporting::{Code, Diagnostic, Label, Token};
+use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
 use crate::Error;
 
@@ -58,7 +58,8 @@ impl Code for DoubleElse {
 }
 
 impl DoubleElse {
-    pub fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, previous: Box<Token>, if_token: Box<Token>) -> Self {
         Self {
             token,
             previous,
@@ -66,6 +67,7 @@ impl DoubleElse {
         }
     }
 
+    #[must_use]
     pub fn code(token: Token, previous: Token, if_token: Token) -> Error {
         Error::Code(Arc::new(Self::new(
             Box::new(token),

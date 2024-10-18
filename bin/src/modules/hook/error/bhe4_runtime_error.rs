@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label},
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 use rhai::{EvalAltResult, Position};
 
@@ -20,7 +20,7 @@ impl Code for RuntimeError {
     }
 
     fn message(&self) -> String {
-        format!("Script {} failed to parse", self.script)
+        format!("Script {} failed at runtime", self.script)
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

@@ -126,26 +126,33 @@ pub fn decompress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut 
 #[test]
 fn compress_and_back() {
     unsafe {
-        let data = [
+        let mut tests = vec![vec![
             0u8, 2, 3, 4, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4,
             2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4,
-        ];
-        let dst_len: usize = worst_compress(mem::size_of_val(&data));
-        let mut v = Vec::with_capacity(dst_len);
-        let dst = libc::malloc(dst_len);
-        let dst = slice::from_raw_parts_mut(dst.cast::<u8>(), dst_len);
-        let dst = compress_to_slice(&data, dst).unwrap();
-        compress(&data, &mut v).unwrap();
-        println!("{}", dst.len());
+        ]];
+        for _ in 0..99 {
+            let mut v = Vec::with_capacity(255);
+            for _ in 0..=(rand::random::<u32>() % 10_000) {
+                v.push(rand::random::<u8>());
+            }
+            tests.push(v);
+        }
+        for data in tests {
+            let size = mem::size_of_val(&data[0]) * data.len();
+            let dst_len: usize = worst_compress(size);
+            let mut v = Vec::with_capacity(dst_len);
+            let dst = libc::malloc(dst_len);
+            let dst = slice::from_raw_parts_mut(dst.cast::<u8>(), dst_len);
+            let dst = compress_to_slice(&data, dst).unwrap();
+            compress(&data, &mut v).unwrap();
 
-        let dec_dst = libc::malloc(mem::size_of_val(&data));
-        let result_len = mem::size_of_val(&data);
-        let dec_dst = slice::from_raw_parts_mut(dec_dst.cast::<u8>(), result_len);
-        let result = decompress_to_slice(dst, dec_dst).unwrap();
-        println!("{}", result.len());
-        assert!(result.len() == mem::size_of_val(&data));
-        assert!(&data[..] == result);
+            let dec_dst = libc::malloc(size);
+            let dec_dst = slice::from_raw_parts_mut(dec_dst.cast::<u8>(), size);
+            let result = decompress_to_slice(dst, dec_dst).unwrap();
+            assert!(result.len() == size);
+            assert!(&data[..] == result);
+        }
     }
 }

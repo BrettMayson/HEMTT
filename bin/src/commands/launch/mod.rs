@@ -5,10 +5,10 @@ use std::path::{Path, PathBuf};
 use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
-    project::{hemtt::LaunchOptions, ProjectConfig},
+    config::{LaunchOptions, ProjectConfig},
+    steam,
 };
 use regex::Regex;
-use steamlocate::SteamDir;
 
 use crate::{
     commands::launch::error::{
@@ -47,20 +47,12 @@ pub fn cli() -> Command {
                     .raw(true)
                     .help("Passthrough additional arguments to Arma 3"),
             )
-            // .arg(
-            //     clap::Arg::new("server")
-            //         .long("with-server")
-            //         .short('S')
-            //         .help("Launches a dedicated server alongside the client")
-            //         .action(ArgAction::SetTrue),
-            // )
             .arg(
                 clap::Arg::new("instances")
                     .long("instances")
                     .short('i')
                     .help("Launches multiple instances of the game")
-                    .action(ArgAction::Set)
-                    .default_value("1"),
+                    .action(ArgAction::Set),
             )
             .arg(
                 clap::Arg::new("no-build")
@@ -68,12 +60,18 @@ pub fn cli() -> Command {
                     .short('Q')
                     .help("Skips the build step, launching the last built version")
                     .action(ArgAction::SetTrue),
-            ),
+            )
+            .arg(
+                clap::Arg::new("no-filepatching")
+                    .long("no-filepatching")
+                    .short('F')
+                    .help("Disables file patching")
+                    .action(ArgAction::SetTrue),
+            )
     )
 }
 
 #[allow(clippy::too_many_lines)]
-#[allow(clippy::cognitive_complexity)]
 /// Execute the launch command
 ///
 /// # Errors
@@ -82,20 +80,10 @@ pub fn cli() -> Command {
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    let Ok(instance_count) = matches
-        .get_one::<String>("instances")
-        .expect("default exists")
-        .parse::<usize>()
-    else {
-        // maybe a pretty error message here
-        eprintln!("Invalid instance count");
-        std::process::exit(1);
-    };
-
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
-        report.error(MissingMainPrefix::code());
+        report.push(MissingMainPrefix::code());
         return Ok(report);
     };
 
@@ -104,15 +92,20 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .unwrap_or_default()
         .collect();
     let launch = if launch_config.is_empty() {
-        config.hemtt().launch("default").unwrap_or_default()
+        config
+            .hemtt()
+            .launch()
+            .get("default")
+            .cloned()
+            .unwrap_or_default()
     } else if let Some(launch) = launch_config
-        .iter()
+        .into_iter()
         .map(|c| {
-            config.hemtt().launch(c).map_or_else(
+            config.hemtt().launch().get(c).cloned().map_or_else(
                 || {
-                    report.error(LaunchConfigNotFound::code(
-                        (*c).to_string(),
-                        &config.hemtt().launch_keys(),
+                    report.push(LaunchConfigNotFound::code(
+                        c.to_string(),
+                        &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                     ));
                     None
                 },
@@ -121,20 +114,30 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         })
         .collect::<Option<Vec<_>>>()
     {
-        launch
-            .into_iter()
-            .fold(LaunchOptions::default(), |acc, l| acc.overlay(&l))
+        launch.into_iter().fold(
+            LaunchOptions::default(),
+            hemtt_common::config::LaunchOptions::overlay,
+        )
     } else {
         return Ok(report);
     };
 
     trace!("launch config: {:?}", launch);
 
-    let Ok(Some((arma3app, library))) = SteamDir::locate().and_then(|s| s.find_app(107_410)) else {
-        report.error(ArmaNotFound::code());
+    let instance_count = matches.get_one::<String>("instances").map_or_else(
+        || launch.instances() as usize,
+        |instances| {
+            instances.parse::<usize>().unwrap_or_else(|_| {
+                error!("Invalid instance count: {}", instances);
+                std::process::exit(1);
+            })
+        },
+    );
+
+    let Some(arma3dir) = steam::find_app(107_410) else {
+        report.push(ArmaNotFound::code());
         return Ok(report);
     };
-    let arma3dir = library.resolve_app_dir(&arma3app);
 
     debug!("Arma 3 found at: {}", arma3dir.display());
 
@@ -168,7 +171,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         trace!("Loading preset: {}", preset);
         let html = presets.join(preset).with_extension("html");
         if !html.exists() {
-            report.error(PresetNotFound::code(preset.to_string(), &presets));
+            report.push(PresetNotFound::code(preset.to_string(), &presets));
             continue;
         }
         let html = std::fs::read_to_string(html)?;
@@ -191,16 +194,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     // climb to the workshop folder
     if !workshop.is_empty() {
         let Some(common) = arma3dir.parent() else {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         let Some(root) = common.parent() else {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         let workshop_folder = root.join("workshop").join("content").join("107410");
         if !workshop_folder.exists() {
-            report.error(WorkshopNotFound::code());
+            report.push(WorkshopNotFound::code());
             return Ok(report);
         };
         for load_mod in workshop {
@@ -213,7 +216,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             }
             let mod_path = workshop_folder.join(&load_mod);
             if !mod_path.exists() {
-                report.error(WorkshopModNotFound::code(load_mod));
+                report.push(WorkshopModNotFound::code(load_mod));
             };
             mods.push(mod_path.display().to_string());
         }
@@ -249,7 +252,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut path = PathBuf::from(mission);
 
         if path.is_absolute() {
-            report.error(MissionAbsolutePath::code(mission.to_string()));
+            report.push(MissionAbsolutePath::code(mission.to_string()));
             return Ok(report);
         }
         path = std::env::current_dir()?.join(mission);
@@ -269,7 +272,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         if path.is_file() {
             args.push(format!("\"{}\"", path.display()));
         } else {
-            report.error(MissionNotFound::code(
+            report.push(MissionNotFound::code(
                 mission.to_string(),
                 &std::env::current_dir()?,
             ));
@@ -280,7 +283,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     if matches.get_flag("no-build") {
         warn!("Using Quick Launch! HEMTT will not rebuild the project");
         if !std::env::current_dir()?.join(".hemttout/dev").exists() {
-            report.error(CanNotQuickLaunch::code(
+            report.push(CanNotQuickLaunch::code(
                 "no dev build found in .hemttout/dev".to_string(),
             ));
             return Ok(report);
@@ -289,13 +292,18 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let prefix_folder = arma3dir.join(mainprefix);
         let link = prefix_folder.join(config.prefix());
         if !prefix_folder.exists() || !link.exists() {
-            report.error(CanNotQuickLaunch::code(
+            report.push(CanNotQuickLaunch::code(
                 "link does not exist in the Arma 3 folder".to_string(),
             ));
             return Ok(report);
         }
     } else {
-        let mut executor = super::dev::context(matches, launch.optionals())?;
+        let mut executor = super::dev::context(
+            matches,
+            launch.optionals(),
+            launch.binarize(),
+            launch.rapify(),
+        )?;
 
         report.merge(executor.run()?);
 
@@ -330,7 +338,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = args.clone();
         if with_server {
             args.push("-connect=127.0.0.1".to_string());
-        } else {
+        } else if launch.file_patching() && !matches.get_flag("no-filepatching") {
             args.push("-filePatching".to_string());
         }
         instances.push(args);
@@ -345,9 +353,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             } else {
                 path.push(exe);
             }
-            if cfg!(windows) {
-                path.set_extension("exe");
-            }
+            path.set_extension("exe");
         } else {
             path.push(launch.executable());
         }
@@ -355,8 +361,11 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             windows_launch(&arma3dir, &path, &instance)?;
         }
     } else {
+        if launch.executable() != "arma3_x64.exe" {
+            warn!("Currently, only Windows supports specifying the executable");
+        }
         for instance in instances {
-            linux_launch(&arma3dir, &launch.executable(), &instance)?;
+            linux_launch(&instance)?;
         }
     }
 
@@ -412,7 +421,7 @@ fn windows_launch(arma3dir: &Path, executable: &PathBuf, args: &[String]) -> Res
     Ok(())
 }
 
-fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<(), Error> {
+fn linux_launch(args: &[String]) -> Result<(), Error> {
     // check if flatpak steam is installed
     let flatpak = std::process::Command::new("flatpak")
         .arg("list")
@@ -420,9 +429,10 @@ fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<()
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"))?;
     if flatpak {
-        warn!("A flatpak override will be created to grant access to the .hemttout directory");
+        warn!(
+            "A flatpak override will be created to grant Steam access to the .hemttout directory"
+        );
         info!("Using flatpak steam with:\n  {}", args.join("\n  "));
-        trace!("using flatpak override to grant access to the mod");
         std::process::Command::new("flatpak")
             .arg("override")
             .arg("--user")
@@ -446,8 +456,13 @@ fn linux_launch(arma3dir: &Path, executable: &str, args: &[String]) -> Result<()
             .spawn()?;
     } else {
         info!("Using native steam with:\n  {}", args.join("\n  "));
-        std::process::Command::new(arma3dir.join(executable))
+        std::process::Command::new("steam")
+            .arg("-applaunch")
+            .arg("107410")
+            .arg("-nolauncher")
             .args(args)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .spawn()?;
     }
     Ok(())

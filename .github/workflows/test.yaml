@@ -1,11 +1,15 @@
 name: Test
 
-permissions:
-  contents: read
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   test:
@@ -19,8 +23,10 @@ jobs:
             name: ubuntu
           - runner: windows-latest
             name: windows
+          - runner: macos-13
+            name: macos-x64
           - runner: macos-latest
-            name: macos
+            name: macos-arm
         toolchain:
           - stable
           - beta
@@ -34,12 +40,13 @@ jobs:
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@nextest
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
-        run: cargo test --locked --all-features --all-targets
+        run: cargo nextest run --locked --all-features --all-targets

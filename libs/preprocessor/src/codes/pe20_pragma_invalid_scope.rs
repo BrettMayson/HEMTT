@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use hemtt_common::{
-    reporting::{Code, Token},
-    similar_values,
-};
+use hemtt_common::similar_values;
+use hemtt_workspace::reporting::{Code, Token};
 
 use crate::Error;
 
@@ -76,10 +74,12 @@ impl Code for PragmaInvalidScope {
 }
 
 impl PragmaInvalidScope {
-    pub fn new(token: Box<Token>, root: bool) -> Self {
+    #[must_use]
+    pub const fn new(token: Box<Token>, root: bool) -> Self {
         Self { token, root }
     }
 
+    #[must_use]
     pub fn code(token: Token, root: bool) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), root)))
     }

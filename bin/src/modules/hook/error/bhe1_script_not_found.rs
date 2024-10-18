@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use hemtt_common::{
+use hemtt_common::similar_values;
+use hemtt_workspace::{
     reporting::{Code, Diagnostic},
-    similar_values,
-    workspace::WorkspacePath,
+    WorkspacePath,
 };
 
 use crate::Error;
@@ -16,6 +16,10 @@ pub struct ScriptNotFound {
 impl Code for ScriptNotFound {
     fn ident(&self) -> &'static str {
         "BHE1"
+    }
+
+    fn link(&self) -> Option<&str> {
+        Some("/rhai/scripts/index.html")
     }
 
     fn message(&self) -> String {

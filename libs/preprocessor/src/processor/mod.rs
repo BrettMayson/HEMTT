@@ -1,17 +1,17 @@
-#[cfg(feature = "lsp")]
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::sync::Arc;
 
-use hemtt_common::position::Position;
-use hemtt_common::reporting::{Code, Output, Processed, Symbol, Token};
-use hemtt_common::workspace::WorkspacePath;
+use hemtt_workspace::{
+    position::Position,
+    reporting::{Codes, Output, Processed, Symbol, Token},
+    WorkspacePath,
+};
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::codes::pe18_eoi_ifstate::EoiIfState;
 use crate::codes::pe2_unexpected_eof::UnexpectedEOF;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
+use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
 use crate::Error;
@@ -29,9 +29,12 @@ pub struct Processor {
     ifstates: IfStates,
     defines: Defines,
 
-    files: Vec<WorkspacePath>,
+    included_files: Vec<WorkspacePath>,
+    file_stack: Vec<WorkspacePath>,
 
     pub(crate) token_count: usize,
+
+    macros: HashMap<String, Vec<Position>>,
 
     #[cfg(feature = "lsp")]
     /// Map of token usage to definition
@@ -44,7 +47,7 @@ pub struct Processor {
     pub(crate) usage: HashMap<Position, Vec<Position>>,
 
     /// Warnings
-    pub(crate) warnings: Vec<Arc<dyn Code>>,
+    pub(crate) warnings: Codes,
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,
@@ -61,20 +64,26 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    pub fn run(path: &WorkspacePath) -> Result<Processed, Error> {
+    pub fn run(path: &WorkspacePath) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
 
-        processor.files.push(path.clone());
+        processor.file_stack.push(path.clone());
 
-        let tokens = crate::parse::parse(path)?;
+        let tokens =
+            crate::parse::parse(path).map_err(|e| (processor.included_files.clone(), e))?;
         let mut pragma = Pragma::root();
         let mut buffer = Vec::with_capacity(tokens.len());
         let mut stream = tokens.into_iter().peekmore();
 
-        processor.file(&mut pragma, &mut stream, &mut buffer)?;
+        processor
+            .file(&mut pragma, &mut stream, &mut buffer)
+            .map_err(|e| (processor.included_files.clone(), e))?;
 
         if let Some(state) = processor.ifstates.pop() {
-            return Err(EoiIfState::code(state.token().as_ref().clone()));
+            return Err((
+                processor.included_files,
+                EoiIfState::code(state.token().as_ref().clone()),
+            ));
         }
 
         if path.filename() == "Config.cpp" {
@@ -85,20 +94,19 @@ impl Processor {
 
         Processed::new(
             buffer,
+            processor.macros,
             #[cfg(feature = "lsp")]
             processor.usage,
-            #[cfg(feature = "lsp")]
-            processor.declarations,
             processor.warnings,
             processor.no_rapify,
         )
-        .map_err(Into::into)
+        .map_err(|e| (processor.included_files, e.into()))
     }
 
     fn file(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         loop {
@@ -113,7 +121,7 @@ impl Processor {
     fn line(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, Some(buffer));
@@ -134,7 +142,7 @@ impl Processor {
         callsite: Option<&Position>,
         in_macro: Option<&str>,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let mut in_quotes = false;
@@ -143,6 +151,9 @@ impl Processor {
         while let Some(token) = stream.peek() {
             match (token.symbol(), in_quotes) {
                 (Symbol::Word(w), false) => {
+                    if w == "__EXEC" {
+                        return Err(ExecNotSupported::code((**token).clone()));
+                    }
                     just_whitespace = false;
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();
@@ -185,7 +196,7 @@ impl Processor {
                             ).start().0)
                     {
                         self.output(
-                            Rc::new(Token::new(Symbol::DoubleQuote, token.position().clone())),
+                            Arc::new(Token::new(Symbol::DoubleQuote, token.position().clone())),
                             buffer,
                         );
                         quote = Some(token.position().clone());
@@ -217,7 +228,7 @@ impl Processor {
                 }
             }
             if let Some(quote) = quote {
-                self.output(Rc::new(Token::new(Symbol::DoubleQuote, quote)), buffer);
+                self.output(Arc::new(Token::new(Symbol::DoubleQuote, quote)), buffer);
             }
             quote = None;
         }
@@ -230,8 +241,8 @@ impl Processor {
     /// - [`UnexpectedEOF`]: If the stream is at the end of the file
     /// - [`ExpectedIdent`]: If the stream is not at a word
     fn current_word(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Result<Rc<Token>, Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<Arc<Token>, Error> {
         if let Some(token) = stream.peek() {
             if token.symbol().is_word() {
                 return Ok(stream.next().expect("just checked"));
@@ -252,22 +263,24 @@ impl Processor {
     /// - [`ExpectedIdent`]: If the stream is not at a word
     fn next_word(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: Option<&mut Vec<Output>>,
-    ) -> Result<Rc<Token>, Error> {
+    ) -> Result<Arc<Token>, Error> {
         self.skip_whitespace(stream, buffer);
         Self::current_word(stream)
     }
 
+    // I might want this later, so for now I am leaving it here
+    #[allow(dead_code)]
     /// Skips whitespace, returning the next value and consuming it from the stream
     ///
     /// # Errors
     /// - [`UnexpectedEOF`]: If the stream is at the end of the file
     fn next_value(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: Option<&mut Vec<Output>>,
-    ) -> Result<Rc<Token>, Error> {
+    ) -> Result<Arc<Token>, Error> {
         self.skip_whitespace(stream, buffer);
         if let Some(token) = stream.peek() {
             if token.symbol().is_eoi() {
@@ -277,7 +290,7 @@ impl Processor {
         Ok(stream.next().expect("just checked"))
     }
 
-    fn output(&mut self, token: Rc<Token>, buffer: &mut Vec<Output>) {
+    fn output(&mut self, token: Arc<Token>, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
             if token.symbol().is_newline()
                 && buffer
@@ -296,15 +309,15 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 pub mod tests {
-    use std::rc::Rc;
+    use std::sync::Arc;
 
-    use hemtt_common::reporting::Token;
+    use hemtt_workspace::reporting::Token;
     use peekmore::{PeekMore, PeekMoreIterator};
 
-    pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Rc<Token>>> {
-        let workspace = hemtt_common::workspace::Workspace::builder()
+    pub fn setup(content: &str) -> PeekMoreIterator<impl Iterator<Item = Arc<Token>>> {
+        let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            .finish(None, false)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .unwrap();
         let test = workspace.join("test.hpp").unwrap();
         test.create_file()
@@ -313,26 +326,4 @@ pub mod tests {
             .unwrap();
         crate::parse::parse(&test).unwrap().into_iter().peekmore()
     }
-
-    // pub fn setup(content: &str) -> Processed {
-    //     let workspace = hemtt_common::workspace::Workspace::builder()
-    //         .memory()
-    //         .finish()
-    //         .unwrap();
-    //     let test = workspace.join("test.hpp").unwrap();
-    //     test.create_file()
-    //         .unwrap()
-    //         .write_all(content.as_bytes())
-    //         .unwrap();
-    //     Processed::new(&test).unwrap()
-    // }
-
-    // #[test]
-    // fn simple_define() {
-    //     let processed = setup("#define number 1\nvalue = number;");
-    //     assert_eq!(processed.as_string(), "value = 1;");
-    //     let mapping = processed.mapping(9);
-    //     println!("{:?}", mapping);
-    //     println!("{:?}", processed.usage);
-    // }
 }

@@ -1,10 +1,15 @@
-use std::sync::atomic::{AtomicU16, Ordering};
+use std::sync::{
+    atomic::{AtomicU16, Ordering},
+    Arc,
+};
 
+use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
-    analyze::analyze,
+    analyze::{analyze, lint_check},
     parser::{database::Database, ParserError},
 };
+use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{context::Context, error::Error, report::Report};
@@ -14,11 +19,42 @@ use super::Module;
 #[derive(Default)]
 pub struct SQFCompiler {
     pub compile: bool,
+    pub database: Option<Arc<Database>>,
+}
+
+impl SQFCompiler {
+    #[must_use]
+    pub const fn new(compile: bool) -> Self {
+        Self {
+            compile,
+            database: None,
+        }
+    }
 }
 
 impl Module for SQFCompiler {
     fn name(&self) -> &'static str {
         "SQF"
+    }
+
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        self.database = Some(Arc::new(Database::a3_with_workspace(
+            ctx.workspace_path(),
+            false,
+        )?));
+        Ok(Report::new())
+    }
+
+    fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        report.extend(lint_check(
+            ctx.config(),
+            self.database
+                .as_ref()
+                .expect("database not initialized")
+                .clone(),
+        ));
+        Ok(report)
     }
 
     #[allow(clippy::too_many_lines)]
@@ -28,45 +64,48 @@ impl Module for SQFCompiler {
         let counter = AtomicU16::new(0);
         let mut entries = Vec::new();
         for addon in ctx.addons() {
-            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+            let addon = Arc::new(addon.clone());
+            for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
                         continue;
                     }
-                    entries.push((addon, entry));
+                    entries.push((addon.clone(), entry));
                 }
             }
         }
-        let database = Database::default();
+        let database = self
+            .database
+            .as_ref()
+            .expect("database not initialized")
+            .clone();
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
-                trace!("sqf validating {}", entry);
+                trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed = Processor::run(entry)?;
+                let processed = Processor::run(entry).map_err(|(_, e)| e)?;
                 for warning in processed.warnings() {
-                    report.warn(warning.clone());
+                    report.push(warning.clone());
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (warnings, errors) =
-                            analyze(&sqf, Some(ctx.config()), &processed, Some(addon), &database);
-                        for warning in warnings {
-                            report.warn(warning);
-                        }
-                        if errors.is_empty() {
+                        let codes = analyze(
+                            &sqf,
+                            Some(ctx.config()),
+                            &processed,
+                            addon.clone(),
+                            database.clone(),
+                        );
+                        if !codes.failed() {
                             if self.compile {
                                 let mut out = entry.with_extension("sqfc")?.create_file()?;
-                                sqf.compile_to_writer(&processed, &mut out)?;
-                                let mut out = entry.with_extension("sqfast")?.create_file()?;
-                                out.write_all(format!("{:#?}", sqf.content()).as_bytes())?;
-                                let mut out = entry.with_extension("sqfs")?.create_file()?;
-                                out.write_all(sqf.source().as_bytes())?;
+                                sqf.optimize().compile_to_writer(&processed, &mut out)?;
                             }
                             counter.fetch_add(1, Ordering::Relaxed);
                         }
-                        for error in errors {
-                            report.error(error);
+                        for code in codes {
+                            report.push(code);
                         }
                         Ok(report)
                     }
@@ -77,14 +116,14 @@ impl Module for SQFCompiler {
                             warn!("skipping apparent CBA settings file: {}", entry);
                         } else {
                             for error in e {
-                                report.error(error);
+                                report.push(error);
                             }
                         }
                         Ok(report)
                     }
                     Err(ParserError::LexingError(e)) => {
                         for error in e {
-                            report.error(error);
+                            report.push(error);
                         }
                         Ok(report)
                     }
@@ -104,5 +143,90 @@ impl Module for SQFCompiler {
             counter.load(Ordering::Relaxed)
         );
         Ok(report)
+    }
+
+    fn post_build(&self, ctx: &Context) -> Result<Report, crate::Error> {
+        let mut report = Report::new();
+        let mut required_version = Version::new(0, 0, 0, None);
+        let mut required_by = Vec::new();
+        for addon in ctx.addons() {
+            let addon_version = addon.build_data().required_version();
+            if let Some((version, _, _)) = addon_version {
+                if version > required_version {
+                    required_version = version;
+                    required_by = vec![addon.name().to_string()];
+                } else if version == required_version {
+                    required_by.push(addon.name().to_string());
+                }
+            }
+        }
+
+        let database = self.database.as_ref().expect("database not initialized");
+
+        let wiki_version = arma3_wiki::model::Version::new(
+            u8::try_from(required_version.major()).unwrap_or_default(),
+            u8::try_from(required_version.minor()).unwrap_or_default(),
+        );
+        if database.wiki().version() < &wiki_version {
+            report.push(Arc::new(RequiresFutureVersion::new(
+                wiki_version,
+                required_by,
+                *database.wiki().version(),
+            )));
+        }
+
+        Ok(report)
+    }
+}
+
+pub struct RequiresFutureVersion {
+    required_version: arma3_wiki::model::Version,
+    required_by: Vec<String>,
+    wiki_version: arma3_wiki::model::Version,
+}
+impl Code for RequiresFutureVersion {
+    fn ident(&self) -> &'static str {
+        "BSW1"
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Warning
+    }
+
+    fn message(&self) -> String {
+        format!(
+            "Required version `{}` is higher than the current stable `{}`",
+            self.required_version, self.wiki_version
+        )
+    }
+
+    fn note(&self) -> Option<String> {
+        Some(format!(
+            "addons requiring version `{}`: {}",
+            self.required_version,
+            self.required_by.join(", ")
+        ))
+    }
+
+    fn help(&self) -> Option<String> {
+        Some("Learn about the `development` branch at `https://community.bistudio.com/wiki/Arma_3:_Steam_Branches`".to_string())
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::simple(self))
+    }
+}
+
+impl RequiresFutureVersion {
+    pub const fn new(
+        required_version: arma3_wiki::model::Version,
+        required_by: Vec<String>,
+        wiki_version: arma3_wiki::model::Version,
+    ) -> Self {
+        Self {
+            required_version,
+            required_by,
+            wiki_version,
+        }
     }
 }

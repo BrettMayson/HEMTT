@@ -1,11 +1,13 @@
 use clap::{ArgAction, ArgMatches, Command};
-use hemtt_common::addons::Location;
+use hemtt_workspace::addons::Location;
 
 use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{
+        bom::BOMCheck, pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler,
+    },
     report::Report,
 };
 
@@ -47,9 +49,15 @@ pub fn add_args(cmd: Command) -> Command {
             .action(ArgAction::SetTrue),
     )
     .arg(
-        clap::Arg::new("expsqfc")
-            .long("expsqfc")
-            .help("Use HEMTT's experimental SQF compiler")
+        clap::Arg::new("asc")
+            .long("asc")
+            .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        clap::Arg::new("no-rap")
+            .long("no-rap")
+            .help("Do not rapify (cpp, rvmat)")
             .action(ArgAction::SetTrue),
     )
 }
@@ -59,7 +67,7 @@ pub fn add_args(cmd: Command) -> Command {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Report, Error> {
-    let mut executor = context(matches, launch_optionals)?;
+    let mut executor = context(matches, launch_optionals, false, true)?;
     executor.run()
 }
 
@@ -67,7 +75,12 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Repo
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Executor, Error> {
+pub fn context(
+    matches: &ArgMatches,
+    launch_optionals: &[String],
+    force_binarize: bool,
+    rapify: bool,
+) -> Result<Executor, Error> {
     let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
     let optionals = matches
         .get_many::<String>("optional")
@@ -114,27 +127,34 @@ pub fn context(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Exec
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
             return Err(Error::Addon(
-                hemtt_common::addons::Error::AddonOptionalNotFound(optional.to_owned()),
+                hemtt_workspace::addons::Error::OptionalNotFound(optional.to_owned()),
             ));
         }
     }
 
-    let expsqfc = matches.get_one::<bool>("expsqfc") == Some(&true);
+    let use_asc = matches.get_one::<bool>("asc") == Some(&true);
+    if cfg!(target_os = "macos") && use_asc {
+        error!("ArmaScriptCompiler is not supported on macOS");
+        std::process::exit(1);
+    }
 
     let mut executor = Executor::new(ctx);
 
     executor.collapse(Collapse::Yes);
 
+    executor.add_module(Box::<BOMCheck>::default());
     executor.add_module(Box::<Hooks>::default());
-    executor.add_module(Box::<Rapifier>::default());
-    executor.add_module(Box::new(SQFCompiler { compile: expsqfc }));
+    if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
+        executor.add_module(Box::<Rapifier>::default());
+    }
+    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
     #[cfg(not(target_os = "macos"))]
-    if !expsqfc {
+    if use_asc {
         executor.add_module(Box::<ArmaScriptCompiler>::default());
     }
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
-    if matches.get_one::<bool>("binarize") == Some(&true) {
+    if force_binarize || matches.get_one::<bool>("binarize") == Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }
 

@@ -12,7 +12,7 @@ use hemtt_preprocessor::Processor;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rust_embed::RustEmbed;
 use serde::Serialize;
-use time::Instant;
+use std::time::Instant;
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -50,6 +50,7 @@ impl Module for ArmaScriptCompiler {
     }
 
     #[allow(clippy::too_many_lines)]
+    #[allow(dependency_on_unit_never_type_fallback)] // ToDo: https://doc.rust-lang.org/nightly/edition-guide/rust-2024/never-type-fallback.html
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut out_file =
             File::create(".hemttout/asc.log").expect("Unable to create `.hemttout/asc.log`");
@@ -82,7 +83,7 @@ impl Module for ArmaScriptCompiler {
             let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
             create_dir_all(&tmp_addon)?;
             let mut entries = Vec::new();
-            for entry in ctx.workspace().join(addon.folder())?.walk_dir()? {
+            for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if entry.extension() != sqf_ext {
                         continue;
@@ -96,7 +97,7 @@ impl Module for ArmaScriptCompiler {
             entries
                 .par_iter()
                 .map(|entry| {
-                    let processed = Processor::run(entry)?;
+                    let processed = Processor::run(entry).map_err(|(_, e)| e)?;
                     let source = tmp_addon.join(
                         entry
                             .as_str()
@@ -136,10 +137,7 @@ impl Module for ArmaScriptCompiler {
                 })
                 .collect::<Result<_, Error>>()?;
         }
-        debug!(
-            "ASC Preprocess took {:?}",
-            start.elapsed().whole_milliseconds()
-        );
+        debug!("ASC Preprocess took {:?}", start.elapsed().as_millis());
         for root in root_dirs {
             config.add_input_dir(root.to_string());
         }
@@ -163,7 +161,7 @@ impl Module for ArmaScriptCompiler {
             warn!("ASC 'Parse Error' - check .hemttout/asc.log");
         }
         if command.status.success() {
-            debug!("ASC took {:?}", start.elapsed().whole_milliseconds());
+            debug!("ASC took {:?}", start.elapsed().as_millis());
         } else {
             return Err(Error::ArmaScriptCompiler(
                 String::from_utf8(command.stdout).expect("stdout should be valid utf8"),
@@ -173,8 +171,8 @@ impl Module for ArmaScriptCompiler {
         let tmp_output = tmp.join("output");
         let counter = AtomicU16::new(0);
         for (src, dst) in &*files.read().expect("unable to read source files") {
-            let from = tmp_output.join(&format!("{src}c"));
-            let to = ctx.workspace().join(&format!("{dst}c"))?;
+            let from = tmp_output.join(format!("{src}c"));
+            let to = ctx.workspace_path().join(format!("{dst}c"))?;
             if !from.exists() {
                 // sqf that have parse errors OR just empty//no-code
                 debug!("asc didn't process {}", src);
