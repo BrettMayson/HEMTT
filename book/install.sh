@@ -51,13 +51,10 @@ curl -L -o /tmp/hemtt-installer/hemtt "$DOWNLOAD_URL"
 chmod +x /tmp/hemtt-installer/hemtt
 
 binaryLocation="$HOME/.local/bin"
-# pick a different location if we're on macOS
 if [ "$(uname -s)" == "Darwin" ]; then
-    binaryLocation="/usr/local/bin"
-else
-    # Create the directory if it doesn't exist
-    mkdir -p "$binaryLocation"
+    binaryLocation="$home/bin"
 fi
+mkdir -p "$binaryLocation"
 
 if ! echo "$PATH" | grep -q "$binaryLocation"; then
     # Array of common shell configuration files
@@ -82,8 +79,8 @@ fi
 if [ -w "$binaryLocation" ]; then
     mv /tmp/hemtt-installer/hemtt "$binaryLocation"
 else
-    echo "This script needs sudo to move the binary to $binaryLocation"
-    sudo mv /tmp/hemtt-installer/hemtt "$binaryLocation"
+    echo "The installer was unable to move the binary to $binaryLocation."
+    exit 1
 fi
 
 echo "Installation complete. You can run HEMTT using 'hemtt'."
