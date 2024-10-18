@@ -85,19 +85,28 @@ impl Module for Binarize {
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         use error::bbe7_wine_not_found::WineNotFound;
+        use hemtt_common::steam;
 
         let mut report = Report::new();
+
+        if cfg!(target_os = "macos") {
+            report.push(PlatformNotSupported::code());
+            return Ok(report);
+        }
+
         let tools_path = {
             let default = dirs::home_dir()
                 .expect("home directory exists")
                 .join(".local/share/arma3tools");
             if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
                 PathBuf::from(path)
-            } else {
-                if !default.exists() {
-                    report.push(PlatformNotSupported::code());
+            } else if !default.exists() {
+                let Some(tools_dir) = steam::find_app(233_800) else {
+                    report.push(ToolsNotFound::code(Severity::Warning));
                     return Ok(report);
-                }
+                };
+                tools_dir
+            } else {
                 default
             }
         };
