@@ -219,8 +219,6 @@ impl Module for Binarize {
                             source: tmp_sourced
                                 .to_str()
                                 .expect("tmp source path should be valid utf-8")
-                                .trim_start_matches('/')
-                                .trim_start_matches(&addon.folder())
                                 .to_owned(),
                             output: tmp_outed
                                 .to_str()
