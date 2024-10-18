@@ -27,6 +27,16 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
+            # Intel Mac
+          - runner: macos-13
+            name: macos-x64
+            artifact: macos-x64
+            exe: hemtt
+            # ARM Mac
+          - runner: macos-latest
+            name: macos-arm
+            artifact: macos-arm64
+            exe: hemtt
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -63,6 +73,12 @@ jobs:
           - runner: windows-latest
             name: windows
             artifact: windows-x64
+          - runner: macos-13
+            name: macos-x64
+            artifact: macos-x64
+          - runner: macos-latest
+            name: macos-arm
+            artifact: macos-arm64
         mod:
           - repo: CBATeam/CBA_A3
             commit: b99dddf46aca7cea008bca56f5a553c5d7776219
@@ -88,8 +104,8 @@ jobs:
           repository: ${{ matrix.mod.repo }}
           path: mod
           ref: ${{ matrix.mod.commit }}
-      - name: Install Linux
-        if: startsWith(matrix.os.runner, 'ubuntu')
+      - name: Install Linux & MacOS
+        if: startsWith(matrix.os.runner, 'ubuntu') || startsWith(matrix.os.runner, 'macos')
         run: |
           cd hemtt && cp hemtt /usr/local/bin/hemtt && chmod +x /usr/local/bin/hemtt
       - name: Install Windows
@@ -130,19 +146,33 @@ jobs:
           name: windows-x64
           path: release
 
+      - name: Download MacOS x64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64
+          path: release
+
+      - name: Download MacOS ARM64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
+          path: release
+
       - name: Zip Linux x64
         run: |
           cd release && zip linux-x64.zip hemtt && rm hemtt
 
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Zip Windows x64
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+
+      - name: Zip MacOS x64
+        run: |
+          cd macos-x64 && zip macos-x64.zip hemtt && rm hemtt
+
+      - name: Zip MacOS ARM64
+        run: |
+          cd macos-arm64 && zip macos-arm64.zip hemtt && rm hemtt
 
       - name: Release
         uses: softprops/action-gh-release@v2
