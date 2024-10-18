@@ -144,6 +144,15 @@ impl Expression {
                                 left_o = consumable;
                             }
                         }
+                        "call" => {
+                            if matches!(&left_o, Self::Variable(name, _) if name == "_this") {
+                                return Self::UnaryCommand(
+                                    UnaryCommand::Named("call".into()),
+                                    Box::new(right_o),
+                                    range.clone(),
+                                );
+                            }
+                        }
                         _ => {}
                     },
                     BinaryCommand::Add => {
