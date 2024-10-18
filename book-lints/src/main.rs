@@ -142,14 +142,9 @@ fn highlight() {
     });
 
     let highlight = std::fs::read_to_string("book-lints/highlight.js").unwrap();
-    let existing = std::fs::read_to_string("book/highlight.js").unwrap();
 
     let highlight = highlight.replace("$FLOW$", &format!("'{}'", flow.join("','")));
     let highlight = highlight.replace("$COMMANDS$", &format!("'{}'", commands.join("','")));
-
-    if highlight == existing {
-        return;
-    }
 
     std::fs::write("book/highlight.js", highlight).unwrap();
 }
