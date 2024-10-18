@@ -69,7 +69,7 @@ impl LintRunner<SqfLintData> for Runner {
             return Vec::new();
         };
         
-        if cmd != "call" {
+        if cmd.to_lowercase() != "call" {
             return Vec::new();
         }
 
