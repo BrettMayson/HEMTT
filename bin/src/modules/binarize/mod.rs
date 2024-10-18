@@ -268,7 +268,8 @@ impl Module for Binarize {
                     let mut cmd = Command::new("wine");
                     cmd.arg(exe);
                     cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                    std::fs::create_dir_all("/tmp/hemtt-wine").expect("should be able to create wine prefix");
+                    std::fs::create_dir_all("/tmp/hemtt-wine")
+                        .expect("should be able to create wine prefix");
                     cmd
                 };
                 cmd.args([
