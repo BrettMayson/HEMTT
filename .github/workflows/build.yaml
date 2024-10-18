@@ -28,15 +28,15 @@ jobs:
           #   artifact: windows-x64
           #   exe: hemtt.exe
             # Intel Mac
-          - runner: macos-13
-            name: macos-x64
-            artifact: macos-x64
-            exe: hemtt
-            # ARM Mac
-          - runner: macos-latest
-            name: macos-arm
-            artifact: macos-arm64
-            exe: hemtt
+        #   - runner: macos-13
+        #     name: macos-x64
+        #     artifact: macos-x64
+        #     exe: hemtt
+        #     # ARM Mac
+        #   - runner: macos-latest
+        #     name: macos-arm
+        #     artifact: macos-arm64
+        #     exe: hemtt
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
