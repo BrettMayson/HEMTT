@@ -150,9 +150,9 @@ jobs:
           name: windows-x64
           path: release
 
-      - name: Rename Windows x64
+      - name: Zip Windows x64
         run: |
-          cd release && mv hemtt.exe windows-x64.exe
+          cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
 
       - name: Download MacOS x64
         uses: actions/download-artifact@v4
@@ -193,5 +193,5 @@ jobs:
         uses: vedantmgoyal2009/winget-releaser@v2
         with:
           identifier: BrettMayson.HEMTT
-          installers-regex: 'windows-x64.exe'
+          installers-regex: 'windows-x64.zip'
           token: ${{ secrets.WINGET_TOKEN }} # Classic Personal Access Token with [public_repo, workflow] scopes
