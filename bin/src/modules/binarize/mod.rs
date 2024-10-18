@@ -283,7 +283,7 @@ impl Module for Binarize {
                         "..\\{}",
                         &target
                             .output
-                            .trim_start_matches(tmp_source.to_str().expect("path is valid utf-8"))
+                            .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
                             .trim_start_matches('/')
                             .replace('/', "\\")
                     ),
