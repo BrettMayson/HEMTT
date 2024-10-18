@@ -93,6 +93,10 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     let mut executor = Executor::new(ctx);
 
     let use_asc = matches.get_one::<bool>("asc") == Some(&true);
+    if cfg!(target_os = "macos") && use_asc {
+        error!("ArmaScriptCompiler is not supported on macOS");
+        std::process::exit(1);
+    }
 
     executor.collapse(Collapse::No);
 

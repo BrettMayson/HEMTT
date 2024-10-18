@@ -7,14 +7,14 @@ An opinionated build system for Arma 3 mods.
 [![Codecov](https://img.shields.io/codecov/c/github/brettmayson/hemtt?style=flat-square&label=Coverage)](https://app.codecov.io/gh/brettmayson/hemtt)
 [![ACE3 Discord](https://img.shields.io/badge/Discord-Join-darkviolet.svg?style=flat-square)](https://acemod.org/discord)
 
-[The HEMTT Book](https://brettmayson.github.io/HEMTT)
+[The HEMTT Book](https://hemtt.dev)
 
 ## Installation
 
 [![GitHub](https://img.shields.io/badge/GitHub-lightblue.svg?style=flat-square)](https://github.com/BrettMayson/HEMTT/releases)
 [![winstall](https://img.shields.io/badge/WinGet-lightblue.svg?style=flat-square)](https://winstall.app/apps/BrettMayson.HEMTT)
 
-[Read it in the book](https://brettmayson.github.io/HEMTT/installation.html)
+[Read it in the book](https://hemtt.dev/installation.html)
 
 ## Browser Extension
 
