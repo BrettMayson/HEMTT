@@ -2,14 +2,11 @@
 
 set -e
 
-# Define the GitHub repo and release
 GITHUB_API="https://api.github.com/repos/brettmayson/HEMTT/releases/latest"
 
-# Get the latest release info
 RELEASE_INFO=$(curl -s "$GITHUB_API")
 DOWNLOAD_URL=""
 
-# Detect OS and architecture
 case "$(uname -s)" in
     Linux*)
         ARCH="$(uname -m)"
@@ -37,7 +34,6 @@ case "$(uname -s)" in
         ;;
 esac
 
-# Download the binary
 if [ -z "$DOWNLOAD_URL" ]; then
     echo "Could not find a suitable binary for your system."
     exit 1
@@ -47,7 +43,6 @@ echo "Downloading from $DOWNLOAD_URL..."
 mkdir -p /tmp/hemtt-installer
 curl -L -o /tmp/hemtt-installer/hemtt "$DOWNLOAD_URL"
 
-# Make it executable
 chmod +x /tmp/hemtt-installer/hemtt
 
 binaryLocation="$HOME/.local/bin"
@@ -57,12 +52,9 @@ fi
 mkdir -p "$binaryLocation"
 
 if ! echo "$PATH" | grep -q "$binaryLocation"; then
-    # Array of common shell configuration files
     config_files=("$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile")
     for config in "${config_files[@]}"; do
-        # Check if the file exists
         if [ -f "$config" ]; then
-            # Check if binaryLocation is already in the file
             if ! grep -q -s "export PATH=$binaryLocation:\$PATH" "$config"; then
                 echo "Appending $binaryLocation to $config"
                 echo "" >>"$config"
@@ -71,11 +63,9 @@ if ! echo "$PATH" | grep -q "$binaryLocation"; then
             fi
         fi
     done
-    # add to the current session
     export PATH=$binaryLocation:$PATH
 fi
 
-# Move the binary to the correct location, check for sudo
 if [ -w "$binaryLocation" ]; then
     mv /tmp/hemtt-installer/hemtt "$binaryLocation"
 else
