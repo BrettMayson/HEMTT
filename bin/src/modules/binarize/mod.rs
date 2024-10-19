@@ -33,6 +33,7 @@ mod error;
 pub struct Binarize {
     check_only: bool,
     command: Option<String>,
+    proton: bool,
     prechecked: RwLock<Vec<BinarizeTarget>>,
 }
 
@@ -42,6 +43,7 @@ impl Binarize {
         Self {
             check_only,
             command: None,
+            proton: false,
             prechecked: RwLock::new(Vec::new()),
         }
     }
@@ -84,7 +86,6 @@ impl Module for Binarize {
 
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        use error::bbe7_wine_not_found::WineNotFound;
         use hemtt_common::steam;
 
         let mut report = Report::new();
@@ -116,7 +117,7 @@ impl Module for Binarize {
             let mut cmd = Command::new("wine64");
             cmd.arg("--version");
             if cmd.output().is_err() {
-                report.push(WineNotFound::code());
+                self.proton = true;
             }
         } else {
             report.push(ToolsNotFound::code(Severity::Warning));
@@ -284,6 +285,25 @@ impl Module for Binarize {
                     .expect("command should be set if we attempted to binarize");
                 let mut cmd = if cfg!(windows) {
                     Command::new(exe)
+                } else if self.proton {
+                    let mut home = dirs::home_dir().expect("home directory exists");
+                    if exe.contains("/.var/") {
+                        home = home.join(".var/app/com.valvesoftware.Steam");
+                    }
+                    let mut cmd = Command::new({
+                        home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+                    });
+                    cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
+                        home.join(".local/share/Steam")
+                    ).env(
+                        "STEAM_COMPAT_DATA_PATH",
+                        home.join(".local/share/Steam/steamapps/compatdata/233800")
+                    ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
+                        home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
+                    ).arg("run").arg(
+                        home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
+                    );
+                    cmd
                 } else {
                     let mut cmd = Command::new("wine64");
                     cmd.arg(exe);
