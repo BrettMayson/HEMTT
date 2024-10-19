@@ -345,15 +345,10 @@ fn check_issue(a: &Comparison, b: &Comparison) -> Option<ComparisonIssue> {
                     span_b: b_span,
                 })
             } else {
-                Some(ComparisonIssue {
-                    issue: ComparisonIssueType::Impossible,
-                    span_a: a_span,
-                    span_b: b_span,
-                })
+                None
             }
         }
-        (Comparison::NotEqual(_, num_a, _), Comparison::Equal(_, num_b, _))
-        | (Comparison::Equal(_, num_a, _), Comparison::NotEqual(_, num_b, _)) => {
+        (Comparison::NotEqual(_, num_a, _), Comparison::Equal(_, num_b, _)) => {
             if num_a == num_b {
                 Some(ComparisonIssue {
                     issue: ComparisonIssueType::Impossible,
@@ -361,11 +356,7 @@ fn check_issue(a: &Comparison, b: &Comparison) -> Option<ComparisonIssue> {
                     span_b: b_span,
                 })
             } else {
-                Some(ComparisonIssue {
-                    issue: ComparisonIssueType::Overlapping,
-                    span_a: a_span,
-                    span_b: b_span,
-                })
+                None
             }
         }
         _ => None,

@@ -16,3 +16,4 @@ if (_x < 20 && _x < 10) then {
     systemChat "This is wasteful";
 };
 
+if (_key != 1 && _key != 2 && _key != 3) exitWith {false};

@@ -154,6 +154,7 @@
     "vscode-uri": "^3.0.8"
   },
   "dependencies": {
+    "hemtt": "file:",
     "portfinder": "^1.0.32",
     "vscode-languageclient": "^9.0.1"
   }
