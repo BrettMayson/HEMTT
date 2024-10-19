@@ -110,14 +110,9 @@ jobs:
         run: |
           cd mod && hemtt dev
       - name: Install Arma 3 Tools
-        uses: arma-actions/arma3-tools@typescript
+        uses: arma-actions/arma3-tools@linux
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
-      - name: Install Wine
-        if: startsWith(matrix.os.runner, 'ubuntu')
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wine64
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
         run: |
           cd mod && hemtt build
