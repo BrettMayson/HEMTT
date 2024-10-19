@@ -47,8 +47,13 @@ fn config(chapter: &mut Chapter) {
         text.push_str(&format!("\n***\n## {}\n", lint.ident()));
         text.push_str(&format!("Code: **L-C{}**  \n", lint.doc_ident()));
         text.push_str(&format!(
-            "Default Severity: **{:?}**  \n",
-            lint.default_config().severity()
+            "Default Severity: **{:?}** {}  \n",
+            lint.default_config().severity(),
+            if lint.default_config().enabled() {
+                ""
+            } else {
+                "(Disabled)"
+            },
         ));
         text.push_str(&format!(
             "Minimum Severity: {:?}  \n",
@@ -85,8 +90,13 @@ fn sqf(chapter: &mut Chapter) {
         text.push_str(&format!("\n***\n## {}\n", lint.ident()));
         text.push_str(&format!("Code: **L-S{}**  \n", lint.doc_ident()));
         text.push_str(&format!(
-            "Default Severity: **{:?}**  \n",
-            lint.default_config().severity()
+            "Default Severity: **{:?}** {}  \n",
+            lint.default_config().severity(),
+            if lint.default_config().enabled() {
+                ""
+            } else {
+                "(Disabled)"
+            },
         ));
         text.push_str(&format!(
             "Minimum Severity: {:?}  \n",
