@@ -8,9 +8,9 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 
-crate::lint!(LintS22InVehicleCheck);
+crate::lint!(LintS22ThisCall);
 
-impl Lint<SqfLintData> for LintS22InVehicleCheck {
+impl Lint<SqfLintData> for LintS22ThisCall {
     fn ident(&self) -> &str {
         "this_call"
     }
