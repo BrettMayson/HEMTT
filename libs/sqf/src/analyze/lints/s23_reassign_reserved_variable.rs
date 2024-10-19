@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath,
 };
 
-use crate::{analyze::SqfLintData, Expression, Statement};
+use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCommand};
 
 crate::lint!(LintS23ReassignReservedVariable);
 
@@ -49,17 +49,16 @@ Reassigning reserved variables can lead to unintentional behavior.
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
-        vec![Box::new(Runner {})]
+        vec![Box::new(StatementsRunner {}), Box::new(ExpressionRunner {})]
     }
 }
-
-struct Runner {}
 
 static RESERVED: [&str; 8] = [
     "this","_this","_forEachIndex","_exception","_thisScript","_thisFSM","thisList","thisTrigger",
 ];
 
-impl LintRunner<SqfLintData> for Runner {
+struct StatementsRunner {}
+impl LintRunner<SqfLintData> for StatementsRunner {
     type Target = crate::Statements;
 
     #[allow(clippy::significant_drop_tightening)]
@@ -118,6 +117,52 @@ impl LintRunner<SqfLintData> for Runner {
         }
 
         codes
+    }
+}
+
+struct ExpressionRunner {}
+impl LintRunner<SqfLintData> for ExpressionRunner {
+    type Target = crate::Expression;
+
+    #[allow(clippy::significant_drop_tightening)]
+    fn run(
+        &self,
+        _project: Option<&hemtt_common::config::ProjectConfig>,
+        config: &LintConfig,
+        processed: Option<&hemtt_workspace::reporting::Processed>,
+        target: &Self::Target,
+        _data: &SqfLintData,
+    ) -> Codes {
+        let Some(processed) = processed else {
+            return Vec::new();
+        };
+        
+        let exp = match target {
+            Expression::UnaryCommand(UnaryCommand::Named(cmd), exp, _) |
+            Expression::BinaryCommand(BinaryCommand::Named(cmd), _, exp, _) if cmd.to_lowercase() == "params" => exp,
+            _ => return Vec::new(),
+        };
+
+        if let Expression::Array(values, _) | Expression::ConsumeableArray(values, _) = &**exp {
+            for param in values {
+                let (name, span) = match &param {
+                    Expression::String(name, span, _) => (name, span),
+                    Expression::Array(values, _) => {
+                        if let Some(Expression::String(name, span, _)) = values.first() {
+                            (name, span)
+                        } else {
+                            continue
+                        }
+                    }
+                    _ => continue,
+                };
+                if RESERVED.contains(&&**name) {
+                    return vec![Arc::new(CodeS23ReassignReservedVariable::new(Variant::Overwrite(name.to_string(), span.clone()), processed, config.severity()))];
+                }
+            }
+        }
+
+        Vec::new()
     }
 }
 

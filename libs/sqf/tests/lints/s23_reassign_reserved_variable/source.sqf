@@ -3,6 +3,11 @@ call {
     _this = 123;
 };
 
+// error for overwriting
+call {
+    params ["_this"];
+};
+
 // error for not restoring
 call {
     private _savedThis = _this;
