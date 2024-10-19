@@ -1,92 +1,92 @@
-name: Browser
+# name: Browser
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
 
-jobs:
-  build-wasm:
-    name: Build WASM
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout the source code
-      uses: actions/checkout@master
-    - name: Install wasm-pack
-      run: cargo install wasm-pack
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: browser
-    - name: Build
-      run: wasm-pack build libs/paa --target web --features wasm
-    - name: Rename
-      run: |
-        mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
-        mv libs/paa/pkg/hemtt_paa.js hemtt_paa.js
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: wasm
-        path: |
-            hemtt_paa_bg.wasm
-            hemtt_paa.js
+# jobs:
+#   build-wasm:
+#     name: Build WASM
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Checkout the source code
+#       uses: actions/checkout@master
+#     - name: Install wasm-pack
+#       run: cargo install wasm-pack
+#     - name: Rust Cache
+#       uses: Swatinem/rust-cache@v2
+#       with:
+#         key: browser
+#     - name: Build
+#       run: wasm-pack build libs/paa --target web --features wasm
+#     - name: Rename
+#       run: |
+#         mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
+#         mv libs/paa/pkg/hemtt_paa.js hemtt_paa.js
+#     - name: Upload
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: wasm
+#         path: |
+#             hemtt_paa_bg.wasm
+#             hemtt_paa.js
 
-  firefox:
-    name: Firefox
-    runs-on: ubuntu-latest
-    needs: build-wasm
-    steps:
-    - name: Checkout the source code
-      uses: actions/checkout@v4
-    - name: Download wasm
-      uses: actions/download-artifact@v4
-      with:
-        name: wasm
-        path: wasm
-    - name: Move wasm
-      run: | 
-        mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
-        mv wasm/hemtt_paa.js browser/hemtt_paa.js
-    - name: Rename manifest
-      run: mv browser/manifest.firefox.json browser/manifest.json && rm browser/manifest.chrome.json
-    - name: zip
-      run: | 
-        cd browser
-        zip -r firefox.zip *
-        mv firefox.zip ../firefox.zip
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: firefox
-        path: firefox.zip
+#   firefox:
+#     name: Firefox
+#     runs-on: ubuntu-latest
+#     needs: build-wasm
+#     steps:
+#     - name: Checkout the source code
+#       uses: actions/checkout@v4
+#     - name: Download wasm
+#       uses: actions/download-artifact@v4
+#       with:
+#         name: wasm
+#         path: wasm
+#     - name: Move wasm
+#       run: | 
+#         mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
+#         mv wasm/hemtt_paa.js browser/hemtt_paa.js
+#     - name: Rename manifest
+#       run: mv browser/manifest.firefox.json browser/manifest.json && rm browser/manifest.chrome.json
+#     - name: zip
+#       run: | 
+#         cd browser
+#         zip -r firefox.zip *
+#         mv firefox.zip ../firefox.zip
+#     - name: Upload
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: firefox
+#         path: firefox.zip
 
-  chrome:
-    name: Chrome
-    runs-on: ubuntu-latest
-    needs: build-wasm
-    steps:
-    - name: Checkout the source code
-      uses: actions/checkout@v4
-    - name: Download wasm
-      uses: actions/download-artifact@v4
-      with:
-        name: wasm
-        path: wasm
-    - name: Move wasm
-      run: | 
-        mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
-        mv wasm/hemtt_paa.js browser/hemtt_paa.js
-    - name: Rename manifest
-      run: mv browser/manifest.chrome.json browser/manifest.json && rm browser/manifest.firefox.json
-    - name: zip
-      run: | 
-        cd browser
-        zip -r chrome.zip *
-        mv chrome.zip ../chrome.zip
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: chrome
-        path: chrome.zip
+#   chrome:
+#     name: Chrome
+#     runs-on: ubuntu-latest
+#     needs: build-wasm
+#     steps:
+#     - name: Checkout the source code
+#       uses: actions/checkout@v4
+#     - name: Download wasm
+#       uses: actions/download-artifact@v4
+#       with:
+#         name: wasm
+#         path: wasm
+#     - name: Move wasm
+#       run: | 
+#         mv wasm/hemtt_paa_bg.wasm browser/hemtt_paa_bg.wasm
+#         mv wasm/hemtt_paa.js browser/hemtt_paa.js
+#     - name: Rename manifest
+#       run: mv browser/manifest.chrome.json browser/manifest.json && rm browser/manifest.firefox.json
+#     - name: zip
+#       run: | 
+#         cd browser
+#         zip -r chrome.zip *
+#         mv chrome.zip ../chrome.zip
+#     - name: Upload
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: chrome
+#         path: chrome.zip
