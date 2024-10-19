@@ -81,14 +81,12 @@ impl LintRunner<SqfLintData> for Runner {
 
         for statement in target.content() {
             let (Statement::AssignGlobal(var, exp, span) | Statement::AssignLocal(var, exp, span)) = statement else {
-                println!("Not AssignGlobal or AssignLocal, dropping just_saved");
                 just_saved.take();
                 continue
             };
     
             if let Some((saved, original, saved_span)) = just_saved.as_ref() {
                 if saved == var {
-                    println!("Saved is the same as var, dropping just_saved");
                     need_to_restore.insert(original.to_string(), (saved.to_string(), span.clone(), saved_span.clone()));
                     just_saved.take();
                     continue
