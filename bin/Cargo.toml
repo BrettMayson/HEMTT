@@ -1,10 +1,11 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.13.2"
+version = "1.13.3"
 edition = "2021"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
+repository.workspace = true
 
 [lints]
 workspace = true
@@ -27,20 +28,22 @@ hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
 hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
 hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
 hemtt-sqf = { path = "../libs/sqf", version = "1.0.0" }
+hemtt-stringtable = { path = "../libs/stringtable", version = "1.0.0" }
 hemtt-workspace = { path = "../libs/workspace", version = "1.0.0" }
 
 arma3-wiki = { workspace = true }
 clap = { workspace = true }
 dialoguer = "0.11.0"
+dirs = { workspace = true }
 fs_extra = "1.3.0"
 git2 = { workspace = true }
 glob = "0.3.1"
 num_cpus = "1.16.0"
+paste = { workspace = true }
 rayon = "1.10.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.8", features = ["blocking", "json"] }
 rhai = "1.19.0"
-rust-embed = "8.5.0"
 semver = "1.0.23"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -61,5 +64,4 @@ enable-ansi-support = "0.2.1"
 winreg = "0.52.0"
 
 [dev-dependencies]
-paste = { workspace = true }
 sealed_test = "1.1.0"

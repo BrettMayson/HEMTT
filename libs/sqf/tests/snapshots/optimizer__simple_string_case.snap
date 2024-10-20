@@ -1,0 +1,18 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (string_case))
+---
+Statements {
+    content: [
+        Expression(
+            String(
+                "aBCd",
+                44..45,
+                DoubleQuote,
+            ),
+            0..61,
+        ),
+    ],
+    source: "toLower \"A\" + toUpper \"b\" + toUpperAnsi \"C\" + toLowerAnsi \"d\";\n",
+    span: 0..62,
+}

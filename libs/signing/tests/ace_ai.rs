@@ -28,6 +28,13 @@ fn write() {
     assert_eq!(public_disk, buffer);
 
     // Do we generate the stored checksum?
+    println!("opening file: {:?}", file.join("source.pbo"));
+    println!("cwd: {:?}", std::env::current_dir().unwrap());
+    // print tree in cwd
+    for entry in std::fs::read_dir("./tests/ace_ai_3.15.2.69").unwrap() {
+        let entry = entry.unwrap();
+        println!("{:?}", entry.path());
+    }
     let mut pbo = ReadablePbo::from(File::open(file.join("source.pbo")).unwrap()).unwrap();
     let checksum = pbo.gen_checksum().unwrap();
     assert_eq!(&checksum, pbo.checksum());

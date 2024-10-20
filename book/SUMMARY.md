@@ -2,7 +2,8 @@
 
 [Introduction](README.md)
 
-- [Installation](installation.md)
+- [Installation](installation/index.md)
+  - [Arma 3 Tools](installation/arma3tools.md)
 
 # Mod Projects
 
@@ -14,6 +15,10 @@
   - [P Drive](configuration/p-drive.md)
   - [Custom Commands](configuration/custom-commands.md)
 - [Commands](commands/index.md)
+  - [check](commands/check.md)
+  - [localization]()
+    - [coverage](commands/localization/coverage.md)
+    - [sort](commands/localization/sort.md)
   - [new](commands/new.md)
   - [dev](commands/dev.md)
   - [launch](commands/launch.md)
@@ -39,8 +44,13 @@
   - [Inspect](utilities/pbo/inspect.md)
   - [Extract](utilities/pbo/extract.md)
   - [Unpack](utilities/pbo/unpack.md)
+- [PAA]()
+  - [Inspect](utilities/paa/inspect.md)
+  - [Convert](utilities/paa/convert.md)
 - [SQF]()
   - [Case](utilities/sqf/case.md)
+- [Config]()
+  - [Inspect](utilities/config/inspect.md)
 - [Verify](utilities/signing/verify.md)
 
 # Reference

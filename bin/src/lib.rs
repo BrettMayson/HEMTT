@@ -26,6 +26,7 @@ pub fn cli() -> Command {
         .subcommand(commands::book::cli())
         .subcommand(commands::new::cli())
         .subcommand(commands::check::cli())
+        .subcommand(commands::localization::cli())
         .subcommand(commands::dev::cli())
         .subcommand(commands::launch::cli())
         .subcommand(commands::build::cli())
@@ -138,6 +139,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         Some(("new", matches)) => commands::new::execute(matches).map(Some),
         Some(("dev", matches)) => commands::dev::execute(matches, &[]).map(Some),
         Some(("check", _matches)) => commands::check::execute().map(Some),
+        Some(("localization", matches)) => commands::localization::execute(matches)
+            .map_err(std::convert::Into::into)
+            .map(Some),
         Some(("build", matches)) => commands::build::execute(matches)
             .map_err(std::convert::Into::into)
             .map(Some),
@@ -166,10 +170,9 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     };
     if let Some(report) = report? {
         report.write_to_stdout();
-        if !matches
-            .subcommand_name()
-            .is_some_and(|s| s == "new" || s == "utils" || s == "wiki" || s == "book")
-        {
+        if !matches.subcommand_name().is_some_and(|s| {
+            s == "new" || s == "utils" || s == "wiki" || s == "book" || s == "localization"
+        }) {
             report.write_ci_annotations()?;
         }
         if report.failed() {

@@ -1,9 +1,9 @@
 //! Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
 //! `ToDo`: what commands consume arrays
-//! `ToDo`: reduce logging when stable
 //!
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
 use std::ops::Range;
+#[allow(unused_imports)]
 use tracing::{trace, warn};
 
 impl Statements {
@@ -144,6 +144,15 @@ impl Expression {
                                 left_o = consumable;
                             }
                         }
+                        "call" => {
+                            if matches!(&left_o, Self::Variable(name, _) if name == "_this") {
+                                return Self::UnaryCommand(
+                                    UnaryCommand::Named("call".into()),
+                                    Box::new(right_o),
+                                    range.clone(),
+                                );
+                            }
+                        }
                         _ => {}
                     },
                     BinaryCommand::Add => {
@@ -190,6 +199,7 @@ impl Expression {
                     }
                     BinaryCommand::Else => {
                         if let (Self::Code(_), Self::Code(_)) = (&left_o, &right_o) {
+                            #[cfg(debug_assertions)]
                             trace!("optimizing [B:{}] => ConsumeableArray", op_type.as_str());
                             return Self::ConsumeableArray(vec![left_o, right_o], range.clone());
                         }
@@ -247,22 +257,27 @@ impl Expression {
 
     /// Trys to get a consumable array from an existing array if it can be made a constant
     #[must_use]
+    #[allow(unused_variables)]
     fn get_consumable_array(&self, direct: bool, op: &String) -> Option<Self> {
         if let Self::Array(array, range) = &self {
             if !self.is_constant() {
-                // println!("debug: not const {op}");
+                #[cfg(debug_assertions)]
+                trace!("not constant {op}");
                 return None;
             }
             if array.is_empty() {
-                println!("debug: pointless to optimize {op}");
+                #[cfg(debug_assertions)]
+                trace!("pointless to optimize {op}");
                 return None;
             }
             if direct {
+                #[cfg(debug_assertions)]
                 trace!("optimizing [{op}]'s arg => ConsumeableArray");
                 Some(Self::ConsumeableArray(array.clone(), range.clone()))
             } else {
-                // make a copy of the array so the original cannot be modified
+                #[cfg(debug_assertions)]
                 trace!("optimizing [{op}]'s arg => +ConsumeableArray (copy)");
+                // make a copy of the array so the original cannot be modified
                 Some(Self::UnaryCommand(
                     UnaryCommand::Plus,
                     Box::new(Self::ConsumeableArray(array.clone(), range.clone())),
@@ -286,6 +301,7 @@ impl Expression {
         if let Self::String(right_string, _, ref right_wrapper) = right {
             if right_string.is_ascii() {
                 let new_string = op(right_string.as_ref());
+                #[cfg(debug_assertions)]
                 trace!(
                     "optimizing [U:{}] ({}) => {}",
                     op_type.as_str(),
@@ -320,6 +336,7 @@ impl Expression {
         if let Self::Number(crate::Scalar(right_number), _) = right {
             let new_number = op(*right_number);
             if new_number.is_finite() {
+                #[cfg(debug_assertions)]
                 trace!(
                     "optimizing [U:{}] ({}) => {}",
                     op_type.as_str(),
@@ -352,6 +369,7 @@ impl Expression {
             if let Self::String(right_string, _, ref right_wrapper) = right {
                 if right_string.is_ascii() && left_string.is_ascii() {
                     let new_string = op(left_string.as_ref(), right_string.as_ref());
+                    #[cfg(debug_assertions)]
                     trace!(
                         "optimizing [B:{}] ({}) => {}",
                         op_type.as_str(),
@@ -389,6 +407,7 @@ impl Expression {
             if let Self::Number(crate::Scalar(right_number), _) = right {
                 let new_number = op(*left_number, *right_number);
                 if new_number.is_finite() {
+                    #[cfg(debug_assertions)]
                     trace!(
                         "optimizing [B:{}] ({}) => {}",
                         op_type.as_str(),

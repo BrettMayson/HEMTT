@@ -1,0 +1,56 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "_redTextDisabled",
+        UnaryCommand(
+            Named(
+                "format",
+            ),
+            Array(
+                [
+                    String(
+                        "<font color='#FF0000'>%1</font>",
+                        37..70,
+                        DoubleQuote,
+                    ),
+                    String(
+                        "thing",
+                        73..80,
+                        DoubleQuote,
+                    ),
+                ],
+                36..80,
+            ),
+            29..35,
+        ),
+        2..81,
+    ),
+    AssignLocal(
+        "_greenTextEnabled",
+        UnaryCommand(
+            Named(
+                "format",
+            ),
+            Array(
+                [
+                    String(
+                        "<font color='#00FF00'>%1</font>",
+                        119..152,
+                        DoubleQuote,
+                    ),
+                    String(
+                        "thing",
+                        155..162,
+                        DoubleQuote,
+                    ),
+                ],
+                118..162,
+            ),
+            111..117,
+        ),
+        83..163,
+    ),
+]

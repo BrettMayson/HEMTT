@@ -84,15 +84,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     };
 
     let license = if test_mode {
-        Some(
-            String::from_utf8(
-                Licenses::get("apl-sa.txt")
-                    .expect("apl-sa should exist")
-                    .data
-                    .to_vec(),
-            )
-            .expect("license should be utf8"),
-        )
+        Some(include_str!("../../modules/new/licenses/mit.txt").to_string())
     } else {
         Licenses::select(&author)
     };

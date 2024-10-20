@@ -150,12 +150,12 @@ impl Code for CodeS18InVehicleCheck {
 
 impl CodeS18InVehicleCheck {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, var: String, negated: bool) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, negated: bool) -> Self {
         Self {
             span,
             severity,
             diagnostic: None,
-            ident: var,
+            ident,
             negated,
         }
         .generate_processed(processed)

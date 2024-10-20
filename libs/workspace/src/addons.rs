@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::ops::Range;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
@@ -103,10 +103,17 @@ impl Addon {
     }
 
     #[must_use]
+    /// The addon's path from the root
     /// addons/foobar
     /// optionals/foobar
     pub fn folder(&self) -> String {
         format!("{}/{}", self.location, self.name)
+    }
+
+    #[must_use]
+    /// The addon's path from the root, as a `PathBuf`
+    pub fn folder_pathbuf(&self) -> PathBuf {
+        PathBuf::from(self.location.to_string()).join(&self.name)
     }
 
     #[must_use]
