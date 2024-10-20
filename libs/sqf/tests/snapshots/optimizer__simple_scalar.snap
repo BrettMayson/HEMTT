@@ -16,4 +16,5 @@ Statements {
     ],
     source: "-5;\n",
     span: 0..3,
+    issues: [],
 }
