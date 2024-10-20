@@ -27,3 +27,6 @@ pkg/
 hls/languages/sqf.json
 hls/hemtt-language-server
 hls/hemtt-language-server.exe
+
+# Cargo Mutants
+mutants.*/

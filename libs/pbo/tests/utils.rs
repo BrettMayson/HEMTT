@@ -5,6 +5,7 @@ use std::{fs::File, io::Read};
 use hemtt_pbo::{Checksum, Header, Mime, ReadablePbo};
 
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 /// # Panics
 /// Will panic if there is an issue with the test
 pub fn pbo(
@@ -15,6 +16,7 @@ pub fn pbo(
     version: &str,
     prefix: &str,
     checksum: Checksum,
+    gen_checksum: Checksum,
 ) -> ReadablePbo<File> {
     let mut pbo = ReadablePbo::from(file).unwrap();
     assert_eq!(pbo.files().len(), file_count);
@@ -26,21 +28,11 @@ pub fn pbo(
     assert!(pbo.header("not_real").is_none());
     if sorted {
         assert_eq!(pbo.checksum(), &checksum);
-        assert_eq!(pbo.gen_checksum().unwrap(), checksum);
-    } else {
-        // assert_eq!(pbo.gen_checksum().unwrap(), checksum);
     }
+    assert!(Checksum::from_bytes(*pbo.gen_checksum().unwrap().as_bytes()) == gen_checksum);
+    assert_eq!(pbo.gen_checksum().unwrap(), gen_checksum);
     pbo
 }
-
-// pub fn writeable_pbo(pbo: ReadablePbo<File>, file: File) {
-//     let mut writeable: WritablePbo<std::io::Cursor<Vec<u8>>> = pbo.try_into().unwrap();
-//     let original = ReadablePbo::from(file).unwrap();
-
-//     assert_eq!(original.files(), writeable.files_sorted().unwrap());
-//     assert_eq!(original.properties(), writeable.properties());
-//     assert_eq!(original.checksum(), writeable.checksum().unwrap());
-// }
 
 /// # Panics
 /// Will panic if there is an issue with the test
