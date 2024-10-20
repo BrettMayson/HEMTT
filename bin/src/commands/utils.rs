@@ -8,6 +8,7 @@ pub fn cli() -> Command {
         .about("Use HEMTT standalone utils")
         .subcommand_required(false)
         .arg_required_else_help(true)
+        .subcommand(utils::config::cli())
         .subcommand(utils::inspect::cli())
         .subcommand(utils::paa::cli())
         .subcommand(utils::pbo::cli())
@@ -21,6 +22,7 @@ pub fn cli() -> Command {
 /// [`Error`] depending on the modules
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     match matches.subcommand() {
+        Some(("config", matches)) => utils::config::execute(matches),
         Some(("inspect", matches)) => utils::inspect::execute(matches),
         Some(("paa", matches)) => utils::paa::execute(matches),
         Some(("pbo", matches)) => utils::pbo::execute(matches),

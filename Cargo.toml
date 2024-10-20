@@ -15,6 +15,7 @@ members = [
     "libs/preprocessor",
     "libs/signing",
     "libs/sqf",
+    "libs/stringtable",
     "libs/workspace",
 ]
 resolver = "2"

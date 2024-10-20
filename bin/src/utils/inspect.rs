@@ -5,13 +5,7 @@ use std::{
 };
 
 use clap::{ArgMatches, Command};
-use hemtt_pbo::ReadablePbo;
 use hemtt_signing::{BIPublicKey, BISign};
-use term_table::{
-    row::Row,
-    table_cell::{Alignment, TableCell},
-    Table, TableStyle,
-};
 
 use crate::Error;
 
@@ -43,16 +37,19 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .unwrap_or_default()
     {
         "paa" => {
-            paa(File::open(&path)?)?;
+            super::paa::inspect(File::open(&path)?)?;
         }
         "pbo" => {
-            pbo(File::open(&path)?)?;
+            super::pbo::inspect(File::open(&path)?)?;
         }
         "bikey" => {
             bikey(File::open(&path)?, &path)?;
         }
         "bisign" => {
             bisign(File::open(&path)?, &path)?;
+        }
+        "cpp" | "hpp" => {
+            super::config::inspect(&path)?;
         }
         _ => {
             let mut file = File::open(&path)?;
@@ -62,14 +59,14 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             // PBO
             if buf == b"\x00sreV\x00" {
                 warn!("The file appears to be a PBO but does not have the .pbo extension.");
-                pbo(file)?;
+                super::pbo::inspect(file)?;
                 return Ok(());
             }
             // PAA (skip first two bytes)
             if &buf[2..] == b"GGAT" {
                 warn!("The file appears to be a PAA but does not have the .paa extension.");
                 file.seek(std::io::SeekFrom::Start(0))?;
-                paa(file)?;
+                super::paa::inspect(file)?;
                 return Ok(());
             }
             // BiSign
@@ -122,133 +119,4 @@ pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
     println!("  - Exponent: {}", signature.exponent());
     println!("  - Modulus: {}", signature.modulus_display(13));
     Ok(signature)
-}
-
-/// Prints information about a [`ReadablePbo`] to stdout
-///
-/// # Errors
-/// [`hemtt_pbo::Error`] if the file is not a valid [`ReadablePbo`]
-///
-/// # Panics
-/// If the file is not a valid [`ReadablePbo`]
-pub fn pbo(file: File) -> Result<(), Error> {
-    let mut pbo = ReadablePbo::from(file)?;
-    println!("Properties");
-    for (key, value) in pbo.properties() {
-        println!("  - {key}: {value}");
-    }
-    println!("Checksum (SHA1)");
-    let stored = *pbo.checksum();
-    println!("  - Stored:  {}", stored.hex());
-    let actual = pbo.gen_checksum()?;
-    println!("  - Actual:  {}", actual.hex());
-
-    let files = pbo.files();
-    println!("Files");
-    if pbo.is_sorted().is_ok() {
-        println!("  - Sorted: true");
-    } else {
-        println!("  - Sorted: false !!!");
-    }
-    println!("  - Count: {}", files.len());
-    let mut table = Table::new();
-    table.style = TableStyle::thin();
-    table.add_row(Row::new(vec![
-        TableCell::builder("Filename")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Method")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Size")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Original")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Timestamp")
-            .alignment(Alignment::Center)
-            .build(),
-    ]));
-    for file in files {
-        let mut row = Row::new(vec![
-            TableCell::new(file.filename()),
-            TableCell::builder(file.mime().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.size().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.original().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.timestamp().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-        ]);
-        row.has_separator = table.rows.len() == 1;
-        table.add_row(row);
-    }
-    println!("{}", table.render());
-    if pbo.is_sorted().is_err() {
-        warn!("The PBO is not sorted, signatures may be invalid");
-    }
-    if stored != actual {
-        warn!("The PBO has an invalid hash stored");
-    }
-    Ok(())
-}
-
-/// Prints information about a PAA to stdout
-///
-/// # Errors
-/// [`Error::Io`] if the file is not a valid [`hemtt_paa::Paa`]
-pub fn paa(mut file: File) -> Result<(), Error> {
-    let paa = hemtt_paa::Paa::read(&mut file)?;
-    println!("PAA");
-    println!("  - Format: {}", paa.format());
-    let maps = paa.maps();
-    println!("Maps: {}", maps.len());
-    let mut table = Table::new();
-    table.style = TableStyle::thin();
-    table.add_row(Row::new(vec![
-        TableCell::builder("Width")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Height")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Size")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Format")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Compressed")
-            .alignment(Alignment::Center)
-            .build(),
-    ]));
-    for map in maps {
-        let mut row = Row::new(vec![
-            TableCell::builder(map.width().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(map.height().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(map.data().len().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(format!("{:?}", map.format()))
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(map.is_compressed().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-        ]);
-        row.has_separator = table.rows.len() == 1;
-        table.add_row(row);
-    }
-    println!("{}", table.render());
-    Ok(())
 }

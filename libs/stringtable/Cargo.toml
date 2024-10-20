@@ -1,0 +1,18 @@
+[package]
+name = "hemtt-stringtable"
+version = "1.0.0"
+edition = "2021"
+description = "A stringtable library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+indexmap = { workspace = true }
+paste = { workspace = true }
+quick-xml = { version = "0.36.2", features = ["serialize"] }
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+insta = { workspace = true }
