@@ -1551,6 +1551,7 @@ dependencies = [
  "byteorder",
  "hemtt-common",
  "indexmap",
+ "insta",
  "serde",
  "sha-1",
 ]

@@ -7,7 +7,7 @@ use hemtt_common::io::WriteExt;
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 
-use crate::{error::Error, model::Header, WritePbo};
+use crate::{error::Error, model::Header, Checksum, WritePbo};
 
 #[derive(Default)]
 /// A PBO file that can be written to
@@ -133,7 +133,7 @@ impl<I: Seek + Read> WritablePbo<I> {
         &mut self,
         output: &mut O,
         properties: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<Checksum, Error> {
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         if properties {
             Header::property().write_pbo(&mut headers)?;
@@ -194,9 +194,11 @@ impl<I: Seek + Read> WritablePbo<I> {
             }
         }
 
+        let checksum = hasher.finalize();
         buffered_output.write_all(&[0])?;
-        buffered_output.write_all(&hasher.finalize())?;
+        buffered_output.write_all(&checksum)?;
+        buffered_output.flush()?;
 
-        Ok(())
+        Ok(checksum.to_vec().into())
     }
 }
