@@ -8,9 +8,6 @@ minor = 0
 patch = 4
 git_hash = 0
 
-[asc]
-enabled = true
-
 [hemtt.launch.default]
 dlc = [
     "ws"

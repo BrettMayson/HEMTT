@@ -1,8 +1,5 @@
 use crate::{context::Context, error::Error, report::Report};
 
-#[cfg(not(target_os = "macos"))]
-pub mod asc;
-
 pub mod archive;
 pub mod bom;
 pub mod hook;
