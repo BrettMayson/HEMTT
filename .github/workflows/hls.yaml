@@ -1,99 +1,99 @@
-# name: Language Server
+name: Language Server
 
-# on:
-#   push:
-#     branches: [main]
-#     tags:
-#       - hls-v*
-#   pull_request:
-#     branches: [main]
+on:
+  push:
+    branches: [main]
+    tags:
+      - hls-v*
+  pull_request:
+    branches: [main]
 
-# permissions:
-#   contents: read
+permissions:
+  contents: read
 
-# jobs:
-#   build:
-#     name: ${{ matrix.os.name }}
-#     runs-on: ${{ matrix.os.runner }}
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         os:
-#           - runner: ubuntu-latest
-#             name: ubuntu
-#             artifact: linux-x64
-#             exe: hemtt-language-server
-#           - runner: windows-latest
-#             name: windows
-#             artifact: windows-x64
-#             exe: hemtt-language-server.exe
-#     steps:
-#       - uses: actions/checkout@v4
-#       - uses: dtolnay/rust-toolchain@stable
-#         with:
-#           toolchain: stable
-#       - name: Rust Cache
-#         uses: Swatinem/rust-cache@v2
-#         with:
-#           key: hls-${{ matrix.os.name }}
-#       - name: Compile
-#         run: |
-#           cd hls
-#           cargo build --release
-#       - name: Upload
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: ${{ matrix.os.artifact }}
-#           path: target/release/${{ matrix.os.exe }}
-#       - name: Upload Language (Linux)
-#         if: startsWith(matrix.os.runner, 'ubuntu')
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: languages
-#           path: hls/languages
+jobs:
+  build:
+    name: ${{ matrix.os.name }}
+    runs-on: ${{ matrix.os.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - runner: ubuntu-latest
+            name: ubuntu
+            artifact: linux-x64
+            exe: hemtt-language-server
+          - runner: windows-latest
+            name: windows
+            artifact: windows-x64
+            exe: hemtt-language-server.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: hls-${{ matrix.os.name }}
+      - name: Compile
+        run: |
+          cd hls
+          cargo build --release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os.artifact }}
+          path: target/release/${{ matrix.os.exe }}
+      - name: Upload Language (Linux)
+        if: startsWith(matrix.os.runner, 'ubuntu')
+        uses: actions/upload-artifact@v4
+        with:
+          name: languages
+          path: hls/languages
 
-#   package:
-#     name: Package
-#     runs-on: ubuntu-latest
-#     needs: build
-#     steps:
-#       - uses: actions/checkout@v4
-#       - uses: actions/download-artifact@v4
-#         with:
-#           name: linux-x64
-#           path: linux
-#       - uses: actions/download-artifact@v4
-#         with:
-#           name: windows-x64
-#           path: windows
-#       - name: Set Executable
-#         run: |
-#           chmod +x linux/hemtt-language-server
-#       - name: Move Server
-#         run: |
-#           mv linux/hemtt-language-server hls/hemtt-language-server
-#           mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
-#       - name: Remove Existing Languages
-#         run: |
-#           rm -rf hls/languages
-#       - name: Download Languages
-#         uses: actions/download-artifact@v4
-#         with:
-#           name: languages
-#           path: hls/languages
-#       - name: Package
-#         run: |
-#           cd hls
-#           npm install
-#           npm install -g @vscode/vsce
-#           vsce package
-#       - name: Upload
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: hls
-#           path: hls/*.vsix
-#       - name: Publish
-#         if: startsWith(github.ref, 'refs/tags/')
-#         run: |
-#           cd hls
-#           vsce publish -p ${{ secrets.VSCE_TOKEN }}
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x64
+          path: linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: windows
+      - name: Set Executable
+        run: |
+          chmod +x linux/hemtt-language-server
+      - name: Move Server
+        run: |
+          mv linux/hemtt-language-server hls/hemtt-language-server
+          mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
+      - name: Remove Existing Languages
+        run: |
+          rm -rf hls/languages
+      - name: Download Languages
+        uses: actions/download-artifact@v4
+        with:
+          name: languages
+          path: hls/languages
+      - name: Package
+        run: |
+          cd hls
+          npm install
+          npm install -g @vscode/vsce
+          vsce package
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: hls
+          path: hls/*.vsix
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd hls
+          vsce publish -p ${{ secrets.VSCE_TOKEN }}
