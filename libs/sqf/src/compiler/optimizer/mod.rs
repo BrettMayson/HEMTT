@@ -1,9 +1,9 @@
 //! Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
 //! `ToDo`: what commands consume arrays
-//! `ToDo`: reduce logging when stable
 //!
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
 use std::ops::Range;
+#[allow(unused_imports)]
 use tracing::{trace, warn};
 
 impl Statements {
@@ -257,6 +257,7 @@ impl Expression {
 
     /// Trys to get a consumable array from an existing array if it can be made a constant
     #[must_use]
+    #[allow(unused_variables)]
     fn get_consumable_array(&self, direct: bool, op: &String) -> Option<Self> {
         if let Self::Array(array, range) = &self {
             if !self.is_constant() {
