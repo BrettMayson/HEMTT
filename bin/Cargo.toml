@@ -42,7 +42,6 @@ rayon = "1.10.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.8", features = ["blocking", "json"] }
 rhai = "1.19.0"
-rust-embed = "8.5.0"
 semver = "1.0.23"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

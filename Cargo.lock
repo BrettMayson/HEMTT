@@ -1421,7 +1421,6 @@ dependencies = [
  "regex",
  "reqwest",
  "rhai",
- "rust-embed",
  "sealed_test",
  "semver",
  "serde",
