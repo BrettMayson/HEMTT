@@ -28,5 +28,8 @@ hls/languages/sqf.json
 hls/hemtt-language-server
 hls/hemtt-language-server.exe
 
+# Insta Pending Snpashots
+*.snap.new
+
 # Cargo Mutants
 mutants.*/

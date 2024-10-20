@@ -1,0 +1,9 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: lint(stringify! (s11_if_not_else))
+---
+[0m[1m[38;5;14mhelp[L-S11][0m[1m: Unneeded not in if[0m
+  [0m[36m┌─[0m s11_if_not_else.sqf:2:5
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m if ([0m[36m![0malive player) then { player } else { objNull };
+  [0m[36m│[0m     [0m[36m^[0m [0m[36munnecessary `!` operation[0m

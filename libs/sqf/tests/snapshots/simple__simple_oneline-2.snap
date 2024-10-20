@@ -1,0 +1,23 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "value",
+        BinaryCommand(
+            Add,
+            Variable(
+                "a",
+                16..17,
+            ),
+            String(
+                "1",
+                20..23,
+                DoubleQuote,
+            ),
+            18..19,
+        ),
+        0..23,
+    ),
+]

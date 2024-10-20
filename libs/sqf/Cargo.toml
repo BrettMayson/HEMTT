@@ -32,4 +32,5 @@ parser = ["chumsky"]
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
+insta = { workspace = true }
 paste = { workspace = true }

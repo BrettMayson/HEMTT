@@ -8,18 +8,32 @@ use hemtt_workspace::LayerType;
 
 const ROOT: &str = "tests/rapify/";
 
-macro_rules! bootstrap {
+macro_rules! rapify {
     ($dir:ident) => {
         paste::paste! {
             #[test]
             fn [<config_rapify_ $dir>]() {
-                check(stringify!($dir));
+                rapify(stringify!($dir));
             }
         }
     };
 }
 
-fn check(dir: &str) {
+rapify!(ace_main);
+rapify!(cba_multiline);
+rapify!(delete_class);
+rapify!(eval);
+rapify!(external_class);
+rapify!(inheritence_array_extend);
+rapify!(join_digit);
+rapify!(join_in_ident);
+rapify!(join);
+rapify!(nested_array);
+rapify!(numbers);
+rapify!(procedural_texture);
+rapify!(single_class);
+
+fn rapify(dir: &str) {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -62,17 +76,3 @@ fn check(dir: &str) {
         assert_eq!(output, expected);
     };
 }
-
-bootstrap!(ace_main);
-bootstrap!(cba_multiline);
-bootstrap!(delete_class);
-bootstrap!(eval);
-bootstrap!(external_class);
-bootstrap!(inheritence_array_extend);
-bootstrap!(join_digit);
-bootstrap!(join_in_ident);
-bootstrap!(join);
-bootstrap!(nested_array);
-bootstrap!(numbers);
-bootstrap!(procedural_texture);
-bootstrap!(single_class);

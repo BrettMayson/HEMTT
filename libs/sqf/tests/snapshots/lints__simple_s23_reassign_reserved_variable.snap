@@ -1,0 +1,36 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: lint(stringify! (s23_reassign_reserved_variable))
+---
+[0m[1m[38;5;9merror[L-S23][0m[1m: Reassigning reserved variable `_this`[0m
+  [0m[36m┌─[0m s23_reassign_reserved_variable.sqf:3:5
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m     [0m[31m_this = 123[0m;
+  [0m[36m│[0m     [0m[31m^^^^^^^^^^^[0m [0m[31m`_this` is reserved[0m
+
+
+[0m[1m[38;5;9merror[L-S23][0m[1m: Reassigning reserved variable `_this`[0m
+  [0m[36m┌─[0m s23_reassign_reserved_variable.sqf:8:13
+  [0m[36m│[0m
+[0m[36m8[0m [0m[36m│[0m     params [[0m[31m"_this"[0m];
+  [0m[36m│[0m             [0m[31m^^^^^^^[0m [0m[31m`_this` is reserved[0m
+
+
+[0m[1m[38;5;9merror[L-S23][0m[1m: Reserved variable `_this` was never restored after being saved to `_savedThis`[0m
+   [0m[36m┌─[0m s23_reassign_reserved_variable.sqf:13:26
+   [0m[36m│[0m
+[0m[36m13[0m [0m[36m│[0m     private _savedThis = [0m[31m_this[0m;
+   [0m[36m│[0m                          [0m[31m^^^^^[0m [0m[31m`_savedThis` is never restored to `_this`[0m
+[0m[36m14[0m [0m[36m│[0m     _this = 123;
+   [0m[36m│[0m     [0m[36m-----------[0m [0m[36m`_this` is modified here[0m
+
+
+[0m[1m[38;5;9merror[L-S23][0m[1m: Holder variable `_savedThis` is overwritten before restoring `_this`[0m
+   [0m[36m┌─[0m s23_reassign_reserved_variable.sqf:22:5
+   [0m[36m│[0m
+[0m[36m20[0m [0m[36m│[0m     private _savedThis = _this;
+   [0m[36m│[0m                          [0m[36m-----[0m [0m[36m`_savedThis` saves the state of _this[0m
+[0m[36m21[0m [0m[36m│[0m     _this = 123;
+   [0m[36m│[0m     [0m[36m-----------[0m [0m[36m`_this` is changed[0m
+[0m[36m22[0m [0m[36m│[0m     [0m[31mprivate _savedThis = 1234[0m;
+   [0m[36m│[0m     [0m[31m^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[31m`_savedThis` is overwritten before restoring `_this`[0m
