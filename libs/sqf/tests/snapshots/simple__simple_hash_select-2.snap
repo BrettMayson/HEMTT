@@ -1,0 +1,23 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    Expression(
+        BinaryCommand(
+            Select,
+            Variable(
+                "_explosive",
+                0..10,
+            ),
+            Number(
+                FloatOrd(
+                    0.0,
+                ),
+                13..14,
+            ),
+            11..12,
+        ),
+        0..14,
+    ),
+]

@@ -1,0 +1,16 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "_target",
+        NularCommand(
+            NularCommand {
+                name: "playerTargetLock",
+            },
+            18..34,
+        ),
+        0..34,
+    ),
+]

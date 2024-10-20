@@ -1,0 +1,282 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    Expression(
+        BinaryCommand(
+            Named(
+                "count",
+            ),
+            Code(
+                Statements {
+                    content: [
+                        Expression(
+                            UnaryCommand(
+                                Named(
+                                    "deleteVehicle",
+                                ),
+                                Variable(
+                                    "_x",
+                                    17..19,
+                                ),
+                                3..16,
+                            ),
+                            3..19,
+                        ),
+                    ],
+                    source: "deleteVehicle _x",
+                    span: 3..19,
+                },
+            ),
+            NularCommand(
+                NularCommand {
+                    name: "allPlayers",
+                },
+                28..38,
+            ),
+            22..27,
+        ),
+        1..38,
+    ),
+    Expression(
+        BinaryCommand(
+            Named(
+                "call",
+            ),
+            Array(
+                [
+                    String(
+                        "something",
+                        43..54,
+                        DoubleQuote,
+                    ),
+                    Code(
+                        Statements {
+                            content: [
+                                Expression(
+                                    BinaryCommand(
+                                        Named(
+                                            "then",
+                                        ),
+                                        UnaryCommand(
+                                            Named(
+                                                "if",
+                                            ),
+                                            UnaryCommand(
+                                                Named(
+                                                    "alive",
+                                                ),
+                                                NularCommand(
+                                                    NularCommand {
+                                                        name: "player",
+                                                    },
+                                                    72..78,
+                                                ),
+                                                66..71,
+                                            ),
+                                            62..64,
+                                        ),
+                                        Code(
+                                            Statements {
+                                                content: [
+                                                    Expression(
+                                                        BinaryCommand(
+                                                            Named(
+                                                                "findIf",
+                                                            ),
+                                                            NularCommand(
+                                                                NularCommand {
+                                                                    name: "allPlayers",
+                                                                },
+                                                                95..105,
+                                                            ),
+                                                            Code(
+                                                                Statements {
+                                                                    content: [
+                                                                        Expression(
+                                                                            UnaryCommand(
+                                                                                Named(
+                                                                                    "alive",
+                                                                                ),
+                                                                                Variable(
+                                                                                    "_x",
+                                                                                    121..123,
+                                                                                ),
+                                                                                115..120,
+                                                                            ),
+                                                                            115..123,
+                                                                        ),
+                                                                    ],
+                                                                    source: "alive _x",
+                                                                    span: 115..123,
+                                                                },
+                                                            ),
+                                                            106..112,
+                                                        ),
+                                                        95..125,
+                                                    ),
+                                                    Expression(
+                                                        BinaryCommand(
+                                                            Named(
+                                                                "forEach",
+                                                            ),
+                                                            Code(
+                                                                Statements {
+                                                                    content: [
+                                                                        Expression(
+                                                                            UnaryCommand(
+                                                                                Named(
+                                                                                    "deleteVehicle",
+                                                                                ),
+                                                                                Variable(
+                                                                                    "_x",
+                                                                                    163..165,
+                                                                                ),
+                                                                                149..162,
+                                                                            ),
+                                                                            149..165,
+                                                                        ),
+                                                                    ],
+                                                                    source: "deleteVehicle _x;",
+                                                                    span: 149..166,
+                                                                },
+                                                            ),
+                                                            NularCommand(
+                                                                NularCommand {
+                                                                    name: "allPlayers",
+                                                                },
+                                                                185..195,
+                                                            ),
+                                                            177..184,
+                                                        ),
+                                                        135..195,
+                                                    ),
+                                                ],
+                                                source: "allPlayers findIf { alive _x };\n        {\n            deleteVehicle _x;\n        } forEach allPlayers;",
+                                                span: 95..196,
+                                            },
+                                        ),
+                                        80..84,
+                                    ),
+                                    62..202,
+                                ),
+                            ],
+                            source: "if (alive player) then {\n        allPlayers findIf { alive _x };\n        {\n            deleteVehicle _x;\n        } forEach allPlayers;\n    };",
+                            span: 62..203,
+                        },
+                    ),
+                ],
+                43..205,
+            ),
+            Variable(
+                "CBA_fnc_addEventHandler",
+                212..235,
+            ),
+            207..211,
+        ),
+        42..235,
+    ),
+    Expression(
+        BinaryCommand(
+            Named(
+                "call",
+            ),
+            Array(
+                [
+                    String(
+                        "something",
+                        240..251,
+                        DoubleQuote,
+                    ),
+                    Code(
+                        Statements {
+                            content: [
+                                Expression(
+                                    BinaryCommand(
+                                        Named(
+                                            "then",
+                                        ),
+                                        UnaryCommand(
+                                            Named(
+                                                "if",
+                                            ),
+                                            UnaryCommand(
+                                                Named(
+                                                    "alive",
+                                                ),
+                                                NularCommand(
+                                                    NularCommand {
+                                                        name: "player",
+                                                    },
+                                                    269..275,
+                                                ),
+                                                263..268,
+                                            ),
+                                            259..261,
+                                        ),
+                                        Code(
+                                            Statements {
+                                                content: [
+                                                    Expression(
+                                                        BinaryCommand(
+                                                            Named(
+                                                                "count",
+                                                            ),
+                                                            Code(
+                                                                Statements {
+                                                                    content: [
+                                                                        Expression(
+                                                                            UnaryCommand(
+                                                                                Named(
+                                                                                    "deleteVehicle",
+                                                                                ),
+                                                                                Variable(
+                                                                                    "_x",
+                                                                                    308..310,
+                                                                                ),
+                                                                                294..307,
+                                                                            ),
+                                                                            294..310,
+                                                                        ),
+                                                                    ],
+                                                                    source: "deleteVehicle _x",
+                                                                    span: 294..310,
+                                                                },
+                                                            ),
+                                                            NularCommand(
+                                                                NularCommand {
+                                                                    name: "allPlayers",
+                                                                },
+                                                                319..329,
+                                                            ),
+                                                            313..318,
+                                                        ),
+                                                        292..329,
+                                                    ),
+                                                ],
+                                                source: "{ deleteVehicle _x } count allPlayers;",
+                                                span: 292..330,
+                                            },
+                                        ),
+                                        277..281,
+                                    ),
+                                    259..336,
+                                ),
+                            ],
+                            source: "if (alive player) then {\n        { deleteVehicle _x } count allPlayers;\n    };",
+                            span: 259..337,
+                        },
+                    ),
+                ],
+                240..339,
+            ),
+            Variable(
+                "CBA_fnc_addEventHandler",
+                346..369,
+            ),
+            341..345,
+        ),
+        239..369,
+    ),
+]

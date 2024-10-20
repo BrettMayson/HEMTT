@@ -1,0 +1,49 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (static_math))
+---
+Statements {
+    content: [
+        Expression(
+            Number(
+                FloatOrd(
+                    23.0,
+                ),
+                48..49,
+            ),
+            0..51,
+        ),
+        Expression(
+            UnaryCommand(
+                Named(
+                    "sqrt",
+                ),
+                Number(
+                    FloatOrd(
+                        -100.0,
+                    ),
+                    59..60,
+                ),
+                54..58,
+            ),
+            54..63,
+        ),
+        Expression(
+            BinaryCommand(
+                Add,
+                Variable(
+                    "z",
+                    67..68,
+                ),
+                Variable(
+                    "z",
+                    71..72,
+                ),
+                69..70,
+            ),
+            67..72,
+        ),
+    ],
+    source: "1 + (2 * 2) + (36 % 31) + (36 / 6) + (sqrt 100) - 3;\n\nsqrt -100;\n\n\nz + z;\n",
+    span: 0..73,
+}

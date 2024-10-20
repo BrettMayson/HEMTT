@@ -1,0 +1,19 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (scalar))
+---
+Statements {
+    content: [
+        Expression(
+            Number(
+                FloatOrd(
+                    -5.0,
+                ),
+                0..1,
+            ),
+            0..2,
+        ),
+    ],
+    source: "-5;\n",
+    span: 0..3,
+}

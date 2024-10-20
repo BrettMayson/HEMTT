@@ -1,0 +1,140 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    Expression(
+        BinaryCommand(
+            Named(
+                "forEach",
+            ),
+            Code(
+                Statements {
+                    content: [
+                        Expression(
+                            UnaryCommand(
+                                Named(
+                                    "deleteVehicle",
+                                ),
+                                Variable(
+                                    "_x",
+                                    21..23,
+                                ),
+                                7..20,
+                            ),
+                            7..23,
+                        ),
+                    ],
+                    source: "deleteVehicle _x;",
+                    span: 7..24,
+                },
+            ),
+            NularCommand(
+                NularCommand {
+                    name: "allUnits",
+                },
+                35..43,
+            ),
+            27..34,
+        ),
+        1..43,
+    ),
+    Expression(
+        BinaryCommand(
+            Named(
+                "forEach",
+            ),
+            Code(
+                Statements {
+                    content: [
+                        Expression(
+                            UnaryCommand(
+                                Named(
+                                    "systemChat",
+                                ),
+                                UnaryCommand(
+                                    Named(
+                                        "format",
+                                    ),
+                                    Array(
+                                        [
+                                            String(
+                                                "%1",
+                                                72..76,
+                                                DoubleQuote,
+                                            ),
+                                            Variable(
+                                                "_x",
+                                                78..80,
+                                            ),
+                                        ],
+                                        72..80,
+                                    ),
+                                    64..70,
+                                ),
+                                53..63,
+                            ),
+                            53..81,
+                        ),
+                        Expression(
+                            BinaryCommand(
+                                Named(
+                                    "forEach",
+                                ),
+                                Code(
+                                    Statements {
+                                        content: [
+                                            Expression(
+                                                BinaryCommand(
+                                                    Named(
+                                                        "setDamage",
+                                                    ),
+                                                    Variable(
+                                                        "_x",
+                                                        97..99,
+                                                    ),
+                                                    Number(
+                                                        FloatOrd(
+                                                            1.0,
+                                                        ),
+                                                        110..111,
+                                                    ),
+                                                    100..109,
+                                                ),
+                                                97..111,
+                                            ),
+                                        ],
+                                        source: "_x setDamage 1;",
+                                        span: 97..112,
+                                    },
+                                ),
+                                UnaryCommand(
+                                    Named(
+                                        "crew",
+                                    ),
+                                    Variable(
+                                        "_x",
+                                        132..134,
+                                    ),
+                                    127..131,
+                                ),
+                                119..126,
+                            ),
+                            87..134,
+                        ),
+                    ],
+                    source: "systemChat format [\"%1\", _x];\n    {\n        _x setDamage 1;\n    } forEach crew _x;",
+                    span: 53..135,
+                },
+            ),
+            NularCommand(
+                NularCommand {
+                    name: "allUnits",
+                },
+                146..154,
+            ),
+            138..145,
+        ),
+        47..154,
+    ),
+]

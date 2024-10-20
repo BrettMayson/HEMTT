@@ -1,0 +1,44 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "_name",
+        String(
+            "HEMTT",
+            16..23,
+            DoubleQuote,
+        ),
+        0..23,
+    ),
+    Expression(
+        UnaryCommand(
+            Named(
+                "systemChat",
+            ),
+            UnaryCommand(
+                Named(
+                    "format",
+                ),
+                Array(
+                    [
+                        String(
+                            "Hello, %1!",
+                            44..56,
+                            DoubleQuote,
+                        ),
+                        Variable(
+                            "_name",
+                            58..63,
+                        ),
+                    ],
+                    44..63,
+                ),
+                36..42,
+            ),
+            25..35,
+        ),
+        25..64,
+    ),
+]

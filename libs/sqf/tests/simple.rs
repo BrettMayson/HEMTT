@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::database::Database;
+use hemtt_sqf::{parser::database::Database, Statement};
 use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
 const ROOT: &str = "tests/simple/";
@@ -13,13 +13,26 @@ macro_rules! simple {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                simple(stringify!($dir));
+                let (sqfc, ast) = simple(stringify!($dir));
+                insta::assert_debug_snapshot!(sqfc);
+                insta::assert_debug_snapshot!(ast);
             }
         }
     };
 }
 
-fn simple(file: &str) {
+simple!(dev);
+simple!(eventhandler);
+simple!(foreach);
+simple!(format_font);
+simple!(get_visibility);
+simple!(hash_select);
+simple!(hello);
+simple!(include);
+simple!(oneline);
+simple!(semicolons);
+
+fn simple(file: &str) -> (Vec<u8>, Vec<Statement>) {
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
@@ -46,21 +59,11 @@ fn simple(file: &str) {
     assert_ne!(parsed.content().len(), 0);
     let mut buffer = Vec::new();
     parsed.compile_to_writer(&processed, &mut buffer).unwrap();
-    std::fs::write(format!("tests/simple/{file}.sqfc"), buffer).unwrap();
+    std::fs::write(format!("tests/simple/{file}.sqfc"), &buffer).unwrap();
     std::fs::write(
         format!("tests/simple/{file}.sqfast"),
         format!("{:#?}", parsed.content()),
     )
     .unwrap();
+    (buffer, parsed.content().to_vec())
 }
-
-simple!(dev);
-simple!(eventhandler);
-simple!(foreach);
-simple!(format_font);
-simple!(get_visibility);
-simple!(hash_select);
-simple!(hello);
-simple!(include);
-simple!(oneline);
-simple!(semicolons);

@@ -1,8 +1,0 @@
-[0m[1m[38;5;9merror[L-C10][0m[1m: classes must use braces when inheriting[0m
-  [0m[36m┌─[0m source.hpp:2:29
-  [0m[36m│[0m
-[0m[36m2[0m [0m[36m│[0m class AlsoExternal: External[0m[31m;[0m
-  [0m[36m│[0m                             [0m[31m^[0m [0m[31mmissing braces[0m
-  [0m[36m│[0m
-  [0m[36m=[0m [32mtry[0m:  {};
-
