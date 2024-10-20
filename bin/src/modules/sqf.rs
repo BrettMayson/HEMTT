@@ -24,9 +24,7 @@ pub struct SQFCompiler {
 impl SQFCompiler {
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            database: None,
-        }
+        Self { database: None }
     }
 }
 
@@ -129,10 +127,7 @@ impl Module for SQFCompiler {
         for new_report in reports {
             report.merge(new_report);
         }
-        info!(
-            "Compiled {} sqf files",
-            counter.load(Ordering::Relaxed)
-        );
+        info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(report)
     }
 
