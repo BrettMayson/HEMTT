@@ -4,10 +4,11 @@ use clap::{ArgMatches, Command};
 
 use crate::Error;
 
-use super::inspect::pbo;
-
 mod extract;
+mod inspect;
 mod unpack;
+
+pub use inspect::inspect;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -35,7 +36,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         Some(("extract", matches)) => extract::execute(matches),
         Some(("unpack", matches)) => unpack::execute(matches),
 
-        Some(("inspect", matches)) => pbo(File::open(PathBuf::from(
+        Some(("inspect", matches)) => inspect::inspect(File::open(PathBuf::from(
             matches.get_one::<String>("pbo").expect("required"),
         ))?),
 
