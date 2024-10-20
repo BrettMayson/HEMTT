@@ -73,7 +73,7 @@ impl LintRunner<SqfLintData> for Runner {
             return Vec::new();
         };
 
-        vec![Arc::new(Code18InVehicleCheck::new(
+        vec![Arc::new(CodeS18InVehicleCheck::new(
             target.full_span(),
             processed,
             config.severity(),
@@ -104,15 +104,15 @@ fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<String> {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct Code18InVehicleCheck {
+pub struct CodeS18InVehicleCheck {
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
-    var: String,
+    ident: String,
     negated: bool,
 }
 
-impl Code for Code18InVehicleCheck {
+impl Code for CodeS18InVehicleCheck {
     fn ident(&self) -> &'static str {
         "L-S18"
     }
@@ -139,7 +139,7 @@ impl Code for Code18InVehicleCheck {
 
     fn suggestion(&self) -> Option<String> {
         Some(
-            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, self.var),
+            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, self.ident),
         )
     }
 
@@ -148,14 +148,14 @@ impl Code for Code18InVehicleCheck {
     }
 }
 
-impl Code18InVehicleCheck {
+impl CodeS18InVehicleCheck {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, var: String, negated: bool) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, negated: bool) -> Self {
         Self {
             span,
             severity,
             diagnostic: None,
-            var,
+            ident,
             negated,
         }
         .generate_processed(processed)

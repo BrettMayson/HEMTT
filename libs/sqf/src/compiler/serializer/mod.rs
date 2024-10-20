@@ -15,7 +15,6 @@ use std::cmp::Ordering;
 use std::io::{self, Read, Write};
 use std::sync::Arc;
 
-/// `ArmaScriptCompiler` defaults to `1`, so this is hardcoded for now.
 pub const VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

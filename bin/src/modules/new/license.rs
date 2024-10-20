@@ -1,7 +1,3 @@
-use rust_embed::RustEmbed;
-
-#[derive(RustEmbed)]
-#[folder = "dist/licenses/"]
 pub struct Licenses;
 
 impl Licenses {
@@ -33,18 +29,16 @@ impl Licenses {
         }
 
         let license = match selection {
-            0 => Self::get("apl-sa.txt"),
-            1 => Self::get("apl.txt"),
-            2 => Self::get("apl-nd.txt"),
-            3 => Self::get("apache.txt"),
-            4 => Self::get("gpl-3.0.txt"),
-            5 => Self::get("mit.txt"),
-            6 => Self::get("unlicense.txt"),
+            0 => include_str!("licenses/apl-sa.txt"),
+            1 => include_str!("licenses/apl.txt"),
+            2 => include_str!("licenses/apl-nd.txt"),
+            3 => include_str!("licenses/apache.txt"),
+            4 => include_str!("licenses/gpl-3.0.txt"),
+            5 => include_str!("licenses/mit.txt"),
+            6 => include_str!("licenses/unlicense.txt"),
             _ => unreachable!(),
-        }
-        .expect("license should exist");
+        };
 
-        let license = String::from_utf8(license.data.to_vec()).expect("license should be utf8");
         Some(license.replace("{author}", author).replace(
             "{year}",
             time::OffsetDateTime::now_utc().year().to_string().as_str(),

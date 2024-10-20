@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
@@ -41,14 +41,14 @@ impl Code for IncludeNotFound {
 
 impl IncludeNotFound {
     #[must_use]
-    pub fn new(token: Vec<Rc<Token>>) -> Self {
+    pub fn new(token: Vec<Arc<Token>>) -> Self {
         Self {
             token: token.into_iter().map(|t| t.as_ref().clone()).collect(),
         }
     }
 
     #[must_use]
-    pub fn code(token: Vec<Rc<Token>>) -> Error {
+    pub fn code(token: Vec<Arc<Token>>) -> Error {
         Error::Code(Arc::new(Self::new(token)))
     }
 }

@@ -47,8 +47,13 @@ fn config(chapter: &mut Chapter) {
         text.push_str(&format!("\n***\n## {}\n", lint.ident()));
         text.push_str(&format!("Code: **L-C{}**  \n", lint.doc_ident()));
         text.push_str(&format!(
-            "Default Severity: **{:?}**  \n",
-            lint.default_config().severity()
+            "Default Severity: **{:?}** {}  \n",
+            lint.default_config().severity(),
+            if lint.default_config().enabled() {
+                ""
+            } else {
+                "(Disabled)"
+            },
         ));
         text.push_str(&format!(
             "Minimum Severity: {:?}  \n",
@@ -85,8 +90,13 @@ fn sqf(chapter: &mut Chapter) {
         text.push_str(&format!("\n***\n## {}\n", lint.ident()));
         text.push_str(&format!("Code: **L-S{}**  \n", lint.doc_ident()));
         text.push_str(&format!(
-            "Default Severity: **{:?}**  \n",
-            lint.default_config().severity()
+            "Default Severity: **{:?}** {}  \n",
+            lint.default_config().severity(),
+            if lint.default_config().enabled() {
+                ""
+            } else {
+                "(Disabled)"
+            },
         ));
         text.push_str(&format!(
             "Minimum Severity: {:?}  \n",
@@ -142,14 +152,9 @@ fn highlight() {
     });
 
     let highlight = std::fs::read_to_string("book-lints/highlight.js").unwrap();
-    let existing = std::fs::read_to_string("book/highlight.js").unwrap();
 
     let highlight = highlight.replace("$FLOW$", &format!("'{}'", flow.join("','")));
     let highlight = highlight.replace("$COMMANDS$", &format!("'{}'", commands.join("','")));
-
-    if highlight == existing {
-        return;
-    }
 
     std::fs::write("book/highlight.js", highlight).unwrap();
 }

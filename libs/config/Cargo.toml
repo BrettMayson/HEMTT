@@ -25,4 +25,5 @@ vfs = { workspace = true }
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
+insta = { workspace = true }
 paste = { workspace = true }

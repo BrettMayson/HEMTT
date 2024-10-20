@@ -11,6 +11,8 @@ coverage:
 # Test files aren't important for coverage
 ignore:
   - "tests"
+  - "hls"
+  - "book-lints"
 
 # Make comments less noisy
 comment:

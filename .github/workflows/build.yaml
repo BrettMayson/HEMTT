@@ -27,6 +27,16 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
+            # Intel Mac
+          - runner: macos-13
+            name: macos-x64
+            artifact: macos-x64
+            exe: hemtt
+            # ARM Mac
+          - runner: macos-latest
+            name: macos-arm
+            artifact: macos-arm64
+            exe: hemtt
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -88,8 +98,8 @@ jobs:
           repository: ${{ matrix.mod.repo }}
           path: mod
           ref: ${{ matrix.mod.commit }}
-      - name: Install Linux
-        if: startsWith(matrix.os.runner, 'ubuntu')
+      - name: Install Linux & MacOS
+        if: startsWith(matrix.os.runner, 'ubuntu') || startsWith(matrix.os.runner, 'macos')
         run: |
           cd hemtt && cp hemtt /usr/local/bin/hemtt && chmod +x /usr/local/bin/hemtt
       - name: Install Windows
@@ -100,8 +110,7 @@ jobs:
         run: |
           cd mod && hemtt dev
       - name: Install Arma 3 Tools
-        if: startsWith(matrix.os.runner, 'windows')
-        uses: arma-actions/arma3-tools@master
+        uses: arma-actions/arma3-tools@linux
         with:
           toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
       - name: Run `hemtt build` on ${{ matrix.mod.repo }}
@@ -124,25 +133,39 @@ jobs:
           name: linux-x64
           path: release
 
+      - name: Rename Linux x64
+        run: |
+          cd release && mv hemtt linux-x64
+
       - name: Download Windows x64
         uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: release
 
-      - name: Zip Linux x64
-        run: |
-          cd release && zip linux-x64.zip hemtt && rm hemtt
-
-      - name: Create Release Version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo Version: $VERSION
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Zip Windows x64
         run: |
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
+
+      - name: Download MacOS x64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64
+          path: release
+
+      - name: Rename MacOS x64
+        run: |
+          cd release && mv hemtt darwin-x64
+
+      - name: Download MacOS ARM64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
+          path: release
+
+      - name: Rename MacOS ARM64
+        run: |
+          cd release && mv hemtt darwin-arm64
 
       - name: Release
         uses: softprops/action-gh-release@v2

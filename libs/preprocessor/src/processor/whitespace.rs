@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
@@ -12,7 +12,7 @@ impl Processor {
     /// The stream is left after the whitespace
     pub(crate) fn skip_whitespace(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while let Some(token) = stream.peek() {
@@ -33,7 +33,7 @@ impl Processor {
     /// End of input will not cause an error
     pub(crate) fn skip_to_after_newline(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         mut buffer: Option<&mut Vec<Output>>,
     ) {
         while stream.peek().is_some() {
@@ -53,7 +53,7 @@ impl Processor {
     /// Whitespace is allowed, but nothing else
     /// The stream is left after the newline
     pub(crate) fn expect_nothing_to_newline(
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         for token in stream.by_ref() {
             if token.symbol().is_newline() || token.symbol().is_eoi() {

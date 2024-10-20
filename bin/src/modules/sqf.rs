@@ -18,17 +18,13 @@ use super::Module;
 
 #[derive(Default)]
 pub struct SQFCompiler {
-    pub compile: bool,
     pub database: Option<Arc<Database>>,
 }
 
 impl SQFCompiler {
     #[must_use]
-    pub const fn new(compile: bool) -> Self {
-        Self {
-            compile,
-            database: None,
-        }
+    pub const fn new() -> Self {
+        Self { database: None }
     }
 }
 
@@ -98,10 +94,8 @@ impl Module for SQFCompiler {
                             database.clone(),
                         );
                         if !codes.failed() {
-                            if self.compile {
-                                let mut out = entry.with_extension("sqfc")?.create_file()?;
-                                sqf.optimize().compile_to_writer(&processed, &mut out)?;
-                            }
+                            let mut out = entry.with_extension("sqfc")?.create_file()?;
+                            sqf.optimize().compile_to_writer(&processed, &mut out)?;
                             counter.fetch_add(1, Ordering::Relaxed);
                         }
                         for code in codes {
@@ -133,15 +127,7 @@ impl Module for SQFCompiler {
         for new_report in reports {
             report.merge(new_report);
         }
-        info!(
-            "{} {} sqf files",
-            if self.compile {
-                "Compiled"
-            } else {
-                "Validated"
-            },
-            counter.load(Ordering::Relaxed)
-        );
+        info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(report)
     }
 

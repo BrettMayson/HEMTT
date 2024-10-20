@@ -1,4 +1,4 @@
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, sync::RwLock};
 
 use git2::Repository;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub struct VersionConfig {
     git_hash: u8,
 }
 
-static mut VERSION: MaybeUninit<Version> = MaybeUninit::uninit();
+static VERSION: RwLock<MaybeUninit<Version>> = RwLock::new(MaybeUninit::uninit());
 static mut INIT: bool = false;
 
 impl VersionConfig {
@@ -29,11 +29,15 @@ impl VersionConfig {
         // Check for a cached version
         unsafe {
             if INIT {
-                return Ok(VERSION.assume_init_ref().clone());
+                return Ok(VERSION
+                    .read()
+                    .expect("VERSION poisoned")
+                    .assume_init_ref()
+                    .clone());
             }
         }
 
-        let mut version = self._get(vfs)?;
+        let mut version = self.internal_get(vfs)?;
 
         if let Some(length) = self.git_hash() {
             let repo = Repository::discover(".")?;
@@ -43,9 +47,13 @@ impl VersionConfig {
         };
 
         unsafe {
-            VERSION = MaybeUninit::new(version);
+            *VERSION.write().expect("VERSION poisoned") = MaybeUninit::new(version.clone());
             INIT = true;
-            return Ok(VERSION.assume_init_ref().clone());
+            Ok(VERSION
+                .read()
+                .expect("VERSION poisoned")
+                .assume_init_ref()
+                .clone())
         }
     }
 
@@ -57,7 +65,7 @@ impl VersionConfig {
         }
     }
 
-    fn _get(&self, vfs: &VfsPath) -> Result<Version, Error> {
+    fn internal_get(&self, vfs: &VfsPath) -> Result<Version, Error> {
         // Check for a defined major version
         if let Some((major, minor, patch, build)) = self.defined {
             trace!("reading version from project.toml");

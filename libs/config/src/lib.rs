@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 mod analyze;
 mod model;
-pub use model::*;
 pub mod parse;
 pub mod rapify;
+pub use model::*;
 
 pub use analyze::CONFIG_LINTS;
 

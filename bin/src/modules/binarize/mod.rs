@@ -11,10 +11,11 @@ use std::{
 
 use hemtt_common::config::PDriveOption;
 use hemtt_p3d::SearchCache;
+use hemtt_workspace::reporting::Severity;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-#[allow(unused_imports)] // used in windows only
+#[allow(unused_imports)] // some are Linux only
 use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
@@ -32,6 +33,7 @@ mod error;
 pub struct Binarize {
     check_only: bool,
     command: Option<String>,
+    proton: bool,
     prechecked: RwLock<Vec<BinarizeTarget>>,
 }
 
@@ -41,6 +43,7 @@ impl Binarize {
         Self {
             check_only,
             command: None,
+            proton: false,
             prechecked: RwLock::new(Vec::new()),
         }
     }
@@ -52,7 +55,7 @@ impl Module for Binarize {
     }
 
     #[cfg(windows)]
-    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
 
         let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
@@ -62,11 +65,11 @@ impl Module for Binarize {
             trace!("Using Binarize path from registry");
             let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
             let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-                report.push(ToolsNotFound::code());
+                report.push(ToolsNotFound::code(Severity::Warning));
                 return Ok(report);
             };
             let Ok(path) = key.get_value::<String, _>("path") else {
-                report.push(ToolsNotFound::code());
+                report.push(ToolsNotFound::code(Severity::Warning));
                 return Ok(report);
             };
             PathBuf::from(path)
@@ -75,15 +78,51 @@ impl Module for Binarize {
         if path.exists() {
             self.command = Some(path.display().to_string());
         } else {
-            report.push(ToolsNotFound::code());
+            report.push(ToolsNotFound::code(Severity::Warning));
         }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
     #[cfg(not(windows))]
-    fn init(&mut self, _ctx: &Context) -> Result<Report, Error> {
+    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        use hemtt_common::steam;
+
         let mut report = Report::new();
-        report.push(PlatformNotSupported::code());
+
+        if cfg!(target_os = "macos") {
+            report.push(PlatformNotSupported::code());
+            return Ok(report);
+        }
+
+        let tools_path = {
+            let default = dirs::home_dir()
+                .expect("home directory exists")
+                .join(".local/share/arma3tools");
+            if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
+                PathBuf::from(path)
+            } else if !default.exists() {
+                let Some(tools_dir) = steam::find_app(233_800) else {
+                    report.push(ToolsNotFound::code(Severity::Warning));
+                    return Ok(report);
+                };
+                tools_dir
+            } else {
+                default
+            }
+        };
+        let path = tools_path.join("Binarize").join("binarize_x64.exe");
+        if path.exists() {
+            self.command = Some(path.display().to_string());
+            let mut cmd = Command::new("wine64");
+            cmd.arg("--version");
+            if cmd.output().is_err() {
+                self.proton = true;
+            }
+        } else {
+            report.push(ToolsNotFound::code(Severity::Warning));
+        }
+        setup_tmp(ctx)?;
         Ok(report)
     }
 
@@ -96,8 +135,7 @@ impl Module for Binarize {
         };
 
         let mut report = Report::new();
-        let tmp_source = ctx.tmp().join("source");
-        let tmp_out = ctx.tmp().join("output");
+        let tmp_out = ctx.tmp().join("hemtt_binarize_output");
         let search_cache = SearchCache::new();
         if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
@@ -189,14 +227,13 @@ impl Module for Binarize {
                         }
                     }
 
-                    let tmp_sourced = tmp_source.join(addon.prefix().as_pathbuf()).join(
+                    let tmp_sourced = ctx.tmp().join(addon.prefix().as_pathbuf()).join(
                         entry
                             .as_str()
                             .trim_start_matches('/')
                             .trim_start_matches(&addon.folder().to_string())
                             .trim_start_matches('/')
-                            .trim_end_matches(&entry.filename())
-                            .replace('/', "\\"),
+                            .trim_end_matches(&entry.filename()),
                     );
                     let tmp_outed = tmp_out.join(entry.parent().as_str().trim_start_matches('/'));
 
@@ -207,8 +244,6 @@ impl Module for Binarize {
                             source: tmp_sourced
                                 .to_str()
                                 .expect("tmp source path should be valid utf-8")
-                                .trim_start_matches('/')
-                                .trim_start_matches(&addon.folder())
                                 .to_owned(),
                             output: tmp_outed
                                 .to_str()
@@ -234,10 +269,8 @@ impl Module for Binarize {
         if self.command.is_none() || self.check_only {
             return Ok(Report::new());
         }
-        setup_tmp(ctx)?;
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
-        let tmp_source = ctx.tmp().join("source");
         self.prechecked
             .read()
             .expect("can read in pre_build")
@@ -250,17 +283,55 @@ impl Module for Binarize {
                     .command
                     .as_ref()
                     .expect("command should be set if we attempted to binarize");
-                let mut cmd = Command::new(exe);
+                let mut cmd = if cfg!(windows) {
+                    Command::new(exe)
+                } else if self.proton {
+                    let mut home = dirs::home_dir().expect("home directory exists");
+                    if exe.contains("/.var/") {
+                        home = home.join(".var/app/com.valvesoftware.Steam");
+                    }
+                    let mut cmd = Command::new({
+                        home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+                    });
+                    cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
+                        home.join(".local/share/Steam")
+                    ).env(
+                        "STEAM_COMPAT_DATA_PATH",
+                        home.join(".local/share/Steam/steamapps/compatdata/233800")
+                    ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
+                        home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
+                    ).arg("run").arg(
+                        home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
+                    );
+                    cmd
+                } else {
+                    let mut cmd = Command::new("wine64");
+                    cmd.arg(exe);
+                    cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
+                    std::fs::create_dir_all("/tmp/hemtt-wine")
+                        .expect("should be able to create wine prefix");
+                    cmd
+                };
                 cmd.args([
                     "-norecurse",
                     "-always",
                     "-silent",
                     "-maxProcesses=0",
-                    &target.source,
-                    &target.output,
-                    &target.entry,
+                    &target
+                        .source
+                        .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
+                        .trim_start_matches('/')
+                        .trim_start_matches('\\')
+                        .replace('/', "\\"),
+                    &target
+                        .output
+                        .trim_start_matches(ctx.tmp().to_str().expect("path is valid utf-8"))
+                        .trim_start_matches('/')
+                        .trim_start_matches('\\')
+                        .replace('/', "\\"),
+                    &target.entry.replace('/', "\\"),
                 ])
-                .current_dir(&tmp_source);
+                .current_dir(ctx.tmp());
                 trace!("{:?}", cmd);
                 let output = cmd.output().expect("should be able to run binarize");
                 assert!(
@@ -303,21 +374,13 @@ fn check_signature(buf: [u8; 4]) -> bool {
     buf == [0x4F, 0x50, 0x52, 0x57]
 }
 
-#[allow(dead_code)] // used in windows only
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    create_dir_all(ctx.tmp().join("output"))?;
-    let tmp = ctx.tmp().join("source");
-    create_dir_all(&tmp)?;
+    create_dir_all(ctx.tmp())?;
+    create_dir_all(ctx.tmp().join("hemtt_binarize_output"))?;
     for addon in ctx.all_addons() {
-        let tmp_addon = tmp.join(addon.prefix().as_pathbuf());
+        let tmp_addon = ctx.tmp().join(addon.prefix().as_pathbuf());
         create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
-        let target = ctx.project_folder().join(
-            addon
-                .folder()
-                .as_str()
-                .trim_start_matches('/')
-                .replace('/', "\\"),
-        );
+        let target = ctx.project_folder().join(addon.folder_pathbuf());
         create_link(&tmp_addon, &target)?;
     }
     // maybe replace with config or rhai in the future?
@@ -327,7 +390,9 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         if file.is_dir() {
             continue;
         }
-        let tmp_file = tmp.join(file.file_name().expect("file should have a name"));
+        let tmp_file = ctx
+            .tmp()
+            .join(file.file_name().expect("file should have a name"));
         if file.metadata()?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",
@@ -355,7 +420,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
             continue;
         }
         if outer_prefix.is_dir() {
-            let tmp_outer_prefix = tmp.join(
+            let tmp_outer_prefix = ctx.tmp().join(
                 outer_prefix
                     .file_name()
                     .expect("outer prefix should have a name"),
@@ -379,6 +444,6 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     let Some(pdrive) = ctx.workspace().pdrive() else {
         return Ok(());
     };
-    create_link(&tmp.join("a3"), &pdrive.link())?;
+    create_link(&ctx.tmp().join("a3"), &pdrive.link())?;
     Ok(())
 }

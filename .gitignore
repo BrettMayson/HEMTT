@@ -2,7 +2,7 @@ target/
 generated.hpp
 map.hpp
 *.map
-*.pbo
+# *.pbo
 
 *.nupkg
 
@@ -27,3 +27,9 @@ pkg/
 hls/languages/sqf.json
 hls/hemtt-language-server
 hls/hemtt-language-server.exe
+
+# Insta Pending Snpashots
+*.snap.new
+
+# Cargo Mutants
+mutants.*/

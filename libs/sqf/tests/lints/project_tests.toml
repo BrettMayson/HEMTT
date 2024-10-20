@@ -8,7 +8,12 @@ options.ignore = [
 
 [lints.sqf]
 if_not_else = true
-shadowed = true
+
+
+[lints.sqf.shadowed]
+enabled = true
+
+[lints.sqf.not_private]
 not_private = true
 
 [lints.sqf.unused]
@@ -18,3 +23,12 @@ options.check_params = false
 [lints.sqf.undefined]
 enabled = true
 options.check_oprhan_code = true
+
+[lints.sqf.var_all_caps]
+enabled = true
+options.ignore = [
+    "AM_IGNORED",
+]
+
+[lints.sqf.this_call]
+enabled = true

@@ -1,0 +1,101 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "_test",
+        Boolean(
+            true,
+            20..24,
+        ),
+        4..24,
+    ),
+    Expression(
+        UnaryCommand(
+            Named(
+                "systemChat",
+            ),
+            String(
+                "this is a test",
+                41..57,
+                DoubleQuote,
+            ),
+            30..40,
+        ),
+        30..57,
+    ),
+    AssignLocal(
+        "_variable",
+        String(
+            "this is a test",
+            83..99,
+            DoubleQuote,
+        ),
+        63..99,
+    ),
+    Expression(
+        BinaryCommand(
+            Named(
+                "then",
+            ),
+            UnaryCommand(
+                Named(
+                    "if",
+                ),
+                BinaryCommand(
+                    Eq,
+                    Variable(
+                        "_variable",
+                        105..114,
+                    ),
+                    String(
+                        "this is a test",
+                        118..134,
+                        DoubleQuote,
+                    ),
+                    115..117,
+                ),
+                101..103,
+            ),
+            Code(
+                Statements {
+                    content: [
+                        Expression(
+                            UnaryCommand(
+                                Named(
+                                    "systemChat",
+                                ),
+                                String(
+                                    "this is a test",
+                                    164..180,
+                                    DoubleQuote,
+                                ),
+                                153..163,
+                            ),
+                            153..180,
+                        ),
+                    ],
+                    source: "systemChat \"this is a test\";",
+                    span: 153..181,
+                },
+            ),
+            136..140,
+        ),
+        101..189,
+    ),
+    Expression(
+        UnaryCommand(
+            Named(
+                "systemChat",
+            ),
+            String(
+                "this is a test",
+                202..218,
+                DoubleQuote,
+            ),
+            191..201,
+        ),
+        191..218,
+    ),
+]

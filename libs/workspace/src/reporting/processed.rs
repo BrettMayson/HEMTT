@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Range, rc::Rc, sync::Arc};
+use std::{collections::HashMap, ops::Range, sync::Arc};
 use tracing::warn;
 
 use crate::{
@@ -22,11 +22,7 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
-    #[allow(dead_code)]
-    #[cfg(feature = "lsp")]
-    /// Map of token usage to definition
-    /// (token, definition)
-    declarations: HashMap<Position, Position>,
+    macros: HashMap<String, Vec<Position>>,
 
     #[allow(dead_code)]
     #[cfg(feature = "lsp")]
@@ -48,7 +44,7 @@ pub struct Processed {
 fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
-    token: Rc<Token>,
+    token: Arc<Token>,
 ) -> Result<(), Error> {
     let path = token.position().path().clone();
     let source = processed
@@ -179,14 +175,13 @@ impl Processed {
     /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
+        macros: HashMap<String, Vec<Position>>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
-        #[cfg(feature = "lsp")] declarations: HashMap<Position, Position>,
         warnings: Codes,
         no_rapify: bool,
     ) -> Result<Self, Error> {
         let mut processed = Self {
-            #[cfg(feature = "lsp")]
-            declarations,
+            macros,
             #[cfg(feature = "lsp")]
             usage,
             warnings,
@@ -259,6 +254,12 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get the macros defined
+    pub const fn macros(&self) -> &HashMap<String, Vec<Position>> {
+        &self.macros
+    }
+
+    #[must_use]
     #[allow(clippy::cast_possible_truncation)]
     /// Get offset as number of raw bytes into the output string
     pub fn get_byte_offset(&self, offset: usize) -> u32 {
@@ -305,7 +306,7 @@ pub struct Mapping {
     source: usize,
     processed: (LineCol, LineCol),
     original: Position,
-    token: Rc<Token>,
+    token: Arc<Token>,
     was_macro: bool,
 }
 
@@ -348,7 +349,7 @@ impl Mapping {
 
     #[must_use]
     /// Get the original token
-    pub const fn token(&self) -> &Rc<Token> {
+    pub const fn token(&self) -> &Arc<Token> {
         &self.token
     }
 

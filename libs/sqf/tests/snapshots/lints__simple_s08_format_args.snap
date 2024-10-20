@@ -1,0 +1,47 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: lint(stringify! (s08_format_args))
+---
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: empty array[0m
+  [0m[36m┌─[0m s08_format_args.sqf:4:21
+  [0m[36m│[0m  
+[0m[36m4[0m [0m[36m│[0m   format ["  • %1", 1][0m[31m;[0m
+  [0m[36m│[0m [0m[31m╭[0m[0m[31m─────────────────────^[0m
+[0m[36m5[0m [0m[36m│[0m [0m[31m│[0m [0m[31mformat [0m[]; // empty array
+  [0m[36m│[0m [0m[31m╰[0m[0m[31m───────^ format string: empty array[0m
+
+
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: unused args [used "%1", passed 3][0m
+  [0m[36m┌─[0m s08_format_args.sqf:5:11
+  [0m[36m│[0m  
+[0m[36m5[0m [0m[36m│[0m   format [];[0m[31m // empty array[0m
+  [0m[36m│[0m [0m[31m╭[0m[0m[31m───────────^[0m
+[0m[36m6[0m [0m[36m│[0m [0m[31m│[0m [0m[31mformat ["%1", 1, 2,[0m 3]; // unused args
+  [0m[36m│[0m [0m[31m╰[0m[0m[31m───────────────────^ format string: unused args [used "%1", passed 3][0m
+
+
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: undefined tokens [used "%2", passed 1][0m
+  [0m[36m┌─[0m s08_format_args.sqf:6:24
+  [0m[36m│[0m  
+[0m[36m6[0m [0m[36m│[0m   format ["%1", 1, 2, 3];[0m[31m // unused args[0m
+  [0m[36m│[0m [0m[31m╭[0m[0m[31m────────────────────────^[0m
+[0m[36m7[0m [0m[36m│[0m [0m[31m│[0m [0m[31mformat ["%1%2",[0m 1]; // undefined tokens
+  [0m[36m│[0m [0m[31m╰[0m[0m[31m───────────────^ format string: undefined tokens [used "%2", passed 1][0m
+
+
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: skipped tokens [used "%5", but only 1 tokens][0m
+  [0m[36m┌─[0m s08_format_args.sqf:7:20
+  [0m[36m│[0m  
+[0m[36m7[0m [0m[36m│[0m   format ["%1%2", 1];[0m[31m // undefined tokens[0m
+  [0m[36m│[0m [0m[31m╭[0m[0m[31m────────────────────^[0m
+[0m[36m8[0m [0m[36m│[0m [0m[31m│[0m [0m[31mformat ["%5", 1, 2 ,3 ,4,[0m 5]; // skipped tokens
+  [0m[36m│[0m [0m[31m╰[0m[0m[31m─────────────────────────^ format string: skipped tokens [used "%5", but only 1 tokens][0m
+
+
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: undefined tokens [used "%1", passed 0][0m
+  [0m[36m┌─[0m s08_format_args.sqf:8:30
+  [0m[36m│[0m  
+[0m[36m8[0m [0m[36m│[0m   format ["%5", 1, 2 ,3 ,4, 5];[0m[31m // skipped tokens[0m
+  [0m[36m│[0m [0m[31m╭[0m[0m[31m──────────────────────────────^[0m
+[0m[36m9[0m [0m[36m│[0m [0m[31m│[0m [0m[31mformatText ["me too %[0m1"];
+  [0m[36m│[0m [0m[31m╰[0m[0m[31m─────────────────────^ format string: undefined tokens [used "%1", passed 0][0m

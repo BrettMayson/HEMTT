@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -154,6 +154,7 @@
     "vscode-uri": "^3.0.8"
   },
   "dependencies": {
+    "hemtt": "file:",
     "portfinder": "^1.0.32",
     "vscode-languageclient": "^9.0.1"
   }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use hemtt_workspace::{
     position::{LineCol, Position},
@@ -23,7 +23,7 @@ pub struct PreprocessorParser;
 ///
 /// # Panics
 /// If the file is invalid
-pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
+pub fn parse(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     let source = path.read_to_string()?;
     let pairs = PreprocessorParser::parse(Rule::file, &source)
         .map_err(|e| ParsingFailed::code(e, path.clone()))?;
@@ -47,7 +47,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
             Rule::COMMENT => {
                 if in_single_string || in_double_string {
                     if !skipping_comment {
-                        tokens.push(Rc::new(Token::new(
+                        tokens.push(Arc::new(Token::new(
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
                                 start,
@@ -96,7 +96,7 @@ pub fn parse(path: &WorkspacePath) -> Result<Vec<Rc<Token>>, Error> {
             continue;
         }
         let end = LineCol(offset, (line, col));
-        tokens.push(Rc::new(Token::new(
+        tokens.push(Arc::new(Token::new(
             Symbol::to_symbol(pair),
             Position::new(start, end, path.clone()),
         )));

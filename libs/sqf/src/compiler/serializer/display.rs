@@ -16,7 +16,7 @@ pub struct DisplayInstructions<'a> {
     pub(super) indent: usize,
 }
 
-impl<'a> fmt::Display for DisplayInstructions<'a> {
+impl fmt::Display for DisplayInstructions<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for &instruction in &self.instructions.contents {
             indent(f, self.indent)?;
@@ -64,7 +64,7 @@ pub struct DisplayConstant<'a> {
     pub(super) indent: usize,
 }
 
-impl<'a> fmt::Display for DisplayConstant<'a> {
+impl fmt::Display for DisplayConstant<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.constant {
             Constant::NularCommand(command) => write!(f, "Nular {command}")?,

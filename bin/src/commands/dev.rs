@@ -11,9 +11,6 @@ use crate::{
     report::Report,
 };
 
-#[cfg(not(target_os = "macos"))]
-use crate::modules::asc::ArmaScriptCompiler;
-
 use super::build::add_just;
 
 #[must_use]
@@ -46,12 +43,6 @@ pub fn add_args(cmd: Command) -> Command {
             .long("all-optionals")
             .short('O')
             .help("Include all optional addon folders")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("asc")
-            .long("asc")
-            .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
             .action(ArgAction::SetTrue),
     )
     .arg(
@@ -132,8 +123,6 @@ pub fn context(
         }
     }
 
-    let use_asc = matches.get_one::<bool>("asc") == Some(&true);
-
     let mut executor = Executor::new(ctx);
 
     executor.collapse(Collapse::Yes);
@@ -143,11 +132,7 @@ pub fn context(
     if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
-    #[cfg(not(target_os = "macos"))]
-    if use_asc {
-        executor.add_module(Box::<ArmaScriptCompiler>::default());
-    }
+    executor.add_module(Box::new(SQFCompiler::default()));
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if force_binarize || matches.get_one::<bool>("binarize") == Some(&true) {

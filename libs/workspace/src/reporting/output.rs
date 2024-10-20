@@ -1,4 +1,4 @@
-use std::{fmt::Display, rc::Rc};
+use std::{fmt::Display, sync::Arc};
 
 use super::{Symbol, Token};
 
@@ -6,9 +6,9 @@ use super::{Symbol, Token};
 /// The output of a token
 pub enum Output {
     /// The token did not expand
-    Direct(Rc<Token>),
+    Direct(Arc<Token>),
     /// The token expanded to a list of tokens
-    Macro(Rc<Token>, Vec<Self>),
+    Macro(Arc<Token>, Vec<Self>),
 }
 
 impl Output {
@@ -37,7 +37,7 @@ impl Display for Output {
     }
 }
 
-impl From<Output> for Vec<Rc<Token>> {
+impl From<Output> for Vec<Arc<Token>> {
     fn from(value: Output) -> Self {
         match value {
             Output::Direct(t) => vec![t],

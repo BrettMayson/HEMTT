@@ -1,12 +1,13 @@
-mod convert;
-
 use std::{fs::File, path::PathBuf};
 
 use clap::{ArgMatches, Command};
 
 use crate::Error;
 
-use super::inspect::paa;
+mod convert;
+mod inspect;
+
+pub use inspect::inspect;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -32,7 +33,7 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
     match matches.subcommand() {
         Some(("convert", matches)) => convert::execute(matches),
 
-        Some(("inspect", matches)) => paa(File::open(PathBuf::from(
+        Some(("inspect", matches)) => inspect::inspect(File::open(PathBuf::from(
             matches.get_one::<String>("paa").expect("required"),
         ))?),
 

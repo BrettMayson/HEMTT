@@ -1,0 +1,14 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c05_parent_case))
+---
+[0m[1m[38;5;9merror[L-C05][0m[1m: parent case does not match parent definition[0m
+  [0m[36m┌─[0m c05_parent_case.hpp:2:14
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m class imported;
+  [0m[36m│[0m       [0m[36m--------[0m [0m[36mparent definition here[0m
+[0m[36m2[0m [0m[36m│[0m class local: [0m[31mImported[0m {
+  [0m[36m│[0m              [0m[31m^^^^^^^^[0m [0m[31mparent does not match definition case[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: change the parent case to match the parent definition
+  [0m[36m=[0m [32mtry[0m: imported

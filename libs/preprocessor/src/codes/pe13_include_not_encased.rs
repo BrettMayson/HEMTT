@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Code, Diagnostic, Label, Token};
 
@@ -73,7 +73,7 @@ impl Code for IncludeNotEncased {
 
 impl IncludeNotEncased {
     #[must_use]
-    pub fn new(token: Box<Token>, path: Vec<Rc<Token>>, start: Option<Token>) -> Self {
+    pub fn new(token: Box<Token>, path: Vec<Arc<Token>>, start: Option<Token>) -> Self {
         Self {
             token,
             path: path.into_iter().map(|t| t.as_ref().clone()).collect(),
@@ -82,7 +82,7 @@ impl IncludeNotEncased {
     }
 
     #[must_use]
-    pub fn code(token: Token, path: Vec<Rc<Token>>, start: Option<Token>) -> Error {
+    pub fn code(token: Token, path: Vec<Arc<Token>>, start: Option<Token>) -> Error {
         Error::Code(Arc::new(Self::new(Box::new(token), path, start)))
     }
 }

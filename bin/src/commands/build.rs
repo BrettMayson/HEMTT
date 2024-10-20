@@ -8,9 +8,6 @@ use crate::{
     report::Report,
 };
 
-#[cfg(not(target_os = "macos"))]
-use crate::modules::asc::ArmaScriptCompiler;
-
 #[must_use]
 pub fn cli() -> Command {
     add_just(add_args(
@@ -34,12 +31,6 @@ pub fn add_args(cmd: Command) -> Command {
         clap::Arg::new("no-rap")
             .long("no-rap")
             .help("Do not rapify (cpp, rvmat)")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("asc")
-            .long("asc")
-            .help("Use ArmaScriptCompiler instead of HEMTT's SQF compiler")
             .action(ArgAction::SetTrue),
     )
 }
@@ -92,8 +83,6 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     let mut executor = Executor::new(ctx);
 
-    let use_asc = matches.get_one::<bool>("asc") == Some(&true);
-
     executor.collapse(Collapse::No);
 
     executor.add_module(Box::<BOMCheck>::default());
@@ -101,11 +90,7 @@ pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::new(!use_asc)));
-    #[cfg(not(target_os = "macos"))]
-    if use_asc {
-        executor.add_module(Box::<ArmaScriptCompiler>::default());
-    }
+    executor.add_module(Box::new(SQFCompiler::default()));
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }

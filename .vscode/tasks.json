@@ -13,13 +13,14 @@
       "type": "npm",
       "label": "build hls (vscode)",
       "script": "compile",
+      "dependsOn": ["build hls (lsp)"],
       "options": {
         "cwd": "${workspaceRoot}/hls"
       }
     },
     {
       "label": "build hls",
-      "dependsOn": ["build hls (lsp)", "build hls (vscode)"],
+      "dependsOn": ["build hls (vscode)"]
     }
   ]
 }

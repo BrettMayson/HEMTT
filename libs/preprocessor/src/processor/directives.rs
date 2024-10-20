@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_workspace::{
     path::LocateResult,
@@ -36,7 +36,7 @@ impl Processor {
     pub(crate) fn directive(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
         if let Some(token) = stream.peek() {
@@ -56,7 +56,7 @@ impl Processor {
     pub(crate) fn directive_command(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         let command = stream.next().expect("was peeked in directive()");
@@ -124,15 +124,15 @@ impl Processor {
 
     pub(crate) fn read_pragma(
         &mut self,
-        command: &Rc<Token>,
+        command: &Arc<Token>,
         pragma: &Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-    ) -> Result<(Rc<Token>, Scope), Error> {
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<(Arc<Token>, Scope), Error> {
         let code = self.next_word(stream, None)?;
         let mut hit_end = false;
         let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
             hit_end = true;
-            Rc::new(Token::new(
+            Arc::new(Token::new(
                 Symbol::Word("line".to_string()),
                 command.position().clone(),
             ))
@@ -153,7 +153,7 @@ impl Processor {
     pub(crate) fn directive_include(
         &mut self,
         pragma: &mut Pragma,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<(), Error> {
         self.skip_whitespace(stream, None);
@@ -235,7 +235,7 @@ impl Processor {
 
     pub(crate) fn directive_define(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
@@ -265,7 +265,9 @@ impl Processor {
             Symbol::LeftParenthesis => Definition::Function({
                 let args = Self::define_read_args(stream)?;
                 let body = self.define_read_body(stream);
-                let position = if body.first().is_some() {
+                let position = if body.is_empty() {
+                    ident.position().clone()
+                } else {
                     Position::new(
                         *body
                             .first()
@@ -279,8 +281,6 @@ impl Processor {
                             .end(),
                         ident.position().path().clone(),
                     )
-                } else {
-                    ident.position().clone()
                 };
                 FunctionDefinition::new(position, args, body)
             }),
@@ -289,6 +289,10 @@ impl Processor {
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
+        self.macros
+            .entry(ident_string.clone())
+            .or_default()
+            .push(ident.position().clone());
         self.defines.insert(
             &ident_string,
             (
@@ -302,7 +306,7 @@ impl Processor {
 
     pub(crate) fn directive_undef(
         &mut self,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {
@@ -317,12 +321,12 @@ impl Processor {
     pub(crate) fn directive_if(
         &mut self,
         pragma: &Pragma,
-        command: Rc<Token>,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        command: Arc<Token>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         fn read_value(
-            stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
-        ) -> Vec<Rc<Token>> {
+            stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+        ) -> Vec<Arc<Token>> {
             let mut tokens = Vec::new();
             while stream.peek().is_some() {
                 let token = stream
@@ -339,8 +343,8 @@ impl Processor {
         }
         fn resolve_value(
             defines: &mut Defines,
-            token: Rc<Token>,
-        ) -> Result<(Vec<Rc<Token>>, bool), Error> {
+            token: Arc<Token>,
+        ) -> Result<(Vec<Arc<Token>>, bool), Error> {
             if let Some((_, definition, _)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
@@ -403,9 +407,9 @@ impl Processor {
             if !left_defined {
                 return Err(IfUndefined::code(left[0].as_ref().clone(), &self.defines));
             }
-            let equals = Rc::new(Token::new(Symbol::Equals, pos.clone()));
+            let equals = Arc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (vec![Rc::new(Token::new(Symbol::Digit(1), pos))], false)
+            (vec![Arc::new(Token::new(Symbol::Digit(1), pos))], false)
         } else {
             operators = read_value(stream);
             self.skip_whitespace(stream, None);
@@ -482,9 +486,9 @@ impl Processor {
 
     pub(crate) fn directive_ifdef(
         &mut self,
-        command: Rc<Token>,
+        command: Arc<Token>,
         outcome: bool,
-        stream: &mut PeekMoreIterator<impl Iterator<Item = Rc<Token>>>,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
     ) -> Result<(), Error> {
         let ident = self.next_word(stream, None)?;
         if !ident.symbol().is_word() {

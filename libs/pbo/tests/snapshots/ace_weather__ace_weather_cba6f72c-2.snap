@@ -1,0 +1,341 @@
+---
+source: libs/pbo/tests/ace_weather.rs
+expression: pbo_summary
+---
+# Properties
+prefix: z\ace\addons\weather
+Mikero: DePbo.dll.6.44
+version: cba6f72c
+
+# Files
+$PBOPREFIX$.backup
+  mime Blank
+  original 20
+  reserved 0
+  timestamp 1543422611
+  size 20
+  offset Some(2023)
+ hash f7b0c322cb2feb80c07a128bf6179f10b4169c59
+ACE_Settings.hpp
+  mime Blank
+  original 829
+  reserved 0
+  timestamp 1533237175
+  size 829
+  offset Some(2043)
+ hash a0985a20f4c9bccad54b41cc206de131adc4a33a
+CfgEventhandlers.hpp
+  mime Blank
+  original 592
+  reserved 0
+  timestamp 1533237175
+  size 592
+  offset Some(2872)
+ hash 925cc171394838cfcb40814865d8f15b8da80d65
+CfgVehicles.hpp
+  mime Blank
+  original 1366
+  reserved 0
+  timestamp 1533237175
+  size 1366
+  offset Some(3464)
+ hash a61ae5f967fe6965ccb45d20f4a10478e14a6d03
+CfgWorlds.hpp
+  mime Blank
+  original 7371
+  reserved 0
+  timestamp 1533237175
+  size 7371
+  offset Some(4830)
+ hash 5e83cc980fabfeca445fc63193626c107287bd7a
+config.bin
+  mime Blank
+  original 6836
+  reserved 0
+  timestamp 1543422611
+  size 6836
+  offset Some(12201)
+ hash 7a49dc8c3c089c7ae9053c94e5034fd6fe741fe4
+functions\fnc_calculateAirDensity.sqf
+  mime Blank
+  original 1173
+  reserved 0
+  timestamp 1541345259
+  size 1173
+  offset Some(19037)
+ hash 741b2d69f4d2d3074f1ce3017716efb58b54af68
+functions\fnc_calculateBarometricPressure.sqf
+  mime Blank
+  original 522
+  reserved 0
+  timestamp 1541345259
+  size 522
+  offset Some(20210)
+ hash acdd9e91db29b97c223e6e54c2a3bb71e0cc1343
+functions\fnc_calculateDensityAltitude.sqf
+  mime Blank
+  original 445
+  reserved 0
+  timestamp 1541345259
+  size 445
+  offset Some(20732)
+ hash 775716ea20a9e84a2fbe2db28c8c682fae5493e3
+functions\fnc_calculateDewPoint.sqf
+  mime Blank
+  original 642
+  reserved 0
+  timestamp 1541345259
+  size 642
+  offset Some(21177)
+ hash 0e2f9b9f3be0d1eb531870ebae3b83668674236a
+functions\fnc_calculateHeatIndex.sqf
+  mime Blank
+  original 892
+  reserved 0
+  timestamp 1541345259
+  size 892
+  offset Some(21819)
+ hash bffa6137da7e39d55e4c147995e72b246790705f
+functions\fnc_calculateRoughnessLength.sqf
+  mime Blank
+  original 980
+  reserved 0
+  timestamp 1542602113
+  size 980
+  offset Some(22711)
+ hash 2eb01971b65b749583fd7e60c89d6b07bd83c738
+functions\fnc_calculateSpeedOfSound.sqf
+  mime Blank
+  original 364
+  reserved 0
+  timestamp 1541345259
+  size 364
+  offset Some(23691)
+ hash 4c6d56029b4224d9d27bcd2efa076afc75a6cb06
+functions\fnc_calculateTemperatureAtHeight.sqf
+  mime Blank
+  original 378
+  reserved 0
+  timestamp 1541345259
+  size 378
+  offset Some(24055)
+ hash aff2edb06fc3ce05f8d0da0b7665f265f1de2b57
+functions\fnc_calculateWetBulb.sqf
+  mime Blank
+  original 1278
+  reserved 0
+  timestamp 1541345259
+  size 1278
+  offset Some(24433)
+ hash bc2c415beebd9a7af10e7281ccc10543c8d773e2
+functions\fnc_calculateWindChill.sqf
+  mime Blank
+  original 611
+  reserved 0
+  timestamp 1541345259
+  size 611
+  offset Some(25711)
+ hash 84abefc2de5dffa370f5e13e522ff74b8fc139dd
+functions\fnc_calculateWindSpeed.sqf
+  mime Blank
+  original 3431
+  reserved 0
+  timestamp 1541345259
+  size 3431
+  offset Some(26322)
+ hash acaf82b46539841d1a360011f20240cdfc3a1000
+functions\fnc_displayWindInfo.sqf
+  mime Blank
+  original 4454
+  reserved 0
+  timestamp 1541345259
+  size 4454
+  offset Some(29753)
+ hash 9095159193675c7b9581dffc1ac9f6974c17abdd
+functions\fnc_getMapData.sqf
+  mime Blank
+  original 15112
+  reserved 0
+  timestamp 1541345259
+  size 15112
+  offset Some(34207)
+ hash 8db55f8033aa70d5f35fe25a3d0a28b76d187c3d
+functions\fnc_initModuleSettings.sqf
+  mime Blank
+  original 894
+  reserved 0
+  timestamp 1541345259
+  size 894
+  offset Some(49319)
+ hash 8bfbdb2cf8d122cf439922a24a1ed1a1e6547820
+functions\fnc_initWind.sqf
+  mime Blank
+  original 2267
+  reserved 0
+  timestamp 1541345259
+  size 2267
+  offset Some(50213)
+ hash acde8c3a42e3f3b2878f84cc00f6a1f4323f1ba4
+functions\fnc_updateHumidity.sqf
+  mime Blank
+  original 1047
+  reserved 0
+  timestamp 1541345259
+  size 1047
+  offset Some(52480)
+ hash 44482299d87ae77c611f5e67f4c8e23c6effec7b
+functions\fnc_updateTemperature.sqf
+  mime Blank
+  original 764
+  reserved 0
+  timestamp 1541345259
+  size 764
+  offset Some(53527)
+ hash fb5252ba9f9e8fa8440fc5cb54db792f6dc0fc5b
+functions\fnc_updateWeather.sqf
+  mime Blank
+  original 1508
+  reserved 0
+  timestamp 1541345259
+  size 1508
+  offset Some(54291)
+ hash 03f25e43ac8f4077e70404daa1ba9fbfcd418ef3
+functions\fnc_updateWind.sqf
+  mime Blank
+  original 686
+  reserved 0
+  timestamp 1541345259
+  size 686
+  offset Some(55799)
+ hash 7047a39b2aef6d2b239cceedd3e3344f9cb5a55c
+functions\script_component.hpp
+  mime Blank
+  original 53
+  reserved 0
+  timestamp 1533237175
+  size 53
+  offset Some(56485)
+ hash 6ec5a63aa11b766d769780724e46da541cef0753
+init3DEN.sqf
+  mime Blank
+  original 569
+  reserved 0
+  timestamp 1533237175
+  size 569
+  offset Some(56538)
+ hash e6f5f63bcba1bf23ba4cb84c1d002bc4febfb75c
+README.md
+  mime Blank
+  original 482
+  reserved 0
+  timestamp 1533237175
+  size 482
+  offset Some(57107)
+ hash 43fb6fc2610d270d3fa056ecdbf0e751c73ecd47
+RscTitles.hpp
+  mime Blank
+  original 764
+  reserved 0
+  timestamp 1533237175
+  size 764
+  offset Some(57589)
+ hash c1f52338d343628bc1318ab453955538e5fa5d00
+script_component.hpp
+  mime Blank
+  original 816
+  reserved 0
+  timestamp 1539785595
+  size 816
+  offset Some(58353)
+ hash 488263fffcd69aa04082842e6076bcbeb0c2f18f
+stringtable.xml
+  mime Blank
+  original 9195
+  reserved 0
+  timestamp 1542602113
+  size 9195
+  offset Some(59169)
+ hash 953f4129d9e106c8da1791bcde7651eb0de33dc3
+texHeaders.bin
+  mime Blank
+  original 681
+  reserved 0
+  timestamp 1543422611
+  size 681
+  offset Some(68364)
+ hash 0db4f6d6e5b111f45232c45785ca654430e61eeb
+UI\Icon_Module_Wind_ca.paa
+  mime Blank
+  original 5625
+  reserved 0
+  timestamp 1533237175
+  size 5625
+  offset Some(69045)
+ hash 31d918e5f730ac8207a34d553f8126071b45cc14
+UI\wind_arrow_ca.paa
+  mime Blank
+  original 33076
+  reserved 0
+  timestamp 1533237175
+  size 33076
+  offset Some(74670)
+ hash 1ee5e9bde52b2c0da40d2178678e44bc45c30b5a
+UI\wind_dot_ca.paa
+  mime Blank
+  original 22016
+  reserved 0
+  timestamp 1533237175
+  size 22016
+  offset Some(107746)
+ hash 714c6adf209aa7665b9114b3ab6d0f0867c64c0d
+UI\wind_noneCircle_ca.paa
+  mime Blank
+  original 22016
+  reserved 0
+  timestamp 1533237175
+  size 22016
+  offset Some(129762)
+ hash 7195b85b6b60fdb3bf74728181c2ae4199c268e1
+XEH_postInit.sqf
+  mime Blank
+  original 877
+  reserved 0
+  timestamp 1533237175
+  size 877
+  offset Some(151778)
+ hash 7ba9ce791106ef4c082de84d8db14937792235ff
+XEH_postServerInit.sqf
+  mime Blank
+  original 668
+  reserved 0
+  timestamp 1533237175
+  size 668
+  offset Some(152655)
+ hash d74fee83d63609833d6ca6a6b06459e311e1b790
+XEH_preInit.sqf
+  mime Blank
+  original 254
+  reserved 0
+  timestamp 1533237175
+  size 254
+  offset Some(153323)
+ hash 7d6e5ea845b2e8020f68766b443225ad08457b15
+XEH_PREP.hpp
+  mime Blank
+  original 508
+  reserved 0
+  timestamp 1533237175
+  size 508
+  offset Some(153577)
+ hash 1046d0adb8ea45c3096233a0622004b0170f14bd
+XEH_preStart.sqf
+  mime Blank
+  original 60
+  reserved 0
+  timestamp 1533237175
+  size 60
+  offset Some(154085)
+ hash 05f11b4250f1ef636af2a3fce306d2d3c263b0cf
+
+# Checksum
+d2d5ff6205c96f76d934db5ba3b3e659628b1f4e
