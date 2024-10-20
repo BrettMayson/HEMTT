@@ -51,9 +51,11 @@ impl Project {
         &self,
         writer: &mut W,
     ) -> Result<(), quick_xml::de::DeError> {
+        // If this write fails, the serializer will also throw an error
+        let _ = writer.write_str(r#"<?xml version="1.0" encoding="utf-8"?>"#);
+        let _ = writer.write_char('\n');
         let mut ser = Serializer::new(writer);
         ser.indent(' ', 4);
-
         self.serialize(ser)
     }
 }
