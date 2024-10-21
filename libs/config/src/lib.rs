@@ -6,15 +6,13 @@
 
 use std::sync::Arc;
 
-mod analyze;
+pub mod analyze;
 mod model;
 pub mod parse;
 pub mod rapify;
 pub use model::*;
 
-pub use analyze::CONFIG_LINTS;
-
-use analyze::{Analyze, CfgPatch, ChumskyCode};
+use analyze::{Analyze, CfgPatch, ChumskyCode, SqfLintData};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
@@ -23,20 +21,6 @@ use hemtt_workspace::{
     lint::LintManager,
     reporting::{Code, Codes, Processed, Severity},
 };
-
-#[must_use]
-pub fn lint_check(project: &ProjectConfig) -> Codes {
-    let mut manager = LintManager::new(project.lints().config().clone(), ());
-    if let Err(e) = manager.extend(
-        CONFIG_LINTS
-            .iter()
-            .map(|l| (**l).clone())
-            .collect::<Vec<_>>(),
-    ) {
-        return e;
-    }
-    vec![]
-}
 
 /// Parse a config file
 ///
@@ -60,16 +44,15 @@ pub fn parse(
         |config| {
             let mut manager = LintManager::new(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
-                (),
             );
             manager.extend(
-                CONFIG_LINTS
+                analyze::CONFIG_LINTS
                     .iter()
                     .map(|l| (**l).clone())
                     .collect::<Vec<_>>(),
             )?;
             Ok(ConfigReport {
-                codes: config.analyze(project, processed, &manager),
+                codes: config.analyze(&SqfLintData {}, project, processed, &manager),
                 patches: config.get_patches(),
                 config,
             })

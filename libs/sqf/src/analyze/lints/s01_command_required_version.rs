@@ -10,7 +10,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, Statements};
 
-crate::lint!(LintS01CommandRequiredVersion);
+crate::analyze::lint!(LintS01CommandRequiredVersion);
 
 impl Lint<SqfLintData> for LintS01CommandRequiredVersion {
     fn ident(&self) -> &str {
@@ -171,7 +171,7 @@ impl CodeS01CommandRequiredVersion {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(diag) = Diagnostic::new_for_processed(&self, self.span.clone(), processed) else {
+        let Some(diag) = Diagnostic::from_code_processed(&self, self.span.clone(), processed) else {
             return self;
         };
         self.diagnostic = Some(diag.with_label(

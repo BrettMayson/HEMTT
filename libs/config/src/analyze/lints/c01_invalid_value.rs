@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed},
 };
 
-use crate::{Item, Value};
+use crate::{analyze::SqfLintData, Item, Value};
 
-crate::lint!(LintC01InvalidValue);
+crate::analyze::lint!(LintC01InvalidValue);
 
-impl Lint<()> for LintC01InvalidValue {
+impl Lint<SqfLintData> for LintC01InvalidValue {
     fn ident(&self) -> &str {
         "invalid_value"
     }
@@ -49,14 +49,14 @@ Arma configs only support Strings, Numbers, and Arrays. While other tools would 
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(RunnerValue), Box::new(RunnerItem)]
     }
 }
 
 struct RunnerValue;
 
-impl LintRunner<()> for RunnerValue {
+impl LintRunner<SqfLintData> for RunnerValue {
     type Target = Value;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<()> for RunnerValue {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Value,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
@@ -85,7 +85,7 @@ impl LintRunner<()> for RunnerValue {
 }
 
 struct RunnerItem;
-impl LintRunner<()> for RunnerItem {
+impl LintRunner<SqfLintData> for RunnerItem {
     type Target = Item;
     fn run(
         &self,
@@ -93,7 +93,7 @@ impl LintRunner<()> for RunnerItem {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Item,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
@@ -156,6 +156,7 @@ impl Code for CodeC01InvalidValue {
 }
 
 impl CodeC01InvalidValue {
+    #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             value: processed.as_str()[span.clone()].to_string(),
@@ -166,7 +167,7 @@ impl CodeC01InvalidValue {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }
@@ -203,6 +204,7 @@ impl Code for CodeC01InvalidValueMacro {
 }
 
 impl CodeC01InvalidValueMacro {
+    #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             span,
@@ -212,7 +214,7 @@ impl CodeC01InvalidValueMacro {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         if let Some(diag) = &mut self.diagnostic {
             diag.notes.push(format!(
                 "The processed output was:\n{} ",

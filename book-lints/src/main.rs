@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use arma3_wiki::Wiki;
-use hemtt_config::CONFIG_LINTS;
+use hemtt_config::analyze::CONFIG_LINTS;
 use hemtt_sqf::analyze::{
     lints::s02_event_handlers::{
         LintS02EventIncorrectCommand, LintS02EventInsufficientVersion, LintS02EventUnknown,

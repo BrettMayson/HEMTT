@@ -1,27 +1,28 @@
 use crate::{context::Context, error::Error, report::Report};
 
-pub mod archive;
-pub mod bom;
-pub mod hook;
-pub mod pbo;
-
-pub use hook::Hooks;
-
 mod binarize;
 mod file_patching;
 mod files;
 mod new;
 mod rapifier;
-pub(crate) mod sign;
 mod sqf;
+mod stringtables;
+
+pub mod archive;
+pub mod bom;
+pub mod hook;
+pub mod pbo;
+pub(crate) mod sign;
 
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
 pub use files::Files;
+pub use hook::Hooks;
 pub use new::Licenses;
 pub use rapifier::Rapifier;
 pub use sign::Sign;
 pub use sqf::SQFCompiler;
+pub use stringtables::Stringtables;
 
 pub trait Module {
     fn name(&self) -> &'static str;

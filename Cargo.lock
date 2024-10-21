@@ -1610,11 +1610,15 @@ dependencies = [
 name = "hemtt-stringtable"
 version = "1.0.0"
 dependencies = [
- "indexmap",
+ "automod",
+ "hemtt-common",
+ "hemtt-workspace",
  "insta",
+ "linkme",
  "paste",
  "quick-xml",
  "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -1626,6 +1630,8 @@ dependencies = [
  "dirs",
  "hemtt-common",
  "hemtt-pbo",
+ "linkme",
+ "paste",
  "serde",
  "supports-hyperlinks",
  "terminal-link",

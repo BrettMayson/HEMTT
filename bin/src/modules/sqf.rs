@@ -43,13 +43,7 @@ impl Module for SQFCompiler {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(
-            ctx.config(),
-            self.database
-                .as_ref()
-                .expect("database not initialized")
-                .clone(),
-        ));
+        report.extend(lint_check(ctx.config().lints().sqf().clone()));
         Ok(report)
     }
 

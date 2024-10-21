@@ -1,6 +1,7 @@
 use quick_xml::se::Serializer;
 use serde::{Deserialize, Serialize};
 
+pub mod analyze;
 mod key;
 mod package;
 mod totals;

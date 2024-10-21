@@ -9,7 +9,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCommand};
 
-crate::lint!(LintS21InvalidComparisons);
+crate::analyze::lint!(LintS21InvalidComparisons);
 
 impl Lint<SqfLintData> for LintS21InvalidComparisons {
     fn ident(&self) -> &str {
@@ -412,7 +412,7 @@ impl CodeS21InvalidComparisons {
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
         let Some(mut diag) =
-            Diagnostic::new_for_processed(&self, self.issue.span_a.clone(), processed)
+            Diagnostic::from_code_processed(&self, self.issue.span_a.clone(), processed)
         else {
             return self;
         };

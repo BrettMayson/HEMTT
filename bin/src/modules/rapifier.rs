@@ -3,7 +3,7 @@ use std::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_config::{lint_check, parse, rapify::Rapify};
+use hemtt_config::{analyze::lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{addons::Addon, WorkspacePath};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -25,7 +25,7 @@ impl Module for Rapifier {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config()));
+        report.extend(lint_check(ctx.config().lints().config().clone()));
         Ok(report)
     }
 

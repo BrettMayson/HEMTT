@@ -1,6 +1,7 @@
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
-    lint::{Lint, LintManager},
+    lint::LintManager,
+    lint_manager,
     reporting::{Codes, Processed},
 };
 
@@ -11,19 +12,9 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
-#[linkme::distributed_slice]
-pub static CONFIG_LINTS: [std::sync::LazyLock<std::sync::Arc<Box<dyn Lint<()>>>>];
+pub struct SqfLintData {}
 
-#[macro_export]
-macro_rules! lint {
-    ($name:ident) => {
-        #[allow(clippy::module_name_repetitions)]
-        pub struct $name;
-        #[linkme::distributed_slice($crate::analyze::CONFIG_LINTS)]
-        static LINT_ADD: std::sync::LazyLock<std::sync::Arc<Box<dyn Lint<()>>>> =
-            std::sync::LazyLock::new(|| std::sync::Arc::new(Box::new($name)));
-    };
-}
+lint_manager!(config, vec![]);
 
 pub use cfgpatch::CfgPatch;
 pub use chumsky::ChumskyCode;
@@ -34,12 +25,13 @@ use crate::{Array, Class, Config, Expression, Item, Number, Property, Str, Value
 pub trait Analyze: Sized + 'static {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes
     }
 }
@@ -51,17 +43,18 @@ impl Analyze for Expression {}
 impl Analyze for Config {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
-        codes.extend(manager.run(project, Some(processed), &self.to_class()));
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), &self.to_class()));
         codes.extend(
             self.0
                 .iter()
-                .flat_map(|p| p.analyze(project, processed, manager)),
+                .flat_map(|p| p.analyze(data, project, processed, manager)),
         );
         codes
     }
@@ -70,17 +63,18 @@ impl Analyze for Config {
 impl Analyze for Class {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } | Self::Root { properties, .. } => properties
                 .iter()
-                .flat_map(|p| p.analyze(project, processed, manager))
+                .flat_map(|p| p.analyze(data, project, processed, manager))
                 .collect::<Vec<_>>(),
         });
         codes
@@ -90,15 +84,16 @@ impl Analyze for Class {
 impl Analyze for Property {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(match self {
-            Self::Entry { value, .. } => value.analyze(project, processed, manager),
-            Self::Class(c) => c.analyze(project, processed, manager),
+            Self::Entry { value, .. } => value.analyze(data, project, processed, manager),
+            Self::Class(c) => c.analyze(data, project, processed, manager),
             Self::Delete(_) | Self::MissingSemicolon(_, _) => vec![],
         });
         codes
@@ -108,17 +103,20 @@ impl Analyze for Property {
 impl Analyze for Value {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(match self {
-            Self::Str(s) => s.analyze(project, processed, manager),
-            Self::Number(n) => n.analyze(project, processed, manager),
-            Self::Expression(e) => e.analyze(project, processed, manager),
-            Self::Array(a) | Self::UnexpectedArray(a) => a.analyze(project, processed, manager),
+            Self::Str(s) => s.analyze(data, project, processed, manager),
+            Self::Number(n) => n.analyze(data, project, processed, manager),
+            Self::Expression(e) => e.analyze(data, project, processed, manager),
+            Self::Array(a) | Self::UnexpectedArray(a) => {
+                a.analyze(data, project, processed, manager)
+            }
             Self::Invalid(_) => {
                 vec![]
             }
@@ -130,16 +128,17 @@ impl Analyze for Value {
 impl Analyze for Array {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(
             self.items
                 .iter()
-                .flat_map(|i| i.analyze(project, processed, manager)),
+                .flat_map(|i| i.analyze(data, project, processed, manager)),
         );
         codes
     }
@@ -148,18 +147,19 @@ impl Analyze for Array {
 impl Analyze for Item {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<()>,
+        manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(match self {
-            Self::Str(s) => s.analyze(project, processed, manager),
-            Self::Number(n) => n.analyze(project, processed, manager),
+            Self::Str(s) => s.analyze(data, project, processed, manager),
+            Self::Number(n) => n.analyze(data, project, processed, manager),
             Self::Array(a) => a
                 .iter()
-                .flat_map(|i| i.analyze(project, processed, manager))
+                .flat_map(|i| i.analyze(data, project, processed, manager))
                 .collect::<Vec<_>>(),
             Self::Invalid(_) => {
                 vec![]

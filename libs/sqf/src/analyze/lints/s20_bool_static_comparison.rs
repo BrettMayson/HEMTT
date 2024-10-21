@@ -5,7 +5,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 
-crate::lint!(LintS20BoolStaticComparison);
+crate::analyze::lint!(LintS20BoolStaticComparison);
 
 impl Lint<SqfLintData> for LintS20BoolStaticComparison {
     fn ident(&self) -> &str {
@@ -156,7 +156,7 @@ impl CodeS20BoolStaticComparison {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

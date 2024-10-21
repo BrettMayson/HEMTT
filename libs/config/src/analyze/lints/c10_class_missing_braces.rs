@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed},
 };
 
-use crate::{Class, Property};
+use crate::{analyze::SqfLintData, Class, Property};
 
-crate::lint!(LintC10ClassMissingBraces);
+crate::analyze::lint!(LintC10ClassMissingBraces);
 
-impl Lint<()> for LintC10ClassMissingBraces {
+impl Lint<SqfLintData> for LintC10ClassMissingBraces {
     fn ident(&self) -> &str {
         "class_missing_braces"
     }
@@ -54,14 +54,14 @@ All classes using inheritance with a parent class must use braces `{}`, even if 
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
 
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -69,7 +69,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -118,6 +118,7 @@ impl Code for Code10ClassMissingBraces {
 }
 
 impl Code10ClassMissingBraces {
+    #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             span,
@@ -133,7 +134,7 @@ impl Code10ClassMissingBraces {
                 .find('\n')
                 .unwrap_or_else(|| haystack.rfind(|c: char| c != ' ' && c != '}').unwrap_or(0) + 1);
         self.diagnostic =
-            Diagnostic::new_for_processed(&self, possible_end..possible_end, processed);
+            Diagnostic::from_code_processed(&self, possible_end..possible_end, processed);
         self
     }
 }

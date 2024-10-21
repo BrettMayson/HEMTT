@@ -5,7 +5,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::{extract_constant, SqfLintData}, BinaryCommand, Expression, UnaryCommand};
 
-crate::lint!(LintS05IfAssign);
+crate::analyze::lint!(LintS05IfAssign);
 
 impl Lint<SqfLintData> for LintS05IfAssign {
     fn ident(&self) -> &str {
@@ -205,7 +205,7 @@ impl CodeS05IfAssign {
         let haystack = &processed.as_str()[self.rhs.1.end..];
         let end_position = self.rhs.1.end + haystack.find('}').unwrap_or(0) + 1;
         self.diagnostic =
-            Diagnostic::new_for_processed(&self, self.if_cmd.start..end_position, processed);
+            Diagnostic::from_code_processed(&self, self.if_cmd.start..end_position, processed);
         self
     }
 }
