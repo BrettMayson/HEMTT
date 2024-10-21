@@ -15,4 +15,5 @@ Statements {
     ],
     source: "toLower \"A\" + toUpper \"b\" + toUpperAnsi \"C\" + toLowerAnsi \"d\";\n",
     span: 0..62,
+    issues: [],
 }
