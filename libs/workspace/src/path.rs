@@ -1,4 +1,8 @@
-use std::{hash::Hasher, sync::Arc};
+use std::{
+    hash::Hasher,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use hemtt_common::strip::StripInsensitive;
 use vfs::{SeekAndWrite, VfsPath};
@@ -184,6 +188,7 @@ impl WorkspacePath {
         })
     }
 
+    #[allow(clippy::too_many_lines)]
     /// Locate a path in the workspace
     ///
     /// Checks in order:
@@ -194,6 +199,9 @@ impl WorkspacePath {
     ///
     /// # Errors
     /// [`Error::Vfs`] if the path could not be located
+    ///
+    /// # Panics
+    /// If the found path is not valid utf-8
     pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
             let on_disk = on_disk.as_str().replace('\\', "/");
@@ -244,25 +252,13 @@ impl WorkspacePath {
                 .iter()
                 .find(|(p, _)| path_lower.starts_with(&format!("{}/", p.to_lowercase())))
             {
-                // Windows needs case insensitivity because p3ds are a
-                // disaster. On Linux we'll be more strict to avoid
-                // pain and suffering.
-                let ret_path = if cfg!(windows) {
-                    root.join(
-                        path_lower
-                            .strip_prefix(&base.to_lowercase())
-                            .unwrap_or(&path)
-                            .strip_prefix('/')
-                            .unwrap_or(&path),
-                    )?
-                } else {
-                    root.join(
-                        path.strip_prefix_insensitive(base)
-                            .unwrap_or(&path)
-                            .strip_prefix('/')
-                            .unwrap_or(&path),
-                    )?
-                };
+                let ret_path = root.join(
+                    path.strip_prefix_insensitive(base)
+                        .unwrap_or(&path)
+                        .strip_prefix('/')
+                        .unwrap_or(&path),
+                )?;
+                let path_str = ret_path.as_str().trim_start_matches('/');
                 if ret_path.exists()? {
                     return Ok(Some(LocateResult {
                         case_mismatch: if is_wrong_case(&ret_path, &path) {
@@ -277,7 +273,35 @@ impl WorkspacePath {
                             }),
                         },
                     }));
+                } else if let Some(insensitive) = exists_case_insensitive(Path::new(path_str)) {
+                    return Ok(Some(LocateResult {
+                        case_mismatch: Some(insensitive.to_string_lossy().to_string()),
+                        path: Self {
+                            data: Arc::new(WorkspacePathData {
+                                path: self
+                                    .data
+                                    .workspace
+                                    .vfs
+                                    .join(insensitive.to_str().expect("utf-8"))?,
+                                workspace: self.data.workspace.clone(),
+                            }),
+                        },
+                    }));
                 }
+            } else if let Some(insensitive) = exists_case_insensitive(Path::new(&path)) {
+                return Ok(Some(LocateResult {
+                    case_mismatch: Some(insensitive.to_string_lossy().to_string()),
+                    path: Self {
+                        data: Arc::new(WorkspacePathData {
+                            path: self
+                                .data
+                                .workspace
+                                .vfs
+                                .join(insensitive.to_str().expect("utf-8"))?,
+                            workspace: self.data.workspace.clone(),
+                        }),
+                    },
+                }));
             }
         }
         let ret_path = self.data.path.parent().join(&path)?;
@@ -392,4 +416,37 @@ impl std::fmt::Debug for WorkspacePath {
 pub struct LocateResult {
     pub path: WorkspacePath,
     pub case_mismatch: Option<String>,
+}
+
+/// Check if a path exists in a case-insensitive manner.
+fn exists_case_insensitive(path: &Path) -> Option<PathBuf> {
+    exists_case_insensitive_from(path, PathBuf::from("."))
+        .or_else(|| exists_case_insensitive_from(path, PathBuf::from("./include")))
+}
+
+fn exists_case_insensitive_from(path: &Path, from: PathBuf) -> Option<PathBuf> {
+    let mut current_path = from;
+    for component in path.components() {
+        if let std::path::Component::Normal(name) = component {
+            let mut found = false;
+            if let Ok(entries) = std::fs::read_dir(&current_path) {
+                for entry in entries.filter_map(Result::ok) {
+                    if entry.file_name().eq_ignore_ascii_case(name) {
+                        current_path.push(entry.file_name());
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if !found {
+                return None;
+            }
+        }
+    }
+
+    if current_path.exists() {
+        Some(current_path)
+    } else {
+        None
+    }
 }

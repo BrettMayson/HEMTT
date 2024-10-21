@@ -68,7 +68,7 @@ impl P3D {
             } else {
                 format!("\\{texture}")
             };
-            let texture = texture.to_lowercase();
+            // let texture = texture.to_lowercase();
             if let Some(exists) = cache.exists(&texture) {
                 if !exists {
                     missing_textures.push(texture);

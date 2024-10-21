@@ -86,6 +86,7 @@ impl Module for Binarize {
 
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
+        use dirs::home_dir;
         use hemtt_common::steam;
 
         let mut report = Report::new();
@@ -117,7 +118,17 @@ impl Module for Binarize {
             let mut cmd = Command::new("wine64");
             cmd.arg("--version");
             if cmd.output().is_err() {
-                self.proton = true;
+                if home_dir()
+                    .expect("home directory exists")
+                    .join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+                    .exists()
+                {
+                    self.proton = true;
+                } else {
+                    debug!("tools found, but not wine64 or proton");
+                    report.push(ToolsNotFound::code(Severity::Warning));
+                    self.command = None;
+                }
             }
         } else {
             report.push(ToolsNotFound::code(Severity::Warning));
