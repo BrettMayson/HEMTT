@@ -14,7 +14,7 @@ if_not_else = true
 enabled = true
 
 [lints.sqf.not_private]
-not_private = true
+enabled = true
 
 [lints.sqf.unused]
 enabled = true

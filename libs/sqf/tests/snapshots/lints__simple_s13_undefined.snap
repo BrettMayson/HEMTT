@@ -1,8 +1,11 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s13_undefined), false)"
+---
 [0m[1m[38;5;14mhelp[L-S13][0m[1m: Undefined Var - _neverDefined[0m
-  [0m[36m┌─[0m source.sqf:1:17
+  [0m[36m┌─[0m s13_undefined.sqf:1:17
   [0m[36m│[0m
 [0m[36m1[0m [0m[36m│[0m x = {systemChat [0m[36m_neverDefined[0m;};
   [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: From Orphan Code - may not be a problem
-
