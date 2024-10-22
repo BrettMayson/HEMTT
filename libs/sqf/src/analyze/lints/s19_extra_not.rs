@@ -8,7 +8,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, Expression, UnaryCommand};
 
-crate::lint!(LintS19ExtraNot);
+crate::analyze::lint!(LintS19ExtraNot);
 
 impl Lint<SqfLintData> for LintS19ExtraNot {
     fn ident(&self) -> &str {
@@ -128,7 +128,7 @@ impl Code19ExtraNot {
         .generate_processed(processed)
     }
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }
