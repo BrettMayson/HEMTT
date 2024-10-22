@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Range, sync::Arc};
+use std::{collections::HashMap, ops::{Range, RangeFrom}, sync::Arc};
 use tracing::warn;
 
 use crate::{
@@ -289,7 +289,7 @@ impl Processed {
         }
         let mut real_start = 0;
         let mut real_end = 0;
-        self.output.char_indices().for_each(|(p, c)| {
+        self.output.chars().enumerate().for_each(|(p, c)| {
             if p < span.start {
                 real_start += c.len_utf8();
             }
@@ -298,6 +298,17 @@ impl Processed {
             }
         });
         Arc::from(&self.output[real_start..real_end])
+    }
+
+    #[must_use]
+    pub fn extract_from(&self, from: RangeFrom<usize>) -> Arc<str> {
+        let mut real_start = 0;
+        self.output.chars().enumerate().for_each(|(p, c)| {
+            if p < from.start {
+                real_start += c.len_utf8();
+            }
+        });
+        Arc::from(&self.output[real_start..])
     }
 }
 
