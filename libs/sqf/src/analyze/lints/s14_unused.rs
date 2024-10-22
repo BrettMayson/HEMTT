@@ -12,7 +12,7 @@ use hemtt_workspace::{
 };
 use std::{ops::Range, sync::Arc};
 
-crate::lint!(LintS14Unused);
+crate::analyze::lint!(LintS14Unused);
 
 impl Lint<SqfLintData> for LintS14Unused {
     fn ident(&self) -> &str {
@@ -149,7 +149,7 @@ impl CodeS14Unused {
         .generate_processed(processed)
     }
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

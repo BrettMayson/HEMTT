@@ -9,7 +9,7 @@ use hemtt_workspace::{
 };
 use std::{ops::Range, sync::Arc};
 
-crate::lint!(LintS13Undefined);
+crate::analyze::lint!(LintS13Undefined);
 
 impl Lint<SqfLintData> for LintS13Undefined {
     fn ident(&self) -> &str {
@@ -143,7 +143,7 @@ impl CodeS13Undefined {
         .generate_processed(processed)
     }
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

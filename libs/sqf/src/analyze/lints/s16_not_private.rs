@@ -9,7 +9,7 @@ use hemtt_workspace::{
 };
 use std::{ops::Range, sync::Arc};
 
-crate::lint!(LintS16NotPrivate);
+crate::analyze::lint!(LintS16NotPrivate);
 
 impl Lint<SqfLintData> for LintS16NotPrivate {
     fn ident(&self) -> &str {
@@ -129,7 +129,7 @@ impl CodeS16NotPrivate {
         .generate_processed(processed)
     }
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }
