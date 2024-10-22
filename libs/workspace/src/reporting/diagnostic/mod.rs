@@ -93,21 +93,6 @@ impl Diagnostic {
         Some(diag)
     }
 
-    pub fn simple(code: &impl Code) -> Self {
-        let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
-        diag.link = code.link().map(std::string::ToString::to_string);
-        if let Some(note) = code.note() {
-            diag.notes.push(note);
-        }
-        if let Some(help) = code.help() {
-            diag.help.push(help);
-        }
-        if let Some(suggestion) = code.suggestion() {
-            diag.suggestions.push(suggestion);
-        }
-        diag
-    }
-
     #[must_use]
     pub const fn set_severity(mut self, severity: Severity) -> Self {
         self.severity = severity;
