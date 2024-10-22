@@ -106,12 +106,13 @@ fn append_token(
         }
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
-                processed.col += str.len();
-                processed.total += str.len();
+                let chars = str.chars().count();
+                processed.col += chars;
+                processed.total += chars;
                 processed.output.push_str(&str);
                 LineCol(
-                    processed.total + str.len(),
-                    (processed.line, processed.col + str.len()),
+                    processed.total + chars,
+                    (processed.line, processed.col + chars),
                 )
             }),
             source,
