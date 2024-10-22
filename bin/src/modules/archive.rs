@@ -1,9 +1,17 @@
-use std::fs::{create_dir_all, File};
+use std::{
+    fs::{create_dir_all, File},
+    path::PathBuf,
+};
 
 use walkdir::WalkDir;
 use zip::{write::SimpleFileOptions, ZipWriter};
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
+
+enum Entry {
+    File(String, PathBuf),
+    Directory(String),
+}
 
 /// Creates the release zips
 ///
@@ -27,7 +35,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
     let options = SimpleFileOptions::default().compression_level(Some(9));
 
     debug!("creating release at {:?}", output.display());
-    let mut zip = ZipWriter::new(File::create(&output)?);
+    let mut to_write = Vec::new();
     for entry in WalkDir::new(ctx.build_folder().expect("build folder exists")) {
         let Ok(entry) = entry else {
             continue;
@@ -48,7 +56,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
                 path.replace('\\', "/")
             );
             trace!("zip: creating directory {:?}", dir);
-            zip.add_directory(dir, options)?;
+            to_write.push(Entry::Directory(dir));
             continue;
         }
         let name = path
@@ -60,9 +68,23 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
             name.display().to_string().replace('\\', "/")
         );
         trace!("zip: adding file {:?}", file);
-        zip.start_file(file, options)?;
-        std::io::copy(&mut File::open(path)?, &mut zip)?;
+        to_write.push(Entry::File(file, path.to_owned()));
     }
+    let progress = progress_bar(to_write.len() as u64).with_message("Creating release");
+    let mut zip = ZipWriter::new(File::create(&output)?);
+    for entry in to_write {
+        match entry {
+            Entry::File(file, path) => {
+                zip.start_file(file, options)?;
+                std::io::copy(&mut File::open(path)?, &mut zip)?;
+            }
+            Entry::Directory(dir) => {
+                zip.add_directory(dir, options)?;
+            }
+        }
+        progress.inc(1);
+    }
+    progress.finish_and_clear();
     zip.finish()?;
     info!("Created release: {}", output.display());
     std::fs::copy(&output, {
