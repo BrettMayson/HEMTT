@@ -218,7 +218,11 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
             if !mod_path.exists() {
                 report.push(WorkshopModNotFound::code(load_mod));
             };
-            mods.push(mod_path.display().to_string());
+            if cfg!(windows) {
+                mods.push(mod_path.display().to_string());
+            } else {
+                mods.push(format!("Z:{}", mod_path.display()));
+            }
         }
     }
     if report.failed() {
