@@ -159,7 +159,7 @@ impl CodeC01InvalidValue {
     #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
-            value: processed.as_str()[span.clone()].to_string(),
+            value: processed.extract(span.clone()).to_string(),
             span,
             diagnostic: None,
         }
@@ -218,7 +218,7 @@ impl CodeC01InvalidValueMacro {
         if let Some(diag) = &mut self.diagnostic {
             diag.notes.push(format!(
                 "The processed output was:\n{} ",
-                &processed.as_str()[self.span.start..self.span.end]
+                processed.extract(self.span.clone())
             ));
         }
         self
