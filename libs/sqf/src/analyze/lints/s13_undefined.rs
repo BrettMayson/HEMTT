@@ -58,8 +58,8 @@ impl LintRunner<SqfLintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let check_oprhan_code =
-            if let Some(toml::Value::Boolean(b)) = config.option("check_oprhan_code") {
+        let check_orphan_code =
+            if let Some(toml::Value::Boolean(b)) = config.option("check_orphan_code") {
                 *b
             } else {
                 false
@@ -68,7 +68,7 @@ impl LintRunner<SqfLintData> for Runner {
         for issue in target.issues() {
             if let Issue::Undefined(var, range, is_orphan_scope) = issue {
                 let error_hint = if *is_orphan_scope {
-                    if !check_oprhan_code {
+                    if !check_orphan_code {
                         continue;
                     }
                     Some("From Orphan Code - may not be a problem".to_owned())

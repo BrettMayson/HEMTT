@@ -22,7 +22,7 @@ options.check_params = false
 
 [lints.sqf.undefined]
 enabled = true
-options.check_oprhan_code = true
+options.check_orphan_code = true
 
 [lints.sqf.var_all_caps]
 enabled = true
