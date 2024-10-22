@@ -16,13 +16,19 @@ impl Code for ToolsNotFound {
     }
 
     fn message(&self) -> String {
-        String::from("Arma 3 Tools not found in registry.")
+        String::from("Arma 3 Tools not found.")
     }
 
     fn help(&self) -> Option<String> {
-        Some(String::from(
-            "Install Arma 3 Tools from Steam and run them at least once.",
-        ))
+        if cfg!(windows) {
+            Some(String::from(
+                "Install Arma 3 Tools from Steam and run them at least once.",
+            ))
+        } else {
+            Some(String::from(
+                "Install Arma 3 Tools, and ensure either `wine64` or Proton Sniper is installed.",
+            ))
+        }
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

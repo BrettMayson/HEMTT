@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
-use crate::{Class, Property};
+use crate::{analyze::SqfLintData, Class, Property};
 
-crate::lint!(LintC05ExternalParentCase);
+crate::analyze::lint!(LintC05ExternalParentCase);
 
-impl Lint<()> for LintC05ExternalParentCase {
+impl Lint<SqfLintData> for LintC05ExternalParentCase {
     fn ident(&self) -> &str {
         "external_parent_case"
     }
@@ -53,13 +53,13 @@ While Arma does not care about the case of class names, HEMTT wants you to have 
         Severity::Help
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = Class;
     fn run(
         &self,
@@ -67,7 +67,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Class,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -171,6 +171,7 @@ impl Code for Code05ExternalParentCase {
 }
 
 impl Code05ExternalParentCase {
+    #[must_use]
     pub fn new(class: Class, parent: Class, processed: &Processed) -> Self {
         Self {
             class,
@@ -182,7 +183,7 @@ impl Code05ExternalParentCase {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(
+        self.diagnostic = Diagnostic::from_code_processed(
             &self,
             self.class
                 .parent()

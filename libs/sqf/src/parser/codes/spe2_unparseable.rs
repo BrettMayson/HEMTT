@@ -32,7 +32,7 @@ impl UnparseableSyntax {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

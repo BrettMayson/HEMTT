@@ -1,10 +1,11 @@
 use clap::Command;
 
 use crate::{
+    commands::global_modules,
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{bom::BOMCheck, pbo::Collapse, Binarize, Hooks, Rapifier, SQFCompiler},
+    modules::{pbo::Collapse, Binarize, Rapifier},
     report::Report,
 };
 
@@ -25,13 +26,11 @@ pub fn execute() -> Result<Report, Error> {
     )?;
 
     let mut executor = Executor::new(ctx);
+    global_modules(&mut executor);
 
     executor.collapse(Collapse::Yes);
 
-    executor.add_module(Box::<BOMCheck>::default());
-    executor.add_module(Box::<Hooks>::default());
     executor.add_module(Box::<Rapifier>::default());
-    executor.add_module(Box::<SQFCompiler>::default());
     executor.add_module(Box::<Binarize>::new(Binarize::new(true)));
 
     info!("Running checks");

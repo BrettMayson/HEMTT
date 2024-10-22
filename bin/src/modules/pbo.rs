@@ -12,7 +12,7 @@ use hemtt_pbo::WritablePbo;
 use hemtt_workspace::addons::{Addon, Location};
 use vfs::VfsFileType;
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Should the optional and compat PBOs be collapsed into the addons folder
@@ -42,15 +42,18 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
         })
     };
     let counter = AtomicU16::new(0);
+    let progress = progress_bar(ctx.addons().to_vec().len() as u64).with_message("Building PBOs");
     ctx.addons()
         .to_vec()
         .iter()
         .map(|addon| {
             internal_build(ctx, addon, collapse, &version, git_hash.as_ref())?;
+            progress.inc(1);
             counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
         .collect::<Result<Vec<_>, Error>>()?;
+    progress.finish_and_clear();
     info!("Built {} PBOs", counter.load(Ordering::Relaxed));
     Ok(Report::new())
 }

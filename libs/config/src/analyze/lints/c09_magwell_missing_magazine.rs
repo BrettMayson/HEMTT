@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
-use crate::{Class, Config, Ident, Item, Property, Str, Value};
+use crate::{analyze::SqfLintData, Class, Config, Ident, Item, Property, Str, Value};
 
-crate::lint!(LintC09MagwellMissingMagazine);
+crate::analyze::lint!(LintC09MagwellMissingMagazine);
 
-impl Lint<()> for LintC09MagwellMissingMagazine {
+impl Lint<SqfLintData> for LintC09MagwellMissingMagazine {
     fn ident(&self) -> &str {
         "magwell_missing_magazine"
     }
@@ -74,13 +74,13 @@ Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe
         Severity::Warning
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -88,7 +88,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
@@ -194,6 +194,7 @@ impl Code for Code09MagwellMissingMagazine {
 }
 
 impl Code09MagwellMissingMagazine {
+    #[must_use]
     pub fn new(array: Ident, span: Range<usize>, processed: &Processed) -> Self {
         Self {
             array,
@@ -205,7 +206,7 @@ impl Code09MagwellMissingMagazine {
     }
 
     fn diagnostic_generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         if let Some(diag) = &mut self.diagnostic {
             diag.labels.push({
                 let Some(map) = processed.mapping(self.array.span.start) else {

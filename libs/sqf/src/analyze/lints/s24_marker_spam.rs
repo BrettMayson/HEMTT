@@ -8,7 +8,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement};
 
-crate::lint!(LintS24MarkerSpam);
+crate::analyze::lint!(LintS24MarkerSpam);
 
 impl Lint<SqfLintData> for LintS24MarkerSpam {
     fn ident(&self) -> &str {
@@ -171,7 +171,7 @@ impl CodeS24MarkerSpam {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(mut diag) = Diagnostic::new_for_processed(&self, self.calls.first().expect("at least one call").1.clone(), processed) else {
+        let Some(mut diag) = Diagnostic::from_code_processed(&self, self.calls.first().expect("at least one call").1.clone(), processed) else {
             return self;
         };
         diag = diag.clear_labels();

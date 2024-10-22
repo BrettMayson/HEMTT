@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// Lint group config
 pub struct LintGroupConfig {
-    /// Lints for config
     config: HashMap<String, LintConfigOverride>,
     sqf: HashMap<String, LintConfigOverride>,
+    stringtables: HashMap<String, LintConfigOverride>,
 }
 
 impl LintGroupConfig {
@@ -23,6 +23,12 @@ impl LintGroupConfig {
     /// Get the sqf lints
     pub const fn sqf(&self) -> &HashMap<String, LintConfigOverride> {
         &self.sqf
+    }
+
+    #[must_use]
+    /// Get the stringtables lints
+    pub const fn stringtables(&self) -> &HashMap<String, LintConfigOverride> {
+        &self.stringtables
     }
 
     pub fn is_empty(&self) -> bool {
@@ -103,7 +109,7 @@ impl LintConfig {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Default, Debug, PartialEq, Deserialize, Serialize)]
 pub struct LintConfigOverride {
     enabled: Option<bool>,
     severity: Option<Severity>,
@@ -147,6 +153,7 @@ impl LintConfigOverride {
 pub struct LintSectionFile {
     pub config: Option<HashMap<String, LintConfigFile>>,
     pub sqf: Option<HashMap<String, LintConfigFile>>,
+    pub stringtables: Option<HashMap<String, LintConfigFile>>,
 }
 
 impl From<LintSectionFile> for LintGroupConfig {
@@ -160,6 +167,12 @@ impl From<LintSectionFile> for LintGroupConfig {
                 .collect(),
             sqf: file
                 .sqf
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(k, v)| (k, v.into()))
+                .collect(),
+            stringtables: file
+                .stringtables
                 .unwrap_or_default()
                 .into_iter()
                 .map(|(k, v)| (k, v.into()))

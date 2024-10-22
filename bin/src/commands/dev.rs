@@ -2,12 +2,11 @@ use clap::{ArgAction, ArgMatches, Command};
 use hemtt_workspace::addons::Location;
 
 use crate::{
+    commands::global_modules,
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{
-        bom::BOMCheck, pbo::Collapse, Binarize, FilePatching, Files, Hooks, Rapifier, SQFCompiler,
-    },
+    modules::{pbo::Collapse, Binarize, FilePatching, Files, Rapifier},
     report::Report,
 };
 
@@ -124,15 +123,13 @@ pub fn context(
     }
 
     let mut executor = Executor::new(ctx);
+    global_modules(&mut executor);
 
     executor.collapse(Collapse::Yes);
 
-    executor.add_module(Box::<BOMCheck>::default());
-    executor.add_module(Box::<Hooks>::default());
     if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::default()));
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if force_binarize || matches.get_one::<bool>("binarize") == Some(&true) {

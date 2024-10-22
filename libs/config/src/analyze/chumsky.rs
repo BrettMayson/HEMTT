@@ -24,6 +24,7 @@ impl Code for ChumskyCode {
 }
 
 impl ChumskyCode {
+    #[must_use]
     pub fn new(err: Simple<char>, processed: &Processed) -> Self {
         Self {
             err,
@@ -33,7 +34,7 @@ impl ChumskyCode {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.err.span(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.err.span(), processed);
         if let Some(diag) = &mut self.diagnostic {
             diag.notes.push(format!(
                 "The processed output of the line with the error was:\n{} ",

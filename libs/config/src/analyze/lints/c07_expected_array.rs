@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{Property, Value};
+use crate::{analyze::SqfLintData, Property, Value};
 
-crate::lint!(LintC07ExpectedArray);
+crate::analyze::lint!(LintC07ExpectedArray);
 
-impl Lint<()> for LintC07ExpectedArray {
+impl Lint<SqfLintData> for LintC07ExpectedArray {
     fn ident(&self) -> &str {
         "expected_array"
     }
@@ -50,13 +50,13 @@ Only properties that are arrays must have `[]` after the property name.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -131,6 +131,7 @@ impl Code for Code07ExpectedArray {
 }
 
 impl Code07ExpectedArray {
+    #[must_use]
     pub fn new(property: Property, processed: &Processed) -> Self {
         Self {
             property,
@@ -168,7 +169,7 @@ impl Code07ExpectedArray {
         let haystack = &processed.as_str()[ident_end.original_start()..value.span().start];
         let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
         self.suggestion = Some(name.value.to_string());
-        self.diagnostic = Diagnostic::new_for_processed(
+        self.diagnostic = Diagnostic::from_code_processed(
             &self,
             ident_start.original_start()..possible_end,
             processed,

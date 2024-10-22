@@ -8,7 +8,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, Expression};
 
-crate::lint!(LintS17VarAllCaps);
+crate::analyze::lint!(LintS17VarAllCaps);
 
 impl Lint<SqfLintData> for LintS17VarAllCaps {
     fn ident(&self) -> &str {
@@ -161,7 +161,7 @@ impl CodeS17VarAllCaps {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(mut diagnostic) = Diagnostic::new_for_processed(&self, self.span.clone(), processed) else {
+        let Some(mut diagnostic) = Diagnostic::from_code_processed(&self, self.span.clone(), processed) else {
             return self;
         };
         self.diagnostic = Some(diagnostic.clone());

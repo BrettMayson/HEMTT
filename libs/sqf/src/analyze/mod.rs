@@ -8,6 +8,7 @@ use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::Addon,
     lint::LintManager,
+    lint_manager,
     reporting::{Codes, Processed},
 };
 use lints::s02_event_handlers::{
@@ -20,46 +21,17 @@ use crate::{
     UnaryCommand,
 };
 
-#[linkme::distributed_slice]
-pub static SQF_LINTS: [std::sync::LazyLock<
-    std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<SqfLintData>>>,
->];
-
-#[macro_export]
-macro_rules! lint {
-    ($name:ident) => {
-        #[allow(clippy::module_name_repetitions)]
-        pub struct $name;
-        #[linkme::distributed_slice($crate::analyze::SQF_LINTS)]
-        static LINT_ADD: std::sync::LazyLock<
-            std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<$crate::analyze::SqfLintData>>>,
-        > = std::sync::LazyLock::new(|| std::sync::Arc::new(Box::new($name)));
-    };
-}
-
-#[must_use]
-pub fn lint_check(project: &ProjectConfig, database: Arc<Database>) -> Codes {
-    let mut manager: LintManager<SqfLintData> = LintManager::new(
-        project.lints().sqf().clone(),
-        (Arc::new(Addon::test_addon()), database),
-    );
-    if let Err(lint_errors) =
-        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
-    {
-        return lint_errors;
-    }
-    if let Err(lint_errors) = manager.push_group(
+lint_manager!(
+    sqf,
+    vec![(
         vec![
             Arc::new(Box::new(LintS02EventUnknown)),
             Arc::new(Box::new(LintS02EventIncorrectCommand)),
             Arc::new(Box::new(LintS02EventInsufficientVersion)),
         ],
         Box::new(EventHandlerRunner),
-    ) {
-        return lint_errors;
-    }
-    vec![]
-}
+    )]
+);
 
 #[must_use]
 pub fn analyze(
@@ -71,7 +43,6 @@ pub fn analyze(
 ) -> Codes {
     let mut manager: LintManager<SqfLintData> = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
-        (addon, database),
     );
     if let Err(lint_errors) =
         manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
@@ -88,7 +59,7 @@ pub fn analyze(
     ) {
         return lint_errors;
     }
-    statements.analyze(project, processed, &manager)
+    statements.analyze(&(addon, database), project, processed, &manager)
 }
 
 pub type SqfLintData = (Arc<Addon>, Arc<Database>);
@@ -96,12 +67,13 @@ pub type SqfLintData = (Arc<Addon>, Arc<Database>);
 pub trait Analyze: Sized + 'static {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
         manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         codes
     }
 }
@@ -113,14 +85,15 @@ impl Analyze for BinaryCommand {}
 impl Analyze for Statements {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
         manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         for statement in self.content() {
-            codes.extend(statement.analyze(project, processed, manager));
+            codes.extend(statement.analyze(data, project, processed, manager));
         }
         codes
     }
@@ -129,17 +102,18 @@ impl Analyze for Statements {
 impl Analyze for Statement {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
         manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         match self {
             Self::Expression(exp, _)
             | Self::AssignLocal(_, exp, _)
             | Self::AssignGlobal(_, exp, _) => {
-                codes.extend(exp.analyze(project, processed, manager));
+                codes.extend(exp.analyze(data, project, processed, manager));
             }
         }
         codes
@@ -149,30 +123,31 @@ impl Analyze for Statement {
 impl Analyze for Expression {
     fn analyze(
         &self,
+        data: &SqfLintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
         manager: &LintManager<SqfLintData>,
     ) -> Codes {
         let mut codes = vec![];
-        codes.extend(manager.run(project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), self));
         match self {
             Self::Array(exp, _) => {
                 for e in exp {
-                    codes.extend(e.analyze(project, processed, manager));
+                    codes.extend(e.analyze(data, project, processed, manager));
                 }
             }
-            Self::Code(s) => codes.extend(s.analyze(project, processed, manager)),
+            Self::Code(s) => codes.extend(s.analyze(data, project, processed, manager)),
             Self::NularCommand(nc, _) => {
-                codes.extend(nc.analyze(project, processed, manager));
+                codes.extend(nc.analyze(data, project, processed, manager));
             }
             Self::UnaryCommand(uc, exp, _) => {
-                codes.extend(uc.analyze(project, processed, manager));
-                codes.extend(exp.analyze(project, processed, manager));
+                codes.extend(uc.analyze(data, project, processed, manager));
+                codes.extend(exp.analyze(data, project, processed, manager));
             }
             Self::BinaryCommand(bc, exp_left, exp_right, _) => {
-                codes.extend(bc.analyze(project, processed, manager));
-                codes.extend(exp_left.analyze(project, processed, manager));
-                codes.extend(exp_right.analyze(project, processed, manager));
+                codes.extend(bc.analyze(data, project, processed, manager));
+                codes.extend(exp_left.analyze(data, project, processed, manager));
+                codes.extend(exp_right.analyze(data, project, processed, manager));
             }
             _ => {}
         }

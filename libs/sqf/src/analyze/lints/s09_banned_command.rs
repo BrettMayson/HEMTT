@@ -5,7 +5,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, Expression};
 
-crate::lint!(LintS09BannedCommand);
+crate::analyze::lint!(LintS09BannedCommand);
 
 impl Lint<SqfLintData> for LintS09BannedCommand {
     fn ident(&self) -> &str {
@@ -170,7 +170,7 @@ impl CodeS09BannedCommand {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

@@ -1,3 +1,5 @@
+pub mod macros;
+
 use std::{collections::HashMap, sync::Arc};
 
 use codespan_reporting::diagnostic::Severity;
@@ -117,17 +119,15 @@ pub struct LintManager<D> {
     lints: Lints<D>,
     groups: Vec<(Lints<D>, Box<dyn AnyLintGroupRunner<D>>)>,
     configs: HashMap<String, LintConfigOverride>,
-    data: D,
 }
 
 impl<D> LintManager<D> {
     #[must_use]
-    pub fn new(configs: HashMap<String, LintConfigOverride>, data: D) -> Self {
+    pub fn new(configs: HashMap<String, LintConfigOverride>) -> Self {
         Self {
             lints: vec![],
             groups: vec![],
             configs,
-            data,
         }
     }
 
@@ -205,6 +205,7 @@ impl<D> LintManager<D> {
 
     pub fn run(
         &self,
+        data: &D,
         project: Option<&ProjectConfig>,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
@@ -222,7 +223,7 @@ impl<D> LintManager<D> {
                 }
                 lint.runners()
                     .iter()
-                    .flat_map(|runner| runner.run(project, &config, processed, target, &self.data))
+                    .flat_map(|runner| runner.run(project, &config, processed, target, data))
                     .collect::<Codes>()
             })
             .chain(self.groups.iter().flat_map(|(lints, runner)| {
@@ -240,7 +241,7 @@ impl<D> LintManager<D> {
                 if configs.is_empty() {
                     return vec![];
                 }
-                runner.run(project, configs, processed, target, &self.data)
+                runner.run(project, configs, processed, target, data)
             }))
             .collect()
     }
@@ -401,22 +402,21 @@ mod tests {
             lints: vec![Arc::new(Box::new(LintA)), Arc::new(Box::new(LintB))],
             groups: vec![],
             configs: HashMap::new(),
-            data: (),
         };
 
         let target_a = TypeA;
         let target_b = TypeB;
         let target_c = TypeC;
 
-        let codes = manager.run(None, None, &target_a);
+        let codes = manager.run(&(), None, None, &target_a);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeA");
 
-        let codes = manager.run(None, None, &target_b);
+        let codes = manager.run(&(), None, None, &target_b);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeB");
 
-        let codes = manager.run(None, None, &target_c);
+        let codes = manager.run(&(), None, None, &target_c);
         assert_eq!(codes.len(), 0);
     }
 }

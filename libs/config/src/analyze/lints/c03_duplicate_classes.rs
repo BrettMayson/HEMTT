@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed},
 };
 
-use crate::{Class, Config, Property};
+use crate::{analyze::SqfLintData, Class, Config, Property};
 
-crate::lint!(LintC03DuplicateClasses);
+crate::analyze::lint!(LintC03DuplicateClasses);
 
-impl Lint<()> for LintC03DuplicateClasses {
+impl Lint<SqfLintData> for LintC03DuplicateClasses {
     fn ident(&self) -> &str {
         "duplicate_classes"
     }
@@ -58,13 +58,13 @@ Children classes can only be defined once in a class.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -72,7 +72,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
@@ -81,6 +81,7 @@ impl LintRunner<()> for Runner {
     }
 }
 
+#[must_use]
 pub fn check(properties: &[Property], processed: &Processed) -> Codes {
     let mut defined: HashMap<String, Vec<Class>> = HashMap::new();
     let mut codes = Vec::new();
@@ -163,6 +164,7 @@ impl Code for CodeC03DuplicateClasses {
 }
 
 impl CodeC03DuplicateClasses {
+    #[must_use]
     pub fn new(classes: Vec<Class>, processed: &Processed) -> Self {
         Self {
             classes,
@@ -175,7 +177,7 @@ impl CodeC03DuplicateClasses {
         let Some(name) = self.classes[0].name() else {
             panic!("CodeC03DuplicateClasses::generate_processed called on class without name");
         };
-        self.diagnostic = Diagnostic::new_for_processed(&self, name.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.clone(), processed);
         if let Some(diag) = &mut self.diagnostic {
             for class in self.classes.iter().skip(1) {
                 let map = processed

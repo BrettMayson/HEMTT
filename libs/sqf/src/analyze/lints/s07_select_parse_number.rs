@@ -7,7 +7,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, parser::database::Database, BinaryCommand, Expression};
 
-crate::lint!(LintS07SelectParseNumber);
+crate::analyze::lint!(LintS07SelectParseNumber);
 
 impl Lint<SqfLintData> for LintS07SelectParseNumber {
     fn ident(&self) -> &str {
@@ -253,7 +253,7 @@ impl CodeS07SelectParseNumber {
     #[allow(clippy::range_plus_one)]
     fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic =
-            Diagnostic::new_for_processed(&self, self.span.start..self.span.end + 1, processed);
+            Diagnostic::from_code_processed(&self, self.span.start..self.span.end + 1, processed);
         self
     }
 }
