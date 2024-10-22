@@ -5,7 +5,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, Expression};
 
-crate::lint!(LintS04CommandCase);
+crate::analyze::lint!(LintS04CommandCase);
 
 impl Lint<SqfLintData> for LintS04CommandCase {
     fn ident(&self) -> &str {
@@ -156,7 +156,7 @@ impl CodeS04CommandCase {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

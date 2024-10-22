@@ -3,17 +3,15 @@ use std::{
     sync::atomic::{AtomicU16, Ordering},
 };
 
-use hemtt_config::{lint_check, parse, rapify::Rapify};
+use hemtt_config::{analyze::lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{addons::Addon, WorkspacePath};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
 use super::Module;
-
-// type RapifyResult = (Vec<(String, Vec<Annotation>)>, Result<(), Error>);
 
 #[derive(Default)]
 pub struct Rapifier;
@@ -25,7 +23,7 @@ impl Module for Rapifier {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config()));
+        report.extend(lint_check(ctx.config().lints().config().clone()));
         Ok(report)
     }
 
@@ -68,11 +66,13 @@ impl Module for Rapifier {
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
+        let progress = progress_bar(entries.len() as u64).with_message("Rapifying Configs");
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
                 let report = rapify(addon, entry, ctx)?;
                 counter.fetch_add(1, Ordering::Relaxed);
+                progress.inc(1);
                 Ok(report)
             })
             .collect::<Result<Vec<Report>, Error>>()?;
@@ -81,6 +81,7 @@ impl Module for Rapifier {
             report.merge(new_report);
         }
 
+        progress.finish_and_clear();
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
         Ok(report)
     }

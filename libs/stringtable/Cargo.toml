@@ -9,10 +9,15 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-indexmap = { workspace = true }
+hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-workspace = { path = "../workspace", version = "1.0.0" }
+
+automod = { workspace = true }
+linkme = { workspace = true }
 paste = { workspace = true }
 quick-xml = { version = "0.36.2", features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

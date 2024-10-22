@@ -12,7 +12,7 @@ use hemtt_sqf::{
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
 use super::Module;
 
@@ -43,13 +43,7 @@ impl Module for SQFCompiler {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(
-            ctx.config(),
-            self.database
-                .as_ref()
-                .expect("database not initialized")
-                .clone(),
-        ));
+        report.extend(lint_check(ctx.config().lints().sqf().clone()));
         Ok(report)
     }
 
@@ -75,6 +69,7 @@ impl Module for SQFCompiler {
             .as_ref()
             .expect("database not initialized")
             .clone();
+        let progress = progress_bar(entries.len() as u64).with_message("Compiling SQF");
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
@@ -97,6 +92,7 @@ impl Module for SQFCompiler {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
                             counter.fetch_add(1, Ordering::Relaxed);
+                            progress.inc(1);
                         }
                         for code in codes {
                             report.push(code);
@@ -127,6 +123,7 @@ impl Module for SQFCompiler {
         for new_report in reports {
             report.merge(new_report);
         }
+        progress.finish_and_clear();
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
         Ok(report)
     }

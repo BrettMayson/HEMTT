@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{diagnostic::Yellow, Code, Diagnostic, Processed},
 };
 
-use crate::Property;
+use crate::{analyze::SqfLintData, Property};
 
-crate::lint!(LintC08MissingSemicolon);
+crate::analyze::lint!(LintC08MissingSemicolon);
 
-impl Lint<()> for LintC08MissingSemicolon {
+impl Lint<SqfLintData> for LintC08MissingSemicolon {
     fn ident(&self) -> &str {
         "missing_semicolon"
     }
@@ -64,14 +64,14 @@ All properties must end with a semicolon, including classes.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
 
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -79,7 +79,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -130,6 +130,7 @@ impl Code for Code08MissingSemicolon {
 }
 
 impl Code08MissingSemicolon {
+    #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed) -> Self {
         Self {
             span,
@@ -145,7 +146,7 @@ impl Code08MissingSemicolon {
                 .find('\n')
                 .unwrap_or_else(|| haystack.rfind(|c: char| c != ' ' && c != '}').unwrap_or(0) + 1);
         self.diagnostic =
-            Diagnostic::new_for_processed(&self, possible_end..possible_end, processed);
+            Diagnostic::from_code_processed(&self, possible_end..possible_end, processed);
         self
     }
 }

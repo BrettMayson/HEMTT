@@ -8,7 +8,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 
-crate::lint!(LintS22ThisCall);
+crate::analyze::lint!(LintS22ThisCall);
 
 impl Lint<SqfLintData> for LintS22ThisCall {
     fn ident(&self) -> &str {
@@ -138,7 +138,7 @@ impl CodeS22ThisCall {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

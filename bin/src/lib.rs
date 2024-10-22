@@ -11,6 +11,7 @@ pub mod executor;
 pub mod link;
 pub mod logging;
 pub mod modules;
+mod progress;
 pub mod report;
 pub mod update;
 pub mod utils;

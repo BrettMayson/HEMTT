@@ -4,9 +4,11 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{bom::BOMCheck, pbo::Collapse, Binarize, Files, Hooks, Rapifier, SQFCompiler},
+    modules::{pbo::Collapse, Binarize, Files, Rapifier},
     report::Report,
 };
+
+use super::global_modules;
 
 #[must_use]
 pub fn cli() -> Command {
@@ -82,15 +84,13 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 #[must_use]
 pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
     let mut executor = Executor::new(ctx);
+    global_modules(&mut executor);
 
     executor.collapse(Collapse::No);
 
-    executor.add_module(Box::<BOMCheck>::default());
-    executor.add_module(Box::<Hooks>::default());
     if matches.get_one::<bool>("no-rap") != Some(&true) {
         executor.add_module(Box::<Rapifier>::default());
     }
-    executor.add_module(Box::new(SQFCompiler::default()));
     if matches.get_one::<bool>("no-bin") != Some(&true) {
         executor.add_module(Box::<Binarize>::default());
     }

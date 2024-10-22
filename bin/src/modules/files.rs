@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
 use super::Module;
 
@@ -17,7 +17,7 @@ impl Module for Files {
             require_literal_separator: true,
             ..Default::default()
         };
-        let mut copied = 0;
+        let mut to_copy = Vec::new();
         let mut globs = Vec::new();
         for file in ctx.config().files().include() {
             globs.push(glob::Pattern::new(file)?);
@@ -47,10 +47,19 @@ impl Module for Files {
             if !folder.exists() {
                 std::mem::drop(create_dir_all(folder));
             }
-            debug!("copying {:?} => {:?}", entry.as_str(), d.display());
-            std::io::copy(&mut entry.open_file()?, &mut std::fs::File::create(&d)?)?;
-            copied += 1;
+            to_copy.push((entry, d));
         }
+
+        let mut copied = 0;
+        let progress = progress_bar(to_copy.len() as u64).with_message("Copying files");
+        for (source, dest) in to_copy {
+            debug!("copying {:?} => {:?}", source.as_str(), dest.display());
+            progress.set_message(format!("Copying {}", source.as_str()));
+            std::io::copy(&mut source.open_file()?, &mut std::fs::File::create(&dest)?)?;
+            copied += 1;
+            progress.inc(1);
+        }
+        progress.finish_and_clear();
         info!("Copied {} files", copied);
         Ok(Report::new())
     }

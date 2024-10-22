@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed},
 };
 
-use crate::{Class, Config, Property};
+use crate::{analyze::SqfLintData, Class, Config, Property};
 
-crate::lint!(LintC04ExternalMissing);
+crate::analyze::lint!(LintC04ExternalMissing);
 
-impl Lint<()> for LintC04ExternalMissing {
+impl Lint<SqfLintData> for LintC04ExternalMissing {
     fn ident(&self) -> &str {
         "external_missing"
     }
@@ -53,13 +53,13 @@ Read more about [class inheritance](https://community.bistudio.com/wiki/Class_In
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<()>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<()> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -67,7 +67,7 @@ impl LintRunner<()> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &(),
+        _data: &SqfLintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
@@ -148,6 +148,7 @@ impl Code for CodeC04ExternalMissing {
 }
 
 impl CodeC04ExternalMissing {
+    #[must_use]
     pub fn new(class: Class, processed: &Processed) -> Self {
         Self {
             class,
@@ -160,7 +161,7 @@ impl CodeC04ExternalMissing {
         let Some(parent) = self.class.parent() else {
             panic!("CodeC04ExternalMissing::generate_processed called on class without parent");
         };
-        self.diagnostic = Diagnostic::new_for_processed(&self, parent.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, parent.span.clone(), processed);
         self
     }
 }

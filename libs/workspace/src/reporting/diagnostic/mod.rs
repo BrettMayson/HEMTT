@@ -43,7 +43,22 @@ impl Diagnostic {
         }
     }
 
-    pub fn new_for_processed(
+    pub fn from_code(code: &impl Code) -> Self {
+        let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
+        diag.link = code.link().map(std::string::ToString::to_string);
+        if let Some(note) = code.note() {
+            diag.notes.push(note);
+        }
+        if let Some(help) = code.help() {
+            diag.help.push(help);
+        }
+        if let Some(suggestion) = code.suggestion() {
+            diag.suggestions.push(suggestion);
+        }
+        diag
+    }
+
+    pub fn from_code_processed(
         code: &impl Code,
         mut span: std::ops::Range<usize>,
         processed: &crate::reporting::Processed,

@@ -133,6 +133,10 @@ jobs:
           name: linux-x64
           path: release
 
+      - name: Zip Linux x64
+        run: |
+          cd release && zip linux-x64.zip hemtt && rm hemtt
+
       - name: Rename Linux x64
         run: |
           cd release && mv hemtt linux-x64
@@ -152,6 +156,10 @@ jobs:
         with:
           name: macos-x64
           path: release
+
+      - name: Zip MacOS x64
+        run: |
+          cd release && zip macos-x64.zip hemtt && rm hemtt
 
       - name: Rename MacOS x64
         run: |

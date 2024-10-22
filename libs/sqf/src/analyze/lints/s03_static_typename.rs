@@ -6,7 +6,7 @@ use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code,
 
 use crate::{analyze::SqfLintData, Expression, NularCommand, UnaryCommand};
 
-crate::lint!(LintS03StaticTypename);
+crate::analyze::lint!(LintS03StaticTypename);
 
 impl Lint<SqfLintData> for LintS03StaticTypename {
     fn ident(&self) -> &str {
@@ -180,7 +180,7 @@ impl CodeS03StaticTypename {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }

@@ -8,7 +8,7 @@ use hemtt_workspace::{
 
 use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCommand};
 
-crate::lint!(LintS23ReassignReservedVariable);
+crate::analyze::lint!(LintS23ReassignReservedVariable);
 
 impl Lint<SqfLintData> for LintS23ReassignReservedVariable {
     fn ident(&self) -> &str {
@@ -233,7 +233,7 @@ impl CodeS23ReassignReservedVariable {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(mut diag) = Diagnostic::new_for_processed(&self, self.variant.span(), processed) else {
+        let Some(mut diag) = Diagnostic::from_code_processed(&self, self.variant.span(), processed) else {
             return self
         };
         diag = diag.clear_labels();

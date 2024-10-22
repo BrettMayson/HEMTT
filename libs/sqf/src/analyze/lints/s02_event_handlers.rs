@@ -435,7 +435,7 @@ impl CodeS02UnknownEvent {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }
@@ -559,7 +559,7 @@ impl CodeS02IncorrectCommand {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::new_for_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self
     }
 }
@@ -636,7 +636,7 @@ impl CodeS02InsufficientVersion {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(diag) = Diagnostic::new_for_processed(&self, self.span.clone(), processed) else {
+        let Some(diag) = Diagnostic::from_code_processed(&self, self.span.clone(), processed) else {
             return self;
         };
         self.diagnostic = Some(diag.with_label(

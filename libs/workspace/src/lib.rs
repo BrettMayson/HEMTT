@@ -10,6 +10,10 @@ use pdrive::PDrive;
 use tracing::trace;
 use vfs::{AltrootFS, MemoryFS, OverlayFS, PhysicalFS, VfsPath};
 
+// Re-export for macros
+pub use linkme;
+pub use paste;
+
 pub mod addons;
 pub mod error;
 pub mod lint;
