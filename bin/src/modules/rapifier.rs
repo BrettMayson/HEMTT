@@ -13,8 +13,6 @@ use crate::{context::Context, error::Error, progress::progress_bar, report::Repo
 
 use super::Module;
 
-// type RapifyResult = (Vec<(String, Vec<Annotation>)>, Result<(), Error>);
-
 #[derive(Default)]
 pub struct Rapifier;
 
@@ -68,8 +66,7 @@ impl Module for Rapifier {
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
-        let progress =
-            progress_bar(ctx.addons().to_vec().len() as u64).with_message("Rapifying Configs");
+        let progress = progress_bar(entries.len() as u64).with_message("Rapifying Configs");
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
