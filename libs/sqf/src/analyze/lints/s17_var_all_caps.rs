@@ -125,7 +125,7 @@ impl Code for CodeS17VarAllCaps {
     }
 
     fn label_message(&self) -> String {
-        "All caps variable".to_string()
+        "all caps variable".to_string()
     }
 
     fn help(&self) -> Option<String> {
@@ -175,13 +175,13 @@ impl CodeS17VarAllCaps {
             }) else {
             return self;
             };
-        if let Some(l) = diagnostic.labels.get_mut(0) { *l = l.clone().with_message("Used in macro here"); }
+        if let Some(l) = diagnostic.labels.get_mut(0) { *l = l.clone().with_message("used in macro here"); }
         diagnostic.labels.push(
             Label::primary(
                 mapping.original().path().clone(),
                 mapping.original().span(),
             )
-            .with_message("All caps variable"),
+            .with_message("all caps variable"),
         );
         self.diagnostic = Some(diagnostic);
         self
