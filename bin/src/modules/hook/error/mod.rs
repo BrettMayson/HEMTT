@@ -13,7 +13,8 @@ fn get_offset(content: &str, location: Position) -> usize {
         if i + 1 == location.line().expect("location should have a line number") {
             offset += location
                 .position()
-                .expect("location should have a column number") - 1;
+                .expect("location should have a column number")
+                - 1;
             break;
         }
         offset += line.len() + 1;
