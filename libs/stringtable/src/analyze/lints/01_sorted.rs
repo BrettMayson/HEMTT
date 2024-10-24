@@ -48,9 +48,10 @@ impl LintRunner<SqfLintData> for Runner {
     ) -> Codes {
         let mut unsorted = Vec::new();
         let mut codes: Codes = Vec::new();
+        let only_lang = matches!(config.option("only-lang"), Some(toml::Value::Boolean(true)));
         for (project, addon, existing) in target {
             let mut project = project.clone();
-            if !matches!(config.option("only-lang"), Some(toml::Value::Boolean(true))) {
+            if !only_lang {
                 project.sort();
             }
             let mut writer = String::new();
@@ -65,12 +66,14 @@ impl LintRunner<SqfLintData> for Runner {
             for addon in unsorted {
                 codes.push(Arc::new(CodeStringtableNotSorted::new(
                     Unsorted::Addon(addon),
+                    only_lang,
                     config.severity(),
                 )));
             }
         } else {
             codes.push(Arc::new(CodeStringtableNotSorted::new(
                 Unsorted::Addons(unsorted),
+                only_lang,
                 config.severity(),
             )));
         }
@@ -86,6 +89,7 @@ pub enum Unsorted {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeStringtableNotSorted {
     unsorted: Unsorted,
+    only_lang: bool,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -109,7 +113,11 @@ impl Code for CodeStringtableNotSorted {
     }
 
     fn help(&self) -> Option<String> {
-        Some("Run `hemtt ln sort` to sort the stringtable".to_string())
+        if self.only_lang {
+            Some("Run `hemtt ln sort --only-lang` to sort the stringtable".to_string())
+        } else {
+            Some("Run `hemtt ln sort` to sort the stringtable".to_string())
+        }
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -119,9 +127,10 @@ impl Code for CodeStringtableNotSorted {
 
 impl CodeStringtableNotSorted {
     #[must_use]
-    pub fn new(unsorted: Unsorted, severity: Severity) -> Self {
+    pub fn new(unsorted: Unsorted, only_lang: bool, severity: Severity) -> Self {
         Self {
             unsorted,
+            only_lang,
             severity,
             diagnostic: None,
         }
