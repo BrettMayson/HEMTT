@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Key, Totals};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Package {
     #[serde(rename = "@name")]
     name: String,

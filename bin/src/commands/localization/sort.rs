@@ -1,11 +1,14 @@
 use std::io::BufReader;
 
+use clap::ArgMatches;
 use hemtt_stringtable::Project;
 
 use crate::{context::Context, report::Report, Error};
 
-pub fn sort() -> Result<Report, Error> {
+pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
+
+    let only_lang = matches.get_flag("only-lang");
 
     for addon in ctx.addons() {
         let stringtable_path = ctx
@@ -15,7 +18,9 @@ pub fn sort() -> Result<Report, Error> {
         if stringtable_path.exists()? {
             match Project::from_reader(BufReader::new(stringtable_path.open_file()?)) {
                 Ok(mut project) => {
-                    project.sort();
+                    if !only_lang {
+                        project.sort();
+                    }
                     let out_path = ctx
                         .project_folder()
                         .join(addon.folder_pathbuf())

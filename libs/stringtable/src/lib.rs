@@ -10,7 +10,7 @@ pub use key::Key;
 pub use package::Package;
 pub use totals::Totals;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Project {
     #[serde(rename = "@name")]
     name: String,

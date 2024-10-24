@@ -1,7 +1,6 @@
 use hemtt_common::config::ProjectConfig;
-use hemtt_workspace::{
-    addons::Addon, lint::LintManager, lint_manager, reporting::Codes, WorkspacePath,
-};
+use hemtt_workspace::{lint::LintManager, lint_manager, reporting::Codes};
+use lints::_01_sorted::StringtableData;
 
 pub mod lints {
     automod::dir!(pub "src/analyze/lints");
@@ -9,22 +8,9 @@ pub mod lints {
 
 lint_manager!(stringtable, vec![]);
 
-pub struct SqfLintData {
-    workspace: WorkspacePath,
-}
+pub struct SqfLintData {}
 
-impl SqfLintData {
-    #[must_use]
-    pub const fn workspace(&self) -> &WorkspacePath {
-        &self.workspace
-    }
-}
-
-pub fn lint_addon(
-    workspace: WorkspacePath,
-    addon: &Addon,
-    project: Option<&ProjectConfig>,
-) -> Codes {
+pub fn lint_addon(addon: &StringtableData, project: Option<&ProjectConfig>) -> Codes {
     let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
@@ -36,15 +22,11 @@ pub fn lint_addon(
     ) {
         return e;
     }
-    manager.run(&SqfLintData { workspace }, project, None, addon)
+    manager.run(&SqfLintData {}, project, None, addon)
 }
 
 #[allow(clippy::ptr_arg)] // Needed for &Vec for &dyn Any
-pub fn lint_addons(
-    workspace: WorkspacePath,
-    addons: &Vec<Addon>,
-    project: Option<&ProjectConfig>,
-) -> Codes {
+pub fn lint_addons(addons: &Vec<StringtableData>, project: Option<&ProjectConfig>) -> Codes {
     let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
@@ -56,5 +38,5 @@ pub fn lint_addons(
     ) {
         return e;
     }
-    manager.run(&SqfLintData { workspace }, project, None, addons)
+    manager.run(&SqfLintData {}, project, None, addons)
 }
