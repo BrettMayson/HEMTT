@@ -117,6 +117,9 @@ pub enum Error {
     #[error("Invalid prefix: {0}")]
     /// Invalid prefix
     InvalidPrefix(String),
+    #[error("Duplicate prefix: {0}")]
+    /// Duplicate prefix
+    DuplicatePrefix(String),
 }
 
 #[cfg(test)]
