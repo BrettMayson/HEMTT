@@ -135,7 +135,7 @@ jobs:
 
       - name: Zip Linux x64
         run: |
-          cd release && zip linux-x64.zip hemtt && rm hemtt
+          cd release && zip linux-x64.zip hemtt
 
       - name: Rename Linux x64
         run: |
@@ -159,7 +159,7 @@ jobs:
 
       - name: Zip MacOS x64
         run: |
-          cd release && zip macos-x64.zip hemtt && rm hemtt
+          cd release && zip macos-x64.zip hemtt
 
       - name: Rename MacOS x64
         run: |
