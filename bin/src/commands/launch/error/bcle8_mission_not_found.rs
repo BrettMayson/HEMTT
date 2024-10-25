@@ -30,7 +30,7 @@ impl Code for MissionNotFound {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 

@@ -6,7 +6,7 @@ expression: lint(stringify! (s17_var_all_caps))
   [0m[36m┌─[0m s17_var_all_caps.sqf:7:19
   [0m[36m│[0m
 [0m[36m7[0m [0m[36m│[0m private _z = _y + [0m[36mDO_NOT_EXIST[0m;
-  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^[0m [0m[36mAll caps variable[0m
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^[0m [0m[36mall caps variable[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: All caps variables are usually reserved for macros
 
@@ -15,7 +15,7 @@ expression: lint(stringify! (s17_var_all_caps))
   [0m[36m┌─[0m s17_var_all_caps.sqf:8:19
   [0m[36m│[0m
 [0m[36m8[0m [0m[36m│[0m private _w = _z + [0m[36mTPYO[0m;
-  [0m[36m│[0m                   [0m[36m^^^^[0m [0m[36mAll caps variable[0m
+  [0m[36m│[0m                   [0m[36m^^^^[0m [0m[36mall caps variable[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: All caps variables are usually reserved for macros
   [0m[36m=[0m [33mhelp[0m: did you mean `TYPO`?
@@ -25,9 +25,9 @@ expression: lint(stringify! (s17_var_all_caps))
   [0m[36m┌─[0m s17_var_all_caps.sqf:3:27
   [0m[36m│[0m
 [0m[36m3[0m [0m[36m│[0m #define NESTED systemChat [0m[36mUNDEFINED[0m
-  [0m[36m│[0m                           [0m[36m^^^^^^^^^[0m [0m[36mAll caps variable[0m
+  [0m[36m│[0m                           [0m[36m^^^^^^^^^[0m [0m[36mall caps variable[0m
   [0m[36m·[0m
 [0m[36m9[0m [0m[36m│[0m [0m[36mNESTED[0m;
-  [0m[36m│[0m [0m[36m^^^^^^[0m [0m[36mUsed in macro here[0m
+  [0m[36m│[0m [0m[36m^^^^^^[0m [0m[36mused in macro here[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: All caps variables are usually reserved for macros

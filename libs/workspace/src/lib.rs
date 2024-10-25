@@ -95,31 +95,45 @@ impl Workspace {
     }
 
     fn discover(&mut self) -> Result<(), Error> {
-        for entry in self.vfs.walk_dir()? {
-            let Ok(entry) = entry else {
-                trace!("unknown issue with entry: {:?}", entry);
-                continue;
-            };
-            if entry.as_str().contains(".hemtt") {
+        for root in &["include", "optionals", "addons"] {
+            let root = self.vfs.join(root)?;
+            if !root.exists()? {
                 continue;
             }
-            match entry.filename().to_lowercase().as_str() {
-                "config.cpp" => {
-                    trace!("config.cpp: {:?}", entry);
-                    self.addons.push(entry);
+            for entry in root.walk_dir()? {
+                let Ok(entry) = entry else {
+                    trace!("unknown issue with entry: {:?}", entry);
+                    continue;
+                };
+                if entry.as_str().contains(".hemtt") {
+                    continue;
                 }
-                "mission.sqm" => {
-                    trace!("mission.sqm: {:?}", entry);
-                    self.missions.push(entry);
-                }
-                _ => {
-                    if FILES.contains(&entry.filename().to_lowercase().as_str()) {
-                        trace!("Prefix: {:?}", entry);
-                        let prefix = Prefix::new(&entry.read_to_string()?)?;
-                        self.pointers.insert(
-                            format!("/{}", prefix.to_string().to_lowercase().replace('\\', "/")),
-                            entry.parent(),
-                        );
+                match entry.filename().to_lowercase().as_str() {
+                    "config.cpp" => {
+                        trace!("config.cpp: {:?}", entry);
+                        self.addons.push(entry);
+                    }
+                    "mission.sqm" => {
+                        trace!("mission.sqm: {:?}", entry);
+                        self.missions.push(entry);
+                    }
+                    _ => {
+                        if FILES.contains(&entry.filename().to_lowercase().as_str()) {
+                            trace!("Prefix: {:?}", entry);
+                            let prefix = Prefix::new(&entry.read_to_string()?)?;
+                            let prefix_str = format!(
+                                "/{}",
+                                prefix.to_string().to_lowercase().replace('\\', "/")
+                            );
+                            if self.pointers.contains_key(&prefix_str) {
+                                return Err(Error::Prefix(
+                                    hemtt_common::prefix::Error::DuplicatePrefix(
+                                        prefix.to_string(),
+                                    ),
+                                ));
+                            }
+                            self.pointers.insert(prefix_str, entry.parent());
+                        }
                     }
                 }
             }

@@ -18,7 +18,7 @@ impl Code for MissingMainPrefix {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 

@@ -26,7 +26,7 @@ impl Code for RhaiParseError {
     fn diagnostic(&self) -> Option<Diagnostic> {
         let content = self.script.read_to_string().ok()?;
         Some(
-            Diagnostic::simple(self).with_label(
+            Diagnostic::from_code(self).with_label(
                 Label::primary(
                     self.script.clone(),
                     get_offset(&content, self.location)..get_offset(&content, self.location),

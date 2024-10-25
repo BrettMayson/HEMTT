@@ -126,14 +126,14 @@ impl Code for CodeS18InVehicleCheck {
     }
 
     fn message(&self) -> String {
-        "Using `vehicle` to check if a unit is in a vehicle is innefficient".to_string()
+        "Using `vehicle` to check if a unit is in a vehicle is inefficient".to_string()
     }
 
     fn label_message(&self) -> String {
         if self.negated {
-            "Innefficient \"in vehicle\" check".to_string()
+            "inefficient \"in vehicle\" check".to_string()
         } else {
-            "Innefficient \"not in vehicle\" check".to_string()
+            "inefficient \"not in vehicle\" check".to_string()
         }
     }
 

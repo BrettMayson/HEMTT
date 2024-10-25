@@ -9,9 +9,9 @@ use crate::StringWrapper;
 pub type Tokens = Vec<(Token, Range<usize>)>;
 
 macro_rules! chain_collect {
-  ($Collect:ty: $($value:expr),+ $(,)?) => {
-    std::iter::empty()$(.chain($value))+.collect::<$Collect>()
-  };
+    ($Collect:ty: $($value:expr),+ $(,)?) => {
+        std::iter::empty()$(.chain($value))+.collect::<$Collect>()
+    };
 }
 
 pub fn strip_comments(tokens: &mut Tokens) {

@@ -24,6 +24,7 @@ lint!(s02_event_handler_case, true);
 lint!(s03_static_typename, true);
 lint!(s04_command_case, true);
 lint!(s05_if_assign, true);
+lint!(s05_if_assign_emoji, true);
 lint!(s06_find_in_str, true);
 lint!(s07_select_parse_number, true);
 lint!(s08_format_args, true);

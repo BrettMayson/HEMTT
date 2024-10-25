@@ -182,7 +182,7 @@ impl CodeS24MarkerSpam {
         diag = diag.with_label(Label::secondary(
             info.0,
             info.1,
-        ).with_message("Last marker update, should remain global"));
+        ).with_message("last marker update, should remain global"));
         for (cmd, span) in self.calls.iter().rev().skip(1) {
             let Some(info) = get_span_info(span, processed) else {
                 continue;
@@ -190,7 +190,7 @@ impl CodeS24MarkerSpam {
             diag = diag.with_label(Label::primary(
                 info.0,
                 info.1,
-            ).with_message(format!("Use {cmd}Local")));
+            ).with_message(format!("use {cmd}Local")));
         }
         self.diagnostic = Some(diag);
         self
