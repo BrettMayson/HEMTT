@@ -11,6 +11,9 @@ pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
     let only_lang = matches.get_flag("only-lang");
 
     for root in ["addons", "optionals"] {
+        if !ctx.project_folder().join(root).exists() {
+            continue;
+        }
         let paths: Vec<PathBuf> = walkdir::WalkDir::new(ctx.project_folder().join(root))
             .into_iter()
             .filter_map(|p| {

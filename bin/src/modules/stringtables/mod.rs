@@ -38,6 +38,9 @@ impl Module for Stringtables {
 
         let mut stringtables = Vec::new();
         for root in ["addons", "optionals"] {
+            if !ctx.workspace_path().join(root)?.exists()? {
+                continue;
+            }
             let paths = ctx
                 .workspace_path()
                 .join(root)
