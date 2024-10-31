@@ -91,9 +91,7 @@ impl Context {
                 remove_dir_all(&build_folder)?;
             }
             create_dir_all(&build_folder)?;
-            if cfg!(target_os = "windows") {
-                builder = builder.physical(&tmp.join("output"), LayerType::Build);
-            }
+            builder = builder.physical(&tmp.join("hemtt_binarize_output"), LayerType::Build);
             let include = root.join("include");
             if include.is_dir() {
                 builder = builder.physical(&include, LayerType::Include);
