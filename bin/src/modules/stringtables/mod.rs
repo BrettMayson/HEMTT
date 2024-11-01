@@ -1,10 +1,13 @@
 use std::{io::BufReader, sync::Arc};
 
 use hemtt_stringtable::{
-    analyze::{lint_addon, lint_addons, lint_check},
+    analyze::{lint_all, lint_check, lint_one},
     Project,
 };
-use hemtt_workspace::reporting::{Code, Diagnostic};
+use hemtt_workspace::{
+    reporting::{Code, Diagnostic},
+    WorkspacePath,
+};
 
 use crate::{context::Context, report::Report, Error};
 
@@ -33,39 +36,38 @@ impl Module for Stringtables {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
 
-        let stringtables = ctx
-            .addons()
-            .iter()
-            .filter_map(|addon| {
-                let path = ctx
-                    .workspace_path()
-                    .join(addon.folder())
-                    .expect("vfs issue")
-                    .join("stringtable.xml")
-                    .expect("vfs issue");
+        let mut stringtables = Vec::new();
+        for root in ["addons", "optionals"] {
+            if !ctx.workspace_path().join(root)?.exists()? {
+                continue;
+            }
+            let paths = ctx
+                .workspace_path()
+                .join(root)
+                .expect("vfs issue")
+                .walk_dir()
+                .expect("vfs issue")
+                .into_iter()
+                .filter(|p| p.filename() == "stringtable.xml")
+                .collect::<Vec<_>>();
+            for path in paths {
                 if path.exists().expect("vfs issue") {
                     let existing = path.read_to_string().expect("vfs issue");
                     match Project::from_reader(BufReader::new(existing.as_bytes())) {
-                        Ok(project) => Some((project, addon.clone(), existing)),
+                        Ok(project) => stringtables.push((project, path, existing)),
                         Err(e) => {
-                            debug!("Failed to parse stringtable for {}: {}", addon.folder(), e);
-                            report.push(Arc::new(CodeStringtableInvalid::new(
-                                addon.folder(),
-                                e.to_string(),
-                            )));
-                            None
+                            debug!("Failed to parse stringtable for {}: {}", path, e);
+                            report.push(Arc::new(CodeStringtableInvalid::new(path, e.to_string())));
                         }
                     }
-                } else {
-                    None
                 }
-            })
-            .collect::<Vec<_>>();
+            }
+        }
 
-        report.extend(lint_addons(&stringtables, Some(ctx.config())));
+        report.extend(lint_all(&stringtables, Some(ctx.config())));
 
         for stringtable in stringtables {
-            report.extend(lint_addon(&stringtable, Some(ctx.config())));
+            report.extend(lint_one(&stringtable, Some(ctx.config())));
         }
 
         Ok(report)
@@ -74,7 +76,7 @@ impl Module for Stringtables {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeStringtableInvalid {
-    addon: String,
+    path: WorkspacePath,
     reason: String,
     diagnostic: Option<Diagnostic>,
 }
@@ -85,7 +87,7 @@ impl Code for CodeStringtableInvalid {
     }
 
     fn message(&self) -> String {
-        format!("Stringtable in `{}` is invalid", self.addon)
+        format!("Stringtable at `{}` is invalid", self.path)
     }
 
     fn note(&self) -> Option<String> {
@@ -99,9 +101,9 @@ impl Code for CodeStringtableInvalid {
 
 impl CodeStringtableInvalid {
     #[must_use]
-    pub fn new(addon: String, reason: String) -> Self {
+    pub fn new(path: WorkspacePath, reason: String) -> Self {
         Self {
-            addon,
+            path,
             reason,
             diagnostic: None,
         }

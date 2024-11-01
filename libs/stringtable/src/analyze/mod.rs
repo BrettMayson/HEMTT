@@ -10,7 +10,7 @@ lint_manager!(stringtable, vec![]);
 
 pub struct SqfLintData {}
 
-pub fn lint_addon(addon: &StringtableData, project: Option<&ProjectConfig>) -> Codes {
+pub fn lint_one(addon: &StringtableData, project: Option<&ProjectConfig>) -> Codes {
     let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
@@ -26,7 +26,7 @@ pub fn lint_addon(addon: &StringtableData, project: Option<&ProjectConfig>) -> C
 }
 
 #[allow(clippy::ptr_arg)] // Needed for &Vec for &dyn Any
-pub fn lint_addons(addons: &Vec<StringtableData>, project: Option<&ProjectConfig>) -> Codes {
+pub fn lint_all(addons: &Vec<StringtableData>, project: Option<&ProjectConfig>) -> Codes {
     let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));

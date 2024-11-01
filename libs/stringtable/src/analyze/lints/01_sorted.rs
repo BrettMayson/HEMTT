@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_common::config::LintConfig;
-use hemtt_workspace::{addons::Addon, lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}};
+use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}, WorkspacePath};
 
 use crate::{analyze::SqfLintData, Project};
 
@@ -33,7 +33,7 @@ impl Lint<SqfLintData> for LintL01Sorted {
     }
 }
 
-pub type StringtableData = (Project, Addon, String);
+pub type StringtableData = (Project, WorkspacePath, String);
 
 pub struct Runner;
 impl LintRunner<SqfLintData> for Runner {
@@ -49,30 +49,30 @@ impl LintRunner<SqfLintData> for Runner {
         let mut unsorted = Vec::new();
         let mut codes: Codes = Vec::new();
         let only_lang = matches!(config.option("only-lang"), Some(toml::Value::Boolean(true)));
-        for (project, addon, existing) in target {
+        for (project, path, existing) in target {
             let mut project = project.clone();
             if !only_lang {
                 project.sort();
             }
             let mut writer = String::new();
             if let Err(e) = project.to_writer(&mut writer) {
-                panic!("Failed to write stringtable for {}: {}", addon.folder(), e);
+                panic!("Failed to write stringtable for {path}: {e}");
             }
             if &writer != existing {
-                unsorted.push(addon.folder().to_string());
+                unsorted.push(path.as_str().to_string());
             }
         }
         if unsorted.len() <= 3 {
-            for addon in unsorted {
+            for path in unsorted {
                 codes.push(Arc::new(CodeStringtableNotSorted::new(
-                    Unsorted::Addon(addon),
+                    Unsorted::Path(path),
                     only_lang,
                     config.severity(),
                 )));
             }
         } else {
             codes.push(Arc::new(CodeStringtableNotSorted::new(
-                Unsorted::Addons(unsorted),
+                Unsorted::Paths(unsorted),
                 only_lang,
                 config.severity(),
             )));
@@ -82,8 +82,8 @@ impl LintRunner<SqfLintData> for Runner {
 }
 
 pub enum Unsorted {
-    Addon(String),
-    Addons(Vec<String>),
+    Path(String),
+    Paths(Vec<String>),
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -105,9 +105,9 @@ impl Code for CodeStringtableNotSorted {
 
     fn message(&self) -> String {
         match &self.unsorted {
-            Unsorted::Addon(addon) => format!("Stringtable in `{addon}` is not sorted"),
-            Unsorted::Addons(addons) => {
-                format!("Stringtables in {} addons are not sorted", addons.len())
+            Unsorted::Path(path) => format!("Stringtable at `{path}` is not sorted"),
+            Unsorted::Paths(paths) => {
+                format!("{} stringtables are not sorted", paths.len())
             }
         }
     }
