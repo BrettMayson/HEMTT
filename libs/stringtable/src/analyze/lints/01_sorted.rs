@@ -1,8 +1,7 @@
-use std::{io::BufReader, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_common::config::LintConfig;
-use hemtt_workspace::{addons::Addon, lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}};
-use tracing::debug;
+use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}, WorkspacePath};
 
 use crate::{analyze::SqfLintData, Project};
 
@@ -34,53 +33,47 @@ impl Lint<SqfLintData> for LintL01Sorted {
     }
 }
 
+pub type StringtableData = (Project, WorkspacePath, String);
+
 pub struct Runner;
 impl LintRunner<SqfLintData> for Runner {
-    type Target = Vec<Addon>;
+    type Target = Vec<StringtableData>;
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &hemtt_common::config::LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
-        target: &Vec<Addon>,
-        data: &SqfLintData,
+        target: &Vec<StringtableData>,
+        _data: &SqfLintData,
     ) -> Codes {
         let mut unsorted = Vec::new();
         let mut codes: Codes = Vec::new();
-        for addon in target {
-            let stringtable_path = data.workspace()
-                .join(addon.folder()).expect("vfs issue")
-                .join("stringtable.xml").expect("vfs issue");
-            if stringtable_path.exists().expect("vfs issue") {
-                let existing = stringtable_path.read_to_string().expect("vfs issue");
-                match Project::from_reader(BufReader::new(existing.as_bytes())) {
-                    Ok(mut project) => {
-                        project.sort();
-                        let mut writer = String::new();
-                        if let Err(e) = project.to_writer(&mut writer) {
-                            panic!("Failed to write stringtable for {}: {}", addon.folder(), e);
-                        }
-                        if writer != existing {
-                            unsorted.push(addon.folder().to_string());
-                        }
-                    }
-                    Err(e) => {
-                        debug!("Failed to parse stringtable for {}: {}", addon.folder(), e);
-                        codes.push(Arc::new(CodeStringtableInvalid::new(addon.folder())));
-                    }
-                }
+        let only_lang = matches!(config.option("only-lang"), Some(toml::Value::Boolean(true)));
+        for (project, path, existing) in target {
+            let mut project = project.clone();
+            if !only_lang {
+                project.sort();
+            }
+            let mut writer = String::new();
+            if let Err(e) = project.to_writer(&mut writer) {
+                panic!("Failed to write stringtable for {path}: {e}");
+            }
+            if &writer != existing {
+                unsorted.push(path.as_str().to_string());
             }
         }
         if unsorted.len() <= 3 {
-            for addon in unsorted {
+            for path in unsorted {
                 codes.push(Arc::new(CodeStringtableNotSorted::new(
-                    Unsorted::Addon(addon),
+                    Unsorted::Path(path),
+                    only_lang,
                     config.severity(),
                 )));
             }
         } else {
             codes.push(Arc::new(CodeStringtableNotSorted::new(
-                Unsorted::Addons(unsorted),
+                Unsorted::Paths(unsorted),
+                only_lang,
                 config.severity(),
             )));
         }
@@ -89,13 +82,14 @@ impl LintRunner<SqfLintData> for Runner {
 }
 
 pub enum Unsorted {
-    Addon(String),
-    Addons(Vec<String>),
+    Path(String),
+    Paths(Vec<String>),
 }
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeStringtableNotSorted {
     unsorted: Unsorted,
+    only_lang: bool,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -111,15 +105,19 @@ impl Code for CodeStringtableNotSorted {
 
     fn message(&self) -> String {
         match &self.unsorted {
-            Unsorted::Addon(addon) => format!("Stringtable in `{addon}` is not sorted"),
-            Unsorted::Addons(addons) => {
-                format!("Stringtables in {} addons are not sorted", addons.len())
+            Unsorted::Path(path) => format!("Stringtable at `{path}` is not sorted"),
+            Unsorted::Paths(paths) => {
+                format!("{} stringtables are not sorted", paths.len())
             }
         }
     }
 
     fn help(&self) -> Option<String> {
-        Some("Run `hemtt ln sort` to sort the stringtable".to_string())
+        if self.only_lang {
+            Some("Run `hemtt ln sort --only-lang` to sort the stringtable".to_string())
+        } else {
+            Some("Run `hemtt ln sort` to sort the stringtable".to_string())
+        }
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -129,46 +127,11 @@ impl Code for CodeStringtableNotSorted {
 
 impl CodeStringtableNotSorted {
     #[must_use]
-    pub fn new(unsorted: Unsorted, severity: Severity) -> Self {
+    pub fn new(unsorted: Unsorted, only_lang: bool, severity: Severity) -> Self {
         Self {
             unsorted,
+            only_lang,
             severity,
-            diagnostic: None,
-        }
-        .generate_processed()
-    }
-
-    fn generate_processed(mut self) -> Self {
-        self.diagnostic = Some(Diagnostic::from_code(&self));
-        self
-    }
-}
-
-#[allow(clippy::module_name_repetitions)]
-pub struct CodeStringtableInvalid {
-    addon: String,
-    diagnostic: Option<Diagnostic>,
-}
-
-impl Code for CodeStringtableInvalid {
-    fn ident(&self) -> &'static str {
-        "L-L02"
-    }
-
-    fn message(&self) -> String {
-        format!("Stringtable in `{}` is invalid", self.addon)
-    }
-
-    fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
-    }
-}
-
-impl CodeStringtableInvalid {
-    #[must_use]
-    pub fn new(addon: String) -> Self {
-        Self {
-            addon,
             diagnostic: None,
         }
         .generate_processed()

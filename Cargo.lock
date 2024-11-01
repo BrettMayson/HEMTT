@@ -1620,6 +1620,7 @@ dependencies = [
  "paste",
  "quick-xml",
  "serde",
+ "toml 0.8.19",
  "tracing",
 ]
 

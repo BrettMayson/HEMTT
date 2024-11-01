@@ -1,4 +1,4 @@
-use clap::{ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command};
 
 use crate::{report::Report, Error};
 
@@ -11,7 +11,14 @@ pub fn cli() -> Command {
         .visible_alias("ln")
         .about("Manage localization stringtables")
         .subcommand(Command::new("coverage").about("Check the coverage of localization"))
-        .subcommand(Command::new("sort").about("Sort the stringtables"))
+        .subcommand(
+            Command::new("sort").about("Sort the stringtables").arg(
+                clap::Arg::new("only-lang")
+                    .long("only-lang")
+                    .help("Sort only the languages")
+                    .action(ArgAction::SetTrue),
+            ),
+        )
 }
 
 /// Execute the localization command
@@ -24,7 +31,7 @@ pub fn cli() -> Command {
 pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     match matches.subcommand() {
         Some(("coverage", _)) => coverage::coverage(),
-        Some(("sort", _)) => sort::sort(),
+        Some(("sort", matches)) => sort::sort(matches),
         _ => {
             cli().print_help().expect("Failed to print help");
             Ok(Report::new())

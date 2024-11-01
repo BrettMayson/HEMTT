@@ -2,7 +2,7 @@
 
 ## What is HEMTT?
 
-HEMTT is used to build your Arma 3 mod into PBOs for development and release.
+HEMTT is an [open source tool](https://github.com/BrettMayson/HEMTT) used to build your Arma 3 mod into PBOs for development and release.
 It is a replacement for tools like [Addon Builder](https://community.bistudio.com/wiki/Addon_Builder) and [pboProject](https://community.bistudio.com/wiki/pboProject).
 
 HEMTT supports the majority of the features found in Bohemia's tools, but prioritizes support for the workflows of best practices and modern modding.
