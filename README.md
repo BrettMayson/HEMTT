@@ -14,7 +14,7 @@ An opinionated build system for Arma 3 mods.
 [![GitHub](https://img.shields.io/badge/GitHub-lightblue.svg?style=flat-square)](https://github.com/BrettMayson/HEMTT/releases)
 [![winstall](https://img.shields.io/badge/WinGet-lightblue.svg?style=flat-square)](https://winstall.app/apps/BrettMayson.HEMTT)
 
-[Read it in the book](https://hemtt.dev/installation.html)
+[Read it in the book](https://hemtt.dev/installation/index.html)
 
 ## Browser Extension
 
