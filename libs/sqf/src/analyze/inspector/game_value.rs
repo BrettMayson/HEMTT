@@ -126,6 +126,7 @@ impl GameValue {
                         "set3DENMissionAttributes",
                         "setPiPEffect",
                         "ppEffectCreate",
+                        "inAreaArray",
                     ];
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
                         warn!("cmd {cmd_name} - param {name} not found");
