@@ -7,3 +7,8 @@ format ["%1", 1, 2, 3]; // unused args
 format ["%1%2", 1]; // undefined tokens
 format ["%5", 1, 2 ,3 ,4, 5]; // skipped tokens
 formatText ["me too %1"];
+
+
+format ["%1%%", 100];
+format ["%%%1%%", 100];
+format ["%%%%%%%%%%%%%%%%"];
