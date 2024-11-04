@@ -129,7 +129,9 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
                     .unwrap_or_default();
                 tokens.push(token_value);
             } else if c != '%' {
-                println!("format string: non-escaped \"%\" [at index {token_start}]");
+                return Some(format!(
+                    "format string: non-escaped \"%\" [at index {token_start}]"
+                ));
             }
         }
         if !token_active && c == '%' && outside_token {
