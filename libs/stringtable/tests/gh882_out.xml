@@ -9,18 +9,25 @@
             <!-- <Russian></Russian> -->
             <!-- <Polish></Polish> -->
         </Key>
-        <Key ID="I will be empty"/>
+        <Key ID="I will be empty">
+            <Original>hey</Original>
+            <English>hey</English>
+            <Russian>hey</Russian>
+            <German>hey</German>
+        </Key>
+        <!-- The I copy paste this part of my language entry thing -->
         <Key ID="I will change the xml structure a little">
-            <Original/>
-            <English/>
-            <Czech/>
-            <French/>
+            <Original></Original>
+            <English></English>
+            <Czech></Czech>
+            <French></French>
         </Key>
         <Key ID="My things get unescaped">
-            <Original>"'</Original>
-            <English>"'</English>
-            <Russian>"'</Russian>
-            <German>"'</German>
+            <Original>&quot;&apos;</Original>
+            <English>&quot;&apos;</English>
+            <Spanish>"Hello World"</Spanish>
+            <Russian>&quot;&apos;</Russian>
+            <German>&quot;&apos;</German>
         </Key>
         <!--
         <Key ID="new entry used in future release, not yet used">

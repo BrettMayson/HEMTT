@@ -89,7 +89,7 @@ impl Project {
                         in_key = None;
                     }
                 }
-                Ok(l)
+                Ok(l.replace('&', "&amp;"))
             })
             .collect::<Result<Vec<_>, _>>()
         else {
@@ -115,6 +115,7 @@ impl Project {
         let mut buffer = String::new();
         let mut ser = Serializer::new(&mut buffer);
         ser.indent(' ', 4);
+        ser.expand_empty_elements(true);
         self.serialize(ser)?;
         buffer.push('\n');
 
@@ -140,7 +141,8 @@ impl Project {
                     writer.write_char('\n')?;
                 }
             }
-            writer.write_str(line)?;
+            println!("{}", line);
+            writer.write_str(line.replace("&amp;amp;", "&").as_str())?;
             writer.write_char('\n')?;
             if l_trim.starts_with("<Key") {
                 in_key = Some(l_trim.to_string());

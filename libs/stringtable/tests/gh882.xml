@@ -19,6 +19,7 @@
             <English>&quot;&apos;</English>
             <German>&quot;&apos;</German>
             <Russian>&quot;&apos;</Russian>
+            <Spanish>"Hello World"</Spanish>
         </Key>
         <!-- a maybe more legitimate use of a comment which gets removed -->
         <Key ID="Comments be gone!">

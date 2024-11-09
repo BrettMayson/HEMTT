@@ -1,57 +1,92 @@
-use serde::{Deserialize, Serialize};
+use quick_xml::escape::minimal_escape;
+use serde::{Deserialize, Serialize, Serializer};
+
+fn min_escape<S>(s: &Option<String>, ser: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match s {
+        Some(s) => ser.serialize_str(&minimal_escape(s)),
+        None => ser.serialize_none(),
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Key {
     #[serde(rename = "@ID")]
     id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "original", alias = "ORIGINAL")]
     original: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "english", alias = "ENGLISH")]
     english: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "czech", alias = "CZECH")]
     czech: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "french", alias = "FRENCH")]
     french: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "spanish", alias = "SPANISH")]
     spanish: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "italian", alias = "ITALIAN")]
     italian: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "polish", alias = "POLISH")]
     polish: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "portuguese", alias = "PORTUGUESE")]
     portuguese: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "russian", alias = "RUSSIAN")]
     russian: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "german", alias = "GERMAN")]
     german: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "korean", alias = "KOREAN")]
     korean: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "japanese", alias = "JAPANESE")]
     japanese: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "chinese", alias = "CHINESE")]
     chinese: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "chinesesimp", alias = "CHINESESIMP")]
     chinesesimp: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "turkish", alias = "TURKISH")]
     turkish: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "swedish", alias = "SWEDISH")]
     swedish: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "slovak", alias = "SLOVAK")]
     slovak: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "serbocroatian", alias = "SERBOCROATIAN")]
     serbocroatian: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "norwegian", alias = "NORWEGIAN")]
     norwegian: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "icelandic", alias = "ICELANDIC")]
     icelandic: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "hungarian", alias = "HUNGARIAN")]
     hungarian: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "greek", alias = "GREEK")]
     greek: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "finnish", alias = "FINNISH")]
     finnish: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "dutch", alias = "DUTCH")]
     dutch: Option<String>,
 }
 

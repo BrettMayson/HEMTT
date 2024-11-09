@@ -41,16 +41,24 @@ Project {
                 },
                 Key {
                     id: "I will be empty",
-                    original: None,
-                    english: None,
+                    original: Some(
+                        "hey",
+                    ),
+                    english: Some(
+                        "hey",
+                    ),
                     czech: None,
                     french: None,
                     spanish: None,
                     italian: None,
                     polish: None,
                     portuguese: None,
-                    russian: None,
-                    german: None,
+                    russian: Some(
+                        "hey",
+                    ),
+                    german: Some(
+                        "hey",
+                    ),
                     korean: None,
                     japanese: None,
                     chinese: None,
@@ -104,22 +112,24 @@ Project {
                 Key {
                     id: "My things get unescaped",
                     original: Some(
-                        "\"'",
+                        "&quot;&apos;",
                     ),
                     english: Some(
-                        "\"'",
+                        "&quot;&apos;",
                     ),
                     czech: None,
                     french: None,
-                    spanish: None,
+                    spanish: Some(
+                        "\"Hello World\"",
+                    ),
                     italian: None,
                     polish: None,
                     portuguese: None,
                     russian: Some(
-                        "\"'",
+                        "&quot;&apos;",
                     ),
                     german: Some(
-                        "\"'",
+                        "&quot;&apos;",
                     ),
                     korean: None,
                     japanese: None,
