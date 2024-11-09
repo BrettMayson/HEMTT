@@ -141,7 +141,6 @@ impl Project {
                     writer.write_char('\n')?;
                 }
             }
-            println!("{}", line);
             writer.write_str(line.replace("&amp;amp;", "&").as_str())?;
             writer.write_char('\n')?;
             if l_trim.starts_with("<Key") {

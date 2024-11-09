@@ -19,7 +19,7 @@ wasm-bindgen = { version = "0.2.95", optional = true }
 
 byteorder = { workspace = true }
 texpresso = "2.0.1"
-image = "0.25.4"
+image = "0.25.5"
 
 [features]
 wasm = ["wasm-bindgen", "js-sys"]

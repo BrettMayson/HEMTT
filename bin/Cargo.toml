@@ -43,8 +43,8 @@ num_cpus = "1.16.0"
 paste = { workspace = true }
 rayon = "1.10.0"
 regex = { workspace = true }
-reqwest = { version = "0.12.8", features = ["blocking", "json"] }
-rhai = "1.19.0"
+reqwest = { version = "0.12.9", features = ["blocking", "json"] }
+rhai = "1.20.0"
 semver = "1.0.23"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
