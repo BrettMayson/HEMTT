@@ -11,3 +11,7 @@ if !include.is_file() {
 if include.is_dir() {
     fatal("{} is a directory", include);
 }
+
+if HEMTT.script("test") != 42 {
+    fatal("HEMTT.script(\"test\") != 42");
+}

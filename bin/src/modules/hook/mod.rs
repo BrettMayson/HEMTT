@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use ::rhai::{packages::Package, Engine, Scope};
 use hemtt_workspace::WorkspacePath;
+use rhai::Dynamic;
 
 use crate::{context::Context, error::Error, report::Report};
 
@@ -102,7 +103,7 @@ impl Hooks {
                 "Running hook: {}",
                 file.as_str().trim_start_matches("/.hemtt/hooks/")
             );
-            report.merge(Self::run(ctx, file, vfs)?);
+            report.merge(Self::run(ctx, file, vfs)?.0);
             ctx.config().version().invalidate();
         }
         Ok(report)
@@ -117,14 +118,14 @@ impl Hooks {
     ///
     /// # Panics
     /// If a file path is not a valid [`OsStr`] (UTF-8)
-    pub fn run_file(ctx: &Context, name: &str) -> Result<Report, Error> {
+    pub fn run_file(ctx: &Context, name: &str) -> Result<(Report, Dynamic), Error> {
         let mut report = Report::new();
         let scripts = ctx.workspace_path().join(".hemtt")?.join("scripts")?;
         let path = scripts.join(name)?.with_extension("rhai")?;
         trace!("running script: {}", path.as_str());
         if !path.exists()? {
             report.push(ScriptNotFound::code(name.to_owned(), &scripts)?);
-            return Ok(report);
+            return Ok((report, Dynamic::UNIT));
         }
         let res = Self::run(ctx, path, false);
         ctx.config().version().invalidate();
@@ -132,7 +133,7 @@ impl Hooks {
     }
 
     #[allow(clippy::needless_pass_by_value)] // rhai things
-    fn run(ctx: &Context, path: WorkspacePath, vfs: bool) -> Result<Report, Error> {
+    fn run(ctx: &Context, path: WorkspacePath, vfs: bool) -> Result<(Report, Dynamic), Error> {
         let mut report = Report::new();
         let mut engine = engine(vfs);
         let mut scope = scope(ctx, vfs)?;
@@ -171,14 +172,18 @@ impl Hooks {
                 .lock()
                 .expect("told_to_fail mutex poisoned") = true;
         });
-        if let Err(e) = engine.run_with_scope(&mut scope, &path.read_to_string()?) {
-            report.push(RuntimeError::code(path, &e));
-            return Ok(report);
+        match engine.eval_with_scope(&mut scope, &path.read_to_string()?) {
+            Err(e) => {
+                report.push(RuntimeError::code(path, &e));
+                Ok((report, Dynamic::UNIT))
+            }
+            Ok(ret) => {
+                if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
+                    report.push(ScriptFatal::code(name));
+                }
+                Ok((report, ret))
+            }
         }
-        if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
-            report.push(ScriptFatal::code(name));
-        }
-        Ok(report)
     }
 }
 
