@@ -10,7 +10,7 @@ Scripts are useful for automating tasks that are not part of the build process, 
 
 ## Calling from Hooks
 
-Scripts can be called from hooks using `HEMTT.script(<script>)`. The script will still only have access to the real file system.
+Scripts can be called from other scripts or from hooks using `HEMTT.script(<script>)`. The script will still only have access to the real file system.
 
 The script can return a value that will be passed back to the hook.
 
