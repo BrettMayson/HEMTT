@@ -54,8 +54,6 @@ impl<I: Seek + Read> ReadablePbo<I> {
             }
         }
 
-        let vers_header = vers_header;
-
         for header in &headers {
             input.seek(SeekFrom::Current(i64::from(header.size())))?;
         }
