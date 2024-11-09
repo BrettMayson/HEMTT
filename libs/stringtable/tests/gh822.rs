@@ -7,7 +7,7 @@ use hemtt_stringtable::Project;
 #[test]
 fn sort() {
     let mut stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/gh882.xml").unwrap(),
+        std::fs::File::open("tests/gh822.xml").unwrap(),
     ))
     .unwrap();
     stringtable.sort();
@@ -18,7 +18,4 @@ fn sort() {
     stringtable.to_writer(&mut out).unwrap();
 
     insta::assert_snapshot!(out);
-
-    // write to file
-    std::fs::write("tests/gh882_out.xml", out).unwrap();
 }

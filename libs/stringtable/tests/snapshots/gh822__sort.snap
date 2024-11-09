@@ -1,5 +1,5 @@
 ---
-source: libs/stringtable/tests/gh882.rs
+source: libs/stringtable/tests/gh822.rs
 expression: stringtable
 ---
 Project {

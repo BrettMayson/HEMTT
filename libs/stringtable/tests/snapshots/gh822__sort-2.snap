@@ -1,3 +1,7 @@
+---
+source: libs/stringtable/tests/gh822.rs
+expression: out
+---
 <?xml version="1.0" encoding="utf-8"?>
 <Project name="test">
     <Package name="test">
