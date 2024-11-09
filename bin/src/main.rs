@@ -1,3 +1,4 @@
+use clap::Parser;
 use hemtt_workspace::reporting::WorkspaceFiles;
 use tracing::error;
 
@@ -27,7 +28,15 @@ It is always best to the include the log and a link to your project when reporti
         tracing::warn!("Failed to enable ANSI support, colored output will not work");
     }
 
-    if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
+    let cli = match hemtt::Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    };
+
+    if let Err(e) = hemtt::execute(&cli) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
                 if let Some(diag) = code.diagnostic() {

@@ -1,40 +1,31 @@
-use clap::{ArgAction, ArgMatches, Command};
-
 use crate::{report::Report, Error};
 
 mod coverage;
 mod sort;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("localization")
-        .visible_alias("ln")
-        .about("Manage localization stringtables")
-        .subcommand(Command::new("coverage").about("Check the coverage of localization"))
-        .subcommand(
-            Command::new("sort").about("Sort the stringtables").arg(
-                clap::Arg::new("only-lang")
-                    .long("only-lang")
-                    .help("Sort only the languages")
-                    .action(ArgAction::SetTrue),
-            ),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Manage localization stringtables
+pub struct Command {
+    #[command(subcommand)]
+    commands: Subcommands,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommands {
+    /// Generate a coverage report
+    Coverage(coverage::Args),
+    /// Sort the stringtables
+    Sort(sort::Args),
 }
 
 /// Execute the localization command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-///
-/// # Panics
-/// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    match matches.subcommand() {
-        Some(("coverage", _)) => coverage::coverage(),
-        Some(("sort", matches)) => sort::sort(matches),
-        _ => {
-            cli().print_help().expect("Failed to print help");
-            Ok(Report::new())
-        }
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    match &cmd.commands {
+        Subcommands::Coverage(cmd) => coverage::coverage(cmd),
+        Subcommands::Sort(cmd) => sort::sort(cmd),
     }
 }

@@ -1,18 +1,13 @@
-use clap::{ArgMatches, Command};
 use hemtt_common::version::Version;
 
 use crate::{context::Context, error::Error, report::Report};
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("value")
-        .about("Print a value from the project")
-        .long_about("Print a value from the project, use `list` to see all available values")
-        .arg(
-            clap::Arg::new("name")
-                .help("Name of the new value")
-                .required(true),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Print a value from the project
+pub struct Command {
+    #[clap(name = "name")]
+    name: String,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -20,17 +15,10 @@ pub fn cli() -> Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-///
-/// # Panics
-/// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let default = String::new();
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, false)?;
-    match matches
-        .get_one::<String>("name")
-        .unwrap_or(&default)
-        .as_str()
-    {
+    match cmd.name.as_str() {
         "project.name" => {
             println!("{}", ctx.config().name());
         }

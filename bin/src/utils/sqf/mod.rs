@@ -1,15 +1,19 @@
 mod case;
 
-use clap::{ArgMatches, Command};
-
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("sqf")
-        .about("Commands for SQF files")
-        .arg_required_else_help(true)
-        .subcommand(case::cli())
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Commands for SQF files
+pub struct Command {
+    #[command(subcommand)]
+    commands: Subcommands,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommands {
+    /// Convert case
+    Case(case::Args),
 }
 
 /// Execute the paa command
@@ -19,10 +23,8 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the args are not present from clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    match matches.subcommand() {
-        Some(("case", matches)) => case::execute(matches),
-
-        _ => unreachable!(),
+pub fn execute(cmd: &Command) -> Result<(), Error> {
+    match &cmd.commands {
+        Subcommands::Case(args) => case::execute(args),
     }
 }

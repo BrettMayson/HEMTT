@@ -1,5 +1,3 @@
-use clap::{ArgAction, ArgMatches, Command};
-
 use crate::{
     context::{self, Context},
     error::Error,
@@ -10,51 +8,38 @@ use crate::{
 
 use super::global_modules;
 
-#[must_use]
-pub fn cli() -> Command {
-    add_just(add_args(
-        Command::new("build")
-            .about("Build the project for final testing")
-            .long_about(
-                "Build your project in release mode for testing, without signing for full release.",
-            ),
-    ))
+#[derive(clap::Parser)]
+#[command(
+    long_about = "Build your project in release mode for testing, without signing for full release."
+)]
+/// Build the project for final testing
+pub struct Command {
+    #[clap(flatten)]
+    build: Args,
+
+    #[clap(flatten)]
+    just: super::JustArgs,
 }
 
-#[must_use]
-pub fn add_args(cmd: Command) -> Command {
-    cmd.arg(
-        clap::Arg::new("no-bin")
-            .long("no-bin")
-            .help("Do not binarize the project")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("no-rap")
-            .long("no-rap")
-            .help("Do not rapify (cpp, rvmat)")
-            .action(ArgAction::SetTrue),
-    )
-}
-
-#[must_use]
-pub fn add_just(cmd: Command) -> Command {
-    cmd.arg(
-        clap::Arg::new("just")
-            .long("just")
-            .help("Only build the given addon")
-            .action(ArgAction::Append),
-    )
+#[derive(clap::Args)]
+pub struct Args {
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    /// Do not binarize the project
+    no_bin: bool,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
+    /// Do not rapify (cpp, rvmat)
+    no_rap: bool,
 }
 
 /// Execute the build command, build a new executor
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
-    let just = matches
-        .get_many::<String>("just")
-        .unwrap_or_default()
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    let just = cmd
+        .just
+        .just
+        .iter()
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
     let mut ctx = Context::new(
@@ -70,7 +55,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
     }
-    let mut executor = executor(ctx, matches);
+    let mut executor = executor(ctx, &cmd.build);
 
     if !just.is_empty() {
         warn!("Use of `--just` is not recommended, only use it if you know what you're doing");
@@ -82,16 +67,16 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 }
 
 #[must_use]
-pub fn executor(ctx: Context, matches: &ArgMatches) -> Executor {
+pub fn executor(ctx: Context, args: &Args) -> Executor {
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);
 
     executor.collapse(Collapse::No);
 
-    if matches.get_one::<bool>("no-rap") != Some(&true) {
+    if !args.no_rap {
         executor.add_module(Box::<Rapifier>::default());
     }
-    if matches.get_one::<bool>("no-bin") != Some(&true) {
+    if !args.no_bin {
         executor.add_module(Box::<Binarize>::default());
     }
     executor.add_module(Box::<Files>::default());

@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
 
 use crate::{
@@ -8,17 +7,14 @@ use crate::{
     Error,
 };
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("verify")
-        .about("Verify a signed PBO")
-        .long_about("Check a .bisign file against a public key and PBO")
-        .arg(clap::Arg::new("pbo").help("PBO to verify").required(true))
-        .arg(
-            clap::Arg::new("bikey")
-                .help("BIKey to verify against")
-                .required(true),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Verify a signed PBO
+pub struct Command {
+    /// PBO to verify
+    pbo: String,
+    /// `BIKey` to verify against
+    bikey: String,
 }
 
 /// Execute the verify command
@@ -28,9 +24,9 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the args are not present from clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let pbo_path = PathBuf::from(matches.get_one::<String>("pbo").expect("required"));
-    let bikey_path = PathBuf::from(matches.get_one::<String>("bikey").expect("required"));
+pub fn execute(cmd: &Command) -> Result<(), Error> {
+    let pbo_path = PathBuf::from(&cmd.pbo);
+    let bikey_path = PathBuf::from(&cmd.bikey);
 
     debug!("Reading PBO: {:?}", &pbo_path);
     let mut pbo = ReadablePbo::from(std::fs::File::open(&pbo_path)?)?;

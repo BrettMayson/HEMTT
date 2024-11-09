@@ -8,6 +8,12 @@ use hemtt_workspace::{
     LayerType,
 };
 
+#[derive(clap::Args)]
+pub struct Args {
+    /// Config to inspect
+    pub(crate) config: String,
+}
+
 use crate::Error;
 
 /// Prints information about a config to stdout

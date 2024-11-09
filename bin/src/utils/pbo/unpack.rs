@@ -4,35 +4,26 @@ use std::{
     path::PathBuf,
 };
 
-use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
 
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("unpack")
-        .about("Unpack a PBO")
-        .arg(
-            clap::Arg::new("pbo")
-                .help("PBO file to unpack")
-                .required(true),
-        )
-        .arg(
-            clap::Arg::new("output")
-                .help("Directory to unpack to")
-                .required(true),
-        )
+#[derive(clap::Args)]
+pub struct Args {
+    /// PBO file to unpack
+    pbo: String,
+    /// Directory to unpack to
+    output: String,
 }
 
 /// Execute the unpack command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let path = PathBuf::from(matches.get_one::<String>("pbo").expect("required"));
+pub fn execute(args: &Args) -> Result<(), Error> {
+    let path = PathBuf::from(&args.pbo);
     let mut pbo = ReadablePbo::from(File::open(path)?)?;
-    let output = PathBuf::from(matches.get_one::<String>("output").expect("required"));
+    let output = PathBuf::from(&args.output);
     if output.exists() {
         error!("Output directory already exists");
         return Ok(());

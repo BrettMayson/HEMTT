@@ -1,28 +1,22 @@
 use std::path::PathBuf;
 
-use clap::{ArgMatches, Command};
-
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("convert")
-        .about("Convert a PAA to another format")
-        .arg(clap::Arg::new("paa").help("PAA to convert").required(true))
-        .arg(
-            clap::Arg::new("output")
-                .help("Where to save the file")
-                .required(true),
-        )
+#[derive(clap::Args)]
+pub struct Args {
+    /// PAA to convert
+    paa: String,
+    /// Where to save the file
+    output: String,
 }
 
 /// Execute the convert command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let paa = PathBuf::from(matches.get_one::<String>("paa").expect("required"));
-    let output = PathBuf::from(matches.get_one::<String>("output").expect("required"));
+pub fn execute(args: &Args) -> Result<(), Error> {
+    let paa = PathBuf::from(&args.paa);
+    let output = PathBuf::from(&args.output);
     if output.exists() {
         error!("Output file already exists");
         return Ok(());

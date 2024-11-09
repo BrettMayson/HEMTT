@@ -1,14 +1,18 @@
 use std::{io::BufReader, path::PathBuf};
 
-use clap::ArgMatches;
 use hemtt_stringtable::Project;
 
 use crate::{context::Context, report::Report, Error};
 
-pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
-    let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
+#[derive(clap::Args)]
+pub struct Args {
+    #[arg(long)]
+    /// Only sort the languages within keys
+    only_lang: bool,
+}
 
-    let only_lang = matches.get_flag("only-lang");
+pub fn sort(args: &Args) -> Result<Report, Error> {
+    let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     for root in ["addons", "optionals"] {
         if !ctx.project_folder().join(root).exists() {
@@ -33,7 +37,7 @@ pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
                 let mut file = std::fs::File::open(&path)?;
                 match Project::from_reader(BufReader::new(&mut file)) {
                     Ok(mut project) => {
-                        if !only_lang {
+                        if !args.only_lang {
                             project.sort();
                         }
                         let mut writer = String::new();

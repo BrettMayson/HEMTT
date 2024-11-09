@@ -2,7 +2,6 @@ mod error;
 
 use std::path::{Path, PathBuf};
 
-use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
     config::{LaunchOptions, ProjectConfig},
@@ -24,51 +23,39 @@ use crate::{
     report::Report,
 };
 
-use super::dev;
+#[derive(clap::Parser)]
+/// Test your project
+pub struct Command {
+    #[clap(flatten)]
+    launch: Args,
 
-#[must_use]
-pub fn cli() -> Command {
-    dev::add_args(
-        Command::new("launch")
-            .about("Test your project")
-            .long_about("Builds your project in dev mode and launches Arma 3 with file patching enabled, loading your mod and any workshop mods.")
-            .arg(
-                clap::Arg::new("config")
-                    .action(ArgAction::Append)
-                    .help("Launches with the specified `[hemtt.launch.<config>]` configurations"),
-            )
-            .arg(
-                clap::Arg::new("executable")
-                    .short('e')
-                    .help("Executable to launch, defaults to `arma3_x64.exe`"),
-            )
-            .arg(
-                clap::Arg::new("passthrough")
-                    .raw(true)
-                    .help("Passthrough additional arguments to Arma 3"),
-            )
-            .arg(
-                clap::Arg::new("instances")
-                    .long("instances")
-                    .short('i')
-                    .help("Launches multiple instances of the game")
-                    .action(ArgAction::Set),
-            )
-            .arg(
-                clap::Arg::new("no-build")
-                    .long("quick")
-                    .short('Q')
-                    .help("Skips the build step, launching the last built version")
-                    .action(ArgAction::SetTrue),
-            )
-            .arg(
-                clap::Arg::new("no-filepatching")
-                    .long("no-filepatching")
-                    .short('F')
-                    .help("Disables file patching")
-                    .action(ArgAction::SetTrue),
-            )
-    )
+    #[clap(flatten)]
+    dev: super::dev::Args,
+
+    #[clap(flatten)]
+    just: super::JustArgs,
+}
+
+#[derive(clap::Args)]
+pub struct Args {
+    #[arg(action = clap::ArgAction::Append)]
+    /// Launches with the specified `[hemtt.launch.<config>]` configurations
+    config: Option<Vec<String>>,
+    #[arg(long, short)]
+    /// Executable to launch, defaults to `arma3_x64.exe`
+    executable: Option<String>,
+    #[arg(raw = true)]
+    /// Passthrough additional arguments to Arma 3
+    passthrough: Option<Vec<String>>,
+    #[arg(long, short)]
+    /// Launches multiple instances of the game
+    instances: Option<u8>,
+    #[arg(long = "quick", short = 'Q')]
+    /// Skips the build step, launching the last built version
+    no_build: bool,
+    #[arg(long = "no-filepatching", short = 'F')]
+    /// Disables file patching
+    no_filepatching: bool,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -79,7 +66,7 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
@@ -87,21 +74,19 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         return Ok(report);
     };
 
-    let launch_config: Vec<&String> = matches
-        .get_many::<String>("config")
-        .unwrap_or_default()
-        .collect();
-    let launch = if launch_config.is_empty() {
+    let configs = cmd.launch.config.clone().unwrap_or_default();
+
+    let launch = if configs.is_empty() {
         config
             .hemtt()
             .launch()
             .get("default")
             .cloned()
             .unwrap_or_default()
-    } else if let Some(launch) = launch_config
+    } else if let Some(launch) = configs
         .into_iter()
         .map(|c| {
-            config.hemtt().launch().get(c).cloned().map_or_else(
+            config.hemtt().launch().get(&c).cloned().map_or_else(
                 || {
                     report.push(LaunchConfigNotFound::code(
                         c.to_string(),
@@ -124,15 +109,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     trace!("launch config: {:?}", launch);
 
-    let instance_count = matches.get_one::<String>("instances").map_or_else(
-        || launch.instances() as usize,
-        |instances| {
-            instances.parse::<usize>().unwrap_or_else(|_| {
-                error!("Invalid instance count: {}", instances);
-                std::process::exit(1);
-            })
-        },
-    );
+    let instance_count = cmd.launch.instances.unwrap_or_else(|| launch.instances());
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.push(ArmaNotFound::code());
@@ -238,13 +215,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(std::string::ToString::to_string)
         .collect();
     args.append(&mut launch.parameters().to_vec());
-    args.append(
-        &mut matches
-            .get_raw("passthrough")
-            .unwrap_or_default()
-            .map(|s| s.to_string_lossy().to_string())
-            .collect::<Vec<_>>(),
-    );
+    args.append(&mut cmd.launch.passthrough.clone().unwrap_or_default());
     args.push(
         mods.iter()
             .map(|s| format!("-mod=\"{s}\""))
@@ -284,7 +255,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         }
     }
 
-    if matches.get_flag("no-build") {
+    if cmd.launch.no_build {
         warn!("Using Quick Launch! HEMTT will not rebuild the project");
         if !std::env::current_dir()?.join(".hemttout/dev").exists() {
             report.push(CanNotQuickLaunch::code(
@@ -303,7 +274,8 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         }
     } else {
         let mut executor = super::dev::context(
-            matches,
+            &cmd.dev,
+            &cmd.just,
             launch.optionals(),
             launch.binarize(),
             launch.rapify(),
@@ -342,7 +314,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = args.clone();
         if with_server {
             args.push("-connect=127.0.0.1".to_string());
-        } else if launch.file_patching() && !matches.get_flag("no-filepatching") {
+        } else if launch.file_patching() && !cmd.launch.no_filepatching {
             args.push("-filePatching".to_string());
         }
         instances.push(args);
@@ -350,7 +322,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     if cfg!(target_os = "windows") {
         let mut path = arma3dir.clone();
-        if let Some(exe) = matches.get_one::<String>("executable") {
+        if let Some(exe) = &cmd.launch.executable {
             let exe = PathBuf::from(exe);
             if exe.is_absolute() {
                 path = exe;
