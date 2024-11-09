@@ -15,8 +15,9 @@ hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 automod = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.36.2", features = ["serialize"] }
+quick-xml = { version = "0.37.0", features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
+serde-aux = "4.5.0"
 toml = { workspace = true }
 tracing = { workspace = true }
 
