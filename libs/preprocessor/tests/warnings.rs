@@ -35,11 +35,9 @@ fn check(dir: &str) {
                 .unwrap();
             let warning = config
                 .warnings()
-                .first()
-                .unwrap()
-                .diagnostic()
-                .unwrap()
-                .to_string(&WorkspaceFiles::new());
+                .iter()
+                .map(|w| w.diagnostic().unwrap().to_string(&WorkspaceFiles::new()))
+                .collect::<String>();
             if expected.is_empty() {
                 std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
             }
@@ -66,3 +64,4 @@ bootstrap!(pw1_redefine);
 bootstrap!(pw1_redefine_stack);
 bootstrap!(pw3_padded_arg);
 bootstrap!(pw3_padded_arg_duplicates);
+bootstrap!(pw3_padded_arg_inner);
