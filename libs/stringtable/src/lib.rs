@@ -55,8 +55,12 @@ impl Project {
         // If this write fails, the serializer will also throw an error
         let _ = writer.write_str(r#"<?xml version="1.0" encoding="utf-8"?>"#);
         let _ = writer.write_char('\n');
-        let mut ser = Serializer::new(writer);
+        let mut buffer = String::new();
+        let mut ser = Serializer::new(&mut buffer);
         ser.indent(' ', 4);
-        self.serialize(ser)
+        self.serialize(ser)?;
+        buffer.push('\n');
+        writer.write_str(&buffer)?;
+        Ok(())
     }
 }
