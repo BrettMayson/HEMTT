@@ -1,0 +1,36 @@
+---
+source: libs/stringtable/tests/gh882.rs
+expression: out
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="test">
+    <Package name="test">
+        <!-- a maybe more legitimate use of a comment which gets removed -->
+        <Key ID="Comments be gone!">
+            <Original>I leave this for later</Original>
+            <English>I leave this for later</English>
+            <!-- <German>I am totally a correct translated entry waiting for approval!</German> -->
+            <!-- <Russian></Russian> -->
+            <!-- <Polish></Polish> -->
+        </Key>
+        <Key ID="I will be empty"/>
+        <Key ID="I will change the xml structure a little">
+            <Original/>
+            <English/>
+            <Czech/>
+            <French/>
+        </Key>
+        <Key ID="My things get unescaped">
+            <Original>"'</Original>
+            <English>"'</English>
+            <Russian>"'</Russian>
+            <German>"'</German>
+        </Key>
+        <!--
+        <Key ID="new entry used in future release, not yet used">
+            <Original>The future</Original>
+            <English>The future</English>
+        </Key>
+        -->
+    </Package>
+</Project>

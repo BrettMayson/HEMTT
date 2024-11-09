@@ -21,7 +21,7 @@ pub struct Project {
     packages: Vec<Package>,
 
     #[serde(skip)]
-    meta_comments: Vec<(String, String)>,
+    meta_comments: Vec<(String, String, Option<String>)>,
 }
 
 impl Project {
@@ -50,6 +50,7 @@ impl Project {
         let mut buffer = String::new();
         let mut reading_comments = false;
         let mut comments = Vec::new();
+        let mut in_key = None;
         let Ok(reader) = reader
             .lines()
             .map(|l| {
@@ -57,17 +58,35 @@ impl Project {
                     error!("Failed to read line: {:?}", l);
                     return l;
                 };
-                if !reading_comments && !buffer.is_empty() {
-                    comments.push((buffer.trim().to_string(), l.trim().to_string()));
-                    buffer.clear();
+                let l_trim = l.trim();
+                if reading_comments {
+                    buffer.push('\n');
                 }
-                if l.trim().starts_with("<!--") {
+                if l_trim.starts_with("<!--") {
                     reading_comments = true;
+                    if !buffer.is_empty() {
+                        buffer.push('\n');
+                    }
+                }
+                if !reading_comments && !buffer.is_empty() {
+                    comments.push((
+                        buffer.trim().to_string(),
+                        l_trim.to_string(),
+                        in_key.clone(),
+                    ));
+                    buffer.clear();
                 }
                 if reading_comments {
                     buffer.push_str(&l);
-                    if l.trim().ends_with("-->") {
+                    if l_trim.ends_with("-->") {
                         reading_comments = false;
+                    }
+                }
+                if !reading_comments {
+                    if l_trim.starts_with("<Key") {
+                        in_key = Some(l_trim.to_string());
+                    } else if l_trim.starts_with("</Key>") {
+                        in_key = None;
                     }
                 }
                 Ok(l)
@@ -99,13 +118,23 @@ impl Project {
         self.serialize(ser)?;
         buffer.push('\n');
 
+        let mut clear_next = false;
+        let mut in_key = None;
         for line in buffer.lines() {
-            for (before, after) in &self.meta_comments {
-                if line.trim().starts_with(after) {
-                    let whitespace = line
+            let l_trim = line.trim();
+            if clear_next {
+                clear_next = false;
+                in_key = None;
+            }
+            for (before, after, key) in &self.meta_comments {
+                if l_trim.starts_with(after) && &in_key == key {
+                    let mut whitespace = line
                         .chars()
                         .take_while(|c| c.is_whitespace())
                         .collect::<String>();
+                    if l_trim.starts_with("</") {
+                        whitespace += "    ";
+                    }
                     writer.write_str(&whitespace)?;
                     writer.write_str(before)?;
                     writer.write_char('\n')?;
@@ -113,6 +142,11 @@ impl Project {
             }
             writer.write_str(line)?;
             writer.write_char('\n')?;
+            if l_trim.starts_with("<Key") {
+                in_key = Some(l_trim.to_string());
+            } else if l_trim.starts_with("</Key>") {
+                clear_next = true;
+            }
         }
 
         Ok(())
