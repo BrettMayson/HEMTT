@@ -30,5 +30,5 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
     let name = matches
         .get_one::<String>("name")
         .expect("name to be set as required");
-    Hooks::run_file(&ctx, name)
+    Hooks::run_file(&ctx, name).map(|(report, _)| report)
 }
