@@ -1,10 +1,8 @@
 #![allow(clippy::unwrap_used)]
 
-mod utils;
 use std::fs::File;
 
-use hemtt_pbo::Checksum;
-use utils::*;
+use hemtt_pbo::{tests::pbo, Checksum};
 
 #[test]
 fn exported_mission() {

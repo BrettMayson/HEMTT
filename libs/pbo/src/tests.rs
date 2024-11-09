@@ -2,7 +2,7 @@
 
 use std::{fs::File, io::Read};
 
-use hemtt_pbo::{Checksum, Header, Mime, ReadablePbo};
+use crate::{Checksum, Header, Mime, ReadablePbo};
 
 #[must_use]
 #[allow(clippy::too_many_arguments)]

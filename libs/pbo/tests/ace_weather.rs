@@ -2,11 +2,12 @@
 
 use std::{fs::File, io::Read};
 
-use hemtt_pbo::{Checksum, Mime, WritablePbo};
+use hemtt_pbo::{
+    tests::{file, header, pbo},
+    Checksum, Mime, WritablePbo,
+};
 
-mod utils;
 use sha1::{Digest, Sha1};
-use utils::*;
 
 #[allow(clippy::too_many_lines)]
 #[test]
