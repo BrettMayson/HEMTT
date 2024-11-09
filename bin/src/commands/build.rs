@@ -9,10 +9,9 @@ use crate::{
 use super::global_modules;
 
 #[derive(clap::Parser)]
-#[command(
-    long_about = "Build your project in release mode for testing, without signing for full release."
-)]
 /// Build the project for final testing
+///
+/// Build your project in release mode for testing, without signing for full release.
 pub struct Command {
     #[clap(flatten)]
     build: Args,

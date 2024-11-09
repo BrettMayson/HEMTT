@@ -5,6 +5,8 @@ use crate::{context::Context, error::Error, report::Report};
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 /// Print a value from the project
+///
+/// Print a value from the project, use `list` to see all available values
 pub struct Command {
     #[clap(name = "name")]
     name: String,

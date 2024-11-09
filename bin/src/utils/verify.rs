@@ -10,6 +10,8 @@ use crate::{
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 /// Verify a signed PBO
+///
+/// Checks a .bisign file against a public key and PBO
 pub struct Command {
     /// PBO to verify
     pbo: String,

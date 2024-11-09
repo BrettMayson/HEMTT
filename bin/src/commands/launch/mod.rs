@@ -25,6 +25,9 @@ use crate::{
 
 #[derive(clap::Parser)]
 /// Test your project
+///
+/// Builds your project in dev mode and launches Arma 3 with
+/// file patching enabled, loading your mod and any workshop mods.
 pub struct Command {
     #[clap(flatten)]
     launch: Args,

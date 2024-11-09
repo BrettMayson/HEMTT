@@ -11,17 +11,11 @@ use crate::{
 
 use super::JustArgs;
 
-// #[must_use]
-// pub fn cli() -> Command {
-//     add_just(add_args(
-//         Command::new("dev")
-//             .about("Build the project for development")
-//             .long_about("Build your project for local development and testing. It is built without binarization of .p3d and .rtm files."),
-//     ))
-// }
-
 #[derive(clap::Parser)]
 /// Build the project for development
+///
+/// Build your project for local development and testing.
+/// It is built without binarization of .p3d and .rtm files.
 pub struct Command {
     #[clap(flatten)]
     dev: Args,

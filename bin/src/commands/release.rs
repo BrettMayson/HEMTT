@@ -3,8 +3,9 @@ use crate::{context::Context, error::Error, modules::Sign, report::Report};
 use super::build;
 
 #[derive(clap::Parser)]
-#[command(long_about = "Build your project for full release, with signing and archiving.")]
 /// Build the project for release
+///
+/// Build your project for full release, with signing and archiving.
 pub struct Command {
     #[clap(flatten)]
     build: build::Args,
