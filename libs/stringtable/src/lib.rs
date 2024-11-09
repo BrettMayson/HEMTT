@@ -78,6 +78,8 @@ impl Project {
                 "Failed to read lines".to_string(),
             ));
         };
+        comments.sort();
+        comments.dedup();
         let mut this: Self =
             quick_xml::de::from_reader(BufReader::new(reader.join("\n").as_bytes()))?;
         this.meta_comments = comments;
