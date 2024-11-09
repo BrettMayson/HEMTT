@@ -47,7 +47,7 @@ chmod +x /tmp/hemtt-installer/hemtt
 
 binaryLocation="$HOME/.local/bin"
 if [ "$(uname -s)" == "Darwin" ]; then
-    binaryLocation="$home/bin"
+    binaryLocation="$HOME/bin"
 fi
 mkdir -p "$binaryLocation"
 
@@ -69,8 +69,8 @@ fi
 if [ -w "$binaryLocation" ]; then
     mv /tmp/hemtt-installer/hemtt "$binaryLocation"
 else
-    echo "The installer was unable to move the binary to $binaryLocation."
+    echo "The installer was unable to move the binary to $binaryLocation"
     exit 1
 fi
 
-echo "Installation complete. You can run HEMTT using 'hemtt'."
+echo "Installation complete. You can run HEMTT using 'hemtt'"
