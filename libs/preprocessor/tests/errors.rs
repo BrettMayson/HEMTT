@@ -78,3 +78,4 @@ bootstrap!(pe22_pragma_invalid_flag);
 bootstrap!(pe23_if_has_include);
 bootstrap!(pe24_parsing_failed);
 bootstrap!(pe25_exec);
+bootstrap!(pe26_unsupported_builtin);
