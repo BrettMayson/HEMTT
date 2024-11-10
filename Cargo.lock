@@ -1461,10 +1461,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "hemtt-book-lints"
+name = "hemtt-book-gen"
 version = "0.1.0"
 dependencies = [
  "arma3-wiki",
+ "clap",
+ "hemtt",
  "hemtt-common",
  "hemtt-config",
  "hemtt-sqf",

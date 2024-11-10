@@ -8,7 +8,11 @@ use crate::{
 };
 
 #[derive(clap::Parser)]
-/// Check the project for errors
+/// Checks the project for errors
+///
+/// `hemtt check` is the quickest way to check your project for errors.
+/// All the same checks are run as [`hemtt dev`](./dev.md), but it will not
+/// write files to disk, saving time and resources.
 pub struct Command {
     #[clap(flatten)]
     global: crate::GlobalArgs,

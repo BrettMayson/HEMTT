@@ -9,9 +9,27 @@ use crate::{
 use super::global_modules;
 
 #[derive(clap::Parser)]
+#[command(verbatim_doc_comment)]
 /// Build the project for final testing
 ///
-/// Build your project in release mode for testing, without signing for full release.
+/// `hemtt build` will build your mod into `.hemttout/build`.
+/// It will binarize all applicable files, and will not
+/// create folder links like [`hemtt dev`](./dev.md).
+///
+/// It is intended to be used for testing your mod locally before release.
+///
+/// ## Configuration
+///
+/// **.hemtt/project.toml**
+///
+/// ```toml
+/// [hemtt.build]
+/// optional_mod_folders = false # Default: true
+/// ```
+///
+/// ### `optional_mod_folders`
+///
+/// By default, `hemtt build` will create separate mods for each optional mod folder.
 pub struct Command {
     #[clap(flatten)]
     build: BuildArgs,
@@ -28,9 +46,15 @@ pub struct Command {
 pub struct BuildArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not binarize the project
+    ///
+    /// They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext` will still be rapified.
+    /// This can be configured per addon in [`addon.toml`](../configuration/addon#binarize).
     no_bin: bool,
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not rapify (cpp, rvmat)
+    ///
+    /// They will be copied directly into the PBO.
+    /// This can be configured per addon in [`addon.toml`](../configuration/addon#rapify).
     no_rap: bool,
 }
 

@@ -18,10 +18,26 @@ use crate::{
 mod error;
 
 #[derive(clap::Parser)]
-#[command(arg_required_else_help = true)]
+#[command(arg_required_else_help = true, verbatim_doc_comment)]
 /// Create a new project
+///
+/// `hemtt new` is used to create a new mod. It will create a new folder with the name you provide, and create some starting files.
+///
+/// It will ask for:
+///
+/// - The full name of your mod  
+/// - The author of your mod  
+/// - The prefix of your mod  
+/// - The main prefix of your mod  
+/// - A license for your mod  
 pub struct Command {
-    #[clap(name = "name")]
+    #[clap(name = "name", verbatim_doc_comment)]
+    /// The name of the new project
+    ///
+    /// This will create a new folder with the name you provide in the current directory.  
+    /// It should be a valid folder name, using only letters, numbers, and underscores.
+    ///
+    /// Example: `hemtt new my_mod`
     name: String,
 }
 

@@ -67,7 +67,8 @@ pub fn inspect(file: File, format: &TableFormat) -> Result<(), Error> {
 
     match format {
         TableFormat::Ascii => println!("{}", modify(Table::new(data).with(Style::modern()))),
-        TableFormat::Json => println!("{}", serde_json::to_string_pretty(&data)?),
+        TableFormat::Json => println!("{}", serde_json::to_string(&data)?),
+        TableFormat::PrettyJson => println!("{}", serde_json::to_string_pretty(&data)?),
         TableFormat::Markdown => println!("{}", modify(Table::new(data).with(Style::markdown()))),
     }
 

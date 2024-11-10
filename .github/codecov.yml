@@ -12,7 +12,7 @@ coverage:
 ignore:
   - "tests"
   - "hls"
-  - "book-lints"
+  - "book-gen"
 
 # Make comments less noisy
 comment:
