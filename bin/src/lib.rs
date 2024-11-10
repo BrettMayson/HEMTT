@@ -83,17 +83,17 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::process::exit(1);
     }
 
-    if !cfg!(debug_assertions) && !matches!(cli.command, Some(Commands::Value(_))) {
+    #[cfg(debug_assertions)]
+    let in_test = cli.global.in_test;
+    #[cfg(not(debug_assertions))]
+    let in_test = false;
+
+    if !in_test && !matches!(cli.command, Some(Commands::Value(_))) {
         logging::init(
             cli.global.verbosity,
             !matches!(cli.command, Some(Commands::Utils(_))),
         );
     }
-
-    #[cfg(debug_assertions)]
-    let in_test = cli.global.in_test;
-    #[cfg(not(debug_assertions))]
-    let in_test = false;
 
     #[cfg(debug_assertions)]
     if let Some(dir) = &cli.global.dir {
