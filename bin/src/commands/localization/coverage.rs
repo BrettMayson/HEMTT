@@ -1,19 +1,44 @@
 use std::{collections::HashMap, io::BufReader};
 
 use hemtt_stringtable::{Project, Totals};
-use term_table::{
-    row::Row,
-    table_cell::{Alignment, TableCell},
-    Table, TableStyle,
-};
+use serde::Serialize;
+use tabled::{settings::Style, Table, Tabled};
 
-use crate::{context::Context, report::Report, Error};
+use crate::{context::Context, report::Report, Error, TableFormat};
+
+#[derive(clap::Parser)]
+#[allow(clippy::module_name_repetitions)]
+/// Generate a coverage report
+///
+/// HEMTT will display a table of the coverage of
+/// language localization in the project. Showing the
+/// percentage, total strings, and how many
+/// addons have gaps in their localization.
+pub struct Command {
+    #[arg(long, default_value = "ascii")]
+    /// Output format
+    format: TableFormat,
+}
 
 macro_rules! missing {
     ($totals:ident, $missing:ident, $lang:tt, $addon:expr) => {
         paste::paste! {
             if $totals.$lang() != $totals.total() {
                 $missing.entry(stringify!($lang)).or_insert_with(Vec::new).push($addon);
+            }
+        }
+    };
+}
+
+macro_rules! row {
+    ($table:ident, $global:ident, $missing:ident, $lang:ident) => {
+        paste::paste! {
+            if $global.$lang() != 0 {
+                $table.push(Entry {
+                    language: first_capital(stringify!($lang)),
+                    percent: Percentage(f64::from($global.$lang()) / f64::from($global.total()) * 100.0),
+                    missing: MissingAddons($missing.get(stringify!($lang)).cloned().unwrap_or_default())
+                });
             }
         }
     };
@@ -26,37 +51,54 @@ fn first_capital(s: &str) -> String {
     })
 }
 
-macro_rules! row {
-    ($table:ident, $global:ident, $missing:ident, $lang:tt) => {
-        if $global.$lang() != 0 {
-            $table.add_row(Row::new(vec![
-                TableCell::new(first_capital(stringify!($lang))),
-                TableCell::new(format!(
-                    "{:.2}%",
-                    f64::from($global.$lang()) / f64::from($global.total()) * 100.0
-                )),
-                TableCell::new($global.$lang()),
-                {
-                    if let Some(missing) = $missing.get(stringify!($lang)) {
-                        if missing.len() < 3 {
-                            TableCell::new(missing.join(", "))
-                        } else {
-                            TableCell::new(format!("{} and {} more", missing[0], missing.len() - 1))
-                        }
-                    } else {
-                        TableCell::new("")
-                    }
-                },
-            ]));
+#[derive(Serialize)]
+pub struct MissingAddons(Vec<String>);
+
+impl std::fmt::Display for MissingAddons {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.0.is_empty() {
+            write!(f, "None")
+        } else if self.0.len() <= 3 {
+            write!(f, "{}", self.0.join(", "))
+        } else {
+            write!(f, "{} and {} more", self.0[0], self.0.len() - 1)
         }
-    };
+    }
 }
 
-pub fn coverage() -> Result<Report, Error> {
+#[derive(Serialize)]
+pub struct Percentage(f64);
+
+impl std::fmt::Display for Percentage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}%", self.0)
+    }
+}
+
+#[derive(Tabled, Serialize)]
+struct Entry {
+    #[tabled(rename = "Language")]
+    language: String,
+    #[tabled(rename = "Coverage %")]
+    percent: Percentage,
+    #[tabled(rename = "Addons")]
+    missing: MissingAddons,
+}
+
+/// Generate a coverage report
+///
+/// # Errors
+/// [`Error`] depending on the modules
+///
+/// # Panics
+/// If json serialization fails
+pub fn coverage(cmd: &Command) -> Result<Report, Error> {
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     let mut global = Totals::default();
     let mut missing = HashMap::new();
+
+    let mut table = Vec::new();
 
     for addon in ctx.addons() {
         let stringtable_path = ctx
@@ -104,23 +146,6 @@ pub fn coverage() -> Result<Report, Error> {
         }
     }
 
-    let mut table = Table::new();
-    table.style = TableStyle::thin();
-    table.add_row(Row::new(vec![
-        TableCell::builder("Language")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Percent")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Total")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Missing Addons")
-            .alignment(Alignment::Center)
-            .build(),
-    ]));
-
     row!(table, global, missing, original);
     row!(table, global, missing, english);
     row!(table, global, missing, czech);
@@ -146,7 +171,26 @@ pub fn coverage() -> Result<Report, Error> {
     row!(table, global, missing, finnish);
     row!(table, global, missing, dutch);
 
-    println!("{}", table.render());
+    match cmd.format {
+        TableFormat::Ascii => {
+            println!("{}", Table::new(&table).with(Style::modern()));
+        }
+        TableFormat::Json => {
+            println!(
+                "{}",
+                serde_json::to_string(&table).expect("Failed to print json")
+            );
+        }
+        TableFormat::PrettyJson => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&table).expect("Failed to print json")
+            );
+        }
+        TableFormat::Markdown => {
+            println!("{}", Table::new(&table).with(Style::markdown()));
+        }
+    }
 
     Ok(Report::new())
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="test">
+    <Package name="test">
+        <!-- The I copy paste this part of my language entry thing -->
+        <Key ID="I will change the xml structure a little">
+            <Original></Original>
+            <English></English>
+            <Czech></Czech>
+            <French></French>
+        </Key>
+        <Key ID="I will be empty">
+            <original>hey</original>
+            <english>hey</english>
+            <german>hey</german>
+            <russian>hey</russian>
+        </Key>
+        <Key ID="My things get unescaped">
+            <Original>&quot;&apos;</Original>
+            <English>&quot;&apos;</English>
+            <German>&quot;&apos;</German>
+            <Russian>&quot;&apos;</Russian>
+            <Spanish>"Hello World"</Spanish>
+        </Key>
+        <!-- a maybe more legitimate use of a comment which gets removed -->
+        <Key ID="Comments be gone!">
+            <Original>I leave this for later</Original>
+            <English>I leave this for later</English>
+            <!-- <German>I am totally a correct translated entry waiting for approval!</German> -->
+            <!-- <Russian></Russian> -->
+            <!-- <Polish></Polish> -->
+        </Key>
+        <!--
+        <Key ID="new entry used in future release, not yet used">
+            <Original>The future</Original>
+            <English>The future</English>
+        </Key>
+        -->
+    </Package>
+</Project>

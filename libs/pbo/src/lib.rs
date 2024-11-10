@@ -15,6 +15,7 @@ mod error;
 pub mod file;
 mod model;
 mod read;
+pub mod tests;
 mod write;
 
 pub use error::Error;

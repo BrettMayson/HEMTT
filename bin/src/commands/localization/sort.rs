@@ -1,14 +1,32 @@
 use std::{io::BufReader, path::PathBuf};
 
-use clap::ArgMatches;
 use hemtt_stringtable::Project;
 
 use crate::{context::Context, report::Report, Error};
 
-pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
-    let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
+#[derive(clap::Parser)]
+#[allow(clippy::module_name_repetitions)]
+#[command(verbatim_doc_comment)]
+/// Sorts the stringtables
+///
+/// HEMTT will:
+///
+/// 1. Sort the Packages in alphabetical order.
+/// 2. Sort the Containers in alphabetical order (if any).
+/// 3. Sort the Keys in alphabetical order.
+/// 4. Sort the Localized Strings in the order of [this table](https://community.bistudio.com/wiki/Stringtable.xml#Supported_Languages)
+pub struct Command {
+    #[arg(long)]
+    /// Only sort the languages within keys
+    only_lang: bool,
+}
 
-    let only_lang = matches.get_flag("only-lang");
+/// Sort the stringtables
+///
+/// # Errors
+/// [`Error`] depending on the modules
+pub fn sort(cmd: &Command) -> Result<Report, Error> {
+    let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     for root in ["addons", "optionals"] {
         if !ctx.project_folder().join(root).exists() {
@@ -33,7 +51,7 @@ pub fn sort(matches: &ArgMatches) -> Result<Report, Error> {
                 let mut file = std::fs::File::open(&path)?;
                 match Project::from_reader(BufReader::new(&mut file)) {
                     Ok(mut project) => {
-                        if !only_lang {
+                        if !cmd.only_lang {
                             project.sort();
                         }
                         let mut writer = String::new();

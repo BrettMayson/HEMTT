@@ -55,7 +55,7 @@ impl Label {
                         .chars()
                         .next()
                         .map_or(true, |c| c.is_lowercase() || !c.is_alphabetic()),
-                "All label messages should be lowercase (except for text copied from the source)"
+                "All label messages should be lowercase (except for text copied from the source), got: {message:?}",
             );
             label = label.with_message(message.clone());
         }

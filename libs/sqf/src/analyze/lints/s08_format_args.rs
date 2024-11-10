@@ -116,6 +116,7 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
     let mut token_active = false;
     let mut token_start = 0;
     for (i, c) in format.chars().enumerate() {
+        let outside_token = !token_active || i > token_start;
         if token_active && !c.is_ascii_digit() {
             token_active = false;
             if i > token_start {
@@ -133,7 +134,7 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
                 ));
             }
         }
-        if !token_active && c == '%' {
+        if !token_active && c == '%' && outside_token {
             token_active = true;
             token_start = i + 1;
         }

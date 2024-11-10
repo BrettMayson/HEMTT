@@ -2,11 +2,12 @@
 
 use std::{fs::File, io::Read};
 
-use hemtt_pbo::{Checksum, Mime, WritablePbo};
+use hemtt_pbo::{
+    tests::{file, header, pbo},
+    Checksum, Mime, WritablePbo,
+};
 
-mod utils;
 use sha1::{Digest, Sha1};
-use utils::*;
 
 #[allow(clippy::too_many_lines)]
 #[test]
@@ -19,8 +20,8 @@ fn ace_weather_cba6f72c() {
         41,
         true,
         3,
-        "cba6f72c",
-        "z\\ace\\addons\\weather",
+        Some("cba6f72c"),
+        Some("z\\ace\\addons\\weather"),
         checksum,
         checksum,
     );
@@ -146,8 +147,8 @@ fn ace_weather_8bd4922f() {
         45,
         false,
         3,
-        "8bd4922f",
-        "z\\ace\\addons\\weather",
+        Some("8bd4922f"),
+        Some("z\\ace\\addons\\weather"),
         Checksum::from_bytes([
             182, 44, 18, 201, 133, 232, 236, 162, 127, 37, 203, 45, 42, 137, 130, 36, 120, 104,
             187, 203,

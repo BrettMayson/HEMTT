@@ -58,7 +58,7 @@ impl LintRunner<SqfLintData> for Runner {
             if let Err(e) = project.to_writer(&mut writer) {
                 panic!("Failed to write stringtable for {path}: {e}");
             }
-            if &writer != existing {
+            if writer.trim() != existing.trim() {
                 unsorted.push(path.as_str().to_string());
             }
         }

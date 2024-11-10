@@ -8,6 +8,13 @@ use hemtt_workspace::{
     LayerType,
 };
 
+#[derive(clap::Args)]
+#[allow(clippy::module_name_repetitions)]
+pub struct InspectArgs {
+    /// Config to inspect
+    pub(crate) config: String,
+}
+
 use crate::Error;
 
 /// Prints information about a config to stdout

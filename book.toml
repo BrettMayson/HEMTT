@@ -14,7 +14,6 @@ edit-url-template = "https://github.com/brettmayson/HEMTT/edit/main/{path}"
 default-theme = "ayu"
 preferred-dark-theme = "ayu"
 additional-css = ['./book/mdbook-admonish.css']
-site-url = "/HEMTT/"
 additional-js = ["book/time.js"]
 
 [build]
@@ -23,7 +22,7 @@ build-dir = "target/book"
 [preprocessor]
 
 [preprocessor.lints]
-command = "cargo run --bin hemtt-book-lints"
+command = "cargo run --bin hemtt-book-gen"
 before = ["admonish"]
 
 [preprocessor.admonish]

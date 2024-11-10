@@ -2,7 +2,6 @@ mod error;
 
 use std::path::{Path, PathBuf};
 
-use clap::{ArgAction, ArgMatches, Command};
 use hemtt_common::{
     arma::dlc::DLC,
     config::{LaunchOptions, ProjectConfig},
@@ -24,51 +23,216 @@ use crate::{
     report::Report,
 };
 
-use super::dev;
+#[derive(clap::Parser)]
+#[command(verbatim_doc_comment)]
+/// Test your project
+///
+/// `hemtt launch` is used to build and launch a dev version of your mod.
+/// It will run the [`hemtt dev`](dev.md) command internally after a
+/// few checks, options are passed to the `dev` command.
+///
+/// You can chain multiple configurations together, and they will be
+/// overlayed from left to right. Any arrays will be concatenated,
+/// and any duplicate keys will be overridden. With the below configuration,
+/// `hemtt launch default vn ace` would launch with all three configurations.
+/// Note that `default` must be specified when specifying additional
+/// configurations, `default` is only implied when no configurations are specified.
+///
+/// ## Configuration
+///
+/// `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
+///
+/// Launch configurations can be stored in either `.hemtt/project.toml` under `hemtt.launch`,
+/// or in a separate file under `.hemtt/launch.toml`. The latter is useful for keeping
+/// your main configuration file clean. When using `launch.toml`,
+/// the `hemtt.launch` key is not required.
+///
+/// **.hemtt/project.toml**
+///
+/// ```toml
+/// mainprefix = "z"
+///
+/// # Launched with `hemtt launch`
+/// [hemtt.launch.default]
+/// workshop = [
+///     "450814997", # CBA_A3's Workshop ID
+/// ]
+/// presets = [
+///     "main", # .html presets from .hemtt/presets/
+/// ]
+/// dlc = [
+///     "Western Sahara",
+/// ]
+/// optionals = [
+///     "caramel",
+/// ]
+/// mission = "test.VR" # Mission to launch directly into the editor with
+/// parameters = [
+///     "-skipIntro",           # These parameters are passed to the Arma 3 executable
+///     "-noSplash",            # They do not need to be added to your list
+///     "-showScriptErrors",    # You can add additional parameters here
+///     "-debug",
+///     "-filePatching",
+/// ]
+/// executable = "arma3" # Default: "arma3_x64"
+/// file_patching = false # Default: true
+/// binarize = true # Default: false
+/// rapify = false # Default: true
+///
+/// # Launched with `hemtt launch vn`
+/// [hemtt.launch.vn]
+/// extends = "default"
+/// dlc = [
+///     "S.O.G. Prairie Fire",
+/// ]
+///
+/// # Launched with `hemtt launch ace`
+/// [hemtt.launch.ace]
+/// extends = "default"
+/// workshop = [
+///     "463939057", # ACE3's Workshop ID
+/// ]
+/// ```
+///
+/// **.hemtt/launch.toml**
+///
+/// ```toml
+/// [default]
+/// workshop = [
+///     "450814997", # CBA_A3's Workshop ID
+/// ]
+///
+/// [vn]
+/// extends = "default"
+/// dlc = [
+///     "S.O.G. Prairie Fire",
+/// ]
+/// ```
+///
+/// ### extends
+///
+/// The name of another configuration to extend. This will merge all
+/// arrays with the base configuration, and override any duplicate keys.
+///
+/// ### workshop
+///
+/// A list of workshop IDs to launch with your mod. These are not
+/// subscribed to, and will need to be manually subscribed to in Steam.
+///
+/// ### presets
+///
+/// A list of `.html` presets to launch with your mod.
+/// Exported from the Arma 3 Launcher, and kept in `.hemtt/presets/`.
+///
+/// ### dlc
+///
+/// A list of DLCs to launch with your mod. The fullname or short-code can be used.
+///
+/// Currently supported DLCs:
+///
+/// | Full Name           | Short Code |
+/// | ------------------- | ---------- |
+/// | Contact             | contact    |
+/// | Global Mobilization | gm         |
+/// | S.O.G. Prairie Fire | vn         |
+/// | CSLA Iron Curtain   | csla       |
+/// | Western Sahara      | ws         |
+/// | Spearhead 1944      | spe        |
+/// | Reaction Forces     | rf         |
+///
+/// ### optionals
+///
+/// A list of optional addon folders to launch with your mod.
+///
+/// ### mission
+///
+/// The mission to launch directly into the editor with. This can be specified
+/// as either the name of a folder in `.hemtt/missions/`
+/// (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`)
+/// or the relative (to the project root) path to a `mission.sqm`
+/// file or a folder containing it.
+///
+/// ### parameters
+///
+/// A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters) to pass to the Arma 3 executable.
+///
+/// ### executable
+///
+/// The name of the Arma 3 executable to launch.
+/// This is usually `arma3` or `arma3_x64`.
+/// Do not include the `.exe` extension, it will be added automatically on Windows.
+/// Only paths relative to the Arma 3 directory are supported.
+///
+/// ### `file_patching`
+///
+/// Whether to launch Arma 3 with `-filePatching`. Equivalent to `--no-filepatching` or `-F`.
+///
+/// ### binarize
+///
+/// Whether to use BI's binarize on supported files. Equivalent to `--binarize`.
+///
+/// ### rapify
+///
+/// Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
+pub struct Command {
+    #[clap(flatten)]
+    launch: LaunchArgs,
 
-#[must_use]
-pub fn cli() -> Command {
-    dev::add_args(
-        Command::new("launch")
-            .about("Test your project")
-            .long_about("Builds your project in dev mode and launches Arma 3 with file patching enabled, loading your mod and any workshop mods.")
-            .arg(
-                clap::Arg::new("config")
-                    .action(ArgAction::Append)
-                    .help("Launches with the specified `[hemtt.launch.<config>]` configurations"),
-            )
-            .arg(
-                clap::Arg::new("executable")
-                    .short('e')
-                    .help("Executable to launch, defaults to `arma3_x64.exe`"),
-            )
-            .arg(
-                clap::Arg::new("passthrough")
-                    .raw(true)
-                    .help("Passthrough additional arguments to Arma 3"),
-            )
-            .arg(
-                clap::Arg::new("instances")
-                    .long("instances")
-                    .short('i')
-                    .help("Launches multiple instances of the game")
-                    .action(ArgAction::Set),
-            )
-            .arg(
-                clap::Arg::new("no-build")
-                    .long("quick")
-                    .short('Q')
-                    .help("Skips the build step, launching the last built version")
-                    .action(ArgAction::SetTrue),
-            )
-            .arg(
-                clap::Arg::new("no-filepatching")
-                    .long("no-filepatching")
-                    .short('F')
-                    .help("Disables file patching")
-                    .action(ArgAction::SetTrue),
-            )
-    )
+    #[clap(flatten)]
+    dev: super::dev::DevArgs,
+
+    #[clap(flatten)]
+    just: super::JustArgs,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
+}
+
+#[derive(clap::Args)]
+#[allow(clippy::module_name_repetitions)]
+pub struct LaunchArgs {
+    #[arg(action = clap::ArgAction::Append)]
+    /// Launches with the specified configurations
+    ///
+    /// Configured in either:
+    /// - `.hemtt/project.toml` under `hemtt.launch`
+    /// - `.hemtt/launch.toml`
+    config: Option<Vec<String>>,
+    #[arg(long, short, verbatim_doc_comment)]
+    /// Executable to launch, defaults to `arma3_x64.exe`
+    ///
+    /// Overrides the `executable` option in the configuration file.
+    ///
+    /// Can be either a relative path to the Arma 3 directory, or an absolute path.
+    ///
+    /// ```bash
+    /// -e arma3profiling_x64 # Relative to the Arma 3 directory
+    /// -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
+    /// ```
+    executable: Option<String>,
+    #[arg(raw = true, verbatim_doc_comment)]
+    /// Passthrough additional arguments to Arma 3
+    ///
+    /// Any options after `--` will be passed to the Arma 3 executable.
+    /// This is useful for passing additional [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters).
+    ///
+    /// ```bash
+    /// hemtt launch -- -world=empty -window
+    /// ```
+    passthrough: Option<Vec<String>>,
+    #[arg(long, short)]
+    /// Launches multiple instances of the game
+    ///
+    /// If unspecified, it will default to 1.
+    instances: Option<u8>,
+    #[arg(long = "quick", short = 'Q')]
+    /// Skips the build step, launching the last built version
+    ///
+    /// Will throw an error if no build has been made, or no symlink exists.
+    no_build: bool,
+    #[arg(long = "no-filepatching", short = 'F')]
+    /// Disables file patching
+    no_filepatching: bool,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -79,7 +243,7 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let mut report = Report::new();
     let Some(mainprefix) = config.mainprefix() else {
@@ -87,21 +251,19 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         return Ok(report);
     };
 
-    let launch_config: Vec<&String> = matches
-        .get_many::<String>("config")
-        .unwrap_or_default()
-        .collect();
-    let launch = if launch_config.is_empty() {
+    let configs = cmd.launch.config.clone().unwrap_or_default();
+
+    let launch = if configs.is_empty() {
         config
             .hemtt()
             .launch()
             .get("default")
             .cloned()
             .unwrap_or_default()
-    } else if let Some(launch) = launch_config
+    } else if let Some(launch) = configs
         .into_iter()
         .map(|c| {
-            config.hemtt().launch().get(c).cloned().map_or_else(
+            config.hemtt().launch().get(&c).cloned().map_or_else(
                 || {
                     report.push(LaunchConfigNotFound::code(
                         c.to_string(),
@@ -124,15 +286,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     trace!("launch config: {:?}", launch);
 
-    let instance_count = matches.get_one::<String>("instances").map_or_else(
-        || launch.instances() as usize,
-        |instances| {
-            instances.parse::<usize>().unwrap_or_else(|_| {
-                error!("Invalid instance count: {}", instances);
-                std::process::exit(1);
-            })
-        },
-    );
+    let instance_count = cmd.launch.instances.unwrap_or_else(|| launch.instances());
 
     let Some(arma3dir) = steam::find_app(107_410) else {
         report.push(ArmaNotFound::code());
@@ -238,13 +392,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         .map(std::string::ToString::to_string)
         .collect();
     args.append(&mut launch.parameters().to_vec());
-    args.append(
-        &mut matches
-            .get_raw("passthrough")
-            .unwrap_or_default()
-            .map(|s| s.to_string_lossy().to_string())
-            .collect::<Vec<_>>(),
-    );
+    args.append(&mut cmd.launch.passthrough.clone().unwrap_or_default());
     args.push(
         mods.iter()
             .map(|s| format!("-mod=\"{s}\""))
@@ -284,7 +432,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         }
     }
 
-    if matches.get_flag("no-build") {
+    if cmd.launch.no_build {
         warn!("Using Quick Launch! HEMTT will not rebuild the project");
         if !std::env::current_dir()?.join(".hemttout/dev").exists() {
             report.push(CanNotQuickLaunch::code(
@@ -303,7 +451,8 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         }
     } else {
         let mut executor = super::dev::context(
-            matches,
+            &cmd.dev,
+            &cmd.just,
             launch.optionals(),
             launch.binarize(),
             launch.rapify(),
@@ -342,7 +491,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
         let mut args = args.clone();
         if with_server {
             args.push("-connect=127.0.0.1".to_string());
-        } else if launch.file_patching() && !matches.get_flag("no-filepatching") {
+        } else if launch.file_patching() && !cmd.launch.no_filepatching {
             args.push("-filePatching".to_string());
         }
         instances.push(args);
@@ -350,7 +499,7 @@ pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
 
     if cfg!(target_os = "windows") {
         let mut path = arma3dir.clone();
-        if let Some(exe) = matches.get_one::<String>("executable") {
+        if let Some(exe) = &cmd.launch.executable {
             let exe = PathBuf::from(exe);
             if exe.is_absolute() {
                 path = exe;

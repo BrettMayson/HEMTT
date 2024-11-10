@@ -1,21 +1,25 @@
 # Commands
 
+## Setup
+
+- [hemtt new](/commands/new.md) - Create a new project
+
 ## Development
 
-- [hemtt new](./new.md) - Create a new project
-- [hemtt dev](./dev.md) - Build the project for local development
-- [hemtt launch](./launch.md) - Launch Arma 3 with your mod and dependencies
-- [hemtt build](./build.md) - Build the project for local testing
+- [hemtt check](/commands/check.md) - Check the project for errors
+- [hemtt dev](/commands/dev.md) - Build the project for local development
+- [hemtt launch](/commands/launch.md) - Launch Arma 3 with your mod and dependencies
+- [hemtt build](/commands/build.md) - Build the project for local testing
 
 ## Release
 
-- [hemtt release](./release.md) - Build the project for release
+- [hemtt release](/commands/release.md) - Build the project for release
 
 ## Options
 
 ### --just
 
-The [`build`](./build.md) and [`dev`](./dev.md) commands can be used to build a single addon. It can be used multiple times to build multiple addons.
+The [`build`](/commands/build.md) and [`dev`](/commands/dev.md) commands can be used to build a single addon. It can be used multiple times to build multiple addons.
 
 ```bash
 hemtt build --just myAddon

@@ -1,7 +1,5 @@
 use std::{fs::File, path::PathBuf};
 
-use clap::{ArgMatches, Command};
-
 use crate::Error;
 
 mod convert;
@@ -9,17 +7,18 @@ mod inspect;
 
 pub use inspect::inspect;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("paa")
-        .about("Commands for PAA files")
-        .arg_required_else_help(true)
-        .subcommand(convert::cli())
-        .subcommand(
-            Command::new("inspect")
-                .about("Inspect a PAA")
-                .arg(clap::Arg::new("paa").help("PAA to inspect").required(true)),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Commands for PAA files
+pub struct Command {
+    #[command(subcommand)]
+    commands: Subcommands,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommands {
+    Convert(convert::PaaConvertArgs),
+    Inspect(inspect::PaaInspectArgs),
 }
 
 /// Execute the paa command
@@ -29,14 +28,11 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the args are not present from clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    match matches.subcommand() {
-        Some(("convert", matches)) => convert::execute(matches),
-
-        Some(("inspect", matches)) => inspect::inspect(File::open(PathBuf::from(
-            matches.get_one::<String>("paa").expect("required"),
-        ))?),
-
-        _ => unreachable!(),
+pub fn execute(cmd: &Command) -> Result<(), Error> {
+    match &cmd.commands {
+        Subcommands::Convert(args) => convert::execute(args),
+        Subcommands::Inspect(args) => {
+            inspect::inspect(File::open(PathBuf::from(&args.paa))?, &args.format)
+        }
     }
 }

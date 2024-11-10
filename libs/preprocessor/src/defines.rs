@@ -23,7 +23,6 @@ type InnerDefines = HashMap<Arc<str>, (Arc<Token>, Definition, DefineSource)>;
 pub struct Defines {
     global: InnerDefines,
     stack: Vec<(Arc<str>, InnerDefines)>,
-
     counter: u16,
 }
 
@@ -40,14 +39,20 @@ const BUILTIN_GEN: [&str; 6] = [
     "__LINE__",
 ];
 
+/// Built-in macros that HEMTT supports, special cases
+const BUILTIN_SPECIAL: [&str; 1] = ["__EVAL"];
+
 /// Built-in macros that HEMTT intentionally does not support
-const BUILTIN_PROTEST: [&str; 16] = [
+const BUILTIN_PROTEST: [&str; 18] = [
     "__DATE_ARR__",
     "__DATE_STR__",
     "__DATE_STR_ISO8601__",
     "__TIME__",
     "__TIME_UTC__",
     "__TIMESTAMP_UTC__",
+    "__DAY__",
+    "__MONTH__",
+    "__YEAR__",
     "__RAND_INT*__",
     "__RAND_UINT*__",
     "__GAME_VER__",
@@ -57,14 +62,18 @@ const BUILTIN_PROTEST: [&str; 16] = [
     "__A3_DIAG__",
     "__A3_DEBUG__",
     "__EXEC",
-    "__EVAL",
 ];
 
 impl Defines {
     pub fn is_builtin(key: &str) -> bool {
         BUILTIN_GEN.contains(&key)
+            || BUILTIN_SPECIAL.contains(&key)
             || BUILTIN_PROTEST.contains(&key)
             || BUILTIN_CONST.iter().any(|(k, _)| *k == key)
+    }
+
+    pub fn is_unsupported_builtin(key: &str) -> bool {
+        BUILTIN_PROTEST.contains(&key)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
