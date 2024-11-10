@@ -3,28 +3,21 @@ use std::{
     sync::{atomic::AtomicUsize, Arc},
 };
 
-use clap::{ArgMatches, Command};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("case")
-        .about("Fix the case of commands in your SQF files")
-        .arg(
-            clap::Arg::new("path")
-                .help("Path to the SQF file or a folder to recursively fix")
-                .required(true),
-        )
+#[derive(clap::Args)]
+pub struct SqfCaseArgs {
+    path: String,
 }
 
 /// Execute the convert command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let path = PathBuf::from(matches.get_one::<String>("path").expect("required"));
+pub fn execute(args: &SqfCaseArgs) -> Result<(), Error> {
+    let path = PathBuf::from(&args.path);
     if path.is_dir() {
         let count = Arc::new(AtomicUsize::new(0));
         let entries = walkdir::WalkDir::new(&path)

@@ -1,16 +1,22 @@
-use clap::{ArgMatches, Command};
 use hemtt_sqf::parser::database::Database;
 
 use crate::{error::Error, report::Report};
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("wiki")
-        .about("Manage the Arma 3 wiki")
-        .subcommand(
-            Command::new("force-pull")
-                .about("Force pull the wiki, if updates you need have been pushed very recently"),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Manage the Arma 3 wiki
+pub struct Command {
+    #[command(subcommand)]
+    commands: Subcommands,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommands {
+    /// Force pull the wiki, regardless of the last pull time
+    ForcePull,
 }
 
 /// Execute the wiki command
@@ -20,7 +26,7 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
-pub fn execute(_matches: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(_cmd: &Command) -> Result<Report, Error> {
     // TODO right now just assumes force-pull since that's the only subcommand
     let _ = Database::empty(true);
     Ok(Report::new())

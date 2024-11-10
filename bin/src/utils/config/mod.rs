@@ -1,25 +1,23 @@
 use std::path::PathBuf;
 
-use clap::{ArgMatches, Command};
-
 use crate::Error;
 
 mod inspect;
 
 pub use inspect::inspect;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("paa")
-        .about("Commands for PAA files")
-        .arg_required_else_help(true)
-        .subcommand(
-            Command::new("inspect").about("Inspect a config file").arg(
-                clap::Arg::new("config")
-                    .help("Config to inspect")
-                    .required(true),
-            ),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Commands for config files
+pub struct Command {
+    #[command(subcommand)]
+    commands: Subcommands,
+}
+
+#[derive(clap::Subcommand)]
+enum Subcommands {
+    /// Inspect a config file
+    Inspect(inspect::InspectArgs),
 }
 
 /// Execute the config command
@@ -29,12 +27,8 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the args are not present from clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    match matches.subcommand() {
-        Some(("inspect", matches)) => inspect::inspect(&PathBuf::from(
-            matches.get_one::<String>("config").expect("required"),
-        )),
-
-        _ => unreachable!(),
+pub fn execute(cmd: &Command) -> Result<(), Error> {
+    match &cmd.commands {
+        Subcommands::Inspect(args) => inspect::inspect(&PathBuf::from(&args.config)),
     }
 }

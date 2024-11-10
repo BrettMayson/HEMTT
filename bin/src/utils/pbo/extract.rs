@@ -1,40 +1,32 @@
 use std::{fs::File, path::PathBuf};
 
-use clap::{ArgMatches, Command};
 use hemtt_pbo::ReadablePbo;
 
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("extract")
-        .about("Extract a file from a PBO")
-        .arg(
-            clap::Arg::new("pbo")
-                .help("PBO file to extract from")
-                .required(true),
-        )
-        .arg(
-            clap::Arg::new("file")
-                .help("File to extract")
-                .required(true),
-        )
-        .arg(clap::Arg::new("output").help("Where to save the extracted file"))
+#[derive(clap::Args)]
+/// Arguments for the extract command
+pub struct PboExtractArgs {
+    /// PBO file to extract from
+    pbo: String,
+    /// File to extract
+    file: String,
+    /// Where to save the extracted file
+    output: Option<String>,
 }
 
 /// Execute the extract command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let path = PathBuf::from(matches.get_one::<String>("pbo").expect("required"));
+pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
+    let path = PathBuf::from(&args.pbo);
     let mut pbo = ReadablePbo::from(File::open(path)?)?;
-    let file = matches.get_one::<String>("file").expect("required");
-    let Some(mut file) = pbo.file(file)? else {
-        error!("File `{file}` not found in PBO");
+    let Some(mut file) = pbo.file(&args.file)? else {
+        error!("File `{}` not found in PBO", args.file);
         return Ok(());
     };
-    let output = matches.get_one::<String>("output").map(PathBuf::from);
+    let output = args.output.as_ref().map(PathBuf::from);
     if let Some(output) = output {
         if output.exists() {
             error!("Output file already exists");

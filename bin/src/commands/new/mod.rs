@@ -4,7 +4,6 @@ use std::{
     path::Path,
 };
 
-use clap::{ArgMatches, Command};
 use dialoguer::Input;
 
 use crate::{
@@ -18,13 +17,12 @@ use crate::{
 
 mod error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("new").about("Create a new project").arg(
-        clap::Arg::new("name")
-            .help("Name of the new mod")
-            .required(true),
-    )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Create a new project
+pub struct Command {
+    #[clap(name = "name")]
+    name: String,
 }
 
 /// Execute the new command
@@ -34,22 +32,19 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
-pub fn execute(matches: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
     let mut report = Report::new();
 
-    let test_mode = !cfg!(not(debug_assertions)) && matches.get_flag("in-test");
+    let test_mode = !cfg!(not(debug_assertions)) && in_test;
 
     if !test_mode && !std::io::stdin().is_terminal() {
         report.push(TerminalNotInput::code());
         return Ok(report);
     }
 
-    let name = matches
-        .get_one::<String>("name")
-        .expect("name to be set as required");
-    let path = Path::new(&name);
+    let path = Path::new(&cmd.name);
     if path.exists() {
-        report.push(FolderExists::code(name.to_string()));
+        report.push(FolderExists::code(cmd.name.to_string()));
         return Ok(report);
     }
 

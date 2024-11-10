@@ -1,13 +1,31 @@
 use std::fs::File;
 
 use hemtt_pbo::ReadablePbo;
-use term_table::{
-    row::Row,
-    table_cell::{Alignment, TableCell},
-    Table, TableStyle,
+use serde::Serialize;
+use tabled::{
+    settings::{object::Columns, Alignment, Style},
+    Table, Tabled,
 };
 
-use crate::Error;
+use crate::{Error, TableFormat};
+
+#[derive(clap::Args)]
+pub struct PboInspectArgs {
+    /// PBO to inspect
+    pub(crate) pbo: String,
+    #[clap(long, default_value = "ascii")]
+    /// Output format
+    pub(crate) format: TableFormat,
+}
+
+#[derive(Tabled, Serialize)]
+pub struct FileInfo {
+    filename: String,
+    mime: String,
+    size: u32,
+    original: u32,
+    timestamp: u32,
+}
 
 /// Prints information about a [`ReadablePbo`] to stdout
 ///
@@ -16,7 +34,7 @@ use crate::Error;
 ///
 /// # Panics
 /// If the file is not a valid [`ReadablePbo`]
-pub fn inspect(file: File) -> Result<(), Error> {
+pub fn inspect(file: File, format: &TableFormat) -> Result<(), Error> {
     let mut pbo = ReadablePbo::from(file)?;
     println!("Properties");
     for (key, value) in pbo.properties() {
@@ -36,45 +54,23 @@ pub fn inspect(file: File) -> Result<(), Error> {
         println!("  - Sorted: false !!!");
     }
     println!("  - Count: {}", files.len());
-    let mut table = Table::new();
-    table.style = TableStyle::thin();
-    table.add_row(Row::new(vec![
-        TableCell::builder("Filename")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Method")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Size")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Original")
-            .alignment(Alignment::Center)
-            .build(),
-        TableCell::builder("Timestamp")
-            .alignment(Alignment::Center)
-            .build(),
-    ]));
-    for file in files {
-        let mut row = Row::new(vec![
-            TableCell::new(file.filename()),
-            TableCell::builder(file.mime().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.size().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.original().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-            TableCell::builder(file.timestamp().to_string())
-                .alignment(Alignment::Right)
-                .build(),
-        ]);
-        row.has_separator = table.rows.len() == 1;
-        table.add_row(row);
+    let data = files
+        .iter()
+        .map(|file| FileInfo {
+            filename: file.filename().to_string(),
+            mime: file.mime().to_string(),
+            size: file.size(),
+            original: file.original(),
+            timestamp: file.timestamp(),
+        })
+        .collect::<Vec<_>>();
+
+    match format {
+        TableFormat::Ascii => println!("{}", modify(Table::new(data).with(Style::modern()))),
+        TableFormat::Json => println!("{}", serde_json::to_string_pretty(&data)?),
+        TableFormat::Markdown => println!("{}", modify(Table::new(data).with(Style::markdown()))),
     }
-    println!("{}", table.render());
+
     if pbo.is_sorted().is_err() {
         warn!("The PBO is not sorted, signatures may be invalid");
     }
@@ -82,4 +78,8 @@ pub fn inspect(file: File) -> Result<(), Error> {
         warn!("The PBO has an invalid hash stored");
     }
     Ok(())
+}
+
+fn modify(table: &mut Table) -> &mut Table {
+    table.modify(Columns::new(1..), Alignment::right())
 }

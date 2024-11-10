@@ -1,5 +1,3 @@
-use clap::Command;
-
 use crate::{
     commands::global_modules,
     context::Context,
@@ -9,16 +7,18 @@ use crate::{
     report::Report,
 };
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("check").about("Check the project for errors")
+#[derive(clap::Parser)]
+/// Check the project for errors
+pub struct Command {
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 /// Execute the dev command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute() -> Result<Report, Error> {
+pub fn execute(_: &Command) -> Result<Report, Error> {
     let ctx = Context::new(
         Some("check"),
         crate::context::PreservePrevious::Remove,

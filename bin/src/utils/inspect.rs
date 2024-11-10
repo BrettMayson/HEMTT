@@ -4,21 +4,16 @@ use std::{
     path::PathBuf,
 };
 
-use clap::{ArgMatches, Command};
 use hemtt_signing::{BIPublicKey, BISign};
 
 use crate::Error;
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("inspect")
-        .about("Inspect an Arma file")
-        .long_about("Provides information about supported files. Supported: pbo, bikey, bisign")
-        .arg(
-            clap::Arg::new("file")
-                .help("File to inspect")
-                .required(true),
-        )
+#[derive(clap::Parser)]
+#[command(arg_required_else_help = true)]
+/// Inspect an Arma file
+pub struct Command {
+    /// File to inspect
+    pub(crate) file: String,
 }
 
 /// Execute the inspect command
@@ -28,8 +23,8 @@ pub fn cli() -> Command {
 ///
 /// # Panics
 /// If the args are not present from clap
-pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
-    let path = PathBuf::from(matches.get_one::<String>("file").expect("required"));
+pub fn execute(cmd: &Command) -> Result<(), Error> {
+    let path = PathBuf::from(&cmd.file);
     match path
         .extension()
         .unwrap_or_default()
@@ -37,10 +32,10 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
         .unwrap_or_default()
     {
         "paa" => {
-            super::paa::inspect(File::open(&path)?)?;
+            super::paa::inspect(File::open(&path)?, &crate::TableFormat::Ascii)?;
         }
         "pbo" => {
-            super::pbo::inspect(File::open(&path)?)?;
+            super::pbo::inspect(File::open(&path)?, &crate::TableFormat::Ascii)?;
         }
         "bikey" => {
             bikey(File::open(&path)?, &path)?;
@@ -59,14 +54,14 @@ pub fn execute(matches: &ArgMatches) -> Result<(), Error> {
             // PBO
             if buf == b"\x00sreV\x00" {
                 warn!("The file appears to be a PBO but does not have the .pbo extension.");
-                super::pbo::inspect(file)?;
+                super::pbo::inspect(file, &crate::TableFormat::Ascii)?;
                 return Ok(());
             }
             // PAA (skip first two bytes)
             if &buf[2..] == b"GGAT" {
                 warn!("The file appears to be a PAA but does not have the .paa extension.");
                 file.seek(std::io::SeekFrom::Start(0))?;
-                super::paa::inspect(file)?;
+                super::paa::inspect(file, &crate::TableFormat::Ascii)?;
                 return Ok(());
             }
             // BiSign

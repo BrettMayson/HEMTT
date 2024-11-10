@@ -65,6 +65,12 @@ impl MipMap {
     }
 
     #[must_use]
+    /// Get the format of the `MipMap` as a string
+    pub fn format_display(&self) -> String {
+        format!("{:?}", self.format)
+    }
+
+    #[must_use]
     /// Get the image from the `MipMap`
     ///
     /// # Panics
