@@ -9,7 +9,7 @@ use hemtt_pbo::ReadablePbo;
 use crate::Error;
 
 #[derive(clap::Args)]
-pub struct Args {
+pub struct PboUnpackArgs {
     /// PBO file to unpack
     pbo: String,
     /// Directory to unpack to
@@ -20,7 +20,7 @@ pub struct Args {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(args: &Args) -> Result<(), Error> {
+pub fn execute(args: &PboUnpackArgs) -> Result<(), Error> {
     let path = PathBuf::from(&args.pbo);
     let mut pbo = ReadablePbo::from(File::open(path)?)?;
     let output = PathBuf::from(&args.output);

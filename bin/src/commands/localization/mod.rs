@@ -9,14 +9,17 @@ mod sort;
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
     /// Generate a coverage report
-    Coverage(coverage::Args),
+    Coverage(coverage::LocalizationCoverageArgs),
     /// Sort the stringtables
-    Sort(sort::Args),
+    Sort(sort::LocalizationSortArgs),
 }
 
 /// Execute the localization command

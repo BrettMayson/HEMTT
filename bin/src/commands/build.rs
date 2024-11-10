@@ -14,14 +14,18 @@ use super::global_modules;
 /// Build your project in release mode for testing, without signing for full release.
 pub struct Command {
     #[clap(flatten)]
-    build: Args,
+    build: BuildArgs,
 
     #[clap(flatten)]
     just: super::JustArgs,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct BuildArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not binarize the project
     no_bin: bool,
@@ -66,7 +70,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 }
 
 #[must_use]
-pub fn executor(ctx: Context, args: &Args) -> Executor {
+pub fn executor(ctx: Context, args: &BuildArgs) -> Executor {
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);
 

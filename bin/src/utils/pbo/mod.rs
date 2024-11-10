@@ -19,11 +19,11 @@ pub struct Command {
 #[derive(clap::Subcommand)]
 enum Subcommands {
     /// Extract a file from a PBO
-    Extract(extract::Args),
+    Extract(extract::PboExtractArgs),
     /// Inspect a PBO file
-    Inspect(inspect::Args),
+    Inspect(inspect::PboInspectArgs),
     /// Unpack a PBO file
-    Unpack(unpack::Args),
+    Unpack(unpack::PboUnpackArgs),
 }
 
 /// Execute the pbo command

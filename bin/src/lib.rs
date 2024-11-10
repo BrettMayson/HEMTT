@@ -24,18 +24,24 @@ pub struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
 
-    #[arg(long, short)]
+    #[clap(flatten)]
+    global: GlobalArgs,
+}
+
+#[derive(clap::Args)]
+pub struct GlobalArgs {
+    #[arg(global = true, long, short)]
     /// Number of threads, defaults to # of CPUs
     threads: Option<usize>,
-    #[arg(short, action = clap::ArgAction::Count)]
+    #[arg(global = true, short, action = clap::ArgAction::Count)]
     /// Verbosity level
     verbosity: u8,
     #[cfg(debug_assertions)]
-    #[arg(long, short)]
+    #[arg(global = true, long)]
     /// Directory to run in
     dir: Option<String>,
     #[cfg(debug_assertions)]
-    #[arg(long, short, hide = true)]
+    #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     /// we are in a test
     in_test: bool,
 }
@@ -67,7 +73,7 @@ enum Commands {
 pub fn execute(cli: &Cli) -> Result<(), Error> {
     // check for -v with no command and show version
     if cli.command.is_none() {
-        if cli.verbosity > 0 {
+        if cli.global.verbosity > 0 {
             println!("{} {}", env!("CARGO_PKG_NAME"), env!("HEMTT_VERSION"));
             return Ok(());
         }
@@ -77,20 +83,20 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::process::exit(1);
     }
 
-    if !matches!(cli.command, Some(Commands::Value(_))) {
+    if !cfg!(debug_assertions) && !matches!(cli.command, Some(Commands::Value(_))) {
         logging::init(
-            cli.verbosity,
+            cli.global.verbosity,
             !matches!(cli.command, Some(Commands::Utils(_))),
         );
     }
 
     #[cfg(debug_assertions)]
-    let in_test = cli.in_test;
+    let in_test = cli.global.in_test;
     #[cfg(not(debug_assertions))]
     let in_test = false;
 
     #[cfg(debug_assertions)]
-    if let Some(dir) = &cli.dir {
+    if let Some(dir) = &cli.global.dir {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
@@ -119,7 +125,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
 
     trace!("args: {:#?}", std::env::args().collect::<Vec<String>>());
 
-    if let Some(threads) = cli.threads {
+    if let Some(threads) = cli.global.threads {
         debug!("Using custom thread count: {threads}");
         if let Err(e) = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)

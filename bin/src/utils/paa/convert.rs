@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use crate::Error;
 
 #[derive(clap::Args)]
-pub struct Args {
+pub struct PaaConvertArgs {
     /// PAA to convert
     paa: String,
     /// Where to save the file
@@ -14,7 +14,7 @@ pub struct Args {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(args: &Args) -> Result<(), Error> {
+pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
     let paa = PathBuf::from(&args.paa);
     let output = PathBuf::from(&args.output);
     if output.exists() {

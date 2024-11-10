@@ -8,14 +8,18 @@ use super::build;
 /// Build your project for full release, with signing and archiving.
 pub struct Command {
     #[clap(flatten)]
-    build: build::Args,
+    build: build::BuildArgs,
 
     #[clap(flatten)]
-    release: Args,
+    release: ReleaseArgs,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct ReleaseArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not sign the PBOs
     no_sign: bool,

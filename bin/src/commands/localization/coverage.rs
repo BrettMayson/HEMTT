@@ -7,7 +7,8 @@ use tabled::{settings::Style, Table, Tabled};
 use crate::{context::Context, report::Report, Error, TableFormat};
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct LocalizationCoverageArgs {
     #[arg(long, default_value = "ascii")]
     /// Output format
     format: TableFormat,
@@ -78,7 +79,7 @@ struct Entry {
     missing: MissingAddons,
 }
 
-pub fn coverage(args: &Args) -> Result<Report, Error> {
+pub fn coverage(args: &LocalizationCoverageArgs) -> Result<Report, Error> {
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     let mut global = Totals::default();

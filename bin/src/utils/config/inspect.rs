@@ -9,7 +9,8 @@ use hemtt_workspace::{
 };
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct InspectArgs {
     /// Config to inspect
     pub(crate) config: String,
 }

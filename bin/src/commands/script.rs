@@ -9,6 +9,9 @@ use crate::{context::Context, error::Error, modules::Hooks, report::Report};
 pub struct Command {
     #[clap(name = "name")]
     name: String,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 /// Execute the script command

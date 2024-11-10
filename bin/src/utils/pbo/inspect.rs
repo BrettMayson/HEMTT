@@ -10,7 +10,7 @@ use tabled::{
 use crate::{Error, TableFormat};
 
 #[derive(clap::Args)]
-pub struct Args {
+pub struct PboInspectArgs {
     /// PBO to inspect
     pub(crate) pbo: String,
     #[clap(long, default_value = "ascii")]

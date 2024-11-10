@@ -30,17 +30,21 @@ use crate::{
 /// file patching enabled, loading your mod and any workshop mods.
 pub struct Command {
     #[clap(flatten)]
-    launch: Args,
+    launch: LaunchArgs,
 
     #[clap(flatten)]
-    dev: super::dev::Args,
+    dev: super::dev::DevArgs,
 
     #[clap(flatten)]
     just: super::JustArgs,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct LaunchArgs {
     #[arg(action = clap::ArgAction::Append)]
     /// Launches with the specified `[hemtt.launch.<config>]` configurations
     config: Option<Vec<String>>,

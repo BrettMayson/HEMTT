@@ -9,7 +9,10 @@ use crate::{
 
 #[derive(clap::Parser)]
 /// Check the project for errors
-pub struct Command {}
+pub struct Command {
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
+}
 
 /// Execute the dev command
 ///

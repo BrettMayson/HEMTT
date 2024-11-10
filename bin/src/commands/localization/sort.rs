@@ -5,13 +5,14 @@ use hemtt_stringtable::Project;
 use crate::{context::Context, report::Report, Error};
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct LocalizationSortArgs {
     #[arg(long)]
     /// Only sort the languages within keys
     only_lang: bool,
 }
 
-pub fn sort(args: &Args) -> Result<Report, Error> {
+pub fn sort(args: &LocalizationSortArgs) -> Result<Report, Error> {
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     for root in ["addons", "optionals"] {

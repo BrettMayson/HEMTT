@@ -8,7 +8,7 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use crate::Error;
 
 #[derive(clap::Args)]
-pub struct Args {
+pub struct SqfCaseArgs {
     path: String,
 }
 
@@ -16,7 +16,7 @@ pub struct Args {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(args: &Args) -> Result<(), Error> {
+pub fn execute(args: &SqfCaseArgs) -> Result<(), Error> {
     let path = PathBuf::from(&args.path);
     if path.is_dir() {
         let count = Arc::new(AtomicUsize::new(0));

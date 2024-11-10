@@ -17,8 +17,8 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    Convert(convert::Args),
-    Inspect(inspect::Args),
+    Convert(convert::PaaConvertArgs),
+    Inspect(inspect::PaaInspectArgs),
 }
 
 /// Execute the paa command

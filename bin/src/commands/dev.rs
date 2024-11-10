@@ -18,14 +18,18 @@ use super::JustArgs;
 /// It is built without binarization of .p3d and .rtm files.
 pub struct Command {
     #[clap(flatten)]
-    dev: Args,
+    dev: DevArgs,
 
     #[clap(flatten)]
     just: JustArgs,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Args)]
-pub struct Args {
+#[allow(clippy::module_name_repetitions)]
+pub struct DevArgs {
     #[arg(long, short, action = clap::ArgAction::SetTrue)]
     /// Use BI's binarize on supported files
     binarize: bool,
@@ -54,7 +58,7 @@ pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<Report, Err
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn context(
-    dev: &Args,
+    dev: &DevArgs,
     just: &JustArgs,
     launch_optionals: &[String],
     force_binarize: bool,

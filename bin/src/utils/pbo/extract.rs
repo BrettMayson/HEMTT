@@ -6,7 +6,7 @@ use crate::Error;
 
 #[derive(clap::Args)]
 /// Arguments for the extract command
-pub struct Args {
+pub struct PboExtractArgs {
     /// PBO file to extract from
     pbo: String,
     /// File to extract
@@ -19,7 +19,7 @@ pub struct Args {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(args: &Args) -> Result<(), Error> {
+pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
     let path = PathBuf::from(&args.pbo);
     let mut pbo = ReadablePbo::from(File::open(path)?)?;
     let Some(mut file) = pbo.file(&args.file)? else {

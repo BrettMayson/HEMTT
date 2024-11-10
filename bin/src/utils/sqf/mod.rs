@@ -13,7 +13,7 @@ pub struct Command {
 #[derive(clap::Subcommand)]
 enum Subcommands {
     /// Convert case
-    Case(case::Args),
+    Case(case::SqfCaseArgs),
 }
 
 /// Execute the paa command

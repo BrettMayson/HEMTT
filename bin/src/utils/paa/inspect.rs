@@ -9,7 +9,7 @@ use tabled::{
 use crate::{Error, TableFormat};
 
 #[derive(clap::Args)]
-pub struct Args {
+pub struct PaaInspectArgs {
     /// PAA to inspect
     pub(crate) paa: String,
     #[clap(long, default_value = "ascii")]

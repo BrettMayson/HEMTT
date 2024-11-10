@@ -6,6 +6,9 @@ use crate::{report::Report, utils, Error};
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
+
+    #[clap(flatten)]
+    global: crate::GlobalArgs,
 }
 
 #[derive(clap::Subcommand)]

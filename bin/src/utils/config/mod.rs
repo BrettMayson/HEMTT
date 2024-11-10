@@ -17,7 +17,7 @@ pub struct Command {
 #[derive(clap::Subcommand)]
 enum Subcommands {
     /// Inspect a config file
-    Inspect(inspect::Args),
+    Inspect(inspect::InspectArgs),
 }
 
 /// Execute the config command
