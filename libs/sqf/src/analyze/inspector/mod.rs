@@ -328,6 +328,7 @@ impl SciptScope {
                         }
                         "do" => {
                             // from While, With, For, and Switch
+                            // todo: handle switch return value
                             Some(self.cmd_b_do(&lhs_set, &rhs_set, database))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),

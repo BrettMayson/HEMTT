@@ -1,3 +1,5 @@
+//! Emulate how common external functions will handle code
+
 use std::collections::HashSet;
 
 use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};

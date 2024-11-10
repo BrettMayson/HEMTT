@@ -1,3 +1,5 @@
+//! Emulates engine commands
+
 use std::{collections::HashSet, ops::Range};
 
 use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
@@ -86,7 +88,7 @@ impl SciptScope {
                                 for type_p in &arg_array[2] {
                                     if let GameValue::Array(Some(type_array)) = type_p {
                                         for type_i in type_array {
-                                            var_types.extend(type_i.iter().cloned());
+                                            var_types.extend(type_i.iter().map(GameValue::make_generic));
                                         }
                                     }
                                 }
@@ -95,7 +97,8 @@ impl SciptScope {
                                 var_types.insert(GameValue::Anything);
                             }
                             // Add the default value to types
-                            // It should be possible to move this above the is_empty check but not always safe
+                            // It would be nice to move this above the is_empty check but not always safe
+                            // ie: assume `params ["_z", ""]` is type string, but this is not guarentted
                             if arg_array.len() > 1 && !arg_array[1].is_empty() {
                                 var_types.insert(arg_array[1][0].clone());
                             }

@@ -1,3 +1,5 @@
+//! Game Values and mapping them from commands
+
 use std::collections::HashSet;
 
 use arma3_wiki::model::{Arg, Call, Param, Value};
@@ -129,7 +131,7 @@ impl GameValue {
                         "inAreaArray",
                     ];
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
-                        warn!("cmd {cmd_name} - param {name} not found");
+                        // warn!("cmd {cmd_name} - param {name} not found");
                     }
                     return true;
                 };
@@ -146,7 +148,7 @@ impl GameValue {
                     return true;
                 }
 
-                let test = set.iter().any(|s| {
+                set.iter().any(|s| {
                     match s {
                         Self::Anything | Self::Array(None) => {
                             // println!("array (any/generic) pass");
@@ -154,9 +156,7 @@ impl GameValue {
                         }
                         Self::Array(Some(gv_array)) => {
                             // println!("array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
-                            // if gv_array.len() > arg_array.len() {
-                            //  not really an error, some syntaxes take more than others
-                            // }
+                            // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
                                     gv_array[index].iter().cloned().collect()
@@ -171,9 +171,7 @@ impl GameValue {
                         }
                         _ => false,
                     }
-                });
-
-                test
+                })
             }
         }
     }
@@ -190,7 +188,6 @@ impl GameValue {
 
     #[must_use]
     /// matches values are compatible (Anything will always match)
-    /// todo: think about how nil and any interact?
     pub fn match_values(left: &Self, right: &Self) -> bool {
         if matches!(left, Self::Anything) {
             return true;
@@ -247,7 +244,19 @@ impl GameValue {
             }
         }
     }
-
+    #[must_use]
+    /// Gets a generic version of a type
+    pub fn make_generic(&self) -> Self {
+        match self {
+            Self::Array(_) => Self::Array(None),
+            Self::Boolean(_) => Self::Boolean(None),
+            Self::Code(_) => Self::Code(None),
+            Self::ForType(_) => Self::ForType(None),
+            Self::Number(_) => Self::Number(None),
+            Self::String(_) => Self::String(None),
+            _ => self.clone()
+    }
+    }
     #[must_use]
     /// Get as a string for debugging
     pub fn as_debug(&self) -> String {

@@ -125,3 +125,8 @@ call _varO;
 
 params [["_someString", "abc", [""]], ["_someCode", { 60 setGusts _someString }]];
 call _someCode; // InvalidArgs for setGusts
+
+// ensure we use a generic version of the array param types or format would have an error
+params [["_varP", "", ["", []]]];
+format _varP;
+
