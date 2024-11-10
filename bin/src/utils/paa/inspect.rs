@@ -59,7 +59,8 @@ pub fn inspect(mut file: File, format: &TableFormat) -> Result<(), Error> {
                 .with(Style::modern())
                 .with(Alignment::right())
         ),
-        TableFormat::Json => println!("{}", serde_json::to_string_pretty(&data)?),
+        TableFormat::Json => println!("{}", serde_json::to_string(&data)?),
+        TableFormat::PrettyJson => println!("{}", serde_json::to_string_pretty(&data)?),
         TableFormat::Markdown => println!(
             "{}",
             Table::new(data)

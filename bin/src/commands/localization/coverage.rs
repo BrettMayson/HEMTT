@@ -6,9 +6,15 @@ use tabled::{settings::Style, Table, Tabled};
 
 use crate::{context::Context, report::Report, Error, TableFormat};
 
-#[derive(clap::Args)]
+#[derive(clap::Parser)]
 #[allow(clippy::module_name_repetitions)]
-pub struct LocalizationCoverageArgs {
+/// Generate a coverage report
+///
+/// HEMTT will display a table of the coverage of
+/// language localization in the project. Showing the
+/// percentage, total strings, and how many
+/// addons have gaps in their localization.
+pub struct Command {
     #[arg(long, default_value = "ascii")]
     /// Output format
     format: TableFormat,
@@ -79,7 +85,14 @@ struct Entry {
     missing: MissingAddons,
 }
 
-pub fn coverage(args: &LocalizationCoverageArgs) -> Result<Report, Error> {
+/// Generate a coverage report
+///
+/// # Errors
+/// [`Error`] depending on the modules
+///
+/// # Panics
+/// If json serialization fails
+pub fn coverage(cmd: &Command) -> Result<Report, Error> {
     let ctx = Context::new(None, crate::context::PreservePrevious::Remove, true)?;
 
     let mut global = Totals::default();
@@ -158,11 +171,17 @@ pub fn coverage(args: &LocalizationCoverageArgs) -> Result<Report, Error> {
     row!(table, global, missing, finnish);
     row!(table, global, missing, dutch);
 
-    match args.format {
+    match cmd.format {
         TableFormat::Ascii => {
             println!("{}", Table::new(&table).with(Style::modern()));
         }
         TableFormat::Json => {
+            println!(
+                "{}",
+                serde_json::to_string(&table).expect("Failed to print json")
+            );
+        }
+        TableFormat::PrettyJson => {
             println!(
                 "{}",
                 serde_json::to_string_pretty(&table).expect("Failed to print json")

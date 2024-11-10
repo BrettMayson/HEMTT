@@ -12,10 +12,27 @@ use crate::{
 use super::JustArgs;
 
 #[derive(clap::Parser)]
+#[command(verbatim_doc_comment)]
 /// Build the project for development
 ///
-/// Build your project for local development and testing.
-/// It is built without binarization of .p3d and .rtm files.
+/// `hemtt dev` is designed to help your development workflows.
+/// It will build your mod into `.hemttout/dev`, with links back
+/// to the original addon folders. This allows you to use
+/// file-patching with optional mods for easy development.
+///
+/// ## Configuration
+///
+/// **.hemtt/project.toml**
+///
+/// ```toml
+/// [hemtt.dev]
+/// exclude = ["addons/unused"]
+/// ```
+///
+/// ### exclude
+///
+/// A list of addons to exclude from the development build.
+/// Includes from excluded addons can be used, but they will not be built or linked.
 pub struct Command {
     #[clap(flatten)]
     dev: DevArgs,
@@ -30,17 +47,28 @@ pub struct Command {
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DevArgs {
-    #[arg(long, short, action = clap::ArgAction::SetTrue)]
+    #[arg(long, short, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Use BI's binarize on supported files
+    ///
+    /// By default, `hemtt dev` will not binarize any files, but rather pack them as-is.
+    /// Binarization is often not needed for development.
     binarize: bool,
-    #[arg(long = "optional", short, action = clap::ArgAction::Append)]
+    #[arg(long, short, action = clap::ArgAction::Append, verbatim_doc_comment)]
     /// Include an optional addon folder
-    optionals: Vec<String>,
-    #[arg(long, short = 'O', action = clap::ArgAction::SetTrue)]
+    ///
+    /// This can be used multiple times to include multiple optional addons.
+    ///
+    /// ```bash
+    /// hemtt dev -o caramel -o chocolate
+    /// ```
+    optional: Vec<String>,
+    #[arg(long, short = 'O', action = clap::ArgAction::SetTrue, conflicts_with = "optional", verbatim_doc_comment)]
     /// Include all optional addon folders
     all_optionals: bool,
-    #[arg(long, action = clap::ArgAction::SetTrue)]
+    #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Do not rapify (cpp, rvmat)
+    ///
+    /// They will be copied directly into the PBO, not .bin version is created.
     no_rap: bool,
 }
 
@@ -66,7 +94,7 @@ pub fn context(
 ) -> Result<Executor, Error> {
     let all_optionals = dev.all_optionals;
     let optionals = dev
-        .optionals
+        .optional
         .iter()
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();

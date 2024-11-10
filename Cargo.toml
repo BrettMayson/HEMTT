@@ -2,7 +2,7 @@
 members = [
     "bin",
 
-    "book-lints",
+    "book-gen",
 
     "hls",
 

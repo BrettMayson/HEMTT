@@ -214,11 +214,13 @@ pub fn is_ci() -> bool {
 #[derive(clap::ValueEnum, Clone, Default, Debug, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum TableFormat {
-    /// ascii table
+    /// an ascii table for the terminal
     #[default]
     Ascii,
-    /// json
+    /// compact json, ideal for machines
     Json,
-    /// markdown table
+    /// pretty json, ideal for humans
+    PrettyJson,
+    /// a markdown table, ideal for documentation or GitHub
     Markdown,
 }

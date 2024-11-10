@@ -1,7 +1,7 @@
 use crate::{report::Report, Error};
 
-mod coverage;
-mod sort;
+pub mod coverage;
+pub mod sort;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
@@ -16,10 +16,8 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    /// Generate a coverage report
-    Coverage(coverage::LocalizationCoverageArgs),
-    /// Sort the stringtables
-    Sort(sort::LocalizationSortArgs),
+    Coverage(coverage::Command),
+    Sort(sort::Command),
 }
 
 /// Execute the localization command

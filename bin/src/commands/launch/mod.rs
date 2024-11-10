@@ -24,10 +24,156 @@ use crate::{
 };
 
 #[derive(clap::Parser)]
+#[command(verbatim_doc_comment)]
 /// Test your project
 ///
-/// Builds your project in dev mode and launches Arma 3 with
-/// file patching enabled, loading your mod and any workshop mods.
+/// `hemtt launch` is used to build and launch a dev version of your mod.
+/// It will run the [`hemtt dev`](dev.md) command internally after a
+/// few checks, options are passed to the `dev` command.
+///
+/// You can chain multiple configurations together, and they will be
+/// overlayed from left to right. Any arrays will be concatenated,
+/// and any duplicate keys will be overridden. With the below configuration,
+/// `hemtt launch default vn ace` would launch with all three configurations.
+/// Note that `default` must be specified when specifying additional
+/// configurations, `default` is only implied when no configurations are specified.
+///
+/// ## Configuration
+///
+/// `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
+///
+/// Launch configurations can be stored in either `.hemtt/project.toml` under `hemtt.launch`,
+/// or in a separate file under `.hemtt/launch.toml`. The latter is useful for keeping
+/// your main configuration file clean. When using `launch.toml`,
+/// the `hemtt.launch` key is not required.
+///
+/// **.hemtt/project.toml**
+///
+/// ```toml
+/// mainprefix = "z"
+///
+/// # Launched with `hemtt launch`
+/// [hemtt.launch.default]
+/// workshop = [
+///     "450814997", # CBA_A3's Workshop ID
+/// ]
+/// presets = [
+///     "main", # .html presets from .hemtt/presets/
+/// ]
+/// dlc = [
+///     "Western Sahara",
+/// ]
+/// optionals = [
+///     "caramel",
+/// ]
+/// mission = "test.VR" # Mission to launch directly into the editor with
+/// parameters = [
+///     "-skipIntro",           # These parameters are passed to the Arma 3 executable
+///     "-noSplash",            # They do not need to be added to your list
+///     "-showScriptErrors",    # You can add additional parameters here
+///     "-debug",
+///     "-filePatching",
+/// ]
+/// executable = "arma3" # Default: "arma3_x64"
+/// file_patching = false # Default: true
+/// binarize = true # Default: false
+/// rapify = false # Default: true
+///
+/// # Launched with `hemtt launch vn`
+/// [hemtt.launch.vn]
+/// extends = "default"
+/// dlc = [
+///     "S.O.G. Prairie Fire",
+/// ]
+///
+/// # Launched with `hemtt launch ace`
+/// [hemtt.launch.ace]
+/// extends = "default"
+/// workshop = [
+///     "463939057", # ACE3's Workshop ID
+/// ]
+/// ```
+///
+/// **.hemtt/launch.toml**
+///
+/// ```toml
+/// [default]
+/// workshop = [
+///     "450814997", # CBA_A3's Workshop ID
+/// ]
+///
+/// [vn]
+/// extends = "default"
+/// dlc = [
+///     "S.O.G. Prairie Fire",
+/// ]
+/// ```
+///
+/// ### extends
+///
+/// The name of another configuration to extend. This will merge all
+/// arrays with the base configuration, and override any duplicate keys.
+///
+/// ### workshop
+///
+/// A list of workshop IDs to launch with your mod. These are not
+/// subscribed to, and will need to be manually subscribed to in Steam.
+///
+/// ### presets
+///
+/// A list of `.html` presets to launch with your mod.
+/// Exported from the Arma 3 Launcher, and kept in `.hemtt/presets/`.
+///
+/// ### dlc
+///
+/// A list of DLCs to launch with your mod. The fullname or short-code can be used.
+///
+/// Currently supported DLCs:
+///
+/// | Full Name           | Short Code |
+/// | ------------------- | ---------- |
+/// | Contact             | contact    |
+/// | Global Mobilization | gm         |
+/// | S.O.G. Prairie Fire | vn         |
+/// | CSLA Iron Curtain   | csla       |
+/// | Western Sahara      | ws         |
+/// | Spearhead 1944      | spe        |
+/// | Reaction Forces     | rf         |
+///
+/// ### optionals
+///
+/// A list of optional addon folders to launch with your mod.
+///
+/// ### mission
+///
+/// The mission to launch directly into the editor with. This can be specified
+/// as either the name of a folder in `.hemtt/missions/`
+/// (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`)
+/// or the relative (to the project root) path to a `mission.sqm`
+/// file or a folder containing it.
+///
+/// ### parameters
+///
+/// A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters) to pass to the Arma 3 executable.
+///
+/// ### executable
+///
+/// The name of the Arma 3 executable to launch.
+/// This is usually `arma3` or `arma3_x64`.
+/// Do not include the `.exe` extension, it will be added automatically on Windows.
+/// Only paths relative to the Arma 3 directory are supported.
+///
+/// ### `file_patching`
+///
+/// Whether to launch Arma 3 with `-filePatching`. Equivalent to `--no-filepatching` or `-F`.
+///
+/// ### binarize
+///
+/// Whether to use BI's binarize on supported files. Equivalent to `--binarize`.
+///
+/// ### rapify
+///
+/// Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
 pub struct Command {
     #[clap(flatten)]
     launch: LaunchArgs,
@@ -46,19 +192,43 @@ pub struct Command {
 #[allow(clippy::module_name_repetitions)]
 pub struct LaunchArgs {
     #[arg(action = clap::ArgAction::Append)]
-    /// Launches with the specified `[hemtt.launch.<config>]` configurations
+    /// Launches with the specified configurations
+    ///
+    /// Configured in either:
+    /// - `.hemtt/project.toml` under `hemtt.launch`
+    /// - `.hemtt/launch.toml`
     config: Option<Vec<String>>,
-    #[arg(long, short)]
+    #[arg(long, short, verbatim_doc_comment)]
     /// Executable to launch, defaults to `arma3_x64.exe`
+    ///
+    /// Overrides the `executable` option in the configuration file.
+    ///
+    /// Can be either a relative path to the Arma 3 directory, or an absolute path.
+    ///
+    /// ```bash
+    /// -e arma3profiling_x64 # Relative to the Arma 3 directory
+    /// -e "C:\Program Files\Steam\steamapps\common\Arma 3\arma3_x64.exe" # Absolute path
+    /// ```
     executable: Option<String>,
-    #[arg(raw = true)]
+    #[arg(raw = true, verbatim_doc_comment)]
     /// Passthrough additional arguments to Arma 3
+    ///
+    /// Any options after `--` will be passed to the Arma 3 executable.
+    /// This is useful for passing additional [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters).
+    ///
+    /// ```bash
+    /// hemtt launch -- -world=empty -window
+    /// ```
     passthrough: Option<Vec<String>>,
     #[arg(long, short)]
     /// Launches multiple instances of the game
+    ///
+    /// If unspecified, it will default to 1.
     instances: Option<u8>,
     #[arg(long = "quick", short = 'Q')]
     /// Skips the build step, launching the last built version
+    ///
+    /// Will throw an error if no build has been made, or no symlink exists.
     no_build: bool,
     #[arg(long = "no-filepatching", short = 'F')]
     /// Disables file patching
