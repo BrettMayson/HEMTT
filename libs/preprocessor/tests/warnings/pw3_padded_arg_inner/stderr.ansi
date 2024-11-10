@@ -1,26 +1,26 @@
 [0m[1m[38;5;11mwarning[PW3][0m[1m: padding a macro argument[0m
-  [0m[36m┌─[0m source.hpp:1:39
+  [0m[36m┌─[0m source.hpp:1:38
   [0m[36m│[0m
-[0m[36m1[0m [0m[36m│[0m #define HELLO(var1, var2) INNER(Hello,[0m[33m [0mvar1##var2)
-  [0m[36m│[0m                                       [0m[33m^[0m [0m[33mpadding a macro argument[0m
+[0m[36m1[0m [0m[36m│[0m #define TEST1(var1, var2) INNER(var1,[0m[33m [0mvar2)
+  [0m[36m│[0m                                      [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
   [0m[36m=[0m [36mnote[0m: occured in: `INNER`
 
 [0m[1m[38;5;11mwarning[PW3][0m[1m: padding a macro argument[0m
-  [0m[36m┌─[0m source.hpp:6:21
+  [0m[36m┌─[0m source.hpp:6:12
   [0m[36m│[0m
-[0m[36m6[0m [0m[36m│[0m value2 = GREET(John,[0m[33m [0mSmith); // Both call and inner
-  [0m[36m│[0m                     [0m[33m^[0m [0m[33mpadding a macro argument[0m
+[0m[36m6[0m [0m[36m│[0m TEST2(John,[0m[33m [0mSmith); // Both call and inner
+  [0m[36m│[0m            [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
-  [0m[36m=[0m [36mnote[0m: occured in: `GREET`
+  [0m[36m=[0m [36mnote[0m: occured in: `TEST2`
 
 [0m[1m[38;5;11mwarning[PW3][0m[1m: padding a macro argument[0m
-  [0m[36m┌─[0m source.hpp:2:43
+  [0m[36m┌─[0m source.hpp:2:38
   [0m[36m│[0m
-[0m[36m2[0m [0m[36m│[0m #define GREET(var1, var2) INNER(Greetings,[0m[33m [0mvar1##var2)
-  [0m[36m│[0m                                           [0m[33m^[0m [0m[33mpadding a macro argument[0m
+[0m[36m2[0m [0m[36m│[0m #define TEST2(var1, var2) INNER(var1,[0m[33m [0mvar2) // Separate macro to trigger unique warning for INNER padding
+  [0m[36m│[0m                                      [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
   [0m[36m=[0m [36mnote[0m: occured in: `INNER`

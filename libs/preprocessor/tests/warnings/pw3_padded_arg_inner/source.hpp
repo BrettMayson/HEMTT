@@ -1,6 +1,6 @@
-#define HELLO(var1, var2) INNER(Hello, var1##var2)
-#define GREET(var1, var2) INNER(Greetings, var1##var2)
+#define TEST1(var1, var2) INNER(var1, var2)
+#define TEST2(var1, var2) INNER(var1, var2) // Separate macro to trigger unique warning for INNER padding
 #define INNER(var1, var2) var1 var2
 
-value1 = HELLO(John,Smith); // Only inner
-value2 = GREET(John, Smith); // Both call and inner
+TEST1(John,Smith); // Only inner
+TEST2(John, Smith); // Both call and inner
