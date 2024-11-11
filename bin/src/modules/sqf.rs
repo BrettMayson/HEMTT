@@ -75,7 +75,16 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed = Processor::run(entry).map_err(|(_, e)| e)?;
+                let processed = match Processor::run(entry).map_err(|(_, e)| e) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        if let hemtt_preprocessor::Error::Code(code) = e {
+                            report.push(code);
+                            return Ok(report);
+                        }
+                        return Err(e.into());
+                    }
+                };
                 for warning in processed.warnings() {
                     report.push(warning.clone());
                 }
