@@ -191,7 +191,7 @@ pub struct Command {
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
 pub struct LaunchArgs {
-    #[arg(action = clap::ArgAction::Append)]
+    #[arg(action = clap::ArgAction::Append, verbatim_doc_comment)]
     /// Launches with the specified configurations
     ///
     /// Configured in either:
