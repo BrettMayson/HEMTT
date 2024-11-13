@@ -91,8 +91,11 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
     if !in_test && !matches!(cli.command, Some(Commands::Value(_))) {
         logging::init(
             cli.global.verbosity,
-            !matches!(cli.command, Some(Commands::Utils(_))),
-        );
+            !matches!(
+                cli.command,
+                Some(Commands::Utils(_) | Commands::Wiki(_) | Commands::New(_) | Commands::Book(_))
+            ),
+        )?;
     }
 
     #[cfg(debug_assertions)]
