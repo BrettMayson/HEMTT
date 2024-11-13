@@ -75,7 +75,7 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: b99dddf46aca7cea008bca56f5a553c5d7776219
+            commit: a587b46cf91278ee7391daac76f3ff78dac1e515
           - repo: acemod/ACE3
             commit: eb57fa49c404e662abcd18c7e52c1f7c4b67a9b0
           - repo: IDI-Systems/acre2
