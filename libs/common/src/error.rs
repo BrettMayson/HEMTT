@@ -2,8 +2,6 @@
 
 #![allow(missing_docs)]
 
-pub use thiserror;
-
 #[derive(thiserror::Error, Debug)]
 /// HEMTT Error
 pub enum Error {

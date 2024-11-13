@@ -20,3 +20,4 @@ byteorder = { workspace = true }
 rand = "0.8.5"
 rsa = "0.9.6"
 sha-1 = { workspace = true }
+thiserror = { workspace = true }

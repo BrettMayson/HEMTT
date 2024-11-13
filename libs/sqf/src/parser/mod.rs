@@ -11,7 +11,6 @@ use crate::{BinaryCommand, Expression, NularCommand, Statement, Statements, Unar
 
 use chumsky::prelude::*;
 use chumsky::Stream;
-use hemtt_common::error::thiserror::Error;
 use hemtt_workspace::reporting::{Code, Processed};
 
 /// Parses a SQF string into a list of statements.
@@ -278,7 +277,7 @@ fn keyword(name: &'static str) -> impl Parser<Token, (), Error = Simple<Token>> 
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ParserError {
     #[error("lexing error {0:?}")]
     LexingError(Vec<Arc<dyn Code>>),

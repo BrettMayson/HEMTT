@@ -1,5 +1,3 @@
-use hemtt_common::error::thiserror;
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
