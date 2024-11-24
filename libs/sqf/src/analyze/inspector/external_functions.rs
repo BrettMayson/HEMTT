@@ -89,7 +89,7 @@ impl SciptScope {
                             }
                         }
                     }
-                    "cba_fnc_addperframehandler" | "cba_fnc_waitandexecute" => {
+                    "cba_fnc_addperframehandler" | "cba_fnc_waitandexecute" | "cba_fnc_execnextframe" => {
                         if !gv_array.is_empty() {
                             self.external_new_scope(&gv_array[0], &vec![], database);
                         }
@@ -103,6 +103,20 @@ impl SciptScope {
                         if gv_array.len() > 2 {
                             self.external_new_scope(
                                 &gv_array[2],
+                                &vec![
+                                    ("_thisType", GameValue::String(None)),
+                                    ("_thisId", GameValue::Number(None)),
+                                    ("_thisFnc", GameValue::Code(None)),
+                                    ("_thisArgs", GameValue::Anything),
+                                ],
+                                database,
+                            );
+                        }
+                    }
+                    "cba_fnc_addeventhandlerargs" => {
+                        if gv_array.len() > 1 {
+                            self.external_new_scope(
+                                &gv_array[1],
                                 &vec![
                                     ("_thisType", GameValue::String(None)),
                                     ("_thisId", GameValue::Number(None)),
@@ -135,7 +149,7 @@ impl SciptScope {
             if self.code_used.contains(expression) {
                 return;
             }
-            let mut ext_scope = Self::create(&self.ignored_vars, true);
+            let mut ext_scope = Self::create(&self.ignored_vars, false);
 
             for (var, value) in vars {
                 ext_scope.var_assign(var, true, HashSet::from([value.clone()]), VarSource::Ignore);

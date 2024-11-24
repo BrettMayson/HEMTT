@@ -130,3 +130,11 @@ call _someCode; // InvalidArgs for setGusts
 params [["_varP", "", ["", []]]];
 format _varP;
 
+
+[{
+    [_test12] call some_func; // undef, not orphan because CBA_fnc_execNextFrame is a known clean scope 
+}, player] call CBA_fnc_execNextFrame;
+[{
+    [_test13] call some_func; // undef, is orphan
+}, player] call unknown_fnc_Usage;
+

@@ -70,6 +70,7 @@ pub struct SciptScope {
     local: Vec<Stack>,
     code_seen: HashSet<Expression>,
     code_used: HashSet<Expression>,
+    /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
     ignored_vars: HashSet<String>,
 }

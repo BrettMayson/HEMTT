@@ -37,7 +37,7 @@ mod tests {
     pub fn test_1() {
         let (_pro, sqf, _database) = get_statements("test_1.sqf");
         let result = sqf.issues();
-        assert_eq!(result.len(), 13);
+        assert_eq!(result.len(), 15);
         // Order not guarenteed
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
@@ -47,8 +47,8 @@ mod tests {
             }
         }));
         assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, _) = i {
-                var == "_test2"
+            if let Issue::Undefined(var, _, orphan) = i {
+                var == "_test2" && !orphan
             } else {
                 false
             }
@@ -89,15 +89,15 @@ mod tests {
             }
         }));
         assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, _) = i {
-                var == "_test8"
+            if let Issue::Undefined(var, _, orphan) = i {
+                var == "_test8" && !orphan
             } else {
                 false
             }
         }));
         assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, _) = i {
-                var == "_test9"
+            if let Issue::Undefined(var, _, orphan) = i {
+                var == "_test9" && !orphan
             } else {
                 false
             }
@@ -126,6 +126,20 @@ mod tests {
         assert!(result.iter().any(|i| {
             if let Issue::InvalidArgs(cmd, _) = i {
                 cmd == "[B:setGusts]"
+            } else {
+                false
+            }
+        }));
+        assert!(result.iter().any(|i| {
+            if let Issue::Undefined(var, _, orphan) = i {
+                var == "_test12" && !orphan
+            } else {
+                false
+            }
+        }));
+        assert!(result.iter().any(|i| {
+            if let Issue::Undefined(var, _, orphan) = i {
+                var == "_test13" && *orphan
             } else {
                 false
             }
