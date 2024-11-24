@@ -9,7 +9,7 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-libc = "0.2.162"
+libc = "0.2.164"
 thiserror = { workspace = true }
 
 [dev-dependencies]

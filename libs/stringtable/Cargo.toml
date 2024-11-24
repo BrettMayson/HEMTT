@@ -16,7 +16,7 @@ automod = { workspace = true }
 casey = "0.4.0"
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.37.0", features = ["serialize"] }
+quick-xml = { version = "0.37.1", features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }

@@ -9,7 +9,6 @@ mod display;
 pub use self::display::{DisplayConstant, DisplayInstructions};
 
 use byteorder::{ReadBytesExt, WriteBytesExt, LE};
-use hemtt_common::error::thiserror;
 
 use std::cmp::Ordering;
 use std::io::{self, Read, Write};

@@ -1,5 +1,3 @@
-use hemtt_common::error::thiserror;
-
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("`.hemtt/project.toml` not found")]

@@ -78,6 +78,9 @@ impl Context {
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
         trace!("using project folder: {:?}", root.display());
+        if !hemtt_folder.exists() {
+            return Err(Error::ConfigNotFound);
+        }
         let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;

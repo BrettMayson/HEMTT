@@ -1,5 +1,3 @@
-use hemtt_common::error::thiserror;
-
 #[derive(thiserror::Error, Debug)]
 /// Error type for the PBO writer/reader
 pub enum Error {

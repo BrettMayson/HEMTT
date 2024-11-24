@@ -14,3 +14,4 @@ hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 byteorder = { workspace = true }
 indexmap = { workspace = true }
+thiserror = { workspace = true }
