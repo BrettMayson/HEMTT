@@ -19,7 +19,7 @@ pub use file_patching::FilePatching;
 pub use files::Files;
 pub use hook::Hooks;
 pub use new::Licenses;
-pub use rapifier::Rapifier;
+pub use rapifier::{AddonConfigs, Rapifier};
 pub use sign::Sign;
 pub use sqf::SQFCompiler;
 pub use stringtables::Stringtables;

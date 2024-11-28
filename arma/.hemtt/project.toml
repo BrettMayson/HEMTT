@@ -1,0 +1,15 @@
+name = "HEMTT"
+author = "BrettMayson"
+prefix = "hemtt"
+mainprefix = "x"
+
+[version]
+git_hash = 0
+major = 0
+minor = 0
+patch = 0
+
+[files]
+include = [
+    "hemtt_comm_x64.dll"
+]

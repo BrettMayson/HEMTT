@@ -35,13 +35,13 @@ use super::JustArgs;
 /// Includes from excluded addons can be used, but they will not be built or linked.
 pub struct Command {
     #[clap(flatten)]
-    dev: DevArgs,
+    pub(crate) dev: DevArgs,
 
     #[clap(flatten)]
-    just: JustArgs,
+    pub(crate) just: JustArgs,
 
     #[clap(flatten)]
-    global: crate::GlobalArgs,
+    pub(crate) global: crate::GlobalArgs,
 }
 
 #[derive(clap::Args)]
@@ -52,7 +52,7 @@ pub struct DevArgs {
     ///
     /// By default, `hemtt dev` will not binarize any files, but rather pack them as-is.
     /// Binarization is often not needed for development.
-    binarize: bool,
+    pub(crate) binarize: bool,
     #[arg(long, short, action = clap::ArgAction::Append, verbatim_doc_comment)]
     /// Include an optional addon folder
     ///
@@ -61,24 +61,24 @@ pub struct DevArgs {
     /// ```bash
     /// hemtt dev -o caramel -o chocolate
     /// ```
-    optional: Vec<String>,
+    pub(crate) optional: Vec<String>,
     #[arg(long, short = 'O', action = clap::ArgAction::SetTrue, conflicts_with = "optional", verbatim_doc_comment)]
     /// Include all optional addon folders
-    all_optionals: bool,
+    pub(crate) all_optionals: bool,
     #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Do not rapify (cpp, rvmat)
     ///
     /// They will be copied directly into the PBO, not .bin version is created.
-    no_rap: bool,
+    pub(crate) no_rap: bool,
 }
 
 /// Execute the dev command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<Report, Error> {
+pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<(Report, Context), Error> {
     let mut executor = context(&cmd.dev, &cmd.just, launch_optionals, false, true)?;
-    executor.run()
+    executor.run().map(|r| (r, executor.into_ctx()))
 }
 
 /// Create a new executor for the dev command

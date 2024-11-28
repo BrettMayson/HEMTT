@@ -6,6 +6,7 @@ extern crate tracing;
 
 pub mod commands;
 pub mod context;
+pub mod controller;
 pub mod error;
 pub mod executor;
 pub mod link;
@@ -28,7 +29,7 @@ pub struct Cli {
     global: GlobalArgs,
 }
 
-#[derive(clap::Args)]
+#[derive(Clone, clap::Args)]
 pub struct GlobalArgs {
     #[arg(global = true, long, short)]
     /// Number of threads, defaults to # of CPUs
@@ -58,6 +59,7 @@ enum Commands {
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
     Script(commands::script::Command),
+    Photoshoot(commands::photoshoot::Command),
     Utils(commands::utils::Command),
     Value(commands::value::Command),
     Wiki(commands::wiki::Command),
@@ -142,12 +144,13 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Book(ref cmd) => commands::book::execute(cmd),
         Commands::New(ref cmd) => commands::new::execute(cmd, in_test),
         Commands::Check(ref cmd) => commands::check::execute(cmd),
-        Commands::Dev(ref cmd) => commands::dev::execute(cmd, &[]),
+        Commands::Dev(ref cmd) => commands::dev::execute(cmd, &[]).map(|(r, _)| r),
         Commands::Launch(ref cmd) => commands::launch::execute(cmd),
         Commands::Build(ref cmd) => commands::build::execute(cmd),
         Commands::Release(ref cmd) => commands::release::execute(cmd),
         Commands::Localization(ref cmd) => commands::localization::execute(cmd),
         Commands::Script(ref cmd) => commands::script::execute(cmd),
+        Commands::Photoshoot(ref cmd) => commands::photoshoot::execute(cmd),
         Commands::Utils(ref cmd) => commands::utils::execute(cmd),
         Commands::Value(ref cmd) => commands::value::execute(cmd),
         Commands::Wiki(ref cmd) => commands::wiki::execute(cmd),

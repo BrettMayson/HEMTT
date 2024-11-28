@@ -37,6 +37,8 @@ pub enum Error {
     GlobError(#[from] glob::GlobError),
     #[error("Glob Pattern Error: {0}")]
     GlobPattern(#[from] glob::PatternError),
+    #[error("Image Error: {0}")]
+    Image(#[from] image::ImageError),
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
     #[error("serde_json Error: {0}")]
