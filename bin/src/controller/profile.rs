@@ -6,7 +6,6 @@ use rust_embed::RustEmbed;
 
 use crate::{context::Context, error::Error};
 
-#[cfg(windows)]
 #[derive(RustEmbed)]
 #[folder = "dist/profile"]
 struct Distributables;
