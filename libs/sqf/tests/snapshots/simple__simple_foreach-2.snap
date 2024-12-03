@@ -27,6 +27,7 @@ expression: ast
                     ],
                     source: "deleteVehicle _x;",
                     span: 7..24,
+                    issues: [],
                 },
             ),
             NularCommand(
@@ -106,6 +107,7 @@ expression: ast
                                         ],
                                         source: "_x setDamage 1;",
                                         span: 97..112,
+                                        issues: [],
                                     },
                                 ),
                                 UnaryCommand(
@@ -125,6 +127,7 @@ expression: ast
                     ],
                     source: "systemChat format [\"%1\", _x];\n    {\n        _x setDamage 1;\n    } forEach crew _x;",
                     span: 53..135,
+                    issues: [],
                 },
             ),
             NularCommand(

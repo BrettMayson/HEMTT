@@ -1694,6 +1694,7 @@ dependencies = [
  "insta",
  "linkme",
  "paste",
+ "regex",
  "thiserror 2.0.3",
  "toml 0.8.19",
  "tracing",

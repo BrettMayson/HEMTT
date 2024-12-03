@@ -10,35 +10,40 @@ use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
 const ROOT: &str = "tests/lints/";
 
 macro_rules! lint {
-    ($dir:ident) => {
+    ($dir:ident, $ignore:expr) => {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                insta::assert_snapshot!(lint(stringify!($dir)));
+                insta::assert_snapshot!(lint(stringify!($dir), $ignore));
             }
         }
     };
 }
 
-lint!(s02_event_handler_case);
-lint!(s03_static_typename);
-lint!(s04_command_case);
-lint!(s05_if_assign);
-lint!(s05_if_assign_emoji);
-lint!(s06_find_in_str);
-lint!(s07_select_parse_number);
-lint!(s08_format_args);
-lint!(s09_banned_command);
-lint!(s11_if_not_else);
-lint!(s17_var_all_caps);
-lint!(s18_in_vehicle_check);
-lint!(s20_bool_static_comparison);
-lint!(s21_invalid_comparisons);
-lint!(s22_this_call);
-lint!(s23_reassign_reserved_variable);
-lint!(s24_marker_spam);
+lint!(s02_event_handler_case, true);
+lint!(s03_static_typename, true);
+lint!(s04_command_case, true);
+lint!(s05_if_assign, true);
+lint!(s05_if_assign_emoji, true);
+lint!(s06_find_in_str, true);
+lint!(s07_select_parse_number, true);
+lint!(s08_format_args, true);
+lint!(s09_banned_command, true);
+lint!(s11_if_not_else, true);
+lint!(s12_invalid_args, false);
+lint!(s13_undefined, false);
+lint!(s14_unused, false);
+lint!(s15_shadowed, false);
+lint!(s16_not_private, false);
+lint!(s17_var_all_caps, true);
+lint!(s18_in_vehicle_check, true);
+lint!(s20_bool_static_comparison, true);
+lint!(s21_invalid_comparisons, true);
+lint!(s22_this_call, true);
+lint!(s23_reassign_reserved_variable, true);
+lint!(s24_marker_spam, true);
 
-fn lint(file: &str) -> String {
+fn lint(file: &str, ignore_inspector: bool) -> String {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -53,7 +58,10 @@ fn lint(file: &str) -> String {
     let config = ProjectConfig::from_file(&config_path_full).unwrap();
 
     match hemtt_sqf::parser::run(&database, &processed) {
-        Ok(sqf) => {
+        Ok(mut sqf) => {
+            if ignore_inspector {
+                sqf.testing_clear_issues();
+            }
             let codes = analyze(
                 &sqf,
                 Some(&config),
