@@ -46,7 +46,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if !dialoguer::Confirm::new()
         .with_prompt("This feature is experimental, are you sure you want to continue?")
         .interact()
-        .unwrap() {
+        .unwrap()
+    {
         return Ok(Report::new());
     }
 

@@ -59,10 +59,11 @@ enum Commands {
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
     Script(commands::script::Command),
-    Photoshoot(commands::photoshoot::Command),
     Utils(commands::utils::Command),
     Value(commands::value::Command),
     Wiki(commands::wiki::Command),
+    #[cfg(windows)]
+    Photoshoot(commands::photoshoot::Command),
 }
 
 /// Run the HEMTT CLI
@@ -150,10 +151,11 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Release(ref cmd) => commands::release::execute(cmd),
         Commands::Localization(ref cmd) => commands::localization::execute(cmd),
         Commands::Script(ref cmd) => commands::script::execute(cmd),
-        Commands::Photoshoot(ref cmd) => commands::photoshoot::execute(cmd),
         Commands::Utils(ref cmd) => commands::utils::execute(cmd),
         Commands::Value(ref cmd) => commands::value::execute(cmd),
         Commands::Wiki(ref cmd) => commands::wiki::execute(cmd),
+        #[cfg(windows)]
+        Commands::Photoshoot(ref cmd) => commands::photoshoot::execute(cmd),
     };
 
     match report {
