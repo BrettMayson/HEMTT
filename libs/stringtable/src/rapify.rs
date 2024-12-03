@@ -60,7 +60,18 @@ fn rapify(project: &Project) -> Option<XmlbLayout> {
         all_translations.push(Vec::new());
     }
 
+
+
     for package in project.packages() {
+        for package_inner in package.containers() { // ugh
+            for key in package_inner.keys() {
+                all_keys.push(key.id().into());
+                // Make sure we can translate everything
+                if !get_translations(key, &mut all_translations) {
+                    return None;
+                }
+            }
+        }
         for key in package.keys() {
             all_keys.push(key.id().into());
             // Make sure we can translate everything
