@@ -1,6 +1,7 @@
 use quick_xml::escape::minimal_escape;
 use serde::{Deserialize, Serialize, Serializer};
 
+#[allow(clippy::ref_option)] // `&Option<String>` is expected by serde
 fn min_escape<S>(s: &Option<String>, ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,

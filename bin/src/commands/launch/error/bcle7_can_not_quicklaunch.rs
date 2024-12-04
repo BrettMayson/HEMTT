@@ -25,6 +25,7 @@ impl Code for CanNotQuickLaunch {
 }
 
 impl CanNotQuickLaunch {
+    #[must_use]
     pub fn code(reason: String) -> Arc<dyn Code> {
         Arc::new(Self { reason })
     }

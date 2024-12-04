@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Property, Value};
 crate::analyze::lint!(LintC07ExpectedArray);
 
 impl Lint<SqfLintData> for LintC07ExpectedArray {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "expected_array"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC07ExpectedArray {
         70
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on properties that are expected to be arrays, but are not defined as arrays"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

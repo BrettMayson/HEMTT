@@ -59,7 +59,7 @@ impl Paa {
             while {
                 let mut tagg_sig = [0; 4];
                 input.read_exact(&mut tagg_sig)?;
-                std::str::from_utf8(&tagg_sig).map_or(false, |ts| ts == "GGAT")
+                std::str::from_utf8(&tagg_sig) == Ok("GGAT")
             } {
                 let name = {
                     let mut bytes = [0; 4];

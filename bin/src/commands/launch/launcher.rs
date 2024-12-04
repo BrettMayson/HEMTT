@@ -36,6 +36,10 @@ pub struct Launcher {
 }
 
 impl Launcher {
+    /// Creates a new launcher
+    ///
+    /// # Errors
+    /// [`Error::Io`] if the current directory could not be determined
     pub fn new(
         launch: &LaunchArgs,
         options: &LaunchOptions,
@@ -73,6 +77,10 @@ impl Launcher {
         Ok((report, Some(launcher)))
     }
 
+    /// Adds the current project to the mod list
+    ///
+    /// # Errors
+    /// [`Error::Io`] if the current directory could not be determined
     pub fn add_self_mod(&mut self) -> Result<(), Error> {
         self.workshop.push({
             let mut path = std::env::current_dir()?;
@@ -86,6 +94,11 @@ impl Launcher {
         Ok(())
     }
 
+    /// Adds a preset to the mod list
+    ///
+    /// # Errors
+    /// [`Error::Io`] if the current directory could not be determined
+    /// [`Error::Io`] if the preset could not be read
     pub fn add_preset(&mut self, preset: &str, report: &mut Report) -> Result<(), Error> {
         let presets = std::env::current_dir()?.join(".hemtt/presets");
         trace!("Loading preset: {}", preset);
@@ -110,6 +123,13 @@ impl Launcher {
     }
 
     #[allow(clippy::too_many_lines)]
+    /// Launches the game
+    ///
+    /// # Errors
+    /// [`Error::Io`] if the current directory could not be determined
+    ///
+    /// # Panics
+    /// If regex fails to compile
     pub fn launch(
         &self,
         mut args: Vec<String>,

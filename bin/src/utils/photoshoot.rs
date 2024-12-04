@@ -6,6 +6,10 @@ use crate::error::Error;
 pub struct Photoshoot {}
 
 impl Photoshoot {
+    /// Processes a weapon screenshot
+    ///
+    /// # Errors
+    /// [`Error::Image`] if the image could not be loaded
     pub fn weapon(name: &str, from: &Path) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
         let path = from.join(format!("{name}.png"));
         let mut new = image::open(path)?.into_rgba8();
@@ -30,6 +34,10 @@ impl Photoshoot {
         Ok(new)
     }
 
+    /// Processes an editor preview screenshot
+    ///
+    /// # Errors
+    /// [`Error::Image`] if the image could not be loaded
     pub fn preview(path: &Path) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
         let new = image::open(path)?.into_rgb8();
         let mut new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Nearest);

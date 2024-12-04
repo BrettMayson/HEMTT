@@ -8,7 +8,7 @@ use crate::{analyze::{extract_constant, SqfLintData}, BinaryCommand, Expression,
 crate::analyze::lint!(LintS05IfAssign);
 
 impl Lint<SqfLintData> for LintS05IfAssign {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "if_assign"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS05IfAssign {
         50
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks if statements that are used as assignments when select or parseNumber would be more appropriate"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**

@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCom
 crate::analyze::lint!(LintS23ReassignReservedVariable);
 
 impl Lint<SqfLintData> for LintS23ReassignReservedVariable {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "reasign_reserved_variable"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS23ReassignReservedVariable {
         230
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Prevents reassigning reserved variables"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

@@ -28,7 +28,7 @@ impl Property {
     ///
     /// # Panics
     /// If this is a [`Class::Root`], which should never occur
-    pub fn name(&self) -> &Ident {
+    pub const fn name(&self) -> &Ident {
         match self {
             Self::Class(c) => c.name().expect("root should not be a property"),
             Self::MissingSemicolon(name, _) | Self::Delete(name) | Self::Entry { name, .. } => name,

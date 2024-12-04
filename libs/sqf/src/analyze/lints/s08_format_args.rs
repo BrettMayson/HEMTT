@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, Expression, UnaryCommand};
 crate::analyze::lint!(LintS08FormatArgs);
 
 impl Lint<SqfLintData> for LintS08FormatArgs {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "format_args"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS08FormatArgs {
         80
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for format commands with incorrect argument counts"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**

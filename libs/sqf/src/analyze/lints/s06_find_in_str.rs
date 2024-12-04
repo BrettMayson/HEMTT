@@ -9,7 +9,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, UnaryCommand};
 crate::analyze::lint!(LintS06FindInStr);
 
 impl Lint<SqfLintData> for LintS06FindInStr {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "find_in_str"
     }
 
@@ -17,11 +17,11 @@ impl Lint<SqfLintData> for LintS06FindInStr {
         60
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for `find` commands that can be replaced with `in`"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

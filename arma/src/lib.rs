@@ -1,14 +1,12 @@
 use std::io::{Read, Write};
 
-use arma_rs::{arma, Extension};
-use conn::Conn;
+use arma_rs::{arma, Context, ContextState, Extension};
 use hemtt_common::arma::control::{
     fromarma::{self, Control, Message},
     toarma,
 };
 use interprocess::local_socket::{prelude::*, GenericNamespaced, Stream};
 
-mod conn;
 mod photoshoot;
 
 #[arma]
@@ -19,8 +17,8 @@ fn init() -> Extension {
         .finish();
     let ctx = ext.context();
     let (send, recv) = std::sync::mpsc::channel::<Message>();
+    ctx.global().set(send);
     std::thread::spawn(move || {
-        Conn::set(send);
         let mut socket =
             Stream::connect("hemtt_arma".to_ns_name::<GenericNamespaced>().unwrap()).unwrap();
         socket.set_nonblocking(true).unwrap();
@@ -73,8 +71,12 @@ fn init() -> Extension {
     ext
 }
 
-fn mission(mission: String) {
-    Conn::get()
+fn mission(ctx: Context, mission: String) {
+    let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+        println!("`mission` called without a sender");
+        return;
+    };
+    sender
         .send(Message::Control(Control::Mission(mission)))
         .unwrap();
 }

@@ -40,6 +40,15 @@ impl Controller {
         self.actions.push(action);
     }
 
+    /// Run the controller
+    ///
+    /// # Errors
+    /// - [`Error::Io`] if profile files cannot be written to disk in the temporary directory
+    /// - [`Error::Io`] if there is an issue with the local socket
+    ///
+    /// # Panics
+    /// - If an message is not able to be read from the local socket
+    /// - If a message is in an unexpected format
     pub fn run(
         self,
         ctx: &Context,
@@ -95,8 +104,8 @@ impl Controller {
                 let len = u32::from_le_bytes(len_buf);
                 trace!("Receiving: {}", len);
                 let mut buf = vec![0u8; len as usize];
-                socket.read_exact(&mut buf).unwrap();
-                let buf = String::from_utf8(buf).unwrap();
+                socket.read_exact(&mut buf).expect("Failed to read message");
+                let buf = String::from_utf8(buf).expect("Failed to parse message");
                 let message: fromarma::Message = serde_json::from_str(&buf)?;
                 trace!("Received: {:?}", message);
                 if let fromarma::Message::Control(control) = message {
@@ -115,7 +124,7 @@ impl Controller {
                     self.actions
                         .iter()
                         .find(|a| a.missions(ctx).iter().any(|m| &m.1 == current))
-                        .unwrap()
+                        .expect("No action for mission")
                         .incoming(ctx, message)
                         .iter()
                         .for_each(|m| send(m, &mut socket));

@@ -8,15 +8,15 @@ use hemtt_common::config::{LintConfig, LintConfigOverride, ProjectConfig};
 use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
 pub trait Lint<D>: Sync + Send {
-    fn ident(&self) -> &str;
+    fn ident(&self) -> &'static str;
     fn sort(&self) -> u32 {
         0
     }
     fn doc_ident(&self) -> String {
         format!("{:02}", (self.sort() / 10))
     }
-    fn description(&self) -> &str;
-    fn documentation(&self) -> &str;
+    fn description(&self) -> &'static str;
+    fn documentation(&self) -> &'static str;
     fn default_config(&self) -> LintConfig;
     fn minimum_severity(&self) -> Severity {
         self.default_config().severity()
@@ -312,15 +312,15 @@ mod tests {
 
     struct LintA;
     impl Lint<()> for LintA {
-        fn ident(&self) -> &str {
+        fn ident(&self) -> &'static str {
             "LintA"
         }
 
-        fn description(&self) -> &str {
+        fn description(&self) -> &'static str {
             "LintA"
         }
 
-        fn documentation(&self) -> &str {
+        fn documentation(&self) -> &'static str {
             "LintA"
         }
 
@@ -355,15 +355,15 @@ mod tests {
 
     struct LintB;
     impl Lint<()> for LintB {
-        fn ident(&self) -> &str {
+        fn ident(&self) -> &'static str {
             "LintB"
         }
 
-        fn description(&self) -> &str {
+        fn description(&self) -> &'static str {
             "LintB"
         }
 
-        fn documentation(&self) -> &str {
+        fn documentation(&self) -> &'static str {
             "LintB"
         }
 

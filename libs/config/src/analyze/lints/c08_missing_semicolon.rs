@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Property};
 crate::analyze::lint!(LintC08MissingSemicolon);
 
 impl Lint<SqfLintData> for LintC08MissingSemicolon {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "missing_semicolon"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC08MissingSemicolon {
         80
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on properties that are missing a semicolon"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

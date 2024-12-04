@@ -29,6 +29,7 @@ impl Code for MissionAbsolutePath {
 }
 
 impl MissionAbsolutePath {
+    #[must_use]
     pub fn code(reason: String) -> Arc<dyn Code> {
         Arc::new(Self { reason })
     }

@@ -6,7 +6,7 @@ fn main() {
     std::panic::set_hook(Box::new(|panic| {
         error!("{panic}");
         eprintln!(
-            r#"
+            "
 Oh no! HEMTT has crashed!
 This is a bug in HEMTT itself, not necessarily your project.
 Even if there is a bug in your project, HEMTT should not crash, but gracefully exit with an error message.
@@ -18,7 +18,7 @@ GitHub (https://github.com/BrettMayson/HEMTT)
 The log from the most recent run can be found in `.hemttout/latest.log`.
 
 It is always best to the include the log and a link to your project when reporting a bug, this will help reproduce the issue.
-"#
+"
         );
         std::process::exit(1);
     }));

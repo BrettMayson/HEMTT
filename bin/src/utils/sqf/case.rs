@@ -104,7 +104,7 @@ fn file(file: &Path) -> Result<bool, Error> {
             }
             ('/', InsideQuote::No, InsideComment::No, _) => {
                 check_buffer(&mut out, &mut buffer, &wiki);
-                if out.chars().last().map_or(false, |c| c == '/') {
+                if out.ends_with('/') {
                     in_comment = InsideComment::Single;
                 }
                 out.push(char);
@@ -118,13 +118,13 @@ fn file(file: &Path) -> Result<bool, Error> {
             }
             ('*', InsideQuote::No, InsideComment::No, _) => {
                 check_buffer(&mut out, &mut buffer, &wiki);
-                if out.chars().last().map_or(false, |c| c == '/') {
+                if out.ends_with('/') {
                     in_comment = InsideComment::Multi;
                 }
                 out.push(char);
             }
             ('/', InsideQuote::No, InsideComment::Multi, _) => {
-                if out.chars().last().map_or(false, |c| c == '*') {
+                if out.ends_with('*') {
                     in_comment = InsideComment::No;
                 }
                 out.push(char);

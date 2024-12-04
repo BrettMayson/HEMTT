@@ -252,7 +252,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         &config,
         cmd.launch.config.as_deref().unwrap_or_default(),
         &mut report,
-    )?;
+    );
     let Some(launch) = launch else {
         return Ok(report);
     };
@@ -318,11 +318,12 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     Ok(report)
 }
 
+/// Read a launch configuration
 pub fn read_config(
     config: &ProjectConfig,
     configs: &[String],
     report: &mut Report,
-) -> Result<Option<LaunchOptions>, Error> {
+) -> Option<LaunchOptions> {
     let launch = if configs.is_empty() {
         config
             .hemtt()
@@ -351,7 +352,7 @@ pub fn read_config(
             hemtt_common::config::LaunchOptions::overlay,
         )
     } else {
-        return Ok(None);
+        return None;
     };
-    Ok(Some(launch))
+    Some(launch)
 }

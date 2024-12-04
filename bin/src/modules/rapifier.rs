@@ -142,7 +142,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     }
     let out = if std::path::Path::new(&path.filename())
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("cpp"))
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("cpp"))
     {
         if path.filename() == "config.cpp" {
             let (version, cfgpatch) = configreport.required_version();

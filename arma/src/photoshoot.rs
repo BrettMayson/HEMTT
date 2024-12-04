@@ -1,7 +1,5 @@
-use arma_rs::Group;
+use arma_rs::{Context, ContextState, Group};
 use hemtt_common::arma::control::fromarma::{Message, Photoshoot};
-
-use crate::conn::Conn;
 
 pub fn group() -> Group {
     Group::new()
@@ -10,20 +8,30 @@ pub fn group() -> Group {
         .command("previews", previews)
 }
 
-fn ready() {
-    Conn::get()
-        .send(Message::Photoshoot(Photoshoot::Ready))
-        .unwrap();
+fn ready(ctx: Context) {
+    let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+        println!("`photoshoot:ready` called without a sender");
+        return;
+    };
+    sender.send(Message::Photoshoot(Photoshoot::Ready)).unwrap();
 }
 
-fn weapon(weapon: String) {
-    Conn::get()
+fn weapon(ctx: Context, weapon: String) {
+    let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+        println!("`photoshoot:weapon` called without a sender");
+        return;
+    };
+    sender
         .send(Message::Photoshoot(Photoshoot::Weapon(weapon)))
         .unwrap();
 }
 
-fn previews() {
-    Conn::get()
+fn previews(ctx: Context) {
+    let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+        println!("`photoshoot:previews` called without a sender");
+        return;
+    };
+    sender
         .send(Message::Photoshoot(Photoshoot::Previews))
         .unwrap();
 }

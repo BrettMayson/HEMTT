@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, Project};
 crate::analyze::lint!(LintL01Sorted);
 
 impl Lint<SqfLintData> for LintL01Sorted {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "sorted"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintL01Sorted {
         10
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks if stringtables are sorted"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         "Stringtables should be sorted alphabetically and the keys in the order from the [Arma 3 Wiki](https://community.bistudio.com/wiki/Stringtable.xml#Supported_Languages)."
     }
 
