@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used)] // Expiremental feature
-
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -149,7 +147,7 @@ impl Photoshoot {
     }
 
     fn prepare(&self) -> bool {
-        let mut pending = self.pending.lock().unwrap();
+        let mut pending = self.pending.lock().expect("pending lock");
         pending.extend(
             self.weapons
                 .keys()
@@ -164,7 +162,7 @@ impl Photoshoot {
     }
 
     fn next_message(&self) -> toarma::Message {
-        let mut pending = self.pending.lock().unwrap();
+        let mut pending = self.pending.lock().expect("pending lock");
         pending.pop().map_or_else(
             || toarma::Message::Photoshoot(toarma::Photoshoot::Done),
             toarma::Message::Photoshoot,
@@ -205,12 +203,13 @@ impl Action for Photoshoot {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image = utils::photoshoot::Photoshoot::weapon(&weapon, &self.from).unwrap();
+                let image =
+                    utils::photoshoot::Photoshoot::weapon(&weapon, &self.from).expect("image");
                 let dst_png = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
                     .join(format!("{weapon}_ca.png"));
-                image.save(&dst_png).unwrap();
+                image.save(&dst_png).expect("save");
                 std::process::Command::new(&self.command)
                     .arg(dst_png)
                     .output()
@@ -219,9 +218,9 @@ impl Action for Photoshoot {
                     .build_folder()
                     .expect("photoshoot has a folder")
                     .join(format!("{weapon}_ca.paa"));
-                std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+                std::fs::create_dir_all(target.parent().expect("has parent")).expect("create dir");
                 info!("Created `{}` at `{}`", weapon, target.display());
-                std::fs::rename(dst_paa, target).unwrap();
+                std::fs::rename(dst_paa, target).expect("rename");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::Previews => {
@@ -231,21 +230,30 @@ impl Action for Photoshoot {
                     .join("EditorPreviews")
                     .join(".hemttout")
                     .join("dev");
-                for image in source.read_dir().unwrap() {
-                    let src = image.unwrap().path();
+                for image in source.read_dir().expect("read dir") {
+                    let src = image.expect("image exists").path();
                     let target = PathBuf::from(
                         self.previews
-                            .get(&src.file_stem().unwrap().to_string_lossy().to_string())
+                            .get(
+                                &src.file_stem()
+                                    .expect("has stem")
+                                    .to_string_lossy()
+                                    .to_string(),
+                            )
                             .expect("received unknown preview"),
                     );
-                    let image = utils::photoshoot::Photoshoot::preview(&src).unwrap();
-                    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+                    let image = utils::photoshoot::Photoshoot::preview(&src).expect("image");
+                    std::fs::create_dir_all(target.parent().expect("has parent"))
+                        .expect("create dir");
                     info!(
                         "Created `{}` at `{}`",
-                        src.file_stem().unwrap().to_string_lossy().to_string(),
+                        src.file_stem()
+                            .expect("has stem")
+                            .to_string_lossy()
+                            .to_string(),
                         target.display()
                     );
-                    image.save(target).unwrap();
+                    image.save(target).expect("save");
                 }
                 vec![self.next_message()]
             }
@@ -258,7 +266,7 @@ fn find_weapons(ctx: &Context) -> HashMap<String, String> {
     ctx.state()
         .get::<AddonConfigs>()
         .read()
-        .unwrap()
+        .expect("addon configs")
         .iter()
         .for_each(|(_, config)| {
             weapons.extend(weapons_from_config(ctx, config));
@@ -313,7 +321,7 @@ fn weapons_from_config(ctx: &Context, config: &Config) -> HashMap<String, String
                             let image = ctx
                                 .workspace_path()
                                 .join(picture.replace('\\', "/"))
-                                .unwrap();
+                                .expect("workspace path");
                             if image.exists().unwrap_or_default() {
                                 continue;
                             }
@@ -333,7 +341,7 @@ fn find_previews(ctx: &Context) -> HashMap<String, String> {
     ctx.state()
         .get::<AddonConfigs>()
         .read()
-        .unwrap()
+        .expect("addon configs")
         .iter()
         .for_each(|(_, config)| {
             previews.extend(previews_from_config(ctx, config));
@@ -388,7 +396,7 @@ fn previews_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
                             let image = ctx
                                 .workspace_path()
                                 .join(picture.replace('\\', "/"))
-                                .unwrap();
+                                .expect("workspace path");
                             if image.exists().unwrap_or_default() {
                                 continue;
                             }
