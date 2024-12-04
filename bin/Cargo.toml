@@ -56,12 +56,12 @@ supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3.36", features = ["formatting"] }
+time = { version = "0.3.37", features = ["formatting"] }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.18", features = ["json"] }
+tracing-subscriber = { version = "0.3.19", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.0.2"
+webbrowser = "1.0.3"
 whoami = "1.5.2"
 zip = { workspace = true }
 
