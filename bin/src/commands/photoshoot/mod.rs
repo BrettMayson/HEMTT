@@ -41,12 +41,15 @@ pub struct Command {
 }
 
 #[allow(clippy::too_many_lines)]
+/// Execute the photoshoot command
+///
+/// # Errors
+/// [`Error::Io`] if an IO error occurs in the Arma controller
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
-    // Warn the user this is experimental, ask them to confirm
     if !dialoguer::Confirm::new()
         .with_prompt("This feature is experimental, are you sure you want to continue?")
         .interact()
-        .unwrap()
+        .unwrap_or_default()
     {
         return Ok(Report::new());
     }
@@ -75,9 +78,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
     let launch = if config.hemtt().launch().contains_key("photoshoot") {
-        read_config(&config, &[String::from("photoshoot")], &mut report)?
+        read_config(&config, &[String::from("photoshoot")], &mut report)
     } else {
-        read_config(&config, &[], &mut report)?
+        read_config(&config, &[], &mut report)
     };
     let Some(launch) = launch else {
         return Ok(report);
@@ -126,6 +129,7 @@ pub struct Photoshoot {
 }
 
 impl Photoshoot {
+    #[must_use]
     pub fn new(command: PathBuf, from: PathBuf) -> Self {
         Self {
             command,
