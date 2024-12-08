@@ -185,10 +185,12 @@ impl Launcher {
         }
 
         let mut dlc = self.dlc.clone();
+        dlc.sort();
         dlc.dedup();
         for dlc in dlc {
             args.push(format!("-mod=\"{}\"", dlc.to_mod()));
         }
+        mods.sort();
         mods.dedup();
         for m in mods {
             args.push(format!("-mod=\"{m}\""));

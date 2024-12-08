@@ -13,6 +13,7 @@ mod photoshoot;
 fn init() -> Extension {
     let ext = Extension::build()
         .command("mission", mission)
+        .command("log", log)
         .group("photoshoot", photoshoot::group())
         .finish();
     let ctx = ext.context();
@@ -43,7 +44,7 @@ fn init() -> Extension {
                     toarma::Message::Photoshoot(photoshoot) => match photoshoot {
                         toarma::Photoshoot::Weapon(weapon) => {
                             println!("Weapon: {}", weapon);
-                            ctx.callback_data("hemtt_photoshoot", "weapon", weapon.clone())
+                            ctx.callback_data("hemtt_photoshoot", "weapon_add", weapon.clone())
                                 .unwrap();
                         }
                         toarma::Photoshoot::Preview(class) => {
@@ -78,6 +79,24 @@ fn mission(ctx: Context, mission: String) {
     };
     sender
         .send(Message::Control(Control::Mission(mission)))
+        .unwrap();
+}
+
+fn log(ctx: Context, level: String, message: String) {
+    let level = match level.as_str() {
+        "trace" => fromarma::Level::Trace,
+        "debug" => fromarma::Level::Debug,
+        "info" => fromarma::Level::Info,
+        "warn" => fromarma::Level::Warn,
+        "error" => fromarma::Level::Error,
+        _ => fromarma::Level::Info,
+    };
+    let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+        println!("`log` called without a sender");
+        return;
+    };
+    sender
+        .send(Message::Log(level, message ))
         .unwrap();
 }
 

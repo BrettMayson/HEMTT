@@ -119,6 +119,14 @@ impl Controller {
                             }
                         }
                     }
+                } else if let fromarma::Message::Log(level, text) = message {
+                    match level {
+                        fromarma::Level::Trace => trace!("arma: {}", text),
+                        fromarma::Level::Debug => debug!("arma: {}", text),
+                        fromarma::Level::Info => info!("arma: {}", text),
+                        fromarma::Level::Warn => warn!("arma: {}", text),
+                        fromarma::Level::Error => error!("arma: {}", text),
+                    }
                 } else if let Some(current) = &current {
                     trace!("msg for {current}: {message:?}");
                     self.actions

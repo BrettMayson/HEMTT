@@ -25,11 +25,21 @@ pub mod toarma {
 
 pub mod fromarma {
     use serde::{Deserialize, Serialize};
+    
+    #[derive(Debug, Serialize, Deserialize)]
+    pub enum Level {
+        Trace,
+        Debug,
+        Info,
+        Warn,
+        Error,
+    }
 
     #[derive(Debug, Serialize, Deserialize)]
     pub enum Message {
         Control(Control),
         Photoshoot(Photoshoot),
+        Log(Level, String),
     }
 
     #[derive(Debug, Serialize, Deserialize)]

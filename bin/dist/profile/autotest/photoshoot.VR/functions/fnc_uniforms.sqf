@@ -1,35 +1,25 @@
 params [
-    ["_uniforms", [], [[]]]
+    ["_uniform", "", [""]]
 ];
 
-private _delay = 0.1;
+if (_uniform == "") exitWith {};
 
-sleep 1;
-
+if (isNil "ps_cam") then {
+    ps_cam = "camera" camCreate [0,0,0];
+};
 ps_cam cameraEffect ["INTERNAL", "BACK"];
-ps_cam camSetDir vectorDir (ps_camLocations get "uniform");
-ps_cam camSetPos getPos (ps_camLocations get "uniform");
+ps_cam camSetDir vectorDir camera_uniform;
+ps_cam camSetPos getPos camera_uniform;
+hideObject camera_uniform;
 ps_cam camCommit 0;
 
-sleep _delay;
+sleep 0.1;
 
-// Preload assets
-{
-    model_clothing setUnitLoadout "C_Soldier_VR_F";
-    model_clothing forceAddUniform _x;
-    sleep _delay;
-} forEach _uniforms;
-
-sleep 3;
-
-// Take screenshots
-{
-    model_clothing setUnitLoadout "C_Soldier_VR_F";
-    model_clothing forceAddUniform _x;
-    sleep _delay;
-    screenshot format ["%1.png", _x];
-    sleep _delay;
-    "hemtt_comm" callExtension ["photoshoot:uniform", [_x]];
-} forEach _uniforms;
-
-endMission "END1";
+// Take screenshot
+model_clothing setUnitLoadout "C_Soldier_VR_F";
+model_clothing forceAddUniform _uniform;
+model_clothing setFace "HEMTTPhotoshoot";
+waitUntil { 10 preloadObject model_clothing };
+screenshot format ["%1.png", _uniform];
+sleep 0.3;
+"hemtt_comm" callExtension ["photoshoot:weapon", [_uniform]];

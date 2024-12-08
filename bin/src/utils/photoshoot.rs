@@ -13,8 +13,8 @@ impl Photoshoot {
     pub fn weapon(name: &str, from: &Path) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
         let path = from.join(format!("{name}.png"));
         let mut new = image::open(path)?.into_rgba8();
-        let crop = 612;
-        let new = image::imageops::crop(&mut new, (1280 - crop) / 2, 720 - crop, crop, crop);
+        let crop = 918;
+        let new = image::imageops::crop(&mut new, (1920 - crop) / 2, 1080 - crop, crop, crop);
         let mut new = image::imageops::resize(
             &new.to_image(),
             512,

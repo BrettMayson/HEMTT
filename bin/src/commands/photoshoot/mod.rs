@@ -34,6 +34,14 @@ use super::{
 
 #[derive(clap::Parser)]
 pub struct Command {
+    #[arg(action = clap::ArgAction::Append, verbatim_doc_comment)]
+    /// Launches with the specified configurations
+    ///
+    /// Configured in either:
+    /// - `.hemtt/project.toml` under `hemtt.launch`
+    /// - `.hemtt/launch.toml`
+    config: Option<Vec<String>>,
+
     #[clap(flatten)]
     global: crate::GlobalArgs,
 }
@@ -75,11 +83,11 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
 
     let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
-    let launch = if config.hemtt().launch().contains_key("photoshoot") {
-        read_config(&config, &[String::from("photoshoot")], &mut report)
-    } else {
-        read_config(&config, &[], &mut report)
-    };
+    let mut configs = cmd.config.clone().unwrap_or_default();
+    if config.hemtt().launch().contains_key("photoshoot") {
+        configs.push("photoshoot".to_string());
+    }
+    let launch =read_config(&config, &configs, &mut report);
     let Some(launch) = launch else {
         return Ok(report);
     };
