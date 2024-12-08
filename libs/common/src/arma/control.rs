@@ -25,7 +25,7 @@ pub mod toarma {
 
 pub mod fromarma {
     use serde::{Deserialize, Serialize};
-    
+
     #[derive(Debug, Serialize, Deserialize)]
     pub enum Level {
         Trace,

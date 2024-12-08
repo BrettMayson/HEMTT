@@ -95,9 +95,7 @@ fn log(ctx: Context, level: String, message: String) {
         println!("`log` called without a sender");
         return;
     };
-    sender
-        .send(Message::Log(level, message ))
-        .unwrap();
+    sender.send(Message::Log(level, message)).unwrap();
 }
 
 fn send(message: fromarma::Message, socket: &mut Stream) {

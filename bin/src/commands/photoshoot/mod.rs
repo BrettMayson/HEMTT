@@ -87,7 +87,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if config.hemtt().launch().contains_key("photoshoot") {
         configs.push("photoshoot".to_string());
     }
-    let launch =read_config(&config, &configs, &mut report);
+    let launch = read_config(&config, &configs, &mut report);
     let Some(launch) = launch else {
         return Ok(report);
     };
