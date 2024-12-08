@@ -32,6 +32,7 @@ lint!(s09_banned_command);
 lint!(s11_if_not_else);
 lint!(s17_var_all_caps);
 lint!(s18_in_vehicle_check);
+lint!(s19_extra_not);
 lint!(s20_bool_static_comparison);
 lint!(s21_invalid_comparisons);
 lint!(s22_this_call);
