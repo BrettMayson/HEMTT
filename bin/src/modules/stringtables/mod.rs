@@ -2,6 +2,7 @@ use std::{io::BufReader, sync::Arc};
 
 use hemtt_stringtable::{
     analyze::{lint_all, lint_check, lint_one},
+    rapify::convert_stringtable,
     Project,
 };
 use hemtt_workspace::{
@@ -67,9 +68,12 @@ impl Module for Stringtables {
         report.extend(lint_all(&stringtables, Some(ctx.config())));
 
         for stringtable in stringtables {
-            report.extend(lint_one(&stringtable, Some(ctx.config())));
+            let codes = lint_one(&stringtable, Some(ctx.config()));
+            if codes.is_empty() {
+                convert_stringtable(&stringtable.0, &stringtable.1);
+            }
+            report.extend(codes);
         }
-
         Ok(report)
     }
 }

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub mod analyze;
 mod key;
 mod package;
+pub mod rapify;
 mod totals;
 
 pub use key::Key;
