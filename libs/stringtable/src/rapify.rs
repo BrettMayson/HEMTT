@@ -54,11 +54,7 @@ fn rapify(project: &Project) -> Option<XmlbLayout> {
 
     // Restructure translations: flat for each language
     let mut all_keys: Vec<String> = Vec::new();
-    let mut all_translations: Vec<Vec<String>> = Vec::new();
-
-    for _language in ALL_LANGUAGES {
-        all_translations.push(Vec::new());
-    }
+    let mut all_translations: Vec<Vec<String>> = vec![Vec::new(); ALL_LANGUAGES.len()];
 
 
 
