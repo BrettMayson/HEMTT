@@ -58,6 +58,8 @@ fn write_int(buffer: &mut Vec<u8>, input: i32) {
     buffer.extend(&input.to_le_bytes());
 }
 
+#[must_use]
+/// # Panics
 pub fn rapify(project: &Project) -> Option<XmlbLayout> {
     let mut data: XmlbLayout = XmlbLayout::default();
 
@@ -135,7 +137,7 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
                 i32::try_from(translation.phrases.len()).expect("overflow"),
             );
             for phrase in &translation.phrases {
-                write_string(&mut translation_buffer, &phrase);
+                write_string(&mut translation_buffer, phrase);
             }
             rolling_offset += translation_buffer.len();
             data.translations.push(translation_buffer);
