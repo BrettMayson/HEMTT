@@ -20,6 +20,7 @@ quick-xml = { version = "0.37.1", features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }
+vfs = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

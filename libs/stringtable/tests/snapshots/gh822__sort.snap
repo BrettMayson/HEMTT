@@ -38,6 +38,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "I will be empty",
@@ -73,6 +75,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "I will change the xml structure a little",
@@ -108,6 +112,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "My things get unescaped",
@@ -145,6 +151,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
             ],
             containers: [],

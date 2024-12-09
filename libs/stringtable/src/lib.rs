@@ -6,12 +6,42 @@ use serde::{Deserialize, Serialize};
 pub mod analyze;
 mod key;
 mod package;
+pub mod rapify;
 mod totals;
 
 pub use key::Key;
 pub use package::Package;
 pub use totals::Totals;
 use tracing::error;
+
+/// Languages in className format
+static ALL_LANGUAGES: [&str; 25] = [
+    "English",
+    "Czech",
+    "French",
+    "Spanish",
+    "Italian",
+    "Polish",
+    "Portuguese",
+    "Russian",
+    "German",
+    "Korean",
+    "Japanese",
+    "Chinese",
+    "Chinesesimp",
+    "Turkish",
+    "Swedish",
+    "Slovak",
+    "SerboCroatian",
+    "Norwegian",
+    "Icelandic",
+    "Hungarian",
+    "Greek",
+    "Finnish",
+    "Dutch",
+    "Ukrainian",
+    "Danish",
+];
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Project {

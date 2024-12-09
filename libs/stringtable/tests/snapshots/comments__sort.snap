@@ -40,6 +40,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "HasComment",
@@ -71,6 +73,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
             ],
             containers: [],

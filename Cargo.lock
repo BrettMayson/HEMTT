@@ -1714,6 +1714,7 @@ dependencies = [
  "serde",
  "toml 0.8.19",
  "tracing",
+ "vfs",
 ]
 
 [[package]]
