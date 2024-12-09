@@ -1,8 +1,6 @@
-use crate::{Key, Project};
+use crate::{Key, Project, ALL_LANGUAGES};
 use hemtt_workspace::WorkspacePath;
 use tracing::warn;
-
-static ALL_LANGUAGES: [&str; 14] = ["English", "Czech", "French", "Spanish", "Italian", "Polish", "Portuguese", "Russian", "German", "Korean", "Japanese", "Chinese", "Chinesesimp", "Turkish"];
 
 #[derive(Default)]
 struct XmlbLayout {
@@ -53,13 +51,11 @@ fn rapify(project: &Project) -> Option<XmlbLayout> {
     let mut data: XmlbLayout = XmlbLayout::default();
 
     // Restructure translations: flat for each language
-    let mut all_keys: Vec<String> = Vec::new();
-    let mut all_translations: Vec<Vec<String>> = vec![Vec::new(); ALL_LANGUAGES.len()];
-
-
+    let mut all_keys: Vec<String> = Vec::with_capacity(20);
+    let mut all_translations: Vec<Vec<String>> = vec![Vec::with_capacity(20); ALL_LANGUAGES.len()];
 
     for package in project.packages() {
-        for package_inner in package.containers() { // ugh
+        for package_inner in package.containers() {
             for key in package_inner.keys() {
                 all_keys.push(key.id().into());
                 // Make sure we can translate everything
@@ -103,7 +99,7 @@ fn rapify(project: &Project) -> Option<XmlbLayout> {
     // Languages
     for translations in all_translations {
         debug_assert_eq!(translations.len(), all_keys.len());
-        let mut translation_buffer: Vec<u8> = Vec::new();
+        let mut translation_buffer: Vec<u8> = Vec::with_capacity(10 * translations.len());
         write_int(
             &mut translation_buffer,
             i32::try_from(translations.len()).expect("overflow"),
@@ -137,7 +133,28 @@ fn rapify(project: &Project) -> Option<XmlbLayout> {
 }
 
 fn get_translations(key: &Key, all_translations: &mut [Vec<String>]) -> bool {
-    let tranlations = [key.english(), key.czech(), key.french(), key.spanish(), key.italian(), key.polish(), key.portuguese(), key.russian(), key.german(), key.korean(), key.japanese(), key.chinese(), key.chinesesimp(), key.turkish()];
+    let tranlations = [
+        key.english(),
+        key.czech(),
+        key.french(),
+        key.spanish(),
+        key.italian(),
+        key.polish(),
+        key.portuguese(),
+        key.russian(),
+        key.german(),
+        key.korean(),
+        key.japanese(),
+        key.chinese(),
+        key.chinesesimp(),
+        key.turkish(),
+        key.dutch(),
+        key.finnish(),
+        key.ukrainian(),
+        key.swedish(),
+        key.norwegian(),
+        key.danish(),
+    ];
     debug_assert_eq!(tranlations.len(), ALL_LANGUAGES.len()); // needs to be synced
 
     for (index, result) in tranlations.into_iter().enumerate() {

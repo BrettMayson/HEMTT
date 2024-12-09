@@ -14,6 +14,29 @@ pub use package::Package;
 pub use totals::Totals;
 use tracing::error;
 
+static ALL_LANGUAGES: [&str; 20] = [
+    "English",
+    "Czech",
+    "French",
+    "Spanish",
+    "Italian",
+    "Polish",
+    "Portuguese",
+    "Russian",
+    "German",
+    "Korean",
+    "Japanese",
+    "Chinese",
+    "Chinesesimp",
+    "Turkish",
+    "Dutch",
+    "Finnish",
+    "Ukrainian",
+    "Swedish",
+    "Norwegian",
+    "Danish",
+];
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Project {
     #[serde(rename = "@name")]
