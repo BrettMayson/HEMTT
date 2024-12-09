@@ -14,7 +14,8 @@ pub use package::Package;
 pub use totals::Totals;
 use tracing::error;
 
-static ALL_LANGUAGES: [&str; 20] = [
+/// Languages in ArmA's className format
+static ALL_LANGUAGES: [&str; 25] = [
     "English",
     "Czech",
     "French",
@@ -29,11 +30,16 @@ static ALL_LANGUAGES: [&str; 20] = [
     "Chinese",
     "Chinesesimp",
     "Turkish",
-    "Dutch",
-    "Finnish",
-    "Ukrainian",
     "Swedish",
+    "Slovak",
+    "SerboCroatian",
     "Norwegian",
+    "Icelandic",
+    "Hungarian",
+    "Greek",
+    "Finnish",
+    "Dutch",
+    "Ukrainian",
     "Danish",
 ];
 
