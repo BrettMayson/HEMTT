@@ -191,7 +191,7 @@ impl Processor {
                     }
                     let token = stream.next().expect("peeked above");
                     if in_macro.is_some()
-                    && stream.peek().map_or(false, |t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
+                    && stream.peek().is_some_and(|t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
                         // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
                         && (token.position().path() != callsite.expect(
                             "callsite should exist if in_macro is some"
@@ -300,7 +300,7 @@ impl Processor {
             if token.symbol().is_newline()
                 && buffer
                     .last()
-                    .map_or(false, |t| t.last_symbol().map_or(false, Symbol::is_escape))
+                    .is_some_and(|t| t.last_symbol().is_some_and(Symbol::is_escape))
             {
                 buffer.pop();
                 return;

@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement};
 crate::analyze::lint!(LintS24MarkerSpam);
 
 impl Lint<SqfLintData> for LintS24MarkerSpam {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "marker_update_spam"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS24MarkerSpam {
         240
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for repeated calls to global marker updates"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r#"### Example
 
 **Incorrect**

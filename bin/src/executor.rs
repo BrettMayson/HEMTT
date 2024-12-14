@@ -29,6 +29,11 @@ impl Executor {
         &self.ctx
     }
 
+    #[must_use]
+    pub fn into_ctx(self) -> Context {
+        self.ctx
+    }
+
     pub fn collapse(&mut self, collpase: Collapse) {
         self.collapse = collpase;
     }

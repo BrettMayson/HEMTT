@@ -1,0 +1,16 @@
+[package]
+name = "hemtt-comm"
+authors = ["Brett Mayson <brett@mayson.io>"]
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "hemtt_comm"
+crate-type = ["cdylib"]
+
+[dependencies]
+hemtt-common = { path = "../libs/common" }
+
+arma-rs = "1.10.5"
+interprocess =  { workspace = true }
+serde_json = { workspace = true }

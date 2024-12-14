@@ -26,6 +26,7 @@ impl Code for WorkshopNotFound {
 }
 
 impl WorkshopNotFound {
+    #[must_use]
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self {})
     }

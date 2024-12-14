@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, Expression};
 crate::analyze::lint!(LintS04CommandCase);
 
 impl Lint<SqfLintData> for LintS04CommandCase {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "command_case"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS04CommandCase {
         40
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks command usage for casing that matches the wiki"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Configuration
 
 - **ignore**: An array of commands to ignore

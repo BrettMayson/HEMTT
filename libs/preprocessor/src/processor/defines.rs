@@ -172,7 +172,7 @@ impl Processor {
             if symbol.is_newline() {
                 if body
                     .last()
-                    .map_or(false, |t: &Arc<Token>| t.symbol().is_escape())
+                    .is_some_and(|t: &Arc<Token>| t.symbol().is_escape())
                 {
                     // remove the backslash
                     body.pop();
@@ -237,7 +237,7 @@ impl Processor {
                         })
                     {
                         for token in [value.first(), value.last()] {
-                            if token.map_or(false, |t| t.symbol().is_whitespace()) {
+                            if token.is_some_and(|t| t.symbol().is_whitespace()) {
                                 let warning = PaddedArg::new(
                                     Box::new(
                                         (**token.expect("token exists from map_or check")).clone(),

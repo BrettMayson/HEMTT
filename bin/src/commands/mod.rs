@@ -11,6 +11,9 @@ pub mod utils;
 pub mod value;
 pub mod wiki;
 
+#[cfg(windows)]
+pub mod photoshoot;
+
 /// Adds modules that should apply to:
 /// - hemtt check
 /// - hemtt dev

@@ -29,6 +29,7 @@ impl Code for WorkshopModNotFound {
 }
 
 impl WorkshopModNotFound {
+    #[must_use]
     pub fn code(id: String) -> Arc<dyn Code> {
         Arc::new(Self { id })
     }

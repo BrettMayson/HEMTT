@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, NularCommand, Unary
 crate::analyze::lint!(LintS18InVehicleCheck);
 
 impl Lint<SqfLintData> for LintS18InVehicleCheck {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "in_vehicle_check"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS18InVehicleCheck {
         180
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Recommends using `isNull objectParent X` instead of `vehicle X == X`"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

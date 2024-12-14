@@ -87,7 +87,7 @@ impl LaunchOptions {
             .map_or_else(|| "arma3_x64", |e| e.as_str());
         if std::path::Path::new(executable)
             .extension()
-            .map_or(false, |ext| ext.eq_ignore_ascii_case("exe"))
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))
         {
             (*executable).to_string()
         } else {

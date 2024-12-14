@@ -13,7 +13,7 @@ use crate::{analyze::SqfLintData, Statements};
 crate::analyze::lint!(LintS01CommandRequiredVersion);
 
 impl Lint<SqfLintData> for LintS01CommandRequiredVersion {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "required_version"
     }
 
@@ -21,11 +21,11 @@ impl Lint<SqfLintData> for LintS01CommandRequiredVersion {
         10
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for command usage that requires a newer version than specified in CfgPatches"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

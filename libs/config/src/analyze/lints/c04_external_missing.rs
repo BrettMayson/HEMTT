@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Class, Config, Property};
 crate::analyze::lint!(LintC04ExternalMissing);
 
 impl Lint<SqfLintData> for LintC04ExternalMissing {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "external_missing"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC04ExternalMissing {
         40
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on classes that extend an external class that is not present in the config"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

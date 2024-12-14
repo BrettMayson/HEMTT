@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 crate::analyze::lint!(LintS20BoolStaticComparison);
 
 impl Lint<SqfLintData> for LintS20BoolStaticComparison {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "bool_static_comparison"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS20BoolStaticComparison {
         200
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for a variable being compared to `true` or `false`"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

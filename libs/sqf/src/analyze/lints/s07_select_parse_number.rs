@@ -10,7 +10,7 @@ use crate::{analyze::SqfLintData, parser::database::Database, BinaryCommand, Exp
 crate::analyze::lint!(LintS07SelectParseNumber);
 
 impl Lint<SqfLintData> for LintS07SelectParseNumber {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "select_parse_number"
     }
 
@@ -18,11 +18,11 @@ impl Lint<SqfLintData> for LintS07SelectParseNumber {
         70
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for `select` commands that can be replaced with `parseNumber`"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

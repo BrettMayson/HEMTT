@@ -23,6 +23,7 @@ impl Code for MissingMainPrefix {
 }
 
 impl MissingMainPrefix {
+    #[must_use]
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self {})
     }

@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, UnaryCommand};
 crate::analyze::lint!(LintS11IfNotElse);
 
 impl Lint<SqfLintData> for LintS11IfNotElse {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "if_not_else"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS11IfNotElse {
         110
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for unneeded not"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

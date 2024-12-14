@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Item, Value};
 crate::analyze::lint!(LintC01InvalidValue);
 
 impl Lint<SqfLintData> for LintC01InvalidValue {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "invalid_value"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC01InvalidValue {
         10
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on any values in the config that could not be parsed into a valid config value."
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**

@@ -126,7 +126,7 @@ fn filter_codes(
                 true
             } else {
                 !c.include()
-                    && c.diagnostic().map_or(true, |d| {
+                    && c.diagnostic().is_none_or(|d| {
                         d.labels.is_empty() || !d.labels.iter().all(|l| l.file().is_include())
                     })
             }

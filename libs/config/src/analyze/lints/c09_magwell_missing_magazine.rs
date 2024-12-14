@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Class, Config, Ident, Item, Property, Str, Val
 crate::analyze::lint!(LintC09MagwellMissingMagazine);
 
 impl Lint<SqfLintData> for LintC09MagwellMissingMagazine {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "magwell_missing_magazine"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC09MagwellMissingMagazine {
         90
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on magazines that are defined in CfgMagazineWells but not in CfgMagazines"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**

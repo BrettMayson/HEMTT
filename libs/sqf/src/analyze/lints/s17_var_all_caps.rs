@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Expression};
 crate::analyze::lint!(LintS17VarAllCaps);
 
 impl Lint<SqfLintData> for LintS17VarAllCaps {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "var_all_caps"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS17VarAllCaps {
         170
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for global variables that are ALL_CAPS and may actually be a undefined macro"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r#"### Configuration
 
 - **ignore**: An array of vars to ignore

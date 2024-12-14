@@ -23,6 +23,7 @@ impl Code for ArmaNotFound {
 }
 
 impl ArmaNotFound {
+    #[must_use]
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self {})
     }

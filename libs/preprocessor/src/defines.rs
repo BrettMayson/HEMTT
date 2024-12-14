@@ -285,7 +285,7 @@ impl Defines {
                 let Definition::Function(func) = def else {
                     return false;
                 };
-                args.map_or(true, |args| func.args().len() == args)
+                args.is_none_or(|args| func.args().len() == args)
             })
             .map(|(name, _)| (name, levenshtein(name, search)))
             .collect::<Vec<_>>();

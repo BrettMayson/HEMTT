@@ -2,7 +2,7 @@ use hemtt_common::version::Version;
 
 use crate::{analyze::CfgPatch, Class, Number, Property, Value};
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 /// A config file
 pub struct Config(pub Vec<Property>);
 

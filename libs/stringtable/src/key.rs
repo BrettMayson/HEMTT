@@ -1,6 +1,7 @@
 use quick_xml::escape::minimal_escape;
 use serde::{Deserialize, Serialize, Serializer};
 
+#[allow(clippy::ref_option)] // `&Option<String>` is expected by serde
 fn min_escape<S>(s: &Option<String>, ser: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -88,6 +89,12 @@ pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "dutch", alias = "DUTCH")]
     dutch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "ukrainian", alias = "UKRAINIAN")]
+    ukrainian: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "danish", alias = "DANISH")]
+    danish: Option<String>,
 }
 
 impl Key {
@@ -214,5 +221,15 @@ impl Key {
     #[must_use]
     pub fn dutch(&self) -> Option<&str> {
         self.dutch.as_deref()
+    }
+
+    #[must_use]
+    pub fn ukrainian(&self) -> Option<&str> {
+        self.ukrainian.as_deref()
+    }
+
+    #[must_use]
+    pub fn danish(&self) -> Option<&str> {
+        self.danish.as_deref()
     }
 }

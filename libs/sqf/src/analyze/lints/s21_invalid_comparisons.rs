@@ -12,7 +12,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCom
 crate::analyze::lint!(LintS21InvalidComparisons);
 
 impl Lint<SqfLintData> for LintS21InvalidComparisons {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "invalid_comparisons"
     }
 
@@ -20,11 +20,11 @@ impl Lint<SqfLintData> for LintS21InvalidComparisons {
         210
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for if statements with impossible or overlapping conditions"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**
