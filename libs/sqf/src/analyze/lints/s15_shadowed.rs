@@ -12,16 +12,16 @@ use std::{ops::Range, sync::Arc};
 crate::analyze::lint!(LintS15Shadowed);
 
 impl Lint<SqfLintData> for LintS15Shadowed {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "shadowed"
     }
     fn sort(&self) -> u32 {
         150
     }
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Shadowed Var"
     }
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

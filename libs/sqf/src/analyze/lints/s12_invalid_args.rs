@@ -12,16 +12,16 @@ use std::{ops::Range, sync::Arc};
 crate::analyze::lint!(LintS12InvalidArgs);
 
 impl Lint<SqfLintData> for LintS12InvalidArgs {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "invalid_args"
     }
     fn sort(&self) -> u32 {
         120
     }
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Invalid Args"
     }
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

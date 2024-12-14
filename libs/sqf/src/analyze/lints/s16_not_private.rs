@@ -12,16 +12,16 @@ use std::{ops::Range, sync::Arc};
 crate::analyze::lint!(LintS16NotPrivate);
 
 impl Lint<SqfLintData> for LintS16NotPrivate {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "not_private"
     }
     fn sort(&self) -> u32 {
         160
     }
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Not Private Var"
     }
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

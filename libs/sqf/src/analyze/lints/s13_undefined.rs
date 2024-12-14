@@ -12,16 +12,16 @@ use std::{ops::Range, sync::Arc};
 crate::analyze::lint!(LintS13Undefined);
 
 impl Lint<SqfLintData> for LintS13Undefined {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "undefined"
     }
     fn sort(&self) -> u32 {
         130
     }
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Undefined Variable"
     }
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

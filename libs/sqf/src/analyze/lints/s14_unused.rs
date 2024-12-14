@@ -15,16 +15,16 @@ use std::{ops::Range, sync::Arc};
 crate::analyze::lint!(LintS14Unused);
 
 impl Lint<SqfLintData> for LintS14Unused {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "unused"
     }
     fn sort(&self) -> u32 {
         120
     }
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Unused Var"
     }
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**
