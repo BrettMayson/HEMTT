@@ -1,6 +1,6 @@
 use crate::{Key, Project, ALL_LANGUAGES};
 use hemtt_workspace::WorkspacePath;
-use tracing::trace;
+use tracing::{error, trace};
 
 #[derive(Default, Debug)]
 pub struct XmlbLayout {
@@ -137,7 +137,11 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
                 i32::try_from(translation.phrases.len()).expect("overflow"),
             );
             for phrase in &translation.phrases {
-                write_string(&mut translation_buffer, phrase);
+                let unescaped = quick_xml::escape::unescape(phrase.as_str());
+                if unescaped.is_err() {
+                    error!("failed to unescape {}", phrase);
+                }
+                write_string(&mut translation_buffer, &unescaped.unwrap_or_default());
             }
             rolling_offset += translation_buffer.len();
             data.translations.push(translation_buffer);
