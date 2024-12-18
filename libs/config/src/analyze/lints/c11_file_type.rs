@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Processed},
+    reporting::{Code, Diagnostic, Processed, Severity},
 };
 
 use crate::{analyze::LintData, Item, Property, Str, Value};
@@ -26,11 +26,11 @@ impl Lint<LintData> for LintC11FileType {
     fn documentation(&self) -> &'static str {
 r#"### Configuration
 
-- **allow_no_extension**: Allow properties to not have a file extension
+- **allow_no_extension**: Allow properties to not have a file extension, default is `true`.
 
 ```toml
 [lints.config.file_type]
-options.allow_no_extension = true
+options.allow_no_extension = false
 ```
 
 ### Example
@@ -61,8 +61,9 @@ class MyClass {
 class MyClass {
     editorPreview = "preview.jpg";
 };
+```
 
-**Incorrect**
+**Incorrect, when `allow_no_extension` is `false`**
 ```hpp
 class MyClass {
     model = "my_model";
@@ -74,7 +75,6 @@ class MyClass {
 class MyClass {
     model = "my_model.p3d";
 };
-```
 ```
 
 ### Explanation
@@ -116,13 +116,13 @@ impl LintRunner<LintData> for Runner {
         let allow_no_extension = if let Some(toml::Value::Boolean(allow_no_extension)) = config.option("allow_no_extension") {
             *allow_no_extension
         } else {
-            false
+            true
         };
         // Arrays
         if let Value::Array(values) = value {
             for value in &values.items {
                 if let Item::Str(value) = value {
-                    if let Some(code) = check(name.as_str(), value, allow_no_extension, processed) {
+                    if let Some(code) = check(name.as_str(), value, allow_no_extension, processed, config) {
                         codes.push(code);
                     }
                 }
@@ -131,18 +131,21 @@ impl LintRunner<LintData> for Runner {
         let Value::Str(value) = value else {
             return codes;
         };
-        if let Some(code) = check(name.as_str(), value, allow_no_extension, processed) {
+        if let Some(code) = check(name.as_str(), value, allow_no_extension, processed, config) {
             codes.push(code);
         }
         codes
     }
 }
 
-fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed) -> Option<Arc<dyn Code>> {
-    let allowed = allowed_ext(name);
+fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed, config: &LintConfig) -> Option<Arc<dyn Code>> {
     let value_str = value.value();
+    if name == "sound" && value_str.starts_with("db") {
+        return None;
+    }
+    let allowed = allowed_ext(name);
     if !allowed.is_empty() {
-        if name == "model" && value_str.is_empty() {
+        if value_str.is_empty() {
             return None;
         }
         let ext = if value_str.contains('.') {
@@ -153,13 +156,13 @@ fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processe
         if ext.is_empty() {
             if !allow_no_extension {
                 let span = value.span().start + 1..value.span().end - 1;
-                return Some(Arc::new(CodeC11MissingExtension::new(span, processed)));
+                return Some(Arc::new(CodeC11MissingExtension::new(span, processed, config.severity())));
             }
             return None;
         }
         if !allowed.contains(&ext){
             let span = value.span().start + 2 + (value_str.len() - ext.len())..value.span().end - 1;
-            return Some(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed)));
+            return Some(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed, config.severity())));
         }
     }
     None
@@ -180,7 +183,7 @@ fn allowed_ext(name: &str) -> Vec<&str> {
         return vec!["p3d"];
     }
     if name.contains("sound") && !name.contains("soundset") {
-        return vec!["wss", "ogg"];
+        return vec!["wss", "ogg", "wav"];
     }
     if name.starts_with("scud") {
         return vec!["rtm"];
@@ -196,6 +199,7 @@ fn allowed_ext(name: &str) -> Vec<&str> {
 pub struct CodeC11MissingExtension {
     span: Range<usize>,
     diagnostic: Option<Diagnostic>,
+    severity: Severity,
 }
 
 impl Code for CodeC11MissingExtension {
@@ -215,6 +219,10 @@ impl Code for CodeC11MissingExtension {
         "missing file extension".to_string()
     }
 
+    fn severity(&self) -> Severity {
+        self.severity
+    }
+
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
@@ -222,9 +230,10 @@ impl Code for CodeC11MissingExtension {
 
 impl CodeC11MissingExtension {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
             span,
+            severity,
             diagnostic: None,
         }
         .generate_processed(processed)
@@ -238,8 +247,9 @@ impl CodeC11MissingExtension {
 
 pub struct CodeC11UnusualExtension {
     span: Range<usize>,
-    diagnostic: Option<Diagnostic>,
     expected: String,
+    diagnostic: Option<Diagnostic>,
+    severity: Severity,
 }
 
 impl Code for CodeC11UnusualExtension {
@@ -263,6 +273,10 @@ impl Code for CodeC11UnusualExtension {
         "unusual file type".to_string()
     }
 
+    fn severity(&self) -> Severity {
+        self.severity
+    }
+
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
@@ -270,11 +284,12 @@ impl Code for CodeC11UnusualExtension {
 
 impl CodeC11UnusualExtension {
     #[must_use]
-    pub fn new(span: Range<usize>, expected: String, processed: &Processed) -> Self {
+    pub fn new(span: Range<usize>, expected: String, processed: &Processed, severity: Severity) -> Self {
         Self {
             span,
-            diagnostic: None,
             expected,
+            severity,
+            diagnostic: None,
         }
         .generate_processed(processed)
     }
