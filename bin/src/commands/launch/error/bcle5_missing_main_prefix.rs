@@ -18,11 +18,12 @@ impl Code for MissingMainPrefix {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 
 impl MissingMainPrefix {
+    #[must_use]
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self {})
     }

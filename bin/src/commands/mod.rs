@@ -11,6 +11,9 @@ pub mod utils;
 pub mod value;
 pub mod wiki;
 
+#[cfg(windows)]
+pub mod photoshoot;
+
 /// Adds modules that should apply to:
 /// - hemtt check
 /// - hemtt dev
@@ -21,4 +24,11 @@ pub fn global_modules(executor: &mut crate::executor::Executor) {
     executor.add_module(Box::<crate::modules::Hooks>::default());
     executor.add_module(Box::<crate::modules::Stringtables>::default());
     executor.add_module(Box::<crate::modules::SQFCompiler>::default());
+}
+
+#[derive(clap::Args)]
+pub struct JustArgs {
+    #[arg(long, action = clap::ArgAction::Append)]
+    /// Only build the given addon
+    pub(crate) just: Vec<String>,
 }

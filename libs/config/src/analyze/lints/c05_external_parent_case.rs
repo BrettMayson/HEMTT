@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Class, Property};
 crate::analyze::lint!(LintC05ExternalParentCase);
 
 impl Lint<SqfLintData> for LintC05ExternalParentCase {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "external_parent_case"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC05ExternalParentCase {
         50
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on uses of base classes with incorrect case compared to the parent definition"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

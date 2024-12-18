@@ -13,11 +13,14 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 automod = { workspace = true }
+casey = "0.4.0"
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.36.2", features = ["serialize"] }
+quick-xml = { version = "0.37.1", features = ["serialize"] }
 serde = { workspace = true, features = ["derive"] }
+toml = { workspace = true }
 tracing = { workspace = true }
+vfs = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

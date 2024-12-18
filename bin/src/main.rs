@@ -1,3 +1,4 @@
+use clap::Parser;
 use hemtt_workspace::reporting::WorkspaceFiles;
 use tracing::error;
 
@@ -5,7 +6,7 @@ fn main() {
     std::panic::set_hook(Box::new(|panic| {
         error!("{panic}");
         eprintln!(
-            r#"
+            "
 Oh no! HEMTT has crashed!
 This is a bug in HEMTT itself, not necessarily your project.
 Even if there is a bug in your project, HEMTT should not crash, but gracefully exit with an error message.
@@ -17,7 +18,7 @@ GitHub (https://github.com/BrettMayson/HEMTT)
 The log from the most recent run can be found in `.hemttout/latest.log`.
 
 It is always best to the include the log and a link to your project when reporting a bug, this will help reproduce the issue.
-"#
+"
         );
         std::process::exit(1);
     }));
@@ -27,7 +28,15 @@ It is always best to the include the log and a link to your project when reporti
         tracing::warn!("Failed to enable ANSI support, colored output will not work");
     }
 
-    if let Err(e) = hemtt::execute(&hemtt::cli().get_matches()) {
+    let cli = match hemtt::Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    };
+
+    if let Err(e) = hemtt::execute(&cli) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
                 if let Some(diag) = code.diagnostic() {

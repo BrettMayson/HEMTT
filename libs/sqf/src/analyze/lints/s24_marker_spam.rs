@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement};
 crate::analyze::lint!(LintS24MarkerSpam);
 
 impl Lint<SqfLintData> for LintS24MarkerSpam {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "marker_update_spam"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS24MarkerSpam {
         240
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for repeated calls to global marker updates"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r#"### Example
 
 **Incorrect**
@@ -182,7 +182,7 @@ impl CodeS24MarkerSpam {
         diag = diag.with_label(Label::secondary(
             info.0,
             info.1,
-        ).with_message("Last marker update, should remain global"));
+        ).with_message("last marker update, should remain global"));
         for (cmd, span) in self.calls.iter().rev().skip(1) {
             let Some(info) = get_span_info(span, processed) else {
                 continue;
@@ -190,7 +190,7 @@ impl CodeS24MarkerSpam {
             diag = diag.with_label(Label::primary(
                 info.0,
                 info.1,
-            ).with_message(format!("Use {cmd}Local")));
+            ).with_message(format!("use {cmd}Local")));
         }
         self.diagnostic = Some(diag);
         self

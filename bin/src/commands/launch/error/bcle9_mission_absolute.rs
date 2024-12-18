@@ -24,11 +24,12 @@ impl Code for MissionAbsolutePath {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 
 impl MissionAbsolutePath {
+    #[must_use]
     pub fn code(reason: String) -> Arc<dyn Code> {
         Arc::new(Self { reason })
     }

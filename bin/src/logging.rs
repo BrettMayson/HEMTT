@@ -8,11 +8,16 @@ use tracing_subscriber::{
     prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
 };
 
+use crate::Error;
+
 /// Initialize the logger
+///
+/// # Errors
+/// If `hemttout` is true, but no `.hemtt` folder is found
 ///
 /// # Panics
 /// If the log file could not be created
-pub fn init(verbosity: u8, hemttout: bool) {
+pub fn init(verbosity: u8, hemttout: bool) -> Result<(), Error> {
     let format = tracing_subscriber::fmt::format()
         .without_time()
         .with_target(false)
@@ -31,6 +36,12 @@ pub fn init(verbosity: u8, hemttout: bool) {
     };
 
     if hemttout {
+        if !std::path::Path::new(".hemtt").exists() {
+            tracing_subscriber::registry()
+                .with(stdout.with_filter(filter))
+                .init();
+            return Err(Error::ConfigNotFound);
+        }
         create_dir_all(".hemttout").expect("Unable to create `.hemttout`");
         let out_file =
             File::create(".hemttout/latest.log").expect("Unable to create `.hemttout/latest.log`");
@@ -48,4 +59,6 @@ pub fn init(verbosity: u8, hemttout: bool) {
             .with(stdout.with_filter(filter))
             .init();
     }
+
+    Ok(())
 }

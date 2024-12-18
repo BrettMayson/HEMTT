@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Property, Value};
 crate::analyze::lint!(LintC07ExpectedArray);
 
 impl Lint<SqfLintData> for LintC07ExpectedArray {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "expected_array"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC07ExpectedArray {
         70
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on properties that are expected to be arrays, but are not defined as arrays"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**
@@ -166,7 +166,7 @@ impl Code07ExpectedArray {
         let ident_end = processed
             .mapping(name.span.end)
             .expect("mapping should exist");
-        let haystack = &processed.as_str()[ident_end.original_start()..value.span().start];
+        let haystack = &processed.extract(ident_end.original_start()..value.span().start);
         let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
         self.suggestion = Some(name.value.to_string());
         self.diagnostic = Diagnostic::from_code_processed(

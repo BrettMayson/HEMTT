@@ -2,6 +2,7 @@ use std::{
     env::temp_dir,
     fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
+    sync::Arc,
 };
 
 use hemtt_common::config::ProjectConfig;
@@ -18,6 +19,8 @@ pub enum PreservePrevious {
     Keep,
 }
 
+pub type State = state::TypeMap![Send + Sync];
+
 #[derive(Debug, Clone)]
 pub struct Context {
     config: ProjectConfig,
@@ -30,6 +33,8 @@ pub struct Context {
     out_folder: PathBuf,
     build_folder: Option<PathBuf>,
     tmp: PathBuf,
+    profile: PathBuf,
+    state: Arc<State>,
 }
 
 impl Context {
@@ -63,8 +68,9 @@ impl Context {
                 tmp = tmp.join(whoami::username());
             }
             tmp
-        }
-        .join(
+        };
+        let profile = tmp.join("profile");
+        let tmp = tmp.join(
             root.components()
                 .skip(2)
                 .collect::<PathBuf>()
@@ -78,6 +84,9 @@ impl Context {
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
         trace!("using project folder: {:?}", root.display());
+        if !hemtt_folder.exists() {
+            return Err(Error::ConfigNotFound);
+        }
         let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
         create_dir_all(&out_folder)?;
@@ -91,9 +100,7 @@ impl Context {
                 remove_dir_all(&build_folder)?;
             }
             create_dir_all(&build_folder)?;
-            if cfg!(target_os = "windows") {
-                builder = builder.physical(&tmp.join("output"), LayerType::Build);
-            }
+            builder = builder.physical(&tmp.join("hemtt_binarize_output"), LayerType::Build);
             let include = root.join("include");
             if include.is_dir() {
                 builder = builder.physical(&include, LayerType::Include);
@@ -122,6 +129,8 @@ impl Context {
             out_folder,
             build_folder: maybe_build_folder,
             tmp,
+            profile,
+            state: Arc::new(State::default()),
         })
     }
 
@@ -204,6 +213,18 @@ impl Context {
     /// %temp%/hemtt/project
     pub const fn tmp(&self) -> &PathBuf {
         &self.tmp
+    }
+
+    #[must_use]
+    /// %temp%/hemtt/profile
+    pub const fn profile(&self) -> &PathBuf {
+        &self.profile
+    }
+
+    #[must_use]
+    /// The state of the context
+    pub fn state(&self) -> Arc<State> {
+        self.state.clone()
     }
 }
 

@@ -8,10 +8,12 @@ use hemtt_workspace::{
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::codes::pe2_unexpected_eof::UnexpectedEOF;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
 use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
+use crate::codes::{
+    pe26_unsupported_builtin::BuiltInNotSupported, pe2_unexpected_eof::UnexpectedEOF,
+};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
 use crate::Error;
@@ -154,6 +156,9 @@ impl Processor {
                     if w == "__EXEC" {
                         return Err(ExecNotSupported::code((**token).clone()));
                     }
+                    if Defines::is_unsupported_builtin(w) {
+                        return Err(BuiltInNotSupported::code((**token).clone()));
+                    }
                     just_whitespace = false;
                     if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();
@@ -186,7 +191,7 @@ impl Processor {
                     }
                     let token = stream.next().expect("peeked above");
                     if in_macro.is_some()
-                    && stream.peek().map_or(false, |t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
+                    && stream.peek().is_some_and(|t| t.symbol().is_word() && self.defines.contains_key(&t.symbol().to_string()))
                         // check if the # token is from another file, or defined before the callsite, ie not in the root arguments
                         && (token.position().path() != callsite.expect(
                             "callsite should exist if in_macro is some"
@@ -295,7 +300,7 @@ impl Processor {
             if token.symbol().is_newline()
                 && buffer
                     .last()
-                    .map_or(false, |t| t.last_symbol().map_or(false, Symbol::is_escape))
+                    .is_some_and(|t| t.last_symbol().is_some_and(Symbol::is_escape))
             {
                 buffer.pop();
                 return;

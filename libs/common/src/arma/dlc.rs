@@ -36,6 +36,10 @@ pub enum DLC {
     /// Creator DLC: Reaction Forces
     /// <https://store.steampowered.com/app/2647760/Arma_3_Creator_DLC_Reaction_Forces/>
     ReactionForces,
+    #[serde(rename = "ef")]
+    /// Creator DLC: Expeditionary Forces
+    /// <https://store.steampowered.com/app/2647830/Arma_3_Creator_DLC_Expeditionary_Forces/>
+    ExpeditionaryForces,
 }
 
 impl DLC {
@@ -50,6 +54,7 @@ impl DLC {
             Self::WesternSahara => "ws",
             Self::Spearhead1944 => "spe",
             Self::ReactionForces => "rf",
+            Self::ExpeditionaryForces => "ef",
         }
     }
 
@@ -64,6 +69,7 @@ impl DLC {
             Self::WesternSahara => "1681170",
             Self::Spearhead1944 => "1175380",
             Self::ReactionForces => "2647760",
+            Self::ExpeditionaryForces => "2647830",
         }
     }
 }
@@ -81,6 +87,7 @@ impl Display for DLC {
                 Self::WesternSahara => "Creator DLC: Western Sahara",
                 Self::Spearhead1944 => "Creator DLC: Spearhead 1944",
                 Self::ReactionForces => "Creator DLC: Reaction Forces",
+                Self::ExpeditionaryForces => "Creator DLC: Expeditionary Forces",
             }
         )
     }
@@ -103,6 +110,7 @@ impl TryFrom<String> for DLC {
                 "1681170" | "ws" | "western sahara" => Self::WesternSahara,
                 "1175380" | "spe" | "spearhead" | "spearhead 1944" => Self::Spearhead1944,
                 "2647760" | "rf" | "reaction forces" => Self::ReactionForces,
+                "2647830" | "ef" | "expeditionary forces" => Self::ExpeditionaryForces,
                 _ => return Err(format!("Unknown DLC: {dlc}")),
             },
         )

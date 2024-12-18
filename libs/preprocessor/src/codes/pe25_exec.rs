@@ -5,15 +5,9 @@ use hemtt_workspace::reporting::{Code, Token};
 use crate::Error;
 
 #[allow(unused)]
-/// The EOI was reached while reading an `#if` [`IfState`]
-///
-/// ```cpp
-/// #if 1
-/// #else
-/// EOI
-/// ```
+/// __EXEC is not a supported macro
 pub struct ExecNotSupported {
-    /// The [`Token`] of the last `#if`
+    /// The [`Token`] of the __EXEC macro
     token: Box<Token>,
 }
 

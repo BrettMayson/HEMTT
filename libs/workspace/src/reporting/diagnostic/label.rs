@@ -49,6 +49,14 @@ impl Label {
         let mut label =
             codespan_reporting::diagnostic::Label::new(self.style, &self.file, self.span.clone());
         if let Some(message) = &self.message {
+            debug_assert!(
+                message.is_empty()
+                    || message
+                        .chars()
+                        .next()
+                        .is_none_or(|c| c.is_lowercase() || !c.is_alphabetic()),
+                "All label messages should be lowercase (except for text copied from the source), got: {message:?}",
+            );
             label = label.with_message(message.clone());
         }
         label

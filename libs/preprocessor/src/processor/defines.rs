@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Output, Symbol, Token},
+    reporting::{Code, Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -172,7 +172,7 @@ impl Processor {
             if symbol.is_newline() {
                 if body
                     .last()
-                    .map_or(false, |t: &Arc<Token>| t.symbol().is_escape())
+                    .is_some_and(|t: &Arc<Token>| t.symbol().is_escape())
                 {
                     // remove the backslash
                     body.pop();
@@ -237,13 +237,19 @@ impl Processor {
                         })
                     {
                         for token in [value.first(), value.last()] {
-                            if token.map_or(false, |t| t.symbol().is_whitespace()) {
-                                self.warnings.push(Arc::new(PaddedArg::new(
+                            if token.is_some_and(|t| t.symbol().is_whitespace()) {
+                                let warning = PaddedArg::new(
                                     Box::new(
                                         (**token.expect("token exists from map_or check")).clone(),
                                     ),
                                     ident_string.clone(),
-                                )));
+                                );
+
+                                if !self.warnings.iter().any(|w| {
+                                    w.ident() == warning.ident() && w.token() == warning.token()
+                                }) {
+                                    self.warnings.push(Arc::new(warning));
+                                }
                             }
                         }
                     }

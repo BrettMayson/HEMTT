@@ -1,4 +1,3 @@
-use clap::{ArgAction, ArgMatches, Command};
 use hemtt_workspace::addons::Location;
 
 use crate::{
@@ -10,55 +9,76 @@ use crate::{
     report::Report,
 };
 
-use super::build::add_just;
+use super::JustArgs;
 
-#[must_use]
-pub fn cli() -> Command {
-    add_just(add_args(
-        Command::new("dev")
-            .about("Build the project for development")
-            .long_about("Build your project for local development and testing. It is built without binarization of .p3d and .rtm files."),
-    ))
+#[derive(clap::Parser)]
+#[command(verbatim_doc_comment)]
+/// Build the project for development
+///
+/// `hemtt dev` is designed to help your development workflows.
+/// It will build your mod into `.hemttout/dev`, with links back
+/// to the original addon folders. This allows you to use
+/// file-patching with optional mods for easy development.
+///
+/// ## Configuration
+///
+/// **.hemtt/project.toml**
+///
+/// ```toml
+/// [hemtt.dev]
+/// exclude = ["addons/unused"]
+/// ```
+///
+/// ### exclude
+///
+/// A list of addons to exclude from the development build.
+/// Includes from excluded addons can be used, but they will not be built or linked.
+pub struct Command {
+    #[clap(flatten)]
+    pub(crate) dev: DevArgs,
+
+    #[clap(flatten)]
+    pub(crate) just: JustArgs,
+
+    #[clap(flatten)]
+    pub(crate) global: crate::GlobalArgs,
 }
 
-#[must_use]
-pub fn add_args(cmd: Command) -> Command {
-    cmd.arg(
-        clap::Arg::new("binarize")
-            .long("binarize")
-            .short('b')
-            .help("Use BI's binarize on supported files")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("optional")
-            .long("optional")
-            .short('o')
-            .help("Include an optional addon folder")
-            .action(ArgAction::Append),
-    )
-    .arg(
-        clap::Arg::new("optionals")
-            .long("all-optionals")
-            .short('O')
-            .help("Include all optional addon folders")
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
-        clap::Arg::new("no-rap")
-            .long("no-rap")
-            .help("Do not rapify (cpp, rvmat)")
-            .action(ArgAction::SetTrue),
-    )
+#[derive(clap::Args)]
+#[allow(clippy::module_name_repetitions)]
+pub struct DevArgs {
+    #[arg(long, short, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
+    /// Use BI's binarize on supported files
+    ///
+    /// By default, `hemtt dev` will not binarize any files, but rather pack them as-is.
+    /// Binarization is often not needed for development.
+    pub(crate) binarize: bool,
+    #[arg(long, short, action = clap::ArgAction::Append, verbatim_doc_comment)]
+    /// Include an optional addon folder
+    ///
+    /// This can be used multiple times to include multiple optional addons.
+    ///
+    /// ```bash
+    /// hemtt dev -o caramel -o chocolate
+    /// ```
+    pub(crate) optional: Vec<String>,
+    #[arg(long, short = 'O', action = clap::ArgAction::SetTrue, conflicts_with = "optional", verbatim_doc_comment)]
+    /// Include all optional addon folders
+    pub(crate) all_optionals: bool,
+    #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
+    /// Do not rapify (cpp, rvmat)
+    ///
+    /// They will be copied directly into the PBO, not .bin version is created.
+    pub(crate) no_rap: bool,
 }
 
 /// Execute the dev command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Report, Error> {
-    let mut executor = context(matches, launch_optionals, false, true)?;
-    executor.run()
+pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<(Report, Context), Error> {
+    let mut executor = context(&cmd.dev, &cmd.just, launch_optionals, false, true)?;
+    executor.run().map(|r| (r, executor.into_ctx()))
 }
 
 /// Create a new executor for the dev command
@@ -66,21 +86,22 @@ pub fn execute(matches: &ArgMatches, launch_optionals: &[String]) -> Result<Repo
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn context(
-    matches: &ArgMatches,
+    dev: &DevArgs,
+    just: &JustArgs,
     launch_optionals: &[String],
     force_binarize: bool,
     rapify: bool,
 ) -> Result<Executor, Error> {
-    let all_optionals = matches.get_one::<bool>("optionals") == Some(&true);
-    let optionals = matches
-        .get_many::<String>("optional")
-        .unwrap_or_default()
+    let all_optionals = dev.all_optionals;
+    let optionals = dev
+        .optional
+        .iter()
         .map(std::string::String::as_str)
         .collect::<Vec<_>>();
 
-    let just = matches
-        .get_many::<String>("just")
-        .unwrap_or_default()
+    let just = just
+        .just
+        .iter()
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
 
@@ -127,12 +148,12 @@ pub fn context(
 
     executor.collapse(Collapse::Yes);
 
-    if rapify && matches.get_one::<bool>("no-rap") != Some(&true) {
+    if rapify && !dev.no_rap {
         executor.add_module(Box::<Rapifier>::default());
     }
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
-    if force_binarize || matches.get_one::<bool>("binarize") == Some(&true) {
+    if force_binarize || dev.binarize {
         executor.add_module(Box::<Binarize>::default());
     }
 

@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, Expression};
 crate::analyze::lint!(LintS09BannedCommand);
 
 impl Lint<SqfLintData> for LintS09BannedCommand {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "banned_commands"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS09BannedCommand {
         90
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for broken or banned commands."
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Configuration
 
 - **banned**: Additional commands to check for

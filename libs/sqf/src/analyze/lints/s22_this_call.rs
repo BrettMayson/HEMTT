@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, BinaryCommand, Expression};
 crate::analyze::lint!(LintS22ThisCall);
 
 impl Lint<SqfLintData> for LintS22ThisCall {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "this_call"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS22ThisCall {
         220
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for usage of `_this call`, where `_this` is not necessary"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**

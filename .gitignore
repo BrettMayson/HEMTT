@@ -12,7 +12,6 @@ releases/
 
 # VSCode Extension
 node_modules
-dist/
 *.vsix
 
 # Browser Extensions

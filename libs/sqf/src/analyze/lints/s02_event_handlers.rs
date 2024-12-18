@@ -11,7 +11,7 @@ use crate::{analyze::{extract_constant, SqfLintData}, parser::database::Database
 pub struct LintS02EventInsufficientVersion;
 
 impl Lint<SqfLintData> for LintS02EventInsufficientVersion {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "event_insufficient_version"
     }
 
@@ -23,11 +23,11 @@ impl Lint<SqfLintData> for LintS02EventInsufficientVersion {
         "02IV".to_string()
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for event handlers that require a newer version than specified in CfgPatches"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**
@@ -62,7 +62,7 @@ Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to 
 pub struct LintS02EventUnknown;
 
 impl Lint<SqfLintData> for LintS02EventUnknown {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "event_unknown"
     }
 
@@ -74,11 +74,11 @@ impl Lint<SqfLintData> for LintS02EventUnknown {
         "02UE".to_string()
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for unknown event used in event handlers"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Configuration
 
 - **ignore**: List of unknown event names to ignore
@@ -115,7 +115,7 @@ Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to 
 pub struct LintS02EventIncorrectCommand;
 
 impl Lint<SqfLintData> for LintS02EventIncorrectCommand {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "event_incorrect_command"
     }
 
@@ -127,11 +127,11 @@ impl Lint<SqfLintData> for LintS02EventIncorrectCommand {
         "02IC".to_string()
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for event handlers used with incorrect commands"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**
@@ -543,8 +543,8 @@ impl CodeS02IncorrectCommand {
                         .filter(|c| c.contains(&prefix))
                         .for_each(|c| {
                             alternatives.push(((*c).to_string(), {
-                                database.wiki().commands().get(c).map_or(false, |c| {
-                                    c.syntax().first().map_or(false, |s| s.call().is_binary())
+                                database.wiki().commands().get(c).is_some_and(|c| {
+                                    c.syntax().first().is_some_and(|s| s.call().is_binary())
                                 })
                             }));
                         });

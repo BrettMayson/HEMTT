@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Class, Config, Ident, Property};
 crate::analyze::lint!(LintC02DuplicateProperty);
 
 impl Lint<SqfLintData> for LintC02DuplicateProperty {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "duplicate_property"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC02DuplicateProperty {
         20
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on duplicated properties."
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**

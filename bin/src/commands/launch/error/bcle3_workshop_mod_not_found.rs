@@ -24,11 +24,12 @@ impl Code for WorkshopModNotFound {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 
 impl WorkshopModNotFound {
+    #[must_use]
     pub fn code(id: String) -> Arc<dyn Code> {
         Arc::new(Self { id })
     }

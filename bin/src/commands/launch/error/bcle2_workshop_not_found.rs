@@ -21,11 +21,12 @@ impl Code for WorkshopNotFound {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 
 impl WorkshopNotFound {
+    #[must_use]
     pub fn code() -> Arc<dyn Code> {
         Arc::new(Self {})
     }

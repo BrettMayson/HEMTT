@@ -5,7 +5,6 @@ use std::sync::{Arc, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
 use hemtt_common::config::AddonConfig;
-use hemtt_common::error::thiserror;
 use hemtt_common::prefix::{Prefix, FILES};
 use hemtt_common::version::Version;
 use tracing::{trace, warn};
@@ -169,7 +168,7 @@ impl Addon {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Location {
     Addons,
     Optionals,

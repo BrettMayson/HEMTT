@@ -35,7 +35,7 @@ impl Code for ScriptNotFound {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        Some(Diagnostic::simple(self))
+        Some(Diagnostic::from_code(self))
     }
 }
 
@@ -45,7 +45,7 @@ impl ScriptNotFound {
             .read_dir()?
             .iter()
             .filter_map(|x| {
-                if x.is_file().map_or(false, |x| x) {
+                if x.is_file().is_ok_and(|x| x) {
                     Some(x.filename().trim_end_matches(".rhai").to_string())
                 } else {
                     None

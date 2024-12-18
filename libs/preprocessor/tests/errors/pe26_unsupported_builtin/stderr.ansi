@@ -1,0 +1,9 @@
+[0m[1m[38;5;9merror[PE26][0m[1m: built-in macro `__DAY__` is not supported by HEMTT[0m
+  [0m[36m┌─[0m source.hpp:2:11
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m     day = [0m[31m__DAY__[0m;
+  [0m[36m│[0m           [0m[31m^^^^^^^[0m [0m[31mbuilt-in macro `__DAY__` is not supported by HEMTT[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: certain built-in macros can not be rapified at build time
+          HEMTT does not support them to prevent unexpected behaviour
+

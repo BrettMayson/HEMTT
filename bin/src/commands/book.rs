@@ -1,17 +1,14 @@
-use clap::{ArgMatches, Command};
-
 use crate::{report::Report, Error};
 
-#[must_use]
-pub fn cli() -> Command {
-    Command::new("book").about("Open The HEMTT book")
-}
+#[derive(clap::Parser)]
+/// Open The HEMTT book
+pub struct Command {}
 
 /// Execute the book command
 ///
 /// # Errors
 /// Will not return an error
-pub fn execute(_: &ArgMatches) -> Result<Report, Error> {
+pub fn execute(_: &Command) -> Result<Report, Error> {
     if let Err(e) = webbrowser::open("https://hemtt.dev/") {
         eprintln!("Failed to open the HEMTT book: {e}");
     }

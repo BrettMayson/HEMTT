@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use tracing::error;
 
-use hemtt_common::error::thiserror;
 use hemtt_workspace::reporting::Code;
 
 #[derive(thiserror::Error, Debug)]
 /// Errors that can occur during preprocessing
 pub enum Error {
-    #[error("Coded error")]
+    #[error("Coded error: {0:?}")]
     /// A coded error
     Code(Arc<dyn Code>),
     #[error("IO Error: {0}")]

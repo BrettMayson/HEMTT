@@ -1,17 +1,35 @@
 use std::{
+    collections::HashMap,
     path::PathBuf,
-    sync::atomic::{AtomicU16, Ordering},
+    sync::{
+        atomic::{AtomicU16, Ordering},
+        RwLock,
+    },
 };
 
-use hemtt_config::{analyze::lint_check, parse, rapify::Rapify};
+use hemtt_config::{analyze::lint_check, parse, rapify::Rapify, Config};
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{addons::Addon, WorkspacePath};
+use hemtt_workspace::{
+    addons::{Addon, Location},
+    WorkspacePath,
+};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
 use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
 use super::Module;
+
+#[derive(Default)]
+pub struct AddonConfigs(RwLock<HashMap<(String, Location), Config>>);
+
+impl std::ops::Deref for AddonConfigs {
+    type Target = RwLock<HashMap<(String, Location), Config>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Default)]
 pub struct Rapifier;
@@ -28,6 +46,7 @@ impl Module for Rapifier {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+        ctx.state().set(AddonConfigs::default());
         let mut report = Report::new();
         let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
@@ -123,7 +142,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     }
     let out = if std::path::Path::new(&path.filename())
         .extension()
-        .map_or(false, |ext| ext.eq_ignore_ascii_case("cpp"))
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("cpp"))
     {
         if path.filename() == "config.cpp" {
             let (version, cfgpatch) = configreport.required_version();
@@ -139,6 +158,14 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             addon
                 .build_data()
                 .set_required_version(version, file.to_owned(), span);
+            ctx.state()
+                .get::<AddonConfigs>()
+                .write()
+                .expect("state is poisoned")
+                .insert(
+                    (addon.name().to_owned(), *addon.location()),
+                    configreport.config().clone(),
+                );
         }
         path.with_extension("bin")?
     } else {

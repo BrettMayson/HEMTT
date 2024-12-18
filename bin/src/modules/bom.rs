@@ -23,7 +23,7 @@ impl Module for BOMCheck {
                 .filter(|e| e.file_type().is_file())
                 .filter(|e| !e.path().display().to_string().contains(".hemttout"))
                 .filter(|e| {
-                    e.path().extension().map_or(false, |e| {
+                    e.path().extension().is_some_and(|e| {
                         !IGNORED_EXTENSIONS.contains(&e.to_str().unwrap_or_default())
                     })
                 })

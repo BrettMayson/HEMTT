@@ -60,6 +60,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_AttributeAddCompatible_Tooltip",
@@ -113,6 +115,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_AttributeExport_Tooltip",
@@ -166,6 +170,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_AttributeImport_Tooltip",
@@ -219,6 +225,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Blacklist",
@@ -274,6 +282,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_CantOpenDisplay",
@@ -329,6 +339,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_DetonatesOnImpact",
@@ -378,6 +390,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Items",
@@ -433,6 +447,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Mission",
@@ -488,6 +504,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Mission_overview",
@@ -541,6 +559,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Mission_tooltip",
@@ -594,6 +614,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Mode",
@@ -649,6 +671,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_ReturnToArsenal",
@@ -704,6 +728,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_StatExplosionTime",
@@ -753,6 +779,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_VisionNight",
@@ -808,6 +836,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_VisionNormal",
@@ -863,6 +893,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_VisionThermal",
@@ -918,6 +950,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_Whitelist",
@@ -975,6 +1009,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_allowDefaultLoadoutsSetting",
@@ -1030,6 +1066,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_allowSharingSetting",
@@ -1085,6 +1123,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonClearContainerTooltip",
@@ -1138,6 +1178,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonCloseText",
@@ -1193,6 +1235,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonCurrentMag2Tooltip",
@@ -1248,6 +1292,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonCurrentMagTooltip",
@@ -1303,6 +1349,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonDeleteText",
@@ -1358,6 +1406,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonDeleteTooltip",
@@ -1413,6 +1463,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonExportText",
@@ -1468,6 +1520,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonExportTooltip",
@@ -1521,6 +1575,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonFavoritesTooltip",
@@ -1568,6 +1624,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonHideText",
@@ -1623,6 +1681,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonHideTooltip",
@@ -1678,6 +1738,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonImportText",
@@ -1733,6 +1795,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonImportTooltip",
@@ -1786,6 +1850,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonLoadText",
@@ -1841,6 +1907,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonLoadTooltip",
@@ -1896,6 +1964,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonLoadoutsText",
@@ -1951,6 +2021,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonLoadoutsTooltip",
@@ -2006,6 +2078,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonRenameTooltip",
@@ -2061,6 +2135,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSaveText",
@@ -2116,6 +2192,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSaveTooltip",
@@ -2171,6 +2249,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSaveTooltip_shiftClick",
@@ -2226,6 +2306,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSearchTooltip",
@@ -2269,6 +2351,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSharePrivateText",
@@ -2324,6 +2408,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonSharePublicText",
@@ -2379,6 +2465,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_buttonShareTooltip",
@@ -2434,6 +2522,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_defaultLoadoutsTooltip",
@@ -2489,6 +2579,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_defaultToFavoritesSetting",
@@ -2536,6 +2628,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_defaultToFavoritesTooltip",
@@ -2583,6 +2677,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_enableIdentityTabsSettings",
@@ -2638,6 +2734,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_exportCurrent",
@@ -2693,6 +2791,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_exportDefault",
@@ -2748,6 +2848,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_exportDefaultError",
@@ -2803,6 +2905,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_exportedClassnameText",
@@ -2856,6 +2960,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_favoritesColorSetting",
@@ -2903,6 +3009,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_favoritesColorTooltip",
@@ -2950,6 +3058,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_fontHeightSetting",
@@ -3005,6 +3115,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_fontHeightTooltip",
@@ -3060,6 +3172,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_importFormatError",
@@ -3115,6 +3229,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_importedCurrent",
@@ -3170,6 +3286,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_importedDefault",
@@ -3225,6 +3343,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_invertCameraSetting",
@@ -3280,6 +3400,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutDeleted",
@@ -3335,6 +3457,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutLoaded",
@@ -3390,6 +3514,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutRenamed",
@@ -3445,6 +3571,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutSaved",
@@ -3500,6 +3628,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutSubcategory",
@@ -3555,6 +3685,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutUnshared",
@@ -3610,6 +3742,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutsSaveFaceSetting",
@@ -3657,6 +3791,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutsSaveInsigniaSetting",
@@ -3704,6 +3840,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_loadoutsSaveVoiceSetting",
@@ -3751,6 +3889,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_modIconsSetting",
@@ -3806,6 +3946,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_modIconsTooltip",
@@ -3861,6 +4003,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_noVirtualItems",
@@ -3916,6 +4060,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_page",
@@ -3971,6 +4117,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_portLoadoutsLoadoutError",
@@ -4026,6 +4174,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_portLoadoutsPlayerError",
@@ -4079,6 +4229,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_portLoadoutsText",
@@ -4132,6 +4284,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_printToRPTSetting",
@@ -4187,6 +4341,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_printToRPTTooltip",
@@ -4242,6 +4398,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_renameExistError",
@@ -4297,6 +4455,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_saveAuthorError",
@@ -4352,6 +4512,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_saveEmptyNameBox",
@@ -4407,6 +4569,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_saveSharedError",
@@ -4462,6 +4626,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_settingCategory",
@@ -4517,6 +4683,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortAscending",
@@ -4564,6 +4732,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByAccuracyText",
@@ -4615,6 +4785,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByAmountText",
@@ -4670,6 +4842,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByLoadText",
@@ -4719,6 +4893,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByMagCountText",
@@ -4770,6 +4946,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByMagnificationText",
@@ -4819,6 +4997,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByProtectionBallistic",
@@ -4868,6 +5048,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByProtectionExplosive",
@@ -4917,6 +5099,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByRateOfFireText",
@@ -4968,6 +5152,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortByWeightText",
@@ -5023,6 +5209,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_sortDescending",
@@ -5070,6 +5258,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statIlluminators",
@@ -5115,6 +5305,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statMagCount",
@@ -5162,6 +5354,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statMagnification",
@@ -5217,6 +5411,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statPotassium",
@@ -5272,6 +5468,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statTTL",
@@ -5327,6 +5525,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode",
@@ -5382,6 +5582,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionModeGeneric",
@@ -5437,6 +5639,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_NoSup",
@@ -5492,6 +5696,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_intPrim",
@@ -5545,6 +5751,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_intPrimTi",
@@ -5588,6 +5796,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_supPrim",
@@ -5641,6 +5851,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_supSec",
@@ -5694,6 +5906,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_statVisionMode_ti",
@@ -5737,6 +5951,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabDefaultLoadoutsText",
@@ -5792,6 +6008,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabDefaultLoadoutsTooltip",
@@ -5847,6 +6065,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabMyLoadoutsText",
@@ -5902,6 +6122,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabMyLoadoutsTooltip",
@@ -5957,6 +6179,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabSharedLoadoutsText",
@@ -6012,6 +6236,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_tabSharedLoadoutsTooltip",
@@ -6067,6 +6293,8 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
                 Key {
                     id: "STR_ACE_Arsenal_toolsTab",
@@ -6122,9 +6350,12 @@ Project {
                     greek: None,
                     finnish: None,
                     dutch: None,
+                    ukrainian: None,
+                    danish: None,
                 },
             ],
             containers: [],
         },
     ],
+    meta_comments: [],
 }

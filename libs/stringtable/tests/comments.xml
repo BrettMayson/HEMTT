@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="HEMTT">
+    <Package name="Test">
+        <Key ID="HasNoComment">
+            <German>Das ist eine Zeichenkette ohne Kommentar</German>
+            <Spanish>Esto es una cadena sin un comentario</Spanish>
+            <!-- This is a comment -->
+            <English>This is a string with a comment</English>
+        </Key>
+        <!-- This key has a comment -->
+        <Key ID="HasComment">
+            <German>Das ist eine Zeichenkette ohne Kommentar</German>
+            <!-- This is a comment -->
+            <English>This is a string with a comment</English>
+        </Key>
+    </Package>
+</Project>

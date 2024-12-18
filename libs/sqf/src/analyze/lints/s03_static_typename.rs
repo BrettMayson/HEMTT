@@ -9,7 +9,7 @@ use crate::{analyze::SqfLintData, Expression, NularCommand, UnaryCommand};
 crate::analyze::lint!(LintS03StaticTypename);
 
 impl Lint<SqfLintData> for LintS03StaticTypename {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "static_typename"
     }
 
@@ -17,11 +17,11 @@ impl Lint<SqfLintData> for LintS03StaticTypename {
         30
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for `typeName` on static values, which can be replaced with the string type directly"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**

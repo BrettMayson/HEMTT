@@ -8,7 +8,7 @@ use crate::{analyze::SqfLintData, Expression, UnaryCommand};
 crate::analyze::lint!(LintS08FormatArgs);
 
 impl Lint<SqfLintData> for LintS08FormatArgs {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "format_args"
     }
 
@@ -16,11 +16,11 @@ impl Lint<SqfLintData> for LintS08FormatArgs {
         80
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for format commands with incorrect argument counts"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 r#"### Example
 
 **Incorrect**
@@ -116,6 +116,7 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
     let mut token_active = false;
     let mut token_start = 0;
     for (i, c) in format.chars().enumerate() {
+        let outside_token = !token_active || i > token_start;
         if token_active && !c.is_ascii_digit() {
             token_active = false;
             if i > token_start {
@@ -133,7 +134,7 @@ fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
                 ));
             }
         }
-        if !token_active && c == '%' {
+        if !token_active && c == '%' && outside_token {
             token_active = true;
             token_start = i + 1;
         }

@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Class, Property};
 crate::analyze::lint!(LintC10ClassMissingBraces);
 
 impl Lint<SqfLintData> for LintC10ClassMissingBraces {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "class_missing_braces"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintC10ClassMissingBraces {
         100
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Reports on classes that use inheritance without braces"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
 "### Example
 
 **Incorrect**
@@ -128,7 +128,7 @@ impl Code10ClassMissingBraces {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let haystack = &processed.as_str()[self.span.clone()];
+        let haystack = &processed.extract(self.span.clone());
         let possible_end = self.span.start
             + haystack
                 .find('\n')

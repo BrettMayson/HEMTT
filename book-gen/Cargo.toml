@@ -1,15 +1,17 @@
 [package]
-name = "hemtt-book-lints"
+name = "hemtt-book-gen"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+hemtt = { path = "../bin" }
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 
-mdbook = "0.4.40"
-serde_json = "1.0.127"
+mdbook = "0.4.42"

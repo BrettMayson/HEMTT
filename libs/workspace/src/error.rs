@@ -1,5 +1,3 @@
-use hemtt_common::error::thiserror;
-
 #[derive(Debug, thiserror::Error)]
 /// Errors that can occur while parsing a version
 pub enum Error {

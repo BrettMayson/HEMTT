@@ -1,0 +1,21 @@
+---
+source: libs/stringtable/tests/comments.rs
+expression: out
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="HEMTT">
+    <Package name="Test">
+        <!-- This key has a comment -->
+        <Key ID="HasComment">
+            <!-- This is a comment -->
+            <English>This is a string with a comment</English>
+            <German>Das ist eine Zeichenkette ohne Kommentar</German>
+        </Key>
+        <Key ID="HasNoComment">
+            <!-- This is a comment -->
+            <English>This is a string with a comment</English>
+            <Spanish>Esto es una cadena sin un comentario</Spanish>
+            <German>Das ist eine Zeichenkette ohne Kommentar</German>
+        </Key>
+    </Package>
+</Project>

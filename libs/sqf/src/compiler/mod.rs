@@ -14,7 +14,6 @@ pub mod serializer;
 
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::error::thiserror;
 use hemtt_workspace::reporting::Processed;
 use serializer::CodePointer;
 
