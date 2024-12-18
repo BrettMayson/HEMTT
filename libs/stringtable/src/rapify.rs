@@ -1,6 +1,6 @@
 use crate::{Key, Project, ALL_LANGUAGES};
 use hemtt_workspace::WorkspacePath;
-use tracing::{warn, trace};
+use tracing::{trace, warn};
 
 #[derive(Default, Debug)]
 pub struct XmlbLayout {
@@ -140,7 +140,7 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
                 let unescaped = quick_xml::escape::unescape(phrase.as_str());
                 if unescaped.is_err() {
                     warn!("failed to unescape stringtable entry [{}]", phrase);
-                    return None
+                    return None;
                 }
                 write_string(&mut translation_buffer, &unescaped.unwrap_or_default());
             }
