@@ -85,11 +85,7 @@ impl Launcher {
         self.workshop.push({
             let mut path = std::env::current_dir()?;
             path.push(".hemttout/dev");
-            if cfg!(target_os = "linux") {
-                format!("Z:{}", path.display())
-            } else {
-                path.display().to_string()
-            }
+            path.display().to_string()
         });
         Ok(())
     }
@@ -170,7 +166,7 @@ impl Launcher {
                     continue;
                 }
                 let mod_path = workshop_folder.join(load_mod);
-                if !mod_path.exists() && (cfg!(windows) || !mod_path.starts_with("Z:")) {
+                if !mod_path.exists() {
                     report.push(WorkshopModNotFound::code(load_mod.to_string()));
                 };
                 if cfg!(windows) {
@@ -319,11 +315,7 @@ impl Launcher {
     }
 
     pub fn add_external_mod(&mut self, path: String) {
-        self.workshop.push(if cfg!(target_os = "linux") {
-            format!("Z:{path}")
-        } else {
-            path
-        });
+        self.workshop.push(path);
     }
 
     pub fn add_options(&mut self, options: Vec<String>) {
