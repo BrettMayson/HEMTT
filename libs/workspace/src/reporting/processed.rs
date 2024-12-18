@@ -259,6 +259,15 @@ impl Processed {
     }
 
     #[must_use]
+    /// Get the deepest tree mapping at a position in the stringified output
+    pub fn mapping_no_macros(&self, offset: usize) -> Option<&Mapping> {
+        self.mappings(offset)
+            .into_iter()
+            .rev()
+            .find(|m| !m.was_macro)
+    }
+
+    #[must_use]
     /// Get the macros defined
     pub const fn macros(&self) -> &HashMap<String, Vec<Position>> {
         &self.macros

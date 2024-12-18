@@ -295,7 +295,7 @@ impl CodeC11UnusualExtension {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed_skip_macros(&self, self.span.clone(), processed);
         self
     }
 }
