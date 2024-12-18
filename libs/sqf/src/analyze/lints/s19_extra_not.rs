@@ -11,7 +11,7 @@ use crate::{analyze::SqfLintData, Expression, UnaryCommand};
 crate::analyze::lint!(LintS19ExtraNot);
 
 impl Lint<SqfLintData> for LintS19ExtraNot {
-    fn ident(&self) -> &str {
+    fn ident(&self) -> &'static str {
         "extra_not"
     }
 
@@ -19,11 +19,11 @@ impl Lint<SqfLintData> for LintS19ExtraNot {
         190
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Checks for extra not before a comparison"
     }
 
-    fn documentation(&self) -> &str {
+    fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**
@@ -109,9 +109,9 @@ impl Code for Code19ExtraNot {
     fn message(&self) -> String {
         "Unneeded Not".to_string()
     }
-    // fn label_message(&self) -> String {
-    //     "".to_string()
-    // }
+    fn label_message(&self) -> String {
+        "unneeded not".to_string()
+    }
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
