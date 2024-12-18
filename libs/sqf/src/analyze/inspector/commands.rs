@@ -88,7 +88,8 @@ impl SciptScope {
                                 for type_p in &arg_array[2] {
                                     if let GameValue::Array(Some(type_array)) = type_p {
                                         for type_i in type_array {
-                                            var_types.extend(type_i.iter().map(GameValue::make_generic));
+                                            var_types
+                                                .extend(type_i.iter().map(GameValue::make_generic));
                                         }
                                     }
                                 }

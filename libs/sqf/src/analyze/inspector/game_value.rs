@@ -254,8 +254,8 @@ impl GameValue {
             Self::ForType(_) => Self::ForType(None),
             Self::Number(_) => Self::Number(None),
             Self::String(_) => Self::String(None),
-            _ => self.clone()
-    }
+            _ => self.clone(),
+        }
     }
     #[must_use]
     /// Get as a string for debugging

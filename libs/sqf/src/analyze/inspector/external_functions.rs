@@ -89,7 +89,9 @@ impl SciptScope {
                             }
                         }
                     }
-                    "cba_fnc_addperframehandler" | "cba_fnc_waitandexecute" | "cba_fnc_execnextframe" => {
+                    "cba_fnc_addperframehandler"
+                    | "cba_fnc_waitandexecute"
+                    | "cba_fnc_execnextframe" => {
                         if !gv_array.is_empty() {
                             self.external_new_scope(&gv_array[0], &vec![], database);
                         }
