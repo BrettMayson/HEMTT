@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression};
+use crate::{analyze::LintData, BinaryCommand, Expression};
 
 crate::analyze::lint!(LintS22ThisCall);
 
-impl Lint<SqfLintData> for LintS22ThisCall {
+impl Lint<LintData> for LintS22ThisCall {
     fn ident(&self) -> &'static str {
         "this_call"
     }
@@ -45,13 +45,13 @@ When using `call`, the called code will inherit `_this` from the calling scope. 
         LintConfig::help().with_enabled(false)
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Expression;
 
     fn run(
@@ -60,7 +60,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

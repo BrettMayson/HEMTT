@@ -6,11 +6,11 @@ use hemtt_workspace::{
     addons::Addon, lint::{AnyLintRunner, Lint, LintGroupRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath
 };
 
-use crate::{analyze::{extract_constant, SqfLintData}, parser::database::Database, BinaryCommand, Expression, Statements, UnaryCommand};
+use crate::{analyze::{extract_constant, LintData}, parser::database::Database, BinaryCommand, Expression, Statements, UnaryCommand};
 
 pub struct LintS02EventInsufficientVersion;
 
-impl Lint<SqfLintData> for LintS02EventInsufficientVersion {
+impl Lint<LintData> for LintS02EventInsufficientVersion {
     fn ident(&self) -> &'static str {
         "event_insufficient_version"
     }
@@ -54,14 +54,14 @@ Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to 
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![]
     }
 }
 
 pub struct LintS02EventUnknown;
 
-impl Lint<SqfLintData> for LintS02EventUnknown {
+impl Lint<LintData> for LintS02EventUnknown {
     fn ident(&self) -> &'static str {
         "event_unknown"
     }
@@ -107,14 +107,14 @@ Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to 
         LintConfig::warning()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![]
     }
 }
 
 pub struct LintS02EventIncorrectCommand;
 
-impl Lint<SqfLintData> for LintS02EventIncorrectCommand {
+impl Lint<LintData> for LintS02EventIncorrectCommand {
     fn ident(&self) -> &'static str {
         "event_incorrect_command"
     }
@@ -153,13 +153,13 @@ _this addMPEventHandler ["MPHit", {
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![]
     }
 }
 
 pub struct EventHandlerRunner;
-impl LintGroupRunner<SqfLintData> for EventHandlerRunner {
+impl LintGroupRunner<LintData> for EventHandlerRunner {
     type Target = Statements;
     fn run(
         &self,
@@ -167,7 +167,7 @@ impl LintGroupRunner<SqfLintData> for EventHandlerRunner {
         config: std::collections::HashMap<String, LintConfig>,
         processed: Option<&Processed>,
         target: &Statements,
-        data: &SqfLintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

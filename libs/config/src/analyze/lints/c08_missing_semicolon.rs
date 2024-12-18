@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{diagnostic::Yellow, Code, Diagnostic, Processed},
 };
 
-use crate::{analyze::SqfLintData, Property};
+use crate::{analyze::LintData, Property};
 
 crate::analyze::lint!(LintC08MissingSemicolon);
 
-impl Lint<SqfLintData> for LintC08MissingSemicolon {
+impl Lint<LintData> for LintC08MissingSemicolon {
     fn ident(&self) -> &'static str {
         "missing_semicolon"
     }
@@ -64,14 +64,14 @@ All properties must end with a semicolon, including classes.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
 
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -79,7 +79,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

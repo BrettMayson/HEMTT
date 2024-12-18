@@ -5,11 +5,11 @@ use float_ord::FloatOrd;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, parser::database::Database, BinaryCommand, Expression};
+use crate::{analyze::LintData, parser::database::Database, BinaryCommand, Expression};
 
 crate::analyze::lint!(LintS07SelectParseNumber);
 
-impl Lint<SqfLintData> for LintS07SelectParseNumber {
+impl Lint<LintData> for LintS07SelectParseNumber {
     fn ident(&self) -> &'static str {
         "select_parse_number"
     }
@@ -51,13 +51,13 @@ Using `select` on an array with 0 and 1 can be replaced with `parseNumber` for b
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
     
     fn run(
@@ -66,7 +66,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
-        data: &SqfLintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

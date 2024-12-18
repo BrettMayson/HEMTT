@@ -3,11 +3,11 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, Expression};
+use crate::{analyze::LintData, Expression};
 
 crate::analyze::lint!(LintS09BannedCommand);
 
-impl Lint<SqfLintData> for LintS09BannedCommand {
+impl Lint<LintData> for LintS09BannedCommand {
     fn ident(&self) -> &'static str {
         "banned_commands"
     }
@@ -56,13 +56,13 @@ Checks for usage of broken or banned commands."#
         Severity::Warning
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
     
     fn run(
@@ -71,7 +71,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
-        data: &SqfLintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

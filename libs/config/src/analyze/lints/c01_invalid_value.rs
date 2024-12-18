@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed},
 };
 
-use crate::{analyze::SqfLintData, Item, Value};
+use crate::{analyze::LintData, Item, Value};
 
 crate::analyze::lint!(LintC01InvalidValue);
 
-impl Lint<SqfLintData> for LintC01InvalidValue {
+impl Lint<LintData> for LintC01InvalidValue {
     fn ident(&self) -> &'static str {
         "invalid_value"
     }
@@ -49,14 +49,14 @@ Arma configs only support Strings, Numbers, and Arrays. While other tools would 
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(RunnerValue), Box::new(RunnerItem)]
     }
 }
 
 struct RunnerValue;
 
-impl LintRunner<SqfLintData> for RunnerValue {
+impl LintRunner<LintData> for RunnerValue {
     type Target = Value;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<SqfLintData> for RunnerValue {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Value,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
@@ -85,7 +85,7 @@ impl LintRunner<SqfLintData> for RunnerValue {
 }
 
 struct RunnerItem;
-impl LintRunner<SqfLintData> for RunnerItem {
+impl LintRunner<LintData> for RunnerItem {
     type Target = Item;
     fn run(
         &self,
@@ -93,7 +93,7 @@ impl LintRunner<SqfLintData> for RunnerItem {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Item,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];

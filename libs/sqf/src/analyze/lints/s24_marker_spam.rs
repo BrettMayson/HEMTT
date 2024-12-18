@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath,
 };
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement};
+use crate::{analyze::LintData, BinaryCommand, Expression, Statement};
 
 crate::analyze::lint!(LintS24MarkerSpam);
 
-impl Lint<SqfLintData> for LintS24MarkerSpam {
+impl Lint<LintData> for LintS24MarkerSpam {
     fn ident(&self) -> &'static str {
         "marker_update_spam"
     }
@@ -52,13 +52,13 @@ Using the `setMarker*Local` on all calls except the last one will reduce the amo
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Statements;
 
     fn run(
@@ -67,7 +67,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

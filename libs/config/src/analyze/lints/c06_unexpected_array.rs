@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{analyze::SqfLintData, Property, Value};
+use crate::{analyze::LintData, Property, Value};
 
 crate::analyze::lint!(LintC06UnexpectedArray);
 
-impl Lint<SqfLintData> for LintC06UnexpectedArray {
+impl Lint<LintData> for LintC06UnexpectedArray {
     fn ident(&self) -> &'static str {
         "unexpected_array"
     }
@@ -50,13 +50,13 @@ Arrays in Arma configs are denoted by `[]` after the property name.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

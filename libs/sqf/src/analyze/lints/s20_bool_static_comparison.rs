@@ -3,11 +3,11 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression};
+use crate::{analyze::LintData, BinaryCommand, Expression};
 
 crate::analyze::lint!(LintS20BoolStaticComparison);
 
-impl Lint<SqfLintData> for LintS20BoolStaticComparison {
+impl Lint<LintData> for LintS20BoolStaticComparison {
     fn ident(&self) -> &'static str {
         "bool_static_comparison"
     }
@@ -40,13 +40,13 @@ if (!_y) then {};
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Expression;
 
     fn run(
@@ -55,7 +55,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();
