@@ -80,8 +80,6 @@ class MyClass {
 ### Explanation
 
 Some properties require a specific file type. This lint will report on properties that have an unusual file type, from typos or incorrect file extensions.
-
-Properties without a file extension are also reported, but this can be disabled.
 "#
     }
 
