@@ -170,7 +170,7 @@ impl Launcher {
                     continue;
                 }
                 let mod_path = workshop_folder.join(load_mod);
-                if !mod_path.exists() {
+                if !mod_path.exists() && (cfg!(windows) || !mod_path.starts_with("Z:")) {
                     report.push(WorkshopModNotFound::code(load_mod.to_string()));
                 };
                 if cfg!(windows) {
