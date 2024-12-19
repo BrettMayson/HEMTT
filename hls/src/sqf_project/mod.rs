@@ -11,6 +11,7 @@ use url::Url;
 
 use crate::workspace::EditorWorkspaces;
 
+#[allow(dead_code)]
 pub struct CacheBundle {
     pub processed: Processed,
     pub source: WorkspacePath,
