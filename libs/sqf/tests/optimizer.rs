@@ -31,7 +31,7 @@ fn optimize(file: &str) -> Statements {
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
-    hemtt_sqf::parser::run(&Database::a3(false), &processed)
-        .unwrap()
-        .optimize()
+    let mut sqf = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+    sqf.testing_clear_issues();
+    sqf.optimize()
 }
