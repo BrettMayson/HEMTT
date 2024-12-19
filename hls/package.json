@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.2.15",
+  "version": "0.3.0",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -63,6 +63,14 @@
         "configuration": "./languages/config.configuration.json"
       }
     ],
+    "semanticTokenScopes": [
+      {
+        "language": "sqf",
+        "scopes": {
+          "property.function": ["entity.name.function.sqf"]
+        }
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "hemtt-language-server",
@@ -83,6 +91,11 @@
           "default": "off",
           "description": "Traces the communication between VS Code and the language server."
         }
+      }
+    },
+    "configurationDefaults": {
+      "[sqf]": {
+        "editor.semanticHighlighting.enabled": true
       }
     },
     "customEditors": [
@@ -137,21 +150,21 @@
     "lint": "eslint vscode-src --ext ts"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.88.0",
-    "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",
-    "@vscode/test-electron": "^2.4.0",
-    "esbuild": "^0.21.5",
-    "eslint": "^8.56.0",
-    "glob": "^10.4.1",
-    "mocha": "^10.4.0",
+    "@types/mocha": "10.0.10",
+    "@types/node": "22.10.2",
+    "@types/vscode": "1.96.0",
+    "@types/ws": "8.5.13",
+    "@typescript-eslint/eslint-plugin": "8.18.1",
+    "@typescript-eslint/parser": "8.18.1",
+    "@vscode/test-electron": "2.4.1",
+    "esbuild": "0.24.0",
+    "eslint": "9.17.0",
+    "glob": "11.0.0",
+    "mocha": "11.0.2",
     "run-script-os": "^1.1.6",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5",
-    "vscode-uri": "^3.0.8"
+    "typescript": "5.7.2",
+    "vscode-uri": "3.0.8"
   },
   "dependencies": {
     "hemtt": "file:",

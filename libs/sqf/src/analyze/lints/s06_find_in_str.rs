@@ -4,11 +4,11 @@ use float_ord::FloatOrd;
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression, UnaryCommand};
+use crate::{analyze::LintData, BinaryCommand, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS06FindInStr);
 
-impl Lint<SqfLintData> for LintS06FindInStr {
+impl Lint<LintData> for LintS06FindInStr {
     fn ident(&self) -> &'static str {
         "find_in_str"
     }
@@ -42,13 +42,13 @@ The `in` command is faster than `find` when searching for a substring in a strin
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
     
     fn run(
@@ -57,7 +57,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         let Some(processed) = processed else {
             return Vec::new();

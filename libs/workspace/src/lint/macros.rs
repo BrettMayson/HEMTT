@@ -4,7 +4,7 @@ macro_rules! lint_manager {
         $crate::paste::paste! {
             #[linkme::distributed_slice]
             pub static [<$ident:upper _LINTS>]: [std::sync::LazyLock<
-                std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<super::analyze::SqfLintData>>>,
+                std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<super::analyze::LintData>>>,
             >];
 
             #[allow(unused_macros)]
@@ -14,7 +14,7 @@ macro_rules! lint_manager {
                     pub struct $name;
                     #[linkme::distributed_slice(super::super::[<$ident:upper _LINTS>])]
                     static LINT_ADD: std::sync::LazyLock<
-                        std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<super::super::SqfLintData>>>,
+                        std::sync::Arc<Box<dyn hemtt_workspace::lint::Lint<super::super::LintData>>>,
                     > = std::sync::LazyLock::new(|| std::sync::Arc::new(Box::new($name)));
                 };
             }
@@ -24,7 +24,7 @@ macro_rules! lint_manager {
             pub fn lint_check(
                 config: std::collections::HashMap<String, hemtt_common::config::LintConfigOverride>,
             ) -> $crate::reporting::Codes {
-                let mut manager: $crate::lint::LintManager<super::analyze::SqfLintData> =
+                let mut manager: $crate::lint::LintManager<super::analyze::LintData> =
                     $crate::lint::LintManager::new(config);
                 if let Err(lint_errors) =
                     manager.extend([<$ident:upper _LINTS>].iter().map(|l| (**l).clone()).collect::<Vec<_>>())
@@ -32,8 +32,8 @@ macro_rules! lint_manager {
                     return lint_errors;
                 }
                 let groups: Vec<(
-                    $crate::lint::Lints<super::analyze::SqfLintData>,
-                    Box<dyn $crate::lint::AnyLintGroupRunner<super::analyze::SqfLintData>>,
+                    $crate::lint::Lints<super::analyze::LintData>,
+                    Box<dyn $crate::lint::AnyLintGroupRunner<super::analyze::LintData>>,
                 )> = $groups;
                 for group in groups {
                     if let Err(lint_errors) = manager.push_group(group.0, group.1) {

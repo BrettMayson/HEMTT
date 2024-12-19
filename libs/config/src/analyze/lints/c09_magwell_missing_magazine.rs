@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
-use crate::{analyze::SqfLintData, Class, Config, Ident, Item, Property, Str, Value};
+use crate::{analyze::LintData, Class, Config, Ident, Item, Property, Str, Value};
 
 crate::analyze::lint!(LintC09MagwellMissingMagazine);
 
-impl Lint<SqfLintData> for LintC09MagwellMissingMagazine {
+impl Lint<LintData> for LintC09MagwellMissingMagazine {
     fn ident(&self) -> &'static str {
         "magwell_missing_magazine"
     }
@@ -74,13 +74,13 @@ Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe
         Severity::Warning
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -88,7 +88,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];

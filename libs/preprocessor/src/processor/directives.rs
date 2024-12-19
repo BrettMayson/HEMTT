@@ -224,7 +224,7 @@ impl Processor {
             }
             found_path
         };
-        let tokens = crate::parse::parse(&path)?;
+        let tokens = crate::parse::file(&path)?;
         self.file_stack.push(path.clone());
         self.included_files.push(path);
         let mut stream = tokens.into_iter().peekmore();

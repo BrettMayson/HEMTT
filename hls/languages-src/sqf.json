@@ -120,30 +120,6 @@
       "match": "\\s*(?i)(player|cursorTarget)\\b",
       "name": "variable.language.vobject.sqf"
     },
-    "commands-1": {
-      "match": "\\s*(?i)($commands1$)\\b",
-      "name": "entity.name.function.sqf"
-    },
-    "commands-2": {
-      "match": "\\s*(?i)($commands2$)\\b",
-      "name": "entity.name.function.sqf"
-    },
-    "commands-3": {
-      "match": "\\s*(?i)($commands3$)\\b",
-      "name": "entity.name.function.sqf"
-    },
-    "commands-4": {
-      "match": "\\s*(?i)($commands4$)\\b",
-      "name": "entity.name.function.sqf"
-    },
-    "commands-5": {
-      "match": "\\s*(?i)($commands5$)\\b",
-      "name": "entity.name.function.sqf"
-    },
-    "commands-6": {
-      "match": "\\s*(?i)($commands6$)\\b",
-      "name": "entity.name.function.sqf"
-    },
     "other": {
       "name": "meta.expression.sqf",
       "patterns": [
@@ -207,24 +183,6 @@
       "patterns": [
         {
           "include": "#vObject-statements"
-        },
-        {
-          "include": "#commands-1"
-        },
-        {
-          "include": "#commands-2"
-        },
-        {
-          "include": "#commands-3"
-        },
-        {
-          "include": "#commands-4"
-        },
-        {
-          "include": "#commands-5"
-        },
-        {
-          "include": "#commands-6"
         }
       ]
     },
@@ -324,7 +282,7 @@
           "name": "keyword.operator.assignment.sqf"
         },
         "6": {
-          "name": "meta.function-call.sqf"
+          "name": "support.class.sqf"
         }
       },
       "end": " |;|{|}|\t",
@@ -337,13 +295,13 @@
     },
     "code-managers": {
       "match": "(\\s*)(compile|compileFinal|exec|execFSM|execVM|callExtension)\\b",
-      "name": "meta.function-call.sqf"
+      "name": "support.class.sqf"
     },
     "fnc-call": {
       "begin": "(\\s*)(call|spawn)(\\s+)([a-zA-Z_0-9]+)",
       "beginCaptures": {
         "2": {
-          "name": "meta.function-call.sqf"
+          "name": "support.class.sqf"
         },
         "4": {
           "name": "support.function.sqf"
@@ -443,7 +401,13 @@
     "qstring-double": {
       "begin": "\"",
       "end": "\"",
-      "name": "string.double.sqf"
+      "name": "string.double.sqf",
+      "patterns": [
+        {
+          "match": "%[0-9]+",
+          "name": "variable.other.format.sqf"
+        }
+      ]
     },
     "qstring-single": {
       "begin": "'",

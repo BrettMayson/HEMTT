@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed},
 };
 
-use crate::{analyze::SqfLintData, Class, Property};
+use crate::{analyze::LintData, Class, Property};
 
 crate::analyze::lint!(LintC10ClassMissingBraces);
 
-impl Lint<SqfLintData> for LintC10ClassMissingBraces {
+impl Lint<LintData> for LintC10ClassMissingBraces {
     fn ident(&self) -> &'static str {
         "class_missing_braces"
     }
@@ -54,14 +54,14 @@ All classes using inheritance with a parent class must use braces `{}`, even if 
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
 
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -69,7 +69,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

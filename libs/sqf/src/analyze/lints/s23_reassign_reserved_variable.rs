@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath,
 };
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression, Statement, UnaryCommand};
+use crate::{analyze::LintData, BinaryCommand, Expression, Statement, UnaryCommand};
 
 crate::analyze::lint!(LintS23ReassignReservedVariable);
 
-impl Lint<SqfLintData> for LintS23ReassignReservedVariable {
+impl Lint<LintData> for LintS23ReassignReservedVariable {
     fn ident(&self) -> &'static str {
         "reasign_reserved_variable"
     }
@@ -49,7 +49,7 @@ Reassigning reserved variables can lead to unintentional behavior.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(StatementsRunner {}), Box::new(ExpressionRunner {})]
     }
 }
@@ -59,7 +59,7 @@ static RESERVED: [&str; 8] = [
 ];
 
 struct StatementsRunner {}
-impl LintRunner<SqfLintData> for StatementsRunner {
+impl LintRunner<LintData> for StatementsRunner {
     type Target = crate::Statements;
 
     #[allow(clippy::significant_drop_tightening)]
@@ -69,7 +69,7 @@ impl LintRunner<SqfLintData> for StatementsRunner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();
@@ -122,7 +122,7 @@ impl LintRunner<SqfLintData> for StatementsRunner {
 }
 
 struct ExpressionRunner {}
-impl LintRunner<SqfLintData> for ExpressionRunner {
+impl LintRunner<LintData> for ExpressionRunner {
     type Target = crate::Expression;
 
     #[allow(clippy::significant_drop_tightening)]
@@ -132,7 +132,7 @@ impl LintRunner<SqfLintData> for ExpressionRunner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

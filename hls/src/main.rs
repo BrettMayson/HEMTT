@@ -1,3 +1,4 @@
+use sqf::SqfAnalyzer;
 use tokio::net::TcpStream;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -6,14 +7,17 @@ use tower_lsp::{Client, LanguageServer, LspService, Server};
 use tracing::{debug, info, Level};
 
 use crate::diag_manager::DiagManager;
-use crate::sqf::SqfCache;
+use crate::sqf_project::SqfCache;
 use crate::workspace::EditorWorkspaces;
 
 mod config;
 mod diag_manager;
 mod positions;
-mod sqf;
+pub mod sqf;
+mod sqf_project;
 mod workspace;
+
+pub const LEGEND_TYPE: &[SemanticTokenType] = &[SemanticTokenType::FUNCTION];
 
 #[derive(Debug)]
 struct Backend {
@@ -37,6 +41,31 @@ impl LanguageServer for Backend {
                     }),
                     file_operations: None,
                 }),
+                semantic_tokens_provider: Some(
+                    SemanticTokensServerCapabilities::SemanticTokensRegistrationOptions(
+                        SemanticTokensRegistrationOptions {
+                            text_document_registration_options: {
+                                TextDocumentRegistrationOptions {
+                                    document_selector: Some(vec![DocumentFilter {
+                                        language: Some("sqf".to_string()),
+                                        scheme: Some("file".to_string()),
+                                        pattern: None,
+                                    }]),
+                                }
+                            },
+                            semantic_tokens_options: SemanticTokensOptions {
+                                work_done_progress_options: WorkDoneProgressOptions::default(),
+                                legend: SemanticTokensLegend {
+                                    token_types: LEGEND_TYPE.into(),
+                                    token_modifiers: vec![],
+                                },
+                                range: Some(false),
+                                full: Some(SemanticTokensFullOptions::Bool(true)),
+                            },
+                            static_registration_options: StaticRegistrationOptions::default(),
+                        },
+                    ),
+                ),
                 ..ServerCapabilities::default()
             },
             ..Default::default()
@@ -70,30 +99,82 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        debug!("did_open: {:?}", params);
-        SqfCache::cache(params.text_document.uri).await;
+        debug!("did_open: {:?}", params.text_document.uri);
+        SqfCache::cache(params.text_document.uri.clone()).await;
+        SqfAnalyzer::get()
+            .on_change(TextDocumentItem {
+                uri: params.text_document.uri,
+                text: TextInformation::Full(&params.text_document.text),
+                version: Some(params.text_document.version),
+            })
+            .await;
     }
 
-    async fn did_change(&self, _: DidChangeTextDocumentParams) {
-        debug!("did_change");
+    async fn did_change(&self, params: DidChangeTextDocumentParams) {
+        debug!("did_change: {:?}", params.text_document.uri);
+        SqfAnalyzer::get()
+            .on_change(TextDocumentItem {
+                text: TextInformation::Changes(params.content_changes),
+                uri: params.text_document.uri,
+                version: Some(params.text_document.version),
+            })
+            .await;
     }
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
-        debug!("did_save");
+        debug!("did_save: {:?}", params.text_document.uri);
         SqfCache::cache(params.text_document.uri.clone()).await;
-        config::did_save(params.text_document.uri).await;
+        config::did_save(params.text_document.uri.clone()).await;
+        if let Some(text) = params.text {
+            SqfAnalyzer::get()
+                .on_change(TextDocumentItem {
+                    uri: params.text_document.uri,
+                    text: TextInformation::Full(&text),
+                    version: None,
+                })
+                .await;
+        }
     }
 
-    async fn did_close(&self, _: DidCloseTextDocumentParams) {
-        debug!("did_close");
+    async fn did_close(&self, params: DidCloseTextDocumentParams) {
+        debug!("did_close: {:?}", params.text_document.uri);
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
-        Ok(SqfCache::get().hover(
-            params.text_document_position_params.text_document.uri,
-            params.text_document_position_params.position,
-        ))
+        Ok(SqfAnalyzer::get()
+            .hover(
+                params.text_document_position_params.text_document.uri,
+                params.text_document_position_params.position,
+            )
+            .await)
     }
+
+    async fn semantic_tokens_full(
+        &self,
+        params: SemanticTokensParams,
+    ) -> Result<Option<SemanticTokensResult>> {
+        Ok(SqfAnalyzer::get()
+            .get_tokens(&params.text_document.uri)
+            .await
+            .map(|tokens| {
+                debug!("sending tokens: {}", tokens.len());
+                SemanticTokensResult::Tokens(SemanticTokens {
+                    data: tokens,
+                    ..Default::default()
+                })
+            }))
+    }
+}
+
+pub struct TextDocumentItem<'a> {
+    uri: Url,
+    text: TextInformation<'a>,
+    version: Option<i32>,
+}
+
+pub enum TextInformation<'a> {
+    Full(&'a str),
+    Changes(Vec<TextDocumentContentChangeEvent>),
 }
 
 #[tokio::main]

@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed},
 };
 
-use crate::{analyze::SqfLintData, Class, Config, Ident, Property};
+use crate::{analyze::LintData, Class, Config, Ident, Property};
 
 crate::analyze::lint!(LintC02DuplicateProperty);
 
-impl Lint<SqfLintData> for LintC02DuplicateProperty {
+impl Lint<LintData> for LintC02DuplicateProperty {
     fn ident(&self) -> &'static str {
         "duplicate_property"
     }
@@ -54,13 +54,13 @@ Properties on a class must be unique, regardless of the type of property.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -68,7 +68,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];

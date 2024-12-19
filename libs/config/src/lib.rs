@@ -12,7 +12,7 @@ pub mod parse;
 pub mod rapify;
 pub use model::*;
 
-use analyze::{Analyze, CfgPatch, ChumskyCode, SqfLintData};
+use analyze::{Analyze, CfgPatch, ChumskyCode, LintData};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
@@ -52,7 +52,14 @@ pub fn parse(
                     .collect::<Vec<_>>(),
             )?;
             Ok(ConfigReport {
-                codes: config.analyze(&SqfLintData {}, project, processed, &manager),
+                codes: config.analyze(
+                    &LintData {
+                        path: String::new(),
+                    },
+                    project,
+                    processed,
+                    &manager,
+                ),
                 patches: config.get_patches(),
                 config,
             })

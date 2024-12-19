@@ -3,11 +3,11 @@ use std::{cmp::Ordering, ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, Expression, UnaryCommand};
+use crate::{analyze::LintData, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS08FormatArgs);
 
-impl Lint<SqfLintData> for LintS08FormatArgs {
+impl Lint<LintData> for LintS08FormatArgs {
     fn ident(&self) -> &'static str {
         "format_args"
     }
@@ -53,13 +53,13 @@ The `format` and `formatText` commands requires the correct number of arguments 
         Severity::Warning
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Expression;
     
     fn run(
@@ -68,7 +68,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

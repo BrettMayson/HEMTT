@@ -6,21 +6,21 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, BinaryCommand, Expression};
+use crate::{analyze::SqfLintData, Expression, UnaryCommand};
 
-crate::analyze::lint!(LintS22ThisCall);
+crate::analyze::lint!(LintS19ExtraNot);
 
-impl Lint<LintData> for LintS22ThisCall {
+impl Lint<SqfLintData> for LintS19ExtraNot {
     fn ident(&self) -> &'static str {
-        "this_call"
+        "extra_not"
     }
 
     fn sort(&self) -> u32 {
-        220
+        190
     }
 
     fn description(&self) -> &'static str {
-        "Checks for usage of `_this call`, where `_this` is not necessary"
+        "Checks for extra not before a comparison"
     }
 
     fn documentation(&self) -> &'static str {
@@ -28,30 +28,26 @@ impl Lint<LintData> for LintS22ThisCall {
 
 **Incorrect**
 ```sqf
-_this call _my_function;
+! (5 isEqualTo 6)
 ```
 **Correct**
 ```sqf
-call _my_function;
+(5 isNotEqualTo 6)
 ```
-
-### Explanation
-
-When using `call`, the called code will inherit `_this` from the calling scope. This means that `_this` is not necessary in the call, and can be omitted for better performance.
 "
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<LintData> for Runner {
+impl LintRunner<SqfLintData> for Runner {
     type Target = crate::Expression;
 
     fn run(
@@ -60,73 +56,68 @@ impl LintRunner<LintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &LintData,
+        _data: &SqfLintData,
     ) -> Codes {
+        const COMPARISON_CMDS: &[&str] = &[
+            "==",
+            "!=",
+            "isEqualTo",
+            "isNotEqualTo",
+            "<",
+            "<=",
+            ">",
+            ">=",
+        ];
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, _, _) = target else {
+        let Expression::UnaryCommand(UnaryCommand::Not, rhs, range) = target else {
             return Vec::new();
         };
-        
-        if cmd.to_lowercase() != "call" {
+        let Expression::BinaryCommand(ref last_cmd, _, _, _) = **rhs else {
+            return Vec::new();
+        };
+        if !COMPARISON_CMDS.contains(&last_cmd.as_str()) {
             return Vec::new();
         }
 
-        if matches!(&**lhs, Expression::Variable(name, _) if name == "_this") {
-            return vec![Arc::new(CodeS22ThisCall::new(
-                lhs.span(),
-                processed,
-                config.severity(),
-            ))];
-        }
-
-        Vec::new()
+        vec![Arc::new(Code19ExtraNot::new(
+            range.clone(),
+            processed,
+            config.severity(),
+        ))]
     }
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeS22ThisCall {
+pub struct Code19ExtraNot {
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS22ThisCall {
+impl Code for Code19ExtraNot {
     fn ident(&self) -> &'static str {
-        "L-S22"
+        "L-S19"
     }
-
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#this_call")
+        Some("/analysis/sqf.html#extra_not")
     }
-
     fn severity(&self) -> Severity {
         self.severity
     }
-
     fn message(&self) -> String {
-        "Unnecessary `_this` in `call`".to_string()
+        "Unneeded Not".to_string()
     }
-
     fn label_message(&self) -> String {
-        String::new()
+        "unneeded not".to_string()
     }
-
-    fn note(&self) -> Option<String> {
-        Some("`call` inherits `_this` from the calling scope".to_string())
-    }
-
-    fn help(&self) -> Option<String> {
-        Some("Remove `_this` from the call".to_string())
-    }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
 }
 
-impl CodeS22ThisCall {
+impl Code19ExtraNot {
     #[must_use]
     pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
@@ -136,7 +127,6 @@ impl CodeS22ThisCall {
         }
         .generate_processed(processed)
     }
-
     fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
         self

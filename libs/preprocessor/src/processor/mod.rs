@@ -72,7 +72,7 @@ impl Processor {
         processor.file_stack.push(path.clone());
 
         let tokens =
-            crate::parse::parse(path).map_err(|e| (processor.included_files.clone(), e))?;
+            crate::parse::file(path).map_err(|e| (processor.included_files.clone(), e))?;
         let mut pragma = Pragma::root();
         let mut buffer = Vec::with_capacity(tokens.len());
         let mut stream = tokens.into_iter().peekmore();
@@ -329,6 +329,6 @@ pub mod tests {
             .unwrap()
             .write_all(content.as_bytes())
             .unwrap();
-        crate::parse::parse(&test).unwrap().into_iter().peekmore()
+        crate::parse::file(&test).unwrap().into_iter().peekmore()
     }
 }

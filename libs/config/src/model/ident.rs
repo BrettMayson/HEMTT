@@ -37,4 +37,10 @@ impl Ident {
     pub fn is_empty(&self) -> bool {
         self.value.is_empty()
     }
+
+    #[must_use]
+    /// Get the span of the identifier
+    pub fn span(&self) -> Range<usize> {
+        self.span.clone()
+    }
 }

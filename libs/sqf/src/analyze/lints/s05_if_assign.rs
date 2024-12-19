@@ -3,11 +3,11 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::{extract_constant, SqfLintData}, BinaryCommand, Expression, UnaryCommand};
+use crate::{analyze::{extract_constant, LintData}, BinaryCommand, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS05IfAssign);
 
-impl Lint<SqfLintData> for LintS05IfAssign {
+impl Lint<LintData> for LintS05IfAssign {
     fn ident(&self) -> &'static str {
         "if_assign"
     }
@@ -49,14 +49,14 @@ private _x = ["orange", "apple"] select _myVar;
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
 
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
 
     fn run(
@@ -65,7 +65,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         let Some(processed) = processed else {
             return Vec::new();

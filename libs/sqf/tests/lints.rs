@@ -37,6 +37,7 @@ lint!(s15_shadowed, false);
 lint!(s16_not_private, false);
 lint!(s17_var_all_caps, true);
 lint!(s18_in_vehicle_check, true);
+lint!(s19_extra_not, true);
 lint!(s20_bool_static_comparison, true);
 lint!(s21_invalid_comparisons, true);
 lint!(s22_this_call, true);

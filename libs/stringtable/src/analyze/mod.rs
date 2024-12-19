@@ -8,7 +8,7 @@ pub mod lints {
 
 lint_manager!(stringtable, vec![]);
 
-pub struct SqfLintData {}
+pub struct LintData {}
 
 pub fn lint_one(addon: &StringtableData, project: Option<&ProjectConfig>) -> Codes {
     let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
@@ -22,7 +22,7 @@ pub fn lint_one(addon: &StringtableData, project: Option<&ProjectConfig>) -> Cod
     ) {
         return e;
     }
-    manager.run(&SqfLintData {}, project, None, addon)
+    manager.run(&LintData {}, project, None, addon)
 }
 
 #[allow(clippy::ptr_arg)] // Needed for &Vec for &dyn Any
@@ -38,5 +38,5 @@ pub fn lint_all(addons: &Vec<StringtableData>, project: Option<&ProjectConfig>) 
     ) {
         return e;
     }
-    manager.run(&SqfLintData {}, project, None, addons)
+    manager.run(&LintData {}, project, None, addons)
 }

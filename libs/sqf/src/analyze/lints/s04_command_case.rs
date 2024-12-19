@@ -3,11 +3,11 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, Expression};
+use crate::{analyze::LintData, Expression};
 
 crate::analyze::lint!(LintS04CommandCase);
 
-impl Lint<SqfLintData> for LintS04CommandCase {
+impl Lint<LintData> for LintS04CommandCase {
     fn ident(&self) -> &'static str {
         "command_case"
     }
@@ -49,13 +49,13 @@ private _leaky = getWaterLeakiness vehicle player;
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
     
     fn run(
@@ -64,7 +64,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
-        data: &SqfLintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

@@ -3,11 +3,11 @@ use std::sync::Arc;
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}, WorkspacePath};
 
-use crate::{analyze::SqfLintData, Project};
+use crate::{analyze::LintData, Project};
 
 crate::analyze::lint!(LintL01Sorted);
 
-impl Lint<SqfLintData> for LintL01Sorted {
+impl Lint<LintData> for LintL01Sorted {
     fn ident(&self) -> &'static str {
         "sorted"
     }
@@ -28,7 +28,7 @@ impl Lint<SqfLintData> for LintL01Sorted {
         LintConfig::warning()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
@@ -36,7 +36,7 @@ impl Lint<SqfLintData> for LintL01Sorted {
 pub type StringtableData = (Project, WorkspacePath, String);
 
 pub struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Vec<StringtableData>;
     fn run(
         &self,
@@ -44,7 +44,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &hemtt_common::config::LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Vec<StringtableData>,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let mut unsorted = Vec::new();
         let mut codes: Codes = Vec::new();

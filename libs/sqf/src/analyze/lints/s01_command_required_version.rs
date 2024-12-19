@@ -8,11 +8,11 @@ use hemtt_workspace::{
     WorkspacePath,
 };
 
-use crate::{analyze::SqfLintData, Statements};
+use crate::{analyze::LintData, Statements};
 
 crate::analyze::lint!(LintS01CommandRequiredVersion);
 
-impl Lint<SqfLintData> for LintS01CommandRequiredVersion {
+impl Lint<LintData> for LintS01CommandRequiredVersion {
     fn ident(&self) -> &'static str {
         "required_version"
     }
@@ -50,13 +50,13 @@ Check [the wiki](https://community.bistudio.com/wiki/Category:Introduced_with_Ar
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 pub struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Statements;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &hemtt_common::config::LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Statements,
-        data: &SqfLintData,
+        data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         let Some(processed) = processed else {
             return Vec::new();

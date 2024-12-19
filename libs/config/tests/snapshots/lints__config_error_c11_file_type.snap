@@ -1,0 +1,20 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c11_file_type))
+---
+[0m[1m[38;5;11mwarning[L-C11UE][0m[1m: a property that references a file has an unusual file type[0m
+  [0m[36m┌─[0m c11_file_type.hpp:4:31
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m         editorPreview = "test.[0m[33mjgp[0m";
+  [0m[36m│[0m                               [0m[33m^^^[0m [0m[33munusual file type[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: expected file type jpg
+
+
+[0m[1m[38;5;11mwarning[L-C11UE][0m[1m: a property that references a file has an unusual file type[0m
+  [0m[36m┌─[0m c11_file_type.hpp:5:57
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m         wounds[] = {"would1.pac", "wound2.paa", "wound3.[0m[33mpng[0m"};
+  [0m[36m│[0m                                                         [0m[33m^^^[0m [0m[33munusual file type[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: expected file type paa
