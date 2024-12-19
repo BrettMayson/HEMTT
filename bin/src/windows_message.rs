@@ -15,9 +15,7 @@ pub fn check_no_terminal() {
 
 fn is_console_created_for_this_program() -> bool {
     unsafe {
-        // Check if there is a console window
         if GetConsoleWindow().is_null() {
-            // No console window is attached
             return false;
         }
 
@@ -32,14 +30,13 @@ fn is_console_created_for_this_program() -> bool {
 }
 
 fn message() {
-    let message = "This is a command-line tool. To use it, open a terminal and run it there.\n\nWould you like to open the documentation?";
-    let title = "CLI Tool - Information";
+    let message = "HEMTT is a command-line tool intended to be used in a terminal. To use it, open a terminal (like in Visual Studio Code) and run it there.\n\nWould you like to open The HEMTT Book for more information?";
+    let title = "HEMTT";
 
     // Convert strings to wide strings for the Windows API
     let message_wide: Vec<u16> = message.encode_utf16().chain(Some(0)).collect();
     let title_wide: Vec<u16> = title.encode_utf16().chain(Some(0)).collect();
 
-    // Show the message box with Yes/No buttons
     let response = unsafe {
         MessageBoxW(
             std::ptr::null_mut(),
