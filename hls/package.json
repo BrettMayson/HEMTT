@@ -16,7 +16,7 @@
     "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
-    "vscode": "^1.88.0"
+    "vscode": "^1.96.0"
   },
   "enabledApiProposals": [],
   "activationEvents": [],
