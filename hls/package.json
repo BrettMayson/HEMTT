@@ -67,7 +67,9 @@
       {
         "language": "sqf",
         "scopes": {
-          "property.function": ["entity.name.function.sqf"]
+          "property.function": [
+            "entity.name.function.sqf"
+          ]
         }
       }
     ],

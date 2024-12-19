@@ -2,7 +2,15 @@ use clap::Parser;
 use hemtt_workspace::reporting::WorkspaceFiles;
 use tracing::error;
 
+#[cfg(windows)]
+mod windows_message;
+
 fn main() {
+    #[cfg(windows)]
+    if !hemtt::is_ci() && std::env::args().count() == 1 {
+        windows_message::check_no_terminal();
+    }
+
     std::panic::set_hook(Box::new(|panic| {
         error!("{panic}");
         eprintln!(
