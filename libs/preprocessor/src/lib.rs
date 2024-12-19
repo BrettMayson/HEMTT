@@ -8,7 +8,7 @@ mod defines;
 mod definition;
 mod error;
 mod ifstate;
-mod parse;
+pub mod parse;
 mod processor;
 
 pub use error::Error;

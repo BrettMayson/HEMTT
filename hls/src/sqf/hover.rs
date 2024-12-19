@@ -1,38 +1,51 @@
 use arma3_wiki::model::{Command, Locality, Since, Syntax};
 use hemtt_sqf::parser::database::Database;
+use hemtt_workspace::reporting::Symbol;
 use regex::Regex;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position};
-use tracing::debug;
+use tracing::{debug, error, warn};
 use url::Url;
 
-use super::{locate::Locate, SqfCache};
+use crate::workspace::EditorWorkspaces;
+
+use super::SqfAnalyzer;
 
 const WIKI: &str = "https://community.bistudio.com/wiki/";
 
-impl SqfCache {
-    pub fn hover(&self, uri: Url, position: Position) -> Option<Hover> {
-        let files = self.files.read().unwrap();
-        if let Some(cache_bundle) = files.get(&uri) {
-            if let Some(expression) =
-                (&cache_bundle.processed, &cache_bundle.statements).locate_expression(uri, position)
-            {
-                match expression {
-                    hemtt_sqf::Expression::NularCommand(command, _) => {
-                        return Some(hover(command.as_str(), &cache_bundle.database))
+impl SqfAnalyzer {
+    pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {
+        let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
+            warn!("Failed to find workspace for {:?}", url);
+            return None;
+        };
+        let database = {
+            if !self.databases.contains_key(&workspace) {
+                let database = match Database::a3_with_workspace(workspace.root(), false) {
+                    Ok(database) => database,
+                    Err(e) => {
+                        error!("Failed to create database: {:?}", e);
+                        Database::a3(false)
                     }
-                    hemtt_sqf::Expression::UnaryCommand(command, _, _) => {
-                        return Some(hover(command.as_str(), &cache_bundle.database))
-                    }
-                    hemtt_sqf::Expression::BinaryCommand(command, _, _, _) => {
-                        return Some(hover(command.as_str(), &cache_bundle.database))
-                    }
-                    _ => return None,
-                }
+                };
+                self.databases.insert(workspace.clone(), database);
             }
-        } else {
-            debug!("No cached file for uri: {} in {:?}", uri, files.keys());
-        }
-        None
+            self.databases.get(&workspace).unwrap()
+        };
+        let tokens = self.tokens.get(&url).unwrap();
+        #[allow(clippy::int_plus_one)]
+        let token = tokens.iter().find(|token| {
+            let start = token.position().start();
+            let end = token.position().end();
+            (start.line() as u32 == position.line + 1)
+                && (end.line() as u32 == position.line + 1)
+                && (start.column() as u32 <= position.character)
+                && (end.column() as u32 >= position.character)
+        })?;
+        let Symbol::Word(word) = token.symbol() else {
+            return None;
+        };
+        database.wiki().commands().get(word)?;
+        Some(hover(word, &database))
     }
 }
 

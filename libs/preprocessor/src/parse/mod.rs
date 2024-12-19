@@ -23,9 +23,20 @@ pub struct PreprocessorParser;
 ///
 /// # Panics
 /// If the file is invalid
-pub fn parse(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
+pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     let source = path.read_to_string()?;
-    let pairs = PreprocessorParser::parse(Rule::file, &source)
+    str(&source, path)
+}
+
+/// Parse a string into tokens
+/// 
+/// # Errors
+/// If the string is invalid
+/// 
+/// # Panics
+/// If the string is invalid
+pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
+    let pairs = PreprocessorParser::parse(Rule::file, source)
         .map_err(|e| ParsingFailed::code(e, path.clone()))?;
     let mut tokens = Vec::new();
     let mut line = 1;
@@ -165,7 +176,7 @@ mod tests {
             .unwrap()
             .write_all(b"value = 1;")
             .unwrap();
-        let tokens = crate::parse::parse(&test).unwrap();
+        let tokens = crate::parse::file(&test).unwrap();
         assert_eq!(tokens.len(), 7);
     }
 
@@ -181,7 +192,7 @@ mod tests {
             .unwrap()
             .write_all(content.as_bytes())
             .unwrap();
-        let tokens = crate::parse::parse(&test).unwrap();
+        let tokens = crate::parse::file(&test).unwrap();
         assert_eq!(tokens.len(), content.chars().count() + 1); // +1 for EOI
     }
 }
