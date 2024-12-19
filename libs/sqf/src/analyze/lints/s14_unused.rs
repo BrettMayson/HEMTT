@@ -1,7 +1,7 @@
 use crate::{
     analyze::{
         inspector::{Issue, VarSource},
-        SqfLintData,
+        LintData,
     },
     Statements,
 };
@@ -14,7 +14,7 @@ use std::{ops::Range, sync::Arc};
 
 crate::analyze::lint!(LintS14Unused);
 
-impl Lint<SqfLintData> for LintS14Unused {
+impl Lint<LintData> for LintS14Unused {
     fn ident(&self) -> &'static str {
         "unused"
     }
@@ -39,13 +39,13 @@ Checks for vars that are never used."
     fn default_config(&self) -> LintConfig {
         LintConfig::help().with_enabled(false)
     }
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 pub struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Statements;
     fn run(
         &self,
@@ -53,7 +53,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &hemtt_common::config::LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Statements,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         if target.issues().is_empty() {
             return Vec::new();

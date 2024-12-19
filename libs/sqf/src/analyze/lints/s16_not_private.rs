@@ -1,5 +1,5 @@
 use crate::{
-    analyze::{inspector::Issue, SqfLintData},
+    analyze::{inspector::Issue, LintData},
     Statements,
 };
 use hemtt_common::config::LintConfig;
@@ -11,7 +11,7 @@ use std::{ops::Range, sync::Arc};
 
 crate::analyze::lint!(LintS16NotPrivate);
 
-impl Lint<SqfLintData> for LintS16NotPrivate {
+impl Lint<LintData> for LintS16NotPrivate {
     fn ident(&self) -> &'static str {
         "not_private"
     }
@@ -36,13 +36,13 @@ Checks local variables that are not private."
     fn default_config(&self) -> LintConfig {
         LintConfig::help().with_enabled(false)
     }
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 pub struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Statements;
     fn run(
         &self,
@@ -50,7 +50,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &hemtt_common::config::LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Statements,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         if target.issues().is_empty() {
             return Vec::new();
