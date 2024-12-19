@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed},
 };
 
-use crate::{analyze::SqfLintData, Class, Config, Property};
+use crate::{analyze::LintData, Class, Config, Property};
 
 crate::analyze::lint!(LintC03DuplicateClasses);
 
-impl Lint<SqfLintData> for LintC03DuplicateClasses {
+impl Lint<LintData> for LintC03DuplicateClasses {
     fn ident(&self) -> &'static str {
         "duplicate_classes"
     }
@@ -58,13 +58,13 @@ Children classes can only be defined once in a class.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -72,7 +72,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];

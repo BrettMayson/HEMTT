@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed},
 };
 
-use crate::{analyze::SqfLintData, Class, Config, Property};
+use crate::{analyze::LintData, Class, Config, Property};
 
 crate::analyze::lint!(LintC04ExternalMissing);
 
-impl Lint<SqfLintData> for LintC04ExternalMissing {
+impl Lint<LintData> for LintC04ExternalMissing {
     fn ident(&self) -> &'static str {
         "external_missing"
     }
@@ -53,13 +53,13 @@ Read more about [class inheritance](https://community.bistudio.com/wiki/Class_In
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
@@ -67,7 +67,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

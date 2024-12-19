@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::SqfLintData, BinaryCommand, Expression, NularCommand, UnaryCommand};
+use crate::{analyze::LintData, BinaryCommand, Expression, NularCommand, UnaryCommand};
 
 crate::analyze::lint!(LintS18InVehicleCheck);
 
-impl Lint<SqfLintData> for LintS18InVehicleCheck {
+impl Lint<LintData> for LintS18InVehicleCheck {
     fn ident(&self) -> &'static str {
         "in_vehicle_check"
     }
@@ -45,13 +45,13 @@ Using `isNull objectParent x` is faster and more reliable than `vehicle x == x` 
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Expression;
 
     fn run(
@@ -60,7 +60,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();

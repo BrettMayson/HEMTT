@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{analyze::SqfLintData, Property, Value};
+use crate::{analyze::LintData, Property, Value};
 
 crate::analyze::lint!(LintC07ExpectedArray);
 
-impl Lint<SqfLintData> for LintC07ExpectedArray {
+impl Lint<LintData> for LintC07ExpectedArray {
     fn ident(&self) -> &'static str {
         "expected_array"
     }
@@ -50,13 +50,13 @@ Only properties that are arrays must have `[]` after the property name.
         LintConfig::error()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Property;
     fn run(
         &self,
@@ -64,7 +64,7 @@ impl LintRunner<SqfLintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];

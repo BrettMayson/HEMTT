@@ -41,7 +41,7 @@ pub fn analyze(
     addon: Arc<Addon>,
     database: Arc<Database>,
 ) -> Codes {
-    let mut manager: LintManager<SqfLintData> = LintManager::new(
+    let mut manager: LintManager<LintData> = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
     );
     if let Err(lint_errors) =
@@ -62,15 +62,15 @@ pub fn analyze(
     statements.analyze(&(addon, database), project, processed, &manager)
 }
 
-pub type SqfLintData = (Arc<Addon>, Arc<Database>);
+pub type LintData = (Arc<Addon>, Arc<Database>);
 
 pub trait Analyze: Sized + 'static {
     fn analyze(
         &self,
-        data: &SqfLintData,
+        data: &LintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<SqfLintData>,
+        manager: &LintManager<LintData>,
     ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(data, project, Some(processed), self));
@@ -85,10 +85,10 @@ impl Analyze for BinaryCommand {}
 impl Analyze for Statements {
     fn analyze(
         &self,
-        data: &SqfLintData,
+        data: &LintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<SqfLintData>,
+        manager: &LintManager<LintData>,
     ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(data, project, Some(processed), self));
@@ -102,10 +102,10 @@ impl Analyze for Statements {
 impl Analyze for Statement {
     fn analyze(
         &self,
-        data: &SqfLintData,
+        data: &LintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<SqfLintData>,
+        manager: &LintManager<LintData>,
     ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(data, project, Some(processed), self));
@@ -123,10 +123,10 @@ impl Analyze for Statement {
 impl Analyze for Expression {
     fn analyze(
         &self,
-        data: &SqfLintData,
+        data: &LintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
-        manager: &LintManager<SqfLintData>,
+        manager: &LintManager<LintData>,
     ) -> Codes {
         let mut codes = vec![];
         codes.extend(manager.run(data, project, Some(processed), self));

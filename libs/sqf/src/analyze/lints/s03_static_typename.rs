@@ -4,11 +4,11 @@ use float_ord::FloatOrd;
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::SqfLintData, Expression, NularCommand, UnaryCommand};
+use crate::{analyze::LintData, Expression, NularCommand, UnaryCommand};
 
 crate::analyze::lint!(LintS03StaticTypename);
 
-impl Lint<SqfLintData> for LintS03StaticTypename {
+impl Lint<LintData> for LintS03StaticTypename {
     fn ident(&self) -> &'static str {
         "static_typename"
     }
@@ -46,13 +46,13 @@ if (typeName _myVar == "STRING") then {
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = Expression;
     
     fn run(
@@ -61,7 +61,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> hemtt_workspace::reporting::Codes {
         let Some(processed) = processed else {
             return Vec::new();

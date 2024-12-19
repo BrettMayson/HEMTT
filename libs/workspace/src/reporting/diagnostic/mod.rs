@@ -58,6 +58,40 @@ impl Diagnostic {
         diag
     }
 
+    pub fn from_code_processed_skip_macros(
+        code: &impl Code,
+        mut span: std::ops::Range<usize>,
+        processed: &crate::reporting::Processed,
+    ) -> Option<Self> {
+        let mut diag = Self::new(code.ident(), code.message()).set_severity(code.severity());
+
+        // Error out out bounds, will never show, just use last char
+        if span.start == processed.as_str().len() {
+            span.start = processed.as_str().len() - 1;
+            span.end = processed.as_str().len() - 1;
+        }
+        let map_start = processed.mapping_no_macros(span.start)?;
+        let map_file = processed.source(map_start.source())?;
+        diag.labels.push(
+            Label::primary(
+                map_file.0.clone(),
+                map_start.original_start()..map_start.original_end(),
+            )
+            .with_message(code.label_message()),
+        );
+        diag.link = code.link().map(std::string::ToString::to_string);
+        if let Some(note) = code.note() {
+            diag.notes.push(note);
+        }
+        if let Some(help) = code.help() {
+            diag.help.push(help);
+        }
+        if let Some(suggestion) = code.suggestion() {
+            diag.suggestions.push(suggestion);
+        }
+        Some(diag)
+    }
+
     pub fn from_code_processed(
         code: &impl Code,
         mut span: std::ops::Range<usize>,

@@ -5,7 +5,7 @@ use hemtt_sqf::analyze::{
     lints::s02_event_handlers::{
         LintS02EventIncorrectCommand, LintS02EventInsufficientVersion, LintS02EventUnknown,
     },
-    SqfLintData, SQF_LINTS,
+    LintData, SQF_LINTS,
 };
 use hemtt_workspace::lint::{Lint, Lints};
 use mdbook::book::Chapter;
@@ -43,7 +43,7 @@ fn sqf(chapter: &mut Chapter) {
         .iter()
         .map(|l| (**l).clone())
         .chain({
-            let lints: Lints<SqfLintData> = vec![
+            let lints: Lints<LintData> = vec![
                 Arc::new(Box::new(LintS02EventUnknown)),
                 Arc::new(Box::new(LintS02EventIncorrectCommand)),
                 Arc::new(Box::new(LintS02EventInsufficientVersion)),
