@@ -29,10 +29,10 @@ pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
 }
 
 /// Parse a string into tokens
-/// 
+///
 /// # Errors
 /// If the string is invalid
-/// 
+///
 /// # Panics
 /// If the string is invalid
 pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
