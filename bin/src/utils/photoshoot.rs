@@ -19,7 +19,7 @@ impl Photoshoot {
             &new.to_image(),
             512,
             512,
-            image::imageops::FilterType::Nearest,
+            image::imageops::FilterType::Lanczos3,
         );
         for pixel in new.pixels_mut() {
             if is_background(*pixel) {
@@ -40,7 +40,8 @@ impl Photoshoot {
     /// [`Error::Image`] if the image could not be loaded
     pub fn preview(path: &Path) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
         let new = image::open(path)?.into_rgb8();
-        let mut new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Nearest);
+        let mut new =
+            image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
         for pixel in new.pixels_mut() {
             Self::gamma_rgb(pixel);
         }
