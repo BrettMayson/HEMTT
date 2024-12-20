@@ -1,0 +1,26 @@
+---
+source: libs/stringtable/tests/sort.rs
+expression: out
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="test">
+    <Package name="test">
+        <Key ID="A1">
+            <Original>Origin</Original>
+        </Key>
+        <Container name="A">
+            <Key ID="A3">
+                <Original>Origin</Original>
+            </Key>
+        </Container>
+        <Container name="B">
+            <Key ID="A2">
+                <English>EN</English>
+                <German>DE</German>
+            </Key>
+            <Key ID="B1">
+                <Original>Origin</Original>
+            </Key>
+        </Container>
+    </Package>
+</Project>

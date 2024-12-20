@@ -166,6 +166,7 @@ impl LanguageServer for Backend {
     }
 }
 
+#[allow(dead_code)]
 pub struct TextDocumentItem<'a> {
     uri: Url,
     text: TextInformation<'a>,

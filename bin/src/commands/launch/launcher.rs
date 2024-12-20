@@ -241,7 +241,7 @@ impl Launcher {
             Ok(Some(if cfg!(target_os = "windows") {
                 super::platforms::windows(&self.arma3, &self.executable, &instances[0])?
             } else {
-                super::platforms::linux(&args)?
+                super::platforms::linux(&instances[0])?
             }))
         } else {
             let mut children = Vec::new();

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="HEMTT">
+    <Package name="Test">
+        <Key ID="A1">
+            <Original>A & B</Original>
+        </Key>
+        <Key ID="A2">
+            <German>DE</German>
+            <English>EN</English>
+        </Key>
+    </Package>
+</Project>

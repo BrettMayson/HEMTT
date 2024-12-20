@@ -1,6 +1,6 @@
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{lint::LintManager, lint_manager, reporting::Codes};
-use lints::_01_sorted::StringtableData;
+use lints::l01_sorted::StringtableData;
 
 pub mod lints {
     automod::dir!(pub "src/analyze/lints");

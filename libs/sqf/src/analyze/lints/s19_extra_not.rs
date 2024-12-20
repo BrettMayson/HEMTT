@@ -6,11 +6,11 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::SqfLintData, Expression, UnaryCommand};
+use crate::{analyze::LintData, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS19ExtraNot);
 
-impl Lint<SqfLintData> for LintS19ExtraNot {
+impl Lint<LintData> for LintS19ExtraNot {
     fn ident(&self) -> &'static str {
         "extra_not"
     }
@@ -41,13 +41,13 @@ impl Lint<SqfLintData> for LintS19ExtraNot {
         LintConfig::help()
     }
 
-    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<SqfLintData>>> {
+    fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
 }
 
 struct Runner;
-impl LintRunner<SqfLintData> for Runner {
+impl LintRunner<LintData> for Runner {
     type Target = crate::Expression;
 
     fn run(
@@ -56,7 +56,7 @@ impl LintRunner<SqfLintData> for Runner {
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &SqfLintData,
+        _data: &LintData,
     ) -> Codes {
         const COMPARISON_CMDS: &[&str] = &[
             "==",

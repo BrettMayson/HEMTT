@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="test">
+    <Package name="test">
+        <Key ID="A1">
+            <Original>Origin</Original>
+        </Key>
+        <Container name="B">
+            <Key ID="B1">
+                <Original>Origin</Original>
+            </Key>
+            <Key ID="A2">
+                <German>DE</German>
+                <English>EN</English>
+            </Key>
+        </Container>
+        <Container name="A">
+            <Key ID="A3">
+                <Original>Origin</Original>
+            </Key>
+        </Container>
+    </Package>
+</Project>

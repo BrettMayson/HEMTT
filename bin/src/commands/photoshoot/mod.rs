@@ -12,6 +12,7 @@ use hemtt_common::{
     config::ProjectConfig,
 };
 use hemtt_config::{Class, Config, Property, Value};
+use image::codecs::jpeg::JpegEncoder;
 
 use crate::{
     context::{Context, PreservePrevious},
@@ -261,7 +262,15 @@ impl Action for Photoshoot {
                             .to_string(),
                         target.display()
                     );
-                    image.save(target).expect("save");
+                    let target = std::fs::File::create(target).expect("create");
+                    JpegEncoder::new_with_quality(target, 90)
+                        .encode(
+                            &image,
+                            image.width(),
+                            image.height(),
+                            image::ExtendedColorType::Rgb8,
+                        )
+                        .expect("encode");
                 }
                 vec![self.next_message()]
             }
