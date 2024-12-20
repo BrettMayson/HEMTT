@@ -18,7 +18,10 @@ struct Translation {
     have_unique: bool,
 }
 
+/// Converts a stringtable.xml to a stringtable.bin
+///
 /// # Panics
+/// If the files can't be read or written from the vfs
 pub fn convert_stringtable(project: &Project, xml_path: &WorkspacePath) {
     let result = rapify(project);
 

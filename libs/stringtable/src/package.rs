@@ -32,6 +32,7 @@ impl Package {
 
     pub fn sort(&mut self) {
         self.keys.sort_by(|a, b| a.id().cmp(b.id()));
+        self.containers.sort_by(|a, b| a.name().cmp(b.name()));
         for container in &mut self.containers {
             container.sort();
         }
