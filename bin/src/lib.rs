@@ -106,25 +106,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
-    if !is_ci() {
-        match update::check() {
-            Ok(Some(version)) => {
-                info!("HEMTT {version} is available, please update");
-                if let Ok(path) = std::env::current_exe() {
-                    trace!("HEMTT is installed at: {}", path.display());
-                    if path.display().to_string().contains("\\Winget\\") {
-                        info!(
-                            "HEMTT is installed via winget, run `winget upgrade hemtt` to update"
-                        );
-                    }
-                }
-            }
-            Err(e) => {
-                error!("Failed to check for updates: {e}");
-            }
-            _ => {}
-        }
-    }
+    check_for_update();
 
     trace!("version: {}", env!("HEMTT_VERSION"));
     trace!("platform: {}", std::env::consts::OS);
@@ -217,6 +199,47 @@ pub fn is_ci() -> bool {
         }
     }
     false
+}
+
+fn check_for_update() {
+    if is_ci() {
+        return;
+    }
+    match update::check() {
+        Ok(Some(version)) => {
+            info!("HEMTT {version} is available, please update");
+        }
+        Err(e) => {
+            error!("Failed to check for updates: {e}");
+            return;
+        }
+        _ => return,
+    }
+    let Ok(path) = std::env::current_exe() else {
+        return;
+    };
+    trace!("HEMTT is installed at: {}", path.display());
+    let os = std::env::consts::OS;
+    let (message, filter) = match os {
+        "windows" => (
+            "HEMTT is installed via winget, run `winget upgrade hemtt` to update",
+            "\\Winget\\".to_string()
+        ),
+        "linux" | "macos" => (
+            "HEMTT is installed in home directory, run `curl -sSf https://hemtt.dev/install.sh | sh` to update", {
+                let mut home = dirs::home_dir().expect("home directory exists");
+                if os == "linux" {
+                    home = home.join(".local");
+                };
+                home.join("bin").display().to_string()
+            }
+        ),
+        _ => return,
+    };
+
+    if path.display().to_string().contains(&filter) {
+        info!(message);
+    }
 }
 
 #[derive(clap::ValueEnum, Clone, Default, Debug, serde::Serialize)]
