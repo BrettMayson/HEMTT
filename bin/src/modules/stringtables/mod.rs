@@ -6,7 +6,7 @@ use hemtt_stringtable::{
     Project,
 };
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic},
+    reporting::{Code, Diagnostic, Severity},
     WorkspacePath,
 };
 
@@ -69,7 +69,7 @@ impl Module for Stringtables {
 
         for stringtable in stringtables {
             let codes = lint_one(&stringtable, Some(ctx.config()));
-            if codes.is_empty() {
+            if !codes.iter().any(|c| c.severity() == Severity::Error) {
                 convert_stringtable(&stringtable.0, &stringtable.1);
             }
             report.extend(codes);

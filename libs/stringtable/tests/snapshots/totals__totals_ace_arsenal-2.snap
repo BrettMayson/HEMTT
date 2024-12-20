@@ -1,0 +1,31 @@
+---
+source: libs/stringtable/tests/totals.rs
+expression: arsenal.totals()
+---
+Totals {
+    total: 115,
+    original: 0,
+    english: 115,
+    czech: 91,
+    french: 115,
+    spanish: 115,
+    italian: 115,
+    polish: 111,
+    portuguese: 112,
+    russian: 115,
+    german: 115,
+    korean: 115,
+    japanese: 115,
+    chinese: 91,
+    chinesesimp: 100,
+    turkish: 79,
+    swedish: 0,
+    slovak: 0,
+    serbocroatian: 0,
+    norwegian: 0,
+    icelandic: 0,
+    hungarian: 1,
+    greek: 0,
+    finnish: 0,
+    dutch: 0,
+}
