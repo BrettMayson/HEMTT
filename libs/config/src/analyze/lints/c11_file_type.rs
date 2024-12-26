@@ -26,11 +26,11 @@ impl Lint<LintData> for LintC11FileType {
     fn documentation(&self) -> &'static str {
 r#"### Configuration
 
-- **allow_no_extension**: Allow properties to not have a file extension, default is `true`.
+- **allow_no_extension**: Allow properties to not have a file extension, default is `false`.
 
 ```toml
 [lints.config.file_type]
-options.allow_no_extension = false
+options.allow_no_extension = true
 ```
 
 ### Example
@@ -114,7 +114,7 @@ impl LintRunner<LintData> for Runner {
         let allow_no_extension = if let Some(toml::Value::Boolean(allow_no_extension)) = config.option("allow_no_extension") {
             *allow_no_extension
         } else {
-            true
+            false
         };
         // Arrays
         if let Value::Array(values) = value {
@@ -138,6 +138,10 @@ impl LintRunner<LintData> for Runner {
 
 fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed, config: &LintConfig) -> Option<Arc<dyn Code>> {
     let value_str = value.value();
+    // Skip if it contains no backslashes, probably a class name
+    if !value_str.contains('\\') {
+        return None;
+    }
     if name == "sound" && value_str.starts_with("db") {
         return None;
     }
