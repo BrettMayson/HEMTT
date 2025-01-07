@@ -83,6 +83,7 @@ impl SciptScope {
                                     &vec![
                                         ("_target", GameValue::Object),
                                         ("_player", GameValue::Object),
+                                        ("_actionParams", GameValue::Anything),
                                     ],
                                     database,
                                 );
