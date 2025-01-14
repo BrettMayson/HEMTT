@@ -2,7 +2,11 @@
 
 use std::{collections::HashSet, ops::Range};
 
-use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
+use crate::{
+    analyze::inspector::{Issue, VarSource},
+    parser::database::Database,
+    Expression,
+};
 
 use super::{game_value::GameValue, SciptScope};
 
@@ -402,5 +406,36 @@ impl SciptScope {
             }
         }
         return_value
+    }
+
+    pub fn cmd_eqx_count_lint(
+        &mut self,
+        lhs: &Box<Expression>,
+        rhs: &Box<Expression>,
+        source: &Range<usize>,
+        database: &Database,
+        equal_zero: bool,
+    ) {
+        let Expression::Number(float_ord::FloatOrd(0.0), _) = **rhs else {
+            return;
+        };
+        let Expression::UnaryCommand(crate::UnaryCommand::Named(ref lhs_cmd), ref count_input, _) =
+            **lhs
+        else {
+            return;
+        };
+        if lhs_cmd != "count" {
+            return;
+        }
+        let count_input_set = self.eval_expression(count_input, database);
+        if count_input_set.is_empty()
+            || !count_input_set
+                .iter()
+                .all(|arr| matches!(arr, GameValue::Array(_)))
+        {
+            return;
+        }
+        self.errors
+            .insert(Issue::CountArrayComparison(equal_zero, source.clone()));
     }
 }

@@ -73,8 +73,8 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         }
 
-        let comparisions = extract_comparisons(arg);
-        let flat = flatten_comparisons(comparisions);
+        let comparisons = extract_comparisons(arg);
+        let flat = flatten_comparisons(comparisons);
         let issues = find_issues(flat);
         issues
             .into_iter()

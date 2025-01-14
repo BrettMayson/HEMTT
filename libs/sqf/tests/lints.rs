@@ -43,6 +43,7 @@ lint!(s21_invalid_comparisons, true);
 lint!(s22_this_call, true);
 lint!(s23_reassign_reserved_variable, true);
 lint!(s24_marker_spam, true);
+lint!(s25_count_array_comp, false);
 
 fn lint(file: &str, ignore_inspector: bool) -> String {
     let folder = std::path::PathBuf::from(ROOT);

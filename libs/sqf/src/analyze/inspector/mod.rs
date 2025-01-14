@@ -26,6 +26,7 @@ pub enum Issue {
     Unused(String, VarSource),
     Shadowed(String, Range<usize>),
     NotPrivate(String, Range<usize>),
+    CountArrayComparison(bool, Range<usize>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -317,6 +318,14 @@ impl SciptScope {
                         None
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
+                    BinaryCommand::Eq => {
+                        self.cmd_eqx_count_lint(&lhs, &rhs, source, database, true);
+                        None
+                    }
+                    BinaryCommand::Greater | BinaryCommand::NotEq => {
+                        self.cmd_eqx_count_lint(&lhs, &rhs, source, database, false);
+                        None
+                    }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
                         "params" => Some(self.cmd_generic_params(&rhs_set)),
                         "call" => {
