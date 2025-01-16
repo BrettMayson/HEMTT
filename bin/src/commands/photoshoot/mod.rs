@@ -214,7 +214,7 @@ impl Action for Photoshoot {
                     return vec![self.next_message()];
                 }
                 let image =
-                    utils::photoshoot::Photoshoot::weapon(&weapon, &self.from).expect("image");
+                    utils::photoshoot::Photoshoot::weapon(&weapon, &self.from, false).expect("image");
                 let dst_png = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
@@ -231,6 +231,10 @@ impl Action for Photoshoot {
                 std::fs::create_dir_all(target.parent().expect("has parent")).expect("create dir");
                 info!("Created `{}` at `{}`", weapon, target.display());
                 std::fs::rename(dst_paa, target).expect("rename");
+                vec![self.next_message()]
+            }
+            fromarma::Photoshoot::WeaponUnsupported(weapon) => {
+                warn!("Photoshoot: WeaponUnsupported: {}", weapon);
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::Previews => {

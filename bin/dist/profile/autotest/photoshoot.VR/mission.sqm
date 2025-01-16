@@ -8,14 +8,14 @@ class EditorData
 	toggles=1;
 	class ItemIDProvider
 	{
-		nextID=23;
+		nextID=28;
 	};
 	class Camera
 	{
-		pos[]={392.44739,17.170723,193.28291};
-		dir[]={-0.94935566,-0.18725735,0.25230667};
-		up[]={-0.18097511,0.98231089,0.04809707};
-		aside[]={0.25685012,0,0.96645135};
+		pos[]={100.67725,16.615911,91.92012};
+		dir[]={0.11379819,-0.095945619,0.9889648};
+		up[]={0.010984627,0.99537742,0.095464736};
+		aside[]={0.99355066,-1.1195261e-06,-0.11432844};
 	};
 };
 binarizationWanted=0;
@@ -92,7 +92,7 @@ class Mission
 	};
 	class Entities
 	{
-		items=3;
+		items=8;
 		class Item0
 		{
 			dataType="Object";
@@ -157,6 +157,7 @@ class Mission
 					flags=2;
 					class Attributes
 					{
+						init="this hideObject true";
 						name="model_clothing";
 						disableSimulation=1;
 						ignoreByDynSimulGrid=1;
@@ -194,7 +195,7 @@ class Mission
 								class data
 								{
 									singleType="STRING";
-									value="HEMTTPhotoshoot";
+									value="";
 								};
 							};
 						};
@@ -257,11 +258,213 @@ class Mission
 			side="Empty";
 			class Attributes
 			{
+				init="this hideObject true";
 				name="camera_uniform";
 			};
 			id=6;
 			type="Sign_Arrow_Direction_Blue_F";
 			atlOffset=11.299999;
+		};
+		class Item3
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={100,16.349998,95};
+			};
+			side="Empty";
+			class Attributes
+			{
+				init="this hideObject true";
+				name="item_position";
+			};
+			id=23;
+			type="Sign_Pointer_Blue_F";
+			atlOffset=11.299999;
+		};
+		class Item4
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={95,15,95};
+				angles[]={0,4.712389,0};
+			};
+			side="Empty";
+			class Attributes
+			{
+			};
+			id=24;
+			type="UserTexture10m_F";
+			atlOffset=10;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ObjectTextureCustom0";
+					expression="_this setObjectTextureGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="#(rgb,8,8,3)color(1,0,1,1)";
+						};
+					};
+				};
+				class Attribute1
+				{
+					property="ObjectMaterialCustom0";
+					expression="_this setObjectMaterialGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="\x\hemtt\addons\photoshoot\chroma.rvmat";
+						};
+					};
+				};
+				nAttributes=2;
+			};
+		};
+		class Item5
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={105,15,95};
+				angles[]={0,1.5707964,0};
+			};
+			side="Empty";
+			class Attributes
+			{
+			};
+			id=25;
+			type="UserTexture10m_F";
+			atlOffset=10;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ObjectTextureCustom0";
+					expression="_this setObjectTextureGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="#(rgb,8,8,3)color(1,0,1,1)";
+						};
+					};
+				};
+				class Attribute1
+				{
+					property="ObjectMaterialCustom0";
+					expression="_this setObjectMaterialGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="\x\hemtt\addons\photoshoot\chroma.rvmat";
+						};
+					};
+				};
+				nAttributes=2;
+			};
+		};
+		class Item6
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={100,15,90};
+				angles[]={0,3.1415927,0};
+			};
+			side="Empty";
+			class Attributes
+			{
+			};
+			id=26;
+			type="UserTexture10m_F";
+			atlOffset=10;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ObjectTextureCustom0";
+					expression="_this setObjectTextureGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="#(rgb,8,8,3)color(1,0,1,1)";
+						};
+					};
+				};
+				class Attribute1
+				{
+					property="ObjectMaterialCustom0";
+					expression="_this setObjectMaterialGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="\x\hemtt\addons\photoshoot\chroma.rvmat";
+						};
+					};
+				};
+				nAttributes=2;
+			};
+		};
+		class Item7
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={100,10,95};
+				angles[]={1.5707964,0,0};
+			};
+			side="Empty";
+			class Attributes
+			{
+			};
+			id=27;
+			type="UserTexture10m_F";
+			atlOffset=5;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ObjectTextureCustom0";
+					expression="_this setObjectTextureGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="#(rgb,8,8,3)color(1,0,1,1)";
+						};
+					};
+				};
+				class Attribute1
+				{
+					property="ObjectMaterialCustom0";
+					expression="_this setObjectMaterialGlobal [0,_value]";
+					class Value
+					{
+						class data
+						{
+							singleType="STRING";
+							value="\x\hemtt\addons\photoshoot\chroma.rvmat";
+						};
+					};
+				};
+				nAttributes=2;
+			};
 		};
 	};
 };

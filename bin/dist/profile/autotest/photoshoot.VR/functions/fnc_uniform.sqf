@@ -12,6 +12,7 @@ ps_cam camSetDir vectorDir camera_uniform;
 ps_cam camSetPos getPos camera_uniform;
 hideObject camera_uniform;
 ps_cam camCommit 0;
+model_clothing hideObject false;
 
 sleep 0.1;
 
@@ -22,4 +23,5 @@ model_clothing setFace "HEMTTPhotoshoot";
 waitUntil { 10 preloadObject model_clothing };
 screenshot format ["%1.png", _uniform];
 sleep 0.3;
+model_clothing hideObject true;
 "hemtt_comm" callExtension ["photoshoot:weapon", [_uniform]];
