@@ -286,8 +286,10 @@ fn find_weapons(ctx: &Context) -> HashMap<String, String> {
         .read()
         .expect("addon configs")
         .iter()
-        .for_each(|(_, config)| {
-            weapons.extend(weapons_from_config(ctx, config));
+        .for_each(|(_, configs)| {
+            for (_, config) in configs {
+                weapons.extend(weapons_from_config(ctx, config));
+            }
         });
     weapons
 }
@@ -361,8 +363,10 @@ fn find_previews(ctx: &Context) -> HashMap<String, String> {
         .read()
         .expect("addon configs")
         .iter()
-        .for_each(|(_, config)| {
-            previews.extend(previews_from_config(ctx, config));
+        .for_each(|(_, configs)| {
+            for (_, config) in configs {
+                previews.extend(previews_from_config(ctx, config));
+            }
         });
     previews
 }

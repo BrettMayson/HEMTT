@@ -20,11 +20,13 @@ use crate::{context::Context, error::Error, progress::progress_bar, report::Repo
 
 use super::Module;
 
+type InnerAddonConfig = RwLock<HashMap<(String, Location), Vec<(WorkspacePath, Config)>>>;
+
 #[derive(Default)]
-pub struct AddonConfigs(RwLock<HashMap<(String, Location), Config>>);
+pub struct AddonConfigs(InnerAddonConfig);
 
 impl std::ops::Deref for AddonConfigs {
-    type Target = RwLock<HashMap<(String, Location), Config>>;
+    type Target = InnerAddonConfig;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -162,10 +164,9 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 .get::<AddonConfigs>()
                 .write()
                 .expect("state is poisoned")
-                .insert(
-                    (addon.name().to_owned(), *addon.location()),
-                    configreport.config().clone(),
-                );
+                .entry((addon.name().to_owned(), *addon.location()))
+                .or_default()
+                .push((file.to_owned(), configreport.config().clone()));
         }
         path.with_extension("bin")?
     } else {
