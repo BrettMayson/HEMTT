@@ -484,6 +484,7 @@ impl Code for CodeS02IncorrectCommand {
                         target, self.alternatives[0].0, self.id
                     ))
                 } else {
+                    #[allow(clippy::literal_string_with_formatting_args)]
                     Some(format!(
                         "{{target}} {} [\"{}\", {{ …",
                         self.alternatives[0].0, self.id
