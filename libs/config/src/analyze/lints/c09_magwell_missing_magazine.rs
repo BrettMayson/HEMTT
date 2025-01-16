@@ -141,6 +141,7 @@ impl LintRunner<LintData> for Runner {
                         continue;
                     };
                     if let Some(project) = project {
+                        if project.prefix().is_empty() { continue; }
                         if !value
                             .to_lowercase()
                             .starts_with(&project.prefix().to_lowercase())
