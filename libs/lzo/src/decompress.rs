@@ -7,7 +7,7 @@ use crate::LzoError;
 
 const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p.cast::<u8>();
-    (*input.offset(0isize) as i32 | (*input.offset(1isize) as i32) << 8i32) as u16
+    (*input.offset(0isize) as i32 | ((*input.offset(1isize) as i32) << 8i32)) as u16
 }
 
 #[no_mangle]
@@ -226,7 +226,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                         if t >= 64usize {
                             next = t & 3usize;
                             m_pos = op.offset(-1isize).cast_const();
-                            m_pos = m_pos.offset(-((t >> 2i32 & 7usize) as isize));
+                            m_pos = m_pos.offset(-(((t >> 2i32) & 7usize) as isize));
                             m_pos = m_pos.offset(
                                 -((i32::from(*{
                                     let old = ip;
