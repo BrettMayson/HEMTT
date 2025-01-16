@@ -395,7 +395,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     let old = op;
                     op = op.offset(1isize);
                     old
-                } = (m_len.wrapping_sub(1usize) << 5i32 | ((m_off & 7usize) << 2i32)) as u8;
+                } = ((m_len.wrapping_sub(1usize) << 5i32) | ((m_off & 7usize) << 2i32)) as u8;
                 *{
                     let old = op;
                     op = op.offset(1isize);
