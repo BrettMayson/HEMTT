@@ -89,9 +89,10 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         configs.push("photoshoot".to_string());
     }
     let launch = read_config(&config, &configs, &mut report);
-    let Some(launch) = launch else {
+    let Some(mut launch) = launch else {
         return Ok(report);
     };
+    launch.set_mission(None);
 
     let (report, dev_ctx) = super::dev::execute(
         &dev::Command {

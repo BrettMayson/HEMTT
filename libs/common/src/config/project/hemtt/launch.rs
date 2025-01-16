@@ -71,6 +71,10 @@ impl LaunchOptions {
         self.mission.as_ref()
     }
 
+    pub fn set_mission(&mut self, mission: Option<String>) {
+        self.mission = mission;
+    }
+
     #[must_use]
     /// Extra launch parameters
     pub fn parameters(&self) -> &[String] {
