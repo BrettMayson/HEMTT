@@ -10,7 +10,11 @@ impl Photoshoot {
     ///
     /// # Errors
     /// [`Error::Image`] if the image could not be loaded
-    pub fn weapon(name: &str, from: &Path, uniform: bool) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
+    pub fn weapon(
+        name: &str,
+        from: &Path,
+        uniform: bool,
+    ) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
         let path = from.join(format!("{name}.png"));
         let mut new = image::open(&path)?.into_rgba8();
         for pixel in new.pixels_mut() {
@@ -49,8 +53,7 @@ impl Photoshoot {
         for pixel in new.pixels_mut() {
             Self::gamma_rgb(pixel);
         }
-        let new =
-            image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
+        let new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
         std::fs::remove_file(path)?;
         Ok(new)
     }

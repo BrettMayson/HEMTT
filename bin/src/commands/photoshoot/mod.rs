@@ -213,8 +213,8 @@ impl Action for Photoshoot {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image =
-                    utils::photoshoot::Photoshoot::weapon(&weapon, &self.from, false).expect("image");
+                let image = utils::photoshoot::Photoshoot::weapon(&weapon, &self.from, false)
+                    .expect("image");
                 let dst_png = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
