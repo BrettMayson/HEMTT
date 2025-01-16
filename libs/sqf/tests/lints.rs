@@ -39,6 +39,8 @@ lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
 
+lint!(s26_short_circuit_bool_var);
+
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
