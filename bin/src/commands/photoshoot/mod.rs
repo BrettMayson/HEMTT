@@ -44,6 +44,9 @@ pub struct Command {
     config: Option<Vec<String>>,
 
     #[clap(flatten)]
+    binarize: dev::BinarizeArgs,
+
+    #[clap(flatten)]
     global: crate::GlobalArgs,
 }
 
@@ -100,9 +103,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             dev: dev::DevArgs {
                 optional: Vec::new(),
                 all_optionals: true,
-                binarize: false,
                 no_rap: false,
             },
+            binarize: cmd.binarize.clone(),
             just: JustArgs { just: Vec::new() },
         },
         launch.optionals(),
