@@ -51,6 +51,7 @@ pub mod fromarma {
     pub enum Photoshoot {
         Ready,
         Weapon(String),
+        WeaponUnsupported(String),
         Previews,
     }
 }
