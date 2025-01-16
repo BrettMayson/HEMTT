@@ -312,7 +312,7 @@ fn weapons_from_config(ctx: &Context, config: &Config) -> HashMap<String, String
             name, properties, ..
         }) = root
         {
-            if name.as_str() != "CfgWeapons" {
+            if name.as_str().to_lowercase() != "cfgweapons" {
                 return;
             }
             for prop in properties {
@@ -328,7 +328,7 @@ fn weapons_from_config(ctx: &Context, config: &Config) -> HashMap<String, String
                             ..
                         } = prop
                         {
-                            if name.as_str() == "picture" {
+                            if name.as_str().to_lowercase() == "picture" {
                                 Some(value.value().to_string())
                             } else {
                                 None
@@ -389,7 +389,7 @@ fn previews_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
             name, properties, ..
         }) = root
         {
-            if name.as_str() != "CfgVehicles" {
+            if name.as_str().to_lowercase() != "cfgvehicles" {
                 return;
             }
             for prop in properties {
@@ -405,7 +405,7 @@ fn previews_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
                             ..
                         } = prop
                         {
-                            if name.as_str() == "editorPreview" {
+                            if name.as_str().to_lowercase() == "editorpreview" {
                                 Some(value.value().to_string())
                             } else {
                                 None
