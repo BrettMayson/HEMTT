@@ -9,20 +9,19 @@ use std::{
 use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Token;
-use ropey::Rope;
 use tokio::sync::RwLock;
 use tower_lsp::lsp_types::SemanticToken;
 use tracing::{error, warn};
 use url::Url;
 
 use crate::{
+    files::FileCache,
     workspace::{EditorWorkspace, EditorWorkspaces},
-    TextDocumentItem, TextInformation,
+    TextDocumentItem,
 };
 
 #[derive(Clone)]
 pub struct SqfAnalyzer {
-    ropes: Arc<RwLock<HashMap<Url, Rope>>>,
     tokens: Arc<DashMap<Url, Vec<Arc<Token>>>>,
     semantic: Arc<RwLock<HashMap<Url, Vec<SemanticToken>>>>,
     databases: Arc<DashMap<EditorWorkspace, Database>>,
@@ -31,7 +30,6 @@ pub struct SqfAnalyzer {
 impl SqfAnalyzer {
     pub fn get() -> Self {
         static SINGLETON: LazyLock<SqfAnalyzer> = LazyLock::new(|| SqfAnalyzer {
-            ropes: Arc::new(RwLock::new(HashMap::new())),
             tokens: Arc::new(DashMap::new()),
             semantic: Arc::new(RwLock::new(HashMap::new())),
             databases: Arc::new(DashMap::new()),
@@ -39,16 +37,18 @@ impl SqfAnalyzer {
         (*SINGLETON).clone()
     }
 
-    pub async fn on_change<'a>(&self, document: TextDocumentItem<'a>) {
-        let url = document.uri;
-        if !url.path().ends_with(".sqf") {
+    pub async fn on_change<'a>(&self, document: &TextDocumentItem<'a>) {
+        if !document.uri.path().ends_with(".sqf") {
             return;
         }
-        let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
-            warn!("Failed to find workspace for {:?}", url);
+        let Some(workspace) = EditorWorkspaces::get()
+            .guess_workspace_retry(&document.uri)
+            .await
+        else {
+            warn!("Failed to find workspace for {:?}", document.uri);
             return;
         };
-        let source = if let Ok(source) = workspace.join_url(&url) {
+        let source = if let Ok(source) = workspace.join_url(&document.uri) {
             source
         } else {
             hemtt_workspace::Workspace::builder()
@@ -70,33 +70,9 @@ impl SqfAnalyzer {
             self.databases.get(&workspace).unwrap()
         };
 
-        match document.text {
-            TextInformation::Full(text) => {
-                let mut ropes = self.ropes.write().await;
-                ropes.insert(url.clone(), Rope::from_str(text));
-            }
-            TextInformation::Changes(changes) => {
-                let mut ropes = self.ropes.write().await;
-                let rope = ropes
-                    .entry(url.clone())
-                    .or_insert_with(|| Rope::from_str(""));
-                for change in changes {
-                    if let Some(range) = change.range {
-                        let start = rope.line_to_char(range.start.line as usize)
-                            + range.start.character as usize;
-                        rope.remove(
-                            start
-                                ..rope.line_to_char(range.end.line as usize)
-                                    + range.end.character as usize,
-                        );
-                        rope.insert(start, change.text.as_str());
-                    }
-                }
-            }
-        }
-        let text = self.ropes.read().await.get(&url).unwrap().to_string();
+        let text = FileCache::get().text(&document.uri).unwrap();
 
-        self.process_semantic_tokens(url, text, source, &database)
+        self.process_semantic_tokens(document.uri.clone(), text, source, &database)
             .await;
     }
 }

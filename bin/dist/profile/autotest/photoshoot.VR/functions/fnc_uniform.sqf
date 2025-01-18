@@ -7,7 +7,9 @@ if (_uniform == "") exitWith {};
 if (isNil "ps_cam") then {
     ps_cam = "camera" camCreate [0,0,0];
 };
+
 ps_cam cameraEffect ["INTERNAL", "BACK"];
+ps_cam camSetTarget objNull;
 ps_cam camSetDir vectorDir camera_uniform;
 ps_cam camSetPos getPos camera_uniform;
 hideObject camera_uniform;

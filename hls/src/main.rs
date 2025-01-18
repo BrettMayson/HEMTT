@@ -1,3 +1,4 @@
+use files::FileCache;
 use sqf::SqfAnalyzer;
 use tokio::net::TcpStream;
 use tower_lsp::jsonrpc::Result;
@@ -10,8 +11,10 @@ use crate::diag_manager::DiagManager;
 use crate::sqf_project::SqfCache;
 use crate::workspace::EditorWorkspaces;
 
+mod color;
 mod config;
 mod diag_manager;
+mod files;
 mod positions;
 pub mod sqf;
 mod sqf_project;
@@ -66,6 +69,23 @@ impl LanguageServer for Backend {
                         },
                     ),
                 ),
+                color_provider: Some(ColorProviderCapability::Options(
+                    StaticTextDocumentColorProviderOptions {
+                        document_selector: Some(vec![
+                            DocumentFilter {
+                                language: Some("sqf".to_string()),
+                                scheme: Some("file".to_string()),
+                                pattern: None,
+                            },
+                            DocumentFilter {
+                                language: Some("arma-config".to_string()),
+                                scheme: Some("file".to_string()),
+                                pattern: None,
+                            },
+                        ]),
+                        id: None,
+                    },
+                )),
                 ..ServerCapabilities::default()
             },
             ..Default::default()
@@ -94,45 +114,50 @@ impl LanguageServer for Backend {
         debug!("did_change_configuration");
     }
 
-    async fn did_change_watched_files(&self, _: DidChangeWatchedFilesParams) {
+    async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
         debug!("did_change_watched_files");
+        for x in params.changes {
+            if x.uri.path().contains(".toml") {
+                config::did_save(x.uri.clone(), Some(self.client.clone())).await;
+            }
+        }
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         debug!("did_open: {:?}", params.text_document.uri);
         SqfCache::cache(params.text_document.uri.clone()).await;
-        SqfAnalyzer::get()
-            .on_change(TextDocumentItem {
-                uri: params.text_document.uri,
-                text: TextInformation::Full(&params.text_document.text),
-                version: Some(params.text_document.version),
-            })
-            .await;
+        let document = TextDocumentItem {
+            uri: params.text_document.uri,
+            text: TextInformation::Full(&params.text_document.text),
+            version: Some(params.text_document.version),
+        };
+        FileCache::get().on_change(&document).await;
+        SqfAnalyzer::get().on_change(&document).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         debug!("did_change: {:?}", params.text_document.uri);
-        SqfAnalyzer::get()
-            .on_change(TextDocumentItem {
-                text: TextInformation::Changes(params.content_changes),
-                uri: params.text_document.uri,
-                version: Some(params.text_document.version),
-            })
-            .await;
+        let document = TextDocumentItem {
+            text: TextInformation::Changes(params.content_changes),
+            uri: params.text_document.uri,
+            version: Some(params.text_document.version),
+        };
+        FileCache::get().on_change(&document).await;
+        SqfAnalyzer::get().on_change(&document).await;
     }
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         debug!("did_save: {:?}", params.text_document.uri);
         SqfCache::cache(params.text_document.uri.clone()).await;
-        config::did_save(params.text_document.uri.clone()).await;
+        config::did_save(params.text_document.uri.clone(), None).await;
         if let Some(text) = params.text {
-            SqfAnalyzer::get()
-                .on_change(TextDocumentItem {
-                    uri: params.text_document.uri,
-                    text: TextInformation::Full(&text),
-                    version: None,
-                })
-                .await;
+            let document = TextDocumentItem {
+                uri: params.text_document.uri,
+                text: TextInformation::Full(&text),
+                version: None,
+            };
+            FileCache::get().on_change(&document).await;
+            SqfAnalyzer::get().on_change(&document).await;
         }
     }
 
@@ -163,6 +188,17 @@ impl LanguageServer for Backend {
                     ..Default::default()
                 })
             }))
+    }
+
+    async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {
+        color::info(params.text_document.uri).await
+    }
+
+    async fn color_presentation(
+        &self,
+        params: ColorPresentationParams,
+    ) -> Result<Vec<ColorPresentation>> {
+        color::presentation(params).await
     }
 }
 

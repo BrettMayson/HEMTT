@@ -14,6 +14,9 @@ const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 impl SqfAnalyzer {
     pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {
+        if !url.path().ends_with(".sqf") {
+            return None;
+        }
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
             warn!("Failed to find workspace for {:?}", url);
             return None;
