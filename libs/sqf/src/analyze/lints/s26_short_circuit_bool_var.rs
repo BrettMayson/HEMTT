@@ -38,11 +38,15 @@ if (_test1 && _test2) then { };
 ### Explanation
 
 Short circuit evaultion on a variable that is a boolean is inefficient
+False positives are possible if the var could be undefined, e.g.:
+```sqf
+(!isNil "z") && {z}
+```
 "#
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::help().with_enabled(false)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
