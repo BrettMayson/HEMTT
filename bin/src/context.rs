@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{BuildInfo, ProjectConfig};
 use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
@@ -35,6 +35,7 @@ pub struct Context {
     tmp: PathBuf,
     profile: PathBuf,
     state: Arc<State>,
+    build_info: BuildInfo,
 }
 
 impl Context {
@@ -118,6 +119,7 @@ impl Context {
         )?;
         version_check(&config, &workspace, print_info)?;
         let addons = Addon::scan(&root)?;
+        let prefix = config.prefix().clone();
         Ok(Self {
             config,
             folder: folder.map(std::borrow::ToOwned::to_owned),
@@ -131,6 +133,7 @@ impl Context {
             tmp,
             profile,
             state: Arc::new(State::default()),
+            build_info: BuildInfo::new(&prefix),
         })
     }
 
@@ -153,6 +156,11 @@ impl Context {
     #[must_use]
     pub const fn config(&self) -> &ProjectConfig {
         &self.config
+    }
+
+    #[must_use]
+    pub const fn build_info(&self) -> &BuildInfo {
+        &self.build_info
     }
 
     #[must_use]

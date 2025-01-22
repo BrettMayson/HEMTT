@@ -66,6 +66,7 @@ impl LintRunner<LintData> for StatementsRunner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
+        _build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
@@ -129,6 +130,7 @@ impl LintRunner<LintData> for ExpressionRunner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
+        _build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,

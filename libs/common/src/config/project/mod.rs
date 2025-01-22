@@ -1,6 +1,10 @@
 //! Module for reading HEMTT project files
 
-use std::{collections::HashMap, path::PathBuf, sync::Once};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+    sync::{Arc, Once, RwLock},
+};
 
 use serde::{Deserialize, Serialize};
 use tracing::warn;
@@ -14,6 +18,55 @@ pub mod hemtt;
 pub mod lint;
 pub mod signing;
 pub mod version;
+
+#[derive(Debug, Clone)]
+pub struct BuildInfo {
+    config_string_prefix: String, // lowercase, e.g. "$str_test_x"
+    code_string_prefix: String,   // lowercase
+    strings: Arc<RwLock<HashSet<String>>>,
+}
+
+impl BuildInfo {
+    #[must_use]
+    pub fn new(prefix: &String) -> Self {
+        Self {
+            config_string_prefix: format!("$str_{prefix}_").to_lowercase(),
+            code_string_prefix: format!("str_{prefix}_").to_lowercase(),
+            strings: Arc::new(RwLock::new(HashSet::new())),
+        }
+    }
+
+    #[must_use]
+    pub const fn stringtable_prefix(&self) -> &String {
+        &self.code_string_prefix
+    }
+    #[must_use]
+    pub fn stringtable_matches_project(&self, str: &str, is_config: bool) -> bool {
+        if is_config {
+            str.to_lowercase().starts_with(&self.config_string_prefix)
+        } else {
+            str.to_lowercase().starts_with(&self.code_string_prefix)
+        }
+    }
+    #[must_use]
+    /// # Panics
+    pub fn stringtable_append(&self, str: &str) -> bool {
+        self.strings
+            .write()
+            .expect("mutex saftey")
+            .insert(str.to_lowercase())
+    }
+    #[must_use]
+    /// # Panics
+    pub fn stringtable_exists(&self, str: &str, is_config: bool) -> bool {
+        let target = if is_config {
+            (str[1..]).to_lowercase()
+        } else {
+            str.to_lowercase()
+        };
+        self.strings.read().expect("mutex saftey").contains(&target)
+    }
+}
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +96,7 @@ pub struct ProjectConfig {
 
     /// Signing specific configuration
     signing: signing::SigningConfig,
+    // test: Arc<Vec<String>>,
 }
 
 impl ProjectConfig {

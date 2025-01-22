@@ -81,6 +81,7 @@ pub fn get_report(file: &PathBuf) -> Result<Result<ConfigReport, Vec<Arc<dyn Cod
     let processed = Processor::run(&source).map_err(|e| e.1)?;
     Ok(hemtt_config::parse(
         Some(&ProjectConfig::test_project()),
+        None,
         &processed,
     ))
 }

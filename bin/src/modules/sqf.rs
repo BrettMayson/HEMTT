@@ -93,6 +93,7 @@ impl Module for SQFCompiler {
                         let codes = analyze(
                             &sqf,
                             Some(ctx.config()),
+                            Some(ctx.build_info()),
                             &processed,
                             addon.clone(),
                             database.clone(),

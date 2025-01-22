@@ -14,7 +14,7 @@ pub use model::*;
 
 use analyze::{Analyze, CfgPatch, ChumskyCode, LintData};
 use chumsky::Parser;
-use hemtt_common::version::Version;
+use hemtt_common::{config::BuildInfo, version::Version};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
@@ -28,6 +28,7 @@ use hemtt_workspace::{
 /// If the file is invalid
 pub fn parse(
     project: Option<&ProjectConfig>,
+    build_info: Option<&BuildInfo>,
     processed: &Processed,
 ) -> Result<ConfigReport, Codes> {
     let (config, errors) = parse::config().parse_recovery(processed.as_str());
@@ -57,6 +58,7 @@ pub fn parse(
                         path: String::new(),
                     },
                     project,
+                    build_info,
                     processed,
                     &manager,
                 ),

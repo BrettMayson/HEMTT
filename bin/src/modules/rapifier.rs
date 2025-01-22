@@ -124,7 +124,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     for warning in processed.warnings() {
         report.push(warning.clone());
     }
-    let configreport = match parse(Some(ctx.config()), &processed) {
+    let configreport = match parse(Some(ctx.config()), Some(ctx.build_info()), &processed) {
         Ok(configreport) => configreport,
         Err(errors) => {
             for e in &errors {

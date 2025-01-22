@@ -61,6 +61,7 @@ impl LintRunner<LintData> for RunnerValue {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
+        _build_info: Option<&hemtt_common::config::BuildInfo>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Value,
@@ -90,6 +91,7 @@ impl LintRunner<LintData> for RunnerItem {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
+        _build_info: Option<&hemtt_common::config::BuildInfo>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Item,

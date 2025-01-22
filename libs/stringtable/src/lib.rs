@@ -72,6 +72,22 @@ impl Project {
         }
     }
 
+    #[must_use]
+    pub fn all_keys(&self) -> Vec<String> {
+        let mut all_keys: Vec<String> = Vec::with_capacity(20);
+        for package in self.packages() {
+            for package_inner in package.containers() {
+                for key in package_inner.keys() {
+                    all_keys.push(key.id().to_lowercase());
+                }
+            }
+            for key in package.keys() {
+                all_keys.push(key.id().to_lowercase());
+            }
+        }
+        all_keys
+    }
+
     /// Read a Project from a reader
     ///
     /// # Errors

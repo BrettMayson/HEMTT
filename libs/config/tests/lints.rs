@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{BuildInfo, ProjectConfig};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
 
@@ -30,6 +30,7 @@ lint!(c08_missing_semicolon);
 lint!(c09_magwell_missing_magazine);
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
+lint!(c12_config_stringtable);
 
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -43,7 +44,11 @@ fn lint(file: &str) -> String {
         .unwrap();
     let source = workspace.join(format!("{file}.hpp")).unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(Some(&ProjectConfig::test_project()), &processed);
+    let test_config = ProjectConfig::test_project();
+    let build_info = BuildInfo::new(test_config.prefix());
+    let _ =
+        build_info.stringtable_append(&format!("{}validEntry", build_info.stringtable_prefix()));
+    let parsed = hemtt_config::parse(Some(&test_config), Some(&build_info), &processed);
     let workspacefiles = WorkspaceFiles::new();
     match parsed {
         Ok(config) => config

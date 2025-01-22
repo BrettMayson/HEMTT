@@ -6,40 +6,31 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, BinaryCommand, Expression, UnaryCommand};
+use crate::{analyze::LintData, Expression, UnaryCommand};
 
-crate::analyze::lint!(LintS11IfNotElse);
+crate::analyze::lint!(LintS27LocalizeStringtable);
 
-impl Lint<LintData> for LintS11IfNotElse {
+impl Lint<LintData> for LintS27LocalizeStringtable {
     fn ident(&self) -> &'static str {
-        "if_not_else"
+        "localize_stringtable"
     }
 
     fn sort(&self) -> u32 {
-        110
+        270
     }
 
     fn description(&self) -> &'static str {
-        "Checks for unneeded not"
+        "trying to localize a stringtable that does not exist"
     }
 
     fn documentation(&self) -> &'static str {
-        r"### Example
-
-**Incorrect**
-```sqf
-if (!alive player) then { player } else { objNull };
-```
-**Correct**
-```sqf
-if (alive player) then { objNull } else { player };
-```
-`!` can be removed and `else` order swapped
-"
+        r"### Explanation
+        Strings should exist...
+        "
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -54,7 +45,7 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
+        build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
@@ -63,23 +54,26 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target else {
+        let Some(build_info) = build_info else {
             return Vec::new();
         };
-        if name.to_lowercase() != "then" {
+        let Expression::UnaryCommand(UnaryCommand::Named(name), rhs, _) = target else {
+            return Vec::new();
+        };
+        if name.to_lowercase() != "localize" {
             return Vec::new();
         }
-        let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
+        let Expression::String(lstring, range, _) = &**rhs else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::Else, _, _, _) = &**code else {
+        if !build_info.stringtable_matches_project(lstring, false)
+            || build_info.stringtable_exists(lstring, false)
+        {
             return Vec::new();
-        };
-        let Expression::UnaryCommand(UnaryCommand::Not, _, _) = &**condition else {
-            return Vec::new();
-        };
-        vec![Arc::new(CodeS11IfNot::new(
-            condition.span(),
+        }
+        vec![Arc::new(CodeS27LocalizeStringtable::new(
+            lstring,
+            range.clone(),
             processed,
             config.severity(),
         ))]
@@ -87,42 +81,42 @@ impl LintRunner<LintData> for Runner {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeS11IfNot {
+pub struct CodeS27LocalizeStringtable {
+    raw: String,
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS11IfNot {
+impl Code for CodeS27LocalizeStringtable {
     fn ident(&self) -> &'static str {
-        "L-S11"
+        "L-S27"
     }
-
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#if_not_else")
+        Some("/analysis/sqf.html#localize_stringtable")
     }
-
     fn severity(&self) -> Severity {
         self.severity
     }
-
     fn message(&self) -> String {
-        "Unneeded not in if".to_string()
+        "invalid project stringtable entry for localize".to_string()
     }
-
     fn label_message(&self) -> String {
-        "unnecessary `!` operation".to_string()
+        String::new()
     }
-
+    fn help(&self) -> Option<String> {
+        Some(format!("[{}] not in project's stringtables", self.raw))
+    }
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
 }
 
-impl CodeS11IfNot {
+impl CodeS27LocalizeStringtable {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(raw: &str,span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
+            raw: raw.into(),
             span,
             severity,
             diagnostic: None,

@@ -41,7 +41,7 @@ fn rapify(dir: &str) {
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(None, &processed);
+    let parsed = hemtt_config::parse(None, None, &processed);
     let workspacefiles = hemtt_workspace::reporting::WorkspaceFiles::new();
     if let Err(e) = &parsed {
         let e = e

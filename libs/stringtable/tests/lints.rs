@@ -42,8 +42,13 @@ fn lint(file: &str) -> String {
     codes.extend(lint_one(
         &(stringtable.clone(), workspace.clone(), existing.clone()),
         None,
+        None,
     ));
-    codes.extend(lint_all(&vec![(stringtable, workspace, existing)], None));
+    codes.extend(lint_all(
+        &vec![(stringtable, workspace, existing)],
+        None,
+        None,
+    ));
 
     codes
         .iter()

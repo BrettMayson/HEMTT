@@ -1,0 +1,11 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c12_config_stringtable))
+---
+[0m[1m[38;5;11mwarning[L-C12][0m[1m: invalid project stringtable entry for config[0m
+  [0m[36m┌─[0m c12_config_stringtable.hpp:5:16
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m         hint = [0m[33m"$STR_abe_invalidEntry"[0m;
+  [0m[36m│[0m                [0m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: [STR_abe_invalidEntry] not in project's stringtables
