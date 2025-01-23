@@ -37,7 +37,7 @@ impl SqfAnalyzer {
         (*SINGLETON).clone()
     }
 
-    pub async fn on_change<'a>(&self, document: &TextDocumentItem<'a>) {
+    pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
         if !document.uri.path().ends_with(".sqf") {
             return;
         }
