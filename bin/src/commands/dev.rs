@@ -1,3 +1,4 @@
+use hemtt_common::config::BuildInfo;
 use hemtt_workspace::addons::Location;
 
 use crate::{
@@ -158,6 +159,8 @@ pub fn context(
         }
     }
 
+    let build_info = BuildInfo::new(ctx.config().prefix());
+    let ctx = ctx.with_build_info(build_info);
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);
 

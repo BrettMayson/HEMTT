@@ -39,6 +39,7 @@ lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
 lint!(s27_localize_stringtable);
+lint!(s28_banned_macros);
 
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -53,7 +54,7 @@ fn lint(file: &str) -> String {
 
     let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
     let config = ProjectConfig::from_file(&config_path_full).unwrap();
-    let build_info = BuildInfo::new(config.prefix());
+    let build_info = BuildInfo::new(config.prefix()).with_release(true);
     let _ = build_info.stringtable_append(&format!("str_{}_validEntry", config.prefix()));
 
     match hemtt_sqf::parser::run(&database, &processed) {

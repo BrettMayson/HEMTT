@@ -1,3 +1,5 @@
+use hemtt_common::config::BuildInfo;
+
 use crate::{context::Context, error::Error, modules::Sign, report::Report};
 
 use super::build;
@@ -76,6 +78,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         crate::context::PreservePrevious::Remove,
         true,
     )?;
+    let build_info = BuildInfo::new(ctx.config().prefix()).with_release(true);
+    let ctx = ctx.with_build_info(build_info);
     let mut executor = build::executor(ctx, &cmd.build);
 
     if !cmd.release.no_sign && executor.ctx().config().hemtt().release().sign() {

@@ -217,14 +217,20 @@ impl<D> LintManager<D> {
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
     ) -> Codes {
+        let is_pedantic = build_info.is_some_and(BuildInfo::is_pedantic);
         self.lints
             .iter()
             .flat_map(|lint| {
-                let config = self
-                    .configs
-                    .get(lint.ident())
-                    .cloned()
-                    .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
+                let config = self.configs.get(lint.ident()).cloned().map_or_else(
+                    || {
+                        if is_pedantic {
+                            lint.default_config().with_enabled(true)
+                        } else {
+                            lint.default_config()
+                        }
+                    },
+                    |c| c.apply(lint.default_config()),
+                );
                 if !config.enabled() {
                     return vec![];
                 }

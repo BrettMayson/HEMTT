@@ -1,3 +1,5 @@
+use hemtt_common::config::BuildInfo;
+
 use crate::{
     commands::global_modules,
     context::Context,
@@ -15,19 +17,32 @@ use crate::{
 /// write files to disk, saving time and resources.
 pub struct Command {
     #[clap(flatten)]
+    pub(crate) check: CheckArgs,
+
+    #[clap(flatten)]
     global: crate::GlobalArgs,
 }
 
-/// Execute the dev command
+#[derive(clap::Args)]
+#[allow(clippy::module_name_repetitions)]
+pub struct CheckArgs {
+    #[arg(long, short = 'p', action = clap::ArgAction::SetTrue)]
+    /// Run all lints that are disabled by default (but not explicitly disabled via project config)
+    pedantic: bool,
+}
+
+/// Execute the check command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(_: &Command) -> Result<Report, Error> {
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let ctx = Context::new(
         Some("check"),
         crate::context::PreservePrevious::Remove,
         true,
     )?;
+    let build_info = BuildInfo::new(ctx.config().prefix()).with_pedantic(cmd.check.pedantic);
+    let ctx = ctx.with_build_info(build_info);
 
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);

@@ -67,7 +67,6 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         }
 
-        println!("DDD");
         vec![Arc::new(CodeC12ConfigStringtable::new(
             &cstring_value[1..], // chop off the $ for the hint
             cstring_data.span(),

@@ -68,22 +68,28 @@ impl Module for Stringtables {
         report.extend(lint_all(
             &stringtables,
             Some(ctx.config()),
-            Some(ctx.build_info()),
+            ctx.build_info(),
         ));
 
-        let code_string_prefix = ctx.build_info().stringtable_prefix();
+        let code_string_prefix = ctx.build_info().map_or("", |b| b.stringtable_prefix());
         for stringtable in stringtables {
-            let codes = lint_one(&stringtable, Some(ctx.config()), Some(ctx.build_info()));
+            let codes = lint_one(&stringtable, Some(ctx.config()), ctx.build_info());
             if !codes.iter().any(|c| c.severity() == Severity::Error) {
                 convert_stringtable(&stringtable.0, &stringtable.1);
+                if code_string_prefix.is_empty() {
+                    continue;
+                }
                 let all_keys = stringtable.0.all_keys();
                 for key in &all_keys {
                     if !key.starts_with(code_string_prefix) {
-                        println!("wrong prefix? {key}"); // todo?
+                        warn!("STRINGTABLE: wrong prefix? {key}"); // todo?
                     }
-                    let unique = ctx.build_info().stringtable_append(key);
+                    let unique = ctx
+                        .build_info()
+                        .expect("has prefix")
+                        .stringtable_append(key);
                     if !unique {
-                        println!("dupelicate? {key}"); // todo?
+                        warn!("STRINGTABLE: dupelicate? {key}"); // todo?
                     }
                 }
             }

@@ -35,7 +35,7 @@ pub struct Context {
     tmp: PathBuf,
     profile: PathBuf,
     state: Arc<State>,
-    build_info: BuildInfo,
+    build_info: Option<BuildInfo>,
 }
 
 impl Context {
@@ -119,7 +119,6 @@ impl Context {
         )?;
         version_check(&config, &workspace, print_info)?;
         let addons = Addon::scan(&root)?;
-        let prefix = config.prefix().clone();
         Ok(Self {
             config,
             folder: folder.map(std::borrow::ToOwned::to_owned),
@@ -133,8 +132,16 @@ impl Context {
             tmp,
             profile,
             state: Arc::new(State::default()),
-            build_info: BuildInfo::new(&prefix),
+            build_info: None,
         })
+    }
+
+    #[must_use]
+    pub fn with_build_info(self, build_info: BuildInfo) -> Self {
+        Self {
+            build_info: Some(build_info),
+            ..self
+        }
     }
 
     #[must_use]
@@ -159,8 +166,8 @@ impl Context {
     }
 
     #[must_use]
-    pub const fn build_info(&self) -> &BuildInfo {
-        &self.build_info
+    pub const fn build_info(&self) -> Option<&BuildInfo> {
+        self.build_info.as_ref()
     }
 
     #[must_use]
