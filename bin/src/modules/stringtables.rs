@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use hemtt_stringtable::{
-    analyze::{lint_all, lint_check},
+    analyze::{lint_all, lint_check, lint_one},
+    rapify::convert_stringtable,
     Project,
 };
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic},
+    reporting::{Code, Diagnostic, Severity},
     WorkspacePath,
 };
 
@@ -68,6 +69,15 @@ impl Module for Stringtables {
             Some(ctx.config()),
             ctx.addons().to_vec(),
         ));
+
+        for stringtable in stringtables {
+            let codes = lint_one(&stringtable, Some(ctx.config()), ctx.addons().to_vec());
+            if !codes.iter().any(|c| c.severity() == Severity::Error) {
+                convert_stringtable(&stringtable);
+            }
+            report.extend(codes);
+        }
+
         Ok(report)
     }
 }
