@@ -14,6 +14,7 @@ use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Codes, Severity},
 };
+use regex::Regex;
 
 use crate::{analyze::LintData, Project};
 
@@ -68,7 +69,7 @@ impl LintRunner<LintData> for Runner {
         }
         let mut unused = all.keys().cloned().collect::<Vec<_>>();
         let mut usages = Vec::new();
-        let mut missing = Vec::new();
+        let mut regex = Vec::new();
         for addon in &data.addons {
             let usage = addon
                 .build_data()
@@ -76,8 +77,25 @@ impl LintRunner<LintData> for Runner {
                 .lock()
                 .expect("lock")
                 .clone();
-            usages.extend(usage);
+            for (original, pos) in usage {
+                if original.contains('%') {
+                    let mut u = original.clone();
+                    let mut i = 1;
+                    while u.contains(&format!("%{i}")) {
+                        u = u.replace(&format!("%{i}"), "(.+)");
+                        i += 1;
+                    }
+                    if let Ok(re) = Regex::new(&u) {
+                        regex.push((re, original, pos));
+                    } else {
+                        usages.push((u, pos));
+                    }
+                } else {
+                    usages.push((original, pos));
+                }
+            }
         }
+        let mut missing = Vec::new();
         let prefix = format!("str_{}", project.map_or("", |p| p.prefix()));
         for (key, position) in usages {
             if all.iter().any(|(k, _)| k == &key) {
@@ -85,6 +103,13 @@ impl LintRunner<LintData> for Runner {
                     unused.remove(pos);
                 }
             } else if key.starts_with(&prefix) && !key.contains('%') {
+                missing.push((key, position));
+            }
+        }
+        for (re, key, position) in regex {
+            if all.iter().any(|(k, _)| re.is_match(k)) {
+                unused.retain(|k| !re.is_match(k));
+            } else {
                 missing.push((key, position));
             }
         }

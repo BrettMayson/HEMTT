@@ -1802,6 +1802,7 @@ dependencies = [
  "linkme",
  "paste",
  "quick-xml",
+ "regex",
  "serde",
  "toml 0.8.19",
  "tracing",
