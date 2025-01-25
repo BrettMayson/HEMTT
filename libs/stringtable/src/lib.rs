@@ -224,19 +224,21 @@ fn process_keys(
     }
     let mut offset = 0;
     for (linenum, line) in source.lines().enumerate() {
-        let line = line.trim();
         for key in &all_keys {
-            if let Some(pos) = line.find(key) {
+            if let Some(pos) = line.find(&format!("\"{key}\"")) {
                 keys.entry(key.to_lowercase())
                     .or_insert_with(Vec::new)
                     .push(Position::new(
-                        LineCol(offset + pos, (linenum + 1, pos)),
-                        LineCol(offset + pos, (linenum + 1, pos + key.len())),
+                        LineCol(offset + pos + 1, (linenum + 1, pos + 2)),
+                        LineCol(
+                            offset + pos + 1 + key.len(),
+                            (linenum + 1, pos + 2 + key.len()),
+                        ),
                         path.clone(),
                     ));
             }
         }
-        offset += line.len() + 1;
+        offset += line.chars().count() + 1;
     }
     for key in all_keys {
         keys.entry(key.to_lowercase()).or_insert_with(Vec::new);

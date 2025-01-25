@@ -1,15 +1,15 @@
 use hemtt_workspace::reporting::{Code, Diagnostic, Severity};
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeStringtableMissingFile {
+pub struct CodeStringtableDuplicateFile {
     count: u64,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeStringtableMissingFile {
+impl Code for CodeStringtableDuplicateFile {
     fn ident(&self) -> &'static str {
-        "L-L02M"
+        "L-L02DF"
     }
 
     fn severity(&self) -> Severity {
@@ -17,12 +17,12 @@ impl Code for CodeStringtableMissingFile {
     }
 
     fn message(&self) -> String {
-        format!("There are {} missing keys in use.", self.count)
+        format!("There are {} duplicate keys in use.", self.count)
     }
 
     fn note(&self) -> Option<String> {
         Some(String::from(
-            "A list has been generated in .hemttout/missing_stringtables.txt",
+            "A list has been generated in .hemttout/duplicate_stringtables.txt",
         ))
     }
 
@@ -31,7 +31,7 @@ impl Code for CodeStringtableMissingFile {
     }
 }
 
-impl CodeStringtableMissingFile {
+impl CodeStringtableDuplicateFile {
     #[must_use]
     pub fn new(count: u64, severity: Severity) -> Self {
         Self {

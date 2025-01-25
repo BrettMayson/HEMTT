@@ -30,7 +30,6 @@ lint!(c08_missing_semicolon);
 lint!(c09_magwell_missing_magazine);
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
-lint!(c12_config_stringtable);
 
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);

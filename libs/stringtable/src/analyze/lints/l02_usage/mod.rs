@@ -1,9 +1,11 @@
+mod code_duplicate_file;
 mod code_missing_file;
 mod code_unused_file;
 
 use std::io::Write;
 use std::{collections::HashMap, sync::Arc};
 
+use code_duplicate_file::CodeStringtableDuplicateFile;
 use code_missing_file::CodeStringtableMissingFile;
 use code_unused_file::CodeStringtableUnusedFile;
 use hemtt_common::config::LintConfig;
@@ -45,6 +47,7 @@ impl Lint<LintData> for LintL02Usage {
 pub struct Runner;
 impl LintRunner<LintData> for Runner {
     type Target = Vec<Project>;
+    #[allow(clippy::too_many_lines)]
     fn run(
         &self,
         project: Option<&hemtt_common::config::ProjectConfig>,
@@ -84,6 +87,7 @@ impl LintRunner<LintData> for Runner {
                 missing.push((key, position));
             }
         }
+        let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
         if !unused.is_empty() {
             unused.sort();
             unused.dedup();
@@ -110,6 +114,7 @@ impl LintRunner<LintData> for Runner {
                 Severity::Warning,
             )));
         }
+        let _ = std::fs::remove_file(".hemttout/missing_stringtables.txt");
         if !missing.is_empty() {
             let mut file = std::fs::File::create(".hemttout/missing_stringtables.txt")
                 .expect("Failed to create file");
@@ -126,6 +131,33 @@ impl LintRunner<LintData> for Runner {
             }
             codes.push(Arc::new(CodeStringtableMissingFile::new(
                 missing.len() as u64,
+                Severity::Error,
+            )));
+        }
+        let _ = std::fs::remove_file(".hemttout/duplicate_stringtables.txt");
+        let duplicates = all
+            .iter()
+            .filter(|(_, v)| v.len() > 1)
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<Vec<_>>();
+        if !duplicates.is_empty() {
+            let mut file = std::fs::File::create(".hemttout/duplicate_stringtables.txt")
+                .expect("Failed to create file");
+            for (key, positions) in &duplicates {
+                writeln!(file, "{key}").expect("Failed to write to file");
+                for pos in positions {
+                    writeln!(
+                        file,
+                        "  {}:{}:{}",
+                        pos.path().as_str().trim_start_matches('/'),
+                        pos.start().1 .0,
+                        pos.start().1 .1
+                    )
+                    .expect("Failed to write to file");
+                }
+            }
+            codes.push(Arc::new(CodeStringtableDuplicateFile::new(
+                duplicates.len() as u64,
                 Severity::Error,
             )));
         }
