@@ -1,6 +1,7 @@
-use hemtt_common::config::{BuildInfo, ProjectConfig};
-use hemtt_workspace::{lint::LintManager, lint_manager, reporting::Codes};
-use lints::l01_sorted::StringtableData;
+use hemtt_common::config::ProjectConfig;
+use hemtt_workspace::{addons::Addon, lint::LintManager, lint_manager, reporting::Codes};
+
+use crate::Project;
 
 pub mod lints {
     automod::dir!(pub "src/analyze/lints");
@@ -8,14 +9,16 @@ pub mod lints {
 
 lint_manager!(stringtable, vec![]);
 
-pub struct LintData {}
+pub struct LintData {
+    pub(crate) addons: Vec<Addon>,
+}
 
 pub fn lint_one(
-    addon: &StringtableData,
-    project: Option<&ProjectConfig>,
-    build_info: Option<&BuildInfo>,
+    project: &Project,
+    project_config: Option<&ProjectConfig>,
+    addons: Vec<Addon>,
 ) -> Codes {
-    let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
+    let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
     if let Err(e) = manager.extend(
@@ -26,16 +29,16 @@ pub fn lint_one(
     ) {
         return e;
     }
-    manager.run(&LintData {}, project, build_info, None, addon)
+    manager.run(&LintData { addons }, project_config, None, project)
 }
 
 #[allow(clippy::ptr_arg)] // Needed for &Vec for &dyn Any
 pub fn lint_all(
-    addons: &Vec<StringtableData>,
-    project: Option<&ProjectConfig>,
-    build_info: Option<&BuildInfo>,
+    projects: &Vec<Project>,
+    project_config: Option<&ProjectConfig>,
+    addons: Vec<Addon>,
 ) -> Codes {
-    let mut manager = LintManager::new(project.map_or_else(Default::default, |project| {
+    let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
     if let Err(e) = manager.extend(
@@ -46,5 +49,5 @@ pub fn lint_all(
     ) {
         return e;
     }
-    manager.run(&LintData {}, project, build_info, None, addons)
+    manager.run(&LintData { addons }, project_config, None, projects)
 }

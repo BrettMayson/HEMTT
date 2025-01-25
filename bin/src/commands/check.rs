@@ -1,5 +1,3 @@
-use hemtt_common::config::BuildInfo;
-
 use crate::{
     commands::global_modules,
     context::Context,
@@ -41,8 +39,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         crate::context::PreservePrevious::Remove,
         true,
     )?;
-    let build_info = BuildInfo::new(ctx.config().prefix()).with_pedantic(cmd.check.pedantic);
-    let ctx = ctx.with_build_info(build_info);
 
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);

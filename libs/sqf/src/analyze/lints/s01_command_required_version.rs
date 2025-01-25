@@ -61,7 +61,6 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
         _config: &hemtt_common::config::LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Statements,
@@ -70,8 +69,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let (addon, database) = data;
-        let Some(required) = addon.build_data().required_version() else {
+        let Some(required) = data.addon.build_data().required_version() else {
             // TODO what to do here?
             return Vec::new();
         };
@@ -81,14 +79,14 @@ impl LintRunner<LintData> for Runner {
             u8::try_from(required.0.minor()).unwrap_or_default(),
         );
         let required = (wiki_version, required.1, required.2);
-        let (command, usage, usage_span) = target.required_version(database);
+        let (command, usage, usage_span) = target.required_version(&data.database);
         if wiki_version < usage {
             errors.push(Arc::new(CodeS01CommandRequiredVersion::new(
                 command,
                 usage_span,
                 usage,
                 required,
-                *database.wiki().version(),
+                *data.database.wiki().version(),
                 processed,
             )));
         }

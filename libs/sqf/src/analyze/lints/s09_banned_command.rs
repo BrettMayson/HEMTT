@@ -68,7 +68,6 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -85,7 +84,7 @@ impl LintRunner<LintData> for Runner {
                 return Vec::new();
             }
         }
-        let Some(wiki) = data.1.wiki().commands().get(command) else {
+        let Some(wiki) = data.database.wiki().commands().get(command) else {
             return Vec::new();
         };
         if wiki.groups().contains(&String::from("Broken Commands")) {

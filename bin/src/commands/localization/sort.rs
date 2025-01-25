@@ -1,6 +1,7 @@
-use std::{io::BufReader, path::PathBuf};
+use std::path::PathBuf;
 
 use hemtt_stringtable::Project;
+use hemtt_workspace::WorkspacePath;
 
 use crate::{context::Context, report::Report, Error};
 
@@ -48,8 +49,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
             .collect::<Vec<_>>();
         for path in paths {
             if path.exists() {
-                let mut file = std::fs::File::open(&path)?;
-                match Project::from_reader(BufReader::new(&mut file)) {
+                match Project::read(WorkspacePath::slim_file(path.clone())?) {
                     Ok(mut project) => {
                         if !cmd.only_lang {
                             project.sort();

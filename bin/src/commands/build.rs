@@ -1,5 +1,3 @@
-use hemtt_common::config::BuildInfo;
-
 use crate::{
     context::{self, Context},
     error::Error,
@@ -84,8 +82,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
     }
-    let build_info = BuildInfo::new(ctx.config().prefix());
-    let ctx = ctx.with_build_info(build_info);
     let mut executor = executor(ctx, &cmd.build);
 
     if !just.is_empty() {

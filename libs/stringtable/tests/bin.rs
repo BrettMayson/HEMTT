@@ -1,15 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use std::io::BufReader;
-
 use hemtt_stringtable::{rapify::rapify, Project};
+use hemtt_workspace::WorkspacePath;
 
 #[test]
 fn bin_pass() {
-    let stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/bin/pass.xml").unwrap(),
-    ))
-    .unwrap();
+    let stringtable =
+        Project::read(WorkspacePath::slim_file("tests/bin/pass.xml").unwrap()).unwrap();
     // Has 2 languages with unique translations
     let bin = rapify(&stringtable);
     assert!(bin.is_some());
@@ -18,10 +15,8 @@ fn bin_pass() {
 
 #[test]
 fn bin_containers() {
-    let stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/bin/containers.xml").unwrap(),
-    ))
-    .unwrap();
+    let stringtable =
+        Project::read(WorkspacePath::slim_file("tests/bin/containers.xml").unwrap()).unwrap();
     // Has 2 languages with unique translations
     let bin = rapify(&stringtable);
     assert!(bin.is_some());
@@ -30,10 +25,8 @@ fn bin_containers() {
 
 #[test]
 fn bin_invalid() {
-    let stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/bin/invalid.xml").unwrap(),
-    ))
-    .unwrap();
+    let stringtable =
+        Project::read(WorkspacePath::slim_file("tests/bin/invalid.xml").unwrap()).unwrap();
     // Cannot be binnerized
     let bin = rapify(&stringtable);
     assert!(bin.is_none());
@@ -41,10 +34,8 @@ fn bin_invalid() {
 
 #[test]
 fn bin_unescaped() {
-    let stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/bin/unescaped.xml").unwrap(),
-    ))
-    .unwrap();
+    let stringtable =
+        Project::read(WorkspacePath::slim_file("tests/bin/unescaped.xml").unwrap()).unwrap();
     // Cannot be binnerized
     let bin = rapify(&stringtable);
     assert!(bin.is_none());

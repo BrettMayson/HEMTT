@@ -1,10 +1,6 @@
 //! Module for reading HEMTT project files
 
-use std::{
-    collections::{HashMap, HashSet},
-    path::PathBuf,
-    sync::{Arc, Once, RwLock},
-};
+use std::{collections::HashMap, path::PathBuf, sync::Once};
 
 use serde::{Deserialize, Serialize};
 use tracing::warn;
@@ -112,86 +108,6 @@ impl ProjectConfig {
     /// [`crate::error::Error::Prefix`] if the prefix is invalid
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
         ProjectFile::from_file(path)?.try_into()
-    }
-}
-
-#[derive(Debug, Clone)]
-/// Information about the build
-pub struct BuildInfo {
-    /// lowercase, e.g. `$str_prefix_`
-    config_string_prefix: String,
-    /// lowercase, e.g. `str_prefix_`
-    code_string_prefix: String,
-    /// All defined stringtable entries in lowercase, modified during the build
-    stringtable: Arc<RwLock<HashSet<String>>>,
-    /// using `hemtt release`
-    is_release: bool,
-    /// using `hemtt check --pedantic`
-    is_pedantic: bool,
-}
-
-impl BuildInfo {
-    #[must_use]
-    pub fn new(prefix: &String) -> Self {
-        Self {
-            config_string_prefix: format!("$str_{prefix}_").to_lowercase(),
-            code_string_prefix: format!("str_{prefix}_").to_lowercase(),
-            stringtable: Arc::new(RwLock::new(HashSet::new())),
-            is_release: false,
-            is_pedantic: false,
-        }
-    }
-
-    #[must_use]
-    pub const fn is_release(&self) -> bool {
-        self.is_release
-    }
-    #[must_use]
-    pub const fn with_release(mut self, is_release: bool) -> Self {
-        self.is_release = is_release;
-        self
-    }
-    #[must_use]
-    pub const fn is_pedantic(&self) -> bool {
-        self.is_pedantic
-    }
-    #[must_use]
-    pub const fn with_pedantic(mut self, is_pedantic: bool) -> Self {
-        self.is_pedantic = is_pedantic;
-        self
-    }
-    #[must_use]
-    pub const fn stringtable_prefix(&self) -> &String {
-        &self.code_string_prefix
-    }
-    #[must_use]
-    pub fn stringtable_matches_project(&self, str: &str, is_config: bool) -> bool {
-        if is_config {
-            str.to_lowercase().starts_with(&self.config_string_prefix)
-        } else {
-            str.to_lowercase().starts_with(&self.code_string_prefix)
-        }
-    }
-    #[must_use]
-    /// # Panics
-    pub fn stringtable_append(&self, str: &str) -> bool {
-        self.stringtable
-            .write()
-            .expect("mutex saftey")
-            .insert(str.to_lowercase())
-    }
-    #[must_use]
-    /// # Panics
-    pub fn stringtable_exists(&self, str: &str, is_config: bool) -> bool {
-        let target = if is_config {
-            (str[1..]).to_lowercase()
-        } else {
-            str.to_lowercase()
-        };
-        self.stringtable
-            .read()
-            .expect("mutex saftey")
-            .contains(&target)
     }
 }
 

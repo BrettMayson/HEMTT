@@ -75,6 +75,15 @@ impl Executor {
     /// # Errors
     /// [`Error`] depending on the modules
     pub fn run(&mut self) -> Result<Report, Error> {
+        self.modules.sort_by(|a, b| {
+            if a.name() == "Stringtables" {
+                std::cmp::Ordering::Greater
+            } else if b.name() == "Stringtables" {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        });
         let mut report = Report::new();
         for stage in self.stages.clone() {
             report.merge(match stage {

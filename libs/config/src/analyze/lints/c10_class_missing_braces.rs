@@ -66,7 +66,6 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &crate::Property,

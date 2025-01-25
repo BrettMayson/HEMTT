@@ -1,9 +1,8 @@
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}
 };
 
 use crate::{analyze::LintData, Value};
@@ -11,12 +10,16 @@ use crate::{analyze::LintData, Value};
 crate::analyze::lint!(LintC12ConfigStringtable);
 
 impl Lint<LintData> for LintC12ConfigStringtable {
+    fn display(&self) -> bool {
+        false
+    }
+
     fn ident(&self) -> &'static str {
         "config_stringtable"
     }
 
     fn sort(&self) -> u32 {
-        120
+        0
     }
 
     fn description(&self) -> &'static str {
@@ -45,34 +48,31 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        build_info: Option<&hemtt_common::config::BuildInfo>,
-        config: &LintConfig,
+        _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Value,
-        _data: &LintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
-        };
-        let Some(build_info) = build_info else {
-            return Vec::new();
         };
         let Value::Str(cstring_data) = target else {
             return vec![];
         };
         let cstring_value = cstring_data.value();
-        if !build_info.stringtable_matches_project(cstring_value, true)
-            || build_info.stringtable_exists(cstring_value, true)
-        {
-            return Vec::new();
+
+        if cstring_value.to_lowercase().starts_with("str_") || cstring_value.to_lowercase().starts_with("$str_") {
+            let mut locations = data.localizations.lock().expect("mutex safety");
+            let pos = if let Some(mapping) = processed.mapping(target.span().start) {
+                mapping.token().position().clone()
+            } else {
+                // No position found for token
+                return vec![];
+            };
+            locations.push((cstring_value.trim_start_matches('$').to_lowercase(), pos));
         }
 
-        vec![Arc::new(CodeC12ConfigStringtable::new(
-            &cstring_value[1..], // chop off the $ for the hint
-            cstring_data.span(),
-            processed,
-            config.severity()
-        ))]
+        vec![]
     }
 }
 

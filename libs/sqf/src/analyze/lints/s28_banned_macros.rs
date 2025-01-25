@@ -1,6 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::config::{BuildInfo, LintConfig, ProjectConfig};
+use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
@@ -26,18 +26,22 @@ impl Lint<LintData> for LintS28BannedMacros {
     fn documentation(&self) -> &'static str {
         r#"### Configuration
 
-- **banned**: macros to check for
+- **always**: macros that are always banned
+- **release**: macros that are banned on release builds
 
 ```toml
 [lints.sqf.banned_macros]
-options.banned = [
+options.always = [
+    "FREEZE_GAME",
+]
+options.release = [
     "DEBUG_MODE_FULL",
 ]
 ```
 
 ### Explanation
 
-Checks for usage of banned macros for release"#
+Checks for usage of banned macros"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -60,7 +64,6 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -69,11 +72,8 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        if !build_info.is_some_and(BuildInfo::is_release) {
-            return Vec::new();
-        }
         let macros = processed.macros();
-        if let Some(toml::Value::Array(banned)) = config.option("banned") {
+        if let Some(toml::Value::Array(banned)) = config.option("always") {
             for ban in banned {
                 let Some(ban_name) = ban.as_str() else {
                     continue;
@@ -88,6 +88,7 @@ impl LintRunner<LintData> for Runner {
                 }
             }
         }
+        // todo Implement banned_macros runner
         Vec::new()
     }
 }

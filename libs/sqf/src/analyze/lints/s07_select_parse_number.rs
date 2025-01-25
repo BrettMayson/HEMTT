@@ -63,7 +63,6 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -72,7 +71,6 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let (_, database) = data;
         let Expression::BinaryCommand(BinaryCommand::Named(name), expression, condition, _) = target
         else {
             return Vec::new();
@@ -99,9 +97,9 @@ impl LintRunner<LintData> for Runner {
             | Expression::ConsumeableArray(_, _)
             | Expression::Variable(_, _) => false,
             Expression::String(_, _, _) | Expression::Boolean(_, _) => true,
-            Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), database),
-            Expression::UnaryCommand(cmd, _, _) => safe_command(cmd.as_str(), database),
-            Expression::BinaryCommand(cmd, _, _, _) => safe_command(cmd.as_str(), database),
+            Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), &data.database),
+            Expression::UnaryCommand(cmd, _, _) => safe_command(cmd.as_str(), &data.database),
+            Expression::BinaryCommand(cmd, _, _, _) => safe_command(cmd.as_str(), &data.database),
         }) {
             return Vec::new();
         }

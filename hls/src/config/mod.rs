@@ -53,7 +53,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     let sources = match Processor::run(&source) {
         Ok(processed) => {
             let workspace_files = WorkspaceFiles::new();
-            match hemtt_config::parse(workspace.config().as_ref(), None, &processed) {
+            match hemtt_config::parse(workspace.config().as_ref(), &processed) {
                 Ok(report) => {
                     info!("parsed config for {}", source);
                     for warning in report.warnings() {

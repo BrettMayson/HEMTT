@@ -124,7 +124,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     for warning in processed.warnings() {
         report.push(warning.clone());
     }
-    let configreport = match parse(Some(ctx.config()), ctx.build_info(), &processed) {
+    let configreport = match parse(Some(ctx.config()), &processed) {
         Ok(configreport) => configreport,
         Err(errors) => {
             for e in &errors {
@@ -133,6 +133,17 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
+    addon
+        .build_data()
+        .localizations()
+        .lock()
+        .expect("not poisoned")
+        .extend(
+            configreport
+                .localized()
+                .iter()
+                .map(|(s, p)| (s.to_owned(), p.clone())),
+        );
     configreport.warnings().into_iter().for_each(|e| {
         report.push(e.clone());
     });

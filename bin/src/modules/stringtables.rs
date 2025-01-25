@@ -1,12 +1,11 @@
-use std::{io::BufReader, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_stringtable::{
-    analyze::{lint_all, lint_check, lint_one},
-    rapify::convert_stringtable,
+    analyze::{lint_all, lint_check},
     Project,
 };
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Severity},
+    reporting::{Code, Diagnostic},
     WorkspacePath,
 };
 
@@ -53,9 +52,8 @@ impl Module for Stringtables {
                 .collect::<Vec<_>>();
             for path in paths {
                 if path.exists().expect("vfs issue") {
-                    let existing = path.read_to_string().expect("vfs issue");
-                    match Project::from_reader(BufReader::new(existing.as_bytes())) {
-                        Ok(project) => stringtables.push((project, path, existing)),
+                    match Project::read(path.clone()) {
+                        Ok(project) => stringtables.push(project),
                         Err(e) => {
                             debug!("Failed to parse stringtable for {}: {}", path, e);
                             report.push(Arc::new(CodeStringtableInvalid::new(path, e.to_string())));
@@ -68,33 +66,8 @@ impl Module for Stringtables {
         report.extend(lint_all(
             &stringtables,
             Some(ctx.config()),
-            ctx.build_info(),
+            ctx.addons().to_vec(),
         ));
-
-        let code_string_prefix = ctx.build_info().map_or("", |b| b.stringtable_prefix());
-        for stringtable in stringtables {
-            let codes = lint_one(&stringtable, Some(ctx.config()), ctx.build_info());
-            if !codes.iter().any(|c| c.severity() == Severity::Error) {
-                convert_stringtable(&stringtable.0, &stringtable.1);
-                if code_string_prefix.is_empty() {
-                    continue;
-                }
-                let all_keys = stringtable.0.all_keys();
-                for key in &all_keys {
-                    if !key.starts_with(code_string_prefix) {
-                        warn!("STRINGTABLE: wrong prefix? {key}"); // todo?
-                    }
-                    let unique = ctx
-                        .build_info()
-                        .expect("has prefix")
-                        .stringtable_append(key);
-                    if !unique {
-                        warn!("STRINGTABLE: dupelicate? {key}"); // todo?
-                    }
-                }
-            }
-            report.extend(codes);
-        }
         Ok(report)
     }
 }

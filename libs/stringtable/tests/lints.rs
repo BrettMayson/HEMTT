@@ -1,7 +1,5 @@
 #![allow(clippy::unwrap_used)]
 
-use std::io::BufReader;
-
 use hemtt_stringtable::{
     analyze::{lint_all, lint_one},
     Project,
@@ -34,21 +32,11 @@ fn lint(file: &str) -> String {
         .unwrap();
     let source = workspace.join(format!("{file}.xml")).unwrap();
     let workspace_files = WorkspaceFiles::new();
-
-    let existing = source.read_to_string().expect("vfs issue");
-    let stringtable = Project::from_reader(BufReader::new(existing.as_bytes())).unwrap();
+    let stringtable = Project::read(source).unwrap();
 
     let mut codes: Codes = Vec::new();
-    codes.extend(lint_one(
-        &(stringtable.clone(), workspace.clone(), existing.clone()),
-        None,
-        None,
-    ));
-    codes.extend(lint_all(
-        &vec![(stringtable, workspace, existing)],
-        None,
-        None,
-    ));
+    codes.extend(lint_one(&stringtable, None, vec![]));
+    codes.extend(lint_all(&vec![stringtable], None, vec![]));
 
     codes
         .iter()

@@ -1,4 +1,4 @@
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
@@ -6,17 +6,21 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, Expression, UnaryCommand};
+use crate::{analyze::LintData, Expression};
 
 crate::analyze::lint!(LintS27LocalizeStringtable);
 
 impl Lint<LintData> for LintS27LocalizeStringtable {
+    fn display(&self) -> bool {
+        false
+    }
+
     fn ident(&self) -> &'static str {
         "localize_stringtable"
     }
 
     fn sort(&self) -> u32 {
-        270
+        0
     }
 
     fn description(&self) -> &'static str {
@@ -45,38 +49,30 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
-        build_info: Option<&hemtt_common::config::BuildInfo>,
-        config: &LintConfig,
+        _config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Self::Target,
-        _data: &LintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Some(build_info) = build_info else {
+        let Expression::String(lstring, range, _) = target else {
             return Vec::new();
         };
-        let Expression::UnaryCommand(UnaryCommand::Named(name), rhs, _) = target else {
-            return Vec::new();
-        };
-        if name.to_lowercase() != "localize" {
-            return Vec::new();
+        
+        if lstring.to_lowercase().starts_with("str_") || lstring.to_lowercase().starts_with("$str_") {
+            let mut locations = data.localizations.lock().expect("mutex safety");
+            let pos = if let Some(mapping) = processed.mapping(range.start) {
+                mapping.token().position().clone()
+            } else {
+                // No position found for token
+                return vec![];
+            };
+            locations.push((lstring.trim_start_matches('$').to_lowercase(), pos));
         }
-        let Expression::String(lstring, range, _) = &**rhs else {
-            return Vec::new();
-        };
-        if !build_info.stringtable_matches_project(lstring, false)
-            || build_info.stringtable_exists(lstring, false)
-        {
-            return Vec::new();
-        }
-        vec![Arc::new(CodeS27LocalizeStringtable::new(
-            lstring,
-            range.clone(),
-            processed,
-            config.severity(),
-        ))]
+
+        vec![]
     }
 }
 

@@ -164,7 +164,6 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _build_info: Option<&hemtt_common::config::BuildInfo>,
         config: std::collections::HashMap<String, LintConfig>,
         processed: Option<&Processed>,
         target: &Statements,
@@ -174,7 +173,6 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
             return Vec::new();
         };
         let mut codes: Codes = Vec::new();
-        let (addon, database) = data;
         for statement in target.content() {
             for expression in statement.walk_expressions() {
                 let Some((ns, name, id, target)) = get_namespaces(expression) else {
@@ -187,7 +185,7 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
                     // Requires arma3-wiki to parse and provide https://community.bistudio.com/wiki/inputAction/actions
                     continue;
                 }
-                let eh = database.wiki().event_handler(&id.0);
+                let eh = data.database.wiki().event_handler(&id.0);
                 codes.extend(check_unknown(
                     &ns,
                     &name,
@@ -195,11 +193,11 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
                     target.map(|t| &**t),
                     &eh,
                     processed,
-                    database,
+                    &data.database,
                     config.get("event_unknown"),
                 ));
                 codes.extend(check_version(
-                    addon, &ns, &name, &id, &eh, processed, database,
+                    &data.addon, &ns, &name, &id, &eh, processed, &data.database,
                 ));
             }
         }
