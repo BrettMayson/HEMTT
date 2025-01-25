@@ -1,8 +1,6 @@
-use std::ops::Range;
-
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Codes, Processed}
 };
 
 use crate::{analyze::LintData, Value};
@@ -73,57 +71,5 @@ impl LintRunner<LintData> for Runner {
         }
 
         vec![]
-    }
-}
-
-#[allow(clippy::module_name_repetitions)]
-pub struct CodeC12ConfigStringtable {
-    raw: String,
-    span: Range<usize>,
-    diagnostic: Option<Diagnostic>,
-    severity: Severity,
-}
-
-impl Code for CodeC12ConfigStringtable {
-    fn ident(&self) -> &'static str {
-        "L-C12"
-    }
-
-    fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#config_stringtable")
-    }
-
-    fn message(&self) -> String {
-        "invalid project stringtable entry for config".to_string()
-    }
-    fn label_message(&self) -> String {
-        String::new()
-    }
-    fn help(&self) -> Option<String> {
-        Some(format!("[{}] not in project's stringtables", self.raw))
-    }
-    fn severity(&self) -> Severity {
-        self.severity
-    }
-    fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
-    }
-}
-
-impl CodeC12ConfigStringtable {
-    #[must_use]
-    pub fn new(raw: &str, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
-        Self {
-            raw: raw.into(),
-            span,
-            diagnostic: None,
-            severity
-        }
-        .generate_processed(processed)
-    }
-
-    fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
-        self
     }
 }

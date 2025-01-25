@@ -4,6 +4,7 @@ use hemtt_workspace::{addons::Addon, lint::LintManager, lint_manager, reporting:
 use crate::Project;
 
 pub mod lints {
+    mod l02_usage;
     automod::dir!(pub "src/analyze/lints");
 }
 

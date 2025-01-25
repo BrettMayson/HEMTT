@@ -1,16 +1,14 @@
-use std::ops::Range;
-
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    reporting::Codes,
 };
 
 use crate::{analyze::LintData, Expression};
 
-crate::analyze::lint!(LintS27LocalizeStringtable);
+crate::analyze::lint!(LocalizeStringtable);
 
-impl Lint<LintData> for LintS27LocalizeStringtable {
+impl Lint<LintData> for LocalizeStringtable {
     fn display(&self) -> bool {
         false
     }
@@ -73,55 +71,5 @@ impl LintRunner<LintData> for Runner {
         }
 
         vec![]
-    }
-}
-
-#[allow(clippy::module_name_repetitions)]
-pub struct CodeS27LocalizeStringtable {
-    raw: String,
-    span: Range<usize>,
-    severity: Severity,
-    diagnostic: Option<Diagnostic>,
-}
-
-impl Code for CodeS27LocalizeStringtable {
-    fn ident(&self) -> &'static str {
-        "L-S27"
-    }
-    fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#localize_stringtable")
-    }
-    fn severity(&self) -> Severity {
-        self.severity
-    }
-    fn message(&self) -> String {
-        "invalid project stringtable entry for localize".to_string()
-    }
-    fn label_message(&self) -> String {
-        String::new()
-    }
-    fn help(&self) -> Option<String> {
-        Some(format!("[{}] not in project's stringtables", self.raw))
-    }
-    fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
-    }
-}
-
-impl CodeS27LocalizeStringtable {
-    #[must_use]
-    pub fn new(raw: &str,span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
-        Self {
-            raw: raw.into(),
-            span,
-            severity,
-            diagnostic: None,
-        }
-        .generate_processed(processed)
-    }
-
-    fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
-        self
     }
 }
