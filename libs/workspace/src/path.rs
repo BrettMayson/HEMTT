@@ -23,6 +23,45 @@ pub struct WorkspacePath {
 }
 
 impl WorkspacePath {
+    /// Create a quick workspace with only the source layer
+    ///
+    /// Useful for tests and utilities
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the workspace could not be created
+    pub fn slim(dir: &PathBuf) -> Result<Self, Error> {
+        super::Workspace::builder()
+            .physical(dir, LayerType::Source)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+    }
+
+    /// Create a quick workspace with only the source layer
+    ///
+    /// Useful for tests and utilities
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the workspace could not be created
+    ///
+    /// # Panics
+    /// If the path does not have a parent
+    pub fn slim_file<P: AsRef<Path>>(dir: P) -> Result<Self, Error> {
+        let dir = dir.as_ref();
+        super::Workspace::builder()
+            .physical(
+                &dir.parent()
+                    .expect("slim_file must have a parent")
+                    .to_path_buf(),
+                LayerType::Source,
+            )
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)?
+            .join(
+                dir.file_name()
+                    .expect("slim_file must have a file name")
+                    .to_str()
+                    .expect("utf-8"),
+            )
+    }
+
     #[must_use]
     /// Returns the underlying [`VfsPath`]
     pub fn vfs(&self) -> &VfsPath {

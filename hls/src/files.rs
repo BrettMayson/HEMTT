@@ -31,7 +31,7 @@ impl FileCache {
         self.ropes.entry(url)
     }
 
-    pub async fn on_change<'a>(&self, document: &TextDocumentItem<'a>) {
+    pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
         match &document.text {
             TextInformation::Full(text) => {
                 FileCache::get().insert(document.uri.clone(), Rope::from_str(text));

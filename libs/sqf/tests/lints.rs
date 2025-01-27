@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use hemtt_common::config::{BuildInfo, ProjectConfig};
+use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
 use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
@@ -54,15 +54,14 @@ fn lint(file: &str) -> String {
 
     let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
     let config = ProjectConfig::from_file(&config_path_full).unwrap();
-    let build_info = BuildInfo::new(config.prefix()).with_release(true);
-    let _ = build_info.stringtable_append(&format!("str_{}_validEntry", config.prefix()));
+    // let build_info = BuildInfo::new(config.prefix()).with_release(true);
+    // let _ = build_info.stringtable_append(&format!("str_{}_validEntry", config.prefix()));
 
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let codes = analyze(
+            let (codes, _) = analyze(
                 &sqf,
                 Some(&config),
-                Some(&build_info),
                 &processed,
                 Arc::new(Addon::test_addon()),
                 database.clone(),

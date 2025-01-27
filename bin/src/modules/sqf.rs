@@ -90,14 +90,19 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let codes = analyze(
+                        let (codes, localizations) = analyze(
                             &sqf,
                             Some(ctx.config()),
-                            ctx.build_info(),
                             &processed,
                             addon.clone(),
                             database.clone(),
                         );
+                        addon
+                            .build_data()
+                            .localizations()
+                            .lock()
+                            .expect("not poisoned")
+                            .extend(localizations);
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;

@@ -3,11 +3,14 @@ pub mod macros;
 use std::{collections::HashMap, sync::Arc};
 
 use codespan_reporting::diagnostic::Severity;
-use hemtt_common::config::{BuildInfo, LintConfig, LintConfigOverride, ProjectConfig};
+use hemtt_common::config::{LintConfig, LintConfigOverride, ProjectConfig};
 
 use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
 pub trait Lint<D>: Sync + Send {
+    fn display(&self) -> bool {
+        true
+    }
     fn ident(&self) -> &'static str;
     fn sort(&self) -> u32 {
         0
@@ -31,7 +34,6 @@ pub trait LintRunner<D> {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -45,7 +47,6 @@ pub trait AnyLintRunner<D> {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
@@ -57,7 +58,6 @@ impl<T: LintRunner<D>, D> AnyLintRunner<D> for T {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
@@ -66,7 +66,7 @@ impl<T: LintRunner<D>, D> AnyLintRunner<D> for T {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, build_info, config, processed, target, data)
+                self.run(project, config, processed, target, data)
             })
     }
 }
@@ -78,7 +78,6 @@ pub trait LintGroupRunner<D> {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -92,7 +91,6 @@ pub trait AnyLintGroupRunner<D> {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
@@ -104,7 +102,6 @@ impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
@@ -113,7 +110,7 @@ impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, build_info, config, processed, target, data)
+                self.run(project, config, processed, target, data)
             })
     }
 }
@@ -213,32 +210,23 @@ impl<D> LintManager<D> {
         &self,
         data: &D,
         project: Option<&ProjectConfig>,
-        build_info: Option<&BuildInfo>,
         processed: Option<&Processed>,
         target: &dyn std::any::Any,
     ) -> Codes {
-        let is_pedantic = build_info.is_some_and(BuildInfo::is_pedantic);
         self.lints
             .iter()
             .flat_map(|lint| {
-                let config = self.configs.get(lint.ident()).cloned().map_or_else(
-                    || {
-                        if is_pedantic {
-                            lint.default_config().with_enabled(true)
-                        } else {
-                            lint.default_config()
-                        }
-                    },
-                    |c| c.apply(lint.default_config()),
-                );
+                let config = self
+                    .configs
+                    .get(lint.ident())
+                    .cloned()
+                    .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
                 if !config.enabled() {
                     return vec![];
                 }
                 lint.runners()
                     .iter()
-                    .flat_map(|runner| {
-                        runner.run(project, build_info, &config, processed, target, data)
-                    })
+                    .flat_map(|runner| runner.run(project, &config, processed, target, data))
                     .collect::<Codes>()
             })
             .chain(self.groups.iter().flat_map(|(lints, runner)| {
@@ -256,7 +244,7 @@ impl<D> LintManager<D> {
                 if configs.is_empty() {
                     return vec![];
                 }
-                runner.run(project, build_info, configs, processed, target, data)
+                runner.run(project, configs, processed, target, data)
             }))
             .collect()
     }
@@ -359,7 +347,6 @@ mod tests {
         fn run(
             &self,
             _project: Option<&ProjectConfig>,
-            _build_info: Option<&BuildInfo>,
             _config: &LintConfig,
             _processed: Option<&Processed>,
             _target: &TypeA,
@@ -403,7 +390,6 @@ mod tests {
         fn run(
             &self,
             _project: Option<&ProjectConfig>,
-            _build_info: Option<&BuildInfo>,
             _config: &LintConfig,
             _processed: Option<&Processed>,
             _target: &TypeB,
@@ -425,15 +411,15 @@ mod tests {
         let target_b = TypeB;
         let target_c = TypeC;
 
-        let codes = manager.run(&(), None, None, None, &target_a);
+        let codes = manager.run(&(), None, None, &target_a);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeA");
 
-        let codes = manager.run(&(), None, None, None, &target_b);
+        let codes = manager.run(&(), None, None, &target_b);
         assert_eq!(codes.len(), 1);
         assert_eq!(codes[0].ident(), "CodeB");
 
-        let codes = manager.run(&(), None, None, None, &target_c);
+        let codes = manager.run(&(), None, None, &target_c);
         assert_eq!(codes.len(), 0);
     }
 }

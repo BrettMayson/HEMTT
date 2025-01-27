@@ -1,15 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_stringtable::Project;
+use hemtt_workspace::WorkspacePath;
 
 #[test]
 fn totals_ace_arsenal() {
-    let stringtable: Project = quick_xml::de::from_str(
-        std::fs::read_to_string("tests/ace_arsenal.xml")
-            .unwrap()
-            .as_str(),
-    )
-    .unwrap();
+    let stringtable =
+        Project::read(WorkspacePath::slim_file("tests/ace_arsenal.xml").unwrap()).unwrap();
     insta::assert_debug_snapshot!(stringtable);
 
     assert_eq!(stringtable.name(), "ACE");

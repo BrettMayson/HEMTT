@@ -13,7 +13,7 @@ pub use pdrive::PDriveOption;
 pub use project::{
     hemtt::launch::LaunchOptions,
     lint::{LintConfig, LintConfigOverride},
-    BuildInfo, ProjectConfig,
+    ProjectConfig,
 };
 
 fn deprecated(file: &str, key: &str, replacement: &str, info: Option<&str>) {

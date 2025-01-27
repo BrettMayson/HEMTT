@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use hemtt_common::config::{BuildInfo, ProjectConfig};
+use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
 
 use crate::error::Error;
@@ -35,7 +35,6 @@ pub struct Context {
     tmp: PathBuf,
     profile: PathBuf,
     state: Arc<State>,
-    build_info: Option<BuildInfo>,
 }
 
 impl Context {
@@ -132,16 +131,7 @@ impl Context {
             tmp,
             profile,
             state: Arc::new(State::default()),
-            build_info: None,
         })
-    }
-
-    #[must_use]
-    pub fn with_build_info(self, build_info: BuildInfo) -> Self {
-        Self {
-            build_info: Some(build_info),
-            ..self
-        }
     }
 
     #[must_use]
@@ -163,11 +153,6 @@ impl Context {
     #[must_use]
     pub const fn config(&self) -> &ProjectConfig {
         &self.config
-    }
-
-    #[must_use]
-    pub const fn build_info(&self) -> Option<&BuildInfo> {
-        self.build_info.as_ref()
     }
 
     #[must_use]

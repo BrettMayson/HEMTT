@@ -38,10 +38,12 @@ impl Licenses {
             6 => include_str!("licenses/unlicense.txt"),
             _ => unreachable!(),
         };
-
-        Some(license.replace("{author}", author).replace(
-            "{year}",
-            time::OffsetDateTime::now_utc().year().to_string().as_str(),
-        ))
+        #[allow(clippy::literal_string_with_formatting_args)]
+        {
+            Some(license.replace("{author}", author).replace(
+                "{year}",
+                time::OffsetDateTime::now_utc().year().to_string().as_str(),
+            ))
+        }
     }
 }

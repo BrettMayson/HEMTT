@@ -26,7 +26,7 @@ pub fn run(chapter: &mut Chapter) {
 fn config(chapter: &mut Chapter) {
     let mut output = String::from("# Lints - Conifg\n\n");
     let mut lint_text: Vec<(u32, String)> = Vec::new();
-    for lint in CONFIG_LINTS.iter() {
+    for lint in CONFIG_LINTS.iter().filter(|l| l.display()) {
         lint_text.push((lint.sort(), get_text(&**lint, "L-C")));
     }
     lint_text.sort_by(|a, b| a.0.cmp(&b.0));
@@ -41,6 +41,7 @@ fn sqf(chapter: &mut Chapter) {
     let mut lint_text: Vec<(u32, String)> = Vec::new();
     let lints = SQF_LINTS
         .iter()
+        .filter(|l| l.display())
         .map(|l| (**l).clone())
         .chain({
             let lints: Lints<LintData> = vec![
