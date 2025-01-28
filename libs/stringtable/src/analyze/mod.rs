@@ -19,6 +19,7 @@ pub fn lint_one(
     project_config: Option<&ProjectConfig>,
     addons: Vec<Addon>,
 ) -> Codes {
+    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
@@ -27,6 +28,7 @@ pub fn lint_one(
             .iter()
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
+        default_enabled,
     ) {
         return e;
     }
@@ -39,6 +41,7 @@ pub fn lint_all(
     project_config: Option<&ProjectConfig>,
     addons: Vec<Addon>,
 ) -> Codes {
+    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
         project.lints().stringtables().clone()
     }));
@@ -47,6 +50,7 @@ pub fn lint_all(
             .iter()
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
+        default_enabled,
     ) {
         return e;
     }

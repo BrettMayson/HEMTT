@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c12_config_stringtable))
+---
+

@@ -46,6 +46,7 @@ pub fn parse(
                 .collect())
         },
         |config| {
+            let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
             let mut manager = LintManager::new(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
             );
@@ -54,6 +55,7 @@ pub fn parse(
                     .iter()
                     .map(|l| (**l).clone())
                     .collect::<Vec<_>>(),
+                default_enabled,
             )?;
             let localizations = Arc::new(Mutex::new(vec![]));
             let codes = config.analyze(

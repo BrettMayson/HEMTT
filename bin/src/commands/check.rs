@@ -34,11 +34,17 @@ pub struct CheckArgs {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
-    let ctx = Context::new(
+    let mut ctx = Context::new(
         Some("check"),
         crate::context::PreservePrevious::Remove,
         true,
     )?;
+
+    if cmd.check.pedantic {
+        let runtime = ctx.config().runtime().clone().with_pedantic(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
+    }
 
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);

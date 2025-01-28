@@ -30,7 +30,11 @@ impl Module for Stringtables {
 
     fn check(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().sqf().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().sqf().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 

@@ -46,12 +46,14 @@ pub fn analyze(
     addon: Arc<Addon>,
     database: Arc<Database>,
 ) -> (Codes, Localizations) {
+    let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager: LintManager<LintData> = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
     );
-    if let Err(lint_errors) =
-        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
-    {
+    if let Err(lint_errors) = manager.extend(
+        SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>(),
+        default_enabled,
+    ) {
         return (lint_errors, vec![]);
     }
     if let Err(lint_errors) = manager.push_group(
@@ -61,6 +63,7 @@ pub fn analyze(
             Arc::new(Box::new(LintS02EventInsufficientVersion)),
         ],
         Box::new(EventHandlerRunner),
+        default_enabled,
     ) {
         return (lint_errors, vec![]);
     }

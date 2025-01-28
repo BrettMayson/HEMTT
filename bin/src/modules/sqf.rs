@@ -43,7 +43,11 @@ impl Module for SQFCompiler {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().sqf().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().sqf().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 

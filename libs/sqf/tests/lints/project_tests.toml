@@ -19,6 +19,6 @@ options.ignore = [
 enabled = true
 
 [lints.sqf.banned_macros]
-options.banned = [
-    "TEST_EXTRA_LOGGING",
+options.always = [
+    "FREEZE_GAME",
 ]

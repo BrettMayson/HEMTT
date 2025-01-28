@@ -92,6 +92,7 @@ impl Project {
     ///
     /// # Errors
     /// [`quick_xml::DeError`] if the reader is not a valid stringtable
+    /// # Panics
     pub fn read(path: WorkspacePath) -> Result<Self, quick_xml::de::DeError> {
         let mut buffer = String::new();
         let mut reading_comments = false;

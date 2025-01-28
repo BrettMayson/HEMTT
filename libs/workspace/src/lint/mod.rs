@@ -138,9 +138,13 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn push(&mut self, lint: Arc<Box<dyn Lint<D>>>) -> Result<(), Codes> {
+    pub fn push(
+        &mut self,
+        lint: Arc<Box<dyn Lint<D>>>,
+        default_enabled: bool,
+    ) -> Result<(), Codes> {
         let lints: Lints<D> = vec![lint];
-        self.check(&lints)?;
+        let lints = self.check_and_filter(lints, default_enabled)?;
         self.lints.extend(lints);
         Ok(())
     }
@@ -149,8 +153,8 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn extend(&mut self, lints: Lints<D>) -> Result<(), Codes> {
-        self.check(&lints)?;
+    pub fn extend(&mut self, lints: Lints<D>, default_enabled: bool) -> Result<(), Codes> {
+        let lints = self.check_and_filter(lints, default_enabled)?;
         self.lints.extend(lints);
         Ok(())
     }
@@ -163,8 +167,9 @@ impl<D> LintManager<D> {
         &mut self,
         lints: Lints<D>,
         runner: Box<dyn AnyLintGroupRunner<D>>,
+        default_enabled: bool,
     ) -> Result<(), Codes> {
-        self.check(&lints)?;
+        let lints = self.check_and_filter(lints, default_enabled)?;
         self.groups.push((lints, runner));
         Ok(())
     }
@@ -172,8 +177,13 @@ impl<D> LintManager<D> {
     /// Check if the lints are valid
     ///
     /// # Errors
-    /// Returns a list of codes if the lint config is invalid
-    pub fn check(&self, lints: &Lints<D>) -> Result<(), Codes> {
+    /// Returns a list of lints that are enabled OR codes if the lint config is invalid
+    pub fn check_and_filter(
+        &self,
+        lints: Lints<D>,
+        default_enable: bool,
+    ) -> Result<Lints<D>, Codes> {
+        let mut enabled_lints = vec![];
         let mut errors: Codes = vec![];
         for lint in lints {
             if self.lints.iter().any(|l| l.ident() == lint.ident()) {
@@ -181,8 +191,12 @@ impl<D> LintManager<D> {
                     message: format!("Lint `{}` already exists", lint.ident()),
                 }));
             }
-            if let Some(config) = self.configs.get(lint.ident()) {
-                let config = config.apply(lint.default_config());
+            let mut config = lint.default_config();
+            if default_enable {
+                config = config.with_enabled(true);
+            }
+            if let Some(config_override) = self.configs.get(lint.ident()) {
+                config = config_override.apply(config);
                 if config.severity() < lint.minimum_severity() {
                     errors.push(Arc::new(InvalidLintConfig {
                         message: format!(
@@ -198,9 +212,12 @@ impl<D> LintManager<D> {
                     }));
                 }
             }
+            if config.enabled() {
+                enabled_lints.push(lint);
+            }
         }
         if errors.is_empty() {
-            Ok(())
+            Ok(enabled_lints)
         } else {
             Err(errors)
         }
@@ -221,9 +238,6 @@ impl<D> LintManager<D> {
                     .get(lint.ident())
                     .cloned()
                     .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
-                if !config.enabled() {
-                    return vec![];
-                }
                 lint.runners()
                     .iter()
                     .flat_map(|runner| runner.run(project, &config, processed, target, data))
@@ -237,9 +251,7 @@ impl<D> LintManager<D> {
                         .get(lint.ident())
                         .cloned()
                         .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
-                    if config.enabled() {
-                        configs.insert(lint.ident().to_string(), config);
-                    }
+                    configs.insert(lint.ident().to_string(), config);
                 }
                 if configs.is_empty() {
                     return vec![];

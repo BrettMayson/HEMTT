@@ -63,7 +63,7 @@ impl LintRunner<LintData> for Runner {
 
     fn run(
         &self,
-        _project: Option<&ProjectConfig>,
+        project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         target: &Self::Target,
@@ -73,21 +73,29 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         let macros = processed.macros();
-        if let Some(toml::Value::Array(banned)) = config.option("always") {
-            for ban in banned {
-                let Some(ban_name) = ban.as_str() else {
-                    continue;
-                };
-                if macros.contains_key(ban_name) {
-                    return vec![Arc::new(CodeS28BannedMacros::new(
-                        ban_name,
-                        target.span(),
-                        processed,
-                        config.severity(),
-                    ))];
+
+        for (type_release, type_phrase) in [(false, "always"), (true, "release")] {
+            if type_release && !project.is_some_and(|p| p.runtime().is_release()) {
+                continue;
+            }
+            if let Some(toml::Value::Array(banned)) = config.option(type_phrase) {
+                for ban in banned {
+                    let Some(ban_name) = ban.as_str() else {
+                        continue;
+                    };
+                    if macros.contains_key(ban_name) {
+                        return vec![Arc::new(CodeS28BannedMacros::new(
+                            ban_name,
+                            type_release,
+                            target.span(),
+                            processed,
+                            config.severity(),
+                        ))];
+                    }
                 }
             }
         }
+
         // todo Implement banned_macros runner
         Vec::new()
     }
@@ -96,6 +104,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS28BannedMacros {
     macro_name: String,
+    is_release: bool,
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -115,7 +124,11 @@ impl Code for CodeS28BannedMacros {
     }
 
     fn message(&self) -> String {
-        format!("Macro `{}` is banned on release builds", self.macro_name)
+        if self.is_release {
+            format!("Macro `{}` is banned on release builds", self.macro_name)
+        } else {
+            format!("Macro `{}` is always banned", self.macro_name)
+        }
     }
 
     fn label_message(&self) -> String {
@@ -131,12 +144,14 @@ impl CodeS28BannedMacros {
     #[must_use]
     pub fn new(
         macro_name: &str,
+        is_release: bool,
         span: Range<usize>,
         processed: &Processed,
         severity: Severity,
     ) -> Self {
         Self {
             macro_name: macro_name.into(),
+            is_release,
             span,
             severity,
             diagnostic: None,

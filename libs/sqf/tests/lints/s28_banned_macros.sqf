@@ -1,6 +1,6 @@
-#define TEST_EXTRA_LOGGING
+#define FREEZE_GAME
 
-#ifdef TEST_EXTRA_LOGGING
+#ifdef FREEZE_GAME
 hint format ["z is %1", z];
 #endif
 
