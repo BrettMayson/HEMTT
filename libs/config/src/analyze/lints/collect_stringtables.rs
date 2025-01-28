@@ -5,15 +5,15 @@ use hemtt_workspace::{
 
 use crate::{analyze::LintData, Value};
 
-crate::analyze::lint!(LintC12ConfigStringtable);
+crate::analyze::lint!(LintColectStringtables);
 
-impl Lint<LintData> for LintC12ConfigStringtable {
+impl Lint<LintData> for LintColectStringtables {
     fn display(&self) -> bool {
         false
     }
 
     fn ident(&self) -> &'static str {
-        "config_stringtable"
+        "collect_stringtable"
     }
 
     fn sort(&self) -> u32 {
@@ -21,13 +21,11 @@ impl Lint<LintData> for LintC12ConfigStringtable {
     }
 
     fn description(&self) -> &'static str {
-        "config stringtable entriy does not exist"
+        "collect_stringtable"
     }
 
     fn documentation(&self) -> &'static str {
-        r"### Explanation
-Strings should exist...
-"
+        r"This should not be visable?"
     }
 
     fn default_config(&self) -> LintConfig {
