@@ -32,7 +32,7 @@ impl Module for Stringtables {
         let mut report = Report::new();
         let default_enabled = ctx.config().runtime().is_pedantic();
         report.extend(lint_check(
-            ctx.config().lints().sqf().clone(),
+            ctx.config().lints().stringtables().clone(),
             default_enabled,
         ));
         Ok(report)

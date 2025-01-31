@@ -199,6 +199,7 @@ impl Project {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename = "Project")]
 struct InnerProject {
     #[serde(rename = "@name")]
     name: String,

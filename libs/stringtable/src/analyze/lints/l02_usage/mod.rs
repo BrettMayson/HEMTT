@@ -34,7 +34,21 @@ impl Lint<LintData> for LintL02Usage {
     }
 
     fn documentation(&self) -> &'static str {
-        "Stringtable keys should be unique and used. This lint checks for unused, missing, or duplicate keys."
+        r#"### Stringtable keys should be unique and used. This lint checks for unused, missing, or duplicate keys.
+        
+Configuration
+
+- **ignore**: Array of stringtable entries to ignore
+- **ignore_missing**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+- **ignore_unused**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+- **ignore_duplicate**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+```toml
+[lints.stringtables.usage]
+options.ignore = [
+    "str_myproject_mystring",
+]
+options.ignore_unused = true
+"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -53,7 +67,7 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         project: Option<&hemtt_common::config::ProjectConfig>,
-        _config: &hemtt_common::config::LintConfig,
+        config: &hemtt_common::config::LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
         target: &Vec<Project>,
         data: &LintData,
@@ -109,18 +123,41 @@ impl LintRunner<LintData> for Runner {
         for (re, key, position) in regex {
             if all.iter().any(|(k, _)| re.is_match(k)) {
                 unused.retain(|k| !re.is_match(k));
-            } else {
+            } else if key.starts_with(&prefix) {
                 missing.push((key, position));
             }
         }
-        codes.extend(unused_codes(unused, &all));
-        codes.extend(missing_codes(&missing));
-        codes.extend(duplicate_codes(&all));
+
+        // Get and apply lint options
+        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
+            for i in ignore {
+                let i_lower = i.as_str().map_or(String::new(), str::to_lowercase);
+                unused.retain(|s| *s != i_lower);
+                missing.retain(|sp| *sp.0 != i_lower);
+            }
+        }
+        let ignore_missing = config
+            .option("ignore_missing")
+            .is_some_and(|o| o.as_bool().is_some_and(|b| b));
+        let ignore_unused = config
+            .option("ignore_unused")
+            .is_some_and(|o| o.as_bool().is_some_and(|b| b));
+        let ignore_duplicate = config
+            .option("ignore_duplicate")
+            .is_some_and(|o| o.as_bool().is_some_and(|b| b));
+
+        codes.extend(unused_codes(unused, &all, ignore_unused));
+        codes.extend(missing_codes(&missing, ignore_missing));
+        codes.extend(duplicate_codes(&all, ignore_duplicate));
         codes
     }
 }
 
-fn unused_codes(mut unused: Vec<String>, all: &HashMap<String, Vec<crate::Position>>) -> Codes {
+fn unused_codes(
+    mut unused: Vec<String>,
+    all: &HashMap<String, Vec<crate::Position>>,
+    ignore: bool,
+) -> Codes {
     let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
     let mut codes: Codes = Vec::new();
     let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
@@ -145,15 +182,17 @@ fn unused_codes(mut unused: Vec<String>, all: &HashMap<String, Vec<crate::Positi
             )
             .expect("Failed to write to file");
         }
-        codes.push(Arc::new(CodeStringtableUnusedFile::new(
-            unused.len() as u64,
-            Severity::Warning,
-        )));
+        if !ignore {
+            codes.push(Arc::new(CodeStringtableUnusedFile::new(
+                unused.len() as u64,
+                Severity::Warning,
+            )));
+        }
     }
     codes
 }
 
-fn missing_codes(missing: &[(String, Position)]) -> Codes {
+fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
     let _ = std::fs::remove_file(".hemttout/missing_stringtables.txt");
     let mut codes: Codes = Vec::new();
     if !missing.is_empty() {
@@ -170,15 +209,17 @@ fn missing_codes(missing: &[(String, Position)]) -> Codes {
             )
             .expect("Failed to write to file");
         }
-        codes.push(Arc::new(CodeStringtableMissingFile::new(
-            missing.len() as u64,
-            Severity::Error,
-        )));
+        if !ignore {
+            codes.push(Arc::new(CodeStringtableMissingFile::new(
+                missing.len() as u64,
+                Severity::Error,
+            )));
+        };
     }
     codes
 }
 
-fn duplicate_codes(all: &HashMap<String, Vec<crate::Position>>) -> Codes {
+fn duplicate_codes(all: &HashMap<String, Vec<crate::Position>>, ignore: bool) -> Codes {
     let _ = std::fs::remove_file(".hemttout/duplicate_stringtables.txt");
     let mut codes: Codes = Vec::new();
     let duplicates = all
@@ -202,10 +243,12 @@ fn duplicate_codes(all: &HashMap<String, Vec<crate::Position>>) -> Codes {
                 .expect("Failed to write to file");
             }
         }
-        codes.push(Arc::new(CodeStringtableDuplicateFile::new(
-            duplicates.len() as u64,
-            Severity::Error,
-        )));
+        if !ignore {
+            codes.push(Arc::new(CodeStringtableDuplicateFile::new(
+                duplicates.len() as u64,
+                Severity::Error,
+            )));
+        }
     }
     codes
 }

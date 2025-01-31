@@ -14,7 +14,7 @@ impl Lint<LintData> for LocalizeStringtable {
     }
 
     fn ident(&self) -> &'static str {
-        "localize_stringtable"
+        "collect_stringtable"
     }
 
     fn sort(&self) -> u32 {
@@ -22,13 +22,11 @@ impl Lint<LintData> for LocalizeStringtable {
     }
 
     fn description(&self) -> &'static str {
-        "trying to localize a stringtable that does not exist"
+        "collect_stringtable"
     }
 
     fn documentation(&self) -> &'static str {
-        r"### Explanation
-        Strings should exist...
-        "
+        r"This should not be visable"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -59,6 +57,7 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
+        // `localize`` strings are case-insensitive and optionally can start with $
         if lstring.to_lowercase().starts_with("str_") || lstring.to_lowercase().starts_with("$str_") {
             let mut locations = data.localizations.lock().expect("mutex safety");
             let pos = if let Some(mapping) = processed.mapping(range.start) {
