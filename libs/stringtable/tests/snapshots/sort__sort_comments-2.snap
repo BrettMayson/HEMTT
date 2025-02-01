@@ -1,86 +1,136 @@
 ---
 source: libs/stringtable/tests/sort.rs
-expression: stringtable
+expression: "ProjectWithSortedKeys::fromProject(&stringtable)"
 ---
-Project {
-    name: "HEMTT",
-    packages: [
-        Package {
-            name: "Test",
-            keys: [
-                Key {
-                    id: "HasComment",
-                    original: None,
-                    english: Some(
-                        "This is a string with a comment",
+ProjectWithSortedKeys {
+    inner: InnerProject {
+        name: "HEMTT",
+        packages: [
+            Package {
+                name: "Test",
+                keys: [
+                    Key {
+                        id: "HasComment",
+                        original: None,
+                        english: Some(
+                            "This is a string with a comment",
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: Some(
+                            "Das ist eine Zeichenkette ohne Kommentar",
+                        ),
+                        korean: None,
+                        japanese: None,
+                        chinese: None,
+                        chinesesimp: None,
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: None,
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                    },
+                    Key {
+                        id: "HasNoComment",
+                        original: None,
+                        english: Some(
+                            "This is a string with a comment",
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: Some(
+                            "Esto es una cadena sin un comentario",
+                        ),
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: Some(
+                            "Das ist eine Zeichenkette ohne Kommentar",
+                        ),
+                        korean: None,
+                        japanese: None,
+                        chinese: None,
+                        chinesesimp: None,
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: None,
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                    },
+                ],
+                containers: [],
+            },
+        ],
+    },
+    path: "/comments.xml",
+    keys: [
+        (
+            "hasnocomment",
+            [
+                Position {
+                    start: LineCol(
+                        105,
+                        (
+                            4,
+                            18,
+                        ),
                     ),
-                    czech: None,
-                    french: None,
-                    spanish: None,
-                    italian: None,
-                    polish: None,
-                    portuguese: None,
-                    russian: None,
-                    german: Some(
-                        "Das ist eine Zeichenkette ohne Kommentar",
+                    end: LineCol(
+                        117,
+                        (
+                            4,
+                            30,
+                        ),
                     ),
-                    korean: None,
-                    japanese: None,
-                    chinese: None,
-                    chinesesimp: None,
-                    turkish: None,
-                    swedish: None,
-                    slovak: None,
-                    serbocroatian: None,
-                    norwegian: None,
-                    icelandic: None,
-                    hungarian: None,
-                    greek: None,
-                    finnish: None,
-                    dutch: None,
-                    ukrainian: None,
-                    danish: None,
-                },
-                Key {
-                    id: "HasNoComment",
-                    original: None,
-                    english: Some(
-                        "This is a string with a comment",
-                    ),
-                    czech: None,
-                    french: None,
-                    spanish: Some(
-                        "Esto es una cadena sin un comentario",
-                    ),
-                    italian: None,
-                    polish: None,
-                    portuguese: None,
-                    russian: None,
-                    german: Some(
-                        "Das ist eine Zeichenkette ohne Kommentar",
-                    ),
-                    korean: None,
-                    japanese: None,
-                    chinese: None,
-                    chinesesimp: None,
-                    turkish: None,
-                    swedish: None,
-                    slovak: None,
-                    serbocroatian: None,
-                    norwegian: None,
-                    icelandic: None,
-                    hungarian: None,
-                    greek: None,
-                    finnish: None,
-                    dutch: None,
-                    ukrainian: None,
-                    danish: None,
+                    path: "/comments.xml",
                 },
             ],
-            containers: [],
-        },
+        ),
+        (
+            "hascomment",
+            [
+                Position {
+                    start: LineCol(
+                        432,
+                        (
+                            11,
+                            18,
+                        ),
+                    ),
+                    end: LineCol(
+                        442,
+                        (
+                            11,
+                            28,
+                        ),
+                    ),
+                    path: "/comments.xml",
+                },
+            ],
+        ),
     ],
-    meta_comments: [
+    source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"HasNoComment\">\n            <German>Das ist eine Zeichenkette ohne Kommentar</German>\n            <Spanish>Esto es una cadena sin un comentario</Spanish>\n            <!-- This is a comment -->\n            <English>This is a string with a comment</English>\n        </Key>\n        <!-- This key has a comment -->\n        <Key ID=\"HasComment\">\n            <German>Das ist eine Zeichenkette ohne Kommentar</German>\n            <!-- This is a comment -->\n            <English>This is a string with a comment</English>\n        </Key>\n    </Package>\n</Project>\n",
+    comments: [
         (
             "<!-- This is a comment -->",
             "<English>This is a string with a comment</English>",

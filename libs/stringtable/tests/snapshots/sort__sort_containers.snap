@@ -1,8 +1,8 @@
 ---
 source: libs/stringtable/tests/sort.rs
-expression: stringtable
+expression: "ProjectWithSortedKeys::fromProject(&stringtable)"
 ---
-Project {
+ProjectWithSortedKeys {
     inner: InnerProject {
         name: "test",
         packages: [
@@ -154,84 +154,96 @@ Project {
         ],
     },
     path: "/containers.xml",
-    keys: {
-        "b1": [
-            Position {
-                start: LineCol(
-                    215,
-                    (
-                        8,
-                        22,
+    keys: [
+        (
+            "b1",
+            [
+                Position {
+                    start: LineCol(
+                        215,
+                        (
+                            8,
+                            22,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    217,
-                    (
-                        8,
-                        24,
+                    end: LineCol(
+                        217,
+                        (
+                            8,
+                            24,
+                        ),
                     ),
-                ),
-                path: "/containers.xml",
-            },
-        ],
-        "a1": [
-            Position {
-                start: LineCol(
-                    105,
-                    (
-                        4,
-                        18,
+                    path: "/containers.xml",
+                },
+            ],
+        ),
+        (
+            "a3",
+            [
+                Position {
+                    start: LineCol(
+                        473,
+                        (
+                            17,
+                            22,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    107,
-                    (
-                        4,
-                        20,
+                    end: LineCol(
+                        475,
+                        (
+                            17,
+                            24,
+                        ),
                     ),
-                ),
-                path: "/containers.xml",
-            },
-        ],
-        "a3": [
-            Position {
-                start: LineCol(
-                    473,
-                    (
-                        17,
-                        22,
+                    path: "/containers.xml",
+                },
+            ],
+        ),
+        (
+            "a2",
+            [
+                Position {
+                    start: LineCol(
+                        304,
+                        (
+                            11,
+                            22,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    475,
-                    (
-                        17,
-                        24,
+                    end: LineCol(
+                        306,
+                        (
+                            11,
+                            24,
+                        ),
                     ),
-                ),
-                path: "/containers.xml",
-            },
-        ],
-        "a2": [
-            Position {
-                start: LineCol(
-                    304,
-                    (
-                        11,
-                        22,
+                    path: "/containers.xml",
+                },
+            ],
+        ),
+        (
+            "a1",
+            [
+                Position {
+                    start: LineCol(
+                        105,
+                        (
+                            4,
+                            18,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    306,
-                    (
-                        11,
-                        24,
+                    end: LineCol(
+                        107,
+                        (
+                            4,
+                            20,
+                        ),
                     ),
-                ),
-                path: "/containers.xml",
-            },
-        ],
-    },
+                    path: "/containers.xml",
+                },
+            ],
+        ),
+    ],
     source: "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<Project name=\"test\">\n    <Package name=\"test\">\n        <Key ID=\"A1\">\n            <Original>Origin</Original>\n        </Key>\n        <Container name=\"B\">\n            <Key ID=\"B1\">\n                <Original>Origin</Original>\n            </Key>\n            <Key ID=\"A2\">\n                <German>DE</German>\n                <English>EN</English>\n            </Key>\n        </Container>\n        <Container name=\"A\">\n            <Key ID=\"A3\">\n                <Original>Origin</Original>\n            </Key>\n        </Container>\n    </Package>\n</Project>\n",
     comments: [],
 }

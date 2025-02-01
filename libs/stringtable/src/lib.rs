@@ -247,3 +247,40 @@ fn process_keys(
     }
     keys
 }
+
+/// Project with determistic order of `keys` for testing
+/// `keys` are sorted, but the `InnerProject` is untouched and retains original order
+#[derive(Clone, Debug)]
+pub struct ProjectWithSortedKeys {
+    #[allow(dead_code)]
+    inner: InnerProject,
+    #[allow(dead_code)]
+    path: WorkspacePath,
+    #[allow(dead_code)]
+    /// Vec of tuples that represent entries from the original: `HashMap<String, Vec<Position>>`
+    keys: Vec<(String, Vec<Position>)>,
+    #[allow(dead_code)]
+    source: String,
+    #[allow(dead_code)]
+    comments: Vec<(String, String, Option<String>)>,
+}
+
+impl ProjectWithSortedKeys {
+    #[must_use]
+    pub fn from_project(project: &Project) -> Self {
+        let mut keys: Vec<(String, Vec<Position>)> = project
+            .keys
+            .clone()
+            .into_iter()
+            .map(|h| (h.0, h.1))
+            .collect();
+        keys.sort_by(|a, b| b.0.cmp(&a.0));
+        Self {
+            inner: project.inner.clone(),
+            path: project.path.clone(),
+            keys,
+            source: project.source.clone(),
+            comments: project.comments.clone(),
+        }
+    }
+}

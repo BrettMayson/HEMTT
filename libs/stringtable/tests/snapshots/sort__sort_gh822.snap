@@ -1,8 +1,8 @@
 ---
 source: libs/stringtable/tests/sort.rs
-expression: stringtable
+expression: "ProjectWithSortedKeys::fromProject(&stringtable)"
 ---
-Project {
+ProjectWithSortedKeys {
     inner: InnerProject {
         name: "test",
         packages: [
@@ -161,84 +161,96 @@ Project {
         ],
     },
     path: "/gh822.xml",
-    keys: {
-        "my things get unescaped": [
-            Position {
-                start: LineCol(
-                    565,
-                    (
-                        17,
-                        18,
+    keys: [
+        (
+            "my things get unescaped",
+            [
+                Position {
+                    start: LineCol(
+                        565,
+                        (
+                            17,
+                            18,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    588,
-                    (
-                        17,
-                        41,
+                    end: LineCol(
+                        588,
+                        (
+                            17,
+                            41,
+                        ),
                     ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
-        "comments be gone!": [
-            Position {
-                start: LineCol(
-                    921,
-                    (
-                        25,
-                        18,
+                    path: "/gh822.xml",
+                },
+            ],
+        ),
+        (
+            "i will change the xml structure a little",
+            [
+                Position {
+                    start: LineCol(
+                        176,
+                        (
+                            5,
+                            18,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    938,
-                    (
-                        25,
-                        35,
+                    end: LineCol(
+                        216,
+                        (
+                            5,
+                            58,
+                        ),
                     ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
-        "i will change the xml structure a little": [
-            Position {
-                start: LineCol(
-                    176,
-                    (
-                        5,
-                        18,
+                    path: "/gh822.xml",
+                },
+            ],
+        ),
+        (
+            "i will be empty",
+            [
+                Position {
+                    start: LineCol(
+                        375,
+                        (
+                            11,
+                            18,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    216,
-                    (
-                        5,
-                        58,
+                    end: LineCol(
+                        390,
+                        (
+                            11,
+                            33,
+                        ),
                     ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
-        "i will be empty": [
-            Position {
-                start: LineCol(
-                    375,
-                    (
-                        11,
-                        18,
+                    path: "/gh822.xml",
+                },
+            ],
+        ),
+        (
+            "comments be gone!",
+            [
+                Position {
+                    start: LineCol(
+                        921,
+                        (
+                            25,
+                            18,
+                        ),
                     ),
-                ),
-                end: LineCol(
-                    390,
-                    (
-                        11,
-                        33,
+                    end: LineCol(
+                        938,
+                        (
+                            25,
+                            35,
+                        ),
                     ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
-    },
+                    path: "/gh822.xml",
+                },
+            ],
+        ),
+    ],
     source: "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<Project name=\"test\">\n    <Package name=\"test\">\n        <!-- The I copy paste this part of my language entry thing -->\n        <Key ID=\"I will change the xml structure a little\">\n            <Original></Original>\n            <English></English>\n            <Czech></Czech>\n            <French></French>\n        </Key>\n        <Key ID=\"I will be empty\">\n            <original>hey</original>\n            <english>hey</english>\n            <german>hey</german>\n            <russian>hey</russian>\n        </Key>\n        <Key ID=\"My things get unescaped\">\n            <Original>&quot;&apos;</Original>\n            <English>&quot;&apos;</English>\n            <German>&quot;&apos;</German>\n            <Russian>&quot;&apos;</Russian>\n            <Spanish>\"Hello World\"</Spanish>\n        </Key>\n        <!-- a maybe more legitimate use of a comment which gets removed -->\n        <Key ID=\"Comments be gone!\">\n            <Original>I leave this for later</Original>\n            <English>I leave this for later</English>\n            <!-- <German>I am totally a correct translated entry waiting for approval!</German> -->\n            <!-- <Russian></Russian> -->\n            <!-- <Polish></Polish> -->\n        </Key>\n        <!--\n        <Key ID=\"new entry used in future release, not yet used\">\n            <Original>The future</Original>\n            <English>The future</English>\n        </Key>\n        -->\n    </Package>\n</Project>\n",
     comments: [
         (

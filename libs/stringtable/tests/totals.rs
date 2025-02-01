@@ -1,13 +1,13 @@
 #![allow(clippy::unwrap_used)]
 
-use hemtt_stringtable::Project;
+use hemtt_stringtable::{Project, ProjectWithSortedKeys};
 use hemtt_workspace::WorkspacePath;
 
 #[test]
 fn totals_ace_arsenal() {
     let stringtable =
         Project::read(WorkspacePath::slim_file("tests/ace_arsenal.xml").unwrap()).unwrap();
-    insta::assert_debug_snapshot!(stringtable);
+    insta::assert_debug_snapshot!(ProjectWithSortedKeys::from_project(&stringtable));
 
     assert_eq!(stringtable.name(), "ACE");
 
