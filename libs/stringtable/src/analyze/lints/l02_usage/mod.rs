@@ -146,6 +146,7 @@ impl LintRunner<LintData> for Runner {
             .option("ignore_duplicate")
             .is_some_and(|o| o.as_bool().is_some_and(|b| b));
 
+        let _ = std::fs::create_dir_all(".hemttout");
         codes.extend(unused_codes(unused, &all, ignore_unused));
         codes.extend(missing_codes(&missing, ignore_missing));
         codes.extend(duplicate_codes(&all, ignore_duplicate));
