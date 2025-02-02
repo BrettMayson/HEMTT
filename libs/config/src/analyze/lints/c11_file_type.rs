@@ -144,7 +144,7 @@ fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processe
         return None;
     }
     let value_str = value_str.to_lowercase();
-    if value_str.starts_with("a3") {
+    if value_str.starts_with("\\a3") {
         return None;
     }
     if name == "sound" && value_str.starts_with("db") {
