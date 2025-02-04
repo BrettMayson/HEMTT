@@ -233,8 +233,8 @@ impl Action for Photoshoot {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image = utils::photoshoot::Photoshoot::weapon(class, &self.from, false)
-                    .expect("image");
+                let image =
+                    utils::photoshoot::Photoshoot::weapon(class, &self.from, false).expect("image");
                 let dst_png = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
@@ -377,7 +377,11 @@ fn vehicles_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
     vehicles
 }
 
-fn find_pictures(ctx: &Context, mainprefix: &str, properties: &[Property]) -> HashMap<String, String> {
+fn find_pictures(
+    ctx: &Context,
+    mainprefix: &str,
+    properties: &[Property],
+) -> HashMap<String, String> {
     let mut pictures = HashMap::new();
     for prop in properties {
         if let Property::Class(Class::Local {
