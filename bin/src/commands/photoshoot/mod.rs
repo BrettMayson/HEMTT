@@ -118,6 +118,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let mut ps = Photoshoot::new(command, ctx.profile().join("Users/hemtt/Screenshots"));
 
     ps.add_weapons(find_weapons(&dev_ctx));
+    ps.add_vehicles(find_vehicles(&dev_ctx));
     ps.add_previews(find_previews(&dev_ctx));
 
     if !ps.prepare() {
@@ -133,6 +134,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
 pub struct Photoshoot {
     weapons: HashMap<String, String>,
+    vehicles: HashMap<String, String>,
     previews: HashMap<String, String>,
     pending: Mutex<Vec<toarma::Photoshoot>>,
     from: PathBuf,
@@ -146,6 +148,7 @@ impl Photoshoot {
             command,
             from,
             weapons: HashMap::new(),
+            vehicles: HashMap::new(),
             previews: HashMap::new(),
             pending: Mutex::new(Vec::new()),
         }
@@ -153,6 +156,10 @@ impl Photoshoot {
 
     fn add_weapons(&mut self, weapons: HashMap<String, String>) {
         self.weapons.extend(weapons);
+    }
+
+    fn add_vehicles(&mut self, vehicles: HashMap<String, String>) {
+        self.vehicles.extend(vehicles);
     }
 
     fn add_previews(&mut self, previews: HashMap<String, String>) {
@@ -165,6 +172,11 @@ impl Photoshoot {
             self.weapons
                 .keys()
                 .map(|weapon| toarma::Photoshoot::Weapon(weapon.clone())),
+        );
+        pending.extend(
+            self.vehicles
+                .keys()
+                .map(|vehicle| toarma::Photoshoot::Vehicle(vehicle.clone())),
         );
         if pending.is_empty() && self.previews.is_empty() {
             info!("No missing items to photoshoot");
@@ -188,11 +200,12 @@ impl Action for Photoshoot {
         vec![(String::from("photoshoot"), String::from("photoshoot.VR"))]
     }
 
+    #[allow(clippy::too_many_lines)]
     fn incoming(&self, ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
         let Message::Photoshoot(msg) = msg else {
             return Vec::new();
         };
-        match msg {
+        match &msg {
             fromarma::Photoshoot::Ready => {
                 debug!("Photoshoot: Ready");
                 if self.previews.is_empty() {
@@ -208,20 +221,24 @@ impl Action for Photoshoot {
                     messages
                 }
             }
-            fromarma::Photoshoot::Weapon(weapon) => {
-                debug!("Photoshoot: Weapon: {}", weapon);
-                let target =
-                    PathBuf::from(self.weapons.get(&weapon).expect("received unknown weapon"));
+            fromarma::Photoshoot::Weapon(class) | fromarma::Photoshoot::Vehicle(class) => {
+                let target = if matches!(msg, fromarma::Photoshoot::Weapon(_)) {
+                    debug!("Photoshoot: Weapon: {}", class);
+                    PathBuf::from(self.weapons.get(class).expect("received unknown weapon"))
+                } else {
+                    debug!("Photoshoot: Vehicle: {}", class);
+                    PathBuf::from(self.vehicles.get(class).expect("received unknown vehicle"))
+                };
                 if target.exists() {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image = utils::photoshoot::Photoshoot::weapon(&weapon, &self.from, false)
-                    .expect("image");
+                let image =
+                    utils::photoshoot::Photoshoot::weapon(class, &self.from, false).expect("image");
                 let dst_png = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
-                    .join(format!("{weapon}_ca.png"));
+                    .join(format!("{class}_ca.png"));
                 image.save(&dst_png).expect("save");
                 std::process::Command::new(&self.command)
                     .arg(dst_png)
@@ -230,14 +247,18 @@ impl Action for Photoshoot {
                 let dst_paa = ctx
                     .build_folder()
                     .expect("photoshoot has a folder")
-                    .join(format!("{weapon}_ca.paa"));
+                    .join(format!("{class}_ca.paa"));
                 std::fs::create_dir_all(target.parent().expect("has parent")).expect("create dir");
-                info!("Created `{}` at `{}`", weapon, target.display());
+                info!("Created `{}` at `{}`", class, target.display());
                 std::fs::rename(dst_paa, target).expect("rename");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::WeaponUnsupported(weapon) => {
                 warn!("Photoshoot: WeaponUnsupported: {}", weapon);
+                vec![self.next_message()]
+            }
+            fromarma::Photoshoot::VehicleUnsupported(vehicle) => {
+                warn!("Photoshoot: VehicleUnsupported: {}", vehicle);
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::Previews => {
@@ -315,52 +336,97 @@ fn weapons_from_config(ctx: &Context, config: &Config) -> HashMap<String, String
             if name.as_str().to_lowercase() != "cfgweapons" {
                 return;
             }
-            for prop in properties {
-                if let Property::Class(Class::Local {
-                    name, properties, ..
-                }) = prop
-                {
-                    trace!("Weapon: {}", name.as_str());
-                    let Some(picture) = properties.iter().find_map(|prop| {
-                        if let Property::Entry {
-                            name,
-                            value: Value::Str(value),
-                            ..
-                        } = prop
-                        {
-                            if name.as_str().to_lowercase() == "picture" {
-                                Some(value.value().to_string())
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    }) else {
-                        continue;
-                    };
-                    if picture.starts_with(&mainprefix) {
-                        let picture = picture.trim_start_matches(&mainprefix);
-                        if picture.starts_with(ctx.config().prefix()) {
-                            let picture = picture
-                                .trim_start_matches(ctx.config().prefix())
-                                .trim_start_matches('\\');
-                            let image = ctx
-                                .workspace_path()
-                                .join(picture.replace('\\', "/"))
-                                .expect("workspace path");
-                            if image.exists().unwrap_or_default() {
-                                continue;
-                            }
-                            debug!("Image not found: {}", image.as_str());
-                            weapons.insert(name.as_str().to_string(), picture.to_owned());
-                        }
-                    }
-                }
-            }
+            weapons.extend(find_pictures(ctx, &mainprefix, properties));
         }
     });
     weapons
+}
+
+fn find_vehicles(ctx: &Context) -> HashMap<String, String> {
+    let mut vehicles = HashMap::new();
+    ctx.state()
+        .get::<AddonConfigs>()
+        .read()
+        .expect("addon configs")
+        .iter()
+        .for_each(|(_, configs)| {
+            for (_, config) in configs {
+                vehicles.extend(vehicles_from_config(ctx, config));
+            }
+        });
+    vehicles
+}
+
+fn vehicles_from_config(ctx: &Context, config: &Config) -> HashMap<String, String> {
+    let Some(mainprefix) = ctx.config().mainprefix() else {
+        return HashMap::new();
+    };
+    let mainprefix = format!("\\{mainprefix}\\");
+    let mut vehicles = HashMap::new();
+    config.0.iter().for_each(|root| {
+        if let Property::Class(Class::Local {
+            name, properties, ..
+        }) = root
+        {
+            if name.as_str().to_lowercase() != "cfgvehicles" {
+                return;
+            }
+            vehicles.extend(find_pictures(ctx, &mainprefix, properties));
+        }
+    });
+    vehicles
+}
+
+fn find_pictures(
+    ctx: &Context,
+    mainprefix: &str,
+    properties: &[Property],
+) -> HashMap<String, String> {
+    let mut pictures = HashMap::new();
+    for prop in properties {
+        if let Property::Class(Class::Local {
+            name, properties, ..
+        }) = prop
+        {
+            trace!("Weapon: {}", name.as_str());
+            let Some(picture) = properties.iter().find_map(|prop| {
+                if let Property::Entry {
+                    name,
+                    value: Value::Str(value),
+                    ..
+                } = prop
+                {
+                    if name.as_str().to_lowercase() == "picture" {
+                        Some(value.value().to_string())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }) else {
+                continue;
+            };
+            if picture.starts_with(mainprefix) {
+                let picture = picture.trim_start_matches(mainprefix);
+                if picture.starts_with(ctx.config().prefix()) {
+                    let picture = picture
+                        .trim_start_matches(ctx.config().prefix())
+                        .trim_start_matches('\\');
+                    let image = ctx
+                        .workspace_path()
+                        .join(picture.replace('\\', "/"))
+                        .expect("workspace path");
+                    if image.exists().unwrap_or_default() {
+                        continue;
+                    }
+                    debug!("Image not found: {}", image.as_str());
+                    pictures.insert(name.as_str().to_string(), picture.to_owned());
+                }
+            }
+        }
+    }
+    pictures
 }
 
 fn find_previews(ctx: &Context) -> HashMap<String, String> {

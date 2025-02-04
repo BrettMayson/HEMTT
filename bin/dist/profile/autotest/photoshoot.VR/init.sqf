@@ -1,8 +1,10 @@
 ps_preview = [];
 
-ps_fnc_uniform = compile preprocessFileLineNumbers "functions\fnc_uniform.sqf";
+ps_fnc_backpack = compile preprocessFileLineNumbers "functions\fnc_backpack.sqf";
 ps_fnc_firearm = compile preprocessFileLineNumbers "functions\fnc_firearm.sqf";
 ps_fnc_headgear = compile preprocessFileLineNumbers "functions\fnc_headgear.sqf";
+ps_fnc_uniform = compile preprocessFileLineNumbers "functions\fnc_uniform.sqf";
+ps_fnc_vest = compile preprocessFileLineNumbers "functions\fnc_vest.sqf";
 
 addMissionEventHandler ["ExtensionCallback", {
     params ["_name", "_function", "_data"];
@@ -26,6 +28,9 @@ addMissionEventHandler ["ExtensionCallback", {
             };
             case "weapon_add": {
                 diag_log format ["Weapon: %1", _data];
+                if !(isClass (configFile >> "CfgWeapons" >> _data)) exitWith {
+                    "hemtt_comm" callExtension ["photoshoot:weapon_unsupported", [_data]];
+                };
                 "hemtt_comm" callExtension ["log", ["debug", format ["Checking Weapon: %1", _data]]];
                 private _type = getNumber (configFile >> "CfgWeapons" >> _data >> "ItemInfo" >> "type");
                 "hemtt_comm" callExtension ["log", ["debug", format ["Type: %1", _type]]];
@@ -70,24 +75,32 @@ addMissionEventHandler ["ExtensionCallback", {
                         "hemtt_comm" callExtension ["log", ["debug", format ["Headgear: %1", _data]]];
                         [_data] spawn ps_fnc_headgear;
                     };
-                    // case 701: {
-                    //     // Vest
-                    //     "hemtt_comm" callExtension ["log", ["debug", format ["Vest: %1", _data]]];
-                    //     [_data] spawn ps_fnc_vest;
-                    // };
+                    case 701: {
+                        // Vest
+                        "hemtt_comm" callExtension ["log", ["debug", format ["Vest: %1", _data]]];
+                        [_data] spawn ps_fnc_vest;
+                    };
                     case 801: {
                         // Uniform
                         "hemtt_comm" callExtension ["log", ["debug", format ["Uniform: %1", _data]]];
                         [_data] spawn ps_fnc_uniform;
                     };
-                    // case 901: {
-                    //     // Backpack
-                    //     "hemtt_comm" callExtension ["log", ["debug", format ["Backpack: %1", _data]]];
-                    //     [_data] spawn ps_fnc_backpack;
-                    // };
                     default {
                         // unsupported
                         "hemtt_comm" callExtension ["photoshoot:weapon_unsupported", [_data]];
+                    };
+                };
+            };
+            case "vehicle_add": {
+                private _type = getText (configFile >> "CfgVehicles" >> _data >> "vehicleClass");
+                "hemtt_comm" callExtension ["log", ["debug", format ["Type: %1", _type]]];
+                switch (_type) do {
+                    case "Backpacks": {
+                        "hemtt_comm" callExtension ["log", ["debug", format ["Backpack: %1", _data]]];
+                        [_data] spawn ps_fnc_backpack;
+                    };
+                    default {
+                        "hemtt_comm" callExtension ["photoshoot:vehicle_unsupported", [_data]];
                     };
                 };
             };
