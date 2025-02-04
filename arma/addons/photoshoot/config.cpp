@@ -31,6 +31,31 @@ class CfgFaces {
     };
 };
 
+class CfgVehicles {
+    class C_Soldier_VR_F;
+    class HEMTTModel: C_Soldier_VR_F {
+        displayName = "HEMTT Model";
+        author = "HEMTT";
+        hiddenSelections[] = {"Camo_arm_left","Camo_arm_right","Camo_body","Camo_head","Camo_leg_left","Camo_leg_right"};
+        hiddenSelectionsMaterials[] = {
+            QPATHTOF(chroma.rvmat)
+            ,QPATHTOF(chroma.rvmat)
+            ,QPATHTOF(chroma.rvmat)
+            ,QPATHTOF(chroma.rvmat)
+            ,QPATHTOF(chroma.rvmat)
+            ,QPATHTOF(chroma.rvmat)
+        };
+        hiddenSelectionsTextures[] = {
+            "#(argb,8,8,3)color(1,0,1,1,ca)"
+            ,"#(argb,8,8,3)color(1,0,1,1,ca)"
+            ,"#(argb,8,8,3)color(1,0,1,1,ca)"
+            ,"#(argb,8,8,3)color(1,0,1,1,ca)"
+            ,"#(argb,8,8,3)color(1,0,1,1,ca)"
+            ,"#(argb,8,8,3)color(1,0,1,1,ca)"
+        };
+    };
+};
+
 class CfgIdentities {
     class HEMTTPhotoshoot {
         face = "HEMTTPhotoshoot";

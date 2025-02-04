@@ -47,6 +47,11 @@ fn init() -> Extension {
                             ctx.callback_data("hemtt_photoshoot", "weapon_add", weapon.clone())
                                 .unwrap();
                         }
+                        toarma::Photoshoot::Vehicle(vehicle) => {
+                            println!("Vehicle: {vehicle}");
+                            ctx.callback_data("hemtt_photoshoot", "vehicle_add", vehicle.clone())
+                                .unwrap();
+                        }
                         toarma::Photoshoot::Preview(class) => {
                             println!("Preview: {class}");
                             ctx.callback_data("hemtt_photoshoot", "preview_add", class.clone())

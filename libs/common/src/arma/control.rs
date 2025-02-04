@@ -17,6 +17,7 @@ pub mod toarma {
     #[derive(Debug, Serialize, Deserialize)]
     pub enum Photoshoot {
         Weapon(String),
+        Vehicle(String),
         Preview(String),
         PreviewRun,
         Done,
@@ -52,6 +53,8 @@ pub mod fromarma {
         Ready,
         Weapon(String),
         WeaponUnsupported(String),
+        Vehicle(String),
+        VehicleUnsupported(String),
         Previews,
     }
 }

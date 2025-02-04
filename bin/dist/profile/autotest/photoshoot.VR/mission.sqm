@@ -169,7 +169,7 @@ class Mission
 						};
 					};
 					id=18;
-					type="C_man_1";
+					type="HEMTTModel";
 					atlOffset=10;
 					class CustomAttributes
 					{
