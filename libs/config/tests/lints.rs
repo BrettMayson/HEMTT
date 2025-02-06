@@ -44,9 +44,6 @@ fn lint(file: &str) -> String {
     let source = workspace.join(format!("{file}.hpp")).unwrap();
     let processed = Processor::run(&source).unwrap();
     let test_config = ProjectConfig::test_project();
-    // let build_info = BuildInfo::new(test_config.prefix());
-    // let _ =
-    // build_info.stringtable_append(&format!("{}validEntry", build_info.stringtable_prefix()));
     let parsed = hemtt_config::parse(Some(&test_config), &processed);
     let workspacefiles = WorkspaceFiles::new();
     match parsed {

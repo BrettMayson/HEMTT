@@ -84,10 +84,19 @@ impl LintRunner<LintData> for Runner {
                         continue;
                     };
                     if macros.contains_key(ban_name) {
+                        let span = target.span();
+                        if processed
+                            .mappings(span.start)
+                            .first()
+                            .is_some_and(|m| m.original().path().is_include())
+                        {
+                            continue;
+                        }
+
                         return vec![Arc::new(CodeS28BannedMacros::new(
                             ban_name,
                             type_release,
-                            target.span(),
+                            span,
                             processed,
                             config.severity(),
                         ))];
