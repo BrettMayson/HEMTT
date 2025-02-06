@@ -213,7 +213,7 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
         if !ignore {
             codes.push(Arc::new(CodeStringtableMissingFile::new(
                 missing.len() as u64,
-                Severity::Error,
+                Severity::Warning,
             )));
         };
     }
