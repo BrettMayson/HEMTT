@@ -2,7 +2,7 @@ use crate::{
     analyze::{inspector::Issue, LintData},
     Statements,
 };
-use hemtt_common::config::LintConfig;
+use hemtt_common::config::{LintConfig, LintEnabled};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
@@ -35,7 +35,7 @@ private _z = 5;
 Checks for variables being shadowed."
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::help().with_enabled(LintEnabled::Pedantic)
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
