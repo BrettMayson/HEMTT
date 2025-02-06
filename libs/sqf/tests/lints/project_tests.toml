@@ -17,3 +17,6 @@ options.ignore = [
 
 [lints.sqf.this_call]
 enabled = true
+
+[lints.sqf.short_circuit_bool_var]
+enabled = true
