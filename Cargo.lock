@@ -1798,6 +1798,7 @@ dependencies = [
  "casey",
  "hemtt-common",
  "hemtt-workspace",
+ "indexmap",
  "insta",
  "linkme",
  "paste",

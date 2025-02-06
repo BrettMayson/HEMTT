@@ -155,25 +155,6 @@ Project {
     },
     path: "/containers.xml",
     keys: {
-        "b1": [
-            Position {
-                start: LineCol(
-                    215,
-                    (
-                        8,
-                        22,
-                    ),
-                ),
-                end: LineCol(
-                    217,
-                    (
-                        8,
-                        24,
-                    ),
-                ),
-                path: "/containers.xml",
-            },
-        ],
         "a1": [
             Position {
                 start: LineCol(
@@ -193,19 +174,19 @@ Project {
                 path: "/containers.xml",
             },
         ],
-        "a3": [
+        "b1": [
             Position {
                 start: LineCol(
-                    473,
+                    215,
                     (
-                        17,
+                        8,
                         22,
                     ),
                 ),
                 end: LineCol(
-                    475,
+                    217,
                     (
-                        17,
+                        8,
                         24,
                     ),
                 ),
@@ -225,6 +206,25 @@ Project {
                     306,
                     (
                         11,
+                        24,
+                    ),
+                ),
+                path: "/containers.xml",
+            },
+        ],
+        "a3": [
+            Position {
+                start: LineCol(
+                    473,
+                    (
+                        17,
+                        22,
+                    ),
+                ),
+                end: LineCol(
+                    475,
+                    (
+                        17,
                         24,
                     ),
                 ),

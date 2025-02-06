@@ -162,44 +162,6 @@ Project {
     },
     path: "/gh822.xml",
     keys: {
-        "my things get unescaped": [
-            Position {
-                start: LineCol(
-                    565,
-                    (
-                        17,
-                        18,
-                    ),
-                ),
-                end: LineCol(
-                    588,
-                    (
-                        17,
-                        41,
-                    ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
-        "comments be gone!": [
-            Position {
-                start: LineCol(
-                    921,
-                    (
-                        25,
-                        18,
-                    ),
-                ),
-                end: LineCol(
-                    938,
-                    (
-                        25,
-                        35,
-                    ),
-                ),
-                path: "/gh822.xml",
-            },
-        ],
         "i will change the xml structure a little": [
             Position {
                 start: LineCol(
@@ -233,6 +195,44 @@ Project {
                     (
                         11,
                         33,
+                    ),
+                ),
+                path: "/gh822.xml",
+            },
+        ],
+        "my things get unescaped": [
+            Position {
+                start: LineCol(
+                    565,
+                    (
+                        17,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    588,
+                    (
+                        17,
+                        41,
+                    ),
+                ),
+                path: "/gh822.xml",
+            },
+        ],
+        "comments be gone!": [
+            Position {
+                start: LineCol(
+                    921,
+                    (
+                        25,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    938,
+                    (
+                        25,
+                        35,
                     ),
                 ),
                 path: "/gh822.xml",
