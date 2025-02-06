@@ -1,8 +1,8 @@
 ---
 source: libs/stringtable/tests/sort.rs
-expression: "ProjectWithSortedKeys::fromProject(&stringtable)"
+expression: stringtable
 ---
-ProjectWithSortedKeys {
+Project {
     inner: InnerProject {
         name: "HEMTT",
         packages: [
@@ -83,52 +83,46 @@ ProjectWithSortedKeys {
         ],
     },
     path: "/comments.xml",
-    keys: [
-        (
-            "hasnocomment",
-            [
-                Position {
-                    start: LineCol(
-                        105,
-                        (
-                            4,
-                            18,
-                        ),
+    keys: {
+        "hasnocomment": [
+            Position {
+                start: LineCol(
+                    105,
+                    (
+                        4,
+                        18,
                     ),
-                    end: LineCol(
-                        117,
-                        (
-                            4,
-                            30,
-                        ),
+                ),
+                end: LineCol(
+                    117,
+                    (
+                        4,
+                        30,
                     ),
-                    path: "/comments.xml",
-                },
-            ],
-        ),
-        (
-            "hascomment",
-            [
-                Position {
-                    start: LineCol(
-                        432,
-                        (
-                            11,
-                            18,
-                        ),
+                ),
+                path: "/comments.xml",
+            },
+        ],
+        "hascomment": [
+            Position {
+                start: LineCol(
+                    432,
+                    (
+                        11,
+                        18,
                     ),
-                    end: LineCol(
-                        442,
-                        (
-                            11,
-                            28,
-                        ),
+                ),
+                end: LineCol(
+                    442,
+                    (
+                        11,
+                        28,
                     ),
-                    path: "/comments.xml",
-                },
-            ],
-        ),
-    ],
+                ),
+                path: "/comments.xml",
+            },
+        ],
+    },
     source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"HasNoComment\">\n            <German>Das ist eine Zeichenkette ohne Kommentar</German>\n            <Spanish>Esto es una cadena sin un comentario</Spanish>\n            <!-- This is a comment -->\n            <English>This is a string with a comment</English>\n        </Key>\n        <!-- This key has a comment -->\n        <Key ID=\"HasComment\">\n            <German>Das ist eine Zeichenkette ohne Kommentar</German>\n            <!-- This is a comment -->\n            <English>This is a string with a comment</English>\n        </Key>\n    </Package>\n</Project>\n",
     comments: [
         (
