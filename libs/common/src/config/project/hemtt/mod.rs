@@ -54,23 +54,27 @@ impl HemttConfig {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct HemttRuntime {
+pub struct RuntimeArguments {
     is_release: bool,
     is_pedantic: bool,
 }
-impl HemttRuntime {
+
+impl RuntimeArguments {
     #[must_use]
     pub const fn is_release(&self) -> bool {
         self.is_release
     }
+
     #[must_use]
     pub const fn with_release(self, is_release: bool) -> Self {
         Self { is_release, ..self }
     }
+
     #[must_use]
     pub const fn is_pedantic(&self) -> bool {
         self.is_pedantic
     }
+
     #[must_use]
     pub const fn with_pedantic(self, is_pedantic: bool) -> Self {
         Self {

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use hemtt_common::config::LintEnabled;
 use hemtt_config::analyze::CONFIG_LINTS;
 use hemtt_sqf::analyze::{
     lints::s02_event_handlers::{
@@ -69,10 +70,10 @@ fn get_text<D>(lint: &Arc<Box<dyn Lint<D>>>, prefix: &str) -> String {
     text.push_str(&format!(
         "Default Severity: **{:?}** {}  \n",
         lint.default_config().severity(),
-        if lint.default_config().enabled() {
-            ""
-        } else {
-            "(Disabled)"
+        match lint.default_config().enabled() {
+            LintEnabled::Enabled => "",
+            LintEnabled::Disabled => "(Disabled)",
+            LintEnabled::Pedantic => "(Pedantic)",
         },
     ));
     text.push_str(&format!(

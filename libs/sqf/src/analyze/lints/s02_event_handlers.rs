@@ -217,12 +217,6 @@ fn check_unknown(
     config: Option<&LintConfig>,
 ) -> Codes {
     if let Some(config) = config {
-        if !config.enabled() {
-            return Vec::new();
-        }
-    }
-
-    if let Some(config) = config {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             if ignore.iter().any(|i| i.as_str() == Some(name)) {
                 return Vec::new();

@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, path::PathBuf, sync::Once};
 
-use hemtt::HemttRuntime;
+use hemtt::RuntimeArguments;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
@@ -45,8 +45,8 @@ pub struct ProjectConfig {
     /// Signing specific configuration
     signing: signing::SigningConfig,
 
-    /// Runtime specific configuration
-    runtime: hemtt::HemttRuntime,
+    /// Runtime specific arguments
+    runtime: hemtt::RuntimeArguments,
 }
 
 impl ProjectConfig {
@@ -106,7 +106,7 @@ impl ProjectConfig {
 
     #[must_use]
     /// HEMTT specific configuration
-    pub const fn runtime(&self) -> &hemtt::HemttRuntime {
+    pub const fn runtime(&self) -> &hemtt::RuntimeArguments {
         &self.runtime
     }
 
@@ -120,7 +120,7 @@ impl ProjectConfig {
         ProjectFile::from_file(path)?.try_into()
     }
     #[must_use]
-    pub fn with_runtime(self, runtime: HemttRuntime) -> Self {
+    pub fn with_runtime(self, runtime: RuntimeArguments) -> Self {
         Self { runtime, ..self }
     }
 }
@@ -211,7 +211,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             files: file.files.into(),
             lints: file.lints.into(),
             signing: file.signing.into(),
-            runtime: HemttRuntime::default(),
+            runtime: RuntimeArguments::default(),
         };
 
         let mut lints_path = file.meta_path;

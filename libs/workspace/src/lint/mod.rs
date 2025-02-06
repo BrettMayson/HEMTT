@@ -3,7 +3,7 @@ pub mod macros;
 use std::{collections::HashMap, sync::Arc};
 
 use codespan_reporting::diagnostic::Severity;
-use hemtt_common::config::{LintConfig, LintConfigOverride, ProjectConfig};
+use hemtt_common::config::{LintConfig, LintConfigOverride, LintEnabled, ProjectConfig};
 
 use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
@@ -178,11 +178,11 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of lints that are enabled OR codes if the lint config is invalid
-    pub fn check_and_filter(
-        &self,
-        lints: Lints<D>,
-        default_enable: bool,
-    ) -> Result<Lints<D>, Codes> {
+    pub fn check_and_filter(&self, lints: Lints<D>, pedantic: bool) -> Result<Lints<D>, Codes> {
+        fn enabled(config: &LintConfig, pedantic: bool) -> bool {
+            config.enabled() == LintEnabled::Enabled
+                || (pedantic && config.enabled() == LintEnabled::Pedantic)
+        }
         let mut enabled_lints = vec![];
         let mut errors: Codes = vec![];
         for lint in lints {
@@ -192,9 +192,6 @@ impl<D> LintManager<D> {
                 }));
             }
             let mut config = lint.default_config();
-            if default_enable {
-                config = config.with_enabled(true);
-            }
             if let Some(config_override) = self.configs.get(lint.ident()) {
                 config = config_override.apply(config);
                 if config.severity() < lint.minimum_severity() {
@@ -206,13 +203,13 @@ impl<D> LintManager<D> {
                         ),
                     }));
                 }
-                if !config.enabled() && lint.minimum_severity() == Severity::Error {
+                if !enabled(&config, pedantic) && lint.minimum_severity() == Severity::Error {
                     errors.push(Arc::new(InvalidLintConfig {
                         message: format!("Lint `{}` cannot be disabled", lint.ident()),
                     }));
                 }
             }
-            if config.enabled() {
+            if enabled(&config, pedantic) {
                 enabled_lints.push(lint);
             }
         }

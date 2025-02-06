@@ -4,7 +4,6 @@ use hemtt_workspace::{
     position::{LineCol, Position},
     WorkspacePath,
 };
-use indexmap::IndexMap;
 use quick_xml::se::Serializer;
 use serde::{Deserialize, Serialize};
 
@@ -51,7 +50,7 @@ static ALL_LANGUAGES: [&str; 25] = [
 pub struct Project {
     inner: InnerProject,
     path: WorkspacePath,
-    keys: IndexMap<String, Vec<Position>>,
+    keys: HashMap<String, Vec<Position>>,
     source: String,
     comments: Vec<(String, String, Option<String>)>,
 }
@@ -68,7 +67,7 @@ impl Project {
     }
 
     #[must_use]
-    pub const fn keys(&self) -> &IndexMap<String, Vec<Position>> {
+    pub const fn keys(&self) -> &HashMap<String, Vec<Position>> {
         &self.keys
     }
 
@@ -212,8 +211,8 @@ fn process_keys(
     inner: &InnerProject,
     source: &str,
     path: &WorkspacePath,
-) -> IndexMap<String, Vec<Position>> {
-    let mut keys = IndexMap::new();
+) -> HashMap<String, Vec<Position>> {
+    let mut keys = HashMap::new();
     let mut all_keys: Vec<String> = Vec::with_capacity(20);
     for package in &inner.packages {
         for package_inner in package.containers() {
