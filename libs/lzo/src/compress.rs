@@ -19,9 +19,9 @@ extern "C" {
 const unsafe extern "C" fn get_unaligned_le32(p: *const ::std::os::raw::c_void) -> u32 {
     let input: *const u8 = p.cast::<u8>();
     (*input.offset(0isize) as i32
-        | (*input.offset(1isize) as i32) << 8i32
-        | (*input.offset(2isize) as i32) << 16i32
-        | (*input.offset(3isize) as i32) << 24i32) as u32
+        | ((*input.offset(1isize) as i32) << 8i32)
+        | ((*input.offset(2isize) as i32) << 16i32)
+        | ((*input.offset(3isize) as i32) << 24i32)) as u32
 }
 
 unsafe extern "C" fn put_unaligned(mut v: u32, p: *mut ::std::os::raw::c_void) {
@@ -84,7 +84,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                 break 'loop2;
             }
             dv = get_unaligned_le32(ip.cast::<::std::os::raw::c_void>());
-            t = (dv.wrapping_mul(0x1824_429d_u32) >> (32i32 - 13i32)
+            t = ((dv.wrapping_mul(0x1824_429d_u32) >> (32i32 - 13i32))
                 & (1u32 << 13i32).wrapping_sub(1u32)) as usize;
             m_pos = in_.offset(*dict.add(t) as isize);
             *dict.add(t) = ((ip as isize).wrapping_sub(in_ as isize)
@@ -352,14 +352,15 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             let old = op;
                             op = op.offset(1isize);
                             old
-                        } = (16usize | m_off >> 11i32 & 8usize | m_len.wrapping_sub(2usize)) as u8;
+                        } = (16usize | (m_off >> 11i32) & 8usize | m_len.wrapping_sub(2usize))
+                            as u8;
                     } else {
                         m_len = m_len.wrapping_sub(9usize);
                         *{
                             let old = op;
                             op = op.offset(1isize);
                             old
-                        } = (16usize | m_off >> 11i32 & 8usize) as u8;
+                        } = (16usize | (m_off >> 11i32) & 8usize) as u8;
                         loop {
                             if m_len <= 255usize {
                                 break;
@@ -394,7 +395,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     let old = op;
                     op = op.offset(1isize);
                     old
-                } = (m_len.wrapping_sub(1usize) << 5i32 | (m_off & 7usize) << 2i32) as u8;
+                } = ((m_len.wrapping_sub(1usize) << 5i32) | ((m_off & 7usize) << 2i32)) as u8;
                 *{
                     let old = op;
                     op = op.offset(1isize);

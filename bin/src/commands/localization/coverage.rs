@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::BufReader};
+use std::collections::HashMap;
 
 use hemtt_stringtable::{Project, Totals};
 use serde::Serialize;
@@ -106,8 +106,7 @@ pub fn coverage(cmd: &Command) -> Result<Report, Error> {
             .join(addon.folder())?
             .join("stringtable.xml")?;
         if stringtable_path.exists()? {
-            let project = match Project::from_reader(BufReader::new(stringtable_path.open_file()?))
-            {
+            let project = match Project::read(stringtable_path) {
                 Ok(project) => project,
                 Err(e) => {
                     error!("Failed to read stringtable for {}", addon.folder());

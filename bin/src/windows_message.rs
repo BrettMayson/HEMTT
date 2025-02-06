@@ -21,8 +21,10 @@ fn is_console_created_for_this_program() -> bool {
 
         // Get the number of processes attached to the console
         let mut process_list: [DWORD; 2] = [0; 2];
-        let process_count =
-            GetConsoleProcessList(process_list.as_mut_ptr(), process_list.len() as DWORD);
+        let process_count = GetConsoleProcessList(
+            process_list.as_mut_ptr(),
+            DWORD::try_from(process_list.len()).unwrap_or(u32::MAX),
+        );
 
         // If only one process is attached, the console was likely created for this program
         process_count == 1

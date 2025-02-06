@@ -30,7 +30,7 @@ fn init() -> Extension {
                 && len_buf != [255u8; 4]
             {
                 let len = u32::from_le_bytes(len_buf);
-                println!("Receiving: {}", len);
+                println!("Receiving: {len}");
                 let mut buf = vec![0u8; len as usize];
                 socket.read_exact(&mut buf).unwrap();
                 let buf = String::from_utf8(buf).unwrap();
@@ -43,12 +43,17 @@ fn init() -> Extension {
                     },
                     toarma::Message::Photoshoot(photoshoot) => match photoshoot {
                         toarma::Photoshoot::Weapon(weapon) => {
-                            println!("Weapon: {}", weapon);
+                            println!("Weapon: {weapon}");
                             ctx.callback_data("hemtt_photoshoot", "weapon_add", weapon.clone())
                                 .unwrap();
                         }
+                        toarma::Photoshoot::Vehicle(vehicle) => {
+                            println!("Vehicle: {vehicle}");
+                            ctx.callback_data("hemtt_photoshoot", "vehicle_add", vehicle.clone())
+                                .unwrap();
+                        }
                         toarma::Photoshoot::Preview(class) => {
-                            println!("Preview: {}", class);
+                            println!("Preview: {class}");
                             ctx.callback_data("hemtt_photoshoot", "preview_add", class.clone())
                                 .unwrap();
                         }
@@ -89,7 +94,10 @@ fn log(ctx: Context, level: String, message: String) {
         "info" => fromarma::Level::Info,
         "warn" => fromarma::Level::Warn,
         "error" => fromarma::Level::Error,
-        _ => fromarma::Level::Info,
+        _ => {
+            println!("Unknown log level: {}", level);
+            fromarma::Level::Info
+        }
     };
     let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
         println!("`log` called without a sender");
@@ -100,9 +108,8 @@ fn log(ctx: Context, level: String, message: String) {
 
 fn send(message: fromarma::Message, socket: &mut Stream) {
     let message = serde_json::to_string(&message).unwrap();
-    socket
-        .write_all(&u32::to_le_bytes(message.len() as u32))
-        .unwrap();
+    let len = u32::try_from(message.len()).unwrap();
+    socket.write_all(&u32::to_le_bytes(len)).unwrap();
     socket.write_all(message.as_bytes()).unwrap();
     socket.flush().unwrap();
 }

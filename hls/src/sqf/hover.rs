@@ -14,6 +14,9 @@ const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 impl SqfAnalyzer {
     pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {
+        if !url.path().ends_with(".sqf") {
+            return None;
+        }
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
             warn!("Failed to find workspace for {:?}", url);
             return None;
@@ -31,7 +34,10 @@ impl SqfAnalyzer {
             }
             self.databases.get(&workspace).unwrap()
         };
-        let tokens = self.tokens.get(&url).unwrap();
+        let Some(tokens) = self.tokens.get(&url) else {
+            warn!("No tokens found for {:?}", url);
+            return None;
+        };
         #[allow(clippy::int_plus_one)]
         let token = tokens.iter().find(|token| {
             let start = token.position().start();

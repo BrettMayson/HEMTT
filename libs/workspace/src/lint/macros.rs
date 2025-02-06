@@ -23,11 +23,12 @@ macro_rules! lint_manager {
             #[must_use]
             pub fn lint_check(
                 config: std::collections::HashMap<String, hemtt_common::config::LintConfigOverride>,
+                default_force_enabled: bool,
             ) -> $crate::reporting::Codes {
                 let mut manager: $crate::lint::LintManager<super::analyze::LintData> =
                     $crate::lint::LintManager::new(config);
                 if let Err(lint_errors) =
-                    manager.extend([<$ident:upper _LINTS>].iter().map(|l| (**l).clone()).collect::<Vec<_>>())
+                    manager.extend([<$ident:upper _LINTS>].iter().map(|l| (**l).clone()).collect::<Vec<_>>(), default_force_enabled)
                 {
                     return lint_errors;
                 }
@@ -36,7 +37,7 @@ macro_rules! lint_manager {
                     Box<dyn $crate::lint::AnyLintGroupRunner<super::analyze::LintData>>,
                 )> = $groups;
                 for group in groups {
-                    if let Err(lint_errors) = manager.push_group(group.0, group.1) {
+                    if let Err(lint_errors) = manager.push_group(group.0, group.1, default_force_enabled) {
                         return lint_errors;
                     }
                 }

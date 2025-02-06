@@ -5,7 +5,8 @@ use std::{
 
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{reporting::WorkspaceFiles, WorkspacePath};
-use tokio::sync::RwLock;
+use tokio::{sync::RwLock, task::JoinSet};
+use tower_lsp::Client;
 use tracing::{debug, info, warn};
 use url::Url;
 
@@ -52,7 +53,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     let sources = match Processor::run(&source) {
         Ok(processed) => {
             let workspace_files = WorkspaceFiles::new();
-            match hemtt_config::parse(None, &processed) {
+            match hemtt_config::parse(workspace.config().as_ref(), &processed) {
                 Ok(report) => {
                     info!("parsed config for {}", source);
                     for warning in report.warnings() {
@@ -114,7 +115,6 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
             diags,
         );
     }
-    manager.sync();
     let cache = ConfigCache::get();
     if !sources.is_empty() {
         cache
@@ -131,17 +131,21 @@ pub async fn workspace_added(workspace: EditorWorkspace) {
     tokio::spawn(check_addons(workspace));
 }
 
-pub async fn did_save(url: Url) {
+pub async fn did_save(url: Url, client: Option<Client>) {
     let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
         warn!("Failed to find workspace for {:?}", url);
         return;
     };
+    let project_change = url.as_str().contains(".toml");
     let recheck_addons = {
         let cache = ConfigCache::get();
         let files = cache.files.read().await;
         files
             .iter()
             .filter_map(|(path, bundle)| {
+                if project_change {
+                    return Some(path.clone());
+                }
                 if bundle.sources.iter().any(|source| {
                     workspace
                         .join_url(&url)
@@ -156,7 +160,23 @@ pub async fn did_save(url: Url) {
             })
             .collect::<Vec<_>>()
     };
+    let mut futures = JoinSet::new();
     for path in recheck_addons {
-        tokio::spawn(check_addon(path.clone(), workspace.clone()));
+        futures.spawn(check_addon(path.clone(), workspace.clone()));
     }
+    tokio::spawn(async move {
+        futures.join_all().await;
+        let Some(dm) = DiagManager::get() else {
+            warn!("failed to get diag manager");
+            return;
+        };
+        dm.sync();
+        if let Some(client) = client {
+            if let Err(e) = client.workspace_diagnostic_refresh().await {
+                warn!("Failed to refresh diagnostics: {:?}", e);
+            } else {
+                info!("Refreshed diagnostics");
+            }
+        }
+    });
 }

@@ -1,5 +1,10 @@
 use std::io::BufReader;
 
+use hemtt_workspace::{
+    position::{LineCol, Position},
+    WorkspacePath,
+};
+use indexmap::IndexMap;
 use quick_xml::se::Serializer;
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +17,6 @@ mod totals;
 pub use key::Key;
 pub use package::Package;
 pub use totals::Totals;
-use tracing::error;
 
 /// Languages in className format
 static ALL_LANGUAGES: [&str; 25] = [
@@ -43,51 +47,62 @@ static ALL_LANGUAGES: [&str; 25] = [
     "Danish",
 ];
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug)]
 pub struct Project {
-    #[serde(rename = "@name")]
-    name: String,
-    #[serde(rename = "Package")]
-    packages: Vec<Package>,
-
-    #[serde(skip)]
-    meta_comments: Vec<(String, String, Option<String>)>,
+    inner: InnerProject,
+    path: WorkspacePath,
+    keys: IndexMap<String, Vec<Position>>,
+    source: String,
+    comments: Vec<(String, String, Option<String>)>,
 }
 
 impl Project {
     #[must_use]
     pub fn name(&self) -> &str {
-        &self.name
+        &self.inner.name
     }
 
     #[must_use]
     pub fn packages(&self) -> &[Package] {
-        &self.packages
+        &self.inner.packages
+    }
+
+    #[must_use]
+    pub const fn keys(&self) -> &IndexMap<String, Vec<Position>> {
+        &self.keys
+    }
+
+    #[must_use]
+    pub const fn path(&self) -> &WorkspacePath {
+        &self.path
+    }
+
+    #[must_use]
+    pub fn source(&self) -> &str {
+        &self.source
     }
 
     pub fn sort(&mut self) {
-        self.packages.sort_by(|a, b| a.name().cmp(b.name()));
-        for package in &mut self.packages {
+        self.inner.packages.sort_by(|a, b| a.name().cmp(b.name()));
+        for package in &mut self.inner.packages {
             package.sort();
         }
     }
 
-    /// Read a Project from a reader
+    /// Read a Project
     ///
     /// # Errors
     /// [`quick_xml::DeError`] if the reader is not a valid stringtable
-    pub fn from_reader<R: std::io::BufRead>(reader: R) -> Result<Self, quick_xml::de::DeError> {
+    /// # Panics
+    pub fn read(path: WorkspacePath) -> Result<Self, quick_xml::de::DeError> {
         let mut buffer = String::new();
         let mut reading_comments = false;
         let mut comments = Vec::new();
         let mut in_key = None;
-        let Ok(reader) = reader
+        let source = path.read_to_string().expect("Failed to read file"); // todo proper error return
+        let reader = source
             .lines()
             .map(|l| {
-                let Ok(l) = l else {
-                    error!("Failed to read line: {:?}", l);
-                    return l;
-                };
                 let l_trim = l.trim();
                 if reading_comments {
                     buffer.push('\n');
@@ -107,7 +122,7 @@ impl Project {
                     buffer.clear();
                 }
                 if reading_comments {
-                    buffer.push_str(&l);
+                    buffer.push_str(l);
                     if l_trim.ends_with("-->") {
                         reading_comments = false;
                     }
@@ -119,20 +134,20 @@ impl Project {
                         in_key = None;
                     }
                 }
-                Ok(l.replace('&', "&amp;"))
+                l.replace('&', "&amp;")
             })
-            .collect::<Result<Vec<_>, _>>()
-        else {
-            return Err(quick_xml::de::DeError::Custom(
-                "Failed to read lines".to_string(),
-            ));
-        };
+            .collect::<Vec<_>>();
         comments.sort();
         comments.dedup();
-        let mut this: Self =
+        let inner: InnerProject =
             quick_xml::de::from_reader(BufReader::new(reader.join("\n").as_bytes()))?;
-        this.meta_comments = comments;
-        Ok(this)
+        Ok(Self {
+            keys: process_keys(&inner, &source, &path),
+            inner,
+            path,
+            source,
+            comments,
+        })
     }
 
     /// Write a Project to a writer
@@ -146,7 +161,7 @@ impl Project {
         let mut ser = Serializer::new(&mut buffer);
         ser.indent(' ', 4);
         ser.expand_empty_elements(true);
-        self.serialize(ser)?;
+        self.inner.serialize(ser)?;
         buffer.push('\n');
 
         let mut clear_next = false;
@@ -157,7 +172,7 @@ impl Project {
                 clear_next = false;
                 in_key = None;
             }
-            for (before, after, key) in &self.meta_comments {
+            for (before, after, key) in &self.comments {
                 if l_trim.starts_with(after) && &in_key == key {
                     let mut whitespace = line
                         .chars()
@@ -182,4 +197,54 @@ impl Project {
 
         Ok(())
     }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename = "Project")]
+struct InnerProject {
+    #[serde(rename = "@name")]
+    name: String,
+    #[serde(rename = "Package")]
+    packages: Vec<Package>,
+}
+
+fn process_keys(
+    inner: &InnerProject,
+    source: &str,
+    path: &WorkspacePath,
+) -> IndexMap<String, Vec<Position>> {
+    let mut keys = IndexMap::new();
+    let mut all_keys: Vec<String> = Vec::with_capacity(20);
+    for package in &inner.packages {
+        for package_inner in package.containers() {
+            for key in package_inner.keys() {
+                all_keys.push(key.id().to_string());
+            }
+        }
+        for key in package.keys() {
+            all_keys.push(key.id().to_string());
+        }
+    }
+    let mut offset = 0;
+    for (linenum, line) in source.lines().enumerate() {
+        for key in &all_keys {
+            if let Some(pos) = line.find(&format!("\"{key}\"")) {
+                keys.entry(key.to_lowercase())
+                    .or_insert_with(Vec::new)
+                    .push(Position::new(
+                        LineCol(offset + pos + 1, (linenum + 1, pos + 2)),
+                        LineCol(
+                            offset + pos + 1 + key.len(),
+                            (linenum + 1, pos + 2 + key.len()),
+                        ),
+                        path.clone(),
+                    ));
+            }
+        }
+        offset += line.chars().count() + 1;
+    }
+    for key in all_keys {
+        keys.entry(key.to_lowercase()).or_insert_with(Vec::new);
+    }
+    keys
 }

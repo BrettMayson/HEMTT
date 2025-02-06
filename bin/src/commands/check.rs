@@ -15,19 +15,36 @@ use crate::{
 /// write files to disk, saving time and resources.
 pub struct Command {
     #[clap(flatten)]
+    pub(crate) check: CheckArgs,
+
+    #[clap(flatten)]
     global: crate::GlobalArgs,
 }
 
-/// Execute the dev command
+#[derive(clap::Args)]
+#[allow(clippy::module_name_repetitions)]
+pub struct CheckArgs {
+    #[arg(long, short = 'p', action = clap::ArgAction::SetTrue)]
+    /// Run all lints that are disabled by default (but not explicitly disabled via project config)
+    pedantic: bool,
+}
+
+/// Execute the check command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(_: &Command) -> Result<Report, Error> {
-    let ctx = Context::new(
+pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    let mut ctx = Context::new(
         Some("check"),
         crate::context::PreservePrevious::Remove,
         true,
     )?;
+
+    if cmd.check.pedantic {
+        let runtime = ctx.config().runtime().clone().with_pedantic(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
+    }
 
     let mut executor = Executor::new(ctx);
     global_modules(&mut executor);

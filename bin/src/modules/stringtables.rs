@@ -1,4 +1,4 @@
-use std::{io::BufReader, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_stringtable::{
     analyze::{lint_all, lint_check, lint_one},
@@ -30,7 +30,11 @@ impl Module for Stringtables {
 
     fn check(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().sqf().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().stringtables().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 
@@ -53,9 +57,8 @@ impl Module for Stringtables {
                 .collect::<Vec<_>>();
             for path in paths {
                 if path.exists().expect("vfs issue") {
-                    let existing = path.read_to_string().expect("vfs issue");
-                    match Project::from_reader(BufReader::new(existing.as_bytes())) {
-                        Ok(project) => stringtables.push((project, path, existing)),
+                    match Project::read(path.clone()) {
+                        Ok(project) => stringtables.push(project),
                         Err(e) => {
                             debug!("Failed to parse stringtable for {}: {}", path, e);
                             report.push(Arc::new(CodeStringtableInvalid::new(path, e.to_string())));
@@ -65,15 +68,20 @@ impl Module for Stringtables {
             }
         }
 
-        report.extend(lint_all(&stringtables, Some(ctx.config())));
+        report.extend(lint_all(
+            &stringtables,
+            Some(ctx.config()),
+            ctx.addons().to_vec(),
+        ));
 
         for stringtable in stringtables {
-            let codes = lint_one(&stringtable, Some(ctx.config()));
+            let codes = lint_one(&stringtable, Some(ctx.config()), ctx.addons().to_vec());
             if !codes.iter().any(|c| c.severity() == Severity::Error) {
-                convert_stringtable(&stringtable.0, &stringtable.1);
+                convert_stringtable(&stringtable);
             }
             report.extend(codes);
         }
+
         Ok(report)
     }
 }

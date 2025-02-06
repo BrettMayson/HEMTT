@@ -1,0 +1,9 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: lint(stringify! (s28_banned_macros))
+---
+[0m[1m[38;5;9merror[L-S280][0m[1m: Macro `FREEZE_GAME` is always banned[0m
+  [0m[36m┌─[0m s28_banned_macros.sqf:4:1
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m [0m[31mhint[0m format ["z is %1", z];
+  [0m[36m│[0m [0m[31m^^^^[0m [0m[31mmacro defined inside this scope[0m

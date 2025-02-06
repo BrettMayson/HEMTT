@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, LazyLock, RwLock},
 };
 
-use hemtt_common::config::PDriveOption;
+use hemtt_common::config::{PDriveOption, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
 use tower_lsp::lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder};
 use tracing::debug;
@@ -95,6 +95,7 @@ impl EditorWorkspaces {
 
 #[derive(Clone, Hash, Eq, PartialEq)]
 pub struct EditorWorkspace {
+    root: PathBuf,
     url: Url,
     workspace: WorkspacePath,
 }
@@ -124,6 +125,7 @@ impl EditorWorkspace {
             Some(Self {
                 workspace,
                 url: folder.uri.clone(),
+                root,
             })
         } else {
             None
@@ -151,6 +153,25 @@ impl EditorWorkspace {
 
     pub fn root(&self) -> &WorkspacePath {
         &self.workspace
+    }
+
+    pub fn config(&self) -> Option<ProjectConfig> {
+        let path = self.root.join(".hemtt").join("project.toml");
+        if path.is_file() {
+            match ProjectConfig::from_file(&path) {
+                Ok(config) => {
+                    debug!("loaded config: {:?}", config);
+                    Some(config)
+                }
+                Err(e) => {
+                    debug!("failed to load config: {:?}", e);
+                    None
+                }
+            }
+        } else {
+            debug!("no config found at {:?}", path);
+            None
+        }
     }
 
     #[allow(dead_code)]

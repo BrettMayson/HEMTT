@@ -43,6 +43,7 @@ lint!(s21_invalid_comparisons, true);
 lint!(s22_this_call, true);
 lint!(s23_reassign_reserved_variable, true);
 lint!(s24_marker_spam, true);
+lint!(s28_banned_macros, true);
 
 fn lint(file: &str, ignore_inspector: bool) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -63,7 +64,7 @@ fn lint(file: &str, ignore_inspector: bool) -> String {
             if ignore_inspector {
                 sqf.testing_clear_issues();
             }
-            let codes = analyze(
+            let (codes, _) = analyze(
                 &sqf,
                 Some(&config),
                 &processed,

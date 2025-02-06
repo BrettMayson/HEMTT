@@ -12,7 +12,7 @@ pub use addon::AddonConfig;
 pub use pdrive::PDriveOption;
 pub use project::{
     hemtt::launch::LaunchOptions,
-    lint::{LintConfig, LintConfigOverride},
+    lint::{LintConfig, LintConfigOverride, LintEnabled},
     ProjectConfig,
 };
 
