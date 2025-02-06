@@ -1,17 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use std::io::BufReader;
-
 use hemtt_stringtable::Project;
+use hemtt_workspace::WorkspacePath;
 
 #[test]
 fn sort_ace_arsenal() {
-    let mut stringtable: Project = quick_xml::de::from_str(
-        std::fs::read_to_string("tests/ace_arsenal.xml")
-            .unwrap()
-            .as_str(),
-    )
-    .unwrap();
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/ace_arsenal.xml").unwrap()).unwrap();
     insta::assert_debug_snapshot!(stringtable);
 
     stringtable.sort();
@@ -21,10 +16,8 @@ fn sort_ace_arsenal() {
 
 #[test]
 fn sort_comments() {
-    let mut stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/sort/comments.xml").unwrap(),
-    ))
-    .unwrap();
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/sort/comments.xml").unwrap()).unwrap();
     insta::assert_debug_snapshot!(stringtable);
 
     stringtable.sort();
@@ -39,10 +32,8 @@ fn sort_comments() {
 
 #[test]
 fn sort_gh822() {
-    let mut stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/sort/gh822.xml").unwrap(),
-    ))
-    .unwrap();
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/sort/gh822.xml").unwrap()).unwrap();
     stringtable.sort();
 
     insta::assert_debug_snapshot!(stringtable);
@@ -55,10 +46,8 @@ fn sort_gh822() {
 
 #[test]
 fn sort_containers() {
-    let mut stringtable = Project::from_reader(BufReader::new(
-        std::fs::File::open("tests/sort/containers.xml").unwrap(),
-    ))
-    .unwrap();
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/sort/containers.xml").unwrap()).unwrap();
     stringtable.sort();
 
     insta::assert_debug_snapshot!(stringtable);

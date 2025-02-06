@@ -1,6 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::config::LintConfig;
+use hemtt_common::config::{LintConfig, LintEnabled};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
@@ -39,7 +39,8 @@ if (alive player) then { objNull } else { player };
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        // Disabled by default because it requires a lot of code moving to remove a single `!`
+        LintConfig::help().with_enabled(LintEnabled::Pedantic)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

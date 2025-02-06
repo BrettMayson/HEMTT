@@ -42,7 +42,7 @@ When using `call`, the called code will inherit `_this` from the calling scope. 
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::help()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

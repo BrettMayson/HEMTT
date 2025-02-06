@@ -173,7 +173,6 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
             return Vec::new();
         };
         let mut codes: Codes = Vec::new();
-        let (addon, database) = data;
         for statement in target.content() {
             for expression in statement.walk_expressions() {
                 let Some((ns, name, id, target)) = get_namespaces(expression) else {
@@ -186,7 +185,7 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
                     // Requires arma3-wiki to parse and provide https://community.bistudio.com/wiki/inputAction/actions
                     continue;
                 }
-                let eh = database.wiki().event_handler(&id.0);
+                let eh = data.database.wiki().event_handler(&id.0);
                 codes.extend(check_unknown(
                     &ns,
                     &name,
@@ -194,11 +193,11 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
                     target.map(|t| &**t),
                     &eh,
                     processed,
-                    database,
+                    &data.database,
                     config.get("event_unknown"),
                 ));
                 codes.extend(check_version(
-                    addon, &ns, &name, &id, &eh, processed, database,
+                    &data.addon, &ns, &name, &id, &eh, processed, &data.database,
                 ));
             }
         }
@@ -217,12 +216,6 @@ fn check_unknown(
     database: &Database,
     config: Option<&LintConfig>,
 ) -> Codes {
-    if let Some(config) = config {
-        if !config.enabled() {
-            return Vec::new();
-        }
-    }
-
     if let Some(config) = config {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             if ignore.iter().any(|i| i.as_str() == Some(name)) {

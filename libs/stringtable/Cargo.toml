@@ -14,9 +14,11 @@ hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 automod = { workspace = true }
 casey = "0.4.0"
+indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
 quick-xml = { version = "0.37.1", features = ["serialize"] }
+regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }

@@ -38,6 +38,7 @@ lint!(s21_invalid_comparisons);
 lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
+lint!(s28_banned_macros);
 
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -55,7 +56,7 @@ fn lint(file: &str) -> String {
 
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let codes = analyze(
+            let (codes, _) = analyze(
                 &sqf,
                 Some(&config),
                 &processed,

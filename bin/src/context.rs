@@ -226,6 +226,10 @@ impl Context {
     pub fn state(&self) -> Arc<State> {
         self.state.clone()
     }
+    #[must_use]
+    pub fn with_config(self, config: ProjectConfig) -> Self {
+        Self { config, ..self }
+    }
 }
 
 fn version_check(

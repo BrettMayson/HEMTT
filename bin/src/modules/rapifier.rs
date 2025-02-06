@@ -43,7 +43,11 @@ impl Module for Rapifier {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().config().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().config().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 
@@ -133,6 +137,17 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
+    addon
+        .build_data()
+        .localizations()
+        .lock()
+        .expect("not poisoned")
+        .extend(
+            configreport
+                .localized()
+                .iter()
+                .map(|(s, p)| (s.to_owned(), p.clone())),
+        );
     configreport.warnings().into_iter().for_each(|e| {
         report.push(e.clone());
     });

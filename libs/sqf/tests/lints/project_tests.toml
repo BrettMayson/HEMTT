@@ -17,3 +17,8 @@ options.ignore = [
 
 [lints.sqf.this_call]
 enabled = true
+
+[lints.sqf.banned_macros]
+options.always = [
+    "FREEZE_GAME",
+]

@@ -71,11 +71,16 @@ pub struct ReleaseArgs {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
-    let ctx = Context::new(
+    let mut ctx = Context::new(
         Some("release"),
         crate::context::PreservePrevious::Remove,
         true,
     )?;
+
+    let runtime = ctx.config().runtime().clone().with_release(true);
+    let config = ctx.config().clone().with_runtime(runtime);
+    ctx = ctx.with_config(config);
+
     let mut executor = build::executor(ctx, &cmd.build);
 
     if !cmd.release.no_sign && executor.ctx().config().hemtt().release().sign() {
