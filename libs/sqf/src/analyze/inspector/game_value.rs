@@ -11,7 +11,7 @@ use crate::{parser::database::Database, Expression};
 pub enum GameValue {
     Anything,
     // Assignment, // as in z = call {x=1}???
-    Array(Option<Vec<Vec<GameValue>>>),
+    Array(Option<Vec<Vec<GameValue>>>, Option<ArrayType>),
     Boolean(Option<Expression>),
     Code(Option<Expression>),
     Config,
@@ -35,6 +35,20 @@ pub enum GameValue {
     TeamMember,
     WhileType,
     WithType,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum ArrayType {
+    Color,
+    // Pos2d,
+    PosAGL,
+    PosAGLS,
+    PosASL,
+    PosASLW,
+    PosATL,
+    /// from object's center `getPosWorld`
+    PosWorld,
+    PosRelative,
 }
 
 impl GameValue {
@@ -93,8 +107,19 @@ impl GameValue {
                 }
             }
             let value = &syntax.ret().0;
+
+            let temp_testing_type = match cmd_name {
+                "getPosASL" => &Value::Position3dASL,
+                "ASLToAGL" | "AGLToASL" => &Value::Position3dAGL,
+                _ => value,
+            };
+            if temp_testing_type != temp_testing_type {
+                // println!("modifying {cmd_name} output {:?} -> {:?}", value, temp_testing_type);
+            }
+
+            let game_value = Self::from_wiki_value(temp_testing_type);
             // println!("match syntax {syntax:?}");
-            return_types.insert(Self::from_wiki_value(value));
+            return_types.insert(game_value);
         }
         // println!("lhs_set {lhs_set:?}");
         // println!("rhs_set {rhs_set:?}");
@@ -135,12 +160,20 @@ impl GameValue {
                     }
                     return true;
                 };
+                let temp_testing_type = match cmd_name {
+                    "ASLToAGL" => &Value::Position3dASL,
+                    "AGLToASL" => &Value::Position3dAGL,
+                    _ => param.typ(),
+                };
+                if temp_testing_type != param.typ() {
+                    // println!("modifying input {:?} -> {:?}", param.typ(), temp_testing_type);
+                }
                 // println!(
                 //     "[arg {name}] typ: {:?}, opt: {:?}",
-                //     param.typ(),
+                //     temp_testing_type,
                 //     param.optional()
                 // );
-                Self::match_set_to_value(set, param.typ(), param.optional())
+                Self::match_set_to_value(set, temp_testing_type, param.optional())
             }
             Arg::Array(arg_array) => {
                 const WIKI_CMDS_IGNORE_ARGS: &[&str] = &["createHashMapFromArray"];
@@ -150,11 +183,11 @@ impl GameValue {
 
                 set.iter().any(|s| {
                     match s {
-                        Self::Anything | Self::Array(None) => {
+                        Self::Anything | Self::Array(None, _) => {
                             // println!("array (any/generic) pass");
                             true
                         }
-                        Self::Array(Some(gv_array)) => {
+                        Self::Array(Some(gv_array), _) => {
                             // println!("array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
@@ -189,11 +222,14 @@ impl GameValue {
     #[must_use]
     /// matches values are compatible (Anything will always match)
     pub fn match_values(left: &Self, right: &Self) -> bool {
-        if matches!(left, Self::Anything) {
+        if matches!(left, Self::Anything) || matches!(right, Self::Anything) {
             return true;
         }
-        if matches!(right, Self::Anything) {
-            return true;
+        if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right) {
+            if lpos != rpos {
+                println!("array fail {:?}!={:?}", lpos, rpos);
+                return false;
+            }
         }
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
@@ -210,8 +246,13 @@ impl GameValue {
             | Value::ArraySized { .. }
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
-            | Value::Position
-            | Value::Waypoint => Self::Array(None),
+            | Value::Position // position is often too generic to match?
+            | Value::Waypoint => Self::Array(None, None),
+            Value::Position3dAGL => Self::Array(None, Some(ArrayType::PosAGL)),
+            Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
+            Value::Position3dASL => Self::Array(None, Some(ArrayType::PosASL)),
+            Value::Position3DASLW => Self::Array(None, Some(ArrayType::PosASLW)),
+            Value::Position3dATL => Self::Array(None, Some(ArrayType::PosATL)),
             Value::Boolean => Self::Boolean(None),
             Value::Code => Self::Code(None),
             Value::Config => Self::Config,
@@ -248,7 +289,7 @@ impl GameValue {
     /// Gets a generic version of a type
     pub fn make_generic(&self) -> Self {
         match self {
-            Self::Array(_) => Self::Array(None),
+            Self::Array(_, _) => Self::Array(None, None),
             Self::Boolean(_) => Self::Boolean(None),
             Self::Code(_) => Self::Code(None),
             Self::ForType(_) => Self::ForType(None),
@@ -293,14 +334,14 @@ impl GameValue {
                     "Boolean(GENERIC)".to_string()
                 }
             }
-            Self::Array(gv_array_option) =>
-            {
-                #[allow(clippy::option_if_let_else)]
-                if let Some(gv_array) = gv_array_option {
-                    format!("ArrayExp(len {})", gv_array.len())
-                } else {
-                    "ArrayExp(GENERIC)".to_string()
-                }
+            Self::Array(gv_array_option, position_option) => {
+                let str_len = gv_array_option
+                    .clone()
+                    .map_or("GENERIC".to_string(), |l| format!("len {}", l.len()));
+                let str_pos = position_option
+                    .clone()
+                    .map_or("".to_string(), |p| format!(":{p:?}"));
+                format!("ArrayExp({str_len}{str_pos})")
             }
             Self::Code(expression) => {
                 if let Some(Expression::Code(statements)) = expression {

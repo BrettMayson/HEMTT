@@ -29,7 +29,8 @@ impl SciptScope {
                         );
                     }
                 }
-                GameValue::Array(Some(gv_array)) => match ext_func.to_ascii_lowercase().as_str() {
+                GameValue::Array(Some(gv_array), _) => match ext_func.to_ascii_lowercase().as_str()
+                {
                     // Functions that will run in existing scope
                     "cba_fnc_hasheachpair" | "cba_fnc_hashfilter" => {
                         if gv_array.len() > 1 {

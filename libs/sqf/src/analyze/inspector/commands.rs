@@ -27,7 +27,7 @@ impl SciptScope {
             }
         }
         for possible in rhs {
-            if let GameValue::Array(Some(gv_array)) = possible {
+            if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
                     for element in gv_index {
                         let GameValue::String(Some(Expression::String(var, source, _))) = element
@@ -53,7 +53,7 @@ impl SciptScope {
     #[must_use]
     pub fn cmd_generic_params(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
         for possible in rhs {
-            let GameValue::Array(Some(gv_array)) = possible else {
+            let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
             };
 
@@ -71,7 +71,7 @@ impl SciptScope {
                                 VarSource::Params(source.clone()),
                             );
                         }
-                        GameValue::Array(Some(arg_array)) => {
+                        GameValue::Array(Some(arg_array), _) => {
                             if arg_array.is_empty() || arg_array[0].is_empty() {
                                 continue;
                             }
@@ -86,7 +86,7 @@ impl SciptScope {
                             let mut var_types = HashSet::new();
                             if arg_array.len() > 2 {
                                 for type_p in &arg_array[2] {
-                                    if let GameValue::Array(Some(type_array)) = type_p {
+                                    if let GameValue::Array(Some(type_array), _) = type_p {
                                         for type_i in type_array {
                                             var_types
                                                 .extend(type_i.iter().map(GameValue::make_generic));
@@ -240,7 +240,7 @@ impl SciptScope {
                     };
                     possible_array.push(expression.clone());
                 }
-                GameValue::Array(option) => {
+                GameValue::Array(option, _) => {
                     let Some(for_stages) = option else {
                         return_value.insert(GameValue::ForType(None));
                         continue;
@@ -310,7 +310,7 @@ impl SciptScope {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(rhs, database));
             }
-            if let GameValue::Array(Some(gv_array)) = possible {
+            if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
                     for element in gv_index {
                         if let GameValue::Code(Some(expression)) = element {
@@ -348,7 +348,7 @@ impl SciptScope {
     ) -> HashSet<GameValue> {
         let mut possible_code = HashSet::new();
         for possible_outer in rhs {
-            let GameValue::Array(Some(gv_array)) = possible_outer else {
+            let GameValue::Array(Some(gv_array), _) = possible_outer else {
                 continue;
             };
             if gv_array.len() < 2 {
@@ -392,7 +392,7 @@ impl SciptScope {
                 .iter()
                 .any(|r| matches!(r, GameValue::Boolean(..)) || matches!(r, GameValue::Number(..)))
         {
-            if let Some(GameValue::Array(Some(gv_array))) = lhs.iter().next() {
+            if let Some(GameValue::Array(Some(gv_array), _)) = lhs.iter().next() {
                 // return_value.clear(); // todo: could clear if we handle pushBack
                 for gv_index in gv_array {
                     for element in gv_index {

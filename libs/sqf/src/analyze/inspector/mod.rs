@@ -256,7 +256,7 @@ impl SciptScope {
                     .iter()
                     .map(|e| self.eval_expression(e, database).into_iter().collect())
                     .collect();
-                HashSet::from([GameValue::Array(Some(gv_array))])
+                HashSet::from([GameValue::Array(Some(gv_array), None)])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
