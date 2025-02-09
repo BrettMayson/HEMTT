@@ -308,7 +308,7 @@ impl SciptScope {
                 }
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
-                        // the : from case
+                        // the : from case ToDo: these run outside of the do scope
                         let _ = self.cmd_generic_call(&rhs_set, database);
                         None
                     }
