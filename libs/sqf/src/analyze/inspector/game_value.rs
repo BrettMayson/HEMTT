@@ -1,8 +1,7 @@
 //! Game Values and mapping them from commands
 
-use std::collections::HashSet;
-
 use arma3_wiki::model::{Arg, Call, Param, Value};
+use indexmap::IndexSet;
 use tracing::{trace, warn};
 
 use crate::{parser::database::Database, Expression};
@@ -57,15 +56,15 @@ impl GameValue {
     /// Gets cmd return types based on input types
     pub fn from_cmd(
         expression: &Expression,
-        lhs_set: Option<&HashSet<Self>>,
-        rhs_set: Option<&HashSet<Self>>,
+        lhs_set: Option<&IndexSet<Self>>,
+        rhs_set: Option<&IndexSet<Self>>,
         database: &Database,
-    ) -> HashSet<Self> {
-        let mut return_types = HashSet::new();
+    ) -> IndexSet<Self> {
+        let mut return_types = IndexSet::new();
         let cmd_name = expression.command_name().expect("has a name");
         let Some(command) = database.wiki().commands().get(cmd_name) else {
             println!("cmd {cmd_name} not in db?");
-            return HashSet::from([Self::Anything]);
+            return IndexSet::from([Self::Anything]);
         };
 
         for syntax in command.syntax() {
@@ -109,13 +108,14 @@ impl GameValue {
             }
             let value = &syntax.ret().0;
 
+            #[allow(clippy::match_single_binding)]
             let temp_testing_type = match cmd_name {
-                "getPosASL" => &Value::Position3dASL,
-                "ASLToAGL" | "AGLToASL" => &Value::Position3dAGL,
+                // "AGLToASL" | "getPosASL" => &Value::Position3dASL,
+                // "ASLToAGL" |  => &Value::Position3dAGL,
                 _ => value,
             };
-            if temp_testing_type != temp_testing_type {
-                // println!("modifying {cmd_name} output {:?} -> {:?}", value, temp_testing_type);
+            if value != temp_testing_type {
+                println!("modifying {cmd_name} output {value:?} -> {temp_testing_type:?}");
             }
 
             let game_value = Self::from_wiki_value(temp_testing_type);
@@ -136,7 +136,7 @@ impl GameValue {
     #[must_use]
     pub fn match_set_to_arg(
         cmd_name: &str,
-        set: &HashSet<Self>,
+        set: &IndexSet<Self>,
         arg: &Arg,
         params: &[Param],
     ) -> bool {
@@ -161,13 +161,14 @@ impl GameValue {
                     }
                     return true;
                 };
+                #[allow(clippy::match_single_binding)]
                 let temp_testing_type = match cmd_name {
-                    "ASLToAGL" => &Value::Position3dASL,
-                    "AGLToASL" => &Value::Position3dAGL,
+                    // "ASLToAGL" => &Value::Position3dASL,
+                    // "AGLToASL" => &Value::Position3dAGL,
                     _ => param.typ(),
                 };
                 if temp_testing_type != param.typ() {
-                    // println!("modifying input {:?} -> {:?}", param.typ(), temp_testing_type);
+                    println!("modifying input {:?} -> {temp_testing_type:?}", param.typ());
                 }
                 // println!(
                 //     "[arg {name}] typ: {:?}, opt: {:?}",
@@ -195,7 +196,7 @@ impl GameValue {
                                 let possible = if index < gv_array.len() {
                                     gv_array[index].iter().cloned().collect()
                                 } else {
-                                    HashSet::new()
+                                    IndexSet::new()
                                 };
                                 if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
                                     return false;
@@ -211,7 +212,7 @@ impl GameValue {
     }
 
     #[must_use]
-    pub fn match_set_to_value(set: &HashSet<Self>, right_wiki: &Value, optional: bool) -> bool {
+    pub fn match_set_to_value(set: &IndexSet<Self>, right_wiki: &Value, optional: bool) -> bool {
         // println!("Checking {:?} against {:?} [O:{optional}]", set, right_wiki);
         if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
             return true;
@@ -228,8 +229,9 @@ impl GameValue {
         }
         if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right) {
             if lpos != rpos {
-                println!("array fail {:?}!={:?}", lpos, rpos);
-                return false;
+                // ToDo: Handle matchign array types better eg: AGLS vs AGL
+                // println!("array mismatch {lpos:?}!={rpos:?}");
+                // return false;
             }
         }
         std::mem::discriminant(left) == std::mem::discriminant(right)
@@ -261,8 +263,9 @@ impl GameValue {
             Value::DiaryRecord => Self::DiaryRecord,
             Value::Display => Self::Display,
             Value::ForType => Self::ForType(None),
-            Value::IfType => Self::IfType,
             Value::Group => Self::Group,
+            Value::HashMapUnknown => Self::HashMap,
+            Value::IfType => Self::IfType,
             Value::Location => Self::Location,
             Value::Namespace => Self::Namespace,
             Value::Nothing => Self::Nothing,
@@ -342,7 +345,7 @@ impl GameValue {
                     .map_or("GENERIC".to_string(), |l| format!("len {}", l.len()));
                 let str_pos = position_option
                     .clone()
-                    .map_or("".to_string(), |p| format!(":{p:?}"));
+                    .map_or(String::new(), |p| format!(":{p:?}"));
                 format!("ArrayExp({str_len}{str_pos})")
             }
             Self::Code(expression) => {

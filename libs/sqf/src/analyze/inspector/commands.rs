@@ -1,6 +1,8 @@
 //! Emulates engine commands
 
-use std::{collections::HashSet, ops::Range};
+use std::ops::Range;
+
+use indexmap::IndexSet;
 
 use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
 
@@ -8,20 +10,20 @@ use super::{game_value::GameValue, SciptScope};
 
 impl SciptScope {
     #[must_use]
-    pub fn cmd_u_private(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_u_private(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         fn push_var(s: &mut SciptScope, var: &String, source: &Range<usize>) {
             if s.ignored_vars.contains(&var.to_ascii_lowercase()) {
                 s.var_assign(
                     &var.to_string(),
                     true,
-                    HashSet::from([GameValue::Anything]),
+                    IndexSet::from([GameValue::Anything]),
                     VarSource::Ignore,
                 );
             } else {
                 s.var_assign(
                     &var.to_string(),
                     true,
-                    HashSet::from([GameValue::Nothing]),
+                    IndexSet::from([GameValue::Nothing]),
                     VarSource::Private(source.clone()),
                 );
             }
@@ -48,10 +50,10 @@ impl SciptScope {
                 push_var(self, &var.to_string(), source);
             }
         }
-        HashSet::new()
+        IndexSet::new()
     }
     #[must_use]
-    pub fn cmd_generic_params(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_generic_params(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
@@ -67,7 +69,7 @@ impl SciptScope {
                             self.var_assign(
                                 var.as_ref(),
                                 true,
-                                HashSet::from([GameValue::Anything]),
+                                IndexSet::from([GameValue::Anything]),
                                 VarSource::Params(source.clone()),
                             );
                         }
@@ -83,7 +85,7 @@ impl SciptScope {
                             if var_name.is_empty() {
                                 continue;
                             }
-                            let mut var_types = HashSet::new();
+                            let mut var_types = IndexSet::new();
                             if arg_array.len() > 2 {
                                 for type_p in &arg_array[2] {
                                     if let GameValue::Array(Some(type_array), _) = type_p {
@@ -115,14 +117,14 @@ impl SciptScope {
                 }
             }
         }
-        HashSet::from([GameValue::Boolean(None)])
+        IndexSet::from([GameValue::Boolean(None)])
     }
     #[must_use]
     pub fn cmd_generic_call(
         &mut self,
-        rhs: &HashSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
                 continue;
@@ -138,15 +140,15 @@ impl SciptScope {
             self.eval_statements(statements, database);
             self.pop();
         }
-        HashSet::from([GameValue::Anything])
+        IndexSet::from([GameValue::Anything])
     }
     #[must_use]
     pub fn cmd_b_do(
         &mut self,
-        lhs: &HashSet<GameValue>,
-        rhs: &HashSet<GameValue>,
+        lhs: &IndexSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
                 continue;
@@ -171,7 +173,7 @@ impl SciptScope {
                                 self.var_assign(
                                     var.as_ref(),
                                     true,
-                                    HashSet::from([GameValue::Number(None)]),
+                                    IndexSet::from([GameValue::Number(None)]),
                                     VarSource::ForLoop(source.clone()),
                                 );
                             }
@@ -192,16 +194,16 @@ impl SciptScope {
             }
             self.pop();
         }
-        HashSet::from([GameValue::Anything])
+        IndexSet::from([GameValue::Anything])
     }
     #[must_use]
     pub fn cmd_generic_call_magic(
         &mut self,
-        code_possibilities: &HashSet<GameValue>,
+        code_possibilities: &IndexSet<GameValue>,
         magic: &Vec<(&str, GameValue)>,
         source: &Range<usize>,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         for possible in code_possibilities {
             let GameValue::Code(Some(expression)) = possible else {
                 continue;
@@ -217,7 +219,7 @@ impl SciptScope {
                 self.var_assign(
                     var,
                     true,
-                    HashSet::from([value.clone()]),
+                    IndexSet::from([value.clone()]),
                     VarSource::Magic(source.clone()),
                 );
             }
@@ -225,11 +227,11 @@ impl SciptScope {
             self.eval_statements(statements, database);
             self.pop();
         }
-        HashSet::from([GameValue::Anything])
+        IndexSet::from([GameValue::Anything])
     }
     #[must_use]
-    pub fn cmd_for(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
-        let mut return_value = HashSet::new();
+    pub fn cmd_for(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
+        let mut return_value = IndexSet::new();
         for possible in rhs {
             let mut possible_array = Vec::new();
             match possible {
@@ -268,17 +270,17 @@ impl SciptScope {
     /// for (from, to, step) chained commands
     pub fn cmd_b_from_chain(
         &self,
-        lhs: &HashSet<GameValue>,
-        _rhs: &HashSet<GameValue>,
-    ) -> HashSet<GameValue> {
+        lhs: &IndexSet<GameValue>,
+        _rhs: &IndexSet<GameValue>,
+    ) -> IndexSet<GameValue> {
         lhs.clone()
     }
     #[must_use]
     pub fn cmd_u_is_nil(
         &mut self,
-        rhs: &HashSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         let mut non_string = false;
         for possible in rhs {
             let GameValue::String(possible) = possible else {
@@ -296,16 +298,16 @@ impl SciptScope {
         if non_string {
             let _ = self.cmd_generic_call(rhs, database);
         }
-        HashSet::from([GameValue::Boolean(None)])
+        IndexSet::from([GameValue::Boolean(None)])
     }
     #[must_use]
     pub fn cmd_b_then(
         &mut self,
-        _lhs: &HashSet<GameValue>,
-        rhs: &HashSet<GameValue>,
+        _lhs: &IndexSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
         database: &Database,
-    ) -> HashSet<GameValue> {
-        let mut return_value = HashSet::new();
+    ) -> IndexSet<GameValue> {
+        let mut return_value = IndexSet::new();
         for possible in rhs {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(rhs, database));
@@ -315,7 +317,7 @@ impl SciptScope {
                     for element in gv_index {
                         if let GameValue::Code(Some(expression)) = element {
                             return_value.extend(self.cmd_generic_call(
-                                &HashSet::from([GameValue::Code(Some(expression.clone()))]),
+                                &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
                                 database,
                             ));
                         }
@@ -328,10 +330,10 @@ impl SciptScope {
     #[must_use]
     pub fn cmd_b_else(
         &self,
-        lhs: &HashSet<GameValue>,
-        rhs: &HashSet<GameValue>,
-    ) -> HashSet<GameValue> {
-        let mut return_value = HashSet::new(); // just merge, not really the same but should be fine
+        lhs: &IndexSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
+    ) -> IndexSet<GameValue> {
+        let mut return_value = IndexSet::new(); // just merge, not really the same but should be fine
         for possible in rhs {
             return_value.insert(possible.clone());
         }
@@ -343,10 +345,10 @@ impl SciptScope {
     #[must_use]
     pub fn cmd_b_get_or_default_call(
         &mut self,
-        rhs: &HashSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
         database: &Database,
-    ) -> HashSet<GameValue> {
-        let mut possible_code = HashSet::new();
+    ) -> IndexSet<GameValue> {
+        let mut possible_code = IndexSet::new();
         for possible_outer in rhs {
             let GameValue::Array(Some(gv_array), _) = possible_outer else {
                 continue;
@@ -357,10 +359,10 @@ impl SciptScope {
             possible_code.extend(gv_array[1].clone());
         }
         let _ = self.cmd_generic_call(&possible_code, database);
-        HashSet::from([GameValue::Anything])
+        IndexSet::from([GameValue::Anything])
     }
     #[must_use]
-    pub fn cmd_u_to_string(&mut self, rhs: &HashSet<GameValue>) -> HashSet<GameValue> {
+    pub fn cmd_u_to_string(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
                 continue;
@@ -371,17 +373,17 @@ impl SciptScope {
             // just skip because it will often use a _x
             self.code_used.insert(expression.clone());
         }
-        HashSet::from([GameValue::String(None)])
+        IndexSet::from([GameValue::String(None)])
     }
     #[must_use]
     pub fn cmd_b_select(
         &mut self,
-        lhs: &HashSet<GameValue>,
-        rhs: &HashSet<GameValue>,
-        cmd_set: &HashSet<GameValue>,
+        lhs: &IndexSet<GameValue>,
+        rhs: &IndexSet<GameValue>,
+        cmd_set: &IndexSet<GameValue>,
         source: &Range<usize>,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
         let _ =
@@ -402,5 +404,26 @@ impl SciptScope {
             }
         }
         return_value
+    }
+    /// emulate a possibly modified l-value array by a command
+    pub fn cmd_generic_modify_lvalue(&mut self, lhs: &Expression) {
+        let Expression::Variable(var_name, _) = lhs else {
+            return;
+        };
+        // if var currently contains a specialized array
+        if !self
+            .var_retrieve(var_name, &lhs.full_span(), true)
+            .iter()
+            .any(|v| matches!(v, GameValue::Array(Some(_), _)))
+        {
+            return;
+        }
+        // push a generic array
+        self.var_assign(
+            var_name,
+            false,
+            IndexSet::from([GameValue::Array(None, None)]),
+            VarSource::Ignore,
+        );
     }
 }

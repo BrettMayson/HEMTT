@@ -22,6 +22,7 @@ byteorder = { workspace = true, optional = true }
 chumsky = { workspace = true, optional = true}
 float-ord = "0.3.2"
 linkme = { workspace = true }
+indexmap = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
