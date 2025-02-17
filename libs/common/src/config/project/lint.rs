@@ -32,7 +32,7 @@ impl LintGroupConfig {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.config.is_empty() && self.sqf.is_empty()
+        self.config.is_empty() && self.sqf.is_empty() && self.stringtables.is_empty()
     }
 }
 
