@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as which from "which";
 
 import {
   Executable,
@@ -17,9 +18,16 @@ let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
 
 export async function activate(context: vscode.ExtensionContext) {
   paa.activate(context);
-  let command = context.asAbsolutePath("hemtt-language-server");
-  if (process.platform === "win32") {
-    command += ".exe";
+  let command: string | null = vscode.workspace.getConfiguration("hemtt-language-server").get("path") || "hemtt";
+  console.log(command);
+  if (command == "hemtt") {
+    command = which.sync("hemtt", { nothrow: true });
+  }
+  if (command == null) {
+    vscode.window.showErrorMessage(
+      "HEMTT not found at the specified path."
+    );
+    return;
   }
   const port = await getPortPromise({
     port: 12000,
