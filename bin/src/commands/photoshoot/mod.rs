@@ -16,7 +16,7 @@ use image::codecs::jpeg::JpegEncoder;
 
 use crate::{
     context::{Context, PreservePrevious},
-    controller::{Action, Controller},
+    controller::{Action, AutotestMission, Controller},
     error::Error,
     modules::AddonConfigs,
     report::Report,
@@ -55,6 +55,9 @@ pub struct Command {
 ///
 /// # Errors
 /// [`Error::Io`] if an IO error occurs in the Arma controller
+///
+/// # Panics
+/// If a `dev_mission` path is set, but it has no parent
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if !dialoguer::Confirm::new()
         .with_prompt("This feature is experimental, are you sure you want to continue?")
@@ -97,7 +100,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     };
     launch.set_mission(None);
 
-    let (report, dev_ctx) = super::dev::execute(
+    let (mut report, dev_ctx) = super::dev::execute(
         &dev::Command {
             global: cmd.global.clone(),
             dev: dev::DevArgs {
@@ -110,12 +113,37 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         },
         launch.optionals(),
     )?;
+
+    if let Some(dev_mission) = launch.dev_mission() {
+        let dev_mission = PathBuf::from(dev_mission);
+        if dev_mission.is_relative() {
+            error!("dev_mission must be an absolute path");
+            std::process::exit(1);
+        }
+        if !dev_mission.exists() {
+            report.push(
+                super::launch::error::bcle8_mission_not_found::MissionNotFound::code(
+                    dev_mission
+                        .file_name()
+                        .map(|x| x.to_string_lossy().to_string())
+                        .unwrap_or_default(),
+                    dev_mission.parent().expect("has parent"),
+                ),
+            );
+        }
+        warn!("dev_mission is in use: {}", dev_mission.display());
+    }
+
     if report.failed() {
         return Ok(report);
     }
     let ctx = Context::new(Some("photoshoot"), PreservePrevious::Remove, false)?;
 
-    let mut ps = Photoshoot::new(command, ctx.profile().join("Users/hemtt/Screenshots"));
+    let mut ps = Photoshoot::new(
+        command,
+        ctx.profile().join("Users/hemtt/Screenshots"),
+        launch.dev_mission().cloned(),
+    );
 
     ps.add_weapons(find_weapons(&dev_ctx));
     ps.add_vehicles(find_vehicles(&dev_ctx));
@@ -133,6 +161,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 }
 
 pub struct Photoshoot {
+    dev_mission: Option<String>,
     weapons: HashMap<String, String>,
     vehicles: HashMap<String, String>,
     previews: HashMap<String, String>,
@@ -143,8 +172,9 @@ pub struct Photoshoot {
 
 impl Photoshoot {
     #[must_use]
-    pub fn new(command: PathBuf, from: PathBuf) -> Self {
+    pub fn new(command: PathBuf, from: PathBuf, dev_mission: Option<String>) -> Self {
         Self {
+            dev_mission,
             command,
             from,
             weapons: HashMap::new(),
@@ -196,8 +226,14 @@ impl Photoshoot {
 }
 
 impl Action for Photoshoot {
-    fn missions(&self, _: &Context) -> Vec<(String, String)> {
-        vec![(String::from("photoshoot"), String::from("photoshoot.VR"))]
+    fn missions(&self, _: &Context) -> Vec<(String, AutotestMission)> {
+        vec![(
+            String::from("photoshoot"),
+            self.dev_mission.as_ref().map_or_else(
+                || AutotestMission::Internal(String::from("photoshoot.VR")),
+                |dev_mission| AutotestMission::Custom(dev_mission.clone()),
+            ),
+        )]
     }
 
     #[allow(clippy::too_many_lines)]
