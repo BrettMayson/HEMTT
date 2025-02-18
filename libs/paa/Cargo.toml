@@ -19,8 +19,8 @@ texpresso = "2.0.1"
 image = "0.25.5"
 
 # WASM
-js-sys = { version = "0.3.72", optional = true }
-wasm-bindgen = { version = "0.2.95", optional = true }
+js-sys = { version = "0.3.77", optional = true }
+wasm-bindgen = { version = "0.2.100", optional = true }
 
 [features]
 wasm = ["wasm-bindgen", "js-sys"]
