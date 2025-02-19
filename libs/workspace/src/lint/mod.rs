@@ -22,7 +22,7 @@ pub trait Lint<D>: Sync + Send {
     fn documentation(&self) -> &'static str;
     fn default_config(&self) -> LintConfig;
     fn minimum_severity(&self) -> Severity {
-        self.default_config().severity()
+        self.default_config().minimum_severity()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<D>>>;
 }
@@ -337,7 +337,7 @@ mod tests {
         }
 
         fn default_config(&self) -> LintConfig {
-            LintConfig::error()
+            LintConfig::fatal()
         }
 
         fn minimum_severity(&self) -> Severity {
@@ -380,7 +380,7 @@ mod tests {
         }
 
         fn default_config(&self) -> LintConfig {
-            LintConfig::error()
+            LintConfig::fatal()
         }
 
         fn minimum_severity(&self) -> Severity {

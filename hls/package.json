@@ -76,25 +76,9 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "hemtt-language-server",
+      "title": "HEMTT",
       "properties": {
-        "hemtt-language-server.trace.server": {
-          "type": "string",
-          "scope": "window",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "enumDescriptions": [
-            "No traces",
-            "Error only",
-            "Full log"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
-        },
-        "hemtt-language-server.path.hemtt": {
+        "HEMTT.path": {
           "type": "string",
           "scope": "window",
           "default": "hemtt",

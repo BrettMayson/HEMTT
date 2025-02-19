@@ -42,7 +42,7 @@ Using `isNull objectParent x` is faster and more reliable than `vehicle x == x` 
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

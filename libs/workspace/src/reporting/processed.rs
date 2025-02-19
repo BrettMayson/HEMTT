@@ -10,7 +10,7 @@ use crate::{
     Error, WorkspacePath,
 };
 
-use super::{Code, Codes, Output, Token};
+use super::{definition::Definition, Code, Codes, Output, Token};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
@@ -26,7 +26,7 @@ pub struct Processed {
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
 
-    macros: HashMap<String, Vec<Position>>,
+    macros: HashMap<String, Vec<(Position, Definition)>>,
 
     #[allow(dead_code)]
     #[cfg(feature = "lsp")]
@@ -180,7 +180,7 @@ impl Processed {
     /// [`Error::Workspace`] if a workspace path could not be read
     pub fn new(
         output: Vec<Output>,
-        macros: HashMap<String, Vec<Position>>,
+        macros: HashMap<String, Vec<(Position, Definition)>>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         warnings: Codes,
         no_rapify: bool,
@@ -269,7 +269,7 @@ impl Processed {
 
     #[must_use]
     /// Get the macros defined
-    pub const fn macros(&self) -> &HashMap<String, Vec<Position>> {
+    pub const fn macros(&self) -> &HashMap<String, Vec<(Position, Definition)>> {
         &self.macros
     }
 
@@ -322,6 +322,12 @@ impl Processed {
             }
         });
         Arc::from(&self.output[real_start..])
+    }
+
+    #[cfg(feature = "lsp")]
+    #[must_use]
+    pub const fn usage(&self) -> &HashMap<Position, Vec<Position>> {
+        &self.usage
     }
 }
 

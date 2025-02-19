@@ -64,8 +64,6 @@ enum Commands {
     Wiki(commands::wiki::Command),
     #[cfg(windows)]
     Photoshoot(commands::photoshoot::Command),
-    #[clap(hide = true)]
-    LanguageServer,
 }
 
 /// Run the HEMTT CLI
@@ -140,10 +138,6 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Wiki(ref cmd) => commands::wiki::execute(cmd),
         #[cfg(windows)]
         Commands::Photoshoot(ref cmd) => commands::photoshoot::execute(cmd),
-        Commands::LanguageServer => {
-            hemtt_language_server::run();
-            return Ok(());
-        }
     };
 
     match report {

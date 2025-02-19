@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Code, Output, Symbol, Token},
+    reporting::{Code, Definition, Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -14,7 +14,7 @@ use crate::{
         pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
     },
     defines::DefineSource,
-    definition::Definition,
+    definition::FunctionDefinitionStream,
     Error,
 };
 

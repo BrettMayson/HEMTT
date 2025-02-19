@@ -55,7 +55,7 @@ Children classes can only be defined once in a class.
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

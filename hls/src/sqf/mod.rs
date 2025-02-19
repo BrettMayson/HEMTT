@@ -1,4 +1,6 @@
+mod goto;
 mod hover;
+mod lints;
 mod semantic;
 
 use std::{
@@ -8,9 +10,12 @@ use std::{
 
 use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::reporting::Token;
+use hemtt_workspace::{
+    reporting::{Processed, Token},
+    WorkspacePath,
+};
 use tokio::sync::RwLock;
-use tower_lsp::lsp_types::SemanticToken;
+use tower_lsp::{lsp_types::SemanticToken, Client};
 use tracing::{error, warn};
 use url::Url;
 
@@ -24,7 +29,8 @@ use crate::{
 pub struct SqfAnalyzer {
     tokens: Arc<DashMap<Url, Vec<Arc<Token>>>>,
     semantic: Arc<RwLock<HashMap<Url, Vec<SemanticToken>>>>,
-    databases: Arc<DashMap<EditorWorkspace, Database>>,
+    databases: Arc<DashMap<EditorWorkspace, Arc<Database>>>,
+    processed: Arc<DashMap<WorkspacePath, Processed>>,
 }
 
 impl SqfAnalyzer {
@@ -33,8 +39,13 @@ impl SqfAnalyzer {
             tokens: Arc::new(DashMap::new()),
             semantic: Arc::new(RwLock::new(HashMap::new())),
             databases: Arc::new(DashMap::new()),
+            processed: Arc::new(DashMap::new()),
         });
         (*SINGLETON).clone()
+    }
+
+    pub fn save_processed(&self, source: WorkspacePath, processed: Processed) {
+        self.processed.insert(source, processed);
     }
 
     pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
@@ -56,23 +67,34 @@ impl SqfAnalyzer {
                 .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
                 .unwrap()
         };
-        let database = {
-            if !self.databases.contains_key(&workspace) {
-                let database = match Database::a3_with_workspace(workspace.root(), false) {
-                    Ok(database) => database,
-                    Err(e) => {
-                        error!("Failed to create database: {:?}", e);
-                        Database::a3(false)
-                    }
-                };
-                self.databases.insert(workspace.clone(), database);
-            }
-            self.databases.get(&workspace).unwrap()
-        };
+
+        let database = self.get_database(&workspace).await;
 
         let text = FileCache::get().text(&document.uri).unwrap();
 
-        self.process_semantic_tokens(document.uri.clone(), text, source, &database)
+        self.process_semantic_tokens(document.uri.clone(), text, source, database)
             .await;
+    }
+
+    pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
+        self.check_lints(workspace, client).await;
+    }
+
+    pub async fn did_save(&self, url: Url, client: Client) {
+        self.partial_recheck_lints(url, client).await;
+    }
+
+    async fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
+        if !self.databases.contains_key(workspace) {
+            let database = match Database::a3_with_workspace(workspace.root(), false) {
+                Ok(database) => database,
+                Err(e) => {
+                    error!("Failed to create database: {:?}", e);
+                    Database::a3(false)
+                }
+            };
+            self.databases.insert(workspace.clone(), Arc::new(database));
+        }
+        self.databases.get(workspace).unwrap().clone()
     }
 }

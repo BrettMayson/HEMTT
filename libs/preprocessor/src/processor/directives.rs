@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hemtt_workspace::{
     path::LocateResult,
     position::Position,
-    reporting::{Output, Symbol, Token},
+    reporting::{Definition, FunctionDefinition, Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 use tracing::debug;
@@ -21,7 +21,6 @@ use crate::{
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
     defines::{DefineSource, Defines},
-    definition::{Definition, FunctionDefinition},
     ifstate::IfState,
     processor::pragma::Flag,
     Error,
@@ -292,7 +291,7 @@ impl Processor {
         self.macros
             .entry(ident_string.clone())
             .or_default()
-            .push(ident.position().clone());
+            .push((ident.position().clone(), definition.clone()));
         self.defines.insert(
             &ident_string,
             (
@@ -504,12 +503,9 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_workspace::reporting::Symbol;
+    use hemtt_workspace::reporting::{Definition, Symbol};
 
-    use crate::{
-        definition::Definition,
-        processor::{pragma::Pragma, tests, Processor},
-    };
+    use crate::processor::{pragma::Pragma, tests, Processor};
 
     #[test]
     fn directive_define_unit() {

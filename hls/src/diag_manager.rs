@@ -1,12 +1,11 @@
 use std::{
     collections::HashSet,
     mem::MaybeUninit,
-    sync::{atomic::AtomicBool, Arc, Mutex, RwLock},
+    sync::{atomic::AtomicBool, Arc, RwLock},
 };
 
 use dashmap::DashMap;
 use tower_lsp::{lsp_types::Diagnostic, Client};
-use tracing::debug;
 use url::Url;
 
 #[derive(Clone)]
@@ -39,7 +38,7 @@ impl DiagManager {
             *SINGLETON.write().expect("DiagManager poisoned") = MaybeUninit::new(Self {
                 worker: Arc::new(DiagWorker {
                     client,
-                    last_touched: Mutex::new(HashSet::new()),
+                    last_touched: DashMap::new(),
                     current: Arc::new(DashMap::new()),
                 }),
             });
@@ -60,14 +59,14 @@ impl DiagManager {
         self.worker.clear_current(scope);
     }
 
-    pub fn sync(&self) {
-        self.worker.sync();
+    pub fn sync(&self, scope: &str) {
+        self.worker.sync(scope);
     }
 }
 
 pub struct DiagWorker {
     client: Client,
-    last_touched: Mutex<HashSet<Url>>,
+    last_touched: DashMap<String, HashSet<Url>>,
     current: Arc<DashMap<(String, Url), Vec<Diagnostic>>>,
 }
 
@@ -87,11 +86,12 @@ impl DiagWorker {
         self.current.retain(|k, _| k.0 != scope);
     }
 
-    pub fn sync(&self) {
+    pub fn sync(&self, scope: &str) {
         let mut touched = HashSet::new();
         let diags = self
             .current
             .iter()
+            .filter(|x| x.key().0.starts_with(scope))
             .map(|x| (x.key().1.clone(), x.value().clone()))
             .collect::<Vec<_>>();
         let mut diags_by_file = std::collections::HashMap::new();
@@ -103,19 +103,19 @@ impl DiagWorker {
                 .extend(diags);
         }
         let client = self.client.clone();
-        let last_touched = self.last_touched.lock().unwrap().clone();
-        *self.last_touched.lock().unwrap() = touched;
+        let last_touched = self
+            .last_touched
+            .insert(scope.to_string(), touched)
+            .unwrap_or_default();
         tokio::spawn(async move {
             // clear files with previous diagnostics
             for url in last_touched {
-                debug!("clearing diagnostics for {:?}", url);
                 client
                     .publish_diagnostics(url.clone(), Vec::new(), None)
                     .await;
             }
             // publish new diagnostics
             for (url, diags) in diags_by_file {
-                debug!("publishing diagnostics for {:?}", url);
                 client.publish_diagnostics(url, diags, None).await;
             }
         });

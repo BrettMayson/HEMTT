@@ -1675,6 +1675,7 @@ version = "0.2.0"
 dependencies = [
  "arma3-wiki",
  "chumsky",
+ "clap",
  "dashmap 6.1.0",
  "hemtt-common",
  "hemtt-config",

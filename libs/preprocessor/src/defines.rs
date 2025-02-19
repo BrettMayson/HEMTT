@@ -2,12 +2,10 @@ use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Symbol, Token},
+    reporting::{Definition, Symbol, Token},
     WorkspacePath,
 };
 use strsim::levenshtein;
-
-use crate::definition::Definition;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum DefineSource {

@@ -47,7 +47,7 @@ Check [the wiki](https://community.bistudio.com/wiki/Category:Introduced_with_Ar
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

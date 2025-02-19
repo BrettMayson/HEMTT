@@ -49,16 +49,28 @@ pub enum LintEnabled {
 pub struct LintConfig {
     enabled: LintEnabled,
     severity: Severity,
+    minimum_severity: Severity,
     options: HashMap<String, toml::Value>,
 }
 impl Eq for LintConfig {}
 
 impl LintConfig {
     #[must_use]
+    pub fn fatal() -> Self {
+        Self {
+            enabled: LintEnabled::Enabled,
+            severity: Severity::Error,
+            minimum_severity: Severity::Error,
+            options: HashMap::new(),
+        }
+    }
+
+    #[must_use]
     pub fn error() -> Self {
         Self {
             enabled: LintEnabled::Enabled,
             severity: Severity::Error,
+            minimum_severity: Severity::Warning,
             options: HashMap::new(),
         }
     }
@@ -68,6 +80,7 @@ impl LintConfig {
         Self {
             enabled: LintEnabled::Enabled,
             severity: Severity::Warning,
+            minimum_severity: Severity::Help,
             options: HashMap::new(),
         }
     }
@@ -77,6 +90,7 @@ impl LintConfig {
         Self {
             enabled: LintEnabled::Enabled,
             severity: Severity::Help,
+            minimum_severity: Severity::Help,
             options: HashMap::new(),
         }
     }
@@ -85,6 +99,7 @@ impl LintConfig {
     pub const fn new(severity: Severity, options: HashMap<String, toml::Value>) -> Self {
         Self {
             severity,
+            minimum_severity: severity,
             options,
             enabled: LintEnabled::Enabled,
         }
@@ -103,6 +118,19 @@ impl LintConfig {
     #[must_use]
     pub const fn enabled(&self) -> LintEnabled {
         self.enabled
+    }
+
+    #[must_use]
+    pub fn with_minimum_severity(self, severity: Severity) -> Self {
+        Self {
+            minimum_severity: severity,
+            ..self
+        }
+    }
+
+    #[must_use]
+    pub const fn minimum_severity(&self) -> Severity {
+        self.minimum_severity
     }
 
     #[must_use]

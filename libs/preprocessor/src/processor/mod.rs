@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Codes, Output, Processed, Symbol, Token},
+    reporting::{Codes, Definition, Output, Processed, Symbol, Token},
     WorkspacePath,
 };
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -36,7 +36,7 @@ pub struct Processor {
 
     pub(crate) token_count: usize,
 
-    macros: HashMap<String, Vec<Position>>,
+    macros: HashMap<String, Vec<(Position, Definition)>>,
 
     #[cfg(feature = "lsp")]
     /// Map of token usage to definition

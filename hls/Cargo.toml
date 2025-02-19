@@ -12,6 +12,7 @@ hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
 chumsky = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
 dashmap = "6.1.0"
 regex = { workspace = true }
 ropey = "1.6.1"

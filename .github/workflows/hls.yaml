@@ -13,20 +13,8 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.os.name }}
-    runs-on: ${{ matrix.os.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - runner: ubuntu-latest
-            name: ubuntu
-            artifact: linux-x64
-            exe: hemtt-language-server
-          - runner: windows-latest
-            name: windows
-            artifact: windows-x64
-            exe: hemtt-language-server.exe
+    name: Build Languages
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -35,18 +23,12 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: hls-${{ matrix.os.name }}
+          key: hls
       - name: Compile
         run: |
           cd hls
-          cargo build --release
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os.artifact }}
-          path: target/release/${{ matrix.os.exe }}
-      - name: Upload Language (Linux)
-        if: startsWith(matrix.os.runner, 'ubuntu')
+          cargo build
+      - name: Upload Language
         uses: actions/upload-artifact@v4
         with:
           name: languages
@@ -61,21 +43,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: actions/download-artifact@v4
-        with:
-          name: linux-x64
-          path: linux
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-x64
-          path: windows
-      - name: Set Executable
-        run: |
-          chmod +x linux/hemtt-language-server
-      - name: Move Server
-        run: |
-          mv linux/hemtt-language-server hls/hemtt-language-server
-          mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
       - name: Remove Existing Languages
         run: |
           rm -rf hls/languages

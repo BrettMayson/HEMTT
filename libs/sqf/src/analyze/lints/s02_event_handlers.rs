@@ -51,7 +51,7 @@ Check [the wiki](https://community.bistudio.com/wiki/Arma_3:_Event_Handlers) to 
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -150,7 +150,7 @@ _this addMPEventHandler ["MPHit", {
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
