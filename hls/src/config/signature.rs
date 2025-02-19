@@ -16,7 +16,6 @@ impl ConfigAnalyzer {
             path.extension().and_then(|ext| ext.to_str()),
             Some("hpp" | "cpp" | "ext")
         ) {
-            debug!("Not a cpp file: {:?}", path);
             return None;
         }
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(url).await else {
@@ -34,19 +33,29 @@ impl ConfigAnalyzer {
             .chars()
             .take(params.text_document_position_params.position.character as usize)
             .collect::<String>();
-        debug!("line: {:?}", line);
         let left_parens = line.chars().filter(|c| *c == '(').count();
         let right_parens = line.chars().filter(|c| *c == ')').count();
         if left_parens == right_parens {
             return None;
         }
         let (name, name_end) = find_name(&line);
-        let arg = line[name_end..].chars().filter(|c| *c == ',').count();
+        let mut arg = line[name_end..].chars().filter(|c| *c == ',').count();
+
+        // special handle ARR_*
+        let re = regex::Regex::new(r"ARR_(\d+)").unwrap();
+        let mut matches: Vec<_> = re.captures_iter(&line).collect();
+        if name.starts_with("ARR_") {
+            matches.pop();
+        }
+        for m in matches {
+            debug!("match: {:?}, arg_before: {:?}", m, arg);
+            arg -= m.get(1).unwrap().as_str().parse::<usize>().unwrap() - 1;
+        }
+
         let (_, def) = processed.macros().get(name)?.first()?;
         let Definition::Function(def) = def else {
             return None;
         };
-        def.args().iter().for_each(|t| debug!("arg: {:?}", t));
         Some(SignatureHelp {
             signatures: vec![SignatureInformation {
                 label: format!(
@@ -82,11 +91,28 @@ impl ConfigAnalyzer {
 /// picture[] = QUOTE(Hello // QUOTE
 /// picture[] = QUOTE(ARR_2 // QUOTE
 /// picture[] = QUOTE(ARR_2(1, // ARR_2
+/// picture[] = QUOTE([ARR_2(1,2)] call // QUOTE
 pub fn find_name(text: &str) -> (&str, usize) {
     if !text.contains('(') {
         return ("", 0);
     }
-    let end = text.rfind('(').unwrap_or(0);
+    // find the last open paren, without a closing paren
+    let mut parens = 0;
+    let end = text
+        .char_indices()
+        .rev()
+        .find_map(|(i, c)| {
+            if c == ')' {
+                parens += 1;
+            } else if c == '(' {
+                if parens == 0 {
+                    return Some(i);
+                }
+                parens -= 1;
+            }
+            None
+        })
+        .unwrap_or(0);
     let start = text[..end]
         .rfind(|c: char| !c.is_alphabetic() && !c.is_ascii_digit() && c != '_')
         .map(|i| i + 1)
@@ -105,5 +131,6 @@ mod tests {
         assert_eq!(find_name("picture[] = QUOTE(Hello").0, "QUOTE");
         assert_eq!(find_name("picture[] = QUOTE(ARR_2").0, "QUOTE");
         assert_eq!(find_name("picture[] = QUOTE(ARR_2(1").0, "ARR_2");
+        assert_eq!(find_name("picture[] = QUOTE([ARR_2(1,2)] call").0, "QUOTE");
     }
 }
