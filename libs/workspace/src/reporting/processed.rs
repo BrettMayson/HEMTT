@@ -329,6 +329,20 @@ impl Processed {
     pub const fn usage(&self) -> &HashMap<Position, Vec<Position>> {
         &self.usage
     }
+
+    #[cfg(feature = "lsp")]
+    #[must_use]
+    pub fn cache(self) -> CacheProcessed {
+        CacheProcessed {
+            macros: self.macros,
+            usage: self.usage,
+        }
+    }
+}
+
+pub struct CacheProcessed {
+    pub macros: HashMap<String, Vec<(Position, Definition)>>,
+    pub usage: HashMap<Position, Vec<Position>>,
 }
 
 #[derive(Debug)]

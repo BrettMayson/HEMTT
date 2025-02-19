@@ -13,6 +13,8 @@ use url::Url;
 
 use crate::{
     diag_manager::DiagManager,
+    files::FileCache,
+    preprocessor::PreprocessorAnalyzer,
     workspace::{EditorWorkspace, EditorWorkspaces},
 };
 
@@ -106,7 +108,6 @@ async fn check_sqf(
                         database,
                     );
                     for code in codes {
-                        warn!("code: {:?} at {:?}", code, source);
                         let Some(diag) = code.diagnostic() else {
                             warn!("failed to get diagnostic");
                             continue;
@@ -119,7 +120,6 @@ async fn check_sqf(
                 }
                 Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
                     for error in e {
-                        warn!("error: {:?}", error);
                         let Some(diag) = error.diagnostic() else {
                             continue;
                         };
@@ -133,7 +133,9 @@ async fn check_sqf(
                 Err(e) => panic!("{e:?}"),
             }
             let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
-            SqfAnalyzer::get().save_processed(source.clone(), processed);
+            if FileCache::get().is_open(&workspace.to_url(&source)) {
+                PreprocessorAnalyzer::get().save_processed(source.clone(), processed);
+            }
             sources
         }
         Err((err_sources, err)) => {
@@ -152,7 +154,6 @@ async fn check_sqf(
         }
     };
     for (file, diags) in lsp_diags {
-        debug!("sqf: setting diags for {:?}", file);
         manager.set_current(
             &format!("sqf:{}", source.as_str()),
             &workspace.to_url(&file),

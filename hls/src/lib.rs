@@ -1,5 +1,6 @@
 use config::ConfigAnalyzer;
 use files::FileCache;
+use preprocessor::PreprocessorAnalyzer;
 use sqf::SqfAnalyzer;
 use tokio::net::TcpStream;
 use tower_lsp::jsonrpc::Result;
@@ -12,11 +13,11 @@ use crate::diag_manager::DiagManager;
 use crate::workspace::EditorWorkspaces;
 
 mod color;
-mod common;
 mod config;
 mod diag_manager;
 mod files;
 mod positions;
+mod preprocessor;
 pub mod sqf;
 mod workspace;
 
@@ -132,10 +133,10 @@ impl LanguageServer for Backend {
         for x in params.changes {
             if x.uri.path().contains(".toml") {
                 ConfigAnalyzer::get()
-                    .did_save(x.uri.clone(), self.client.clone())
+                    .on_save(x.uri.clone(), self.client.clone())
                     .await;
                 SqfAnalyzer::get()
-                    .did_save(x.uri.clone(), self.client.clone())
+                    .on_save(x.uri.clone(), self.client.clone())
                     .await;
             }
         }
@@ -144,11 +145,17 @@ impl LanguageServer for Backend {
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         debug!("did_open: {:?}", params.text_document.uri);
         let document = TextDocumentItem {
-            uri: params.text_document.uri,
+            uri: params.text_document.uri.clone(),
             text: TextInformation::Full(&params.text_document.text),
             version: Some(params.text_document.version),
         };
         FileCache::get().on_change(&document).await;
+        ConfigAnalyzer::get()
+            .on_open(params.text_document.uri.clone(), self.client.clone())
+            .await;
+        SqfAnalyzer::get()
+            .on_open(params.text_document.uri, self.client.clone())
+            .await;
         SqfAnalyzer::get().on_change(&document).await;
     }
 
@@ -165,10 +172,10 @@ impl LanguageServer for Backend {
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         debug!("did_save: {:?}", params.text_document.uri);
         ConfigAnalyzer::get()
-            .did_save(params.text_document.uri.clone(), self.client.clone())
+            .on_save(params.text_document.uri.clone(), self.client.clone())
             .await;
         SqfAnalyzer::get()
-            .did_save(params.text_document.uri.clone(), self.client.clone())
+            .on_save(params.text_document.uri.clone(), self.client.clone())
             .await;
         if let Some(text) = params.text {
             let document = TextDocumentItem {
@@ -183,6 +190,11 @@ impl LanguageServer for Backend {
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         debug!("did_close: {:?}", params.text_document.uri);
+        FileCache::get().on_close(&params.text_document.uri).await;
+        SqfAnalyzer::get().on_close(&params.text_document.uri).await;
+        PreprocessorAnalyzer::get()
+            .on_close(&params.text_document.uri)
+            .await;
     }
 
     async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
@@ -211,23 +223,14 @@ impl LanguageServer for Backend {
     }
 
     async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
-        if let Some(help) = ConfigAnalyzer::get().signature_help(&params).await {
-            Ok(Some(help))
-        } else {
-            // Ok(SqfAnalyzer::get().signature_help(&params).await)
-            Ok(None)
-        }
+        Ok(PreprocessorAnalyzer::get().signature_help(&params).await)
     }
 
     async fn goto_definition(
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
-        if let Some(pos) = ConfigAnalyzer::get().goto_definition(&params).await {
-            Ok(Some(pos))
-        } else {
-            Ok(SqfAnalyzer::get().goto_definition(&params).await)
-        }
+        Ok(PreprocessorAnalyzer::get().goto_definition(&params).await)
     }
 
     async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {

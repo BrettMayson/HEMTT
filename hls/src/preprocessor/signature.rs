@@ -6,24 +6,33 @@ use tracing::{debug, warn};
 
 use crate::{files::FileCache, workspace::EditorWorkspaces};
 
-use super::ConfigAnalyzer;
+use super::PreprocessorAnalyzer;
 
-impl ConfigAnalyzer {
+impl PreprocessorAnalyzer {
     pub async fn signature_help(&self, params: &SignatureHelpParams) -> Option<SignatureHelp> {
+        debug!("signature_help: {:?}", params);
         let url = &params.text_document_position_params.text_document.uri;
         let path = url.to_file_path().ok()?;
-        if !matches!(
-            path.extension().and_then(|ext| ext.to_str()),
-            Some("hpp" | "cpp" | "ext")
-        ) {
-            return None;
+        #[derive(Debug, PartialEq, Eq)]
+        enum Kind {
+            Config,
+            Sqf,
         }
+        let kind = match path.extension().and_then(|ext| ext.to_str()) {
+            Some("hpp" | "cpp" | "ext") => Kind::Config,
+            Some("sqf") => Kind::Sqf,
+            _ => return None,
+        };
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(url).await else {
             warn!("Failed to find workspace for {:?}", url);
             return None;
         };
         let source = workspace.join_url(url).ok()?;
-        let processed = self.processed.get(&source.parent())?;
+        let processed = self.processed.get(&if kind == Kind::Config {
+            source.parent()
+        } else {
+            source.clone()
+        })?;
         let text =
             FileCache::get().text(&params.text_document_position_params.text_document.uri)?;
         let line = text
@@ -39,6 +48,9 @@ impl ConfigAnalyzer {
             return None;
         }
         let (name, name_end) = find_name(&line);
+        if name.is_empty() {
+            return None;
+        }
         let mut arg = line[name_end..].chars().filter(|c| *c == ',').count();
 
         // special handle ARR_*
@@ -48,11 +60,10 @@ impl ConfigAnalyzer {
             matches.pop();
         }
         for m in matches {
-            debug!("match: {:?}, arg_before: {:?}", m, arg);
             arg -= m.get(1).unwrap().as_str().parse::<usize>().unwrap() - 1;
         }
 
-        let (_, def) = processed.macros().get(name)?.first()?;
+        let (_, def) = processed.macros.get(name)?.first()?;
         let Definition::Function(def) = def else {
             return None;
         };
@@ -116,7 +127,7 @@ pub fn find_name(text: &str) -> (&str, usize) {
     let start = text[..end]
         .rfind(|c: char| !c.is_alphabetic() && !c.is_ascii_digit() && c != '_')
         .map(|i| i + 1)
-        .unwrap_or(end);
+        .unwrap_or(0);
     (&text[start..end], end)
 }
 
@@ -132,5 +143,6 @@ mod tests {
         assert_eq!(find_name("picture[] = QUOTE(ARR_2").0, "QUOTE");
         assert_eq!(find_name("picture[] = QUOTE(ARR_2(1").0, "ARR_2");
         assert_eq!(find_name("picture[] = QUOTE([ARR_2(1,2)] call").0, "QUOTE");
+        assert_eq!(find_name("GVAR(").0, "GVAR");
     }
 }

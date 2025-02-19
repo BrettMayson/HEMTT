@@ -31,6 +31,10 @@ impl FileCache {
         self.ropes.entry(url)
     }
 
+    pub fn is_open(&self, url: &Url) -> bool {
+        self.ropes.contains_key(url)
+    }
+
     pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
         match &document.text {
             TextInformation::Full(text) => {
@@ -53,5 +57,9 @@ impl FileCache {
                 }
             }
         }
+    }
+
+    pub async fn on_close(&self, url: &Url) {
+        self.ropes.remove(url);
     }
 }

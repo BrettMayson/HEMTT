@@ -10,7 +10,7 @@ use crate::workspace::EditorWorkspaces;
 
 use super::SqfAnalyzer;
 
-const WIKI: &str = "https://community.bistudio.com/wiki/";
+pub const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 impl SqfAnalyzer {
     pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {

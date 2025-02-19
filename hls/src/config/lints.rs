@@ -12,10 +12,9 @@ use url::Url;
 
 use crate::{
     diag_manager::DiagManager,
+    preprocessor::PreprocessorAnalyzer,
     workspace::{EditorWorkspace, EditorWorkspaces},
 };
-
-use super::ConfigAnalyzer;
 
 struct CacheBundle {
     pub sources: Vec<WorkspacePath>,
@@ -105,7 +104,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                 }
             }
             let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
-            ConfigAnalyzer::get().save_processed(source.parent(), processed);
+            PreprocessorAnalyzer::get().save_processed(source.parent(), processed);
             sources
         }
         Err((err_sources, err)) => {
@@ -146,7 +145,7 @@ pub async fn workspace_added(workspace: EditorWorkspace, client: Client) {
     tokio::spawn(check_addons(workspace, client));
 }
 
-pub async fn did_save(url: Url, client: Client) {
+pub async fn process(url: Url, client: Client) {
     let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
         warn!("Failed to find workspace for {:?}", url);
         return;

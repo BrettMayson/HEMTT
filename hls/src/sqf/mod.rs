@@ -1,4 +1,3 @@
-mod goto;
 mod hover;
 mod lints;
 mod semantic;
@@ -10,10 +9,7 @@ use std::{
 
 use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::{
-    reporting::{Processed, Token},
-    WorkspacePath,
-};
+use hemtt_workspace::reporting::Token;
 use tokio::sync::RwLock;
 use tower_lsp::{lsp_types::SemanticToken, Client};
 use tracing::{error, warn};
@@ -30,7 +26,6 @@ pub struct SqfAnalyzer {
     tokens: Arc<DashMap<Url, Vec<Arc<Token>>>>,
     semantic: Arc<RwLock<HashMap<Url, Vec<SemanticToken>>>>,
     databases: Arc<DashMap<EditorWorkspace, Arc<Database>>>,
-    processed: Arc<DashMap<WorkspacePath, Processed>>,
 }
 
 impl SqfAnalyzer {
@@ -39,13 +34,8 @@ impl SqfAnalyzer {
             tokens: Arc::new(DashMap::new()),
             semantic: Arc::new(RwLock::new(HashMap::new())),
             databases: Arc::new(DashMap::new()),
-            processed: Arc::new(DashMap::new()),
         });
         (*SINGLETON).clone()
-    }
-
-    pub fn save_processed(&self, source: WorkspacePath, processed: Processed) {
-        self.processed.insert(source, processed);
     }
 
     pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
@@ -80,8 +70,17 @@ impl SqfAnalyzer {
         self.check_lints(workspace, client).await;
     }
 
-    pub async fn did_save(&self, url: Url, client: Client) {
+    pub async fn on_open(&self, url: Url, client: Client) {
         self.partial_recheck_lints(url, client).await;
+    }
+
+    pub async fn on_save(&self, url: Url, client: Client) {
+        self.partial_recheck_lints(url, client).await;
+    }
+
+    pub async fn on_close(&self, url: &Url) {
+        self.tokens.remove(url);
+        self.semantic.write().await.remove(url);
     }
 
     async fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
