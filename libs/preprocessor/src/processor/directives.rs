@@ -409,7 +409,10 @@ impl Processor {
             }
             let equals = Arc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (Arc::new(vec![Arc::new(Token::new(Symbol::Digit(1), pos))]), false)
+            (
+                Arc::new(vec![Arc::new(Token::new(Symbol::Digit(1), pos))]),
+                false,
+            )
         } else {
             operators = read_value(stream);
             self.skip_whitespace(stream, None);

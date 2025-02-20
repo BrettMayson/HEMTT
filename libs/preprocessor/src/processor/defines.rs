@@ -284,7 +284,11 @@ impl Processor {
                     ));
                 } else {
                     let mut layer = Vec::new();
-                    let body: Vec<_> = body.iter().filter(|t| !t.symbol().is_join()).cloned().collect();
+                    let body: Vec<_> = body
+                        .iter()
+                        .filter(|t| !t.symbol().is_join())
+                        .cloned()
+                        .collect();
                     self.walk(
                         Some(callsite),
                         Some(&ident_string),
