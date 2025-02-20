@@ -44,7 +44,7 @@ impl VersionConfig {
             let rev = repo.revparse_single("HEAD")?;
             let id = rev.id().to_string();
             version.set_build(&id[0..length as usize]);
-        };
+        }
 
         unsafe {
             *VERSION.write().expect("VERSION poisoned") = MaybeUninit::new(version.clone());
