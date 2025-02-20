@@ -113,6 +113,18 @@
         "command": "hemtt.zoomOut",
         "title": "Zoom Out%",
         "category": "Image Preview"
+      },
+      {
+        "command": "hemtt.showProcessed",
+        "title": "Show Processed",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')"
+      },
+      {
+        "command": "hemtt.showCompiled",
+        "title": "Show Compiled",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf'"
       }
     ],
     "menus": {
@@ -126,6 +138,18 @@
           "command": "hemtt.zoomOut",
           "when": "activeCustomEditorId == 'hemtt.previewEditor'",
           "group": "1_imagePreview"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')",
+          "command": "hemtt.showProcessed",
+          "group": "1_hemtt"
+        },
+        {
+          "when": "resourceLangId == 'sqf'",
+          "command": "hemtt.showCompiled",
+          "group": "1_hemtt"
         }
       ]
     }

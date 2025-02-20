@@ -1,6 +1,7 @@
 use config::ConfigAnalyzer;
 use files::FileCache;
 use preprocessor::PreprocessorAnalyzer;
+use serde_json::Value;
 use sqf::SqfAnalyzer;
 use tokio::net::TcpStream;
 use tower_lsp::jsonrpc::Result;
@@ -100,6 +101,10 @@ impl LanguageServer for Backend {
                         id: None,
                     },
                 )),
+                execute_command_provider: Some(ExecuteCommandOptions {
+                    commands: vec!["hemtt/processed".to_string()],
+                    ..Default::default()
+                }),
                 ..ServerCapabilities::default()
             },
             ..Default::default()
@@ -245,6 +250,29 @@ impl LanguageServer for Backend {
     }
 }
 
+impl Backend {
+    async fn processed(&self, params: ProviderParams) -> Result<Option<Value>> {
+        debug!("processed: {:?}", params);
+        let Some(res) = PreprocessorAnalyzer::get().get_processed(params.url).await else {
+            return Ok(None);
+        };
+        Ok(Some(serde_json::to_value(res).unwrap()))
+    }
+
+    async fn compiled(&self, params: ProviderParams) -> Result<Option<Value>> {
+        debug!("compiled: {:?}", params);
+        let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
+            return Ok(None);
+        };
+        Ok(Some(serde_json::to_value(res).unwrap()))
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ProviderParams {
+    url: Url,
+}
+
 #[allow(dead_code)]
 pub struct TextDocumentItem<'a> {
     uri: Url,
@@ -282,6 +310,9 @@ async fn server() {
 
     let (read, write) = tokio::io::split(stream);
 
-    let (service, socket) = LspService::new(|client| Backend { client });
+    let (service, socket) = LspService::build(|client| Backend { client })
+        .custom_method("hemtt/processed", Backend::processed)
+        .custom_method("hemtt/compiled", Backend::compiled)
+        .finish();
     Server::new(read, write, socket).serve(service).await;
 }

@@ -8,7 +8,7 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, WorkspacePath};
 use tokio::{sync::RwLock, task::JoinSet};
 use tower_lsp::Client;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 use url::Url;
 
 use crate::{
@@ -199,7 +199,6 @@ impl SqfAnalyzer {
                             .map(|joined| joined == *source)
                             .unwrap_or(false)
                     }) {
-                        info!("rechecking {:?} since it has sources", path);
                         Some(path.clone())
                     } else {
                         None

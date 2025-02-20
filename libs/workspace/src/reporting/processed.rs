@@ -334,6 +334,7 @@ impl Processed {
     #[must_use]
     pub fn cache(self) -> CacheProcessed {
         CacheProcessed {
+            output: self.output,
             macros: self.macros,
             usage: self.usage,
         }
@@ -341,6 +342,7 @@ impl Processed {
 }
 
 pub struct CacheProcessed {
+    pub output: String,
     pub macros: HashMap<String, Vec<(Position, Definition)>>,
     pub usage: HashMap<Position, Vec<Position>>,
 }

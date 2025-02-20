@@ -7,7 +7,7 @@ use hemtt_preprocessor::Processor;
 use hemtt_workspace::{reporting::WorkspaceFiles, WorkspacePath};
 use tokio::{sync::RwLock, task::JoinSet};
 use tower_lsp::Client;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 use url::Url;
 
 use crate::{
@@ -165,7 +165,6 @@ pub async fn process(url: Url, client: Client) {
                     return Some(path.clone());
                 }
                 if &saved == path || bundle.sources.iter().any(|source| saved == *source) {
-                    info!("rechecking {:?} since it has sources", path);
                     Some(path.clone())
                 } else {
                     None

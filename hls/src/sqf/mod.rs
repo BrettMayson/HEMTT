@@ -1,3 +1,4 @@
+mod compiled;
 mod hover;
 mod lints;
 mod semantic;

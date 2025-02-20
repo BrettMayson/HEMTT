@@ -43,4 +43,23 @@ impl PreprocessorAnalyzer {
             tracing::debug!("sqf: removed processed cache for {}", source);
         }
     }
+
+    pub async fn get_processed(&self, url: Url) -> Option<String> {
+        let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
+            tracing::warn!("Failed to find workspace for {:?}", url);
+            return None;
+        };
+        let Ok(mut source) = workspace.join_url(&url) else {
+            tracing::warn!("Failed to join url {:?}", url);
+            return None;
+        };
+        if source.extension() == Some("cpp".to_string()) {
+            source = source.parent();
+        }
+        let Some(cache) = self.processed.get(&source) else {
+            tracing::warn!("Failed to find cache for {:?}", source);
+            return None;
+        };
+        Some(cache.output.clone())
+    }
 }
