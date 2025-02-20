@@ -72,17 +72,19 @@ impl Statements {
 
         let source_pointer = if is_root {
             CodePointer::Constant(u64::from(
-                ctx.add_constant(Constant::String(self.source.clone()))?,
+                ctx.add_constant(Constant::String(processed.clean_output().into()))?,
             ))
         } else {
-            let offset = processed.get_byte_offset(self.span.start);
-            let source = processed.extract(self.span.clone());
+            let offset = processed.clean_span(self.span.clone());
             let length = if self.content.is_empty() {
                 0
             } else {
-                source.len() as u32
+                offset.len() as u32
             };
-            CodePointer::Source { offset, length }
+            CodePointer::Source {
+                offset: offset.start as u32,
+                length,
+            }
         };
         Ok(Instructions {
             contents: instructions,
