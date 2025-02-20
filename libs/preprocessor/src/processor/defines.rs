@@ -257,7 +257,7 @@ impl Processor {
                         Arc::from(arg.to_string().as_str()),
                         (
                             arg.clone(),
-                            Definition::Value(value),
+                            Definition::Value(Arc::new(value)),
                             DefineSource::Argument,
                         ),
                     );
@@ -280,11 +280,11 @@ impl Processor {
                     // prevent infinite recursion
                     buffer.push(Output::Macro(
                         ident.clone(),
-                        body.into_iter().map(Output::Direct).collect(),
+                        body.iter().map(|t| Output::Direct(t.clone())).collect(),
                     ));
                 } else {
                     let mut layer = Vec::new();
-                    let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
+                    let body: Vec<_> = body.iter().filter(|t| !t.symbol().is_join()).cloned().collect();
                     self.walk(
                         Some(callsite),
                         Some(&ident_string),
