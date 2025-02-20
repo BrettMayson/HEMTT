@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as which from "which";
 
 import {
   Executable,
@@ -17,10 +18,15 @@ let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
 
 export async function activate(context: vscode.ExtensionContext) {
   paa.activate(context);
-  let command = context.asAbsolutePath("hemtt-language-server");
-  if (process.platform === "win32") {
-    command += ".exe";
+
+  const command = findHEMTT();
+  if (command === null) {
+    vscode.window.showErrorMessage(
+      "HEMTT not found in PATH. Please install HEMTT or configure the path to HEMTT in the settings."
+    );
+    return;
   }
+
   const port = await getPortPromise({
     port: 12000,
   });
@@ -28,9 +34,12 @@ export async function activate(context: vscode.ExtensionContext) {
   channel.appendLine(`Starting HEMTT Language Server on port ${port}`);
   channel.appendLine(`Using command: ${command}`);
 
+  const version = require("child_process").execSync(`${command} -v`).toString();
+  channel.appendLine(`HEMTT version: ${version}`);
+
   const run: Executable = {
     command,
-    args: [port.toString()],
+    args: ["language-server", port.toString()],
     options: {
       env: {
         ...process.env,
@@ -69,6 +78,83 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   // activateInlayHints(context);
   client.start();
+
+  // Processed view
+  const processedProvider = new (class implements vscode.TextDocumentContentProvider {
+    onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    onDidChange = this.onDidChangeEmitter.event;
+    async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+      channel.appendLine("processedProvider: " + uri.toString());
+      try {
+        const text: string | undefined = await client.sendRequest("hemtt/processed", {
+          url: uri.toString()
+        });
+        if (!text) {
+          vscode.window.showErrorMessage("Failed to get processed text.");
+          throw new Error("Failed to get processed text.");
+        }
+        return text;
+      } catch (e) {
+        channel.appendLine("sendRequest: hemtt/processed: " + uri.toString() + " failed");
+        channel.appendLine(e as any);
+        throw e;
+      }
+    }
+  })();
+  vscode.workspace.registerTextDocumentContentProvider("hemttprocessed", processedProvider);
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.showProcessed', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showInformationMessage('No editor is open.');
+      return;
+    }
+    let uri = vscode.Uri.parse('hemttprocessed://' + editor.document.uri.path);
+    channel.appendLine("showProcessed: " + uri.toString());
+    let doc = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(doc, { preview: false });
+  }));
+
+  // Compiled view
+  const compiledProvider = new (class implements vscode.TextDocumentContentProvider {
+    onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    onDidChange = this.onDidChangeEmitter.event;
+    async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+      channel.appendLine("compiledProvider: " + uri.toString());
+      try {
+        const text: string | undefined = await client.sendRequest("hemtt/compiled", {
+          url: uri.toString()
+        });
+        if (!text) {
+          vscode.window.showErrorMessage("Failed to get compiled text.");
+          throw new Error("Failed to get compiled text.");
+        }
+        return text;
+      } catch (e) {
+        channel.appendLine("sendRequest: hemtt/compiled: " + uri.toString() + " failed");
+        channel.appendLine(e as any);
+        throw e;
+      }
+    }
+  })();
+  vscode.workspace.registerTextDocumentContentProvider("hemttcompiled", compiledProvider);
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.showCompiled', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showInformationMessage('No editor is open.');
+      return;
+    }
+    let uri = vscode.Uri.parse('hemttcompiled://' + editor.document.uri.path);
+    channel.appendLine("showCompiled: " + uri.toString());
+    let doc = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(doc, { preview: false });
+  }));
+
+  vscode.workspace.onDidSaveTextDocument((document) => {
+    let uri = vscode.Uri.parse('hemttcompiled://' + document.uri.path);
+    compiledProvider.onDidChangeEmitter.fire(uri);
+    uri = vscode.Uri.parse('hemttprocessed://' + document.uri.path);
+    processedProvider.onDidChangeEmitter.fire(uri);
+  });
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -76,4 +162,23 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
+}
+
+function findHEMTT(): string | null {
+  let command: string | null = vscode.workspace.getConfiguration("HEMTT").get("path") || "hemtt";
+  if (command == "hemtt") {
+    command = which.sync("hemtt", { nothrow: true });
+    if (command == null) {
+      command = `${process.env["HOME"]}/.cargo/bin/hemtt`;
+      if (require("fs").existsSync(command)) {
+        return command;
+      }
+      command = `${process.env["HOME"]}/.local/bin/hemtt`;
+      if (require("fs").existsSync(command)) {
+        return command;
+      }
+      return null;
+    }
+  }
+  return command;
 }

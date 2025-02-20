@@ -3,14 +3,14 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Symbol;
 use regex::Regex;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position};
-use tracing::{debug, error, warn};
+use tracing::warn;
 use url::Url;
 
 use crate::workspace::EditorWorkspaces;
 
 use super::SqfAnalyzer;
 
-const WIKI: &str = "https://community.bistudio.com/wiki/";
+pub const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 impl SqfAnalyzer {
     pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {
@@ -21,19 +21,7 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", url);
             return None;
         };
-        let database = {
-            if !self.databases.contains_key(&workspace) {
-                let database = match Database::a3_with_workspace(workspace.root(), false) {
-                    Ok(database) => database,
-                    Err(e) => {
-                        error!("Failed to create database: {:?}", e);
-                        Database::a3(false)
-                    }
-                };
-                self.databases.insert(workspace.clone(), database);
-            }
-            self.databases.get(&workspace).unwrap()
-        };
+        let database = self.get_database(&workspace).await;
         let Some(tokens) = self.tokens.get(&url) else {
             warn!("No tokens found for {:?}", url);
             return None;
@@ -56,7 +44,6 @@ impl SqfAnalyzer {
 }
 
 fn hover(command: &str, database: &Database) -> Hover {
-    debug!("Hovering over {}", command);
     database.wiki().commands().get(command).map_or_else(
         || Hover {
             contents: HoverContents::Scalar(MarkedString::String("No documentation found".into())),

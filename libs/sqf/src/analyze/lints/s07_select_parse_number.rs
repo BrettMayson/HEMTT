@@ -48,7 +48,7 @@ Using `select` on an array with 0 and 1 can be replaced with `parseNumber` for b
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

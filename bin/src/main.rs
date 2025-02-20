@@ -11,6 +11,11 @@ fn main() {
         windows_message::check_no_terminal();
     }
 
+    if std::env::args().nth(1) == Some("language-server".to_string()) {
+        hemtt_language_server::run();
+        return;
+    }
+
     std::panic::set_hook(Box::new(|panic| {
         error!("{panic}");
         eprintln!(

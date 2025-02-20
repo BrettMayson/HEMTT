@@ -6,9 +6,14 @@ use std::{
 
 use hemtt_common::config::{PDriveOption, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
-use tower_lsp::lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder};
+use tower_lsp::{
+    lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
+    Client,
+};
 use tracing::debug;
 use url::Url;
+
+use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer};
 
 #[derive(Clone)]
 pub struct EditorWorkspaces {
@@ -23,20 +28,15 @@ impl EditorWorkspaces {
         (*SINGLETON).clone()
     }
 
-    pub fn initialize(&self, folders: Vec<WorkspaceFolder>) {
+    pub fn initialize(&self, folders: Vec<WorkspaceFolder>, client: Client) {
         let mut workspaces = self.workspaces.write().unwrap();
         for folder in folders {
             debug!("adding workspace {}", folder.uri);
-            if let Some(workspace) = EditorWorkspace::new(&folder) {
-                workspaces.insert(folder.uri.clone(), workspace.clone());
-                tokio::spawn(crate::config::workspace_added(workspace));
-            } else {
-                debug!("failed to add workspace {}", folder.uri);
-            }
+            self.add(folder, &mut workspaces, client.clone());
         }
     }
 
-    pub fn changed(&self, changes: DidChangeWorkspaceFoldersParams) {
+    pub fn changed(&self, changes: DidChangeWorkspaceFoldersParams, client: Client) {
         let mut workspaces = self.workspaces.write().unwrap();
         for removed in changes.event.removed {
             if workspaces.contains_key(&removed.uri) {
@@ -47,13 +47,7 @@ impl EditorWorkspaces {
             if workspaces.contains_key(&added.uri) {
                 workspaces.remove(&added.uri);
             }
-            debug!("adding workspace {}", added.uri);
-            if let Some(workspace) = EditorWorkspace::new(&added) {
-                workspaces.insert(added.uri.clone(), workspace.clone());
-                tokio::spawn(crate::config::workspace_added(workspace));
-            } else {
-                debug!("failed to add workspace {}", added.uri);
-            }
+            self.add(added, &mut workspaces, client.clone());
         }
     }
 
@@ -89,6 +83,30 @@ impl EditorWorkspaces {
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(200)).await;
             }
+        }
+    }
+
+    fn add(
+        &self,
+        added: WorkspaceFolder,
+        workspaces: &mut HashMap<Url, EditorWorkspace>,
+        client: Client,
+    ) {
+        debug!("adding workspace {}", added.uri);
+        if let Some(workspace) = EditorWorkspace::new(&added) {
+            workspaces.insert(added.uri.clone(), workspace.clone());
+            let config_workspace = workspace.clone();
+            let config_client = client.clone();
+            tokio::spawn(async {
+                ConfigAnalyzer::get()
+                    .workspace_added(config_workspace, config_client)
+                    .await;
+            });
+            tokio::spawn(async {
+                SqfAnalyzer::get().workspace_added(workspace, client).await;
+            });
+        } else {
+            debug!("failed to add workspace {}", added.uri);
         }
     }
 }
@@ -140,6 +158,7 @@ impl EditorWorkspace {
     }
 
     pub fn to_url(&self, path: &WorkspacePath) -> Url {
+        let include = path.is_include();
         // trim the workspace path
         let path = path.as_str().strip_prefix(self.workspace.as_str()).unwrap();
         let path = path.replace('\\', "/");
@@ -147,7 +166,15 @@ impl EditorWorkspace {
         let path = urlencoding::encode(&path);
         let path = path.replace("%2F", "/");
         let mut url = self.url.clone();
-        url.set_path(format!("{}{}", url.path(), path).as_str());
+        url.set_path(
+            format!(
+                "{}{}{}",
+                url.path(),
+                if include { "/include" } else { "" },
+                path
+            )
+            .as_str(),
+        );
         url
     }
 
@@ -155,14 +182,15 @@ impl EditorWorkspace {
         &self.workspace
     }
 
+    pub fn root_disk(&self) -> &PathBuf {
+        &self.root
+    }
+
     pub fn config(&self) -> Option<ProjectConfig> {
         let path = self.root.join(".hemtt").join("project.toml");
         if path.is_file() {
             match ProjectConfig::from_file(&path) {
-                Ok(config) => {
-                    debug!("loaded config: {:?}", config);
-                    Some(config)
-                }
+                Ok(config) => Some(config),
                 Err(e) => {
                     debug!("failed to load config: {:?}", e);
                     None

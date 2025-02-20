@@ -2,6 +2,7 @@
 
 use std::fmt::Debug;
 
+mod definition;
 pub mod diagnostic;
 mod files;
 mod output;
@@ -11,10 +12,11 @@ mod token;
 mod whitespace;
 
 pub use codespan_reporting::diagnostic::Severity;
+pub use definition::{Definition, FunctionDefinition};
 pub use diagnostic::{Diagnostic, Label};
 pub use files::{WorkspaceFile, WorkspaceFiles};
 pub use output::Output;
-pub use processed::{Mapping, Processed, Sources};
+pub use processed::{CacheProcessed, Mapping, Processed, Sources};
 pub use symbol::Symbol;
 pub use token::Token;
 pub use whitespace::Whitespace;

@@ -42,7 +42,7 @@ This lint checks for if statements with impossible or overlapping conditions. Th
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::error()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

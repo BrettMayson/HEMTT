@@ -1569,6 +1569,7 @@ dependencies = [
  "glob",
  "hemtt-common",
  "hemtt-config",
+ "hemtt-language-server",
  "hemtt-p3d",
  "hemtt-paa",
  "hemtt-pbo",
@@ -1674,8 +1675,8 @@ version = "0.2.0"
 dependencies = [
  "arma3-wiki",
  "chumsky",
+ "clap",
  "dashmap 6.1.0",
- "hemtt",
  "hemtt-common",
  "hemtt-config",
  "hemtt-preprocessor",

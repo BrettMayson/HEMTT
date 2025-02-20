@@ -31,6 +31,8 @@ hemtt-sqf = { path = "../libs/sqf", version = "1.0.0" }
 hemtt-stringtable = { path = "../libs/stringtable", version = "1.0.0" }
 hemtt-workspace = { path = "../libs/workspace", version = "1.0.0" }
 
+hemtt-language-server = { path = "../hls" }
+
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 dialoguer = "0.11.0"
