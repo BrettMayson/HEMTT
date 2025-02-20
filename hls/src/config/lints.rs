@@ -63,48 +63,54 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     };
     manager.clear_current(&format!("config:{}", source.as_str()));
     let mut lsp_diags = HashMap::new();
+    PreprocessorAnalyzer::get()
+        .mark_in_progress(source.clone())
+        .await;
     let sources = match Processor::run(&source) {
         Ok(processed) => {
-            let workspace_files = WorkspaceFiles::new();
-            match hemtt_config::parse(workspace.config().as_ref(), &processed) {
-                Ok(report) => {
-                    for warning in report.warnings() {
-                        warn!("warning: {:?}", warning);
-                        let Some(diag) = warning.diagnostic() else {
-                            continue;
-                        };
-                        let lsp_diag = diag.to_lsp(&workspace_files);
-                        for (file, diag) in lsp_diag {
-                            lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+            {
+                let workspace_files = WorkspaceFiles::new();
+                match hemtt_config::parse(workspace.config().as_ref(), &processed) {
+                    Ok(report) => {
+                        for warning in report.warnings() {
+                            warn!("warning: {:?}", warning);
+                            let Some(diag) = warning.diagnostic() else {
+                                continue;
+                            };
+                            let lsp_diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in lsp_diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
+                        }
+                        for error in report.errors() {
+                            warn!("error: {:?}", error);
+                            let Some(diag) = error.diagnostic() else {
+                                continue;
+                            };
+                            let lsp_diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in lsp_diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
                         }
                     }
-                    for error in report.errors() {
-                        warn!("error: {:?}", error);
-                        let Some(diag) = error.diagnostic() else {
-                            continue;
-                        };
-                        let lsp_diag = diag.to_lsp(&workspace_files);
-                        for (file, diag) in lsp_diag {
-                            lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
-                        }
-                    }
-                }
-                Err(err) => {
-                    warn!("failed to process config: {:?}", err);
-                    for error in err {
-                        warn!("error: {:?}", error);
-                        let Some(diag) = error.diagnostic() else {
-                            continue;
-                        };
-                        let lsp_diag = diag.to_lsp(&workspace_files);
-                        for (file, diag) in lsp_diag {
-                            lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                    Err(err) => {
+                        warn!("failed to process config: {:?}", err);
+                        for error in err {
+                            warn!("error: {:?}", error);
+                            let Some(diag) = error.diagnostic() else {
+                                continue;
+                            };
+                            let lsp_diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in lsp_diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
                         }
                     }
                 }
             }
             let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
             PreprocessorAnalyzer::get().save_processed(source.parent(), processed);
+            PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             sources
         }
         Err((err_sources, err)) => {

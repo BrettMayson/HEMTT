@@ -252,7 +252,6 @@ impl LanguageServer for Backend {
 
 impl Backend {
     async fn processed(&self, params: ProviderParams) -> Result<Option<Value>> {
-        debug!("processed: {:?}", params);
         let Some(res) = PreprocessorAnalyzer::get().get_processed(params.url).await else {
             return Ok(None);
         };
@@ -260,7 +259,6 @@ impl Backend {
     }
 
     async fn compiled(&self, params: ProviderParams) -> Result<Option<Value>> {
-        debug!("compiled: {:?}", params);
         let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
             return Ok(None);
         };

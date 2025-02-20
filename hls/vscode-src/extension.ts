@@ -81,6 +81,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Processed view
   const processedProvider = new (class implements vscode.TextDocumentContentProvider {
+    onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    onDidChange = this.onDidChangeEmitter.event;
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
       channel.appendLine("processedProvider: " + uri.toString());
       try {
@@ -114,6 +116,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Compiled view
   const compiledProvider = new (class implements vscode.TextDocumentContentProvider {
+    onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    onDidChange = this.onDidChangeEmitter.event;
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
       channel.appendLine("compiledProvider: " + uri.toString());
       try {
@@ -144,6 +148,13 @@ export async function activate(context: vscode.ExtensionContext) {
     let doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });
   }));
+
+  vscode.workspace.onDidSaveTextDocument((document) => {
+    let uri = vscode.Uri.parse('hemttcompiled://' + document.uri.path);
+    compiledProvider.onDidChangeEmitter.fire(uri);
+    uri = vscode.Uri.parse('hemttprocessed://' + document.uri.path);
+    processedProvider.onDidChangeEmitter.fire(uri);
+  });
 }
 
 export function deactivate(): Thenable<void> | undefined {

@@ -18,21 +18,34 @@ impl SqfAnalyzer {
         let database = self.get_database(&workspace).await;
         match Processor::run(&source) {
             Ok(processed) => match hemtt_sqf::parser::run(&database, &processed) {
-                Ok(sqf) => {
-                    let Ok(compiled) = sqf.optimize().compile(&processed) else {
-                        tracing::error!("Failed to compile SQF");
-                        return None;
-                    };
-                    Some(compiled.display().to_string())
-                }
+                Ok(sqf) => match sqf.optimize().compile(&processed) {
+                    Ok(compiled) => Some(compiled.display().to_string()),
+                    Err(e) => {
+                        tracing::error!("Failed to compile SQF: {:?}", e);
+                        Some(e.to_string())
+                    }
+                },
                 Err(e) => {
                     tracing::error!("Failed to parse SQF: {:?}", e);
-                    None
+                    Some(e.to_string())
+                    // needs to have ansi stripped out, should wait for the error rework
+                    // let workspace_files = WorkspaceFiles::new();
+                    // Some(
+                    //     e.codes()
+                    //         .iter()
+                    //         .map(|c| {
+                    //             c.diagnostic()
+                    //                 .map(|d| d.to_string(&workspace_files))
+                    //                 .unwrap_or_default()
+                    //         })
+                    //         .collect::<Vec<_>>()
+                    //         .join("\n\n"),
+                    // )
                 }
             },
-            Err(e) => {
+            Err((_, e)) => {
                 tracing::error!("Failed to preprocess SQF: {:?}", e);
-                None
+                Some(e.to_string())
             }
         }
     }

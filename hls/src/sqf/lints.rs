@@ -95,46 +95,52 @@ async fn check_sqf(
     manager.clear_current(&format!("sqf:{}", source.as_str()));
 
     let mut lsp_diags = HashMap::new();
+    PreprocessorAnalyzer::get()
+        .mark_in_progress(source.clone())
+        .await;
     let sources = match Processor::run(&source) {
         Ok(processed) => {
-            let workspace_files = WorkspaceFiles::new();
-            match hemtt_sqf::parser::run(&database, &processed) {
-                Ok(sqf) => {
-                    let (codes, _) = hemtt_sqf::analyze::analyze(
-                        &sqf,
-                        workspace.config().as_ref(),
-                        &processed,
-                        addon,
-                        database,
-                    );
-                    for code in codes {
-                        let Some(diag) = code.diagnostic() else {
-                            warn!("failed to get diagnostic");
-                            continue;
-                        };
-                        let lsp_diag = diag.to_lsp(&workspace_files);
-                        for (file, diag) in lsp_diag {
-                            lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+            {
+                let workspace_files = WorkspaceFiles::new();
+                match hemtt_sqf::parser::run(&database, &processed) {
+                    Ok(sqf) => {
+                        let (codes, _) = hemtt_sqf::analyze::analyze(
+                            &sqf,
+                            workspace.config().as_ref(),
+                            &processed,
+                            addon,
+                            database,
+                        );
+                        for code in codes {
+                            let Some(diag) = code.diagnostic() else {
+                                warn!("failed to get diagnostic");
+                                continue;
+                            };
+                            let lsp_diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in lsp_diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
                         }
                     }
-                }
-                Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
-                    for error in e {
-                        let Some(diag) = error.diagnostic() else {
-                            continue;
-                        };
-                        let diag = diag.to_lsp(&workspace_files);
-                        for (file, diag) in diag {
-                            lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                    Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
+                        for error in e {
+                            let Some(diag) = error.diagnostic() else {
+                                continue;
+                            };
+                            let diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
                         }
+                        panic!("failed to parse");
                     }
-                    panic!("failed to parse");
+                    Err(e) => panic!("{e:?}"),
                 }
-                Err(e) => panic!("{e:?}"),
             }
             let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
             if FileCache::get().is_open(&workspace.to_url(&source)) {
                 PreprocessorAnalyzer::get().save_processed(source.clone(), processed);
+                PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             }
             sources
         }
