@@ -132,9 +132,18 @@ async fn check_sqf(
                                 lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
                             }
                         }
-                        panic!("failed to parse");
                     }
-                    Err(e) => panic!("{e:?}"),
+                    Err(e) => {
+                        for error in e.codes() {
+                            let Some(diag) = error.diagnostic() else {
+                                continue;
+                            };
+                            let diag = diag.to_lsp(&workspace_files);
+                            for (file, diag) in diag {
+                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            }
+                        }
+                    }
                 }
             }
             let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
