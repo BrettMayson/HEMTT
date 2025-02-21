@@ -403,8 +403,11 @@ impl Expression {
         right: &Self,
         op: fn(f32, f32) -> f32,
     ) -> Option<Self> {
-        if let Self::Number(crate::Scalar(left_number), _) = left {
-            if let Self::Number(crate::Scalar(right_number), _) = right {
+        let Self::Number(crate::Scalar(right_number), _) = right else {
+            return None;
+        };
+        match left {
+            Self::Number(crate::Scalar(left_number), _) => {
                 let new_number = op(*left_number, *right_number);
                 if new_number.is_finite() {
                     #[cfg(debug_assertions)]
@@ -423,7 +426,58 @@ impl Expression {
                     new_number
                 );
             }
+            Self::BinaryCommand(left_op_type, left_left, left_right, _) => {
+                // reverse chain: (X / 2) * 5  ->  X / (2 / 5)  ->  X / 0.4
+                let new_op = Self::op_bin_chainable(left_op_type, op_type)?;
+                let Self::Number(crate::Scalar(_), _) = **left_right else {
+                    return None;
+                };
+                let result = Self::BinaryCommand(
+                    new_op,
+                    left_right.clone(),
+                    Box::new(right.clone()),
+                    range.clone(),
+                )
+                .optimize();
+                let Self::Number(crate::Scalar(_), _) = result else {
+                    return None;
+                };
+                return Some(Self::BinaryCommand(
+                    left_op_type.clone(),
+                    left_left.clone(),
+                    Box::new(result),
+                    range.clone(),
+                ));
+            }
+            _ => {}
         }
         None
+    }
+
+    #[must_use]
+    const fn op_bin_chainable(left: &BinaryCommand, right: &BinaryCommand) -> Option<BinaryCommand> {
+        match left {
+            BinaryCommand::Mul => match right {
+                BinaryCommand::Mul => Some(BinaryCommand::Mul),
+                BinaryCommand::Div => Some(BinaryCommand::Div),
+                _ => None,
+            },
+            BinaryCommand::Div => match right {
+                BinaryCommand::Mul => Some(BinaryCommand::Div),
+                BinaryCommand::Div => Some(BinaryCommand::Mul),
+                _ => None,
+            },
+            BinaryCommand::Add => match right {
+                BinaryCommand::Add => Some(BinaryCommand::Add),
+                BinaryCommand::Sub => Some(BinaryCommand::Sub),
+                _ => None,
+            },
+            BinaryCommand::Sub => match right {
+                BinaryCommand::Add => Some(BinaryCommand::Sub),
+                BinaryCommand::Sub => Some(BinaryCommand::Add),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }
