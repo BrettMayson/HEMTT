@@ -20,6 +20,7 @@ optimize!(consume_array);
 optimize!(static_math);
 optimize!(scalar);
 optimize!(string_case);
+optimize!(chain);
 
 const ROOT: &str = "tests/optimizer/";
 
