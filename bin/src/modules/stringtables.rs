@@ -53,7 +53,19 @@ impl Module for Stringtables {
                 .walk_dir()
                 .expect("vfs issue")
                 .into_iter()
-                .filter(|p| p.filename() == "stringtable.xml")
+                .filter(|p| {
+                    if p.filename() == "stringtable.xml" {
+                        return true;
+                    }
+                    let lower = p.filename().to_lowercase();
+                    if lower == "stringtable.xml"
+                        || lower == "stringtable.csv"
+                        || lower == "stringtable.bin"
+                    {
+                        warn!("Stringtable [{}] will not be linted", p.as_str());
+                    }
+                    false
+                })
                 .collect::<Vec<_>>();
             for path in paths {
                 if path.exists().expect("vfs issue") {
