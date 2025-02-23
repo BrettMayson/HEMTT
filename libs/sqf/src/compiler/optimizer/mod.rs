@@ -426,28 +426,42 @@ impl Expression {
                     new_number
                 );
             }
-            Self::BinaryCommand(left_op_type, left_left, left_right, _) => {
+            Self::BinaryCommand(left_op_type, left_op_lhs, left_op_rhs, _) => {
                 // reverse chain: (X / 2) * 5  ->  X / (2 / 5)  ->  X / 0.4
-                let new_op = Self::op_bin_chainable(left_op_type, op_type)?;
-                let Self::Number(crate::Scalar(_), _) = **left_right else {
+                let Self::Number(crate::Scalar(_), _) = **left_op_rhs else {
                     return None;
                 };
+                let new_op = Self::op_bin_float_chainable_op(left_op_type, op_type)?;
                 let result = Self::BinaryCommand(
-                    new_op,
-                    left_right.clone(),
+                    new_op.clone(),
+                    left_op_rhs.clone(),
                     Box::new(right.clone()),
                     range.clone(),
                 )
                 .optimize();
-                let Self::Number(crate::Scalar(_), _) = result else {
-                    return None;
+                if let Self::Number(crate::Scalar(ref new_number), _) = result {
+                    if new_number.is_finite() {
+                        #[cfg(debug_assertions)]
+                        trace!(
+                            "optimizing pair ([B:{}], [B:{}]) ({}) => {}",
+                            op_type.as_str(),
+                            left_op_type.as_str(),
+                            self.source(),
+                            new_number
+                        );
+                        return Some(Self::BinaryCommand(
+                            left_op_type.clone(),
+                            left_op_lhs.clone(),
+                            Box::new(result),
+                            range.clone(),
+                        ));
+                    }
                 };
-                return Some(Self::BinaryCommand(
-                    left_op_type.clone(),
-                    left_left.clone(),
-                    Box::new(result),
-                    range.clone(),
-                ));
+                warn!(
+                    "Skipping Optimization on float chain [B:{}] ({})",
+                    new_op.as_str(),
+                    self.source()
+                );
             }
             _ => {}
         }
@@ -455,24 +469,28 @@ impl Expression {
     }
 
     #[must_use]
-    const fn op_bin_chainable(left: &BinaryCommand, right: &BinaryCommand) -> Option<BinaryCommand> {
-        match left {
-            BinaryCommand::Mul => match right {
+    /// gets the re-ordered math operation
+    const fn op_bin_float_chainable_op(
+        left_op: &BinaryCommand,
+        right_op: &BinaryCommand,
+    ) -> Option<BinaryCommand> {
+        match left_op {
+            BinaryCommand::Mul => match right_op {
                 BinaryCommand::Mul => Some(BinaryCommand::Mul),
                 BinaryCommand::Div => Some(BinaryCommand::Div),
                 _ => None,
             },
-            BinaryCommand::Div => match right {
+            BinaryCommand::Div => match right_op {
                 BinaryCommand::Mul => Some(BinaryCommand::Div),
                 BinaryCommand::Div => Some(BinaryCommand::Mul),
                 _ => None,
             },
-            BinaryCommand::Add => match right {
+            BinaryCommand::Add => match right_op {
                 BinaryCommand::Add => Some(BinaryCommand::Add),
                 BinaryCommand::Sub => Some(BinaryCommand::Sub),
                 _ => None,
             },
-            BinaryCommand::Sub => match right {
+            BinaryCommand::Sub => match right_op {
                 BinaryCommand::Add => Some(BinaryCommand::Sub),
                 BinaryCommand::Sub => Some(BinaryCommand::Add),
                 _ => None,

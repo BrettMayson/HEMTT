@@ -9,85 +9,85 @@ Statements {
                 Mul,
                 Variable(
                     "aa",
-                    0..2,
+                    1..3,
                 ),
                 Number(
                     FloatOrd(
                         15.0,
                     ),
-                    7..8,
+                    8..9,
                 ),
-                7..8,
+                8..9,
             ),
-            0..10,
+            1..11,
         ),
         Expression(
             BinaryCommand(
                 Div,
                 Variable(
                     "bb",
-                    13..15,
+                    14..16,
                 ),
                 Number(
                     FloatOrd(
                         0.6,
                     ),
-                    20..21,
+                    21..22,
                 ),
-                20..21,
+                21..22,
             ),
-            13..23,
+            14..24,
         ),
         Expression(
             BinaryCommand(
                 Mul,
                 Variable(
                     "cc",
-                    26..28,
+                    27..29,
                 ),
                 Number(
                     FloatOrd(
                         0.6,
                     ),
-                    33..34,
+                    34..35,
                 ),
-                33..34,
+                34..35,
             ),
-            26..36,
+            27..37,
         ),
         Expression(
             BinaryCommand(
                 Div,
                 Variable(
                     "dd",
-                    39..41,
+                    40..42,
                 ),
                 Number(
                     FloatOrd(
                         15.0,
                     ),
-                    46..47,
+                    47..48,
                 ),
-                46..47,
+                47..48,
             ),
-            39..49,
+            40..50,
         ),
         Expression(
             BinaryCommand(
                 Mul,
                 Variable(
                     "ee",
-                    53..55,
+                    54..56,
                 ),
                 Number(
                     FloatOrd(
                         7.5,
                     ),
-                    68..69,
+                    69..70,
                 ),
-                68..69,
+                69..70,
             ),
-            53..71,
+            54..72,
         ),
         Expression(
             BinaryCommand(
@@ -98,91 +98,118 @@ Statements {
                         FloatOrd(
                             12.0,
                         ),
-                        75..76,
+                        76..77,
                     ),
                     Variable(
                         "ff",
-                        81..83,
+                        82..84,
                     ),
-                    79..80,
+                    80..81,
                 ),
                 Number(
                     FloatOrd(
                         30.0,
                     ),
-                    88..89,
+                    89..90,
                 ),
-                88..89,
+                89..90,
             ),
-            73..91,
+            74..92,
+        ),
+        Expression(
+            BinaryCommand(
+                Div,
+                BinaryCommand(
+                    Mul,
+                    Variable(
+                        "gg",
+                        95..97,
+                    ),
+                    Number(
+                        FloatOrd(
+                            1.0,
+                        ),
+                        100..101,
+                    ),
+                    98..99,
+                ),
+                Number(
+                    FloatOrd(
+                        0.0,
+                    ),
+                    104..105,
+                ),
+                102..103,
+            ),
+            95..105,
         ),
         Expression(
             BinaryCommand(
                 Add,
                 Variable(
                     "mm",
-                    95..97,
+                    110..112,
                 ),
                 Number(
                     FloatOrd(
                         50.0,
                     ),
-                    103..104,
+                    118..119,
                 ),
-                103..104,
+                118..119,
             ),
-            95..107,
+            110..122,
         ),
         Expression(
             BinaryCommand(
                 Add,
                 Variable(
                     "nn",
-                    109..111,
+                    124..126,
                 ),
                 Number(
                     FloatOrd(
                         -10.0,
                     ),
-                    117..118,
+                    132..133,
                 ),
-                117..118,
+                132..133,
             ),
-            109..121,
+            124..136,
         ),
         Expression(
             BinaryCommand(
                 Sub,
                 Variable(
                     "oo",
-                    123..125,
+                    138..140,
                 ),
                 Number(
                     FloatOrd(
                         -10.0,
                     ),
-                    131..132,
+                    146..147,
                 ),
-                131..132,
+                146..147,
             ),
-            123..135,
+            138..150,
         ),
         Expression(
             BinaryCommand(
                 Sub,
                 Variable(
                     "pp",
-                    137..139,
+                    152..154,
                 ),
                 Number(
                     FloatOrd(
                         50.0,
                     ),
-                    145..146,
+                    160..161,
                 ),
-                145..146,
+                160..161,
             ),
-            137..149,
+            152..164,
         ),
         Expression(
             BinaryCommand(
@@ -191,27 +218,27 @@ Statements {
                     Mul,
                     Variable(
                         "zz",
-                        152..154,
+                        167..169,
                     ),
                     Number(
                         FloatOrd(
                             6.0,
                         ),
-                        157..158,
+                        172..173,
                     ),
-                    155..156,
+                    170..171,
                 ),
                 Number(
                     FloatOrd(
                         7.0,
                     ),
-                    161..162,
+                    176..177,
                 ),
-                159..160,
+                174..175,
             ),
-            152..162,
+            167..177,
         ),
     ],
-    source: "aa * 3 * 5; \nbb / 3 * 5; \ncc * 3 / 5; \ndd / 3 / 5; \n\nee * 2 * 3 / 4 * 5;\n3 * 4 * ff / 5 / 6;\n\n\nmm + 20 + 30;\nnn + 20 - 30;\noo - 20 + 30;\npp - 20 - 30;\n\nzz * 6 - 7;\n",
-    span: 0..163,
+    source: "\naa * 3 * 5; \nbb / 3 * 5; \ncc * 3 / 5; \ndd / 3 / 5; \n\nee * 2 * 3 / 4 * 5;\n3 * 4 * ff / 5 / 6;\n\ngg * 1 / 0;\n\n\n\nmm + 20 + 30;\nnn + 20 - 30;\noo - 20 + 30;\npp - 20 - 30;\n\nzz * 6 - 7;\n",
+    span: 1..178,
 }
