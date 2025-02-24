@@ -38,7 +38,12 @@ fn lint(file: &str) -> String {
     codes.extend(lint_one(&stringtable, None, vec![]));
     codes.extend(lint_all(&vec![stringtable], None, vec![]));
 
-    codes.retain(|e| e.ident().starts_with(&format!("L-{}", file.split_once('_').unwrap().0.to_uppercase())));
+    codes.retain(|e| {
+        e.ident().starts_with(&format!(
+            "L-{}",
+            file.split_once('_').unwrap().0.to_uppercase()
+        ))
+    });
 
     codes
         .iter()
