@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as which from "which";
 
 import {
   Executable,
@@ -18,13 +17,9 @@ let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
 
 export async function activate(context: vscode.ExtensionContext) {
   paa.activate(context);
-
-  const command = findHEMTT();
-  if (command === null) {
-    vscode.window.showErrorMessage(
-      "HEMTT not found in PATH. Please install HEMTT or configure the path to HEMTT in the settings."
-    );
-    return;
+  let command = context.asAbsolutePath("hemtt-language-server");
+  if (process.platform === "win32") {
+    command += ".exe";
   }
 
   const port = await getPortPromise({
@@ -162,23 +157,4 @@ export function deactivate(): Thenable<void> | undefined {
     return undefined;
   }
   return client.stop();
-}
-
-function findHEMTT(): string | null {
-  let command: string | null = vscode.workspace.getConfiguration("HEMTT").get("path") || "hemtt";
-  if (command == "hemtt") {
-    command = which.sync("hemtt", { nothrow: true });
-    if (command == null) {
-      command = `${process.env["HOME"]}/.cargo/bin/hemtt`;
-      if (require("fs").existsSync(command)) {
-        return command;
-      }
-      command = `${process.env["HOME"]}/.local/bin/hemtt`;
-      if (require("fs").existsSync(command)) {
-        return command;
-      }
-      return null;
-    }
-  }
-  return command;
 }

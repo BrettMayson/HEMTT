@@ -283,17 +283,14 @@ pub enum TextInformation<'a> {
     Changes(Vec<TextDocumentContentChangeEvent>),
 }
 
-pub fn run() {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::fmt()
         .with_ansi(false)
         .with_max_level(Level::DEBUG)
         .init();
 
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(server());
+    server().await;
 }
 
 async fn server() {
