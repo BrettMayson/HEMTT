@@ -1670,7 +1670,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-language-server"
-version = "0.2.0"
+version = "0.5.1"
 dependencies = [
  "arma3-wiki",
  "chumsky",
