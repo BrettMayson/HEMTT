@@ -29,12 +29,9 @@ export async function activate(context: vscode.ExtensionContext) {
   channel.appendLine(`Starting HEMTT Language Server on port ${port}`);
   channel.appendLine(`Using command: ${command}`);
 
-  const version = require("child_process").execSync(`${command} -v`).toString();
-  channel.appendLine(`HEMTT version: ${version}`);
-
   const run: Executable = {
     command,
-    args: ["language-server", port.toString()],
+    args: [port.toString()],
     options: {
       env: {
         ...process.env,

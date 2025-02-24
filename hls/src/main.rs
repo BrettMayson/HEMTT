@@ -295,7 +295,7 @@ async fn main() {
 
 async fn server() {
     // second argument is the port
-    let port = std::env::args().nth(2).unwrap_or("9632".to_string());
+    let port = std::env::args().nth(1).expect("port is required");
 
     let stream = TcpStream::connect(format!("127.0.0.1:{}", port))
         .await
