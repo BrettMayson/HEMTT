@@ -283,22 +283,19 @@ pub enum TextInformation<'a> {
     Changes(Vec<TextDocumentContentChangeEvent>),
 }
 
-pub fn run() {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::fmt()
         .with_ansi(false)
         .with_max_level(Level::DEBUG)
         .init();
 
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(server());
+    server().await;
 }
 
 async fn server() {
     // second argument is the port
-    let port = std::env::args().nth(2).unwrap_or("9632".to_string());
+    let port = std::env::args().nth(1).expect("port is required");
 
     let stream = TcpStream::connect(format!("127.0.0.1:{}", port))
         .await
