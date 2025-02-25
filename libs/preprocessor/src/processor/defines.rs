@@ -176,9 +176,10 @@ impl Processor {
                 {
                     // remove the backslash
                     body.pop();
-                } else {
-                    return body;
+                    // remove the newline
+                    continue;
                 }
+                return body;
             }
             if !symbol.is_eoi() {
                 body.push(token);
@@ -518,10 +519,9 @@ mod tests {
         let mut stream = tests::setup("hello \\\nworld");
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
-        assert_eq!(body.len(), 4);
+        assert_eq!(body.len(), 3);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
         assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*body[2].symbol(), Symbol::Newline);
-        assert_eq!(*body[3].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*body[2].symbol(), Symbol::Word("world".to_string()));
     }
 }

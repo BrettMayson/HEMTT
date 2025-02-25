@@ -179,6 +179,7 @@ pub fn clean_output(processed: &mut Processed) {
     let mut output = String::new();
     let mut indexes = Vec::new();
     let mut cursor_offset = 0;
+    let mut clean_cursor = 0;
     let mut pending_empty = 0;
     loop {
         let Some(line) = lines.next() else {
@@ -201,28 +202,29 @@ pub fn clean_output(processed: &mut Processed) {
             .as_str()
             .to_string()
             .replace('/', "\\");
-        if file != comitted_file {
+        if file != comitted_file || pending_line != linenum {
             comitted_file = file;
             comitted_line = linenum;
-            output.push_str(&format!("#line {linenum} \"{comitted_file}\"\n"));
-            pending_empty = 0;
-        } else if pending_line != linenum {
-            comitted_line = linenum;
-            output.push_str(&format!("#line {linenum} \"{comitted_file}\"\n"));
+            let line = format!("#line {linenum} \"{comitted_file}\"\n");
+            output.push_str(&line);
+            clean_cursor += line.chars().count() + 1;
             pending_empty = 0;
         }
         if pending_empty > 0 {
             for _ in 0..pending_empty {
-                indexes.push((map.processed_start().offset(), cursor_offset));
+                indexes.push((map.processed_start().offset(), clean_cursor));
                 output.push('\n');
+                clean_cursor += 1;
             }
             comitted_line += pending_empty;
             pending_empty = 0;
         }
-        indexes.push((map.processed_start().offset(), cursor_offset));
+        indexes.push((map.processed_start().offset(), clean_cursor));
         output.push_str(line);
         output.push('\n');
-        cursor_offset += line.chars().count() + 1;
+        let chars = line.chars().count() + 1;
+        cursor_offset += chars;
+        clean_cursor += chars;
         comitted_line += 1;
     }
     processed.clean_output = output;

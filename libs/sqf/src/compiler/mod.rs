@@ -76,6 +76,11 @@ impl Statements {
             ))
         } else {
             let offset = processed.clean_span(self.span.clone());
+            if offset.start > processed.clean_output().chars().count() {
+                std::fs::write("test.sqf", processed.clean_output()).expect("failed to write file");
+                println!("offset: {:?}", offset);
+                panic!("offset too large");
+            }
             let length = if self.content.is_empty() {
                 0
             } else {
