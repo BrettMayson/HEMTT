@@ -14,11 +14,12 @@ mod str;
 mod value;
 
 /// Parse a config file.
-pub fn config() -> impl Parser<char, Config, Error = Simple<char>> {
+pub fn config<'a>() -> impl Parser<'a, &'a str, Config, extra::Err<Rich<'a, char>>> {
     choice((
         property()
             .padded()
             .repeated()
+            .collect::<Vec<_>>()
             .delimited_by(empty(), end())
             .map(Config),
         end().padded().map(|()| Config(vec![])),
@@ -33,15 +34,15 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert_eq!(config().parse(r"",), Ok(Config(vec![]),));
-        assert_eq!(config().parse(r"   ",), Ok(Config(vec![]),));
+        assert_eq!(config().parse(r"",).output(), Some(&Config(vec![]),));
+        assert_eq!(config().parse(r"   ",).output(), Some(&Config(vec![]),));
     }
 
     #[test]
     fn single_item() {
         assert_eq!(
-            config().parse(r#"MyData = "Hello World";"#,),
-            Ok(Config(vec![crate::Property::Entry {
+            config().parse(r#"MyData = "Hello World";"#,).output(),
+            Some(&Config(vec![crate::Property::Entry {
                 name: crate::Ident {
                     value: "MyData".to_string(),
                     span: 0..6,
@@ -58,8 +59,10 @@ mod tests {
     #[test]
     fn multiple_items() {
         assert_eq!(
-            config().parse(r#"MyData = "Hello World"; MyOtherData = 1234;"#,),
-            Ok(Config(vec![
+            config()
+                .parse(r#"MyData = "Hello World"; MyOtherData = 1234;"#,)
+                .output(),
+            Some(&Config(vec![
                 crate::Property::Entry {
                     name: crate::Ident {
                         value: "MyData".to_string(),
@@ -89,13 +92,15 @@ mod tests {
     #[test]
     fn class() {
         assert_eq!(
-            config().parse(
-                r#"class MyClass {
+            config()
+                .parse(
+                    r#"class MyClass {
                     MyData = "Hello World";
                     MyOtherData = 1234;
                 };"#,
-            ),
-            Ok(Config(vec![crate::Property::Class(crate::Class::Local {
+                )
+                .output(),
+            Some(&Config(vec![crate::Property::Class(crate::Class::Local {
                 name: crate::Ident {
                     value: "MyClass".to_string(),
                     span: 6..13,
@@ -133,15 +138,17 @@ mod tests {
     #[test]
     fn nested_class() {
         assert_eq!(
-            config().parse(
-                r#"class Outer {
+            config()
+                .parse(
+                    r#"class Outer {
                     class Inner {
                         MyData = "Hello World";
                         MyOtherData = 1234;
                     };
                 };"#,
-            ),
-            Ok(Config(vec![crate::Property::Class(crate::Class::Local {
+                )
+                .output(),
+            Some(&Config(vec![crate::Property::Class(crate::Class::Local {
                 err_missing_braces: false,
                 name: crate::Ident {
                     value: "Outer".to_string(),

@@ -34,7 +34,9 @@ pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
 ) -> Result<ConfigReport, Codes> {
-    let (config, errors) = parse::config().parse_recovery(processed.as_str());
+    let result = parse::config().parse(processed.as_str());
+    let config = result.output().cloned();
+    let errors = result.errors();
     config.map_or_else(
         || {
             Err(errors

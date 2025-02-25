@@ -18,7 +18,8 @@ hemtt-workspace = { path = "../workspace", version = "1.0.0", features = ["lsp"]
 
 automod = { workspace = true }
 byteorder = { workspace = true }
-chumsky = { workspace = true }
+# chumsky = { workspace = true }
+chumsky = { version = "1.0.0-alpha.8" }
 linkme = { workspace = true }
 lsp-types = { workspace = true }
 toml = { workspace = true }

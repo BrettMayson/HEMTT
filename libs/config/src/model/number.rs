@@ -24,6 +24,9 @@ pub enum Number {
         /// Number span
         span: Range<usize>,
     },
+    InvalidMath {
+        span: Range<usize>,
+    },
 }
 
 impl Number {
@@ -66,6 +69,7 @@ impl Number {
                 value: -*value,
                 span: span.clone(),
             },
+            Self::InvalidMath { span } => Self::InvalidMath { span: span.clone() },
         }
     }
 
@@ -73,9 +77,10 @@ impl Number {
     /// Get the range of the number
     pub fn span(&self) -> Range<usize> {
         match self {
-            Self::Int32 { span, .. } | Self::Int64 { span, .. } | Self::Float32 { span, .. } => {
-                span.clone()
-            }
+            Self::Int32 { span, .. }
+            | Self::Int64 { span, .. }
+            | Self::Float32 { span, .. }
+            | Self::InvalidMath { span, .. } => span.clone(),
         }
     }
 }
@@ -86,6 +91,7 @@ impl std::fmt::Display for Number {
             Self::Int32 { value, .. } => write!(f, "{value}"),
             Self::Int64 { value, .. } => write!(f, "{value}"),
             Self::Float32 { value, .. } => write!(f, "{value}"),
+            Self::InvalidMath { span } => write!(f, "{{ Invalid math at {span:?} }}"),
         }
     }
 }

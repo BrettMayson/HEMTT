@@ -4,32 +4,34 @@ use crate::{Array, Item};
 
 use super::value::math;
 
-pub fn array(expand: bool) -> impl Parser<char, Array, Error = Simple<char>> {
+pub fn array<'a>(
+    expand: bool,
+) -> impl Parser<'a, &'a str, Array, extra::Err<Rich<'a, char>>> + Clone {
+    let recovery = none_of("},")
+        .padded()
+        .repeated()
+        .at_least(1)
+        .map_with(move |(), extra| Item::Invalid((extra.span() as SimpleSpan).into_range()));
     recursive(|value| {
         value
             .map(Item::Array)
-            .or(array_value().recover_with(skip_parser(
-                none_of("},")
-                    .padded()
-                    .repeated()
-                    .at_least(1)
-                    .map_with_span(move |_, span| Item::Invalid(span)),
-            )))
+            .or(array_value().recover_with(via_parser(recovery)))
             .padded()
             .separated_by(just(',').padded())
             .allow_trailing()
+            .collect()
             .delimited_by(just('{').padded(), just('}').padded())
     })
-    .map_with_span(move |items, span| Array {
+    .map_with(move |items, extra| Array {
         expand,
         items,
-        span,
+        span: extra.span().into_range(),
     })
 }
 
-fn array_value() -> impl Parser<char, Item, Error = Simple<char>> {
+fn array_value<'a>() -> impl Parser<'a, &'a str, Item, extra::Err<Rich<'a, char>>> + Clone {
     choice((
-        super::str::string('"').map(Item::Str),
+        super::str::string().map(Item::Str),
         math().map(Item::Number),
         super::number::number().map(Item::Number),
     ))
@@ -44,8 +46,8 @@ mod tests {
     #[test]
     fn empty() {
         assert_eq!(
-            array(false).parse("{}"),
-            Ok(Array {
+            array(false).parse("{}").output(),
+            Some(&Array {
                 expand: false,
                 items: vec![],
                 span: 0..2,
@@ -56,8 +58,8 @@ mod tests {
     #[test]
     fn single() {
         assert_eq!(
-            array(false).parse("{1,2,3}"),
-            Ok(Array {
+            array(false).parse("{1,2,3}").output(),
+            Some(&Array {
                 expand: false,
                 items: vec![
                     Item::Number(Number::Int32 {
@@ -81,8 +83,8 @@ mod tests {
     #[test]
     fn nested() {
         assert_eq!(
-            array(false).parse("{{1,2},{3,4},5}"),
-            Ok(Array {
+            array(false).parse("{{1,2},{3,4},5}").output(),
+            Some(&Array {
                 expand: false,
                 items: vec![
                     Item::Array(vec![
@@ -118,8 +120,8 @@ mod tests {
     #[test]
     fn trailing() {
         assert_eq!(
-            array(false).parse_recovery("{1,2,3,}").0,
-            Some(Array {
+            array(false).parse("{1,2,3,}").output(),
+            Some(&Array {
                 expand: false,
                 items: vec![
                     Item::Number(Number::Int32 {
@@ -143,8 +145,8 @@ mod tests {
     #[test]
     fn invalid_item() {
         assert_eq!(
-            array(false).parse_recovery("{1,2,three,4}").0,
-            Some(Array {
+            array(false).parse("{1,2,three,4}").output(),
+            Some(&Array {
                 expand: false,
                 items: vec![
                     Item::Number(Number::Int32 {

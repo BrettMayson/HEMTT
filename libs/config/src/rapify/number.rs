@@ -24,6 +24,7 @@ impl Rapify for Number {
                 output.write_f32::<LittleEndian>(*value)?;
                 written += 4;
             }
+            Self::InvalidMath { .. } => unreachable!(),
         }
         Ok(written)
     }
@@ -32,6 +33,7 @@ impl Rapify for Number {
         match self {
             Self::Int32 { .. } | Self::Float32 { .. } => 4,
             Self::Int64 { .. } => 8,
+            Self::InvalidMath { .. } => unreachable!(),
         }
     }
 
@@ -40,6 +42,7 @@ impl Rapify for Number {
             Self::Int32 { .. } => 2,
             Self::Int64 { .. } => 6,
             Self::Float32 { .. } => 1,
+            Self::InvalidMath { .. } => unreachable!(),
         }
     }
 }
