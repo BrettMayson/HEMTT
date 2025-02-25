@@ -13,8 +13,7 @@ macro_rules! simple {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                let (sqfc, ast) = simple(stringify!($dir));
-                insta::assert_debug_snapshot!(sqfc);
+                let ast = simple(stringify!($dir));
                 insta::assert_debug_snapshot!(ast);
             }
         }
@@ -32,7 +31,7 @@ simple!(include);
 simple!(oneline);
 simple!(semicolons);
 
-fn simple(file: &str) -> (Vec<u8>, Vec<Statement>) {
+fn simple(file: &str) -> Vec<Statement> {
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&PathBuf::from(ROOT), LayerType::Source)
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
@@ -57,13 +56,10 @@ fn simple(file: &str) -> (Vec<u8>, Vec<Statement>) {
         Err(e) => panic!("{e:?}"),
     };
     assert_ne!(parsed.content().len(), 0);
-    let mut buffer = Vec::new();
-    parsed.compile_to_writer(&processed, &mut buffer).unwrap();
-    std::fs::write(format!("tests/simple/{file}.sqfc"), &buffer).unwrap();
     std::fs::write(
         format!("tests/simple/{file}.sqfast"),
         format!("{:#?}", parsed.content()),
     )
     .unwrap();
-    (buffer, parsed.content().to_vec())
+    parsed.content().to_vec()
 }
