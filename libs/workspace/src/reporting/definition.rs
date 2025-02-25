@@ -8,9 +8,9 @@ use super::Token;
 /// A macro definition
 pub enum Definition {
     /// A [`FunctionDefinition`] that takes parameters
-    Function(FunctionDefinition),
+    Function(Arc<FunctionDefinition>),
     /// A value that is a list of [`Token`]s to be added at the call site
-    Value(Vec<Arc<Token>>),
+    Value(Arc<Vec<Arc<Token>>>),
     /// A flag that can be checked with `#ifdef`
     Unit,
     /// A macro that changes the internal state, returning nothing
@@ -38,7 +38,7 @@ impl Definition {
 
     #[must_use]
     /// Get the [`FunctionDefinition`] if it is one
-    pub const fn as_function(&self) -> Option<&FunctionDefinition> {
+    pub const fn as_function(&self) -> Option<&Arc<FunctionDefinition>> {
         match self {
             Self::Function(f) => Some(f),
             _ => None,

@@ -1,6 +1,6 @@
 //! Versioning for Arma mods
 
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Write};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -205,10 +205,10 @@ impl Serialize for Version {
     {
         let mut version = format!("{}.{}.{}", self.major, self.minor, self.patch);
         if let Some(build) = self.build {
-            version.push_str(&format!(".{build}"));
+            write!(version, ".{build}").unwrap();
         }
         if let Some(hash) = &self.hash {
-            version.push_str(&format!("-{hash}"));
+            write!(version, "-{hash}").unwrap();
         }
         serializer.serialize_str(&version)
     }

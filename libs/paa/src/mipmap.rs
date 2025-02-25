@@ -36,7 +36,7 @@ impl MipMap {
         let mut width = self.width;
         if self.is_compressed() {
             width -= 32768;
-        };
+        }
         width
     }
 
@@ -105,7 +105,7 @@ impl MipMap {
                 usize::from(self.height),
                 &mut out_buffer,
             );
-        };
+        }
         image::DynamicImage::ImageRgba8(
             image::RgbaImage::from_raw(u32::from(width_2), u32::from(self.height), out_buffer)
                 .expect("paa should contain valid image data"),

@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -16,7 +16,7 @@
     "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.96.0"
   },
   "enabledApiProposals": [],
   "activationEvents": [],
@@ -77,14 +77,7 @@
     "configuration": {
       "type": "object",
       "title": "HEMTT",
-      "properties": {
-        "HEMTT.path": {
-          "type": "string",
-          "scope": "window",
-          "default": "hemtt",
-          "description": "Path to the HEMTT executable."
-        }
-      }
+      "properties": {}
     },
     "configurationDefaults": {
       "[sqf]": {
@@ -160,27 +153,28 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
+    "compile-lsp": "run-script-os",
+    "compile-lsp:darwin:linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
+    "compile-lsp:win32": "cargo build --release --bin hemtt-language-server && copy ..\\target\\release\\hemtt-language-server.exe .\\hemtt-language-server.exe",
     "test-compile": "tsc -p ./",
     "lint": "eslint vscode-src --ext ts"
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",
-    "@types/node": "22.13.4",
-    "@types/vscode": "1.97.0",
-    "@types/which": "^3.0.4",
-    "@types/ws": "8.5.14",
-    "@typescript-eslint/eslint-plugin": "8.24.1",
-    "@typescript-eslint/parser": "8.24.1",
+    "@types/node": "22.10.6",
+    "@types/vscode": "1.96.0",
+    "@types/ws": "8.5.13",
+    "@typescript-eslint/eslint-plugin": "8.20.0",
+    "@typescript-eslint/parser": "8.20.0",
     "@vscode/test-electron": "2.4.1",
-    "esbuild": "0.25.0",
-    "eslint": "9.20.1",
+    "esbuild": "0.24.2",
+    "eslint": "9.18.0",
     "glob": "11.0.1",
     "mocha": "11.1.0",
     "run-script-os": "^1.1.6",
     "ts-loader": "9.5.2",
     "typescript": "5.7.3",
-    "vscode-uri": "3.1.0",
-    "which": "5.0.0"
+    "vscode-uri": "3.0.8"
   },
   "dependencies": {
     "hemtt": "file:",

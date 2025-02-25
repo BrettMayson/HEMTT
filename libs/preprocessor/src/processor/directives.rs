@@ -281,10 +281,10 @@ impl Processor {
                         ident.position().path().clone(),
                     )
                 };
-                FunctionDefinition::new(position, args, body)
+                Arc::new(FunctionDefinition::new(position, args, body))
             }),
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
-            _ => Definition::Value(self.define_read_body(stream)),
+            _ => Definition::Value(Arc::new(self.define_read_body(stream))),
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
@@ -340,10 +340,11 @@ impl Processor {
             }
             tokens
         }
+        #[allow(clippy::type_complexity)]
         fn resolve_value(
             defines: &mut Defines,
             token: Arc<Token>,
-        ) -> Result<(Vec<Arc<Token>>, bool), Error> {
+        ) -> Result<(Arc<Vec<Arc<Token>>>, bool), Error> {
             if let Some((_, definition, _)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
@@ -353,7 +354,7 @@ impl Processor {
                     &defines.clone(),
                 ));
             }
-            Ok((vec![token], false))
+            Ok((Arc::new(vec![token]), false))
         }
         self.skip_whitespace(stream, None);
         let left = read_value(stream);
@@ -388,7 +389,7 @@ impl Processor {
                     .expect("length is 1, next will exist"),
             )?
         } else {
-            (left, false)
+            (Arc::new(left), false)
         };
         if left.is_empty() {
             return Err(UnexpectedEOF::code(command.as_ref().clone()));
@@ -408,7 +409,10 @@ impl Processor {
             }
             let equals = Arc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (vec![Arc::new(Token::new(Symbol::Digit(1), pos))], false)
+            (
+                Arc::new(vec![Arc::new(Token::new(Symbol::Digit(1), pos))]),
+                false,
+            )
         } else {
             operators = read_value(stream);
             self.skip_whitespace(stream, None);
@@ -431,7 +435,7 @@ impl Processor {
                         .expect("length is 1, next will exist"),
                 )?
             } else {
-                (right, false)
+                (Arc::new(right), false)
             }
         };
         let operator = operators
@@ -452,16 +456,16 @@ impl Processor {
             ">" | ">=" | "<" | "<=" => {
                 let Ok(left_f64) = left_string.parse::<f64>() else {
                     return Err(IfIncompatibleType::code(
-                        (left, left_defined),
+                        &(left, left_defined),
                         operators,
-                        (right, right_defined),
+                        &(right, right_defined),
                     ));
                 };
                 let Ok(right_f64) = right_string.parse::<f64>() else {
                     return Err(IfIncompatibleType::code(
-                        (left, left_defined),
+                        &(left, left_defined),
                         operators,
-                        (right, right_defined),
+                        &(right, right_defined),
                     ));
                 };
                 match operator.as_str() {

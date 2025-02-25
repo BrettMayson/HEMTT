@@ -15,7 +15,7 @@ impl FilesConfig {
     }
 
     /// Files to exclude from the PBO
-    pub(crate) fn exclude_mut(&mut self) -> &mut Vec<String> {
+    pub(crate) const fn exclude_mut(&mut self) -> &mut Vec<String> {
         &mut self.exclude
     }
 }

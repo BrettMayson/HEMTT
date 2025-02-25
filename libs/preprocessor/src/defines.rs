@@ -104,10 +104,10 @@ impl Defines {
                         self.counter += 1;
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Arc::new(Token::new(
+                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
                                 Symbol::Digit(counter.into()),
                                 key.position().clone(),
-                            ))]),
+                            ))])),
                             DefineSource::Generated,
                         ));
                     }
@@ -119,7 +119,7 @@ impl Defines {
                         let path = site.path().as_str().replace('/', "\\");
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![
+                            Definition::Value(Arc::new(vec![
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                                 Arc::new(site.path().workspace().project().map_or_else(
                                     || {
@@ -152,7 +152,7 @@ impl Defines {
                                     },
                                 )),
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                            ]),
+                            ])),
                             DefineSource::Generated,
                         ));
                     }
@@ -160,10 +160,10 @@ impl Defines {
                         let path = site.path().filename();
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Arc::new(Token::new(
+                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
                                 Symbol::Word(path),
                                 key.position().clone(),
-                            ))]),
+                            ))])),
                             DefineSource::Generated,
                         ));
                     }
@@ -181,20 +181,20 @@ impl Defines {
                             .collect::<String>();
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Arc::new(Token::new(
+                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
                                 Symbol::Word(path),
                                 key.position().clone(),
-                            ))]),
+                            ))])),
                             DefineSource::Generated,
                         ));
                     }
                     "__LINE__" => {
                         return Some((
                             key.clone(),
-                            Definition::Value(vec![Arc::new(Token::new(
+                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
                                 Symbol::Digit(site.start().1 .0),
                                 key.position().clone(),
-                            ))]),
+                            ))])),
                             DefineSource::Generated,
                         ));
                     }
