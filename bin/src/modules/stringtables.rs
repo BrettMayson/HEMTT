@@ -55,13 +55,10 @@ impl Module for Stringtables {
                 .into_iter()
                 .filter(|p| {
                     let lower = p.filename().to_lowercase();
-                    if lower == "stringtable.xml" {
-                        return true;
-                    }
                     if lower == "stringtable.csv" || lower == "stringtable.bin" {
                         warn!("Stringtable [{}] will not be linted", p.as_str());
                     }
-                    false
+                    lower == "stringtable.xml"
                 })
                 .collect::<Vec<_>>();
             for path in paths {
