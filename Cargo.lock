@@ -1676,7 +1676,6 @@ dependencies = [
  "chumsky",
  "clap",
  "dashmap 6.1.0",
- "hemtt",
  "hemtt-common",
  "hemtt-config",
  "hemtt-preprocessor",
