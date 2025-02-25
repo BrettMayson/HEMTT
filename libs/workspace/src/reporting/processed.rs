@@ -47,8 +47,24 @@ pub struct Processed {
 fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
+    next_is_escape: &mut Option<Arc<Token>>,
     token: Arc<Token>,
 ) -> Result<(), Error> {
+    if token.symbol().is_newline() && next_is_escape.is_some() {
+        *next_is_escape = None;
+        return Ok(());
+    }
+    if token.symbol().is_escape() {
+        if next_is_escape.is_some() {
+            *next_is_escape = None;
+        } else {
+            *next_is_escape = Some(token);
+            return Ok(());
+        }
+    }
+    if let Some(escape_token) = next_is_escape.clone() {
+        append_token(processed, string_stack, next_is_escape, escape_token)?;
+    }
     let path = token.position().path().clone();
     let source = processed
         .sources
@@ -130,18 +146,19 @@ fn append_token(
 fn append_output(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
+    next_is_escape: &mut Option<Arc<Token>>,
     output: Vec<Output>,
 ) -> Result<(), Error> {
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processed, string_stack, t)?;
+                append_token(processed, string_stack, next_is_escape, t)?;
             }
             Output::Macro(root, o) => {
                 let start = processed.total;
                 let line = processed.line;
                 let col = processed.col;
-                append_output(processed, string_stack, o)?;
+                append_output(processed, string_stack, next_is_escape, o)?;
                 let end = processed.total;
                 let path = root.position().path().clone();
                 let source = processed
@@ -212,14 +229,14 @@ pub fn clean_output(processed: &mut Processed) {
         }
         if pending_empty > 0 {
             for _ in 0..pending_empty {
-                indexes.push((map.processed_start().offset(), clean_cursor));
+                indexes.push((cursor_offset, clean_cursor));
                 output.push('\n');
                 clean_cursor += 1;
             }
             comitted_line += pending_empty;
             pending_empty = 0;
         }
-        indexes.push((map.processed_start().offset(), clean_cursor));
+        indexes.push((cursor_offset, clean_cursor));
         output.push_str(line);
         output.push('\n');
         let chars = line.chars().count() + 1;
@@ -252,7 +269,13 @@ impl Processed {
             ..Default::default()
         };
         let mut string_stack = Vec::new();
-        append_output(&mut processed, &mut string_stack, output)?;
+        let mut next_is_escape = None;
+        append_output(
+            &mut processed,
+            &mut string_stack,
+            &mut next_is_escape,
+            output,
+        )?;
         clean_output(&mut processed);
         Ok(processed)
     }
@@ -339,14 +362,6 @@ impl Processed {
     }
 
     #[must_use]
-    #[allow(clippy::cast_possible_truncation)]
-    /// Get offset as number of raw bytes into the output string
-    pub fn get_byte_offset(&self, offset: usize) -> u32 {
-        let ret: usize = self.output.chars().take(offset).map(char::len_utf8).sum();
-        ret as u32
-    }
-
-    #[must_use]
     /// Returns the warnings
     pub fn warnings(&self) -> &[Arc<dyn Code>] {
         &self.warnings
@@ -379,23 +394,6 @@ impl Processed {
     }
 
     #[must_use]
-    pub fn clean(&self, range: Range<usize>) -> Arc<str> {
-        let span = self.clean_span(range);
-        tracing::trace!("clean span: {:?}", span);
-        let mut real_start = 0;
-        let mut real_end = 0;
-        self.clean_output.chars().enumerate().for_each(|(p, c)| {
-            if p < span.start {
-                real_start += c.len_utf8();
-            }
-            if p < span.end {
-                real_end += c.len_utf8();
-            }
-        });
-        Arc::from(&self.clean_output[real_start..real_end])
-    }
-
-    #[must_use]
     /// Return the entire clean output
     pub fn clean_output(&self) -> &str {
         &self.clean_output
@@ -403,7 +401,7 @@ impl Processed {
 
     #[must_use]
     /// Return a string with the source from the span
-    pub fn clean_span(&self, span: Range<usize>) -> Range<usize> {
+    pub fn clean_span(&self, span: &Range<usize>) -> Range<usize> {
         fn find_point(processed: &Processed, target: usize) -> usize {
             let mut last_start = (0, 0);
             for (original, clean) in &processed.clean_output_line_indexes {
@@ -412,7 +410,12 @@ impl Processed {
                 }
                 last_start = (*original, *clean);
             }
-            last_start.1 + (target - last_start.0)
+            processed
+                .clean_output
+                .chars()
+                .take(last_start.1 - 1 + (target - last_start.0))
+                .map(char::len_utf8)
+                .sum()
         }
         let start = find_point(self, span.start);
         let end = find_point(self, span.end);

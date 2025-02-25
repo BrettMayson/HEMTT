@@ -75,12 +75,7 @@ impl Statements {
                 ctx.add_constant(Constant::String(processed.clean_output().into()))?,
             ))
         } else {
-            let offset = processed.clean_span(self.span.clone());
-            if offset.start > processed.clean_output().chars().count() {
-                std::fs::write("test.sqf", processed.clean_output()).expect("failed to write file");
-                println!("offset: {:?}", offset);
-                panic!("offset too large");
-            }
+            let offset = processed.clean_span(&self.span);
             let length = if self.content.is_empty() {
                 0
             } else {
@@ -107,7 +102,7 @@ pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> Sou
     let map = processed.mapping(location.start).expect(
         "location not in mapping, this should not happen as the location is from the processed file",
     ).original();
-    let offset = processed.get_byte_offset(location.start);
+    let offset = processed.clean_span(location).start as u32;
     SourceInfo {
         offset,
         file_index: processed
