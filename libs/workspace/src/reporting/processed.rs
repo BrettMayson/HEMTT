@@ -55,7 +55,7 @@ fn append_token(
         return Ok(());
     }
     if token.symbol().is_escape() {
-        if next_is_escape.is_some() {
+        if *next_is_escape == Some(token.clone()) {
             *next_is_escape = None;
         } else {
             *next_is_escape = Some(token);
