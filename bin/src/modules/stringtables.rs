@@ -54,14 +54,11 @@ impl Module for Stringtables {
                 .expect("vfs issue")
                 .into_iter()
                 .filter(|p| {
-                    if p.filename() == "stringtable.xml" {
+                    let lower = p.filename().to_lowercase();
+                    if lower == "stringtable.xml" {
                         return true;
                     }
-                    let lower = p.filename().to_lowercase();
-                    if lower == "stringtable.xml"
-                        || lower == "stringtable.csv"
-                        || lower == "stringtable.bin"
-                    {
+                    if lower == "stringtable.csv" || lower == "stringtable.bin" {
                         warn!("Stringtable [{}] will not be linted", p.as_str());
                     }
                     false
