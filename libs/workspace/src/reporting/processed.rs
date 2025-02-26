@@ -216,7 +216,7 @@ pub fn clean_output(processed: &mut Processed) {
         let file = map
             .original()
             .path()
-            .as_str()
+            .as_virtual_str()
             .to_string()
             .replace('/', "\\");
         if file != comitted_file || pending_line != linenum {
