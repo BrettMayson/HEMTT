@@ -3,8 +3,8 @@
 use std::{fs::File, io::Read};
 
 use hemtt_pbo::{
-    tests::{file, header, pbo},
     Checksum, Mime, WritablePbo,
+    tests::{file, header, pbo},
 };
 
 use sha1::{Digest, Sha1};

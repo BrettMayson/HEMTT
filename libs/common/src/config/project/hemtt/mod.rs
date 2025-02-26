@@ -124,6 +124,22 @@ impl HemttSectionFile {
         } else {
             self.launch
         };
+        if launch_source
+            .iter()
+            .any(|(k, v)| k != "photoshoot" && v.dev_mission.is_some())
+        {
+            return Err(Error::ConfigInvalid(
+                "dev_mission is only allowed in the photoshoot preset.".to_string(),
+            ));
+        }
+        if launch_source
+            .iter()
+            .any(|(k, v)| k == "photoshoot" && v.mission.is_some())
+        {
+            return Err(Error::ConfigInvalid(
+                "mission is not allowed in the photoshoot preset.".to_string(),
+            ));
+        }
         Ok(HemttConfig {
             check: self.check.into(),
             dev: self.dev.into(),
@@ -201,11 +217,13 @@ file_patching = false
                 .mission(),
             Some(&"test".to_string())
         );
-        assert!(!config
-            .launch()
-            .get("test")
-            .expect("has test preset")
-            .file_patching());
+        assert!(
+            !config
+                .launch()
+                .get("test")
+                .expect("has test preset")
+                .file_patching()
+        );
     }
 
     #[test]

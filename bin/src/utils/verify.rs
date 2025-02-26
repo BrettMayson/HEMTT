@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use hemtt_pbo::ReadablePbo;
 
 use crate::{
-    utils::inspect::{bikey, bisign},
     Error,
+    utils::inspect::{bikey, bisign},
 };
 
 #[derive(clap::Parser)]

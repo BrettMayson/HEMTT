@@ -61,7 +61,7 @@ All properties must end with a semicolon, including classes.
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

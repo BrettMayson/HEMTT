@@ -49,7 +49,7 @@ Using the `setMarker*Local` on all calls except the last one will reduce the amo
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.2",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -76,25 +76,8 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "hemtt-language-server",
-      "properties": {
-        "hemtt-language-server.trace.server": {
-          "type": "string",
-          "scope": "window",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "enumDescriptions": [
-            "No traces",
-            "Error only",
-            "Full log"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
-        }
-      }
+      "title": "HEMTT",
+      "properties": {}
     },
     "configurationDefaults": {
       "[sqf]": {
@@ -123,6 +106,18 @@
         "command": "hemtt.zoomOut",
         "title": "Zoom Out%",
         "category": "Image Preview"
+      },
+      {
+        "command": "hemtt.showProcessed",
+        "title": "Show Processed",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')"
+      },
+      {
+        "command": "hemtt.showCompiled",
+        "title": "Show Compiled",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf'"
       }
     ],
     "menus": {
@@ -136,6 +131,18 @@
           "command": "hemtt.zoomOut",
           "when": "activeCustomEditorId == 'hemtt.previewEditor'",
           "group": "1_imagePreview"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')",
+          "command": "hemtt.showProcessed",
+          "group": "1_hemtt"
+        },
+        {
+          "when": "resourceLangId == 'sqf'",
+          "command": "hemtt.showCompiled",
+          "group": "1_hemtt"
         }
       ]
     }

@@ -48,7 +48,7 @@ Using `select` on an array with 0 and 1 can be replaced with `parseNumber` for b
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -84,10 +84,10 @@ impl LintRunner<LintData> for Runner {
         if args.len() != 2 {
             return Vec::new();
         }
-        let Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
+        let &Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
             return Vec::new();
         };
-        let Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
+        let &Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
             return Vec::new();
         };
         if !(match &**condition {

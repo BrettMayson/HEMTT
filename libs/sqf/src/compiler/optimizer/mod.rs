@@ -222,8 +222,8 @@ impl Expression {
     fn is_constant(&self) -> bool {
         match self {
             Self::Code(..) | Self::String(..) | Self::Number(..) | Self::Boolean(..) => true,
-            Self::NularCommand(ref command, ..) => command.is_constant(),
-            Self::Array(ref array, ..) => array.iter().all(Self::is_constant), // true on empty
+            Self::NularCommand(command, ..) => command.is_constant(),
+            Self::Array(array, ..) => array.iter().all(Self::is_constant), // true on empty
             Self::ConsumeableArray(..) => {
                 unreachable!("should not be reachable");
             }
@@ -298,7 +298,7 @@ impl Expression {
         right: &Self,
         op: fn(&str) -> String,
     ) -> Option<Self> {
-        if let Self::String(right_string, _, ref right_wrapper) = right {
+        if let Self::String(right_string, _, right_wrapper) = right {
             if right_string.is_ascii() {
                 let new_string = op(right_string.as_ref());
                 #[cfg(debug_assertions)]
@@ -365,8 +365,8 @@ impl Expression {
         right: &Self,
         op: fn(&str, &str) -> String,
     ) -> Option<Self> {
-        if let Self::String(left_string, _, ref _left_wrapper) = left {
-            if let Self::String(right_string, _, ref right_wrapper) = right {
+        if let Self::String(left_string, _, _left_wrapper) = left {
+            if let Self::String(right_string, _, right_wrapper) = right {
                 if right_string.is_ascii() && left_string.is_ascii() {
                     let new_string = op(left_string.as_ref(), right_string.as_ref());
                     #[cfg(debug_assertions)]
@@ -403,8 +403,11 @@ impl Expression {
         right: &Self,
         op: fn(f32, f32) -> f32,
     ) -> Option<Self> {
-        if let Self::Number(crate::Scalar(left_number), _) = left {
-            if let Self::Number(crate::Scalar(right_number), _) = right {
+        let Self::Number(crate::Scalar(right_number), _) = right else {
+            return None;
+        };
+        match left {
+            Self::Number(crate::Scalar(left_number), _) => {
                 let new_number = op(*left_number, *right_number);
                 if new_number.is_finite() {
                     #[cfg(debug_assertions)]
@@ -423,7 +426,76 @@ impl Expression {
                     new_number
                 );
             }
+            Self::BinaryCommand(left_op_type, left_op_lhs, left_op_rhs, _) => {
+                // reverse chain: (X / 2) * 5  ->  X / (2 / 5)  ->  X / 0.4
+                let Self::Number(crate::Scalar(_), _) = **left_op_rhs else {
+                    return None;
+                };
+                let new_op = Self::op_bin_float_chainable_op(left_op_type, op_type)?;
+                let result = Self::BinaryCommand(
+                    new_op.clone(),
+                    left_op_rhs.clone(),
+                    Box::new(right.clone()),
+                    range.clone(),
+                )
+                .optimize();
+                if let Self::Number(crate::Scalar(ref new_number), _) = result {
+                    if new_number.is_finite() {
+                        #[cfg(debug_assertions)]
+                        trace!(
+                            "optimizing pair ([B:{}], [B:{}]) ({}) => {}",
+                            op_type.as_str(),
+                            left_op_type.as_str(),
+                            self.source(),
+                            new_number
+                        );
+                        return Some(Self::BinaryCommand(
+                            left_op_type.clone(),
+                            left_op_lhs.clone(),
+                            Box::new(result),
+                            range.clone(),
+                        ));
+                    }
+                };
+                warn!(
+                    "Skipping Optimization on float chain [B:{}] ({})",
+                    new_op.as_str(),
+                    self.source()
+                );
+            }
+            _ => {}
         }
         None
+    }
+
+    #[must_use]
+    /// gets the re-ordered math operation
+    const fn op_bin_float_chainable_op(
+        left_op: &BinaryCommand,
+        right_op: &BinaryCommand,
+    ) -> Option<BinaryCommand> {
+        match left_op {
+            BinaryCommand::Mul => match right_op {
+                BinaryCommand::Mul => Some(BinaryCommand::Mul),
+                BinaryCommand::Div => Some(BinaryCommand::Div),
+                _ => None,
+            },
+            BinaryCommand::Div => match right_op {
+                BinaryCommand::Mul => Some(BinaryCommand::Div),
+                BinaryCommand::Div => Some(BinaryCommand::Mul),
+                _ => None,
+            },
+            BinaryCommand::Add => match right_op {
+                BinaryCommand::Add => Some(BinaryCommand::Add),
+                BinaryCommand::Sub => Some(BinaryCommand::Sub),
+                _ => None,
+            },
+            BinaryCommand::Sub => match right_op {
+                BinaryCommand::Add => Some(BinaryCommand::Sub),
+                BinaryCommand::Sub => Some(BinaryCommand::Add),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }

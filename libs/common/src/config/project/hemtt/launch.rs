@@ -21,6 +21,9 @@ pub struct LaunchOptions {
     /// Mission to launch directly into the editor with
     mission: Option<String>,
 
+    /// Mission to launch with `hemtt launch`, used for development purposes only
+    dev_mission: Option<String>,
+
     /// Extra launch parameters
     parameters: Vec<String>,
 
@@ -69,6 +72,12 @@ impl LaunchOptions {
     /// Mission to launch directly into the editor with
     pub const fn mission(&self) -> Option<&String> {
         self.mission.as_ref()
+    }
+
+    #[must_use]
+    /// Mission to launch with `hemtt launch`, used for development purposes only
+    pub const fn dev_mission(&self) -> Option<&String> {
+        self.dev_mission.as_ref()
     }
 
     pub fn set_mission(&mut self, mission: Option<String>) {
@@ -143,6 +152,9 @@ impl LaunchOptions {
         if let Some(mission) = other.mission {
             base.mission = Some(mission);
         }
+        if let Some(dev_mission) = other.dev_mission {
+            base.dev_mission = Some(dev_mission);
+        }
         if let Some(binarize) = other.binarize {
             base.binarize = Some(binarize);
         }
@@ -179,7 +191,10 @@ pub struct LaunchOptionsFile {
     optionals: Vec<String>,
 
     #[serde(default)]
-    mission: Option<String>,
+    pub(crate) mission: Option<String>,
+
+    #[serde(default)]
+    pub(crate) dev_mission: Option<String>,
 
     #[serde(default)]
     parameters: Vec<String>,
@@ -213,6 +228,9 @@ impl LaunchOptionsFile {
         }
         if let Some(mission) = self.mission {
             other.mission = Some(mission);
+        }
+        if let Some(dev_mission) = self.dev_mission {
+            other.dev_mission = Some(dev_mission);
         }
         if let Some(binarize) = self.binarize {
             other.binarize = Some(binarize);
@@ -251,6 +269,7 @@ impl From<LaunchOptionsFile> for LaunchOptions {
             presets: file.presets,
             optionals: file.optionals,
             mission: file.mission,
+            dev_mission: file.dev_mission,
             parameters: file.parameters,
             executable: file.executable,
             binarize: file.binarize,

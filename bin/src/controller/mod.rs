@@ -10,11 +10,11 @@ use hemtt_common::{
     config::LaunchOptions,
 };
 use interprocess::local_socket::{
-    traits::Listener, GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName,
+    GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName, traits::Listener,
 };
 
 use crate::{
-    commands::launch::{launcher::Launcher, LaunchArgs},
+    commands::launch::{LaunchArgs, launcher::Launcher},
     context::Context,
     error::Error,
     report::Report,
@@ -24,6 +24,7 @@ mod action;
 mod profile;
 
 pub use action::Action;
+pub use profile::AutotestMission;
 
 #[derive(Default)]
 pub struct Controller {
@@ -115,7 +116,8 @@ impl Controller {
                                 debug!("Mission: {}", mission);
                                 current = Some(mission.replace('\\', ""));
                             } else {
-                                warn!("Invalid mission: {}", mission);
+                                debug!("Custom Mission: {}", mission);
+                                current = Some(mission.trim_end_matches('\\').to_string());
                             }
                         }
                     }
@@ -131,7 +133,7 @@ impl Controller {
                     trace!("msg for {current}: {message:?}");
                     self.actions
                         .iter()
-                        .find(|a| a.missions(ctx).iter().any(|m| &m.1 == current))
+                        .find(|a| a.missions(ctx).iter().any(|m| m.1.as_str() == current))
                         .expect("No action for mission")
                         .incoming(ctx, message)
                         .iter()

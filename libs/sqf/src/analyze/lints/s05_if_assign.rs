@@ -46,7 +46,7 @@ private _x = ["orange", "apple"] select _myVar;
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

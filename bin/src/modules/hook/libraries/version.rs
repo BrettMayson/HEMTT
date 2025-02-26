@@ -1,6 +1,6 @@
 use rhai::plugin::{
-    export_module, Dynamic, FnNamespace, FuncRegistration, Module, NativeCallContext, PluginFunc,
-    RhaiResult, TypeId,
+    Dynamic, FnNamespace, FuncRegistration, Module, NativeCallContext, PluginFunc, RhaiResult,
+    TypeId, export_module,
 };
 
 #[allow(clippy::needless_pass_by_ref_mut)]

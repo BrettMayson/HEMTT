@@ -1,8 +1,8 @@
 use std::io::BufReader;
 
 use hemtt_workspace::{
-    position::{LineCol, Position},
     WorkspacePath,
+    position::{LineCol, Position},
 };
 use indexmap::IndexMap;
 use quick_xml::se::Serializer;

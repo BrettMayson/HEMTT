@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
-use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, addons::Addon, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 

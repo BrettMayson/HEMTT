@@ -3,8 +3,8 @@
 use std::collections::HashSet;
 
 use arma3_wiki::{
-    model::{Call, Version},
     Wiki,
+    model::{Call, Version},
 };
 use hemtt_workspace::WorkspacePath;
 use tracing::{error, trace, warn};

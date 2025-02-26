@@ -113,18 +113,18 @@ impl Code for IfIncompatibleType {
 impl IfIncompatibleType {
     #[must_use]
     pub fn new(
-        left: (Vec<Arc<Token>>, bool),
+        left: &(Arc<Vec<Arc<Token>>>, bool),
         operator: Vec<Arc<Token>>,
-        right: (Vec<Arc<Token>>, bool),
+        right: &(Arc<Vec<Arc<Token>>>, bool),
     ) -> Self {
         Self {
             left: (
-                left.0.into_iter().map(|t| t.as_ref().clone()).collect(),
+                left.0.iter().map(|t| t.as_ref().clone()).collect(),
                 left.1,
             ),
             operator: operator.into_iter().map(|t| t.as_ref().clone()).collect(),
             right: (
-                right.0.into_iter().map(|t| t.as_ref().clone()).collect(),
+                right.0.iter().map(|t| t.as_ref().clone()).collect(),
                 right.1,
             ),
         }
@@ -132,9 +132,9 @@ impl IfIncompatibleType {
 
     #[must_use]
     pub fn code(
-        left: (Vec<Arc<Token>>, bool),
+        left: &(Arc<Vec<Arc<Token>>>, bool),
         operator: Vec<Arc<Token>>,
-        right: (Vec<Arc<Token>>, bool),
+        right: &(Arc<Vec<Arc<Token>>>, bool),
     ) -> Error {
         Error::Code(Arc::new(Self::new(left, operator, right)))
     }

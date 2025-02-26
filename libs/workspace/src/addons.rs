@@ -5,12 +5,12 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
 use hemtt_common::config::AddonConfig;
-use hemtt_common::prefix::{Prefix, FILES};
+use hemtt_common::prefix::{FILES, Prefix};
 use hemtt_common::version::Version;
 use tracing::{trace, warn};
 
-use crate::position::Position;
 use crate::WorkspacePath;
+use crate::position::Position;
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {

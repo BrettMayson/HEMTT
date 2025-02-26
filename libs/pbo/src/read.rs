@@ -6,10 +6,10 @@ use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 
 use crate::{
+    BISignVersion, ReadPbo, WritePbo,
     error::Error,
     file::File,
     model::{Checksum, Header, Mime},
-    BISignVersion, ReadPbo, WritePbo,
 };
 
 /// An existing PBO file that can be read from

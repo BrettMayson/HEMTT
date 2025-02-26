@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::{reporting::Symbol, WorkspacePath};
+use hemtt_workspace::{WorkspacePath, reporting::Symbol};
 use tower_lsp::lsp_types::SemanticToken;
 use tracing::warn;
 use url::Url;
@@ -12,7 +14,7 @@ impl SqfAnalyzer {
         url: Url,
         text: String,
         source: WorkspacePath,
-        database: &Database,
+        database: Arc<Database>,
     ) {
         let Ok(tokens) = hemtt_preprocessor::parse::str(&text, &source) else {
             warn!("Failed to parse file");

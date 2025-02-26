@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use hemtt_workspace::LayerType;
 
 fn criterion_benchmark(c: &mut Criterion) {

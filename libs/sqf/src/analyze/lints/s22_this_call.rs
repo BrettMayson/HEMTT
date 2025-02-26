@@ -1,6 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::config::LintConfig;
+use hemtt_common::config::{LintConfig, LintEnabled};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
@@ -42,7 +42,7 @@ When using `call`, the called code will inherit `_this` from the calling scope. 
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning().with_enabled(LintEnabled::Disabled)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

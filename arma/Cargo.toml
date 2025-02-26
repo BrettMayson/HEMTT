@@ -2,7 +2,7 @@
 name = "hemtt-comm"
 authors = ["Brett Mayson <brett@mayson.io>"]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 name = "hemtt_comm"

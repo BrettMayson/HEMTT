@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
-use hemtt_stringtable::{rapify::rapify, Project};
+use hemtt_stringtable::{Project, rapify::rapify};
 use hemtt_workspace::WorkspacePath;
 
 #[test]

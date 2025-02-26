@@ -2,16 +2,16 @@ use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{
-        atomic::{AtomicU16, Ordering},
         RwLock,
+        atomic::{AtomicU16, Ordering},
     },
 };
 
-use hemtt_config::{analyze::lint_check, parse, rapify::Rapify, Config};
+use hemtt_config::{Config, analyze::lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
-    addons::{Addon, Location},
     WorkspacePath,
+    addons::{Addon, Location},
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;

@@ -1,4 +1,4 @@
-use crate::{Key, Project, ALL_LANGUAGES};
+use crate::{ALL_LANGUAGES, Key, Project};
 use tracing::{trace, warn};
 
 #[derive(Default, Debug)]

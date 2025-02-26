@@ -19,8 +19,8 @@ use lints::s02_event_handlers::{
 };
 
 use crate::{
-    parser::database::Database, BinaryCommand, Expression, NularCommand, Statement, Statements,
-    UnaryCommand,
+    BinaryCommand, Expression, NularCommand, Statement, Statements, UnaryCommand,
+    parser::database::Database,
 };
 
 lint_manager!(

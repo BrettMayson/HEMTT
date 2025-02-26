@@ -50,7 +50,7 @@ Read more about [class inheritance](https://community.bistudio.com/wiki/Class_In
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

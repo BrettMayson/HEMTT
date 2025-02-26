@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_stringtable::{
-    analyze::{lint_all, lint_one},
     Project,
+    analyze::{lint_all, lint_one},
 };
 use hemtt_workspace::{
-    reporting::{Codes, WorkspaceFiles},
     LayerType,
+    reporting::{Codes, WorkspaceFiles},
 };
 
 const ROOT: &str = "tests/lints/";
@@ -37,6 +37,13 @@ fn lint(file: &str) -> String {
     let mut codes: Codes = Vec::new();
     codes.extend(lint_one(&stringtable, None, vec![]));
     codes.extend(lint_all(&vec![stringtable], None, vec![]));
+
+    codes.retain(|e| {
+        e.ident().starts_with(&format!(
+            "L-{}",
+            file.split_once('_').unwrap().0.to_uppercase()
+        ))
+    });
 
     codes
         .iter()

@@ -1,16 +1,16 @@
 use std::sync::Arc;
 
 use hemtt_stringtable::{
+    Project,
     analyze::{lint_all, lint_check, lint_one},
     rapify::convert_stringtable,
-    Project,
 };
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Severity},
     WorkspacePath,
+    reporting::{Code, Diagnostic, Severity},
 };
 
-use crate::{context::Context, report::Report, Error};
+use crate::{Error, context::Context, report::Report};
 
 use super::Module;
 
@@ -53,7 +53,13 @@ impl Module for Stringtables {
                 .walk_dir()
                 .expect("vfs issue")
                 .into_iter()
-                .filter(|p| p.filename() == "stringtable.xml")
+                .filter(|p| {
+                    let lower = p.filename().to_lowercase();
+                    if lower == "stringtable.csv" || lower == "stringtable.bin" {
+                        warn!("Stringtable [{}] will not be linted", p.as_str());
+                    }
+                    lower == "stringtable.xml"
+                })
                 .collect::<Vec<_>>();
             for path in paths {
                 if path.exists().expect("vfs issue") {

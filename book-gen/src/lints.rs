@@ -3,17 +3,17 @@ use std::sync::Arc;
 use hemtt_common::config::LintEnabled;
 use hemtt_config::analyze::CONFIG_LINTS;
 use hemtt_sqf::analyze::{
+    LintData, SQF_LINTS,
     lints::s02_event_handlers::{
         LintS02EventIncorrectCommand, LintS02EventInsufficientVersion, LintS02EventUnknown,
     },
-    LintData, SQF_LINTS,
 };
 use hemtt_workspace::lint::{Lint, Lints};
 use mdbook::book::Chapter;
 
 pub fn run(chapter: &mut Chapter) {
     for item in &mut chapter.sub_items {
-        if let mdbook::BookItem::Chapter(ref mut chapter) = item {
+        if let mdbook::BookItem::Chapter(chapter) = item {
             if chapter.name == "Config" {
                 config(chapter);
             }

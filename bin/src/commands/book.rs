@@ -1,4 +1,4 @@
-use crate::{report::Report, Error};
+use crate::{Error, report::Report};
 
 #[derive(clap::Parser)]
 /// Open The HEMTT book
