@@ -19,6 +19,7 @@ use crate::{
         pe15_if_invalid_operator::IfInvalidOperator,
         pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
+        pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
     defines::{DefineSource, Defines},
@@ -85,11 +86,17 @@ impl Processor {
                 Ok(())
             }
             ("else", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedElse::code(command.as_ref().clone()));
+                }
                 self.ifstates.flip(command)?;
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
             ("endif", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedEndif::code(command.as_ref().clone()));
+                }
                 self.ifstates.pop();
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
