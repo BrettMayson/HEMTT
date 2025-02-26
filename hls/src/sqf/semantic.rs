@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::{reporting::Symbol, WorkspacePath};
+use hemtt_workspace::{WorkspacePath, reporting::Symbol};
 use tower_lsp::lsp_types::SemanticToken;
 use tracing::warn;
 use url::Url;

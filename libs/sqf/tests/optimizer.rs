@@ -2,7 +2,7 @@
 
 pub use float_ord::FloatOrd as Scalar;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::{parser::database::Database, Statements};
+use hemtt_sqf::{Statements, parser::database::Database};
 use hemtt_workspace::LayerType;
 
 macro_rules! optimize {

@@ -12,14 +12,14 @@ use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Token;
 use tokio::sync::RwLock;
-use tower_lsp::{lsp_types::SemanticToken, Client};
+use tower_lsp::{Client, lsp_types::SemanticToken};
 use tracing::{error, warn};
 use url::Url;
 
 use crate::{
+    TextDocumentItem,
     files::FileCache,
     workspace::{EditorWorkspace, EditorWorkspaces},
-    TextDocumentItem,
 };
 
 #[derive(Clone)]

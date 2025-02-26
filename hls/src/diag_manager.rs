@@ -1,11 +1,11 @@
 use std::{
     collections::HashSet,
     mem::MaybeUninit,
-    sync::{atomic::AtomicBool, Arc, RwLock},
+    sync::{Arc, RwLock, atomic::AtomicBool},
 };
 
 use dashmap::DashMap;
-use tower_lsp::{lsp_types::Diagnostic, Client};
+use tower_lsp::{Client, lsp_types::Diagnostic};
 use url::Url;
 
 #[derive(Clone)]

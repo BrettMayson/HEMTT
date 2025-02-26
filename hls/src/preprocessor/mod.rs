@@ -8,8 +8,8 @@ use std::{
 
 use dashmap::DashMap;
 use hemtt_workspace::{
-    reporting::{CacheProcessed, Processed},
     WorkspacePath,
+    reporting::{CacheProcessed, Processed},
 };
 use tokio::sync::Mutex;
 use url::Url;

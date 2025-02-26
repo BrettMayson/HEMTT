@@ -1,4 +1,4 @@
-use crate::{report::Report, utils, Error};
+use crate::{Error, report::Report, utils};
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]

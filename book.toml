@@ -6,7 +6,7 @@ language = "en"
 src = "book"
 
 [rust]
-edition = "2021"
+edition = "2024"
 
 [output.html]
 git-repository-url = "https://github.com/brettmayson/HEMTT/tree/main/book"

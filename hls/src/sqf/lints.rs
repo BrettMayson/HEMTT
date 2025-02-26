@@ -5,7 +5,7 @@ use std::{
 
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, WorkspacePath};
+use hemtt_workspace::{WorkspacePath, addons::Addon, reporting::WorkspaceFiles};
 use tokio::{sync::RwLock, task::JoinSet};
 use tower_lsp::Client;
 use tracing::{debug, warn};

@@ -7,8 +7,8 @@ use std::{
 use hemtt_common::config::{PDriveOption, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
 use tower_lsp::{
-    lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
     Client,
+    lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
 };
 use tracing::debug;
 use url::Url;

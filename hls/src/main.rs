@@ -8,7 +8,7 @@ use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
-use tracing::{debug, info, Level};
+use tracing::{Level, debug, info};
 
 use crate::diag_manager::DiagManager;
 use crate::workspace::EditorWorkspaces;

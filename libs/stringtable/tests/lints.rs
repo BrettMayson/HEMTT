@@ -1,12 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_stringtable::{
-    analyze::{lint_all, lint_one},
     Project,
+    analyze::{lint_all, lint_one},
 };
 use hemtt_workspace::{
-    reporting::{Codes, WorkspaceFiles},
     LayerType,
+    reporting::{Codes, WorkspaceFiles},
 };
 
 const ROOT: &str = "tests/lints/";

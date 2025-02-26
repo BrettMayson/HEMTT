@@ -1,8 +1,8 @@
 use std::{cell::RefCell, fs::File, io::Write, rc::Rc};
 
 use rhai::plugin::{
-    export_module, mem, Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module,
-    NativeCallContext, PluginFunc, RhaiResult, TypeId,
+    Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
+    RhaiResult, TypeId, export_module, mem,
 };
 
 #[derive(Clone)]

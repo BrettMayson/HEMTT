@@ -84,10 +84,10 @@ impl LintRunner<LintData> for Runner {
         if args.len() != 2 {
             return Vec::new();
         }
-        let Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
+        let &Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
             return Vec::new();
         };
-        let Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
+        let &Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
             return Vec::new();
         };
         if !(match &**condition {

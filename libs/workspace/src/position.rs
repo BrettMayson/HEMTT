@@ -14,7 +14,7 @@ impl LineCol {
     /// Convert to an LSP [`lsp_types::Position`]
     pub fn to_lsp(&self) -> tower_lsp::lsp_types::Position {
         #[allow(clippy::cast_possible_truncation)]
-        tower_lsp::lsp_types::Position::new(self.1 .0 as u32 - 1, self.1 .1 as u32)
+        tower_lsp::lsp_types::Position::new(self.1.0 as u32 - 1, self.1.1 as u32)
     }
 
     #[must_use]
@@ -38,13 +38,13 @@ impl LineCol {
     #[must_use]
     /// Get the line of the token
     pub const fn line(&self) -> usize {
-        self.1 .0
+        self.1.0
     }
 
     #[must_use]
     /// Get the column of the token
     pub const fn column(&self) -> usize {
-        self.1 .1
+        self.1.1
     }
 
     #[must_use]

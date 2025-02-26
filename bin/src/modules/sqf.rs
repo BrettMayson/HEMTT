@@ -1,13 +1,13 @@
 use std::sync::{
-    atomic::{AtomicU16, Ordering},
     Arc,
+    atomic::{AtomicU16, Ordering},
 };
 
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
     analyze::{analyze, lint_check},
-    parser::{database::Database, ParserError},
+    parser::{ParserError, database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};

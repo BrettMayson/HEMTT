@@ -5,7 +5,7 @@ use hemtt_common::io::{ReadExt, WriteExt};
 use hemtt_pbo::ReadablePbo;
 use rsa::BigUint;
 
-use crate::{generate_hashes, BISign, Error};
+use crate::{BISign, Error, generate_hashes};
 
 #[derive(Debug)]
 /// A public key

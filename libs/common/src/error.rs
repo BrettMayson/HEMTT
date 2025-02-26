@@ -15,10 +15,14 @@ pub enum Error {
     LaunchConfigExtendsMissing(String, String),
     #[error("Launch configuration extends itself: {0}")]
     LaunchConfigExtendsSelf(String),
-    #[error("Launch configuration source conflict. They can exist in either `project.toml` or `launch.toml`, not both.")]
+    #[error(
+        "Launch configuration source conflict. They can exist in either `project.toml` or `launch.toml`, not both."
+    )]
     LaunchConfigConflict,
 
-    #[error("Lints configuration source conflict. They can exist in either `project.toml` or `lints.toml`, not both.")]
+    #[error(
+        "Lints configuration source conflict. They can exist in either `project.toml` or `lints.toml`, not both."
+    )]
     LintsConfigConflict,
 
     #[error("Git Error: {0}")]

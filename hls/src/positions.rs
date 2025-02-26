@@ -8,6 +8,6 @@ pub trait ToPosition {
 
 impl ToPosition for LineCol {
     fn to_position(&self) -> Position {
-        Position::new(self.1 .0 as u32, self.1 .1 as u32)
+        Position::new(self.1.0 as u32, self.1.1 as u32)
     }
 }

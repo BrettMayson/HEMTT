@@ -1,4 +1,4 @@
-use hemtt_workspace::{reporting::CacheProcessed, WorkspacePath};
+use hemtt_workspace::{WorkspacePath, reporting::CacheProcessed};
 use tower_lsp::lsp_types::{GotoDefinitionParams, GotoDefinitionResponse, Location, Position};
 use tracing::warn;
 
@@ -61,10 +61,10 @@ pub async fn get_definition<'a>(
             if usage.path().as_str() != source.as_str() {
                 return false;
             }
-            usage.start().1 .0 - 1 <= position.line as usize
-                && usage.end().1 .0 > position.line as usize
-                && usage.start().1 .1 <= position.character as usize
-                && usage.end().1 .1 >= position.character as usize
+            usage.start().1.0 - 1 <= position.line as usize
+                && usage.end().1.0 > position.line as usize
+                && usage.start().1.1 <= position.character as usize
+                && usage.end().1.1 >= position.character as usize
         })
     })
 }

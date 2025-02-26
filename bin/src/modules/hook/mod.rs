@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use ::rhai::{packages::Package, Engine, Scope};
+use ::rhai::{Engine, Scope, packages::Package};
 use hemtt_workspace::WorkspacePath;
 use rhai::Dynamic;
 

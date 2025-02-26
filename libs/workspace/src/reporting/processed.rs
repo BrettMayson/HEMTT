@@ -6,11 +6,11 @@ use std::{
 use tracing::warn;
 
 use crate::{
-    position::{LineCol, Position},
     Error, WorkspacePath,
+    position::{LineCol, Position},
 };
 
-use super::{definition::Definition, Code, Codes, Output, Token};
+use super::{Code, Codes, Output, Token, definition::Definition};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 

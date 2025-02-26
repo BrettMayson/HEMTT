@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hemtt_workspace::reporting::Token;
 
-use crate::{codes::pe17_double_else::DoubleElse, Error};
+use crate::{Error, codes::pe17_double_else::DoubleElse};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum IfState {

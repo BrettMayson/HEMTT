@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Label},
     WorkspacePath,
+    reporting::{Code, Diagnostic, Label},
 };
 use rhai::{EvalAltResult, Position};
 

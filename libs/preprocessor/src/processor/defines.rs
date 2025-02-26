@@ -7,20 +7,20 @@ use hemtt_workspace::{
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::{
+    Error,
     codes::{
-        pe10_function_as_value::FunctionAsValue,
-        pe11_expected_function_or_value::ExpectedFunctionOrValue,
         pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
-        pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
+        pe9_function_call_argument_count::FunctionCallArgumentCount,
+        pe10_function_as_value::FunctionAsValue,
+        pe11_expected_function_or_value::ExpectedFunctionOrValue, pw3_padded_arg::PaddedArg,
     },
     defines::DefineSource,
     definition::FunctionDefinitionStream,
-    Error,
 };
 
 use super::{
-    pragma::{Flag, Pragma, Suppress},
     Processor,
+    pragma::{Flag, Pragma, Suppress},
 };
 
 impl Processor {
@@ -334,7 +334,7 @@ impl Processor {
 mod tests {
     use hemtt_workspace::reporting::{Symbol, Whitespace};
 
-    use crate::processor::{pragma::Pragma, tests, Processor};
+    use crate::processor::{Processor, pragma::Pragma, tests};
 
     #[test]
     fn single_arg_single_word() {

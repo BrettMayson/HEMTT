@@ -16,7 +16,7 @@ use hemtt_workspace::{
 };
 use regex::Regex;
 
-use crate::{analyze::LintData, Project};
+use crate::{Project, analyze::LintData};
 
 crate::analyze::lint!(LintL02Usage);
 
@@ -178,8 +178,8 @@ fn unused_codes(
                 "{} - {}:{}:{}",
                 key,
                 pos.path().as_str().trim_start_matches('/'),
-                pos.start().1 .0,
-                pos.start().1 .1
+                pos.start().1.0,
+                pos.start().1.1
             )
             .expect("Failed to write to file");
         }
@@ -205,8 +205,8 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
                 "{} - {}:{}:{}",
                 key,
                 pos.path().as_str().trim_start_matches('/'),
-                pos.start().1 .0,
-                pos.start().1 .1
+                pos.start().1.0,
+                pos.start().1.1
             )
             .expect("Failed to write to file");
         }
@@ -238,8 +238,8 @@ fn duplicate_codes(all: &HashMap<String, Vec<crate::Position>>, ignore: bool) ->
                     file,
                     "  {}:{}:{}",
                     pos.path().as_str().trim_start_matches('/'),
-                    pos.start().1 .0,
-                    pos.start().1 .1
+                    pos.start().1.0,
+                    pos.start().1.1
                 )
                 .expect("Failed to write to file");
             }

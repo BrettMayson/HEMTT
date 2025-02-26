@@ -3,7 +3,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, Rapifier},
+    modules::{Binarize, Rapifier, pbo::Collapse},
     report::Report,
 };
 

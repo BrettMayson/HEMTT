@@ -2,7 +2,7 @@
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
 version = "1.14.4"
-edition = "2021"
+edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
 repository.workspace = true
