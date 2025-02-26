@@ -130,7 +130,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     };
     for (file, diags) in lsp_diags {
         manager.set_current(
-            &format!("config:{}", source.as_str()),
+            format!("config:{}", source.as_str()),
             &workspace.to_url(&file),
             diags,
         );

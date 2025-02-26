@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use hemtt_common::version::Version;
 
 use crate::{context::Context, error::Error, report::Report};
@@ -34,7 +36,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             println!("{}", {
                 let mut props = String::new();
                 for (key, value) in ctx.config().properties() {
-                    props.push_str(&format!("{key}: {value}\n"));
+                    writeln!(&mut props, "{key}: {value}").unwrap();
                 }
                 props
             });
