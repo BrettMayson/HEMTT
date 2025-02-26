@@ -1,11 +1,11 @@
 use std::io::{Read, Write};
 
-use arma_rs::{arma, Context, ContextState, Extension};
+use arma_rs::{Context, ContextState, Extension, arma};
 use hemtt_common::arma::control::{
     fromarma::{self, Control, Message},
     toarma,
 };
-use interprocess::local_socket::{prelude::*, GenericNamespaced, Stream};
+use interprocess::local_socket::{GenericNamespaced, Stream, prelude::*};
 
 mod photoshoot;
 

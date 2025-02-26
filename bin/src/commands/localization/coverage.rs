@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use hemtt_stringtable::{Project, Totals};
 use serde::Serialize;
-use tabled::{settings::Style, Table, Tabled};
+use tabled::{Table, Tabled, settings::Style};
 
-use crate::{context::Context, report::Report, Error, TableFormat};
+use crate::{Error, TableFormat, context::Context, report::Report};
 
 #[derive(clap::Parser)]
 #[allow(clippy::module_name_repetitions)]

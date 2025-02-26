@@ -28,9 +28,8 @@ mod error;
 use self::error::bcpe1_tools_not_found::ToolsNotFound;
 
 use super::{
-    dev,
-    launch::{read_config, LaunchArgs},
-    JustArgs,
+    JustArgs, dev,
+    launch::{LaunchArgs, read_config},
 };
 
 #[derive(clap::Parser)]

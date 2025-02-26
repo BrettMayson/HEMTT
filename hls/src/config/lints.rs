@@ -4,7 +4,7 @@ use std::{
 };
 
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{reporting::WorkspaceFiles, WorkspacePath};
+use hemtt_workspace::{WorkspacePath, reporting::WorkspaceFiles};
 use tokio::{sync::RwLock, task::JoinSet};
 use tower_lsp::Client;
 use tracing::{debug, warn};
@@ -130,7 +130,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     };
     for (file, diags) in lsp_diags {
         manager.set_current(
-            &format!("config:{}", source.as_str()),
+            format!("config:{}", source.as_str()),
             &workspace.to_url(&file),
             diags,
         );

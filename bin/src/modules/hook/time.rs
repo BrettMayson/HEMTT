@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use rhai::EvalAltResult;
-use time::{format_description, OffsetDateTime};
+use time::{OffsetDateTime, format_description};
 
 pub fn date(format: &str) -> Result<String, Box<EvalAltResult>> {
     let now: OffsetDateTime = SystemTime::now().into();

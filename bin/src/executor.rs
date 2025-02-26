@@ -3,7 +3,7 @@ use crate::error::Error;
 use crate::report::Report;
 use crate::{
     context::Context,
-    modules::{self, pbo::Collapse, Module},
+    modules::{self, Module, pbo::Collapse},
 };
 
 pub struct Executor {

@@ -1,11 +1,11 @@
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     sync::Arc,
 };
 
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{
-    prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
+    Layer, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
 };
 
 use crate::Error;

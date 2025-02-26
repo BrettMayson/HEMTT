@@ -3,8 +3,8 @@ use std::fs::File;
 use hemtt_pbo::ReadablePbo;
 use serde::Serialize;
 use tabled::{
-    settings::{object::Columns, Alignment, Style},
     Table, Tabled,
+    settings::{Alignment, Style, object::Columns},
 };
 
 use crate::{Error, TableFormat};

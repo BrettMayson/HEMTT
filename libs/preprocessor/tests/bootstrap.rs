@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/bootstrap/";
 

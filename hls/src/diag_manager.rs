@@ -1,11 +1,11 @@
 use std::{
     collections::HashSet,
     mem::MaybeUninit,
-    sync::{atomic::AtomicBool, Arc, RwLock},
+    sync::{Arc, RwLock, atomic::AtomicBool},
 };
 
 use dashmap::DashMap;
-use tower_lsp::{lsp_types::Diagnostic, Client};
+use tower_lsp::{Client, lsp_types::Diagnostic};
 use url::Url;
 
 #[derive(Clone)]
@@ -51,7 +51,7 @@ impl DiagManager {
         self.worker.current(scope, url)
     }
 
-    pub fn set_current(&self, scope: &str, url: &Url, diags: Vec<Diagnostic>) {
+    pub fn set_current(&self, scope: String, url: &Url, diags: Vec<Diagnostic>) {
         self.worker.set_current(scope, url, diags);
     }
 
@@ -78,8 +78,8 @@ impl DiagWorker {
             .map(|x| x.clone())
     }
 
-    pub fn set_current(&self, scope: &str, url: &Url, diags: Vec<Diagnostic>) {
-        self.current.insert((scope.to_string(), url.clone()), diags);
+    pub fn set_current(&self, scope: String, url: &Url, diags: Vec<Diagnostic>) {
+        self.current.insert((scope, url.clone()), diags);
     }
 
     pub fn clear_current(&self, scope: &str) {

@@ -4,8 +4,8 @@ use hemtt_common::config::ProjectConfig;
 use hemtt_config::ConfigReport;
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
-    reporting::{Code, WorkspaceFiles},
     LayerType,
+    reporting::{Code, WorkspaceFiles},
 };
 
 #[derive(clap::Args)]

@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-signing"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "A signing library for hemtt"
 license = "GPL-2.0"
 

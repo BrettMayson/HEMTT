@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::{parser::database::Database, Statement};
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_sqf::{Statement, parser::database::Database};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/simple/";
 

@@ -29,7 +29,7 @@ pub fn config() -> impl Parser<char, Config, Error = Simple<char>> {
 mod tests {
     use chumsky::Parser;
 
-    use crate::{parse::config, Config};
+    use crate::{Config, parse::config};
 
     #[test]
     fn empty() {

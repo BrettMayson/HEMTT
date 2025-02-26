@@ -212,7 +212,10 @@ fn markdown_locality(locality: &Locality, context: &str) -> String {
 
 fn markdown_since(since: &Since) -> String {
     if let Some(arma3) = since.arma_3() {
-        format!("Since [Arma 3 {}](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3_version_{})\n\n", arma3, arma3)
+        format!(
+            "Since [Arma 3 {}](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3_version_{})\n\n",
+            arma3, arma3
+        )
     } else {
         "".to_string()
     }

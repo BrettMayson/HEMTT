@@ -1,9 +1,9 @@
 use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
+    WorkspacePath,
     position::Position,
     reporting::{Definition, Symbol, Token},
-    WorkspacePath,
 };
 use strsim::levenshtein;
 
@@ -192,7 +192,7 @@ impl Defines {
                         return Some((
                             key.clone(),
                             Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Digit(site.start().1 .0),
+                                Symbol::Digit(site.start().1.0),
                                 key.position().clone(),
                             ))])),
                             DefineSource::Generated,
@@ -208,11 +208,11 @@ impl Defines {
                 return ret;
             }
             // starts before the definition
-            if key.position().start().1 .0 < body.position().start().1 .0 {
+            if key.position().start().1.0 < body.position().start().1.0 {
                 return ret;
             }
             // starts after the definition
-            if key.position().start().1 .0 > body.position().end().1 .0 {
+            if key.position().start().1.0 > body.position().end().1.0 {
                 return ret;
             }
             // the usage is within the definition, so we can't use it

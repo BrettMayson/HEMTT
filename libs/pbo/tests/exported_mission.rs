@@ -2,7 +2,7 @@
 
 use std::fs::File;
 
-use hemtt_pbo::{tests::pbo, Checksum};
+use hemtt_pbo::{Checksum, tests::pbo};
 
 #[test]
 fn exported_mission() {

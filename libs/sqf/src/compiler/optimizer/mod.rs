@@ -222,8 +222,8 @@ impl Expression {
     fn is_constant(&self) -> bool {
         match self {
             Self::Code(..) | Self::String(..) | Self::Number(..) | Self::Boolean(..) => true,
-            Self::NularCommand(ref command, ..) => command.is_constant(),
-            Self::Array(ref array, ..) => array.iter().all(Self::is_constant), // true on empty
+            Self::NularCommand(command, ..) => command.is_constant(),
+            Self::Array(array, ..) => array.iter().all(Self::is_constant), // true on empty
             Self::ConsumeableArray(..) => {
                 unreachable!("should not be reachable");
             }
@@ -298,7 +298,7 @@ impl Expression {
         right: &Self,
         op: fn(&str) -> String,
     ) -> Option<Self> {
-        if let Self::String(right_string, _, ref right_wrapper) = right {
+        if let Self::String(right_string, _, right_wrapper) = right {
             if right_string.is_ascii() {
                 let new_string = op(right_string.as_ref());
                 #[cfg(debug_assertions)]
@@ -365,8 +365,8 @@ impl Expression {
         right: &Self,
         op: fn(&str, &str) -> String,
     ) -> Option<Self> {
-        if let Self::String(left_string, _, ref _left_wrapper) = left {
-            if let Self::String(right_string, _, ref right_wrapper) = right {
+        if let Self::String(left_string, _, _left_wrapper) = left {
+            if let Self::String(right_string, _, right_wrapper) = right {
                 if right_string.is_ascii() && left_string.is_ascii() {
                     let new_string = op(left_string.as_ref(), right_string.as_ref());
                     #[cfg(debug_assertions)]

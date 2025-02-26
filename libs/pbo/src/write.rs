@@ -7,7 +7,7 @@ use hemtt_common::io::WriteExt;
 use indexmap::IndexMap;
 use sha1::{Digest, Sha1};
 
-use crate::{error::Error, model::Header, Checksum, WritePbo};
+use crate::{Checksum, WritePbo, error::Error, model::Header};
 
 #[derive(Default)]
 /// A PBO file that can be written to

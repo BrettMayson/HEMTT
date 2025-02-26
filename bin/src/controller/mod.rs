@@ -10,11 +10,11 @@ use hemtt_common::{
     config::LaunchOptions,
 };
 use interprocess::local_socket::{
-    traits::Listener, GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName,
+    GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName, traits::Listener,
 };
 
 use crate::{
-    commands::launch::{launcher::Launcher, LaunchArgs},
+    commands::launch::{LaunchArgs, launcher::Launcher},
     context::Context,
     error::Error,
     report::Report,

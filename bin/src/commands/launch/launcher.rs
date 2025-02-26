@@ -7,21 +7,21 @@ use hemtt_common::{arma::dlc::DLC, config::LaunchOptions, steam};
 use regex::Regex;
 
 use crate::{
+    Error,
     commands::launch::{
         error::{bcle1_preset_not_found::PresetNotFound, bcle4_arma_not_found::ArmaNotFound},
         preset,
     },
     report::Report,
-    Error,
 };
 
 use super::{
+    LaunchArgs,
     error::{
         bcle2_workshop_not_found::WorkshopNotFound,
         bcle3_workshop_mod_not_found::WorkshopModNotFound,
         bcle8_mission_not_found::MissionNotFound, bcle9_mission_absolute::MissionAbsolutePath,
     },
-    LaunchArgs,
 };
 
 pub struct Launcher {

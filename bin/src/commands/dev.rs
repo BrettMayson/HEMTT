@@ -5,7 +5,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Rapifier},
+    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse},
     report::Report,
 };
 

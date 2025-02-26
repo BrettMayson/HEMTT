@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-p3d"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "An P3d library for hemtt"
 license = "GPL-2.0"
 

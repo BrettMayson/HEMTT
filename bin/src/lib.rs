@@ -124,20 +124,20 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
     }
 
     let report = match cli.command.as_ref().expect("Handled above") {
-        Commands::Book(ref cmd) => commands::book::execute(cmd),
-        Commands::New(ref cmd) => commands::new::execute(cmd, in_test),
-        Commands::Check(ref cmd) => commands::check::execute(cmd),
-        Commands::Dev(ref cmd) => commands::dev::execute(cmd, &[]).map(|(r, _)| r),
-        Commands::Launch(ref cmd) => commands::launch::execute(cmd),
-        Commands::Build(ref cmd) => commands::build::execute(cmd),
-        Commands::Release(ref cmd) => commands::release::execute(cmd),
-        Commands::Localization(ref cmd) => commands::localization::execute(cmd),
-        Commands::Script(ref cmd) => commands::script::execute(cmd),
-        Commands::Utils(ref cmd) => commands::utils::execute(cmd),
-        Commands::Value(ref cmd) => commands::value::execute(cmd),
-        Commands::Wiki(ref cmd) => commands::wiki::execute(cmd),
+        Commands::Book(cmd) => commands::book::execute(cmd),
+        Commands::New(cmd) => commands::new::execute(cmd, in_test),
+        Commands::Check(cmd) => commands::check::execute(cmd),
+        Commands::Dev(cmd) => commands::dev::execute(cmd, &[]).map(|(r, _)| r),
+        Commands::Launch(cmd) => commands::launch::execute(cmd),
+        Commands::Build(cmd) => commands::build::execute(cmd),
+        Commands::Release(cmd) => commands::release::execute(cmd),
+        Commands::Localization(cmd) => commands::localization::execute(cmd),
+        Commands::Script(cmd) => commands::script::execute(cmd),
+        Commands::Utils(cmd) => commands::utils::execute(cmd),
+        Commands::Value(cmd) => commands::value::execute(cmd),
+        Commands::Wiki(cmd) => commands::wiki::execute(cmd),
         #[cfg(windows)]
-        Commands::Photoshoot(ref cmd) => commands::photoshoot::execute(cmd),
+        Commands::Photoshoot(cmd) => commands::photoshoot::execute(cmd),
     };
 
     match report {
@@ -223,16 +223,17 @@ fn check_for_update() {
     let (message, filter) = match os {
         "windows" => (
             "HEMTT is installed via winget, run `winget upgrade hemtt` to update",
-            "\\Winget\\".to_string()
+            "\\Winget\\".to_string(),
         ),
         "linux" | "macos" => (
-            "HEMTT is installed in home directory, run `curl -sSf https://hemtt.dev/install.sh | sh` to update", {
+            "HEMTT is installed in home directory, run `curl -sSf https://hemtt.dev/install.sh | sh` to update",
+            {
                 let mut home = dirs::home_dir().expect("home directory exists");
                 if os == "linux" {
                     home = home.join(".local");
                 };
                 home.join("bin").display().to_string()
-            }
+            },
         ),
         _ => return,
     };

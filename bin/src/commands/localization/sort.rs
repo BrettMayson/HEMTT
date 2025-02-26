@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use hemtt_stringtable::Project;
 use hemtt_workspace::WorkspacePath;
 
-use crate::{context::Context, report::Report, Error};
+use crate::{Error, context::Context, report::Report};
 
 #[derive(clap::Parser)]
 #[allow(clippy::module_name_repetitions)]

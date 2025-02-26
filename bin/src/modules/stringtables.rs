@@ -1,16 +1,16 @@
 use std::sync::Arc;
 
 use hemtt_stringtable::{
+    Project,
     analyze::{lint_all, lint_check, lint_one},
     rapify::convert_stringtable,
-    Project,
 };
 use hemtt_workspace::{
-    reporting::{Code, Diagnostic, Severity},
     WorkspacePath,
+    reporting::{Code, Diagnostic, Severity},
 };
 
-use crate::{context::Context, report::Report, Error};
+use crate::{Error, context::Context, report::Report};
 
 use super::Module;
 

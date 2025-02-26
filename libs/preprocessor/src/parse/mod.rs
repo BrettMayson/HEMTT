@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use hemtt_workspace::{
+    WorkspacePath,
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
-    WorkspacePath,
 };
 
 use pest::Parser;
 use pest_derive::Parser;
 
-use crate::{codes::pe24_parsing_failed::ParsingFailed, Error};
+use crate::{Error, codes::pe24_parsing_failed::ParsingFailed};
 
 #[derive(Parser)]
 #[grammar = "parse/config.pest"]
@@ -62,7 +62,7 @@ pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error>
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
                                 start,
-                                LineCol(start.0 + 2, (start.1 .0 + 2, start.1 .1 + 2)),
+                                LineCol(start.0 + 2, (start.1.0 + 2, start.1.1 + 2)),
                                 path.clone(),
                             ),
                         )));

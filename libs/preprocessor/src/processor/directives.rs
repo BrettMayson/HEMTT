@@ -9,26 +9,27 @@ use peekmore::{PeekMore, PeekMoreIterator};
 use tracing::debug;
 
 use crate::{
+    Error,
     codes::{
+        pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
+        pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
+        pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
         pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
         pe14_include_unexpected_suffix::IncludeUnexpectedSuffix,
         pe15_if_invalid_operator::IfInvalidOperator,
         pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
-        pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
-        pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
-        pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
+        pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
     defines::{DefineSource, Defines},
     ifstate::IfState,
     processor::pragma::Flag,
-    Error,
 };
 
 use super::{
-    pragma::{Pragma, Scope},
     Processor,
+    pragma::{Pragma, Scope},
 };
 
 impl Processor {
@@ -85,11 +86,17 @@ impl Processor {
                 Ok(())
             }
             ("else", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedElse::code(command.as_ref().clone()));
+                }
                 self.ifstates.flip(command)?;
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
             ("endif", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedEndif::code(command.as_ref().clone()));
+                }
                 self.ifstates.pop();
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
@@ -509,7 +516,7 @@ impl Processor {
 mod tests {
     use hemtt_workspace::reporting::{Definition, Symbol};
 
-    use crate::processor::{pragma::Pragma, tests, Processor};
+    use crate::processor::{Processor, pragma::Pragma, tests};
 
     #[test]
     fn directive_define_unit() {

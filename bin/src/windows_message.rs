@@ -2,7 +2,7 @@ use winapi::{
     shared::minwindef::DWORD,
     um::{
         wincon::{GetConsoleProcessList, GetConsoleWindow},
-        winuser::{MessageBoxW, IDYES, MB_ICONQUESTION, MB_YESNO},
+        winuser::{IDYES, MB_ICONQUESTION, MB_YESNO, MessageBoxW},
     },
 };
 

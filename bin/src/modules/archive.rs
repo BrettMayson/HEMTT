@@ -1,10 +1,10 @@
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     path::PathBuf,
 };
 
 use walkdir::WalkDir;
-use zip::{write::SimpleFileOptions, ZipWriter};
+use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
