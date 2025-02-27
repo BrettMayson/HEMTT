@@ -124,6 +124,7 @@ impl Executor {
                 "pre_build" => module.pre_build(&self.ctx)?,
                 "post_build" => module.post_build(&self.ctx)?,
                 "pre_release" => module.pre_release(&self.ctx)?,
+                "archive" => module.archive(&self.ctx)?,
                 "post_release" => module.post_release(&self.ctx)?,
                 _ => unreachable!(),
             });

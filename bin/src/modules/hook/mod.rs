@@ -233,6 +233,10 @@ impl Module for Hooks {
         self.run_folder(ctx, "pre_release", true)
     }
 
+    fn archive(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "archive", false)
+    }
+
     fn post_release(&self, ctx: &Context) -> Result<Report, Error> {
         self.run_folder(ctx, "post_release", false)
     }

@@ -61,6 +61,13 @@ pub trait Module {
     fn pre_release(&self, _ctx: &Context) -> Result<Report, Error> {
         Ok(Report::new())
     }
+    /// Executes the module's `archive` phase
+    /// 
+    /// # Errors
+    /// Any error that the module encounters
+    fn archive(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
+    }
     /// Executes the module's `post_release` phase
     ///
     /// # Errors
