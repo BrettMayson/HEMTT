@@ -13,8 +13,8 @@ bench = false
 
 [dependencies]
 hemtt-common = { path = "../common", version = "1.0.0" }
-hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0", features = ["lsp"] }
-hemtt-workspace = { path = "../workspace", version = "1.0.0", features = ["lsp"] }
+hemtt-preprocessor = { path = "../preprocessor", version = "1.0.0" }
+hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 automod = { workspace = true }
 byteorder = { workspace = true }

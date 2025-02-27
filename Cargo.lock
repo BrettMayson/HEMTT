@@ -1745,6 +1745,7 @@ version = "1.0.0"
 dependencies = [
  "automod",
  "criterion",
+ "dashmap 6.1.0",
  "hemtt-common",
  "hemtt-workspace",
  "lsp-types 0.97.0",
