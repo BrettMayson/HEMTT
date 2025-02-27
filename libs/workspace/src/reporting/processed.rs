@@ -24,6 +24,7 @@ pub struct Processed {
 
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
+    mappings_newlines: Vec<(usize, usize)>,
 
     macros: HashMap<String, Vec<(Position, Definition)>>,
 
@@ -123,6 +124,9 @@ fn append_token(
         if str == "##" && string_stack.is_empty() {
             return Ok(());
         }
+        processed
+            .mappings_newlines
+            .push((processed.total, processed.mappings.len()));
         processed.mappings.push(Mapping {
             processed: (LineCol(processed.total, (processed.line, processed.col)), {
                 let chars = str.chars().count();
@@ -208,9 +212,16 @@ pub fn clean_output(processed: &mut Processed) {
             continue;
         }
 
-        let Some(map) = processed.mapping(cursor_offset + 1) else {
+        let Some(map) = processed
+            .mappings_newlines
+            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
+            .ok()
+            .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
+            .or_else(|| processed.mapping(cursor_offset + 1))
+        else {
             panic!("mapping not found for offset {cursor_offset}");
         };
+
         let pending_line = comitted_line + pending_empty;
         let linenum = map.original().start().line();
         let file = map
@@ -343,7 +354,9 @@ impl Processed {
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
-        self.mappings(offset).last().copied()
+        self.mappings.iter().rev().find(|map| {
+            map.processed_start().offset() <= offset && map.processed_end().offset() > offset
+        })
     }
 
     #[must_use]
