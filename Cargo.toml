@@ -74,5 +74,5 @@ zip = "2.2.2"
 [profile.bench]
 lto = true
 
-[profile.release]
-debug = true
+# [profile.release]
+# debug = true

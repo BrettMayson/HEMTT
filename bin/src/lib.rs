@@ -115,11 +115,12 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
 
     if let Some(threads) = cli.global.threads {
         debug!("Using custom thread count: {threads}");
-        if let Err(e) = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .use_current_thread()
-            .build_global()
-        {
+        let mut builder = rayon::ThreadPoolBuilder::new().num_threads(threads);
+        if threads == 1 {
+            // helps with profiling to just use the main thread
+            builder = builder.use_current_thread();
+        }
+        if let Err(e) = builder.build_global() {
             error!("Failed to initialize thread pool: {e}");
         }
     }
