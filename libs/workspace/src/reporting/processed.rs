@@ -323,15 +323,15 @@ impl Processed {
             .collect()
     }
 
-    #[must_use]
+    // #[must_use]
     /// Get the tree mapping at a position in the stringified output
-    pub fn mappings(&self, offset: usize) -> Vec<&Mapping> {
+    pub fn mappings(&self, offset: usize) -> impl Iterator<Item = &Mapping> {
         self.mappings
             .iter()
-            .filter(|map| {
+            .filter(move |map| {
                 map.processed_start().offset() <= offset && map.processed_end().offset() > offset
             })
-            .collect()
+            // .collect()
     }
 
     #[must_use]
@@ -343,16 +343,19 @@ impl Processed {
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
-        self.mappings(offset).last().copied()
+        self.mappings(offset).last()
     }
 
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping_no_macros(&self, offset: usize) -> Option<&Mapping> {
+        // self.mappings(offset)
+        //     .into_iter()
+        //     .rev()
+        //     .find(|m| !m.was_macro)
         self.mappings(offset)
-            .into_iter()
-            .rev()
-            .find(|m| !m.was_macro)
+            .filter(|m| !m.was_macro)
+            .last()
     }
 
     #[must_use]

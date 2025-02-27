@@ -142,7 +142,7 @@ impl CodeS04CommandCase {
     #[must_use]
     pub fn new(span: Range<usize>, used: String, wiki: String, processed: &Processed, severity: Severity) -> Self {
         Self {
-            include: processed.mappings(span.end).first().is_some_and(|mapping| {
+            include: processed.mappings(span.end).next().is_some_and(|mapping| {
                 mapping.original().path().is_include()
             }),
             severity,

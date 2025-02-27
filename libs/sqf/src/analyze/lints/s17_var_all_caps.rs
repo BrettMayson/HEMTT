@@ -165,11 +165,9 @@ impl CodeS17VarAllCaps {
             return self;
         };
         self.diagnostic = Some(diagnostic.clone());
-        let mut mappings = processed.mappings(self.span.start);
-        mappings.pop();
+        let mut mappings = processed.mappings(self.span.start).skip(1);
         let symbol = Symbol::Word(self.ident.clone());
         let Some(mapping) = mappings
-            .iter()
             .find(|m| {
                 m.token().symbol() == &symbol
             }) else {

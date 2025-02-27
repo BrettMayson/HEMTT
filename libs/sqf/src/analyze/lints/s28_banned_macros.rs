@@ -87,7 +87,7 @@ impl LintRunner<LintData> for Runner {
                         let span = target.span();
                         if processed
                             .mappings(span.start)
-                            .first()
+                            .next()
                             .is_some_and(|m| m.original().path().is_include())
                         {
                             continue;
