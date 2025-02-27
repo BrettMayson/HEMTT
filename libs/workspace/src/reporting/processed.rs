@@ -248,7 +248,6 @@ pub fn clean_output(processed: &Processed) {
         clean_cursor += chars;
         comitted_line += 1;
     }
-    // processed.clean_output = output;
     processed
         .clean_output
         .write()
