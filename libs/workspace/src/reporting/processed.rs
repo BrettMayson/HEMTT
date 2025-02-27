@@ -323,7 +323,6 @@ impl Processed {
             .collect()
     }
 
-    // #[must_use]
     /// Get the tree mapping at a position in the stringified output
     pub fn mappings(&self, offset: usize) -> impl Iterator<Item = &Mapping> {
         self.mappings
@@ -331,7 +330,6 @@ impl Processed {
             .filter(move |map| {
                 map.processed_start().offset() <= offset && map.processed_end().offset() > offset
             })
-            // .collect()
     }
 
     #[must_use]
