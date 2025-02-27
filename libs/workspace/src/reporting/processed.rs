@@ -354,7 +354,6 @@ impl Processed {
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
-        // self.mappings(offset).last().copied()
         self.mappings.iter().rev().find(|map| {
             map.processed_start().offset() <= offset && map.processed_end().offset() > offset
         })
