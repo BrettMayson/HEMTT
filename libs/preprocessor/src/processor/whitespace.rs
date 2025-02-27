@@ -59,7 +59,7 @@ impl Processor {
             if token.symbol().is_newline() || token.symbol().is_eoi() {
                 break;
             }
-            if !token.symbol().is_whitespace() {
+            if !token.symbol().is_whitespace() && !token.symbol().is_escape() {
                 return Err(UnexpectedToken::code(
                     token.as_ref().clone(),
                     vec!["newline".to_string()],

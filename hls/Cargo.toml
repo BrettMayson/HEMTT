@@ -1,19 +1,19 @@
 [package]
 name = "hemtt-language-server"
-version = "0.5.2"
+version = "0.5.3"
 edition = "2024"
 
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
-hemtt-preprocessor = { path = "../libs/preprocessor" }
+hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
 chumsky = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-dashmap = "6.1.0"
+dashmap = { workspace = true }
 regex = { workspace = true }
 ropey = "1.6.1"
 serde = { workspace = true }

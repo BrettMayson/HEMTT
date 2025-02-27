@@ -170,7 +170,7 @@ async fn check_sqf(
     };
     for (file, diags) in lsp_diags {
         manager.set_current(
-            &format!("sqf:{}", source.as_str()),
+            format!("sqf:{}", source.as_str()),
             &workspace.to_url(&file),
             diags,
         );
