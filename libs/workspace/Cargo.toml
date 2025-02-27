@@ -9,8 +9,8 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
-hemtt-pbo = { path = "../pbo", version = "1.0.0" }
+hemtt-common = { path = "../common" }
+hemtt-pbo = { path = "../pbo" }
 
 ansi_term = "0.12.1"
 codespan-reporting = { workspace = true }

@@ -12,9 +12,9 @@ workspace = true
 bench = false
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-common = { path = "../common" }
 
-hemtt-pbo = { path = "../pbo", version = "1.0.0" }
+hemtt-pbo = { path = "../pbo" }
 
 byteorder = { workspace = true }
 rand = "0.8.5"
