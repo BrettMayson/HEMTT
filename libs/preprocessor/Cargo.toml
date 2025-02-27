@@ -16,6 +16,7 @@ hemtt-common = { path = "../common", version = "1.0.0" }
 hemtt-workspace = { path = "../workspace", version = "1.0.0" }
 
 automod = { workspace = true }
+dashmap = { workspace = true }
 lsp-types = { workspace = true, optional = true }
 peekmore = { workspace = true }
 pest = { workspace = true }
