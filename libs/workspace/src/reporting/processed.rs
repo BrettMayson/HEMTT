@@ -1,4 +1,8 @@
-use std::{collections::HashMap, ops::Range, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::Range,
+    sync::{Arc, RwLock},
+};
 use tracing::warn;
 
 use crate::{
@@ -16,8 +20,8 @@ pub struct Processed {
     sources: Sources,
 
     output: String,
-    clean_output: String,
-    clean_output_line_indexes: Vec<(usize, usize)>,
+    clean_output: RwLock<Option<String>>,
+    clean_output_line_indexes: RwLock<Vec<(usize, usize)>>,
 
     /// character offset for each line
     line_offsets: HashMap<WorkspacePath, HashMap<usize, usize>>,
@@ -189,7 +193,7 @@ fn append_output(
     Ok(())
 }
 
-pub fn clean_output(processed: &mut Processed) {
+pub fn clean_output(processed: &Processed) {
     let mut comitted_file = String::new();
     let mut comitted_line = 0;
     let mut lines = processed.output.lines();
@@ -244,8 +248,16 @@ pub fn clean_output(processed: &mut Processed) {
         clean_cursor += chars;
         comitted_line += 1;
     }
-    processed.clean_output = output;
-    processed.clean_output_line_indexes = indexes;
+    // processed.clean_output = output;
+    processed
+        .clean_output
+        .write()
+        .expect("clean output lock")
+        .replace(output);
+    *processed
+        .clean_output_line_indexes
+        .write()
+        .expect("clean output line indexes lock") = indexes;
 }
 
 impl Processed {
@@ -276,7 +288,6 @@ impl Processed {
             &mut next_is_escape,
             output,
         )?;
-        clean_output(&mut processed);
         Ok(processed)
     }
 
@@ -395,16 +406,35 @@ impl Processed {
 
     #[must_use]
     /// Return the entire clean output
-    pub fn clean_output(&self) -> &str {
-        &self.clean_output
+    ///
+    /// # Panics
+    /// If the clean output mutex is poisoned
+    pub fn clean_output(&self) -> String {
+        let exists = self
+            .clean_output
+            .read()
+            .expect("clean output lock")
+            .is_some();
+        if !exists {
+            clean_output(self);
+        }
+        self.clean_output
+            .read()
+            .expect("clean output lock")
+            .as_ref()
+            .expect("exists")
+            .to_string()
     }
 
     #[must_use]
     /// Return a string with the source from the span
+    ///
+    /// # Panics
+    /// If the clean output mutex is poisoned
     pub fn clean_span(&self, span: &Range<usize>) -> Range<usize> {
-        fn find_point(processed: &Processed, target: usize) -> usize {
+        fn find_point(processed: &Processed, target: usize, indexes: &[(usize, usize)]) -> usize {
             let mut last_start = (0, 0);
-            for (original, clean) in &processed.clean_output_line_indexes {
+            for (original, clean) in indexes {
                 if original > &target {
                     break;
                 }
@@ -412,13 +442,30 @@ impl Processed {
             }
             processed
                 .clean_output
+                .read()
+                .expect("clean output lock")
+                .as_ref()
+                .expect("clean output exists")
                 .chars()
                 .take(last_start.1 - 1 + (target - last_start.0))
                 .map(char::len_utf8)
                 .sum()
         }
-        let start = find_point(self, span.start);
-        let end = find_point(self, span.end);
+        let exists = self
+            .clean_output
+            .read()
+            .expect("clean output lock")
+            .is_some();
+        if !exists {
+            clean_output(self);
+        }
+        let indexes = self
+            .clean_output_line_indexes
+            .read()
+            .expect("clean output line indexes lock")
+            .clone();
+        let start = find_point(self, span.start, &indexes);
+        let end = find_point(self, span.end, &indexes);
         start..end
     }
 
@@ -432,7 +479,7 @@ impl Processed {
     #[must_use]
     pub fn cache(self) -> CacheProcessed {
         CacheProcessed {
-            output: self.clean_output,
+            output: self.clean_output(),
             macros: self.macros,
             usage: self.usage,
         }
