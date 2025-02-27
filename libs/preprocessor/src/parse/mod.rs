@@ -50,7 +50,7 @@ pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     #[cfg(not(feature = "lsp"))]
     {
         let path_str = path.as_str();
-        if ["macros", "common"].iter().any(|&x| path_str.contains(x)) {
+        if ["macros", "common", "script", "component"].iter().any(|&x| path_str.contains(x)) {
             cache.tokens.insert(path.clone(), res.clone());
         }
     }
