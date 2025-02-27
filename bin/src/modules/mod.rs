@@ -62,7 +62,7 @@ pub trait Module {
         Ok(Report::new())
     }
     /// Executes the module's `archive` phase
-    /// 
+    ///
     /// # Errors
     /// Any error that the module encounters
     fn archive(&self, _ctx: &Context) -> Result<Report, Error> {
