@@ -347,10 +347,6 @@ impl Processed {
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping_no_macros(&self, offset: usize) -> Option<&Mapping> {
-        // self.mappings(offset)
-        //     .into_iter()
-        //     .rev()
-        //     .find(|m| !m.was_macro)
         self.mappings(offset)
             .filter(|m| !m.was_macro)
             .last()
