@@ -105,12 +105,15 @@ fn append_token(
         );
         processed.output.push('\n');
         processed.mappings.push(Mapping {
-            processed: (LineCol(processed.total_chars, (processed.line, processed.col)), {
-                processed.line += 1;
-                processed.col = 0;
-                processed.total_chars += 1;
-                LineCol(processed.total_chars, (processed.line, processed.col))
-            }),
+            processed: (
+                LineCol(processed.total_chars, (processed.line, processed.col)),
+                {
+                    processed.line += 1;
+                    processed.col = 0;
+                    processed.total_chars += 1;
+                    LineCol(processed.total_chars, (processed.line, processed.col))
+                },
+            ),
             source,
             original: token.position().clone(),
             token,
@@ -128,16 +131,19 @@ fn append_token(
             return Ok(());
         }
         processed.mappings.push(Mapping {
-            processed: (LineCol(processed.total_chars, (processed.line, processed.col)), {
-                let chars = str.chars().count();
-                processed.col += chars;
-                processed.total_chars += chars;
-                processed.output.push_str(&str);
-                LineCol(
-                    processed.total_chars + chars,
-                    (processed.line, processed.col + chars),
-                )
-            }),
+            processed: (
+                LineCol(processed.total_chars, (processed.line, processed.col)),
+                {
+                    let chars = str.chars().count();
+                    processed.col += chars;
+                    processed.total_chars += chars;
+                    processed.output.push_str(&str);
+                    LineCol(
+                        processed.total_chars + chars,
+                        (processed.line, processed.col + chars),
+                    )
+                },
+            ),
             source,
             original: token.position().clone(),
             token,
@@ -428,7 +434,8 @@ impl Processed {
                 .chars()
                 .take(last_start.1 - 1 + (target - last_start.0))
                 .map(char::len_utf8)
-                .sum::<usize>() + 1
+                .sum::<usize>()
+                + 1
         }
         let start = find_point(self, span.start);
         let end = find_point(self, span.end);
