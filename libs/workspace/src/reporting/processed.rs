@@ -36,7 +36,7 @@ pub struct Processed {
 
     line: usize,
     col: usize,
-    total: usize,
+    total_chars: usize,
 
     /// Warnings
     warnings: Codes,
@@ -105,17 +105,23 @@ fn append_token(
         );
         processed.output.push('\n');
         processed.mappings.push(Mapping {
-            processed: (LineCol(processed.total, (processed.line, processed.col)), {
-                processed.line += 1;
-                processed.col = 0;
-                processed.total += 1;
-                LineCol(processed.total, (processed.line, processed.col))
-            }),
+            processed: (
+                LineCol(processed.total_chars, (processed.line, processed.col)),
+                {
+                    processed.line += 1;
+                    processed.col = 0;
+                    processed.total_chars += 1;
+                    LineCol(processed.total_chars, (processed.line, processed.col))
+                },
+            ),
             source,
             original: token.position().clone(),
             token,
             was_macro: false,
         });
+        processed
+            .mappings_newlines
+            .push((processed.total_chars, processed.mappings.len()));
     } else {
         let str = token.to_source();
         if str.is_empty() {
@@ -124,20 +130,20 @@ fn append_token(
         if str == "##" && string_stack.is_empty() {
             return Ok(());
         }
-        processed
-            .mappings_newlines
-            .push((processed.total, processed.mappings.len()));
         processed.mappings.push(Mapping {
-            processed: (LineCol(processed.total, (processed.line, processed.col)), {
-                let chars = str.chars().count();
-                processed.col += chars;
-                processed.total += chars;
-                processed.output.push_str(&str);
-                LineCol(
-                    processed.total + chars,
-                    (processed.line, processed.col + chars),
-                )
-            }),
+            processed: (
+                LineCol(processed.total_chars, (processed.line, processed.col)),
+                {
+                    let chars = str.chars().count();
+                    processed.col += chars;
+                    processed.total_chars += chars;
+                    processed.output.push_str(&str);
+                    LineCol(
+                        processed.total_chars + chars,
+                        (processed.line, processed.col + chars),
+                    )
+                },
+            ),
             source,
             original: token.position().clone(),
             token,
@@ -159,11 +165,11 @@ fn append_output(
                 append_token(processed, string_stack, next_is_escape, t)?;
             }
             Output::Macro(root, o) => {
-                let start = processed.total;
+                let start = processed.total_chars;
                 let line = processed.line;
                 let col = processed.col;
                 append_output(processed, string_stack, next_is_escape, o)?;
-                let end = processed.total;
+                let end = processed.total_chars;
                 let path = root.position().path().clone();
                 let source = processed
                     .sources
@@ -235,7 +241,7 @@ pub fn clean_output(processed: &mut Processed) {
             comitted_line = linenum;
             let line = format!("#line {linenum} \"{comitted_file}\"\n");
             output.push_str(&line);
-            clean_cursor += line.chars().count() + 1;
+            clean_cursor += line.chars().count();
             pending_empty = 0;
         }
         if pending_empty > 0 {
@@ -299,9 +305,9 @@ impl Processed {
     }
 
     #[must_use]
-    // Get the length of the output
-    pub const fn output_len(&self) -> usize {
-        self.total
+    // Get the length of the output in characters
+    pub const fn output_chars(&self) -> usize {
+        self.total_chars
     }
 
     #[must_use]
@@ -428,7 +434,8 @@ impl Processed {
                 .chars()
                 .take(last_start.1 - 1 + (target - last_start.0))
                 .map(char::len_utf8)
-                .sum()
+                .sum::<usize>()
+                + 1
         }
         let start = find_point(self, span.start);
         let end = find_point(self, span.end);
