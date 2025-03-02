@@ -12,7 +12,7 @@ workspace = true
 bench = false
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-common = { path = "../common" }
 
 byteorder = { workspace = true }
 indexmap = { workspace = true }

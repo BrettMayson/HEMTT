@@ -99,9 +99,10 @@ impl Executor {
                 "post_build" => self.run_modules("post_build")?,
                 "pre_release" => self.run_modules("pre_release")?,
                 "archive" => {
-                    trace!("phase: release (start)");
+                    trace!("phase: archive (start)");
+                    self.run_modules("archive")?;
                     let report = modules::archive::release(&self.ctx)?;
-                    trace!("phase: release (done)");
+                    trace!("phase: archive (done)");
                     report
                 }
                 "post_release" => self.run_modules("post_release")?,
@@ -124,6 +125,7 @@ impl Executor {
                 "pre_build" => module.pre_build(&self.ctx)?,
                 "post_build" => module.post_build(&self.ctx)?,
                 "pre_release" => module.pre_release(&self.ctx)?,
+                "archive" => module.archive(&self.ctx)?,
                 "post_release" => module.post_release(&self.ctx)?,
                 _ => unreachable!(),
             });

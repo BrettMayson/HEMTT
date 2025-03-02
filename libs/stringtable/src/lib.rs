@@ -214,21 +214,21 @@ fn process_keys(
     path: &WorkspacePath,
 ) -> IndexMap<String, Vec<Position>> {
     let mut keys = IndexMap::new();
-    let mut all_keys: Vec<String> = Vec::with_capacity(20);
+    let mut all_keys: Vec<(&str, String)> = Vec::with_capacity(20);
     for package in &inner.packages {
         for package_inner in package.containers() {
             for key in package_inner.keys() {
-                all_keys.push(key.id().to_string());
+                all_keys.push((key.id(), format!("\"{}\"", key.id())));
             }
         }
         for key in package.keys() {
-            all_keys.push(key.id().to_string());
+            all_keys.push((key.id(), format!("\"{}\"", key.id())));
         }
     }
     let mut offset = 0;
     for (linenum, line) in source.lines().enumerate() {
-        for key in &all_keys {
-            if let Some(pos) = line.find(&format!("\"{key}\"")) {
+        for (key, needle) in &all_keys {
+            if let Some(pos) = line.find(needle.as_str()) {
                 keys.entry(key.to_lowercase())
                     .or_insert_with(Vec::new)
                     .push(Position::new(
@@ -243,7 +243,7 @@ fn process_keys(
         }
         offset += line.chars().count() + 1;
     }
-    for key in all_keys {
+    for (key, _) in all_keys {
         keys.entry(key.to_lowercase()).or_insert_with(Vec::new);
     }
     keys
