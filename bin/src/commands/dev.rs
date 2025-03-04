@@ -120,7 +120,7 @@ pub fn context(
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
 
-    let ctx = Context::new(
+    let mut ctx = Context::new(
         Some("dev"),
         if just.is_empty() {
             crate::context::PreservePrevious::Remove
@@ -149,6 +149,12 @@ pub fn context(
             .iter()
             .any(|e| (a.folder() + "/").starts_with(&format!("{e}/")))
     });
+
+    if !just.is_empty() {
+        let runtime = ctx.config().runtime().clone().with_just(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
+    }
 
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
