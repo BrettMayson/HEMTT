@@ -72,10 +72,15 @@ impl LintRunner<LintData> for Runner {
         target: &Vec<Project>,
         data: &LintData,
     ) -> Codes {
+        // Ignore if using `--just`
+        // leaving previous (missing_stringtables.txt...) untouched
+        if project.is_some_and(|p| p.runtime().is_just()) {
+            return Vec::new();
+        }
         let mut codes: Codes = Vec::new();
         let mut all = HashMap::new();
-        for project in target {
-            for (key, positions) in &project.keys {
+        for stringtable in target {
+            for (key, positions) in &stringtable.keys {
                 all.entry(key.to_lowercase())
                     .or_insert_with(Vec::new)
                     .extend(positions.clone());

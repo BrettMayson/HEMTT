@@ -57,6 +57,7 @@ impl HemttConfig {
 pub struct RuntimeArguments {
     is_release: bool,
     is_pedantic: bool,
+    is_just: bool,
 }
 
 impl RuntimeArguments {
@@ -81,6 +82,16 @@ impl RuntimeArguments {
             is_pedantic,
             ..self
         }
+    }
+
+    #[must_use]
+    pub const fn is_just(&self) -> bool {
+        self.is_just
+    }
+
+    #[must_use]
+    pub const fn with_just(self, is_just: bool) -> Self {
+        Self { is_just, ..self }
     }
 }
 

@@ -81,6 +81,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     )?;
     if !just.is_empty() {
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
+        let runtime = ctx.config().runtime().clone().with_just(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
     }
     let mut executor = executor(ctx, &cmd.build);
 
