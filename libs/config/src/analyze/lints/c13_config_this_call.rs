@@ -80,13 +80,6 @@ impl LintRunner<LintData> for Runner {
             return vec![];
         }
 
-        println!(
-            "{}-{} from {}",
-            count_this_call.len(),
-            count_this.len(),
-            raw_string
-        );
-
         let span = target_str.span().start + 1..target_str.span().end - 1;
 
         vec![Arc::new(Code13ConfigThisCall::new(
