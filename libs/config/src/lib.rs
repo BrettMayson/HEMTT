@@ -108,6 +108,15 @@ impl ConfigReport {
     }
 
     #[must_use]
+    /// Get the hints and notes
+    pub fn hints_and_notes(&self) -> Vec<&Arc<dyn Code>> {
+        self.codes
+            .iter()
+            .filter(|c| c.severity() == Severity::Help || c.severity() == Severity::Note)
+            .collect::<Vec<_>>()
+    }
+
+    #[must_use]
     /// Get the warnings
     pub fn warnings(&self) -> Vec<&Arc<dyn Code>> {
         self.codes
