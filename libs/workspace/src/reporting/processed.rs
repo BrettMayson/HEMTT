@@ -45,6 +45,7 @@ pub struct Processed {
     no_rapify: bool,
 }
 
+#[allow(clippy::too_many_lines)]
 fn append_token(
     processed: &mut Processed,
     string_stack: &mut Vec<char>,
@@ -58,6 +59,9 @@ fn append_token(
     if token.symbol().is_escape() {
         if *next_is_escape == Some(token.clone()) {
             *next_is_escape = None;
+        } else if let Some(escape_token) = next_is_escape.clone() {
+            *next_is_escape = None;
+            append_token(processed, string_stack, next_is_escape, escape_token)?;
         } else {
             *next_is_escape = Some(token);
             return Ok(());
