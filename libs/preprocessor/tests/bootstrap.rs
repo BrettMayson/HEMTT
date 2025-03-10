@@ -87,4 +87,5 @@ bootstrap!(self_recursion);
 bootstrap!(sqf_select);
 bootstrap!(sqf);
 bootstrap!(strings);
+bootstrap!(triple_backslash);
 bootstrap!(utf);
