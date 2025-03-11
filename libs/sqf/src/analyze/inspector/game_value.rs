@@ -42,7 +42,7 @@ pub enum ArrayType {
     Color,
     // Pos2d,
     PosAGL,
-    PosAGLS,
+    // PosAGLS,
     PosASL,
     PosASLW,
     PosATL,
@@ -229,7 +229,13 @@ impl GameValue {
         }
         if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right) {
             if lpos != rpos {
-                // ToDo: Handle matchign array types better eg: AGLS vs AGL
+                // ToDo: Handle matching array types better eg: AGLS vs AGL
+                // false-positive:
+                /*
+                    private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
+                    _dropPos set [2, ((getPosASL _target) select 2)];
+                    _holder setPosASL _dropPos;
+                 */
                 // println!("array mismatch {lpos:?}!={rpos:?}");
                 // return false;
             }
@@ -251,8 +257,8 @@ impl GameValue {
             | Value::ArrayUnsized { .. }
             | Value::Position // position is often too generic to match?
             | Value::Waypoint => Self::Array(None, None),
-            Value::Position3dAGL => Self::Array(None, Some(ArrayType::PosAGL)),
-            Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
+            // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
+            Value::Position3dAGLS | Value::Position3dAGL => Self::Array(None, Some(ArrayType::PosAGL)), // merge
             Value::Position3dASL => Self::Array(None, Some(ArrayType::PosASL)),
             Value::Position3DASLW => Self::Array(None, Some(ArrayType::PosASLW)),
             Value::Position3dATL => Self::Array(None, Some(ArrayType::PosATL)),
