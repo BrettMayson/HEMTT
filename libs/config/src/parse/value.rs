@@ -290,5 +290,19 @@ mod tests {
                 span: 0..6
             }))
         );
+        assert_eq!(
+            value().parse("10 % 3 + 2"),
+            Ok(Value::Number(Number::Int32 {
+                value: 3,
+                span: 0..10
+            }))
+        );
+        assert_eq!(
+            value().parse("-0.01*0.5"),
+            Ok(Value::Number(Number::Float32 {
+                value: -0.005,
+                span: 0..9
+            }))
+        );
     }
 }
