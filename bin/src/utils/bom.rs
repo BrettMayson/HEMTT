@@ -21,9 +21,16 @@ pub fn execute(_: &Command) -> Result<(), Error> {
         let entry = entry?;
         let path = entry.path();
         if path.is_file() {
-            let ext = path.extension().unwrap_or_default().to_str().unwrap_or_default();
+            let ext = path
+                .extension()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default();
             if ALLOWED_EXTENSIONS.contains(&ext) {
-                let mut file = std::fs::OpenOptions::new().read(true).write(true).open(path)?;
+                let mut file = std::fs::OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open(path)?;
                 let mut buf = [0; 3];
                 if file.read_exact(&mut buf).is_err() {
                     continue;
