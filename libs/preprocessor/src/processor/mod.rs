@@ -8,7 +8,6 @@ use hemtt_workspace::{
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::Error;
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
 use crate::codes::{
@@ -17,6 +16,7 @@ use crate::codes::{
 use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
+use crate::{Error, codes::pe29_circular_include::CircularInclude};
 
 use self::pragma::Pragma;
 
@@ -307,6 +307,16 @@ impl Processor {
             self.token_count += 1;
             buffer.push(Output::Direct(token));
         }
+    }
+
+    /// Check if any two files are the same
+    fn add_include(&mut self, path: WorkspacePath, token: Vec<Arc<Token>>) -> Result<(), Error> {
+        if self.file_stack.contains(&path) {
+            return Err(CircularInclude::code(token, self.file_stack.clone()));
+        }
+        self.file_stack.push(path.clone());
+        self.included_files.push(path);
+        Ok(())
     }
 }
 

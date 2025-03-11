@@ -81,3 +81,4 @@ bootstrap!(pe25_exec);
 bootstrap!(pe26_unsupported_builtin);
 bootstrap!(pe27_unexpected_endif);
 bootstrap!(pe28_unexpected_else);
+bootstrap!(pe29_circular_include);
