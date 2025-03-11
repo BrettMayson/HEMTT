@@ -70,17 +70,10 @@ impl LintRunner<LintData> for Runner {
         match target {
             Value::Array(arr) => {
                 for item in &arr.items {
-                    let Item::Str(str) = item else { continue };
-                    if let Some(code) = check(str, processed, config) {
-                        codes.push(code);
-                    }
+                    check_item(item, processed, config, &mut codes);
                 }
             }
-            Value::Str(str) => {
-                if let Some(code) = check(str, processed, config) {
-                    codes.push(code);
-                }
-            }
+            Value::Str(str) => check_str(str, processed, config, &mut codes),
             _ => {}
         }
 
@@ -88,11 +81,31 @@ impl LintRunner<LintData> for Runner {
     }
 }
 
-fn check(
+fn check_item(
+    target: &crate::Item,
+    processed: &Processed,
+    config: &LintConfig,
+    codes: &mut Vec<Arc<dyn Code>>,
+) {
+    match target {
+        Item::Array(items) => {
+            for element in items {
+                check_item(element, processed, config, codes);
+            }
+        }
+        Item::Str(taget_str) => {
+            check_str(taget_str, processed, config, codes);
+        }
+        _ => {}
+    }
+}
+
+fn check_str(
     target_str: &crate::Str,
     processed: &Processed,
     config: &LintConfig,
-) -> Option<Arc<dyn Code>> {
+    codes: &mut Vec<Arc<dyn Code>>,
+) {
     let raw_string = target_str.value();
     // check if it contains some kind of math ops (avoid false positives from `displayName = "556";`)
     if !(raw_string.contains('+')
@@ -100,17 +113,19 @@ fn check(
         || raw_string.contains('*')
         || raw_string.contains('/'))
     {
-        return None;
+        return;
     }
     // attempt to parse it as a number
-    let num = Number::try_evaulation(raw_string, target_str.span())?;
+    let Some(num) = Number::try_evaulation(raw_string, target_str.span()) else {
+        return;
+    };
     let span = target_str.span().start + 1..target_str.span().end - 1;
-    Some(Arc::new(Code12MathCouldBeUnquoted::new(
+    codes.push(Arc::new(Code12MathCouldBeUnquoted::new(
         span,
         processed,
         format!("reducible to: {num}"),
         config.severity(),
-    )))
+    )));
 }
 
 #[allow(clippy::module_name_repetitions)]
