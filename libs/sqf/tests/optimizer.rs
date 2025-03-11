@@ -2,7 +2,7 @@
 
 pub use float_ord::FloatOrd as Scalar;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::{parser::database::Database, Statements};
+use hemtt_sqf::{Statements, parser::database::Database};
 use hemtt_workspace::LayerType;
 
 macro_rules! optimize {
@@ -20,6 +20,7 @@ optimize!(consume_array);
 optimize!(static_math);
 optimize!(scalar);
 optimize!(string_case);
+optimize!(chain);
 
 const ROOT: &str = "tests/optimizer/";
 

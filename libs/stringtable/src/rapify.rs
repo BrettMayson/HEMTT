@@ -1,5 +1,4 @@
-use crate::{Key, Project, ALL_LANGUAGES};
-use hemtt_workspace::WorkspacePath;
+use crate::{ALL_LANGUAGES, Key, Project};
 use tracing::{trace, warn};
 
 #[derive(Default, Debug)]
@@ -22,16 +21,16 @@ struct Translation {
 ///
 /// # Panics
 /// If the files can't be read or written from the vfs
-pub fn convert_stringtable(project: &Project, xml_path: &WorkspacePath) {
+pub fn convert_stringtable(project: &Project) {
     let result = rapify(project);
 
     if result.is_some() {
         // Create stringtable.bin
-        let xmlb_path = xml_path.with_extension("bin").expect("vfs error");
+        let xmlb_path = project.path().with_extension("bin").expect("vfs error");
         let mut xmlb_file = xmlb_path.create_file().expect("vfs error");
 
         // Remove Original stringtable.xml
-        xml_path.vfs().remove_file().expect("vfs error");
+        project.path().vfs().remove_file().expect("vfs error");
 
         // Write data to virtual file
         let data = result.expect("data struct valid");
@@ -48,7 +47,7 @@ pub fn convert_stringtable(project: &Project, xml_path: &WorkspacePath) {
             data.translations.len()
         );
     } else {
-        trace!("skpping binerization of stringtable{:?}", xml_path);
+        trace!("skpping binerization of stringtable{:?}", project.path());
     }
 }
 

@@ -51,20 +51,20 @@ impl Number {
     }
 
     #[must_use]
-    /// Negate the number
-    pub fn negate(&self) -> Self {
+    /// Negate the number and adjust the span to include the `-`
+    pub fn negate(&self, span: Range<usize>) -> Self {
         match self {
-            Self::Int32 { value, span } => Self::Int32 {
+            Self::Int32 { value, .. } => Self::Int32 {
                 value: -value,
-                span: span.clone(),
+                span,
             },
-            Self::Int64 { value, span } => Self::Int64 {
+            Self::Int64 { value, .. } => Self::Int64 {
                 value: -value,
-                span: span.clone(),
+                span,
             },
-            Self::Float32 { value, span } => Self::Float32 {
+            Self::Float32 { value, .. } => Self::Float32 {
                 value: -*value,
-                span: span.clone(),
+                span,
             },
         }
     }

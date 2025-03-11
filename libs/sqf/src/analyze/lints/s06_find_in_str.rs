@@ -39,7 +39,7 @@ The `in` command is faster than `find` when searching for a substring in a strin
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

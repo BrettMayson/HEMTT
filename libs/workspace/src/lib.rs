@@ -4,7 +4,7 @@ use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use hemtt_common::{
     config::{PDriveOption, ProjectConfig},
-    prefix::{Prefix, FILES},
+    prefix::{FILES, Prefix},
 };
 use pdrive::PDrive;
 use tracing::trace;

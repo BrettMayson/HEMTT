@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hemtt_workspace::reporting::{Output, Token};
 use peekmore::PeekMoreIterator;
 
-use crate::{codes::pe1_unexpected_token::UnexpectedToken, Error};
+use crate::{Error, codes::pe1_unexpected_token::UnexpectedToken};
 
 use super::Processor;
 
@@ -59,7 +59,7 @@ impl Processor {
             if token.symbol().is_newline() || token.symbol().is_eoi() {
                 break;
             }
-            if !token.symbol().is_whitespace() {
+            if !token.symbol().is_whitespace() && !token.symbol().is_escape() {
                 return Err(UnexpectedToken::code(
                     token.as_ref().clone(),
                     vec!["newline".to_string()],
@@ -75,7 +75,7 @@ impl Processor {
 mod tests {
     use hemtt_workspace::reporting::Symbol;
 
-    use crate::processor::{tests, Processor};
+    use crate::processor::{Processor, tests};
 
     #[test]
     fn skip_whitespace_space() {

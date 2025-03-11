@@ -97,7 +97,7 @@ impl P3D {
         }
         let mut missing_materials = Vec::new();
         for material in materials {
-            if material.is_empty() {
+            if material.is_empty() || material.starts_with('#') {
                 continue;
             }
             let material = if material.starts_with('\\') {

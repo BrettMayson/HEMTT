@@ -3,7 +3,7 @@
 use std::io::Read;
 
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/errors/";
 
@@ -79,3 +79,6 @@ bootstrap!(pe23_if_has_include);
 bootstrap!(pe24_parsing_failed);
 bootstrap!(pe25_exec);
 bootstrap!(pe26_unsupported_builtin);
+bootstrap!(pe27_unexpected_endif);
+bootstrap!(pe28_unexpected_else);
+bootstrap!(pe29_circular_include);

@@ -2,11 +2,11 @@
 source: libs/sqf/tests/lints.rs
 expression: lint(stringify! (s05_if_assign_emoji))
 ---
-[0m[1m[38;5;14mhelp[L-S05][0m[1m: assignment to if can be replaced with select[0m
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m s05_if_assign_emoji.sqf:2:24
   [0m[36m│[0m
-[0m[36m2[0m [0m[36m│[0m private _workingArms = [0m[36mif (alive player) then { 2 } else { 0 }[0m;
-  [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse select[0m
+[0m[36m2[0m [0m[36m│[0m private _workingArms = [0m[33mif (alive player) then { 2 } else { 0 }[0m;
+  [0m[36m│[0m                        [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
           select is faster in this case

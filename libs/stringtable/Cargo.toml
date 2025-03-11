@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-stringtable"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "A stringtable library for hemtt"
 license = "GPL-2.0"
 
@@ -9,14 +9,16 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
-hemtt-workspace = { path = "../workspace", version = "1.0.0" }
+hemtt-common = { path = "../common" }
+hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
-casey = "0.4.0"
+casey = "0.4.2"
+indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.37.1", features = ["serialize"] }
+quick-xml = { version = "0.37.2", features = ["serialize"] }
+regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }

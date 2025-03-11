@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use ::rhai::{packages::Package, Engine, Scope};
+use ::rhai::{Engine, Scope, packages::Package};
 use hemtt_workspace::WorkspacePath;
 use rhai::Dynamic;
 
@@ -231,6 +231,10 @@ impl Module for Hooks {
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
         self.run_folder(ctx, "pre_release", true)
+    }
+
+    fn archive(&self, ctx: &Context) -> Result<Report, Error> {
+        self.run_folder(ctx, "archive", false)
     }
 
     fn post_release(&self, ctx: &Context) -> Result<Report, Error> {

@@ -1,0 +1,11 @@
+[0m[1m[38;5;9merror[PE29][0m[1m: circular include detected[0m
+  [0m[36m┌─[0m b.hpp:1:11
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #include "[0m[31ma.hpp[0m"
+  [0m[36m│[0m           [0m[31m^^^^^[0m [0m[31mcircular include detected[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: include stack: 
+           ┬ /source.hpp
+           ├ /a.hpp
+           ╰ /b.hpp
+

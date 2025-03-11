@@ -98,7 +98,9 @@ impl AddonFile {
         let see_more = "See <https://hemtt.dev/configuration/addon> for more information.";
 
         if content.contains("preprocess = ") || content.contains("preprocess=") {
-            return Err(Error::ConfigInvalid(format!("`preprocess = {{}}` is deprecated, use `[rapify] enabled = false` instead. {see_more}")));
+            return Err(Error::ConfigInvalid(format!(
+                "`preprocess = {{}}` is deprecated, use `[rapify] enabled = false` instead. {see_more}"
+            )));
         }
 
         DEPRECATION.call_once(|| {

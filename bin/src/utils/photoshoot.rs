@@ -10,17 +10,13 @@ impl Photoshoot {
     ///
     /// # Errors
     /// [`Error::Image`] if the image could not be loaded
-    pub fn weapon(name: &str, from: &Path) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
+    pub fn weapon(
+        name: &str,
+        from: &Path,
+        uniform: bool,
+    ) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
         let path = from.join(format!("{name}.png"));
-        let mut new = image::open(path)?.into_rgba8();
-        let crop = 918;
-        let new = image::imageops::crop(&mut new, (1920 - crop) / 2, 1080 - crop, crop, crop);
-        let mut new = image::imageops::resize(
-            &new.to_image(),
-            512,
-            512,
-            image::imageops::FilterType::Lanczos3,
-        );
+        let mut new = image::open(&path)?.into_rgba8();
         for pixel in new.pixels_mut() {
             if is_background(*pixel) {
                 pixel.0[0] = 0;
@@ -31,6 +27,20 @@ impl Photoshoot {
             }
             Self::gamma_rgba(pixel);
         }
+        let new = if uniform {
+            let crop = 918;
+            image::imageops::crop(&mut new, (1920 - crop) / 2, 1080 - crop, crop, crop)
+        } else {
+            // a square 1080x1080 image from the center
+            image::imageops::crop(&mut new, 1920 / 2 - 1080 / 2, 0, 1080, 1080)
+        };
+        let new = image::imageops::resize(
+            &new.to_image(),
+            512,
+            512,
+            image::imageops::FilterType::Lanczos3,
+        );
+        std::fs::remove_file(path)?;
         Ok(new)
     }
 
@@ -39,12 +49,12 @@ impl Photoshoot {
     /// # Errors
     /// [`Error::Image`] if the image could not be loaded
     pub fn preview(path: &Path) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
-        let new = image::open(path)?.into_rgb8();
-        let mut new =
-            image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
+        let mut new = image::open(path)?.into_rgb8();
         for pixel in new.pixels_mut() {
             Self::gamma_rgb(pixel);
         }
+        let new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
+        std::fs::remove_file(path)?;
         Ok(new)
     }
 

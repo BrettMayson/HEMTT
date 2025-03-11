@@ -39,7 +39,7 @@ impl MissingTextures {
     pub fn code(p3d: String, textures: Vec<String>, warning: bool) -> Arc<dyn Code> {
         Arc::new(Self {
             p3d,
-            textures: textures.into_iter().map(|t| t.replace('\\', "/")).collect(),
+            textures,
             warning,
         })
     }

@@ -47,7 +47,7 @@ Check [the wiki](https://community.bistudio.com/wiki/Category:Introduced_with_Ar
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -69,8 +69,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let (addon, database) = data;
-        let Some(required) = addon.build_data().required_version() else {
+        let Some(required) = data.addon.build_data().required_version() else {
             // TODO what to do here?
             return Vec::new();
         };
@@ -80,14 +79,14 @@ impl LintRunner<LintData> for Runner {
             u8::try_from(required.0.minor()).unwrap_or_default(),
         );
         let required = (wiki_version, required.1, required.2);
-        let (command, usage, usage_span) = target.required_version(database);
+        let (command, usage, usage_span) = target.required_version(&data.database);
         if wiki_version < usage {
             errors.push(Arc::new(CodeS01CommandRequiredVersion::new(
                 command,
                 usage_span,
                 usage,
                 required,
-                *database.wiki().version(),
+                *data.database.wiki().version(),
                 processed,
             )));
         }

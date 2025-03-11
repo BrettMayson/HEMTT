@@ -2,8 +2,8 @@ use std::fs::File;
 
 use serde::Serialize;
 use tabled::{
-    settings::{Alignment, Style},
     Table, Tabled,
+    settings::{Alignment, Style},
 };
 
 use crate::{Error, TableFormat};

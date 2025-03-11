@@ -2,21 +2,21 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use hemtt_workspace::{
-    position::Position,
-    reporting::{Codes, Output, Processed, Symbol, Token},
     WorkspacePath,
+    position::Position,
+    reporting::{Codes, Definition, Output, Processed, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::codes::pe3_expected_ident::ExpectedIdent;
 use crate::codes::pw2_invalid_config_case::InvalidConfigCase;
-use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::codes::{
-    pe26_unsupported_builtin::BuiltInNotSupported, pe2_unexpected_eof::UnexpectedEOF,
+    pe2_unexpected_eof::UnexpectedEOF, pe26_unsupported_builtin::BuiltInNotSupported,
 };
+use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
-use crate::Error;
+use crate::{Error, codes::pe29_circular_include::CircularInclude};
 
 use self::pragma::Pragma;
 
@@ -30,13 +30,14 @@ mod whitespace;
 pub struct Processor {
     ifstates: IfStates,
     defines: Defines,
+    backslashes: usize,
 
     included_files: Vec<WorkspacePath>,
     file_stack: Vec<WorkspacePath>,
 
     pub(crate) token_count: usize,
 
-    macros: HashMap<String, Vec<Position>>,
+    macros: HashMap<String, Vec<(Position, Definition)>>,
 
     #[cfg(feature = "lsp")]
     /// Map of token usage to definition
@@ -296,17 +297,29 @@ impl Processor {
 
     fn output(&mut self, token: Arc<Token>, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
-            if token.symbol().is_newline()
-                && buffer
-                    .last()
-                    .is_some_and(|t| t.last_symbol().is_some_and(Symbol::is_escape))
-            {
+            if token.symbol().is_newline() && self.backslashes % 2 == 1 {
+                self.backslashes = 0;
                 buffer.pop();
                 return;
+            }
+            if token.symbol().is_escape() {
+                self.backslashes += 1;
+            } else {
+                self.backslashes = 0;
             }
             self.token_count += 1;
             buffer.push(Output::Direct(token));
         }
+    }
+
+    /// Check if any two files are the same
+    fn add_include(&mut self, path: WorkspacePath, token: Vec<Arc<Token>>) -> Result<(), Error> {
+        if self.file_stack.contains(&path) {
+            return Err(CircularInclude::code(token, self.file_stack.clone()));
+        }
+        self.file_stack.push(path.clone());
+        self.included_files.push(path);
+        Ok(())
     }
 }
 

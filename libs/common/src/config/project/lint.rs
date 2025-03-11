@@ -32,25 +32,45 @@ impl LintGroupConfig {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.config.is_empty() && self.sqf.is_empty()
+        self.config.is_empty() && self.sqf.is_empty() && self.stringtables.is_empty()
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LintEnabled {
+    Enabled,
+    Disabled,
+    /// Only enables the lint if --pedantic is set
+    Pedantic,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct LintConfig {
-    enabled: bool,
+    enabled: LintEnabled,
     severity: Severity,
+    minimum_severity: Severity,
     options: HashMap<String, toml::Value>,
 }
 impl Eq for LintConfig {}
 
 impl LintConfig {
     #[must_use]
+    pub fn fatal() -> Self {
+        Self {
+            enabled: LintEnabled::Enabled,
+            severity: Severity::Error,
+            minimum_severity: Severity::Error,
+            options: HashMap::new(),
+        }
+    }
+
+    #[must_use]
     pub fn error() -> Self {
         Self {
-            enabled: true,
+            enabled: LintEnabled::Enabled,
             severity: Severity::Error,
+            minimum_severity: Severity::Warning,
             options: HashMap::new(),
         }
     }
@@ -58,8 +78,9 @@ impl LintConfig {
     #[must_use]
     pub fn warning() -> Self {
         Self {
-            enabled: true,
+            enabled: LintEnabled::Enabled,
             severity: Severity::Warning,
+            minimum_severity: Severity::Help,
             options: HashMap::new(),
         }
     }
@@ -67,8 +88,9 @@ impl LintConfig {
     #[must_use]
     pub fn help() -> Self {
         Self {
-            enabled: true,
+            enabled: LintEnabled::Enabled,
             severity: Severity::Help,
+            minimum_severity: Severity::Help,
             options: HashMap::new(),
         }
     }
@@ -77,8 +99,9 @@ impl LintConfig {
     pub const fn new(severity: Severity, options: HashMap<String, toml::Value>) -> Self {
         Self {
             severity,
+            minimum_severity: severity,
             options,
-            enabled: true,
+            enabled: LintEnabled::Enabled,
         }
     }
 
@@ -88,13 +111,26 @@ impl LintConfig {
     }
 
     #[must_use]
-    pub fn with_enabled(self, enabled: bool) -> Self {
+    pub fn with_enabled(self, enabled: LintEnabled) -> Self {
         Self { enabled, ..self }
     }
 
     #[must_use]
-    pub const fn enabled(&self) -> bool {
+    pub const fn enabled(&self) -> LintEnabled {
         self.enabled
+    }
+
+    #[must_use]
+    pub fn with_minimum_severity(self, severity: Severity) -> Self {
+        Self {
+            minimum_severity: severity,
+            ..self
+        }
+    }
+
+    #[must_use]
+    pub const fn minimum_severity(&self) -> Severity {
+        self.minimum_severity
     }
 
     #[must_use]
@@ -108,10 +144,17 @@ impl LintConfig {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum LintConfigEnabled {
+    Bool(bool),
+    String(String),
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default, Debug, PartialEq, Deserialize, Serialize)]
 pub struct LintConfigOverride {
-    enabled: Option<bool>,
+    enabled: Option<LintConfigEnabled>,
     severity: Option<Severity>,
     #[serde(default)]
     options: HashMap<String, toml::Value>,
@@ -120,8 +163,15 @@ impl Eq for LintConfigOverride {}
 
 impl LintConfigOverride {
     #[must_use]
-    pub const fn enabled(&self) -> Option<bool> {
-        self.enabled
+    pub fn enabled(&self) -> Option<LintEnabled> {
+        match self.enabled {
+            Some(LintConfigEnabled::Bool(true)) => Some(LintEnabled::Enabled),
+            Some(LintConfigEnabled::Bool(false)) => Some(LintEnabled::Disabled),
+            Some(LintConfigEnabled::String(ref s)) if s == "pedantic" => {
+                Some(LintEnabled::Pedantic)
+            }
+            _ => None,
+        }
     }
 
     #[must_use]
@@ -137,7 +187,7 @@ impl LintConfigOverride {
     #[must_use]
     pub fn apply(&self, config: LintConfig) -> LintConfig {
         let mut new = config;
-        if let Some(enabled) = self.enabled {
+        if let Some(enabled) = self.enabled() {
             new.enabled = enabled;
         }
         if let Some(severity) = self.severity {
@@ -184,14 +234,14 @@ impl From<LintSectionFile> for LintGroupConfig {
 #[derive(PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum LintConfigFile {
-    Enabled(bool),
     Severity(Severity),
     Full(LintConfigOverride),
+    Enabled(LintConfigEnabled),
 }
 
 impl Default for LintConfigFile {
     fn default() -> Self {
-        Self::Enabled(true)
+        Self::Enabled(LintConfigEnabled::Bool(true))
     }
 }
 
@@ -231,7 +281,7 @@ example = false
                 .get("example")
                 .expect("example exists")
                 .enabled(),
-            Some(false)
+            Some(LintEnabled::Disabled)
         );
     }
 
@@ -264,7 +314,7 @@ options.test = true
         let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = LintGroupConfig::from(file);
         let example = config.sqf().get("example").expect("example exists");
-        assert_eq!(example.enabled(), Some(false));
+        assert_eq!(example.enabled(), Some(LintEnabled::Disabled));
         assert_eq!(example.severity(), Some(Severity::Warning));
         assert_eq!(example.option("test"), Some(&toml::Value::Boolean(true)));
     }
@@ -286,7 +336,7 @@ enabled = true
         let file: LintSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = LintGroupConfig::from(file);
         let example = config.sqf().get("example").expect("example exists");
-        assert_eq!(example.enabled(), Some(true));
+        assert_eq!(example.enabled(), Some(LintEnabled::Enabled));
         assert_eq!(example.severity(), None);
         assert!(example.option("test").is_none());
     }

@@ -2,7 +2,7 @@
 
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 macro_rules! errors {
     ($dir:ident) => {

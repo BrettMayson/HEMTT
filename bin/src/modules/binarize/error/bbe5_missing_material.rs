@@ -39,10 +39,7 @@ impl MissingMaterials {
     pub fn code(p3d: String, materials: Vec<String>, warning: bool) -> Arc<dyn Code> {
         Arc::new(Self {
             p3d,
-            materials: materials
-                .into_iter()
-                .map(|t| t.replace('\\', "/"))
-                .collect(),
+            materials,
             warning,
         })
     }

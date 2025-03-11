@@ -4,8 +4,8 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
 use hemtt_pbo::{BISignVersion, ReadablePbo};
 use rsa::{
-    traits::{PrivateKeyParts, PublicKeyParts},
     BigUint, RsaPrivateKey,
+    traits::{PrivateKeyParts, PublicKeyParts},
 };
 
 use crate::{error::Error, generate_hashes, public::BIPublicKey, signature::BISign};

@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-paa"
 version = "1.0.1"
-edition = "2021"
+edition = "2024"
 description = "An PAA library for hemtt"
 license = "GPL-2.0"
 
@@ -12,15 +12,15 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hemtt-lzo = { path = "../lzo", version = "1.0.0", features = ["decompress"], default-features = false }
+hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = false }
 
 byteorder = { workspace = true }
 texpresso = "2.0.1"
 image = "0.25.5"
 
 # WASM
-js-sys = { version = "0.3.72", optional = true }
-wasm-bindgen = { version = "0.2.95", optional = true }
+js-sys = { version = "0.3.77", optional = true }
+wasm-bindgen = { version = "0.2.100", optional = true }
 
 [features]
 wasm = ["wasm-bindgen", "js-sys"]

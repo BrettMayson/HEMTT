@@ -2,25 +2,25 @@ use std::{collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     position::Position,
-    reporting::{Code, Output, Symbol, Token},
+    reporting::{Code, Definition, Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use crate::{
+    Error,
     codes::{
-        pe10_function_as_value::FunctionAsValue,
-        pe11_expected_function_or_value::ExpectedFunctionOrValue,
         pe1_unexpected_token::UnexpectedToken, pe5_define_multitoken_argument::DefineMissingComma,
-        pe9_function_call_argument_count::FunctionCallArgumentCount, pw3_padded_arg::PaddedArg,
+        pe9_function_call_argument_count::FunctionCallArgumentCount,
+        pe10_function_as_value::FunctionAsValue,
+        pe11_expected_function_or_value::ExpectedFunctionOrValue, pw3_padded_arg::PaddedArg,
     },
     defines::DefineSource,
-    definition::Definition,
-    Error,
+    definition::FunctionDefinitionStream,
 };
 
 use super::{
-    pragma::{Flag, Pragma, Suppress},
     Processor,
+    pragma::{Flag, Pragma, Suppress},
 };
 
 impl Processor {
@@ -169,16 +169,12 @@ impl Processor {
         let mut body = Vec::new();
         for token in stream.by_ref() {
             let symbol = token.symbol();
-            if symbol.is_newline() {
-                if body
+            if symbol.is_newline()
+                && !body
                     .last()
                     .is_some_and(|t: &Arc<Token>| t.symbol().is_escape())
-                {
-                    // remove the backslash
-                    body.pop();
-                } else {
-                    return body;
-                }
+            {
+                return body;
             }
             if !symbol.is_eoi() {
                 body.push(token);
@@ -257,7 +253,7 @@ impl Processor {
                         Arc::from(arg.to_string().as_str()),
                         (
                             arg.clone(),
-                            Definition::Value(value),
+                            Definition::Value(Arc::new(value)),
                             DefineSource::Argument,
                         ),
                     );
@@ -280,11 +276,15 @@ impl Processor {
                     // prevent infinite recursion
                     buffer.push(Output::Macro(
                         ident.clone(),
-                        body.into_iter().map(Output::Direct).collect(),
+                        body.iter().map(|t| Output::Direct(t.clone())).collect(),
                     ));
                 } else {
                     let mut layer = Vec::new();
-                    let body: Vec<_> = body.into_iter().filter(|t| !t.symbol().is_join()).collect();
+                    let body: Vec<_> = body
+                        .iter()
+                        .filter(|t| !t.symbol().is_join())
+                        .cloned()
+                        .collect();
                     self.walk(
                         Some(callsite),
                         Some(&ident_string),
@@ -330,7 +330,7 @@ impl Processor {
 mod tests {
     use hemtt_workspace::reporting::{Symbol, Whitespace};
 
-    use crate::processor::{pragma::Pragma, tests, Processor};
+    use crate::processor::{Processor, pragma::Pragma, tests};
 
     #[test]
     fn single_arg_single_word() {
@@ -518,10 +518,11 @@ mod tests {
         let mut stream = tests::setup("hello \\\nworld");
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
-        assert_eq!(body.len(), 4);
+        assert_eq!(body.len(), 5);
         assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
         assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*body[2].symbol(), Symbol::Newline);
-        assert_eq!(*body[3].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*body[2].symbol(), Symbol::Escape);
+        assert_eq!(*body[3].symbol(), Symbol::Newline);
+        assert_eq!(*body[4].symbol(), Symbol::Word("world".to_string()));
     }
 }

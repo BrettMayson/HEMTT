@@ -1,9 +1,12 @@
 {
   "scopeName": "config",
   "fileTypes": [
-    "ext"
+    "ext",
+    "cpp",
+    "sqm",
+    "rvmat"
   ],
-  "name": "ext",
+  "name": "arma-config",
   "patterns": [
     {
       "include": "#strings"
@@ -15,21 +18,40 @@
       "include": "#comments"
     },
     {
-      "name": "storage.type",
-      "match": "\\b(class)\\b"
+      "name": "meta.class.declaration.arma_config",
+      "match": "\\b(class)\\s+([a-zA-Z_][a-zA-Z0-9_]*)(?:\\s*\\:\\s*([a-zA-Z_][a-zA-Z0-9_]*))?",
+      "captures": {
+        "1": {
+          "name": "storage.type.arma_config"
+        },
+        "2": {
+          "name": "entity.name.class.arma_config"
+        },
+        "3": {
+          "name": "entity.other.inherited-class.arma_config"
+        }
+      }
+    },
+    {
+      "name": "support.function.macro.arma_config",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()"
+    },
+    {
+      "name": "variable.other.arma_config",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*(?:\\[\\])?\\s*=)"
     },
     {
       "begin": "^\\s*((#)\\s*(include(?:_next)?|import))\\b\\s*",
       "beginCaptures": {
         "1": {
-          "name": "keyword.control.directive.$3.ext"
+          "name": "keyword.control.directive.$3.arma_config"
         },
         "2": {
-          "name": "punctuation.definition.directive.ext"
+          "name": "punctuation.definition.directive.arma_config"
         }
       },
       "end": "(?=(?://|/\\*))|(?<!\\\\)(?=\\n)",
-      "name": "meta.preprocessor.include.ext",
+      "name": "meta.preprocessor.include.arma_config",
       "patterns": [
         {
           "include": "#line_continuation_character"
@@ -38,31 +60,31 @@
           "begin": "\"",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.ext"
+              "name": "punctuation.definition.string.begin.arma_config"
             }
           },
           "end": "\"",
           "endCaptures": {
             "0": {
-              "name": "punctuation.definition.string.end.ext"
+              "name": "punctuation.definition.string.end.arma_config"
             }
           },
-          "name": "string.quoted.double.include.ext"
+          "name": "string.quoted.double.include.arma_config"
         },
         {
           "begin": "<",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.ext"
+              "name": "punctuation.definition.string.begin.arma_config"
             }
           },
           "end": ">",
           "endCaptures": {
             "0": {
-              "name": "punctuation.definition.string.end.ext"
+              "name": "punctuation.definition.string.end.arma_config"
             }
           },
-          "name": "string.quoted.other.lt-gt.include.ext"
+          "name": "string.quoted.other.lt-gt.include.arma_config"
         }
       ]
     },
@@ -92,7 +114,7 @@
         }
       },
       "end": "(?=(?://|/\\*))|(?<!\\\\)(?=\\n)",
-      "name": "meta.preprocessor.macro.ext"
+      "name": "meta.preprocessor.macro.arma_config"
     }
   ],
   "repository": {
@@ -112,7 +134,7 @@
       "patterns": [
         {
           "match": "\\b((0(x|X)[0-9a-fA-F]([0-9a-fA-F']*[0-9a-fA-F])?)|(0(b|B)[01]([01']*[01])?)|(([0-9]([0-9']*[0-9])?\\.?[0-9]*([0-9']*[0-9])?)|(\\.[0-9]([0-9']*[0-9])?))((e|E)(\\+|-)?[0-9]([0-9']*[0-9])?)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\\b",
-          "name": "constant.numeric.ext"
+          "name": "constant.numeric.arma_config"
         }
       ]
     },
@@ -189,35 +211,35 @@
           "begin": "(u|u8|U|L)?\"",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.ext"
+              "name": "punctuation.definition.string.begin.arma_config"
             },
             "1": {
-              "name": "meta.encoding.ext"
+              "name": "meta.encoding.arma_config"
             }
           },
           "end": "\"",
           "endCaptures": {
             "0": {
-              "name": "punctuation.definition.string.end.ext"
+              "name": "punctuation.definition.string.end.arma_config"
             }
           },
-          "name": "string.quoted.double.ext",
+          "name": "string.quoted.double.arma_config",
           "patterns": [
             {
               "match": "\\\\u\\h{4}|\\\\U\\h{8}",
-              "name": "constant.character.escape.ext"
+              "name": "constant.character.escape.arma_config"
             },
             {
               "match": "\\\\['\"?\\\\abfnrtv]",
-              "name": "constant.character.escape.ext"
+              "name": "constant.character.escape.arma_config"
             },
             {
               "match": "\\\\[0-7]{1,3}",
-              "name": "constant.character.escape.ext"
+              "name": "constant.character.escape.arma_config"
             },
             {
               "match": "\\\\x\\h+",
-              "name": "constant.character.escape.ext"
+              "name": "constant.character.escape.arma_config"
             }
           ]
         },
@@ -225,25 +247,25 @@
           "begin": "(u|u8|U|L)?R\"(?:([^ ()\\\\\\t]{0,16})|([^ ()\\\\\\t]*))\\(",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.ext"
+              "name": "punctuation.definition.string.begin.arma_config"
             },
             "1": {
-              "name": "meta.encoding.ext"
+              "name": "meta.encoding.arma_config"
             },
             "3": {
-              "name": "invalid.illegal.delimiter-too-long.ext"
+              "name": "invalid.illegal.delimiter-too-long.arma_config"
             }
           },
           "end": "\\)\\2(\\3)\"",
           "endCaptures": {
             "0": {
-              "name": "punctuation.definition.string.end.ext"
+              "name": "punctuation.definition.string.end.arma_config"
             },
             "1": {
-              "name": "invalid.illegal.delimiter-too-long.ext"
+              "name": "invalid.illegal.delimiter-too-long.arma_config"
             }
           },
-          "name": "string.quoted.double.raw.ext"
+          "name": "string.quoted.double.raw.arma_config"
         }
       ]
     }

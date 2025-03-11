@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
-use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, addons::Addon, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 
@@ -38,6 +38,7 @@ lint!(s21_invalid_comparisons);
 lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
+lint!(s28_banned_macros);
 
 lint!(s26_short_circuit_bool_var);
 
@@ -57,7 +58,7 @@ fn lint(file: &str) -> String {
 
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let codes = analyze(
+            let (codes, _) = analyze(
                 &sqf,
                 Some(&config),
                 &processed,

@@ -8,7 +8,7 @@ mod display;
 
 pub use self::display::{DisplayConstant, DisplayInstructions};
 
-use byteorder::{ReadBytesExt, WriteBytesExt, LE};
+use byteorder::{LE, ReadBytesExt, WriteBytesExt};
 
 use std::cmp::Ordering;
 use std::io::{self, Read, Write};

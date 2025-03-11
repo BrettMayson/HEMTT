@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-signing"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "A signing library for hemtt"
 license = "GPL-2.0"
 
@@ -12,12 +12,12 @@ workspace = true
 bench = false
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
+hemtt-common = { path = "../common" }
 
-hemtt-pbo = { path = "../pbo", version = "1.0.0" }
+hemtt-pbo = { path = "../pbo" }
 
 byteorder = { workspace = true }
 rand = "0.8.5"
-rsa = "0.9.6"
+rsa = "0.9.7"
 sha-1 = { workspace = true }
 thiserror = { workspace = true }

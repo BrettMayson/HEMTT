@@ -1,8 +1,8 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.14.2"
-edition = "2021"
+version = "1.14.5"
+edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
 repository.workspace = true
@@ -19,17 +19,17 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
-hemtt-common = { path = "../libs/common", version = "1.0.0" }
+hemtt-common = { path = "../libs/common" }
 
-hemtt-config = { path = "../libs/config", version = "1.0.0" }
-hemtt-p3d = { path = "../libs/p3d", version = "1.0.0" }
-hemtt-paa = { path = "../libs/paa", version = "1.0.0" }
-hemtt-pbo = { path = "../libs/pbo", version = "1.0.1" }
-hemtt-preprocessor = { path = "../libs/preprocessor", version = "1.0.0" }
-hemtt-signing = { path = "../libs/signing", version = "1.0.0" }
-hemtt-sqf = { path = "../libs/sqf", version = "1.0.0" }
-hemtt-stringtable = { path = "../libs/stringtable", version = "1.0.0" }
-hemtt-workspace = { path = "../libs/workspace", version = "1.0.0" }
+hemtt-config = { path = "../libs/config" }
+hemtt-p3d = { path = "../libs/p3d" }
+hemtt-paa = { path = "../libs/paa" }
+hemtt-pbo = { path = "../libs/pbo" }
+hemtt-preprocessor = { path = "../libs/preprocessor" }
+hemtt-signing = { path = "../libs/signing" }
+hemtt-sqf = { path = "../libs/sqf" }
+hemtt-stringtable = { path = "../libs/stringtable" }
+hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
@@ -39,16 +39,16 @@ fs_extra = "1.3.0"
 git2 = { workspace = true }
 glob = "0.3.2"
 image = "0.25.5"
-indicatif = "0.17.9"
+indicatif = "0.17.11"
 interprocess = { workspace = true }
 num_cpus = "1.16.0"
 paste = { workspace = true }
 rayon = "1.10.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.12", features = ["blocking", "json"] }
-rhai = "1.20.1"
-rust-embed = "8.5.0"
-semver = "1.0.24"
+rhai = "1.21.0"
+rust-embed = "8.6.0"
+semver = "1.0.26"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 state = "0.6.0"
@@ -56,12 +56,12 @@ supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3.37", features = ["formatting"] }
+time = { version = "0.3.39", features = ["formatting"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.0.3"
+webbrowser = "1.0.4"
 whoami = "1.5.2"
 zip = { workspace = true }
 

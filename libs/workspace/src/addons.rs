@@ -1,15 +1,16 @@
 use std::fmt::Display;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::{fs::DirEntry, str::FromStr};
 
 use hemtt_common::config::AddonConfig;
-use hemtt_common::prefix::{Prefix, FILES};
+use hemtt_common::prefix::{FILES, Prefix};
 use hemtt_common::version::Version;
 use tracing::{trace, warn};
 
 use crate::WorkspacePath;
+use crate::position::Position;
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -238,6 +239,7 @@ type RequiredVersion = (Version, WorkspacePath, Range<usize>);
 #[derive(Debug, Clone, Default)]
 pub struct BuildData {
     required_version: Arc<RwLock<Option<RequiredVersion>>>,
+    localizations: Arc<Mutex<Vec<(String, Position)>>>,
 }
 
 impl BuildData {
@@ -245,6 +247,7 @@ impl BuildData {
     pub fn new() -> Self {
         Self {
             required_version: Arc::new(RwLock::new(None)),
+            localizations: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -272,6 +275,12 @@ impl BuildData {
             .required_version
             .write()
             .expect("the required version lock is poisoned") = Some((version, file, line));
+    }
+
+    #[must_use]
+    /// Fetches the localizations
+    pub fn localizations(&self) -> Arc<Mutex<Vec<(String, Position)>>> {
+        self.localizations.clone()
     }
 }
 

@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use hemtt_common::io::{compressed_int_len, WriteExt};
+use hemtt_common::io::{WriteExt, compressed_int_len};
 
 use crate::{Class, Ident, Property};
 

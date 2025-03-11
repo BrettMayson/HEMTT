@@ -1,20 +1,35 @@
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
+use dashmap::DashMap;
 use hemtt_workspace::{
+    WorkspacePath,
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
-    WorkspacePath,
 };
 
 use pest::Parser;
 use pest_derive::Parser;
 
-use crate::{codes::pe24_parsing_failed::ParsingFailed, Error};
+use crate::{Error, codes::pe24_parsing_failed::ParsingFailed};
 
 #[derive(Parser)]
 #[grammar = "parse/config.pest"]
 /// Parser for the preprocessor, generated from `config.pest`
 pub struct PreprocessorParser;
+
+#[derive(Debug, Clone)]
+struct Cache {
+    tokens: Arc<DashMap<WorkspacePath, Vec<Arc<Token>>>>,
+}
+
+impl Cache {
+    pub fn get() -> Self {
+        static SINGLETON: LazyLock<Cache> = LazyLock::new(|| Cache {
+            tokens: Arc::new(DashMap::new()),
+        });
+        (*SINGLETON).clone()
+    }
+}
 
 /// Parse a file into tokens
 ///
@@ -24,14 +39,31 @@ pub struct PreprocessorParser;
 /// # Panics
 /// If the file is invalid
 pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
+    let cache = Cache::get();
+    if cache.tokens.contains_key(path) {
+        return Ok(cache.tokens.get(path).expect("exists").value().clone());
+    }
     let source = path.read_to_string()?;
-    str(&source, path)
+    let res = str(&source, path)?;
+    // The LSP manages its own caches, having this enabled would cause the LSP to never see any changes
+    // This will make the LSP slower, in the future it could have a way to invalidate the cache (when a file is saved)
+    #[cfg(not(feature = "lsp"))]
+    {
+        let path_str = path.as_str();
+        if ["macros", "common", "script", "component"]
+            .iter()
+            .any(|&x| path_str.contains(x))
+        {
+            cache.tokens.insert(path.clone(), res.clone());
+        }
+    }
+    Ok(res)
 }
 
 /// Parse a string into tokens
 ///
 /// # Errors
-/// If the string is invalid
+/// If the string is invalid1
 ///
 /// # Panics
 /// If the string is invalid
@@ -62,7 +94,7 @@ pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error>
                             Symbol::Word(pair.as_str().to_string()),
                             Position::new(
                                 start,
-                                LineCol(start.0 + 2, (start.1 .0 + 2, start.1 .1 + 2)),
+                                LineCol(start.0 + 2, (start.1.0 + 2, start.1.1 + 2)),
                                 path.clone(),
                             ),
                         )));

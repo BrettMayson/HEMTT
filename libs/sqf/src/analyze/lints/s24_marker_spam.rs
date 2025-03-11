@@ -49,7 +49,7 @@ Using the `setMarker*Local` on all calls except the last one will reduce the amo
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -107,7 +107,11 @@ impl LintRunner<LintData> for Runner {
 }
 
 fn is_marker_global(cmd: &str) -> bool {
-    cmd.starts_with("setMarker") && !cmd.ends_with("Local")
+    let cmd = cmd.to_lowercase();
+    if cmd == "setmarkerdrawpriority" {
+        return false;
+    }
+    cmd.starts_with("setmarker") && !cmd.ends_with("local")
 }
 
 fn marker_name(var: &Expression) -> Option<String> {

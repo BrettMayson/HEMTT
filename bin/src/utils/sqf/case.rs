@@ -1,6 +1,6 @@
 use std::{
     path::{Path, PathBuf},
-    sync::{atomic::AtomicUsize, Arc},
+    sync::{Arc, atomic::AtomicUsize},
 };
 
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};

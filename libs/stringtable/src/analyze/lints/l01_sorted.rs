@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hemtt_common::config::LintConfig;
-use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}, WorkspacePath};
+use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Severity}};
 
 use crate::{analyze::LintData, Project};
 
@@ -33,33 +33,31 @@ impl Lint<LintData> for LintL01Sorted {
     }
 }
 
-pub type StringtableData = (Project, WorkspacePath, String);
-
 pub struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = Vec<StringtableData>;
+    type Target = Vec<Project>;
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &hemtt_common::config::LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
-        target: &Vec<StringtableData>,
+        target: &Vec<Project>,
         _data: &LintData,
     ) -> Codes {
         let mut unsorted = Vec::new();
         let mut codes: Codes = Vec::new();
         let only_lang = matches!(config.option("only-lang"), Some(toml::Value::Boolean(true)));
-        for (project, path, existing) in target {
+        for project in target {
             let mut project = project.clone();
             if !only_lang {
                 project.sort();
             }
             let mut writer = String::new();
             if let Err(e) = project.to_writer(&mut writer) {
-                panic!("Failed to write stringtable for {path}: {e}");
+                panic!("Failed to write stringtable for {}: {e}", project.path());
             }
-            if writer.trim() != existing.trim() {
-                unsorted.push(path.as_str().to_string());
+            if writer.trim() != project.source().trim() {
+                unsorted.push(project.path().as_str().to_string());
             }
         }
         if unsorted.len() <= 3 {

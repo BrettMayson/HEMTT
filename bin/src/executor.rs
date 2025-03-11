@@ -3,7 +3,7 @@ use crate::error::Error;
 use crate::report::Report;
 use crate::{
     context::Context,
-    modules::{self, pbo::Collapse, Module},
+    modules::{self, Module, pbo::Collapse},
 };
 
 pub struct Executor {
@@ -75,6 +75,15 @@ impl Executor {
     /// # Errors
     /// [`Error`] depending on the modules
     pub fn run(&mut self) -> Result<Report, Error> {
+        self.modules.sort_by(|a, b| {
+            if a.name() == "Stringtables" {
+                std::cmp::Ordering::Greater
+            } else if b.name() == "Stringtables" {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        });
         let mut report = Report::new();
         for stage in self.stages.clone() {
             report.merge(match stage {
@@ -90,9 +99,10 @@ impl Executor {
                 "post_build" => self.run_modules("post_build")?,
                 "pre_release" => self.run_modules("pre_release")?,
                 "archive" => {
-                    trace!("phase: release (start)");
+                    trace!("phase: archive (start)");
+                    self.run_modules("archive")?;
                     let report = modules::archive::release(&self.ctx)?;
-                    trace!("phase: release (done)");
+                    trace!("phase: archive (done)");
                     report
                 }
                 "post_release" => self.run_modules("post_release")?,
@@ -115,6 +125,7 @@ impl Executor {
                 "pre_build" => module.pre_build(&self.ctx)?,
                 "post_build" => module.post_build(&self.ctx)?,
                 "pre_release" => module.pre_release(&self.ctx)?,
+                "archive" => module.archive(&self.ctx)?,
                 "post_release" => module.post_release(&self.ctx)?,
                 _ => unreachable!(),
             });

@@ -67,7 +67,7 @@ Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn minimum_severity(&self) -> Severity {

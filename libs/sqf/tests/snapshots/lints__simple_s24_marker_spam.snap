@@ -2,15 +2,15 @@
 source: libs/sqf/tests/lints.rs
 expression: lint(stringify! (s24_marker_spam))
 ---
-[0m[1m[38;5;14mhelp[L-S24][0m[1m: Repeated calls to global marker updates[0m
+[0m[1m[38;5;11mwarning[L-S24][0m[1m: Repeated calls to global marker updates[0m
   [0m[36m┌─[0m s24_marker_spam.sqf:4:13
   [0m[36m│[0m
-[0m[36m4[0m [0m[36m│[0m     _marker [0m[36msetMarkerShape[0m "ICON";
-  [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^^[0m [0m[36muse setMarkerShapeLocal[0m
-[0m[36m5[0m [0m[36m│[0m     _marker [0m[36msetMarkerType[0m "hd_dot";
-  [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^[0m [0m[36muse setMarkerTypeLocal[0m
-[0m[36m6[0m [0m[36m│[0m     _marker [0m[36msetMarkerColor[0m "ColorRed";
-  [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^^[0m [0m[36muse setMarkerColorLocal[0m
+[0m[36m4[0m [0m[36m│[0m     _marker [0m[33msetMarkerShape[0m "ICON";
+  [0m[36m│[0m             [0m[33m^^^^^^^^^^^^^^[0m [0m[33muse setMarkerShapeLocal[0m
+[0m[36m5[0m [0m[36m│[0m     _marker [0m[33msetMarkerType[0m "hd_dot";
+  [0m[36m│[0m             [0m[33m^^^^^^^^^^^^^[0m [0m[33muse setMarkerTypeLocal[0m
+[0m[36m6[0m [0m[36m│[0m     _marker [0m[33msetMarkerColor[0m "ColorRed";
+  [0m[36m│[0m             [0m[33m^^^^^^^^^^^^^^[0m [0m[33muse setMarkerColorLocal[0m
 [0m[36m7[0m [0m[36m│[0m     _marker setMarkerSize [1, 1];
   [0m[36m│[0m             [0m[36m-------------[0m [0m[36mlast marker update, should remain global[0m
   [0m[36m│[0m
@@ -18,13 +18,13 @@ expression: lint(stringify! (s24_marker_spam))
   [0m[36m=[0m [33mhelp[0m: Using `setMarker*Local` on all except the last call reduces network updates
 
 
-[0m[1m[38;5;14mhelp[L-S24][0m[1m: Repeated calls to global marker updates[0m
+[0m[1m[38;5;11mwarning[L-S24][0m[1m: Repeated calls to global marker updates[0m
    [0m[36m┌─[0m s24_marker_spam.sqf:12:10
    [0m[36m│[0m
-[0m[36m12[0m [0m[36m│[0m     "m1" [0m[36msetMarkerShape[0m "ICON";
-   [0m[36m│[0m          [0m[36m^^^^^^^^^^^^^^[0m [0m[36muse setMarkerShapeLocal[0m
-[0m[36m13[0m [0m[36m│[0m     "m1" [0m[36msetMarkerType[0m "hd_dot";
-   [0m[36m│[0m          [0m[36m^^^^^^^^^^^^^[0m [0m[36muse setMarkerTypeLocal[0m
+[0m[36m12[0m [0m[36m│[0m     "m1" [0m[33msetMarkerShape[0m "ICON";
+   [0m[36m│[0m          [0m[33m^^^^^^^^^^^^^^[0m [0m[33muse setMarkerShapeLocal[0m
+[0m[36m13[0m [0m[36m│[0m     "m1" [0m[33msetMarkerType[0m "hd_dot";
+   [0m[36m│[0m          [0m[33m^^^^^^^^^^^^^[0m [0m[33muse setMarkerTypeLocal[0m
 [0m[36m14[0m [0m[36m│[0m     "m1" setMarkerSize [1, 1];
    [0m[36m│[0m          [0m[36m-------------[0m [0m[36mlast marker update, should remain global[0m
    [0m[36m│[0m
@@ -32,11 +32,11 @@ expression: lint(stringify! (s24_marker_spam))
    [0m[36m=[0m [33mhelp[0m: Using `setMarker*Local` on all except the last call reduces network updates
 
 
-[0m[1m[38;5;14mhelp[L-S24][0m[1m: Repeated calls to global marker updates[0m
+[0m[1m[38;5;11mwarning[L-S24][0m[1m: Repeated calls to global marker updates[0m
    [0m[36m┌─[0m s24_marker_spam.sqf:20:13
    [0m[36m│[0m
-[0m[36m20[0m [0m[36m│[0m     _marker [0m[36msetMarkerShape[0m "ICON";
-   [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^^[0m [0m[36muse setMarkerShapeLocal[0m
+[0m[36m20[0m [0m[36m│[0m     _marker [0m[33msetMarkerShape[0m "ICON";
+   [0m[36m│[0m             [0m[33m^^^^^^^^^^^^^^[0m [0m[33muse setMarkerShapeLocal[0m
 [0m[36m21[0m [0m[36m│[0m     _marker setMarkerType "hd_dot";
    [0m[36m│[0m             [0m[36m-------------[0m [0m[36mlast marker update, should remain global[0m
    [0m[36m│[0m
@@ -44,11 +44,11 @@ expression: lint(stringify! (s24_marker_spam))
    [0m[36m=[0m [33mhelp[0m: Using `setMarker*Local` on all except the last call reduces network updates
 
 
-[0m[1m[38;5;14mhelp[L-S24][0m[1m: Repeated calls to global marker updates[0m
+[0m[1m[38;5;11mwarning[L-S24][0m[1m: Repeated calls to global marker updates[0m
    [0m[36m┌─[0m s24_marker_spam.sqf:23:13
    [0m[36m│[0m
-[0m[36m23[0m [0m[36m│[0m     _marker [0m[36msetMarkerColor[0m "ColorRed";
-   [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^^[0m [0m[36muse setMarkerColorLocal[0m
+[0m[36m23[0m [0m[36m│[0m     _marker [0m[33msetMarkerColor[0m "ColorRed";
+   [0m[36m│[0m             [0m[33m^^^^^^^^^^^^^^[0m [0m[33muse setMarkerColorLocal[0m
 [0m[36m24[0m [0m[36m│[0m     _marker setMarkerSize [1, 1];
    [0m[36m│[0m             [0m[36m-------------[0m [0m[36mlast marker update, should remain global[0m
    [0m[36m│[0m

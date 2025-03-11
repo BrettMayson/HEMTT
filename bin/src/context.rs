@@ -6,7 +6,7 @@ use std::{
 };
 
 use hemtt_common::config::ProjectConfig;
-use hemtt_workspace::{addons::Addon, LayerType, Workspace, WorkspacePath};
+use hemtt_workspace::{LayerType, Workspace, WorkspacePath, addons::Addon};
 
 use crate::error::Error;
 
@@ -226,6 +226,10 @@ impl Context {
     pub fn state(&self) -> Arc<State> {
         self.state.clone()
     }
+    #[must_use]
+    pub fn with_config(self, config: ProjectConfig) -> Self {
+        Self { config, ..self }
+    }
 }
 
 fn version_check(
@@ -235,7 +239,9 @@ fn version_check(
 ) -> Result<(), Error> {
     let version = config.version().get(workspace.vfs());
     if let Err(hemtt_common::Error::Git(_)) = version {
-        error!("Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml");
+        error!(
+            "Failed to find a git repository with at least one commit, if you are not using git add the following to your project.toml"
+        );
         println!("\n[version]\ngit_hash = 0\n");
         std::process::exit(1);
     };
@@ -257,7 +263,9 @@ fn version_check(
                     );
                     println!("\nRead more about Version Configuration in {link}");
                 } else {
-                    println!("\nRead more about Version Configuration at https://hemtt.dev/configuration/version.html");
+                    println!(
+                        "\nRead more about Version Configuration at https://hemtt.dev/configuration/version.html"
+                    );
                 }
             }
             hemtt_common::version::Error::ExpectedMajor => {
@@ -281,7 +289,9 @@ fn version_check(
                 error!("HEMTT is not able to determine the source of the version.");
                 println!("\nThere are two ways to define the version of your project");
                 println!("\n1. The `path` field in the `version` table in your project.toml");
-                println!("\n2. The `major`, `minor`, `patch`, and `build` fields in the `version` table in your project.toml");
+                println!(
+                    "\n2. The `major`, `minor`, `patch`, and `build` fields in the `version` table in your project.toml"
+                );
                 println!("Currently both are defined, only one can be used.");
             }
         }

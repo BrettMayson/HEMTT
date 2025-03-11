@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/bootstrap/";
 
@@ -64,6 +64,7 @@ bootstrap!(define_undef);
 bootstrap!(define_use_define);
 bootstrap!(define_variable_recursion);
 bootstrap!(define_with_dash);
+bootstrap!(double_escape_newline);
 bootstrap!(group_unit);
 bootstrap!(hashtag_outside_macro);
 bootstrap!(if_digits);
@@ -87,4 +88,5 @@ bootstrap!(self_recursion);
 bootstrap!(sqf_select);
 bootstrap!(sqf);
 bootstrap!(strings);
+bootstrap!(triple_backslash);
 bootstrap!(utf);

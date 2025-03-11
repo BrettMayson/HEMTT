@@ -179,6 +179,9 @@ pub struct Command {
     dev: super::dev::DevArgs,
 
     #[clap(flatten)]
+    binarize: super::dev::BinarizeArgs,
+
+    #[clap(flatten)]
     just: super::JustArgs,
 
     #[clap(flatten)]
@@ -287,6 +290,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     } else {
         let mut executor = super::dev::context(
             &cmd.dev,
+            &cmd.binarize,
             &cmd.just,
             launch.optionals(),
             launch.binarize(),

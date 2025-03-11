@@ -48,7 +48,7 @@ Using `select` on an array with 0 and 1 can be replaced with `parseNumber` for b
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -71,7 +71,6 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let (_, database) = data;
         let Expression::BinaryCommand(BinaryCommand::Named(name), expression, condition, _) = target
         else {
             return Vec::new();
@@ -85,10 +84,10 @@ impl LintRunner<LintData> for Runner {
         if args.len() != 2 {
             return Vec::new();
         }
-        let Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
+        let &Expression::Number(FloatOrd(mut lhs), _) = &args[0] else {
             return Vec::new();
         };
-        let Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
+        let &Expression::Number(FloatOrd(mut rhs), _) = &args[1] else {
             return Vec::new();
         };
         if !(match &**condition {
@@ -98,9 +97,9 @@ impl LintRunner<LintData> for Runner {
             | Expression::ConsumeableArray(_, _)
             | Expression::Variable(_, _) => false,
             Expression::String(_, _, _) | Expression::Boolean(_, _) => true,
-            Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), database),
-            Expression::UnaryCommand(cmd, _, _) => safe_command(cmd.as_str(), database),
-            Expression::BinaryCommand(cmd, _, _, _) => safe_command(cmd.as_str(), database),
+            Expression::NularCommand(cmd, _) => safe_command(cmd.as_str(), &data.database),
+            Expression::UnaryCommand(cmd, _, _) => safe_command(cmd.as_str(), &data.database),
+            Expression::BinaryCommand(cmd, _, _, _) => safe_command(cmd.as_str(), &data.database),
         }) {
             return Vec::new();
         }
