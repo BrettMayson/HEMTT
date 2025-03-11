@@ -46,7 +46,7 @@ False positives are possible if the var could be undefined, e.g.:
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(false)
+        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
