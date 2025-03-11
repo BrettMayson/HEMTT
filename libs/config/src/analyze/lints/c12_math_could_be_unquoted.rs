@@ -1,6 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::config::{LintConfig, LintEnabled, ProjectConfig};
+use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Diagnostic, Processed, Severity},
@@ -33,17 +33,18 @@ x = '1+1';
 
 **Correct**
 ```hpp
-x = 1+1; // hemtt will evaluate at build-time to 2
+x = 1+1; // HEMTT will evaluate at build-time to 2
 ```
 
 ### Explanation
-Quoted math statements will have to be evaulated in-game
-"
+Quoted math statements will have to be evaulated on each use in-game, by allowing HEMTT to evaluate the math at build-time you can save some performance."
     }
 
     fn default_config(&self) -> LintConfig {
-        // false-positives are possible
-        LintConfig::help().with_enabled(LintEnabled::Pedantic)
+        // false-positives are possible - pabst
+        // I think this will be rare enough that people can ignore the help,
+        // imo the value in this being on by default is worth the false positives - brett
+        LintConfig::help()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
