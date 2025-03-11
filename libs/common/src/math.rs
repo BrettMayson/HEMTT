@@ -5,7 +5,6 @@ use std::{collections::HashMap, str::FromStr};
 #[must_use]
 /// Evaluates a mathematical expression
 pub fn eval(expression: &str) -> Option<f64> {
-    println!("Evaluating: {}", expression);
     evaluate_postfix(&shunting_yard(expression)?)
 }
 
