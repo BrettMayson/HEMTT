@@ -121,7 +121,7 @@ impl Code for CodeS26ShortCircuitBoolVar {
     }
 
     fn note(&self) -> Option<String> {
-        Some("remove the { } and use the variable directly".to_string())
+        Some("remove the { } and use the variable directly (if safe to do so)".to_string())
     }
 
     fn help(&self) -> Option<String> {

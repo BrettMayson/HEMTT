@@ -8,4 +8,4 @@ expression: lint(stringify! (s26_short_circuit_bool_var))
 [0m[36m7[0m [0m[36m│[0m if (_test1 && {[0m[36m_test2[0m}) then { };
   [0m[36m│[0m                [0m[36m^^^^^^[0m
   [0m[36m│[0m
-  [0m[36m=[0m [36mnote[0m: remove the { } and use the variable directly
+  [0m[36m=[0m [36mnote[0m: remove the { } and use the variable directly (if safe to do so)
