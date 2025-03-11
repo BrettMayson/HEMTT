@@ -297,15 +297,15 @@ impl Processor {
 
     fn output(&mut self, token: Arc<Token>, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
-            if token.symbol().is_escape() {
-                self.backslashes += 1;
-            } else {
-                self.backslashes = 0;
-            }
             if token.symbol().is_newline() && self.backslashes % 2 == 1 {
                 self.backslashes = 0;
                 buffer.pop();
                 return;
+            }
+            if token.symbol().is_escape() {
+                self.backslashes += 1;
+            } else {
+                self.backslashes = 0;
             }
             self.token_count += 1;
             buffer.push(Output::Direct(token));
