@@ -13,8 +13,9 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    Inspect(utils::inspect::Command),
+    Bom(utils::bom::Command),
     Config(utils::config::Command),
+    Inspect(utils::inspect::Command),
     Paa(utils::paa::Command),
     Pbo(utils::pbo::Command),
     Sqf(utils::sqf::Command),
@@ -27,11 +28,14 @@ enum Subcommands {
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     match &cmd.commands {
-        Subcommands::Inspect(cmd) => {
-            utils::inspect::execute(cmd)?;
+        Subcommands::Bom(cmd) => {
+            utils::bom::execute(cmd)?;
         }
         Subcommands::Config(cmd) => {
             utils::config::execute(cmd)?;
+        }
+        Subcommands::Inspect(cmd) => {
+            utils::inspect::execute(cmd)?;
         }
         Subcommands::Paa(cmd) => {
             utils::paa::execute(cmd)?;

@@ -435,6 +435,20 @@ mod tests {
             })
         );
         assert_eq!(
+            property().parse("math = -0.01*0.5;"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                value: Value::Number(crate::Number::Float32 {
+                    value: -0.01 * 0.5,
+                    span: 7..16,
+                }),
+                expected_array: false,
+            })
+        );
+        assert_eq!(
             property().parse("math = 1 + one;"),
             Ok(Property::MissingSemicolon(
                 crate::Ident {

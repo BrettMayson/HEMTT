@@ -48,7 +48,7 @@ regex = { workspace = true }
 reqwest = { version = "0.12.12", features = ["blocking", "json"] }
 rhai = "1.21.0"
 rust-embed = "8.6.0"
-semver = "1.0.25"
+semver = "1.0.26"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 state = "0.6.0"
@@ -56,12 +56,12 @@ supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3.37", features = ["formatting"] }
+time = { version = "0.3.39", features = ["formatting"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.0.3"
+webbrowser = "1.0.4"
 whoami = "1.5.2"
 zip = { workspace = true }
 
