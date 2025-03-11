@@ -29,8 +29,8 @@ pub fn number() -> impl Parser<char, Number, Error = Simple<char>> {
                 }
             }),
         )))
-        .map(|(sign, value)| match sign {
-            Some(_) => value.negate(),
+        .map_with_span(|(sign, value), span| match sign {
+            Some(_) => value.negate(span),
             None => value,
         })
 }
@@ -92,6 +92,8 @@ where
 mod tests {
     use chumsky::Parser;
 
+    use crate::Number;
+
     #[test]
     fn number_digits() {
         assert_eq!(super::number_digits().parse("123"), Ok(vec!['1', '2', '3']));
@@ -125,7 +127,56 @@ mod tests {
         assert_eq!(super::number_float_basic().parse("123.0abc"), Ok(123.0));
         assert_eq!(super::number_float_basic().parse("123.456"), Ok(123.456));
         assert_eq!(super::number_float_basic().parse("123.456abc"), Ok(123.456));
+        assert_eq!(super::number_float_basic().parse("0.01"), Ok(0.01));
+        assert_eq!(super::number_float_basic().parse("0.5"), Ok(0.5));
         assert!(super::number_float_basic().parse("abc").is_err());
+    }
+
+    #[test]
+    fn number_float_negative() {
+        assert_eq!(
+            super::number().parse("-123.0"),
+            Ok(Number::Float32 {
+                value: -123.0,
+                span: 0..6
+            })
+        );
+        assert_eq!(
+            super::number().parse("-123.0abc"),
+            Ok(Number::Float32 {
+                value: -123.0,
+                span: 0..6
+            })
+        );
+        assert_eq!(
+            super::number().parse("-123.456"),
+            Ok(Number::Float32 {
+                value: -123.456,
+                span: 0..8
+            })
+        );
+        assert_eq!(
+            super::number().parse("-123.456abc"),
+            Ok(Number::Float32 {
+                value: -123.456,
+                span: 0..8
+            })
+        );
+        assert_eq!(
+            super::number().parse("-0.01"),
+            Ok(Number::Float32 {
+                value: -0.01,
+                span: 0..5
+            })
+        );
+        assert_eq!(
+            super::number().parse("-0.5"),
+            Ok(Number::Float32 {
+                value: -0.5,
+                span: 0..4
+            })
+        );
+        assert!(super::number().parse("-abc").is_err());
     }
 
     #[test]
