@@ -30,6 +30,7 @@ mod whitespace;
 pub struct Processor {
     ifstates: IfStates,
     defines: Defines,
+    backslashes: usize,
 
     included_files: Vec<WorkspacePath>,
     file_stack: Vec<WorkspacePath>,
@@ -296,11 +297,13 @@ impl Processor {
 
     fn output(&mut self, token: Arc<Token>, buffer: &mut Vec<Output>) {
         if self.ifstates.reading() && !token.symbol().is_comment() {
-            if token.symbol().is_newline()
-                && buffer
-                    .last()
-                    .is_some_and(|t| t.last_symbol().is_some_and(Symbol::is_escape))
-            {
+            if token.symbol().is_escape() {
+                self.backslashes += 1;
+            } else {
+                self.backslashes = 0;
+            }
+            if token.symbol().is_newline() && self.backslashes % 2 == 1 {
+                self.backslashes = 0;
                 buffer.pop();
                 return;
             }
