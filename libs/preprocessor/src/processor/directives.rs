@@ -179,7 +179,7 @@ impl Processor {
             .symbol()
             .matching_enclosure()
             .expect("is_include_enclosure should always have a matching_enclosure");
-        let mut path = Vec::new();
+        let mut path_tokens = Vec::new();
         for token in stream.by_ref() {
             let symbol = token.symbol();
             if symbol == &close {
@@ -188,14 +188,14 @@ impl Processor {
             if symbol.is_newline() {
                 return Err(IncludeNotEncased::code(
                     token.as_ref().clone(),
-                    path,
+                    path_tokens,
                     Some(open.as_ref().clone()),
                 ));
             }
             if symbol.is_eoi() {
                 return Err(UnexpectedEOF::code(token.as_ref().clone()));
             }
-            path.push(token);
+            path_tokens.push(token);
         }
 
         if let Err(Error::Code(code)) = Self::expect_nothing_to_newline(stream) {
@@ -214,25 +214,24 @@ impl Processor {
                 path: found_path,
                 case_mismatch,
             })) = current.locate(
-                &path
+                &path_tokens
                     .iter()
                     .map(std::string::ToString::to_string)
                     .collect::<String>(),
             )
             else {
-                return Err(IncludeNotFound::code(path));
+                return Err(IncludeNotFound::code(path_tokens));
             };
             if let Some(case_mismatch) = case_mismatch {
                 self.warnings.push(Arc::new(IncludeCase::new(
-                    path.iter().map(|t| t.as_ref().clone()).collect(),
+                    path_tokens.iter().map(|t| t.as_ref().clone()).collect(),
                     case_mismatch,
                 )));
             }
             found_path
         };
         let tokens = crate::parse::file(&path)?;
-        self.file_stack.push(path.clone());
-        self.included_files.push(path);
+        self.add_include(path, path_tokens)?;
         let mut stream = tokens.into_iter().peekmore();
         let ret = self.file(&mut pragma.child(), &mut stream, buffer);
         self.file_stack.pop();
