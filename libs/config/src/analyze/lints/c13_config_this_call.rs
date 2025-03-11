@@ -70,12 +70,11 @@ impl LintRunner<LintData> for Runner {
         };
 
         let raw_string = target_str.value();
-        let count_this_call: Vec<_> = raw_string.match_indices("_this call ").collect();
-        if count_this_call.is_empty() {
+        let count_this_call = raw_string.match_indices("_this call ").count();
+        if count_this_call == 0 {
             return vec![];
         }
-        let count_this: Vec<_> = raw_string.match_indices("_this").collect();
-        if count_this_call.len() != count_this.len() {
+        if count_this_call != raw_string.match_indices("_this").count() {
             // must be some other use of _this
             return vec![];
         }
