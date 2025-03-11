@@ -64,6 +64,7 @@ bootstrap!(define_undef);
 bootstrap!(define_use_define);
 bootstrap!(define_variable_recursion);
 bootstrap!(define_with_dash);
+bootstrap!(double_escape_newline);
 bootstrap!(group_unit);
 bootstrap!(hashtag_outside_macro);
 bootstrap!(if_digits);
