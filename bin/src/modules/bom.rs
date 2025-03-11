@@ -72,4 +72,8 @@ impl Code for BOMError {
     fn message(&self) -> String {
         format!("File `{}` has a BOM marker", self.file)
     }
+
+    fn help(&self) -> Option<String> {
+        Some("Run `hemtt utils bom` to remove BOM markers".to_string())
+    }
 }
