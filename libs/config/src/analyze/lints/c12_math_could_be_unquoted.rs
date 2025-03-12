@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, Item, Number, Value};
+use crate::{analyze::LintData, Item, Number, Property, Value};
 
 crate::analyze::lint!(LintC12MathCouldBeUnquoted);
 
@@ -51,29 +51,36 @@ Quoted math statements will have to be evaulated on each use in-game, by allowin
         vec![Box::new(Runner)]
     }
 }
-
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Value;
+    type Target = crate::Property;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
-        target: &crate::Value,
+        target: &crate::Property,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let mut codes = Vec::new();
         let Some(processed) = processed else {
             return vec![];
         };
-        match target {
+        let Property::Entry { name, value, .. } = target else {
+            return vec![];
+        };
+        let name = name.as_str().to_lowercase();
+        if ["text", "name", "displayname"].contains(&name.as_str()) {
+            return vec![];
+        }
+        let check_if_equation = !["initspeed"].contains(&name.as_str());
+        match value {
             Value::Array(arr) => {
                 for item in &arr.items {
-                    check_item(item, processed, config, &mut codes);
+                    check_item(item, processed, config, check_if_equation, &mut codes);
                 }
             }
-            Value::Str(str) => check_str(str, processed, config, &mut codes),
+            Value::Str(str) => check_str(str, processed, config, check_if_equation, &mut codes),
             _ => {}
         }
 
@@ -85,16 +92,17 @@ fn check_item(
     target: &crate::Item,
     processed: &Processed,
     config: &LintConfig,
+    check_if_equation: bool,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
     match target {
         Item::Array(items) => {
             for element in items {
-                check_item(element, processed, config, codes);
+                check_item(element, processed, config, check_if_equation, codes);
             }
         }
         Item::Str(taget_str) => {
-            check_str(taget_str, processed, config, codes);
+            check_str(taget_str, processed, config, check_if_equation, codes);
         }
         _ => {}
     }
@@ -104,11 +112,12 @@ fn check_str(
     target_str: &crate::Str,
     processed: &Processed,
     config: &LintConfig,
+    check_if_equation: bool,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
     let raw_string = target_str.value();
     // check if it contains some kind of math ops (avoid false positives from `displayName = "556";`)
-    if !(raw_string.contains('+')
+    if check_if_equation && !(raw_string.contains('+')
         || raw_string.contains('-')
         || raw_string.contains('*')
         || raw_string.contains('/'))
