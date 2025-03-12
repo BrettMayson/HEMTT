@@ -49,7 +49,7 @@ jobs:
           name: ${{ matrix.os.name }}-coverage
           path: out.lcov
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: out.lcov
           fail_ci_if_error: true
