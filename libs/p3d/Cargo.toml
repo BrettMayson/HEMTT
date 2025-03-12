@@ -13,5 +13,4 @@ hemtt-common = { path = "../common" }
 hemtt-workspace = { path = "../workspace" }
 
 byteorder = { workspace = true }
-indexmap = { workspace = true }
 thiserror = { workspace = true }
