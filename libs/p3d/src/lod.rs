@@ -38,7 +38,6 @@ impl LOD {
         let num_face_normals = input.read_u32::<LittleEndian>()?;
         let num_faces = input.read_u32::<LittleEndian>()?;
 
-        // input.bytes().nth(3);
         let unknown_flags = input.read_u32::<LittleEndian>()?;
 
         let mut points: Vec<Point> = Vec::with_capacity(num_points as usize);
