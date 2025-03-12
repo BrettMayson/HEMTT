@@ -39,6 +39,7 @@ lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
 lint!(s26_short_circuit_bool_var);
+lint!(s27_select_count);
 lint!(s28_banned_macros);
 
 fn lint(file: &str) -> String {
