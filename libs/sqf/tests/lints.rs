@@ -23,8 +23,8 @@ macro_rules! lint {
 lint!(s02_event_handler_case);
 lint!(s03_static_typename);
 lint!(s04_command_case);
-lint!(s05_if_assign);
 lint!(s05_if_assign_emoji);
+lint!(s05_if_assign);
 lint!(s06_find_in_str);
 lint!(s07_select_parse_number);
 lint!(s08_format_args);
@@ -38,6 +38,7 @@ lint!(s21_invalid_comparisons);
 lint!(s22_this_call);
 lint!(s23_reassign_reserved_variable);
 lint!(s24_marker_spam);
+lint!(s26_short_circuit_bool_var);
 lint!(s27_select_count);
 lint!(s28_banned_macros);
 
