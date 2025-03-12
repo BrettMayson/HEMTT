@@ -5,7 +5,7 @@ use hemtt_common::io::{ReadExt, WriteExt};
 
 use crate::{Error, Vertex};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Face {
     pub vertices: Vec<Vertex>,
     pub flags: u32,

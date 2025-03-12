@@ -2,19 +2,19 @@ use std::io::{Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
-use indexmap::IndexMap;
 
 use crate::{Error, Face, Point};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct LOD {
     pub version_major: u32,
     pub version_minor: u32,
+    pub unknown_flags: u32,
     pub resolution: f32,
     pub points: Vec<Point>,
     pub face_normals: Vec<(f32, f32, f32)>,
     pub faces: Vec<Face>,
-    pub taggs: IndexMap<String, Box<[u8]>>,
+    pub taggs: Vec<(String, Box<[u8]>)>,
 }
 
 impl LOD {
@@ -38,7 +38,8 @@ impl LOD {
         let num_face_normals = input.read_u32::<LittleEndian>()?;
         let num_faces = input.read_u32::<LittleEndian>()?;
 
-        input.bytes().nth(3);
+        // input.bytes().nth(3);
+        let unknown_flags = input.read_u32::<LittleEndian>()?;
 
         let mut points: Vec<Point> = Vec::with_capacity(num_points as usize);
         let mut face_normals: Vec<(f32, f32, f32)> = Vec::with_capacity(num_face_normals as usize);
@@ -67,7 +68,7 @@ impl LOD {
             ));
         }
 
-        let mut taggs: IndexMap<String, Box<[u8]>> = IndexMap::new();
+        let mut taggs: Vec<(String, Box<[u8]>)> = Vec::new();
 
         loop {
             input.bytes().next();
@@ -81,7 +82,7 @@ impl LOD {
                 break;
             }
 
-            taggs.insert(name, buffer);
+            taggs.push((name, buffer));
         }
 
         let resolution = input.read_f32::<LittleEndian>()?;
@@ -89,6 +90,7 @@ impl LOD {
         Ok(Self {
             version_major,
             version_minor,
+            unknown_flags,
             resolution,
             points,
             face_normals,
@@ -115,7 +117,7 @@ impl LOD {
         output.write_u32::<LittleEndian>(points_count)?;
         output.write_u32::<LittleEndian>(face_normals_count)?;
         output.write_u32::<LittleEndian>(faces_count)?;
-        output.write_all(b"\0\0\0\0")?;
+        output.write_u32::<LittleEndian>(self.unknown_flags)?;
 
         for point in &self.points {
             point.write(output)?;
