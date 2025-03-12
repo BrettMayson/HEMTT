@@ -1699,7 +1699,6 @@ dependencies = [
  "byteorder",
  "hemtt-common",
  "hemtt-workspace",
- "indexmap",
  "thiserror 2.0.12",
 ]
 
