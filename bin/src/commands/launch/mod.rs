@@ -10,7 +10,6 @@ use crate::{
         bcle7_can_not_quicklaunch::CanNotQuickLaunch,
     },
     error::Error,
-    link::create_link,
     report::Report,
 };
 
@@ -301,19 +300,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
         if report.failed() {
             return Ok(report);
-        }
-
-        let prefix_folder = launcher.arma3dir().join(mainprefix);
-        if !prefix_folder.exists() {
-            std::fs::create_dir_all(&prefix_folder)?;
-        }
-
-        let link = prefix_folder.join(executor.ctx().config().prefix());
-        if !link.exists() {
-            create_link(
-                &link,
-                executor.ctx().build_folder().expect("build folder exists"),
-            )?;
         }
     }
 
