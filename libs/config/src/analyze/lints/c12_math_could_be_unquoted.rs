@@ -26,7 +26,7 @@ impl Lint<LintData> for LintC12MathCouldBeUnquoted {
     fn documentation(&self) -> &'static str {
         r#"### Configuration
 
-- **ignore**: Specifies a list of properties to ignore, typically because they contain false positives.
+- **ignore**: Specifies a list of properties to ignore, typically because they may contain false positives.
 - **forced**: Specifies a boolean to check all properites for numbers, or list of properties that should be checked to be numbers.
 
 **default values shown below**
