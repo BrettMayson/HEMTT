@@ -24,7 +24,20 @@ impl Lint<LintData> for LintC12MathCouldBeUnquoted {
     }
 
     fn documentation(&self) -> &'static str {
-        "### Example
+        r#"### Configuration
+
+- **ignore**: Specifies a list of properties to ignore, typically because they may contain false positives.
+- **forced**: Specifies a boolean to check all properites for numbers, or list of properties that should be checked to be numbers.
+
+**default values shown below**
+
+```toml
+[lints.config.math_could_be_unquoted]
+options.ignore = ["text", "name", "displayname"]
+options.forced = ["initSpeed"]
+```
+
+### Example
 
 **Incorrect**
 ```hpp
@@ -37,7 +50,7 @@ x = 1+1; // HEMTT will evaluate at build-time to 2
 ```
 
 ### Explanation
-Quoted math statements will have to be evaulated on each use in-game, by allowing HEMTT to evaluate the math at build-time you can save some performance."
+Quoted math statements will have to be evaulated on each use in-game, by allowing HEMTT to evaluate the math at build-time you can save some performance."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -70,10 +83,23 @@ impl LintRunner<LintData> for Runner {
             return vec![];
         };
         let name = name.as_str().to_lowercase();
-        if ["text", "name", "displayname"].contains(&name.as_str()) {
+        let ignore = if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
+            ignore.iter().map(|v| v.as_str().expect("ignore items must be strings")).collect::<Vec<&str>>()
+        } else {
+            vec!["text", "name", "displayname"]
+        };
+        if ignore.contains(&name.as_str()) {
             return vec![];
         }
-        let check_if_equation = !["initspeed"].contains(&name.as_str());
+        let check_if_equation = !match config.option("forced") {
+            Some(toml::Value::Boolean(forced)) => *forced,
+            Some(toml::Value::Array(forced)) => forced.iter().map(|v| v.as_str().expect("forced items must be strings").to_lowercase()).any(|x| x == name.as_str()),
+            None => ["initspeed"].contains(&name.as_str()),
+            _ => {
+                println!("Invalid forced value on math_could_be_unquoted, expected boolean or array of strings");
+                false
+            }
+        };
         match value {
             Value::Array(arr) => {
                 for item in &arr.items {
