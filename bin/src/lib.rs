@@ -106,7 +106,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
-    let update_thread = std::thread::spawn(|| check_for_update());
+    let update_thread = std::thread::spawn(check_for_update);
 
     trace!("version: {}", env!("HEMTT_VERSION"));
     trace!("platform: {}", std::env::consts::OS);
