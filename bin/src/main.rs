@@ -44,10 +44,6 @@ It is always best to the include the log and a link to your project when reporti
         }
     };
 
-    let update_thread = std::thread::spawn(|| {
-        hemtt::check_for_update()
-    });
-
     if let Err(e) = hemtt::execute(&cli) {
         if let hemtt::Error::Preprocessor(e) = &e {
             if let Some(code) = e.get_code() {
@@ -59,17 +55,5 @@ It is always best to the include the log and a link to your project when reporti
         }
         error!("{}", e);
         std::process::exit(1);
-    }
-
-    match update_thread.join() {
-        Err(e) => {
-            error!("Failed to check for updates: {e:?}");
-        }
-        Ok(Some(lines)) => {
-            for line in lines {
-                tracing::info!("{}", line);
-            }
-        }
-        Ok(None) => {}
     }
 }

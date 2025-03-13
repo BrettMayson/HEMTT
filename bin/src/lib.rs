@@ -106,6 +106,8 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
+    let update_thread = std::thread::spawn(|| check_for_update());
+
     trace!("version: {}", env!("HEMTT_VERSION"));
     trace!("platform: {}", std::env::consts::OS);
 
@@ -158,6 +160,19 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             std::process::exit(1);
         }
     }
+
+    match update_thread.join() {
+        Err(e) => {
+            error!("Failed to check for updates: {e:?}");
+        }
+        Ok(Some(lines)) => {
+            for line in lines {
+                tracing::info!("{}", line);
+            }
+        }
+        Ok(None) => {}
+    }
+
     Ok(())
 }
 
@@ -202,13 +217,13 @@ pub fn is_ci() -> bool {
 }
 
 /// Check for updates to HEMTT
-/// 
+///
 /// # Returns
 /// If an update is available, a message to display to the user
-/// 
+///
 /// # Panics
 /// If the user's home directory does not exist
-pub fn check_for_update() -> Option<Vec<String>> {
+fn check_for_update() -> Option<Vec<String>> {
     if is_ci() {
         return None;
     }
