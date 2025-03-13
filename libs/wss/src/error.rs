@@ -15,4 +15,10 @@ pub enum Error {
     #[error("WAV Error: {0}")]
     /// Error while reading or writing a WAV file
     Wav(#[from] hound::Error),
+    #[error("Ogg Error: {0}")]
+    /// Error while reading an OGG file
+    Ogg(#[from] vorbis_rs::VorbisError),
+    #[error("MP3 Error: {0}")]
+    /// Error while reading an MP3 file
+    Mp3(#[from] puremp3::Error),
 }

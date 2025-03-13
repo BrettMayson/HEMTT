@@ -1,3 +1,4 @@
+pub mod audio;
 pub mod bom;
 pub mod config;
 pub mod inspect;

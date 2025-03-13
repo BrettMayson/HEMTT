@@ -25,11 +25,11 @@ fn test_file(path: &str) {
     let wav = wss.to_wav().expect("Failed to convert WSS to WAV");
     std::fs::write(&wav_path, &wav).expect("Failed to write WAV file");
     {
-        let wss_byte = Wss::from_wav_with_compression(&wav[..], &hemtt_wss::Compression::Byte)
+        let wss_byte = Wss::from_wav_with_compression(&wav[..], hemtt_wss::Compression::Byte)
             .expect("Failed to convert WAV to WSS");
         assert_eq!(wss_byte.channels(), 2);
         assert_eq!(wss_byte.sample_rate(), 44100);
-        assert_eq!(wss_byte.bits_per_second(), 16);
+        assert_eq!(wss_byte.bits_per_sample(), 16);
         std::fs::write(
             wav_path.with_extension("byte.wav"),
             wss_byte.to_wav().expect("failed to convert to wav"),
@@ -37,11 +37,23 @@ fn test_file(path: &str) {
         .expect("Failed to write WAV file");
     }
     {
-        let wss_byte = Wss::from_wav_with_compression(&wav[..], &hemtt_wss::Compression::Nibble)
+        let wss_byte = Wss::from_wav_with_compression(&wav[..], hemtt_wss::Compression::Byte)
             .expect("Failed to convert WAV to WSS");
         assert_eq!(wss_byte.channels(), 2);
         assert_eq!(wss_byte.sample_rate(), 44100);
-        assert_eq!(wss_byte.bits_per_second(), 16);
+        assert_eq!(wss_byte.bits_per_sample(), 16);
+        std::fs::write(
+            wav_path.with_extension("byte.ogg"),
+            wss_byte.to_ogg().expect("failed to convert to ogg"),
+        )
+        .expect("Failed to write WAV file");
+    }
+    {
+        let wss_byte = Wss::from_wav_with_compression(&wav[..], hemtt_wss::Compression::Nibble)
+            .expect("Failed to convert WAV to WSS");
+        assert_eq!(wss_byte.channels(), 2);
+        assert_eq!(wss_byte.sample_rate(), 44100);
+        assert_eq!(wss_byte.bits_per_sample(), 16);
         std::fs::write(
             wav_path.with_extension("nibble.wav"),
             wss_byte.to_wav().expect("failed to convert to wav"),

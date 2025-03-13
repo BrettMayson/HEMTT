@@ -15,3 +15,5 @@ byteorder = { workspace = true }
 thiserror = { workspace = true }
 
 hound = "3.5.1"
+puremp3 = "0.1.0"
+vorbis_rs = "0.5.5"

@@ -12,5 +12,5 @@ fn ace_metal_detector() {
     let wss2 = Wss::from_wav(&wav[..]).expect("Failed to convert WAV to WSS");
     assert_eq!(wss2.channels(), 1);
     assert_eq!(wss2.sample_rate(), 44100);
-    assert_eq!(wss2.bits_per_second(), 16);
+    assert_eq!(wss2.bits_per_sample(), 16);
 }

@@ -30,6 +30,7 @@ hemtt-signing = { path = "../libs/signing" }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-stringtable = { path = "../libs/stringtable" }
 hemtt-workspace = { path = "../libs/workspace" }
+hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }

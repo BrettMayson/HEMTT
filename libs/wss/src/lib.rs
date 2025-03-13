@@ -1,9 +1,11 @@
-use std::io::{BufReader, Read, Seek, Write};
+use std::io::{BufReader, Read, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 mod compression;
 mod error;
+mod mp3;
+mod ogg;
 mod wav;
 
 pub use compression::Compression;
@@ -16,7 +18,7 @@ pub struct Wss {
     sample_rate: u32,
     bytes_per_second: u32,
     block_align: u16,
-    bits_per_second: u16,
+    bits_per_sample: u16,
     output_size: u16,
     data: Vec<u8>,
 }
@@ -28,7 +30,7 @@ impl Wss {
     /// [`std::io::Error`] if an IO error occurs
     /// [`Error::UnsupportedFileType`] if the file is not a WSS file
     /// [`Error::InvalidCompressionValue`] if the compression value is invalid
-    pub fn read<I: Read + Seek>(input: &mut I) -> Result<Self, Error> {
+    pub fn read<R: Read>(input: R) -> Result<Self, Error> {
         let mut reader = BufReader::new(input);
 
         let mut buffer = [0; 4];
@@ -45,7 +47,7 @@ impl Wss {
         let sample_rate = reader.read_u32::<LittleEndian>()?;
         let bytes_per_second = reader.read_u32::<LittleEndian>()?;
         let block_align = reader.read_u16::<LittleEndian>()?;
-        let bits_per_second = reader.read_u16::<LittleEndian>()?;
+        let bits_per_sample = reader.read_u16::<LittleEndian>()?;
         let output_size = reader.read_u16::<LittleEndian>()?;
 
         let mut data = Vec::new();
@@ -58,7 +60,7 @@ impl Wss {
             sample_rate,
             bytes_per_second,
             block_align,
-            bits_per_second,
+            bits_per_sample,
             output_size,
             data,
         })
@@ -72,14 +74,23 @@ impl Wss {
         output.write_all(b"WSS0")?;
         output.write_u32::<LittleEndian>(self.compression.to_u32())?;
         output.write_u16::<LittleEndian>(self.format)?;
+        output.write_u16::<LittleEndian>(self.channels)?;
         output.write_u32::<LittleEndian>(self.sample_rate)?;
         output.write_u32::<LittleEndian>(self.bytes_per_second)?;
         output.write_u16::<LittleEndian>(self.block_align)?;
-        output.write_u16::<LittleEndian>(self.bits_per_second)?;
+        output.write_u16::<LittleEndian>(self.bits_per_sample)?;
         output.write_u16::<LittleEndian>(self.output_size)?;
         output.write_all(&self.data)?;
 
         Ok(())
+    }
+
+    pub fn set_compression(&mut self, compression: Compression) {
+        if self.compression == compression {
+            return;
+        }
+        self.data = compression.compress(&self.data());
+        self.compression = compression;
     }
 
     #[must_use]
@@ -118,8 +129,8 @@ impl Wss {
     }
 
     #[must_use]
-    pub const fn bits_per_second(&self) -> u16 {
-        self.bits_per_second
+    pub const fn bits_per_sample(&self) -> u16 {
+        self.bits_per_sample
     }
 
     #[must_use]

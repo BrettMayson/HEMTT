@@ -10,11 +10,11 @@ mod none;
 /// Reccomended to use either `Compression::Byte` or `Compression::None`
 pub enum Compression {
     /// No compression
+    #[default]
     None,
     /// Nibble compression, IMA ADPCM-inspired, not recommended
     Nibble,
     /// Byte compression, recommended
-    #[default]
     Byte,
 }
 
@@ -24,6 +24,7 @@ impl Compression {
     /// # Errors
     /// [`Error::InvalidCompressionValue`] if the value is not 0, 4, or 8
     pub const fn from_u32(value: u32) -> Result<Self, Error> {
+        let value = value & 0xFF;
         match value {
             0 => Ok(Self::None),
             4 => Ok(Self::Nibble),
@@ -57,5 +58,20 @@ impl Compression {
             Self::Nibble => nibble::compress(data),
             Self::Byte => byte::compress(data),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_compression_byte() {
+        let compression = Compression::from_u32(8).expect("Failed to read compression");
+        assert_eq!(compression, Compression::Byte);
+        assert_eq!(compression.to_u32(), 8);
+        let compression = Compression::from_u32(8 | 0xFF00).expect("Failed to read compression");
+        assert_eq!(compression, Compression::Byte);
+        assert_eq!(compression.to_u32(), 8);
     }
 }
