@@ -4,7 +4,10 @@
 //!
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 pub mod analyze;
 mod model;
@@ -12,7 +15,7 @@ pub mod parse;
 pub mod rapify;
 pub use model::*;
 
-use analyze::{Analyze, CfgPatch, ChumskyCode, LintData};
+use analyze::{Analyze, CfgPatch, ChumskyCode, DefinedFunctions, LintData};
 use chumsky::Parser;
 use hemtt_common::version::Version;
 
@@ -58,10 +61,12 @@ pub fn parse(
                 default_enabled,
             )?;
             let localizations = Arc::new(Mutex::new(vec![]));
+            let functions_defined = Arc::new(Mutex::new(HashSet::new()));
             let codes = config.analyze(
                 &LintData {
                     path: String::new(),
                     localizations: localizations.clone(),
+                    functions_defined: functions_defined.clone(),
                 },
                 project,
                 processed,
@@ -75,6 +80,10 @@ pub fn parse(
                     .into_inner()
                     .expect("not poisoned"),
                 config,
+                functions_defined: Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
+                    .expect("not poisoned")
+                    .into_inner()
+                    .expect("not poisoned"),
             })
         },
     )
@@ -86,6 +95,7 @@ pub struct ConfigReport {
     codes: Codes,
     patches: Vec<CfgPatch>,
     localized: Vec<(String, Position)>,
+    functions_defined: DefinedFunctions,
 }
 
 impl ConfigReport {
@@ -158,5 +168,10 @@ impl ConfigReport {
     /// Get the localized strings
     pub fn localized(&self) -> &[(String, Position)] {
         &self.localized
+    }
+    #[must_use]
+    /// Get the defined functions from `CfgFunctions`
+    pub const fn functions_defined(&self) -> &DefinedFunctions {
+        &self.functions_defined
     }
 }

@@ -148,6 +148,12 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 .iter()
                 .map(|(s, p)| (s.to_owned(), p.clone())),
         );
+    addon
+        .build_data()
+        .functions_defined()
+        .lock()
+        .expect("not poisoned")
+        .extend(configreport.functions_defined().clone());
     configreport.notes_and_helps().into_iter().for_each(|e| {
         report.push(e.clone());
     });

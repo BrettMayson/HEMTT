@@ -6,7 +6,7 @@ use std::sync::{
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
-    analyze::{analyze, lint_check},
+    analyze::{analyze, lint_all, lint_check},
     parser::{ParserError, database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
@@ -94,19 +94,33 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (codes, localizations) = analyze(
+                        let (codes, sqf_report) = analyze(
                             &sqf,
                             Some(ctx.config()),
                             &processed,
                             addon.clone(),
                             database.clone(),
                         );
-                        addon
-                            .build_data()
-                            .localizations()
-                            .lock()
-                            .expect("not poisoned")
-                            .extend(localizations);
+                        if let Some(sqf_report) = sqf_report {
+                            addon
+                                .build_data()
+                                .localizations()
+                                .lock()
+                                .expect("not poisoned")
+                                .extend(sqf_report.localizations);
+                            addon
+                                .build_data()
+                                .functions_used()
+                                .lock()
+                                .expect("not poisoned")
+                                .extend(sqf_report.functions_used);
+                            addon
+                                .build_data()
+                                .functions_defined()
+                                .lock()
+                                .expect("not poisoned")
+                                .extend(sqf_report.functions_defined);
+                        };
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
@@ -144,6 +158,23 @@ impl Module for SQFCompiler {
         }
         progress.finish_and_clear();
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
+        Ok(report)
+    }
+
+    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+        let database = self
+            .database
+            .as_ref()
+            .expect("database not initialized")
+            .clone();
+
+        report.extend(lint_all(
+            Some(ctx.config()),
+            &ctx.addons().to_vec(),
+            database,
+        ));
+
         Ok(report)
     }
 

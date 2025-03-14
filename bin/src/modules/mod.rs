@@ -47,6 +47,13 @@ pub trait Module {
     fn pre_build(&self, _ctx: &Context) -> Result<Report, Error> {
         Ok(Report::new())
     }
+    /// Executes the module's `pre_build: Episode II` phase
+    ///
+    /// # Errors
+    /// Any error that the module encounters
+    fn pre_build2(&self, _ctx: &Context) -> Result<Report, Error> {
+        Ok(Report::new())
+    }
     /// Executes the module's `post_build` phase
     ///
     /// # Errors

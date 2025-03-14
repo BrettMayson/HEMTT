@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
@@ -240,6 +241,8 @@ type RequiredVersion = (Version, WorkspacePath, Range<usize>);
 pub struct BuildData {
     required_version: Arc<RwLock<Option<RequiredVersion>>>,
     localizations: Arc<Mutex<Vec<(String, Position)>>>,
+    functions_defined: Arc<Mutex<HashSet<String>>>,
+    functions_used: Arc<Mutex<Vec<(String, Position)>>>,
 }
 
 impl BuildData {
@@ -248,6 +251,8 @@ impl BuildData {
         Self {
             required_version: Arc::new(RwLock::new(None)),
             localizations: Arc::new(Mutex::new(Vec::new())),
+            functions_defined: Arc::new(Mutex::new(HashSet::new())),
+            functions_used: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -281,6 +286,16 @@ impl BuildData {
     /// Fetches the localizations
     pub fn localizations(&self) -> Arc<Mutex<Vec<(String, Position)>>> {
         self.localizations.clone()
+    }
+    #[must_use]
+    /// Fetches the used functions
+    pub fn functions_used(&self) -> Arc<Mutex<Vec<(String, Position)>>> {
+        self.functions_used.clone()
+    }
+    #[must_use]
+    /// Fetches the used functions
+    pub fn functions_defined(&self) -> Arc<Mutex<HashSet<String>>> {
+        self.functions_defined.clone()
     }
 }
 

@@ -69,7 +69,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Some(required) = data.addon.build_data().required_version() else {
+        let Some(required) = data.addon.as_ref().expect("addon will exist").build_data().required_version() else {
             // TODO what to do here?
             return Vec::new();
         };

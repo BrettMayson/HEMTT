@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
@@ -15,9 +18,11 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
+pub type DefinedFunctions = HashSet<String>;
 pub struct LintData {
     pub(crate) path: String,
     pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
+    pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
 }
 
 lint_manager!(config, vec![]);
@@ -85,6 +90,7 @@ impl Analyze for Class {
                         |name| format!("{}/{}", data.path, name.value),
                     ),
                     localizations: data.localizations.clone(),
+                    functions_defined: data.functions_defined.clone(),
                 };
                 properties
                     .iter()
@@ -111,6 +117,7 @@ impl Analyze for Property {
                 let data = LintData {
                     path: format!("{}.{}", data.path, self.name().value),
                     localizations: data.localizations.clone(),
+                    functions_defined: data.functions_defined.clone(),
                 };
                 value.analyze(&data, project, processed, manager)
             }
