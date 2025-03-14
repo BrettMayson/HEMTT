@@ -8,11 +8,12 @@ use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
-use tracing::{Level, debug, info};
+use tracing::{Level, debug, error, info};
 
 use crate::diag_manager::DiagManager;
 use crate::workspace::EditorWorkspaces;
 
+mod audio;
 mod color;
 mod config;
 mod diag_manager;
@@ -264,11 +265,29 @@ impl Backend {
         };
         Ok(Some(serde_json::to_value(res).unwrap()))
     }
+
+    async fn convert_audio(&self, params: AudioConvertParams) -> Result<Option<Value>> {
+        println!("Converting audio: {:?}", params);
+        match audio::convert(params.url, params.to, params.out) {
+            Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
+            Err(e) => {
+                error!("Error converting audio: {}", e);
+                Ok(None)
+            }
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ProviderParams {
     url: Url,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct AudioConvertParams {
+    url: Url,
+    to: String,
+    out: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -308,6 +327,7 @@ async fn server() {
     let (service, socket) = LspService::build(|client| Backend { client })
         .custom_method("hemtt/processed", Backend::processed)
         .custom_method("hemtt/compiled", Backend::compiled)
+        .custom_method("hemtt/convertAudio", Backend::convert_audio)
         .finish();
     Server::new(read, write, socket).serve(service).await;
 }

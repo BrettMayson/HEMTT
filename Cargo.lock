@@ -1687,6 +1687,7 @@ dependencies = [
  "hemtt-preprocessor",
  "hemtt-sqf",
  "hemtt-workspace",
+ "hemtt-wss",
  "regex",
  "ropey",
  "serde",

@@ -10,7 +10,7 @@ import { Scale, ZoomStatusBarEntry } from "./zoomStatusBarEntry";
 import { BinarySizeStatusBarEntry } from "./binarySizeStatusBarEntry";
 
 export class PaaViewerProvider implements vscode.CustomReadonlyEditorProvider {
-  public static readonly viewType = "hemtt.paa";
+  public static readonly viewType = "hemtt.paaViewer";
 
   private readonly _previews = new Set<Preview>();
   private _activePreview: Preview | undefined;
