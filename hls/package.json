@@ -130,19 +130,19 @@
       },
       {
         "command": "hemtt.convertAudioWav",
-        "title": "Convert Audio to wav",
+        "title": "Convert to wav",
         "category": "HEMTT Audio",
         "enablement": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
       },
       {
         "command": "hemtt.convertAudioOgg",
-        "title": "Convert Audio to ogg",
+        "title": "Convert to ogg",
         "category": "HEMTT Audio",
         "enablement": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
       },
       {
         "command": "hemtt.convertAudioWss",
-        "title": "Convert Audio to wss",
+        "title": "Convert to wss",
         "category": "HEMTT Audio",
         "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
       }
