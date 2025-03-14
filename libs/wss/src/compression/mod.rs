@@ -64,8 +64,8 @@ impl Compression {
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::None => "None",
-            Self::Nibble => "Nibble",
-            Self::Byte => "Byte",
+            Self::Nibble => "Delta4",
+            Self::Byte => "Delta8",
         }
     }
 }
