@@ -25,23 +25,6 @@ impl Wss {
         )?
         .build()?;
 
-        // for sample in samples.chunks(self.channels() as usize * 16) {
-        //     let sample: Vec<_> = sample
-        //         .iter()
-        //         .map(|s| f32::from(*s) / f32::from(i16::MAX))
-        //         .collect();
-        //     let sample: Vec<Vec<_>> = sample.chunks(self.channels() as usize).fold(
-        //         vec![Vec::new(); self.channels() as usize],
-        //         |mut acc, s| {
-        //             for (i, s) in s.iter().enumerate() {
-        //                 acc[i].push(*s);
-        //             }
-        //             acc
-        //         },
-        //     );
-        //     enc.encode_audio_block(sample)?;
-        // }
-
         for i in 0..self.channel_data[0].len() {
             let mut sample = Vec::new();
             for channel in &self.channel_data {

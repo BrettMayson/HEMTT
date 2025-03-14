@@ -18,12 +18,6 @@ impl Wss {
         };
         let mut writer = hound::WavWriter::new(&mut cursor, spec)?;
 
-        // let samples = self.compression().decompress(&self.data);
-
-        // for sample in samples {
-        //     writer.write_sample(sample)?;
-        // }
-
         for i in 0..self.channel_data[0].len() {
             for channel in &self.channel_data {
                 writer.write_sample(channel[i])?;
