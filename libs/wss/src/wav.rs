@@ -18,10 +18,16 @@ impl Wss {
         };
         let mut writer = hound::WavWriter::new(&mut cursor, spec)?;
 
-        let samples = self.compression().decompress(&self.data);
+        // let samples = self.compression().decompress(&self.data);
 
-        for sample in samples {
-            writer.write_sample(sample)?;
+        // for sample in samples {
+        //     writer.write_sample(sample)?;
+        // }
+
+        for i in 0..self.channel_data[0].len() {
+            for channel in &self.channel_data {
+                writer.write_sample(channel[i])?;
+            }
         }
 
         drop(writer);
@@ -34,35 +40,25 @@ impl Wss {
     /// # Errors
     /// [`Error::Wav`] if an error occurs while reading the WAV file.
     pub fn from_wav<R: Read>(wav: R) -> Result<Self, Error> {
-        Self::from_wav_with_compression(wav, Compression::default())
-    }
-
-    /// Create a new WSS file from a WAV file with a specific compression type.
-    ///
-    /// # Errors
-    /// [`Error::Wav`] if an error occurs while reading the WAV file.
-    pub fn from_wav_with_compression<R: Read>(
-        wav: R,
-        mut compression: Compression,
-    ) -> Result<Self, Error> {
         let mut reader = hound::WavReader::new(wav)?;
         let channels = reader.spec().channels;
         let sample_rate = reader.spec().sample_rate;
         let bits_per_sample = reader.spec().bits_per_sample;
+
         let mut data = Vec::new();
-
-        if channels > 2 || bits_per_sample != 16 {
-            compression = Compression::None;
-        }
-
         for sample in reader.samples::<i16>() {
             data.push(sample?);
         }
-
-        let data = compression.compress(&data);
+        let mut channel_data = Vec::new();
+        for _ in 0..channels {
+            channel_data.push(Vec::new());
+        }
+        for (i, sample) in data.iter().enumerate() {
+            channel_data[i % channels as usize].push(*sample);
+        }
 
         Ok(Self {
-            compression,
+            compression: Compression::None,
             format: 1,
             channels,
             sample_rate,
@@ -70,7 +66,7 @@ impl Wss {
             block_align: channels * bits_per_sample / 8,
             bits_per_sample,
             output_size: 0,
-            data,
+            channel_data,
         })
     }
 }

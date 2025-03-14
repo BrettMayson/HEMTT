@@ -20,7 +20,7 @@ pub struct Wss {
     block_align: u16,
     bits_per_sample: u16,
     output_size: u16,
-    data: Vec<u8>,
+    channel_data: Vec<Vec<i16>>,
 }
 
 impl Wss {
@@ -53,8 +53,10 @@ impl Wss {
         let mut data = Vec::new();
         reader.read_to_end(&mut data)?;
 
+        let compression = Compression::from_u32(compression)?;
+
         Ok(Self {
-            compression: Compression::from_u32(compression)?,
+            compression,
             format,
             channels,
             sample_rate,
@@ -62,7 +64,7 @@ impl Wss {
             block_align,
             bits_per_sample,
             output_size,
-            data,
+            channel_data: compression.decompress(&data, channels),
         })
     }
 
@@ -80,27 +82,13 @@ impl Wss {
         output.write_u16::<LittleEndian>(self.block_align)?;
         output.write_u16::<LittleEndian>(self.bits_per_sample)?;
         output.write_u16::<LittleEndian>(self.output_size)?;
-        output.write_all(&self.data)?;
+        output.write_all(&self.compression.compress(&self.channel_data))?;
 
         Ok(())
     }
 
     pub fn set_compression(&mut self, compression: Compression) {
-        if self.compression == compression {
-            return;
-        }
-        self.data = compression.compress(&self.data());
         self.compression = compression;
-    }
-
-    #[must_use]
-    pub fn data_raw(&self) -> &[u8] {
-        &self.data
-    }
-
-    #[must_use]
-    pub fn data(&self) -> Vec<i16> {
-        self.compression.decompress(&self.data)
     }
 
     #[must_use]

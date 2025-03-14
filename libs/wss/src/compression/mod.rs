@@ -43,16 +43,16 @@ impl Compression {
     }
 
     #[must_use]
-    pub fn decompress(&self, data: &[u8]) -> Vec<i16> {
+    pub fn decompress(&self, data: &[u8], channels: u16) -> Vec<Vec<i16>> {
         match self {
-            Self::None => none::decompress(data),
-            Self::Nibble => nibble::decompress(data),
-            Self::Byte => byte::decompress(data),
+            Self::None => none::decompress(data, channels),
+            Self::Nibble => nibble::decompress(data, channels),
+            Self::Byte => byte::decompress(data, channels),
         }
     }
 
     #[must_use]
-    pub fn compress(&self, data: &[i16]) -> Vec<u8> {
+    pub fn compress(&self, data: &[Vec<i16>]) -> Vec<u8> {
         match self {
             Self::None => none::compress(data),
             Self::Nibble => nibble::compress(data),

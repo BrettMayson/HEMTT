@@ -3,8 +3,36 @@ const LN_10: f64 = 2.302_585_092_994_045_684_084_0;
 #[allow(clippy::excessive_precision)]
 const LOG2: f64 = 1.442_695_040_888_963_407_0;
 
+pub fn decompress(data: &[u8], channels: u16) -> Vec<Vec<i16>> {
+    let channels = channels as usize;
+    let mut working = Vec::with_capacity(channels);
+    let mut output = Vec::with_capacity(channels);
+
+    for _ in 0..channels {
+        working.push(Vec::new());
+    }
+
+    let mut current_channel = 0;
+    let mut i = 0;
+    while i < data.len() {
+        let point = data[i];
+        working[current_channel].push(point);
+        i += 1;
+        current_channel += 1;
+        if current_channel == channels {
+            current_channel = 0;
+        }
+    }
+
+    for channel in working {
+        output.push(decompress_mono(&channel));
+    }
+
+    output
+}
+
 #[allow(clippy::suboptimal_flops)]
-pub fn decompress(data: &[u8]) -> Vec<i16> {
+fn decompress_mono(data: &[u8]) -> Vec<i16> {
     let magic_number: f64 = (LN_10 * LOG2) / 28.125_740_425_151_72;
     let mut output_data = Vec::with_capacity(data.len());
     let mut last_val: i16 = 0;
@@ -37,8 +65,22 @@ pub fn decompress(data: &[u8]) -> Vec<i16> {
     output_data
 }
 
+pub fn compress(data: &[Vec<i16>]) -> Vec<u8> {
+    let data = data
+        .iter()
+        .map(|channel| compress_mono(channel))
+        .collect::<Vec<_>>();
+    let mut output = Vec::new();
+    for i in 0..data[0].len() {
+        for channel in &data {
+            output.push(channel[i]);
+        }
+    }
+    output
+}
+
 #[allow(clippy::suboptimal_flops)]
-pub fn compress(data: &[i16]) -> Vec<u8> {
+fn compress_mono(data: &[i16]) -> Vec<u8> {
     let magic_number: f64 = (LN_10 * LOG2) / 28.125_740_425_151_72;
     let mut output_data = Vec::with_capacity(data.len());
     let mut last_val: i16 = 0;
@@ -121,8 +163,8 @@ mod tests {
             test_data.push(value);
         }
 
-        let compressed = compress(&test_data);
-        let decompressed = decompress(&compressed);
+        let compressed = compress(&[test_data.clone()]);
+        let decompressed = decompress(&compressed, 1)[0].clone();
 
         let mut total_error = 0.0;
         for (&original, &decoded) in test_data.iter().zip(decompressed.iter()) {

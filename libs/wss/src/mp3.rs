@@ -21,14 +21,12 @@ impl Wss {
         compression: Compression,
     ) -> Result<Self, Error> {
         let (header, samples) = puremp3::read_mp3(mp3)?;
-        let mut data = Vec::new();
+        let mut left_out = Vec::new();
+        let mut right_out = Vec::new();
         for (left, right) in samples {
-            data.push((left.clamp(-1.0, 1.0) * 32_767.5).floor() as i16);
-            data.push((right.clamp(-1.0, 1.0) * 32_767.5).floor() as i16);
+            left_out.push((left.clamp(-1.0, 1.0) * 32_767.5).floor() as i16);
+            right_out.push((right.clamp(-1.0, 1.0) * 32_767.5).floor() as i16);
         }
-        let data = compression.compress(&data);
-        println!("Sample rate: {:?}", header.sample_rate.hz());
-        println!("Bitrate: {:?}", header.bitrate);
         Ok(Self {
             compression,
             format: 1,
@@ -38,7 +36,7 @@ impl Wss {
             block_align: 4,
             bits_per_sample: 16,
             output_size: 0,
-            data,
+            channel_data: vec![left_out, right_out],
         })
     }
 }

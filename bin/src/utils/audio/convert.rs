@@ -20,21 +20,11 @@ pub struct ConvertArgs {
 
 pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<(), Error> {
     let compression = Compression::from_u32(u32::from(compression.unwrap_or(0)))?;
-    let wss = match guess_file_type(file)? {
-        Some(SupportedFile::Wss) => {
-            let mut wss = hemtt_wss::Wss::read(std::fs::File::open(file)?)?;
-            wss.set_compression(compression);
-            wss
-        }
-        Some(SupportedFile::Wav) => {
-            hemtt_wss::Wss::from_wav_with_compression(std::fs::File::open(file)?, compression)?
-        }
-        Some(SupportedFile::Ogg) => {
-            hemtt_wss::Wss::from_ogg_with_compression(std::fs::File::open(file)?, compression)?
-        }
-        Some(SupportedFile::Mp3) => {
-            hemtt_wss::Wss::from_mp3_with_compression(std::fs::File::open(file)?, compression)?
-        }
+    let mut wss = match guess_file_type(file)? {
+        Some(SupportedFile::Wss) => hemtt_wss::Wss::read(std::fs::File::open(file)?)?,
+        Some(SupportedFile::Wav) => hemtt_wss::Wss::from_wav(std::fs::File::open(file)?)?,
+        Some(SupportedFile::Ogg) => hemtt_wss::Wss::from_ogg(std::fs::File::open(file)?)?,
+        Some(SupportedFile::Mp3) => hemtt_wss::Wss::from_mp3(std::fs::File::open(file)?)?,
         _ => {
             println!("Unsupported file type");
             return Ok(());
@@ -59,6 +49,7 @@ pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<
     let data = match extension.as_str() {
         "wss" => {
             let mut buffer = Vec::new();
+            wss.set_compression(compression);
             wss.write(&mut buffer)?;
             buffer
         }

@@ -39,6 +39,6 @@ pub fn inspect(file: &PathBuf) -> Result<(), Error> {
     println!("Sample Rate: {:?}", wss.sample_rate());
     println!("Bytes Per Second: {:?}", wss.bytes_per_second());
     println!("Bits Per Sample: {:?}", wss.bits_per_sample());
-    println!("Raw Bytes: {:?}", wss.data().len());
+    // println!("Raw Bytes: {:?}", wss.data().len());
     Ok(())
 }
