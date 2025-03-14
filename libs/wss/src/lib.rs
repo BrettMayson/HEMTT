@@ -130,4 +130,9 @@ impl Wss {
     pub const fn compression(&self) -> &Compression {
         &self.compression
     }
+
+    #[must_use]
+    pub fn size(&self) -> usize {
+        self.channel_data.iter().map(std::vec::Vec::len).sum()
+    }
 }

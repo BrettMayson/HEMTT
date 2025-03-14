@@ -5,6 +5,7 @@ use std::{
 
 use crate::Error;
 
+mod compress;
 mod convert;
 mod inspect;
 
@@ -24,6 +25,8 @@ enum Subcommands {
     Inspect(inspect::InspectArgs),
     /// Convert an audio file
     Convert(convert::ConvertArgs),
+    /// Compress wss files
+    Compress(compress::CompressArgs),
 }
 
 /// Execute the audio command
@@ -39,6 +42,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         Subcommands::Convert(args) => {
             convert::convert(&PathBuf::from(&args.file), &args.output, args.compression)
         }
+        Subcommands::Compress(_) => compress::compress(),
     }
 }
 

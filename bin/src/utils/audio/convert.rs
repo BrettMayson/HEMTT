@@ -18,6 +18,7 @@ pub struct ConvertArgs {
     pub(crate) compression: Option<u8>,
 }
 
+/// Convert an audio file
 pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<(), Error> {
     let compression = Compression::from_u32(u32::from(compression.unwrap_or(0)))?;
     let mut wss = match guess_file_type(file)? {

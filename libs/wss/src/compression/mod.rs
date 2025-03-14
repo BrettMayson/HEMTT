@@ -59,6 +59,15 @@ impl Compression {
             Self::Byte => byte::compress(data),
         }
     }
+
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::None => "None",
+            Self::Nibble => "Nibble",
+            Self::Byte => "Byte",
+        }
+    }
 }
 
 #[cfg(test)]
