@@ -1,0 +1,19 @@
+[package]
+name = "hemtt-wss"
+version = "1.0.0"
+edition = "2024"
+description = "An wss library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+hemtt-common = { path = "../common" }
+
+byteorder = { workspace = true }
+thiserror = { workspace = true }
+
+hound = "3.5.1"
+puremp3 = "0.1.0"
+vorbis_rs = "0.5.5"

@@ -13,6 +13,7 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    Audio(utils::audio::Command),
     Bom(utils::bom::Command),
     Config(utils::config::Command),
     Inspect(utils::inspect::Command),
@@ -28,6 +29,9 @@ enum Subcommands {
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     match &cmd.commands {
+        Subcommands::Audio(cmd) => {
+            utils::audio::execute(cmd)?;
+        }
         Subcommands::Bom(cmd) => {
             utils::bom::execute(cmd)?;
         }
