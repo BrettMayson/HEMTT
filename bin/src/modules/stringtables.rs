@@ -42,7 +42,7 @@ impl Module for Stringtables {
         Ok(report)
     }
 
-    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
+    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
         let report = Arc::new(Mutex::new(Report::new()));
         let mut paths = Vec::new();
         for root in ["addons", "optionals"] {
