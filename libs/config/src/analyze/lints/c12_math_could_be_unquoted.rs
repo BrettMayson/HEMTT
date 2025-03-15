@@ -94,7 +94,7 @@ impl LintRunner<LintData> for Runner {
         let check_if_equation = !match config.option("forced") {
             Some(toml::Value::Boolean(forced)) => *forced,
             Some(toml::Value::Array(forced)) => forced.iter().map(|v| v.as_str().expect("forced items must be strings").to_lowercase()).any(|x| x == name.as_str()),
-            None => ["initspeed"].contains(&name.as_str()),
+            None => ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive", "specular", "specularpower"].contains(&name.as_str()),
             _ => {
                 println!("Invalid forced value on math_could_be_unquoted, expected boolean or array of strings");
                 false
