@@ -7,7 +7,12 @@ use std::{
     },
 };
 
-use hemtt_config::{Config, analyze::lint_check, parse, rapify::Rapify};
+use hemtt_config::{
+    Config,
+    analyze::{lint_all, lint_check},
+    parse,
+    rapify::Rapify,
+};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
     WorkspacePath,
@@ -110,6 +115,14 @@ impl Module for Rapifier {
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
         Ok(report)
     }
+
+    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut report = Report::new();
+
+        report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
+
+        Ok(report)
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -137,23 +150,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
-    addon
-        .build_data()
-        .localizations()
-        .lock()
-        .expect("not poisoned")
-        .extend(
-            configreport
-                .localized()
-                .iter()
-                .map(|(s, p)| (s.to_owned(), p.clone())),
-        );
-    addon
-        .build_data()
-        .functions_defined()
-        .lock()
-        .expect("not poisoned")
-        .extend(configreport.functions_defined().clone());
+    configreport.push_to_addon(addon);
     configreport.notes_and_helps().into_iter().for_each(|e| {
         report.push(e.clone());
     });

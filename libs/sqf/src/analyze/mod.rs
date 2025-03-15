@@ -9,7 +9,7 @@ use std::{
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
-    addons::Addon,
+    addons::{Addon, DefinedFunctions, UsedFunctions},
     lint::LintManager,
     lint_manager,
     position::Position,
@@ -109,8 +109,6 @@ pub fn analyze(
 }
 
 pub type Localizations = Vec<(String, Position)>;
-pub type UsedFunctions = Vec<(String, Position)>;
-pub type DefinedFunctions = HashSet<String>;
 pub struct LintData {
     pub(crate) addon: Option<Arc<Addon>>,
     pub(crate) database: Arc<Database>,
@@ -122,6 +120,30 @@ pub struct SqfReport {
     pub localizations: Localizations,
     pub functions_used: UsedFunctions,
     pub functions_defined: DefinedFunctions,
+}
+
+impl SqfReport {
+    /// Pushes the report into an Addon
+    /// # Panics
+        pub fn push_to_addon(&self, addon: &Addon) {
+        let build_data = addon.build_data();
+        build_data
+            .localizations()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.localizations.clone());
+        build_data
+            .functions_used()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.functions_used.clone());
+        addon
+            .build_data()
+            .functions_defined()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.functions_defined.clone());
+    }
 }
 
 pub trait Analyze: Sized + 'static {

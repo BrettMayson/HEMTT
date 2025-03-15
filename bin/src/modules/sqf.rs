@@ -102,24 +102,7 @@ impl Module for SQFCompiler {
                             database.clone(),
                         );
                         if let Some(sqf_report) = sqf_report {
-                            addon
-                                .build_data()
-                                .localizations()
-                                .lock()
-                                .expect("not poisoned")
-                                .extend(sqf_report.localizations);
-                            addon
-                                .build_data()
-                                .functions_used()
-                                .lock()
-                                .expect("not poisoned")
-                                .extend(sqf_report.functions_used);
-                            addon
-                                .build_data()
-                                .functions_defined()
-                                .lock()
-                                .expect("not poisoned")
-                                .extend(sqf_report.functions_defined);
+                            sqf_report.push_to_addon(addon);
                         };
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
