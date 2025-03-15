@@ -46,13 +46,11 @@ lint!(s27_select_count);
 lint!(s28_banned_macros);
 
 #[test]
-fn test_s29() {
+fn test_s29_function_undefined() {
     let (_, report) = lint(stringify!(s29_undefined_functions));
-
     assert!(report.functions_defined.contains("test_fnc_a"));
     assert!(report.functions_defined.contains("test_fnc_b"));
     assert!(report.functions_defined.contains("test_fnc_c"));
-
     assert!(report.functions_used.iter().any(|x| x.0 == "test_fnc_x"));
     assert!(report.functions_used.iter().any(|x| x.0 == "test_fnc_y"));
 }

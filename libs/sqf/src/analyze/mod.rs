@@ -125,7 +125,7 @@ pub struct SqfReport {
 impl SqfReport {
     /// Pushes the report into an Addon
     /// # Panics
-        pub fn push_to_addon(&self, addon: &Addon) {
+    pub fn push_to_addon(&self, addon: &Addon) {
         let build_data = addon.build_data();
         build_data
             .localizations()

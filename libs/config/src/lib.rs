@@ -103,7 +103,7 @@ pub struct ConfigReport {
     patches: Vec<CfgPatch>,
     localized: Vec<(String, Position)>,
     functions_defined: DefinedFunctions,
-    magazine_well_info: MagazineWellInfo,
+    pub magazine_well_info: MagazineWellInfo,
 }
 
 impl ConfigReport {

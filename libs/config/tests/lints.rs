@@ -1,6 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_common::config::ProjectConfig;
+use hemtt_config::ConfigReport;
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
@@ -11,7 +12,7 @@ macro_rules! lint {
         paste::paste! {
             #[test]
             fn [<config_error_ $dir>]() {
-                insta::assert_snapshot!(lint(stringify!($dir)));
+                insta::assert_snapshot!(lint(stringify!($dir)).0);
             }
         }
     };
@@ -27,13 +28,19 @@ lint!(c05_parent_case);
 lint!(c06_unexpected_array);
 lint!(c07_expected_array);
 lint!(c08_missing_semicolon);
-lint!(c09_magwell_missing_magazine);
+// lint!(c09_magwell_missing_magazine);
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
 lint!(c12_math_could_be_unquoted);
 lint!(c13_config_this_call);
 
-fn lint(file: &str) -> String {
+#[test]
+fn test_c09_magwell_missing_magazine() {
+    let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
+    insta::assert_compact_debug_snapshot!(report.magazine_well_info);
+}
+
+fn lint(file: &str) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -50,13 +57,16 @@ fn lint(file: &str) -> String {
     let parsed = hemtt_config::parse(Some(&test_config), &processed);
     let workspacefiles = WorkspaceFiles::new();
     match parsed {
-        Ok(config) => config
-            .codes()
-            .iter()
-            .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
-            .collect::<Vec<_>>()
-            .join("\n")
-            .replace('\r', ""),
+        Ok(config) => (
+            config
+                .codes()
+                .iter()
+                .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
+                .collect::<Vec<_>>()
+                .join("\n")
+                .replace('\r', ""),
+            config,
+        ),
         // Errors may occur, but they should be handled, if one is not a handler should be created
         Err(e) => {
             for e in &e {
