@@ -27,3 +27,12 @@ expression: lint(stringify! (c12_math_could_be_unquoted))
   [0m[36m│[0m                                [0m[36m^^^^^[0m [0m[36mreducible to: 8[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: Could remove quotes to allow evaluation at build-time
+
+
+[0m[1m[38;5;14mhelp[L-C12][0m[1m: Math could be unquoted[0m
+   [0m[36m┌─[0m c12_math_could_be_unquoted.hpp:10:22
+   [0m[36m│[0m
+[0m[36m10[0m [0m[36m│[0m         initSpeed = "[0m[36m300[0m"; // forced because name
+   [0m[36m│[0m                      [0m[36m^^^[0m [0m[36mreducible to: 300[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: Could remove quotes to allow evaluation at build-time
