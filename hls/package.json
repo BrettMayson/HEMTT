@@ -94,7 +94,8 @@
             "filenamePattern": "*.paa"
           }
         ]
-      }, {
+      },
+      {
         "viewType": "hemtt.wssViewer",
         "displayName": "WSS",
         "priority": "default",
