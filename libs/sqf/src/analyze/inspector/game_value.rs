@@ -107,18 +107,7 @@ impl GameValue {
                 }
             }
             let value = &syntax.ret().0;
-
-            #[allow(clippy::match_single_binding)]
-            let temp_testing_type = match cmd_name {
-                // "AGLToASL" | "getPosASL" => &Value::Position3dASL,
-                // "ASLToAGL" |  => &Value::Position3dAGL,
-                _ => value,
-            };
-            if value != temp_testing_type {
-                println!("modifying {cmd_name} output {value:?} -> {temp_testing_type:?}");
-            }
-
-            let game_value = Self::from_wiki_value(temp_testing_type);
+            let game_value = Self::from_wiki_value(value);
             // println!("match syntax {syntax:?}");
             return_types.insert(game_value);
         }
@@ -161,21 +150,12 @@ impl GameValue {
                     }
                     return true;
                 };
-                #[allow(clippy::match_single_binding)]
-                let temp_testing_type = match cmd_name {
-                    // "ASLToAGL" => &Value::Position3dASL,
-                    // "AGLToASL" => &Value::Position3dAGL,
-                    _ => param.typ(),
-                };
-                if temp_testing_type != param.typ() {
-                    println!("modifying input {:?} -> {temp_testing_type:?}", param.typ());
-                }
                 // println!(
                 //     "[arg {name}] typ: {:?}, opt: {:?}",
-                //     temp_testing_type,
+                //     param.typ(),
                 //     param.optional()
                 // );
-                Self::match_set_to_value(set, temp_testing_type, param.optional())
+                Self::match_set_to_value(set, param.typ(), param.optional())
             }
             Arg::Array(arg_array) => {
                 const WIKI_CMDS_IGNORE_ARGS: &[&str] = &["createHashMapFromArray"];
