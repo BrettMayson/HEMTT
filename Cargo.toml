@@ -17,6 +17,7 @@ members = [
     "libs/sqf",
     "libs/stringtable",
     "libs/workspace",
+    "libs/wss",
 
     "arma",
 ]

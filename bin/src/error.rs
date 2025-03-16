@@ -21,6 +21,8 @@ pub enum Error {
     Version(#[from] hemtt_common::version::Error),
     #[error("Workspace Error: {0}")]
     Workspace(#[from] hemtt_workspace::Error),
+    #[error("Wss Error: {0}")]
+    Wss(#[from] hemtt_wss::Error),
     #[error("Sqf Error: {0}")]
     Sqf(#[from] hemtt_sqf::Error),
     #[error("Addon Error: {0}")]

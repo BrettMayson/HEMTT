@@ -23,8 +23,8 @@ macro_rules! lint {
 lint!(s02_event_handler_case, true);
 lint!(s03_static_typename, true);
 lint!(s04_command_case, true);
-lint!(s05_if_assign, true);
 lint!(s05_if_assign_emoji, true);
+lint!(s05_if_assign, true);
 lint!(s06_find_in_str, true);
 lint!(s07_select_parse_number, true);
 lint!(s08_format_args, true);
@@ -43,6 +43,8 @@ lint!(s21_invalid_comparisons, true);
 lint!(s22_this_call, true);
 lint!(s23_reassign_reserved_variable, true);
 lint!(s24_marker_spam, true);
+lint!(s26_short_circuit_bool_var, true);
+lint!(s27_select_count, true);
 lint!(s28_banned_macros, true);
 
 fn lint(file: &str, ignore_inspector: bool) -> String {

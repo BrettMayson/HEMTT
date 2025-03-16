@@ -1,6 +1,4 @@
 # Do not include test input files in the language statistics
-libs/**/*.hpp linguist-vendored
-libs/**/*.cpp linguist-vendored
-bin/**/*.hpp linguist-vendored
-bin/**/*.cpp linguist-vendored
+**/*.hpp linguist-vendored
+**/*.cpp linguist-vendored
 book/**/* linguist-vendored

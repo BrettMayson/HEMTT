@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.5.3",
+  "version": "0.5.6",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -86,12 +86,21 @@
     },
     "customEditors": [
       {
-        "viewType": "hemtt.paa",
+        "viewType": "hemtt.paaViewer",
         "displayName": "PAA",
         "priority": "default",
         "selector": [
           {
             "filenamePattern": "*.paa"
+          }
+        ]
+      }, {
+        "viewType": "hemtt.wssViewer",
+        "displayName": "WSS",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.wss"
           }
         ]
       }
@@ -118,6 +127,24 @@
         "title": "Show Compiled",
         "category": "HEMTT",
         "enablement": "resourceLangId == 'sqf'"
+      },
+      {
+        "command": "hemtt.convertAudioWav",
+        "title": "Convert to wav",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+      },
+      {
+        "command": "hemtt.convertAudioOgg",
+        "title": "Convert to ogg",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+      },
+      {
+        "command": "hemtt.convertAudioWss",
+        "title": "Convert to wss",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
       }
     ],
     "menus": {
@@ -144,8 +171,37 @@
           "command": "hemtt.showCompiled",
           "group": "1_hemtt"
         }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'",
+          "submenu": "hemtt.audio"
+        }
+      ],
+      "hemtt.audio": [
+        {
+          "command": "hemtt.convertAudioWav",
+          "group": "1_convert",
+          "when": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        },
+        {
+          "command": "hemtt.convertAudioOgg",
+          "group": "1_convert",
+          "when": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        },
+        {
+          "command": "hemtt.convertAudioWss",
+          "group": "1_convert",
+          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+        }
       ]
-    }
+    },
+    "submenus": [
+      {
+        "id": "hemtt.audio",
+        "label": "HEMTT Audio"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -167,7 +223,7 @@
     "@typescript-eslint/eslint-plugin": "8.20.0",
     "@typescript-eslint/parser": "8.20.0",
     "@vscode/test-electron": "2.4.1",
-    "esbuild": "0.24.2",
+    "esbuild": "0.25.0",
     "eslint": "9.18.0",
     "glob": "11.0.1",
     "mocha": "11.1.0",

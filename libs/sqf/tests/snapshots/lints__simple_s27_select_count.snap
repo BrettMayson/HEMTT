@@ -1,0 +1,20 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: lint(stringify! (s27_select_count))
+---
+[0m[1m[38;5;14mhelp[L-S27][0m[1m: Using `select` with `count`[0m
+  [0m[36m┌─[0m s27_select_count.sqf:2:17
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m private _last = [0m[36m_array select (count _array - 1)[0m;
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _array select -1
+
+
+[0m[1m[38;5;14mhelp[L-S27][0m[1m: Using `select` with `count`[0m
+  [0m[36m┌─[0m s27_select_count.sqf:5:22
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _very_last = [0m[36m(_array2 select 2) select (count (_array2 select 2) - 1)[0m;
+  [0m[36m│[0m                      [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: (_array2 select 2) select -1
