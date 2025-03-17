@@ -34,7 +34,7 @@ impl Lint<LintData> for LintC12MathCouldBeUnquoted {
 ```toml
 [lints.config.math_could_be_unquoted]
 options.ignore = ["text", "name", "displayname"]
-options.forced = ["initSpeed"]
+options.forced = ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive", "specular", "specularpower"]
 ```
 
 ### Example
