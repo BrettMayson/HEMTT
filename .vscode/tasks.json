@@ -27,8 +27,16 @@
       }
     },
     {
+      "type": "npm",
+      "label": "build hls (paa viewer)",
+      "script": "esbuild-paa",
+      "options": {
+        "cwd": "${workspaceRoot}/hls"
+      }
+    },
+    {
       "label": "build hls",
-      "dependsOn": ["build hls (vscode)", "build hls (p3d viewer)"]
+      "dependsOn": ["build hls (vscode)", "build hls (p3d viewer)", "build hls (paa viewer)"]
     }
   ]
 }
