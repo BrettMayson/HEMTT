@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ViewportGizmo } from "three-viewport-gizmo";
 
 // Global variables to store state
-let scene, camera, renderer, controls, gizmo, lightHelper;
+let scene, camera, renderer, controls, gizmo, lightHelper, directionalLight;
 let lodArray = [];
 let currentModel = null;
 let lastPosition, lastRotation, lastScale;
@@ -36,12 +36,12 @@ function setupScene() {
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 5);
   scene.add(hemiLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(2, 5, 1);
   directionalLight.castShadow = true;
   scene.add(directionalLight);
 
-  const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
+  lightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
   scene.add(lightHelper);
 
   const gridHelper = new THREE.GridHelper(2000, 500, 0xffffff, 0x737373);
