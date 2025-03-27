@@ -1,5 +1,8 @@
 use serde::Serialize;
+use tracing::error;
 use url::Url;
+
+use crate::Backend;
 
 #[derive(Debug, Serialize)]
 pub struct WssInfo {
@@ -62,4 +65,27 @@ pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, Str
         sample_rate: wss.sample_rate(),
         compression: wss.compression().as_str().to_string(),
     })
+}
+
+impl Backend {
+    pub async fn audio_convert(
+        &self,
+        params: ConvertParams,
+    ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
+        println!("Converting audio: {:?}", params);
+        match convert(params.url, params.to, params.out) {
+            Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
+            Err(e) => {
+                error!("Error converting audio: {}", e);
+                Ok(None)
+            }
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ConvertParams {
+    url: Url,
+    to: String,
+    out: Option<String>,
 }

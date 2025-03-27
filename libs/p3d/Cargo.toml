@@ -14,3 +14,4 @@ hemtt-workspace = { path = "../workspace" }
 
 byteorder = { workspace = true }
 thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
