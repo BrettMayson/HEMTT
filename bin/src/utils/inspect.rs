@@ -46,6 +46,9 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         "cpp" | "hpp" => {
             super::config::inspect(&path)?;
         }
+        "wss" | "mp3" | "ogg" | "wav" => {
+            super::audio::inspect(&path)?;
+        }
         _ => {
             let mut file = File::open(&path)?;
             let buf = &mut [0u8; 6];
@@ -79,6 +82,13 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
                 );
                 file.seek(std::io::SeekFrom::Start(0))?;
                 bikey(file, &path)?;
+                return Ok(());
+            }
+            if super::audio::guess_file_type(&path)?.is_some() {
+                warn!(
+                    "The file appears to be an audio file but does not have the .wss, .mp3, .ogg, or .wav extension."
+                );
+                super::audio::inspect(&path)?;
                 return Ok(());
             }
             println!("Unsupported file type");

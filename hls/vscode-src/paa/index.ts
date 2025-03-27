@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
       PaaViewerProvider.viewType,
       previewManager,
       {
-        supportsMultipleEditorsPerDocument: true,
+        supportsMultipleEditorsPerDocument: false,
       }
     )
   );

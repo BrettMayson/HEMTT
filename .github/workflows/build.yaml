@@ -43,7 +43,7 @@ jobs:
         with:
           toolchain: stable
       - run: echo "RELEASE=true" >> $GITHUB_ENV
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os.name == 'ubuntu'
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os.name != 'windows'
       - run: echo "RELEASE=true" >> $env:GITHUB_ENV
         if: startsWith(github.ref, 'refs/tags/') && matrix.os.name == 'windows'
       - name: Rust Cache

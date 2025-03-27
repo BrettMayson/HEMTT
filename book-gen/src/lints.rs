@@ -25,7 +25,7 @@ pub fn run(chapter: &mut Chapter) {
 }
 
 fn config(chapter: &mut Chapter) {
-    let mut output = String::from("# Lints - Conifg\n\n");
+    let mut output = String::from("# Lints - Config\n\n");
     let mut lint_text: Vec<(u32, String)> = Vec::new();
     for lint in CONFIG_LINTS.iter().filter(|l| l.display()) {
         lint_text.push((lint.sort(), get_text(&**lint, "L-C")));

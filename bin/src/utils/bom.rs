@@ -40,6 +40,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
                     file.read_to_end(&mut buf)?;
                     file.seek(std::io::SeekFrom::Start(0))?;
                     file.write_all(&buf)?;
+                    file.set_len(buf.len() as u64)?;
                     info!("Removed BOM from {}", path.display());
                     count += 1;
                 }

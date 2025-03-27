@@ -13,13 +13,15 @@ use tracing::{Level, debug, info};
 use crate::diag_manager::DiagManager;
 use crate::workspace::EditorWorkspaces;
 
+mod audio;
 mod color;
 mod config;
 mod diag_manager;
 mod files;
+mod p3d;
 mod positions;
 mod preprocessor;
-pub mod sqf;
+mod sqf;
 mod workspace;
 
 #[derive(Clone, clap::Args)]
@@ -257,13 +259,6 @@ impl Backend {
         };
         Ok(Some(serde_json::to_value(res).unwrap()))
     }
-
-    async fn compiled(&self, params: ProviderParams) -> Result<Option<Value>> {
-        let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
-            return Ok(None);
-        };
-        Ok(Some(serde_json::to_value(res).unwrap()))
-    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -307,7 +302,9 @@ async fn server() {
 
     let (service, socket) = LspService::build(|client| Backend { client })
         .custom_method("hemtt/processed", Backend::processed)
-        .custom_method("hemtt/compiled", Backend::compiled)
+        .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
+        .custom_method("hemtt/audio/convert", Backend::audio_convert)
+        .custom_method("hemtt/p3d/json", Backend::p3d_json)
         .finish();
     Server::new(read, write, socket).serve(service).await;
 }

@@ -1,14 +1,16 @@
 [package]
 name = "hemtt-language-server"
-version = "0.5.6"
+version = "0.6.2"
 edition = "2024"
 
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
+hemtt-p3d = { path = "../libs/p3d" }
 hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
+hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
 chumsky = { workspace = true }

@@ -29,5 +29,5 @@ var ex1 = ex1date + " " + ex1time;
 
 var ex2 = date.getFullYear().toString().slice(-2) + (date.getMonth().padStart(2, '0')) + date.getDate().padStart(2, '0');
 
-document.body.innerHTML = document.body.innerHTML.replace(/{{ time_1 }}/g, ex1);
-document.body.innerHTML = document.body.innerHTML.replace(/{{ time_2 }}/g, ex2);
+var content = document.getElementById("content");
+content.innerHTML = content.innerHTML.replace(/{{ time_1 }}/g, ex1).replace(/{{ time_2 }}/g, ex2);

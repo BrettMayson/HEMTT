@@ -116,6 +116,9 @@ async fn check_sqf(
                                 warn!("failed to get diagnostic");
                                 continue;
                             };
+                            if diag.labels.iter().all(|l| l.file().is_include()) {
+                                continue;
+                            }
                             let lsp_diag = diag.to_lsp(&workspace_files);
                             for (file, diag) in lsp_diag {
                                 lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);

@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.14.8"
+version = "1.15.1"
 edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -30,6 +30,7 @@ hemtt-signing = { path = "../libs/signing" }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-stringtable = { path = "../libs/stringtable" }
 hemtt-workspace = { path = "../libs/workspace" }
+hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
