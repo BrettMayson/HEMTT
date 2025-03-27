@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -215,7 +215,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "vscode:prepublish": "npm run esbuild-base -- --minify && npm run esbuild-p3d -- --minify",
     "esbuild-base": "esbuild ./vscode-src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild-p3d": "esbuild ./webview-src/p3d/viewer.js --bundle --outfile=webview-dist/p3d/viewer.js --format=esm --platform=browser",
     "esbuild": "npm run esbuild-base -- --sourcemap --minify && npm run esbuild-p3d -- --sourcemap --minify",
