@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -119,6 +119,16 @@
         "icon": {
           "light": "./media/icons/audio-light.png",
           "dark": "./media/icons/audio-dark.png"
+        }
+      },
+      {
+        "id": "rvmat",
+        "extensions": [
+          ".rvmat"
+        ],
+        "icon": {
+          "light": "./media/icons/mat-light.png",
+          "dark": "./media/icons/mat-dark.png"
         }
       },
       {
