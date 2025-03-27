@@ -1686,6 +1686,7 @@ dependencies = [
  "dashmap 6.1.0",
  "hemtt-common",
  "hemtt-config",
+ "hemtt-p3d",
  "hemtt-preprocessor",
  "hemtt-sqf",
  "hemtt-workspace",
@@ -1719,6 +1720,7 @@ dependencies = [
  "byteorder",
  "hemtt-common",
  "hemtt-workspace",
+ "serde",
  "thiserror 2.0.12",
 ]
 

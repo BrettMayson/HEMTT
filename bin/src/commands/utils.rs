@@ -17,6 +17,7 @@ enum Subcommands {
     Bom(utils::bom::Command),
     Config(utils::config::Command),
     Inspect(utils::inspect::Command),
+    P3d(utils::p3d::Command),
     Paa(utils::paa::Command),
     Pbo(utils::pbo::Command),
     Sqf(utils::sqf::Command),
@@ -40,6 +41,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
         Subcommands::Inspect(cmd) => {
             utils::inspect::execute(cmd)?;
+        }
+        Subcommands::P3d(cmd) => {
+            utils::p3d::execute(cmd)?;
         }
         Subcommands::Paa(cmd) => {
             utils::paa::execute(cmd)?;

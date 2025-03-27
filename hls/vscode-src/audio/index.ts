@@ -24,7 +24,6 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
       }
     )
   );
-  // Make sure to add the provider to subscriptions for proper disposal
   context.subscriptions.push(wssViewerProvider);
 }
 
@@ -36,7 +35,7 @@ export interface WssConversion {
 }
 
 async function conversion(url: string, to: string, client: LanguageClient, channel: vscode.OutputChannel) {
-  const conv: WssConversion | undefined = await client.sendRequest("hemtt/convertAudio", {
+  const conv: WssConversion | undefined = await client.sendRequest("hemtt/audio/convert", {
     url,
     to,
   });
@@ -44,6 +43,5 @@ async function conversion(url: string, to: string, client: LanguageClient, chann
     vscode.window.showErrorMessage("Failed to convert audio file");
     return;
   }
-  // open the path returned
   vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(conv.path));
 }

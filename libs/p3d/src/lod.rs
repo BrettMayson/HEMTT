@@ -2,10 +2,11 @@ use std::io::{Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
+use serde::Serialize;
 
 use crate::{Error, Face, Point};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct LOD {
     pub version_major: u32,
     pub version_minor: u32,

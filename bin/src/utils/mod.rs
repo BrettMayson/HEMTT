@@ -2,6 +2,7 @@ pub mod audio;
 pub mod bom;
 pub mod config;
 pub mod inspect;
+pub mod p3d;
 pub mod paa;
 pub mod pbo;
 pub mod photoshoot;

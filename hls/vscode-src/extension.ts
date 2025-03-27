@@ -11,6 +11,7 @@ import {
 import * as paa from "./paa";
 import * as preprocessor from "./preprocessor";
 import * as audio from "./audio";
+import * as p3d from "./p3d";
 
 import { getPortPromise } from "portfinder";
 
@@ -75,6 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   preprocessor.init(client, channel, context);
   audio.init(client, channel, context);
+  p3d.init(client, channel, context);
   channel.appendLine("HEMTT initialized");
 }
 

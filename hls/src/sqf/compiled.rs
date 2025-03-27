@@ -1,7 +1,7 @@
 use hemtt_preprocessor::Processor;
 use url::Url;
 
-use crate::workspace::EditorWorkspaces;
+use crate::{Backend, ProviderParams, workspace::EditorWorkspaces};
 
 use super::SqfAnalyzer;
 
@@ -48,5 +48,17 @@ impl SqfAnalyzer {
                 Some(e.to_string())
             }
         }
+    }
+}
+
+impl Backend {
+    pub async fn sqf_compiled(
+        &self,
+        params: ProviderParams,
+    ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
+        let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
+            return Ok(None);
+        };
+        Ok(Some(serde_json::to_value(res).unwrap()))
     }
 }

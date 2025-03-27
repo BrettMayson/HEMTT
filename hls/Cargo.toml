@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
+hemtt-p3d = { path = "../libs/p3d" }
 hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }

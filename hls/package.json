@@ -104,6 +104,16 @@
             "filenamePattern": "*.wss"
           }
         ]
+      },
+      {
+        "viewType": "hemtt.p3dViewer",
+        "displayName": "P3D",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.p3d"
+          }
+        ]
       }
     ],
     "commands": [
@@ -207,7 +217,8 @@
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "esbuild ./vscode-src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-p3d": "esbuild ./webview-src/p3d/viewer.js --bundle --outfile=webview-dist/p3d/viewer.js --format=esm --platform=browser",
+    "esbuild": "npm run esbuild-base -- --sourcemap --minify && npm run esbuild-p3d -- --sourcemap --minify",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
     "compile-lsp": "run-script-os",
@@ -236,6 +247,7 @@
   "dependencies": {
     "hemtt": "file:",
     "portfinder": "^1.0.32",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^9.0.1",
+    "three": "^0.174.0"
   }
 }
