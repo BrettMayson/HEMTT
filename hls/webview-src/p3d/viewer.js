@@ -1,140 +1,98 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { ViewportGizmo } from "three-viewport-gizmo";
 
 // Global variables to store state
-let scene, camera, renderer, controls;
+let scene, camera, renderer, controls, gizmo, lightHelper;
 let lodArray = [];
 let currentModel = null;
 let lastPosition, lastRotation, lastScale;
 
-function initViewer() {
-  lodArray = window.modelData.lods || [window.modelData];
-  
-  lastPosition = new THREE.Vector3();
-  lastRotation = new THREE.Euler();
-  lastScale = new THREE.Vector3(1, 1, 1);
-  
+function setupRenderer() {
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setAnimationLoop(onRender);
+
+  document.body.appendChild(renderer.domElement);
+}
+
+function setupScene() {
+
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x333333);
+  scene.background = new THREE.Color(0x181a1b);
+  scene.fog = new THREE.Fog(0x181a1b, 20, 100);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(4, 4, 4);
   camera.lookAt(0, 0, 0);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
 
-  const ambientLight = new THREE.AmbientLight(0x606060, 0.5);
-  scene.add(ambientLight);
+  gizmo = new ViewportGizmo(camera, renderer);
+  gizmo.attachControls(controls);
+
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 5);
+  scene.add(hemiLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(2, 5, 1);
+  directionalLight.castShadow = true;
   scene.add(directionalLight);
 
   const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
   scene.add(lightHelper);
 
-  const lightXSlider = document.getElementById('lightXSlider');
-  const lightYSlider = document.getElementById('lightYSlider');
-  const lightZSlider = document.getElementById('lightZSlider');
-
-  function updateLightPosition() {
-    directionalLight.position.set(
-        parseFloat(lightXSlider.value),
-        parseFloat(lightYSlider.value),
-        parseFloat(lightZSlider.value)
-    );
-    lightHelper.update();
-  }
-
-  lightXSlider.addEventListener('input', updateLightPosition);
-  lightYSlider.addEventListener('input', updateLightPosition);
-  lightZSlider.addEventListener('input', updateLightPosition);
-
-  const gridHelper = new THREE.GridHelper(10, 10);
+  const gridHelper = new THREE.GridHelper(2000, 500, 0xffffff, 0x737373);
+  gridHelper.material.opacity = 0.2;
+  gridHelper.material.transparent = true;
   scene.add(gridHelper);
 
   const axesHelper = new THREE.AxesHelper(5);
   scene.add(axesHelper);
 
-  const lodLevel = document.getElementById('lodLevel');
-  const wireframeToggle = document.getElementById('wireframeToggle');
+}
 
-  if (lodArray.length > 0) {
-    lodArray.forEach((lod, index) => {
-      const option = document.createElement('option');
-      option.value = index;
-      const lodType = getLODTypeFromResolution(lod.resolution);
-      option.textContent = `LOD ${index} - ${lodType} (${lod.points.length} points, ${lod.faces.length} faces)`;
-      lodLevel.appendChild(option);
-    });
-    loadSelectedLOD();
-  }
-
-  lodLevel.addEventListener('change', loadSelectedLOD);
-
-  wireframeToggle.addEventListener('change', (e) => {
-    if (!currentModel) return;
-    currentModel.traverse((child) => {
-      if (child.isMesh) {
-        child.material.wireframe = e.target.checked;
-      }
-    });
-  });
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  animate();
+function onRender() {
+  renderer.render(scene, camera);
+  gizmo.render();
 }
 
 function loadSelectedLOD() {
   const lodLevel = document.getElementById('lodLevel');
   const wireframeToggle = document.getElementById('wireframeToggle');
-  
+
   const index = parseInt(lodLevel.value, 10);
   if (isNaN(index) || index < 0 || index >= lodArray.length) return;
-  
+
   if (currentModel) {
     lastPosition.copy(currentModel.position);
     lastRotation.copy(currentModel.rotation);
     lastScale.copy(currentModel.scale);
-    
+
     scene.remove(currentModel);
     currentModel = null;
   }
-  
+
   const selectedLOD = lodArray[index];
   updateStats(selectedLOD);
-  
+
   const model = loadLODModel(selectedLOD, {
     wireframe: wireframeToggle.checked,
     material: { side: THREE.DoubleSide }
   });
-  
+
   model.position.copy(lastPosition);
   model.rotation.copy(lastRotation);
   model.scale.copy(lastScale);
-  
+
   if (lastPosition.length() === 0) {
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     model.position.sub(center);
   }
-  
+
   scene.add(model);
   currentModel = model;
 }
@@ -145,7 +103,7 @@ function updateStats(lod) {
     statsDiv.innerHTML = '';
     return;
   }
-  
+
   statsDiv.innerHTML = `
     <h4>LOD Stats</h4>
     <p>Version: ${lod.version_major}.${lod.version_minor}</p>
@@ -211,15 +169,15 @@ function getLODTypeFromResolution(resolution) {
 
 function loadLODModel(json, options = {}) {
   const group = new THREE.Group();
-  
+
   const points = json.points.map(point => new THREE.Vector3(
-    point.coords[0], 
-    point.coords[1], 
+    point.coords[0],
+    point.coords[1],
     point.coords[2]
   ));
-  
+
   const faceGroups = {};
-  
+
   json.faces.forEach(face => {
     const key = `${face.texture}|${face.material}`;
     if (!faceGroups[key]) {
@@ -232,16 +190,16 @@ function loadLODModel(json, options = {}) {
         normals: []
       };
     }
-    
+
     const group = faceGroups[key];
     const indexOffset = group.vertices.length / 3;
-    
+
     face.vertices.forEach(vertex => {
       const point = points[vertex.point_index];
       group.vertices.push(point.x, point.y, point.z);
-      
+
       group.uvs.push(vertex.uv[0], vertex.uv[1]);
-      
+
       if (vertex.normal_index < json.face_normals.length) {
         const normal = json.face_normals[vertex.normal_index];
         // Flip the normals to convert from DirectX to OpenGL format
@@ -250,7 +208,7 @@ function loadLODModel(json, options = {}) {
         group.normals.push(0, -1, 0);
       }
     });
-    
+
     for (let i = 0; i < face.vertices.length - 2; i++) {
       group.indices.push(
         indexOffset,
@@ -259,53 +217,125 @@ function loadLODModel(json, options = {}) {
       );
     }
   });
-  
+
   Object.keys(faceGroups).forEach(key => {
     const faceGroup = faceGroups[key];
     const geometry = new THREE.BufferGeometry();
-    
+
     geometry.setAttribute(
-      'position', 
+      'position',
       new THREE.Float32BufferAttribute(faceGroup.vertices, 3)
     );
-    
+
     geometry.setAttribute(
-      'uv', 
+      'uv',
       new THREE.Float32BufferAttribute(faceGroup.uvs, 2)
     );
-    
+
     geometry.setAttribute(
       'normal',
       new THREE.Float32BufferAttribute(faceGroup.normals, 3)
     );
 
     geometry.setIndex(faceGroup.indices);
-    
+
     const materialOptions = {
       color: 0xcccccc,
       flatShading: false,
       wireframe: options.wireframe || false
     };
-    
+
     if (faceGroup.material) {
       materialOptions.name = faceGroup.material;
     }
-    
+
     let material = new THREE.MeshStandardMaterial(materialOptions);
-    
+
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
     mesh.name = `${faceGroup.texture || 'unknown'}_${faceGroup.material || 'unknown'}`;
     group.add(mesh);
   });
-  
+
   group.userData = {
     version_major: json.version_major,
     version_minor: json.version_minor,
     unknown_flags: json.unknown_flags,
     resolution: json.resolution
   };
-  
+
   return group;
+}
+
+function initViewer() {
+
+  setupRenderer();
+  setupScene();
+
+  lodArray = window.modelData.lods || [window.modelData];
+
+  lastPosition = new THREE.Vector3();
+  lastRotation = new THREE.Euler();
+  lastScale = new THREE.Vector3(1, 1, 1);
+
+  const lightXSlider = document.getElementById('lightXSlider');
+  const lightYSlider = document.getElementById('lightYSlider');
+  const lightZSlider = document.getElementById('lightZSlider');
+
+  function updateLightPosition() {
+    directionalLight.position.set(
+      parseFloat(lightXSlider.value),
+      parseFloat(lightYSlider.value),
+      parseFloat(lightZSlider.value)
+    );
+    lightHelper.update();
+  }
+
+  lightXSlider.addEventListener('input', updateLightPosition);
+  lightYSlider.addEventListener('input', updateLightPosition);
+  lightZSlider.addEventListener('input', updateLightPosition);
+
+  document.addEventListener("keydown", (event) => {
+
+    if (event.code === "KeyF") {
+      controls.reset();
+    }
+  });
+
+  const lodLevel = document.getElementById('lodLevel');
+  const wireframeToggle = document.getElementById('wireframeToggle');
+
+  if (lodArray.length > 0) {
+    lodArray.forEach((lod, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      const lodType = getLODTypeFromResolution(lod.resolution);
+      option.textContent = `LOD ${index} - ${lodType} (${lod.points.length} points, ${lod.faces.length} faces)`;
+      lodLevel.appendChild(option);
+    });
+    loadSelectedLOD();
+  }
+
+  lodLevel.addEventListener('change', loadSelectedLOD);
+
+  wireframeToggle.addEventListener('change', (e) => {
+    if (!currentModel) return;
+    currentModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.wireframe = e.target.checked;
+      }
+    });
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    gizmo.update();
+  });
+
 }
 
 window.addEventListener('DOMContentLoaded', initViewer);
