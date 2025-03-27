@@ -1,0 +1,83 @@
+body {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    color: var(--vscode-editor-foreground);
+    background-color: var(--vscode-editor-background);
+    font-family: var(--vscode-font-family);
+}
+
+#controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: var(--vscode-editor-background);
+    border-bottom: 1px solid var(--vscode-panel-border);
+    z-index: 10;
+}
+
+#imageContainer {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    cursor: grab;
+}
+
+/* Add a wrapper div around your image in the HTML */
+#imageWrapper {
+    position: absolute;
+    min-width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* When image is larger than container */
+@media (max-width: 100%) {
+    #imageWrapper {
+        position: static;
+        transform: none;
+    }
+}
+
+#imageContainer:active {
+    cursor: grabbing;
+}
+
+#paaImage {
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    transition: width 0.1s, height 0.1s;
+    image-rendering: pixelated;
+}
+
+#zoomLevel {
+    margin: 0 5px;
+    min-width: 50px;
+    display: inline-block;
+    text-align: center;
+}
+
+button {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: 1px solid var(--vscode-button-border);
+    padding: 4px 8px;
+    cursor: pointer;
+    margin: 0 2px;
+}
+
+button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+select {
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+    border: 1px solid var(--vscode-dropdown-border);
+    padding: 4px 8px;
+}

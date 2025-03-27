@@ -1687,6 +1687,7 @@ dependencies = [
  "hemtt-common",
  "hemtt-config",
  "hemtt-p3d",
+ "hemtt-paa",
  "hemtt-preprocessor",
  "hemtt-sqf",
  "hemtt-workspace",
@@ -1728,10 +1729,13 @@ dependencies = [
 name = "hemtt-paa"
 version = "1.0.1"
 dependencies = [
+ "base64 0.22.1",
  "byteorder",
  "hemtt-lzo",
  "image",
  "js-sys",
+ "serde",
+ "serde_json",
  "texpresso",
  "wasm-bindgen",
 ]

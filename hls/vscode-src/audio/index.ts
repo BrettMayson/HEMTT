@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
-import { WssViewerProvider } from "./wssViewer";
+import { WssViewerProvider } from "./viewer";
 
 export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioWav', async (uri: vscode.Uri) => {

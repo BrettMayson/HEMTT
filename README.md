@@ -45,3 +45,7 @@ jobs:
                   name: my-mod-latest
                   path: release/my-mod-latest.zip
 ```
+
+### Attribution
+
+File icons contain elements made in whole or in part by [Freepik - Flaticon](https://www.flaticon.com/authors/freepik)

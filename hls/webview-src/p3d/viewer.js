@@ -105,7 +105,6 @@ function updateStats(lod) {
   }
 
   statsDiv.innerHTML = `
-    <h4>LOD Stats</h4>
     <p>Version: ${lod.version_major}.${lod.version_minor}</p>
     <p>Resolution: ${lod.resolution}</p>
     <p>Points: ${lod.points.length}</p>
