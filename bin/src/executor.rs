@@ -55,6 +55,7 @@ impl Executor {
     /// The exeuctor will run the `build` phases
     pub fn build(&mut self, write: bool) {
         self.stages.push("pre_build");
+        self.stages.push("pre_build2");
         if write {
             self.stages.push("build");
             self.stages.push("post_build");
@@ -75,21 +76,13 @@ impl Executor {
     /// # Errors
     /// [`Error`] depending on the modules
     pub fn run(&mut self) -> Result<Report, Error> {
-        self.modules.sort_by(|a, b| {
-            if a.name() == "Stringtables" {
-                std::cmp::Ordering::Greater
-            } else if b.name() == "Stringtables" {
-                std::cmp::Ordering::Less
-            } else {
-                std::cmp::Ordering::Equal
-            }
-        });
         let mut report = Report::new();
         for stage in self.stages.clone() {
             report.merge(match stage {
                 "init" => self.run_modules("init")?,
                 "check" => self.run_modules("check")?,
                 "pre_build" => self.run_modules("pre_build")?,
+                "pre_build2" => self.run_modules("pre_build2")?,
                 "build" => {
                     trace!("phase: build (start)");
                     let report = modules::pbo::build(&self.ctx, self.collapse)?;
@@ -123,6 +116,7 @@ impl Executor {
                 "init" => module.init(&self.ctx)?,
                 "check" => module.check(&self.ctx)?,
                 "pre_build" => module.pre_build(&self.ctx)?,
+                "pre_build2" => module.pre_build2(&self.ctx)?,
                 "post_build" => module.post_build(&self.ctx)?,
                 "pre_release" => module.pre_release(&self.ctx)?,
                 "archive" => module.archive(&self.ctx)?,

@@ -36,6 +36,7 @@ pub fn lint_one(
 }
 
 #[allow(clippy::ptr_arg)] // Needed for &Vec for &dyn Any
+#[must_use]
 pub fn lint_all(
     projects: &Vec<Project>,
     project_config: Option<&ProjectConfig>,
