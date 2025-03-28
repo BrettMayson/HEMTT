@@ -1,6 +1,5 @@
 use std::io::Read;
 
-use base64::Engine as _;
 use byteorder::{LittleEndian, ReadBytesExt};
 use texpresso::Format;
 
@@ -120,6 +119,7 @@ impl MipMap {
     /// # Panics
     /// Panics if the image cannot be encoded
     pub fn json(&self) -> String {
+        use base64::Engine as _;
         let img = self.get_image();
         let mut buffer = std::io::Cursor::new(Vec::new());
         img.write_to(&mut buffer, image::ImageFormat::Png)
