@@ -230,7 +230,7 @@ fn check_for_update() -> Option<Vec<String>> {
     let mut out = Vec::new();
     match update::check() {
         Ok(Some(version)) => {
-            out.push(format!("HEMTT {version} is available, please update"));
+            out.push(format!("HEMTT {version} is available, you can get the latest version here (https://github.com/BrettMayson/HEMTT/releases) or via WinGet."));
         }
         Err(e) => {
             error!("Failed to check for updates: {e}");
