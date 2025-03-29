@@ -86,9 +86,9 @@ impl LintRunner<LintData> for Runner {
         let ignore = if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             ignore.iter().map(|v| v.as_str().expect("ignore items must be strings")).collect::<Vec<&str>>()
         } else {
-            vec!["text", "name", "displayname"]
+            vec!["text", "name", "displayname", "icontext"]
         };
-        if ignore.contains(&name.as_str()) {
+        if ignore.iter().any(|s| s.to_lowercase() == name) {
             return vec![];
         }
         let check_if_equation = !match config.option("forced") {
