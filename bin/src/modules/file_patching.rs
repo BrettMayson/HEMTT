@@ -69,7 +69,7 @@ impl Module for FilePatching {
             std::fs::remove_file(&link)?;
         }
         create_link(&link, ctx.build_folder().expect("build folder exists"))?;
-        info!("created symlink to build folder for file patching");
+        info!("Symlink created at {}", link.display());
         Ok(report)
     }
 }
