@@ -8,6 +8,16 @@ let lodArray = [];
 let currentModel = null;
 let lastPosition, lastRotation, lastScale;
 
+const materialMap = new Map();
+materialMap.set("Standard", new THREE.MeshStandardMaterial({ color: 0xcccccc }));
+materialMap.set("Wireframe", new THREE.MeshBasicMaterial({ color: 0xcccccc, wireframe: true }));
+materialMap.set("Flat", new THREE.MeshStandardMaterial({ color: 0xcccccc, flatShading: true }));
+materialMap.set("Unlit", new THREE.MeshBasicMaterial({ color: 0xcccccc }));
+materialMap.set("Depth", new THREE.MeshDepthMaterial());
+materialMap.set("Normal", new THREE.MeshNormalMaterial());
+
+const cullingNames = ["FrontSide", "BackSide", "DoubleSide"];
+
 function setupRenderer() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -60,11 +70,18 @@ function onRender() {
 }
 
 function loadSelectedLOD() {
-  const lodLevel = document.getElementById('lodLevel');
-  const wireframeToggle = document.getElementById('wireframeToggle');
 
-  const index = parseInt(lodLevel.value, 10);
+  const lodLevel = document.getElementById('lodLevel');
+  const index = parseInt(lodLevel.value);
   if (isNaN(index) || index < 0 || index >= lodArray.length) return;
+
+  const materialSelect = document.getElementById('material');
+  const materialKey = materialSelect.value;
+  if (!materialMap.has(materialKey)) return;
+
+  const cullingSelect = document.getElementById('culling');
+  const culling = parseInt(cullingSelect.value);
+  if (isNaN(culling) || culling < 0 || culling >= 3) return;
 
   if (currentModel) {
     lastPosition.copy(currentModel.position);
@@ -79,8 +96,8 @@ function loadSelectedLOD() {
   updateStats(selectedLOD);
 
   const model = loadLODModel(selectedLOD, {
-    wireframe: wireframeToggle.checked,
-    material: { side: THREE.DoubleSide }
+    material: materialMap.get(materialKey),
+    culling: culling,
   });
 
   model.position.copy(lastPosition);
@@ -238,24 +255,20 @@ function loadLODModel(json, options = {}) {
 
     geometry.setIndex(faceGroup.indices);
 
-    const materialOptions = {
-      color: 0xcccccc,
-      flatShading: false,
-      wireframe: options.wireframe || false
-    };
+    const material = options.material.clone();
+    material.side = options.side;
 
     if (faceGroup.material) {
-      materialOptions.name = faceGroup.material;
+      material.name = faceGroup.material;
     }
-
-    let material = new THREE.MeshStandardMaterial(materialOptions);
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-
     mesh.name = `${faceGroup.texture || 'unknown'}_${faceGroup.material || 'unknown'}`;
+
     group.add(mesh);
+
   });
 
   group.userData = {
@@ -272,6 +285,10 @@ function initViewer() {
 
   setupRenderer();
   setupScene();
+
+  if (typeof window.modelData === "string") {
+    window.modelData = JSON.parse(window.modelData);
+  }
 
   lodArray = window.modelData.lods || [window.modelData];
 
@@ -303,30 +320,77 @@ function initViewer() {
     }
   });
 
+  const cullingSelect = document.getElementById('culling');
+
+  for (let index = 0; index < cullingNames.length; index++) {
+
+    const name = cullingNames[index];
+
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = name;
+
+    cullingSelect.appendChild(option);
+  }
+
+  cullingSelect.addEventListener('change', (e) => {
+
+    if (!currentModel) return;
+
+    const culling = parseInt(e.target.value);
+    if (isNaN(culling) || culling < 0 || culling >= 3) return;
+
+    currentModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material.side = culling;
+      }
+    });
+  });
+
+  const materialSelect = document.getElementById('material');
+
+  for (const name of materialMap.keys()) {
+
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+
+    materialSelect.appendChild(option);
+  }
+
+  materialSelect.addEventListener('change', (e) => {
+
+    if (!currentModel) return;
+
+    const materialKey = e.target.value;
+    if (!materialMap.has(materialKey)) return;
+
+    currentModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material = materialMap.get(materialKey);
+      }
+    });
+  });
+
   const lodLevel = document.getElementById('lodLevel');
-  const wireframeToggle = document.getElementById('wireframeToggle');
 
   if (lodArray.length > 0) {
-    lodArray.forEach((lod, index) => {
+
+    for (let index = 0; index < lodArray.length; index++) {
+
+      const lod = lodArray[index];
       const option = document.createElement('option');
       option.value = index;
       const lodType = getLODTypeFromResolution(lod.resolution);
       option.textContent = `LOD ${index} - ${lodType} (${lod.points.length} points, ${lod.faces.length} faces)`;
+
       lodLevel.appendChild(option);
-    });
+    }
+
     loadSelectedLOD();
   }
 
   lodLevel.addEventListener('change', loadSelectedLOD);
-
-  wireframeToggle.addEventListener('change', (e) => {
-    if (!currentModel) return;
-    currentModel.traverse((child) => {
-      if (child.isMesh) {
-        child.material.wireframe = e.target.checked;
-      }
-    });
-  });
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
