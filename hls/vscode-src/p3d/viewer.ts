@@ -84,7 +84,12 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
             <select id="lodLevel"></select>
           </div>
           <div id="displayOptions">
-            <label><input type="checkbox" id="wireframeToggle"> Wireframe</label>
+            <label for="material">Material:</label>
+            <select id="material"></select>
+            <label for="culling">Culling:</label>
+            <select id="culling"></select>
+          </div>
+          <div>
           </div>
         </div>
 
