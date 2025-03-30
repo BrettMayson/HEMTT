@@ -230,26 +230,21 @@ function loadLODModel(json, options = {}) {
       }
     }
 
-    if (face.vertices.length === 3) {
-      group.indices.push(
-        indexOffset,
-        indexOffset + 1,
-        indexOffset + 2,
-      );
-    } else if (face.vertices.length === 4) {
+    group.indices.push(
+      indexOffset,
+      indexOffset + 1,
+      indexOffset + 2,
+    );
 
-      group.indices.push(
-        indexOffset,
-        indexOffset + 1,
-        indexOffset + 2,
-      );
+    if (face.vertices.length === 4) {
 
       group.indices.push(
         indexOffset + 2,
         indexOffset + 3,
         indexOffset,
       );
-    } else {
+
+    } else if (face.vertices.length !== 3) {
       console.error(`Face has unsupported vertex amount ${face.vertices.length}`)
     }
   }
