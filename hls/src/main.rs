@@ -305,6 +305,7 @@ async fn server() {
         .custom_method("hemtt/audio/convert", Backend::audio_convert)
         .custom_method("hemtt/p3d/json", Backend::p3d_json)
         .custom_method("hemtt/paa/json", Backend::paa_json)
+        .custom_method("hemtt/paa/p3d", Backend::paa_p3d)
         .custom_method("hemtt/processed", Backend::processed)
         .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
         .finish();

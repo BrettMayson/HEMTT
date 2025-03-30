@@ -43,6 +43,26 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
       }
 
       webview.html = this.getHtml(webview, modelData);
+
+      webview.onDidReceiveMessage(message => {
+        channel.appendLine(`Received message: ${JSON.stringify(message)}`);
+        switch (message.command) {
+          case 'requestTexture':
+            this.client.sendRequest("hemtt/paa/p3d", {
+              url: document.uri.toString(),
+              texture: message.texture,
+            }).then((response: any) => {
+              if (response) {
+                webview.postMessage({
+                  command: 'textureResponse',
+                  id: message.id,
+                  data: response,
+                })
+              }
+            });
+            break;
+          }
+        });
       
       webview.onDidReceiveMessage(message => {
         switch (message.command) {
@@ -73,7 +93,7 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
         <title>P3D Model Viewer</title>
         <link rel="stylesheet" href="${styleUri}">
       </head>
@@ -113,6 +133,7 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
 
         <script nonce="${nonce}" type="module">
           window.modelData = ${JSON.stringify(modelData)};
+          window.vscode = acquireVsCodeApi();
         </script>
         <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
       </body>

@@ -262,6 +262,18 @@ function loadLODModel(json, options = {}) {
       material.name = faceGroup.material;
     }
 
+    if (faceGroup.texture) {
+      requestTexture(faceGroup.texture).then(texture => {
+        if (texture) {
+          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          material.map = texture;
+          material.needsUpdate = true;
+        }
+      }).catch(err => {
+        console.error(`Error loading texture for ${mesh.name}:`, err);
+      });
+    }
+
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -402,3 +414,35 @@ function initViewer() {
 }
 
 window.addEventListener('DOMContentLoaded', initViewer);
+
+const textureRequests = new Map();
+let requestId = 0;
+async function requestTexture(path) {
+  console.log(`Requesting texture: ${path}`);
+  return new Promise((resolve, reject) => {
+    const id = requestId++;
+    textureRequests.set(id, { resolve, reject });
+    window.vscode.postMessage({
+      command: 'requestTexture',
+      texture: path,
+      id: id
+    });
+  });
+}
+window.addEventListener('message', event => {
+  const message = event.data;
+  if (message.command === 'textureResponse') {
+    const request = textureRequests.get(message.id);
+    if (request) {
+      textureRequests.delete(message.id);
+      if (message.error) {
+        request.reject(new Error(message.error));
+      } else if (message.data) {
+        const texture = new THREE.TextureLoader().load(`data:image/png;base64,${message.data}`);
+        request.resolve(texture);
+      } else {
+        request.resolve(null);
+      }
+    }
+  }
+});
