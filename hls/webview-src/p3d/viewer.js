@@ -196,52 +196,67 @@ function loadLODModel(json, options = {}) {
     point.coords[2]
   ));
 
-  const faceGroups = {};
+  const faceGroups = new Map();
 
-  json.faces.forEach(face => {
+  for (const face of json.faces) {
+
     const key = `${face.texture}|${face.material}`;
-    if (!faceGroups[key]) {
-      faceGroups[key] = {
+    if (!faceGroups.has(key)) {
+      faceGroups.set(key, {
         texture: face.texture,
         material: face.material,
         vertices: [],
         indices: [],
         uvs: [],
         normals: []
-      };
+      })
     }
 
-    const group = faceGroups[key];
+    const group = faceGroups.get(key);
     const indexOffset = group.vertices.length / 3;
 
-    face.vertices.forEach(vertex => {
+    for (const vertex of face.vertices) {
+
       const point = points[vertex.point_index];
-      group.vertices.push(point.x, point.y, point.z);
+      group.vertices.push(point.x, point.y, -point.z);
 
       group.uvs.push(vertex.uv[0], 1 - vertex.uv[1]);
 
       if (vertex.normal_index < json.face_normals.length) {
         const normal = json.face_normals[vertex.normal_index];
-        // Flip the normals to convert from DirectX to OpenGL format
-        group.normals.push(normal[0], -normal[1], normal[2]);
+        group.normals.push(normal[0], normal[1], normal[2]);
       } else {
         group.normals.push(0, -1, 0);
       }
-    });
+    }
 
-    for (let i = 0; i < face.vertices.length - 2; i++) {
+    if (face.vertices.length === 3) {
       group.indices.push(
         indexOffset,
-        indexOffset + i + 2,
-        indexOffset + i + 1,
+        indexOffset + 1,
+        indexOffset + 2,
       );
+    } else if (face.vertices.length === 4) {
+
+      group.indices.push(
+        indexOffset,
+        indexOffset + 1,
+        indexOffset + 2,
+      );
+
+      group.indices.push(
+        indexOffset + 2,
+        indexOffset + 3,
+        indexOffset,
+      );
+    } else {
+      console.error(`Face has unsupported vertex amount ${face.vertices.length}`)
     }
-  });
+  }
 
-  Object.keys(faceGroups).forEach(key => {
-    const faceGroup = faceGroups[key];
+  for (const faceGroup of faceGroups.values()) {
+
     const geometry = new THREE.BufferGeometry();
-
     geometry.setAttribute(
       'position',
       new THREE.Float32BufferAttribute(faceGroup.vertices, 3)
@@ -285,7 +300,7 @@ function loadLODModel(json, options = {}) {
 
     group.add(mesh);
 
-  });
+  }
 
   group.userData = {
     version_major: json.version_major,
