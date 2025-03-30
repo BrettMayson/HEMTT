@@ -134,59 +134,6 @@ function updateStats(lod) {
   `;
 }
 
-function getLODTypeFromResolution(resolution) {
-  const resolutionMap = {
-    // View positions
-    1000: "View Gunner",
-    1100: "View Pilot",
-    1200: "View Cargo",
-    // Shadow volumes
-    10000: "Shadow Volume 0",
-    10010: "Shadow Volume 10",
-    11000: "Shadow Buffer 0",
-    11010: "Shadow Buffer 10",
-    // Geometry types
-    1e13: "Geometry",
-    2e13: "Geometry Buoyancy",
-    4e13: "Geometry PysX",
-    // Memory and special geometries
-    1e15: "Memory",
-    2e15: "Land Contact",
-    3e15: "Roadway",
-    4e15: "Paths",
-    5e15: "Hit-points",
-    6e15: "View Geometry",
-    7e15: "Fire Geometry",
-    8e15: "View Cargo Geom.",
-    9e15: "View Cargo Fire Geom.",
-    // Commander, pilot, gunner views
-    1e16: "View Commander",
-    1.1e16: "View Commander Geom.",
-    1.2e16: "View Commander Fire Geom.",
-    1.3e16: "View Pilot Geom.",
-    1.4e16: "View Pilot Fire Geom.",
-    1.5e16: "View Gunner Geom.",
-    1.6e16: "View Gunner Fire Geom.",
-    // Additional types
-    1.7e16: "Sub Parts",
-    1.8e16: "Shadow Volume - View Cargo",
-    1.9e16: "Shadow Volume - View Pilot",
-    2e16: "Shadow Volume - View Gunner",
-    2.1e16: "Wreck"
-  };
-
-  if (resolution >= 20000 && resolution < 30000) {
-    return `Edit ${Math.floor(resolution - 20000)}`;
-  }
-  if (resolutionMap[resolution]) {
-    return resolutionMap[resolution];
-  }
-  if (resolution > 1000) {
-    return `Unknown ${resolution}`;
-  }
-  return `Resolution ${resolution}`;
-}
-
 function loadLODModel(json, options = {}) {
   const group = new THREE.Group();
 
@@ -413,7 +360,7 @@ function initViewer() {
       const lod = lodArray[index];
       const option = document.createElement('option');
       option.value = index;
-      const lodType = getLODTypeFromResolution(lod.resolution);
+      const lodType = lod.type_name;
       option.textContent = `LOD ${index} - ${lodType} (${lod.points.length} points, ${lod.faces.length} faces)`;
 
       lodLevel.appendChild(option);
