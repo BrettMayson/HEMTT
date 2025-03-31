@@ -326,6 +326,7 @@
   },
   "dependencies": {
     "hemtt": "file:",
+    "image-js": "^0.36.0",
     "portfinder": "^1.0.32",
     "three": "^0.174.0",
     "three-viewport-gizmo": "^2.2.0",

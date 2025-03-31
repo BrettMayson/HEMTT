@@ -89,6 +89,12 @@ export class PaaViewerProvider implements vscode.CustomReadonlyEditorProvider {
             <label for="mipmapLevel">Mipmap:</label>
             <select id="mipmapLevel"></select>
           </div>
+          <div>
+            <label><input type="checkbox" id="channelRed" checked=true> Red</label>
+            <label><input type="checkbox" id="channelGreen" checked=true> Green</label>
+            <label><input type="checkbox" id="channelBlue" checked=true> Blue</label>
+            <label><input type="checkbox" id="channelAlpha"> Alpha</label>
+          </div>
           <div id="displayInfo">
             <div>Format: <span id="formatInfo"></span></div>
             <div>Dimensions: <span id="dimensionsInfo"></span></div>

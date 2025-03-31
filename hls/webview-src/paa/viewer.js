@@ -1,3 +1,5 @@
+import { Image } from "image-js";
+
 (function () {
   const vscode = acquireVsCodeApi();
   const paaData = window.paaData;
@@ -12,6 +14,7 @@
   let lastMouseY = 0;
 
   function initialize() {
+
     try {
       if (!paaData || !paaData.maps || !paaData.maps.length) {
         reportError('Invalid PAA data received');
@@ -22,12 +25,47 @@
       updateFormatInfo();
       setupZoomControls();
       setupDragAndScrollControls();
-      displayMipmap(0);
 
-      document.getElementById('mipmapLevel').addEventListener('change', (event) => {
-        displayMipmap(parseInt(event.target.value));
+      const channelRed = document.getElementById('channelRed');
+      const channelGreen = document.getElementById('channelGreen');
+      const channelBlue = document.getElementById('channelBlue');
+      const channelAlpha = document.getElementById('channelAlpha');
+
+      const channelToggles = [channelRed, channelGreen, channelBlue, channelAlpha];
+
+      function getToggleSettings() {
+
+        if (channelAlpha.checked) {
+          channelRed.checked = false;
+          channelGreen.checked = false;
+          channelBlue.checked = false;
+        } else if (!channelAlpha.checked && !channelRed.checked && !channelGreen.checked && !channelBlue.checked) {
+          channelRed.checked = true;
+          channelGreen.checked = true;
+          channelBlue.checked = true;
+        }
+
+        return {
+          red: channelRed.checked,
+          green: channelGreen.checked,
+          blue: channelBlue.checked,
+          alpha: channelAlpha.checked,
+        };
+      }
+
+      displayMipmap(0, getToggleSettings());
+
+      const minimapLevel = document.getElementById('mipmapLevel');
+
+      minimapLevel.addEventListener('change', (event) => {
+        displayMipmap(parseInt(event.target.value), getToggleSettings());
       });
 
+      for (const toggle of channelToggles) {
+        toggle.addEventListener('change', () => {
+          displayMipmap(parseInt(minimapLevel.value), getToggleSettings());
+        });
+      }
       const container = document.getElementById('imageContainer');
       container.addEventListener('wheel', (event) => {
         // Handle Ctrl+scroll for zooming
@@ -231,8 +269,10 @@
     container.scrollTop += (heightDiff * beforeY);
   }
 
-  function displayMipmap(level) {
+  async function displayMipmap(level, channelSettings) {
+
     if (level < 0 || level >= paaData.maps.length) {
+
       reportError(`Invalid mipmap level: ${level}`);
       return;
     }
@@ -240,8 +280,42 @@
     const newZoom = currentZoom * Math.pow(2, level - currentLevel);
     currentLevel = level;
 
+    let imgUrl = `data:image/png;base64,${paaData.maps[level]}`;
+
+    if (!channelSettings.red || !channelSettings.green || !channelSettings.blue || channelSettings.alpha) {
+      const loadedImg = await Image.load(imgUrl);
+      for (let index = 0; index < loadedImg.width * loadedImg.height; index++) {
+
+        if (channelSettings.alpha) {
+
+          const alpha = loadedImg.getValue(index, 3);
+          loadedImg.setValue(index, 0, alpha);
+          loadedImg.setValue(index, 1, alpha);
+          loadedImg.setValue(index, 2, alpha);
+          loadedImg.setValue(index, 3, 255);
+
+          continue;
+        }
+
+        if (!channelSettings.red) {
+          loadedImg.setValue(index, 0, 0);
+        }
+
+        if (!channelSettings.green) {
+          loadedImg.setValue(index, 1, 0);
+        }
+
+        if (!channelSettings.blue) {
+          loadedImg.setValue(index, 2, 0);
+        }
+
+      }
+
+      imgUrl = loadedImg.toDataURL();
+    }
+
     const img = document.getElementById('paaImage');
-    img.src = `data:image/png;base64,${paaData.maps[level]}`;
+    img.src = imgUrl;
 
     img.onload = () => {
       document.getElementById('dimensionsInfo').textContent = `${img.naturalWidth}×${img.naturalHeight}`;
