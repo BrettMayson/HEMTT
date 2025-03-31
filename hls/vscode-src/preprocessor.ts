@@ -44,7 +44,7 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
       channel.appendLine("compiledProvider: " + uri.toString());
       try {
-        const text: string | undefined = await client.sendRequest("hemtt/compiled", {
+        const text: string | undefined = await client.sendRequest("hemtt/sqf/compiled", {
           url: uri.toString()
         });
         if (!text) {
@@ -53,7 +53,7 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
         }
         return text;
       } catch (e) {
-        channel.appendLine("sendRequest: hemtt/compiled: " + uri.toString() + " failed");
+        channel.appendLine("sendRequest: hemtt/sqf/compiled: " + uri.toString() + " failed");
         channel.appendLine(e as any);
         throw e;
       }

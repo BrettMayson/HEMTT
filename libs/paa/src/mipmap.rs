@@ -111,4 +111,19 @@ impl MipMap {
                 .expect("paa should contain valid image data"),
         )
     }
+
+    #[cfg(feature = "json")]
+    #[must_use]
+    /// Returns the image as a base64 encoded string
+    ///
+    /// # Panics
+    /// Panics if the image cannot be encoded
+    pub fn json(&self) -> String {
+        use base64::Engine as _;
+        let img = self.get_image();
+        let mut buffer = std::io::Cursor::new(Vec::new());
+        img.write_to(&mut buffer, image::ImageFormat::Png)
+            .expect("Failed to write PNG");
+        base64::prelude::BASE64_STANDARD.encode(buffer.get_ref())
+    }
 }

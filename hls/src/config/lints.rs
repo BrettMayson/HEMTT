@@ -72,21 +72,14 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                 let workspace_files = WorkspaceFiles::new();
                 match hemtt_config::parse(workspace.config().as_ref(), &processed) {
                     Ok(report) => {
-                        for warning in report.warnings() {
-                            warn!("warning: {:?}", warning);
-                            let Some(diag) = warning.diagnostic() else {
+                        for code in report.warnings().iter().chain(report.errors().iter()) {
+                            warn!("code: {:?}", code);
+                            let Some(diag) = code.diagnostic() else {
                                 continue;
                             };
-                            let lsp_diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in lsp_diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            if diag.labels.iter().all(|l| l.file().is_include()) {
+                                continue;
                             }
-                        }
-                        for error in report.errors() {
-                            warn!("error: {:?}", error);
-                            let Some(diag) = error.diagnostic() else {
-                                continue;
-                            };
                             let lsp_diag = diag.to_lsp(&workspace_files);
                             for (file, diag) in lsp_diag {
                                 lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);

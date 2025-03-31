@@ -180,4 +180,24 @@ impl Paa {
 
         Ok(())
     }
+
+    #[cfg(feature = "json")]
+    /// Get the Paa as a JSON string
+    ///
+    /// # Errors
+    /// [`String`] if the Paa is invalid
+    pub fn json(&self) -> Result<String, String> {
+        serde_json::to_string(&PaaJson {
+            format: self.format.to_string(),
+            maps: self.maps.iter().map(super::mipmap::MipMap::json).collect(),
+        })
+        .map_err(|e| e.to_string())
+    }
+}
+
+#[cfg(feature = "json")]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct PaaJson {
+    format: String,
+    maps: Vec<String>,
 }

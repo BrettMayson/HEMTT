@@ -67,7 +67,7 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
       
       // Call your existing audio conversion function
       channel.appendLine(`Converting WSS file to WAV: ${wssUri.toString()} -> ${tempWavPath}`);
-      const result: WssConversion | undefined = await this.client.sendRequest("hemtt/convertAudio", {
+      const result: WssConversion | undefined = await this.client.sendRequest("hemtt/audio/convert", {
         url: wssUri.toString(),
         to: "wav",
         out: tempWavPath

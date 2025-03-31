@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, Item, Number, Value};
+use crate::{analyze::LintData, Item, Number, Property, Value};
 
 crate::analyze::lint!(LintC12MathCouldBeUnquoted);
 
@@ -24,7 +24,20 @@ impl Lint<LintData> for LintC12MathCouldBeUnquoted {
     }
 
     fn documentation(&self) -> &'static str {
-        "### Example
+        r#"### Configuration
+
+- **ignore**: Specifies a list of properties to ignore, typically because they may contain false positives.
+- **forced**: Specifies a boolean to check all properites for numbers, or list of properties that should be checked to be numbers.
+
+**default values shown below**
+
+```toml
+[lints.config.math_could_be_unquoted]
+options.ignore = ["text", "name", "displayname"]
+options.forced = ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive", "specular", "specularpower"]
+```
+
+### Example
 
 **Incorrect**
 ```hpp
@@ -37,7 +50,7 @@ x = 1+1; // HEMTT will evaluate at build-time to 2
 ```
 
 ### Explanation
-Quoted math statements will have to be evaulated on each use in-game, by allowing HEMTT to evaluate the math at build-time you can save some performance."
+Quoted math statements will have to be evaulated on each use in-game, by allowing HEMTT to evaluate the math at build-time you can save some performance."#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -51,29 +64,49 @@ Quoted math statements will have to be evaulated on each use in-game, by allowin
         vec![Box::new(Runner)]
     }
 }
-
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Value;
+    type Target = crate::Property;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
-        target: &crate::Value,
+        target: &crate::Property,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let mut codes = Vec::new();
         let Some(processed) = processed else {
             return vec![];
         };
-        match target {
+        let Property::Entry { name, value, .. } = target else {
+            return vec![];
+        };
+        let name = name.as_str().to_lowercase();
+        let ignore = if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
+            ignore.iter().map(|v| v.as_str().expect("ignore items must be strings")).collect::<Vec<&str>>()
+        } else {
+            vec!["text", "name", "displayname"]
+        };
+        if ignore.contains(&name.as_str()) {
+            return vec![];
+        }
+        let check_if_equation = !match config.option("forced") {
+            Some(toml::Value::Boolean(forced)) => *forced,
+            Some(toml::Value::Array(forced)) => forced.iter().map(|v| v.as_str().expect("forced items must be strings").to_lowercase()).any(|x| x == name.as_str()),
+            None => ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive", "specular", "specularpower"].contains(&name.as_str()),
+            _ => {
+                println!("Invalid forced value on math_could_be_unquoted, expected boolean or array of strings");
+                false
+            }
+        };
+        match value {
             Value::Array(arr) => {
                 for item in &arr.items {
-                    check_item(item, processed, config, &mut codes);
+                    check_item(item, processed, config, check_if_equation, &mut codes);
                 }
             }
-            Value::Str(str) => check_str(str, processed, config, &mut codes),
+            Value::Str(str) => check_str(str, processed, config, check_if_equation, &mut codes),
             _ => {}
         }
 
@@ -85,16 +118,17 @@ fn check_item(
     target: &crate::Item,
     processed: &Processed,
     config: &LintConfig,
+    check_if_equation: bool,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
     match target {
         Item::Array(items) => {
             for element in items {
-                check_item(element, processed, config, codes);
+                check_item(element, processed, config, check_if_equation, codes);
             }
         }
         Item::Str(taget_str) => {
-            check_str(taget_str, processed, config, codes);
+            check_str(taget_str, processed, config, check_if_equation, codes);
         }
         _ => {}
     }
@@ -104,11 +138,12 @@ fn check_str(
     target_str: &crate::Str,
     processed: &Processed,
     config: &LintConfig,
+    check_if_equation: bool,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
     let raw_string = target_str.value();
     // check if it contains some kind of math ops (avoid false positives from `displayName = "556";`)
-    if !(raw_string.contains('+')
+    if check_if_equation && !(raw_string.contains('+')
         || raw_string.contains('-')
         || raw_string.contains('*')
         || raw_string.contains('/'))

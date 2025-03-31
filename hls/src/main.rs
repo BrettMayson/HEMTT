@@ -8,7 +8,7 @@ use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
 
-use tracing::{Level, debug, error, info};
+use tracing::{Level, debug, info};
 
 use crate::diag_manager::DiagManager;
 use crate::workspace::EditorWorkspaces;
@@ -18,9 +18,11 @@ mod color;
 mod config;
 mod diag_manager;
 mod files;
+mod p3d;
+mod paa;
 mod positions;
 mod preprocessor;
-pub mod sqf;
+mod sqf;
 mod workspace;
 
 #[derive(Clone, clap::Args)]
@@ -258,36 +260,11 @@ impl Backend {
         };
         Ok(Some(serde_json::to_value(res).unwrap()))
     }
-
-    async fn compiled(&self, params: ProviderParams) -> Result<Option<Value>> {
-        let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
-            return Ok(None);
-        };
-        Ok(Some(serde_json::to_value(res).unwrap()))
-    }
-
-    async fn convert_audio(&self, params: AudioConvertParams) -> Result<Option<Value>> {
-        println!("Converting audio: {:?}", params);
-        match audio::convert(params.url, params.to, params.out) {
-            Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
-            Err(e) => {
-                error!("Error converting audio: {}", e);
-                Ok(None)
-            }
-        }
-    }
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ProviderParams {
     url: Url,
-}
-
-#[derive(Debug, serde::Deserialize)]
-pub struct AudioConvertParams {
-    url: Url,
-    to: String,
-    out: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -325,9 +302,12 @@ async fn server() {
     let (read, write) = tokio::io::split(stream);
 
     let (service, socket) = LspService::build(|client| Backend { client })
+        .custom_method("hemtt/audio/convert", Backend::audio_convert)
+        .custom_method("hemtt/p3d/json", Backend::p3d_json)
+        .custom_method("hemtt/paa/json", Backend::paa_json)
+        .custom_method("hemtt/paa/p3d", Backend::paa_p3d)
         .custom_method("hemtt/processed", Backend::processed)
-        .custom_method("hemtt/compiled", Backend::compiled)
-        .custom_method("hemtt/convertAudio", Backend::convert_audio)
+        .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
         .finish();
     Server::new(read, write, socket).serve(service).await;
 }

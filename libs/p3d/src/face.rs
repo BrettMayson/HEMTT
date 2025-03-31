@@ -2,10 +2,11 @@ use std::io::{Read, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
+use serde::Serialize;
 
 use crate::{Error, Vertex};
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Serialize)]
 pub struct Face {
     pub vertices: Vec<Vertex>,
     pub flags: u32,

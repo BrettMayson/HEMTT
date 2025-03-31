@@ -8,9 +8,10 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
+import * as audio from "./audio";
+import * as p3d from "./p3d";
 import * as paa from "./paa";
 import * as preprocessor from "./preprocessor";
-import * as audio from "./audio";
 
 import { getPortPromise } from "portfinder";
 
@@ -19,7 +20,6 @@ export let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HE
 
 export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(channel);
-  paa.activate(context);
   let command = context.asAbsolutePath("hemtt-language-server");
   if (process.platform === "win32") {
     command += ".exe";
@@ -73,8 +73,10 @@ export async function activate(context: vscode.ExtensionContext) {
   // activateInlayHints(context);
   client.start();
 
-  preprocessor.init(client, channel, context);
   audio.init(client, channel, context);
+  p3d.init(client, channel, context);
+  paa.init(client, channel, context);
+  preprocessor.init(client, channel, context);
   channel.appendLine("HEMTT initialized");
 }
 

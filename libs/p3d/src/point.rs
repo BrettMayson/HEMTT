@@ -1,10 +1,11 @@
 use std::io::{Read, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use serde::Serialize;
 
 use crate::Error;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Serialize)]
 pub struct Point {
     pub coords: (f32, f32, f32),
     pub flags: u32,
