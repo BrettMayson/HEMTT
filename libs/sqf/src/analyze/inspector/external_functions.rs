@@ -154,6 +154,7 @@ impl SciptScope {
                 return;
             }
             let mut ext_scope = Self::create(self.global.clone(), &self.ignored_vars, false);
+            ext_scope.code_used.insert(expression.clone()); // prevent infinite recursion
 
             for (var, value) in vars {
                 ext_scope.var_assign(
