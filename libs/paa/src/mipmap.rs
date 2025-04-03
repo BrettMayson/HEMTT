@@ -1,14 +1,15 @@
 use std::io::Read;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use texpresso::Format;
+
+use crate::PaXType;
 
 #[derive(Debug)]
 pub struct MipMap {
     width: u16,
     height: u16,
     data: Vec<u8>,
-    format: Format,
+    format: PaXType,
 }
 
 impl MipMap {
@@ -16,7 +17,7 @@ impl MipMap {
     ///
     /// # Errors
     /// [`std::io::Error`] if the input is not readable, or the `MipMap` is invalid
-    pub fn from_stream<I: Read>(format: Format, stream: &mut I) -> Result<Self, std::io::Error> {
+    pub fn from_stream<I: Read>(format: PaXType, stream: &mut I) -> Result<Self, std::io::Error> {
         let width = stream.read_u16::<LittleEndian>()?;
         let height = stream.read_u16::<LittleEndian>()?;
         let length = stream.read_u24::<LittleEndian>()?;
@@ -60,7 +61,7 @@ impl MipMap {
 
     #[must_use]
     /// Get the format of the `MipMap`
-    pub const fn format(&self) -> &Format {
+    pub const fn format(&self) -> &PaXType {
         &self.format
     }
 
@@ -76,38 +77,91 @@ impl MipMap {
     /// # Panics
     /// Panics if the `MipMap` is invalid
     pub fn get_image(&self) -> image::DynamicImage {
-        let data = &*self.data;
-        let mut width_2 = self.width;
-        let compress = if width_2 % 32768 == width_2 {
-            false
-        } else {
-            width_2 -= 32768;
-            true
-        };
-        let mut img_size: u32 = u32::from(width_2) * u32::from(self.height);
-        if self.format == Format::Bc1 {
-            img_size /= 2;
+        #[derive(Debug, PartialEq, Eq)]
+        pub enum Compression {
+            None,
+            Lzss,
+            Lz77,
         }
+        let data = &*self.data;
+
+        // Determine if this is a DXT format
+        let is_dxt = matches!(
+            self.format,
+            PaXType::DXT1 | PaXType::DXT2 | PaXType::DXT3 | PaXType::DXT4 | PaXType::DXT5
+        );
+
+        // Get actual width - for DXT formats, check compression flag in width
+        let actual_width = if is_dxt && self.width % 32768 != self.width {
+            self.width - 32768
+        } else {
+            self.width
+        };
+
+        // Calculate decompressed data size based on format
+        let img_size = match self.format {
+            PaXType::GRAYA | PaXType::ARGB4 | PaXType::ARGBA5 => {
+                u32::from(actual_width) * u32::from(self.height) * 2
+            }
+            PaXType::ARGB8 => u32::from(actual_width) * u32::from(self.height) * 4,
+            PaXType::DXT1 => (u32::from(actual_width) * u32::from(self.height)) / 2,
+            _ => u32::from(actual_width) * u32::from(self.height),
+        };
+
+        // Output buffer is always RGBA8 (4 bytes per pixel)
+        let mut out_buffer = vec![0u8; 4 * (actual_width as usize) * (self.height as usize)];
+
+        // Determine if we need to decompress
+        let decompression = if !is_dxt {
+            Compression::Lz77
+        } else if self.width % 32768 != self.width {
+            Compression::Lzss
+        } else {
+            Compression::None
+        };
+
         let mut buffer: Box<[u8]> = vec![0; img_size as usize].into_boxed_slice();
-        let mut out_buffer = vec![0u8; 4 * (width_2 as usize) * (self.height as usize)];
-        if compress {
-            let _ = hemtt_lzo::decompress_to_slice(data, &mut buffer);
+        if decompression == Compression::Lzss {
+            match hemtt_lzo::decompress_to_slice(data, &mut buffer) {
+                Ok(decompressed) => {
+                    self.format.decompress(
+                        decompressed,
+                        usize::from(actual_width),
+                        usize::from(self.height),
+                        &mut out_buffer,
+                    );
+                }
+                Err(e) => {
+                    eprintln!(
+                        "Failed to decompress LZSS data for {:?} ({}x{}): {}",
+                        self.format, actual_width, self.height, e
+                    );
+                    self.format.decompress(
+                        data,
+                        usize::from(actual_width),
+                        usize::from(self.height),
+                        &mut out_buffer,
+                    );
+                }
+            }
+        } else if decompression == Compression::Lz77 {
+            expand_unknown_input_length(data, &mut buffer).expect("Failed to decompress LZSS data");
             self.format.decompress(
                 &buffer,
-                usize::from(width_2),
+                usize::from(actual_width),
                 usize::from(self.height),
                 &mut out_buffer,
             );
         } else {
             self.format.decompress(
                 data,
-                usize::from(width_2),
+                usize::from(actual_width),
                 usize::from(self.height),
                 &mut out_buffer,
             );
         }
         image::DynamicImage::ImageRgba8(
-            image::RgbaImage::from_raw(u32::from(width_2), u32::from(self.height), out_buffer)
+            image::RgbaImage::from_raw(u32::from(actual_width), u32::from(self.height), out_buffer)
                 .expect("paa should contain valid image data"),
         )
     }
@@ -126,4 +180,125 @@ impl MipMap {
             .expect("Failed to write PNG");
         base64::prelude::BASE64_STANDARD.encode(buffer.get_ref())
     }
+}
+
+/// Decompress data from input to a fixed-size output buffer
+///
+/// Returns the number of bytes read from input on success, or an error message
+pub fn expand_unknown_input_length(
+    input: &[u8],
+    out_buf: &mut [u8],
+) -> Result<usize, &'static str> {
+    let outlen = out_buf.len();
+    let mut flag: u8 = 0;
+    let mut rpos: usize;
+    let mut rlen: u8;
+    let mut fl: usize = 0;
+    let mut calculated_checksum: u32 = 0;
+    let mut pi: usize = 0;
+    let mut data: u8;
+
+    let mut remaining_outlen = outlen;
+
+    'outer: while remaining_outlen > 0 {
+        if pi >= input.len() {
+            return Err("Unexpected end of input data");
+        }
+
+        flag = input[pi];
+        pi += 1;
+
+        for _ in 0..8 {
+            if (flag & 0x01) != 0 {
+                // Raw data
+                if pi >= input.len() {
+                    return Err("Unexpected end of input data during raw byte read");
+                }
+
+                data = input[pi];
+                pi += 1;
+                calculated_checksum += data as u32;
+                out_buf[fl] = data;
+                fl += 1;
+
+                remaining_outlen -= 1;
+                if remaining_outlen == 0 {
+                    break 'outer; // goto finish
+                }
+            } else {
+                // Back reference - need 2 more bytes
+                if pi + 1 >= input.len() {
+                    return Err("Unexpected end of input data during back reference read");
+                }
+
+                rpos = input[pi] as usize;
+                pi += 1;
+
+                rlen = (input[pi] & 0x0F) + 3;
+                rpos += ((input[pi] & 0xF0) as usize) << 4;
+                pi += 1;
+
+                // Special case: space fill
+                let mut skip_backref = false;
+                while rpos > fl {
+                    calculated_checksum += 0x20;
+                    out_buf[fl] = 0x20;
+                    fl += 1;
+
+                    remaining_outlen -= 1;
+                    if remaining_outlen == 0 {
+                        break 'outer; // goto finish
+                    }
+
+                    rlen -= 1;
+                    if rlen == 0 {
+                        skip_backref = true;
+                        break;
+                    }
+                }
+
+                if !skip_backref {
+                    // Standard back reference copy
+                    rpos = fl - rpos;
+
+                    // Need to copy byte-by-byte because source and destination might overlap
+                    for _ in 0..rlen {
+                        data = out_buf[rpos];
+                        calculated_checksum += data as u32;
+                        out_buf[fl] = data;
+                        fl += 1;
+                        rpos += 1;
+
+                        remaining_outlen -= 1;
+                        if remaining_outlen == 0 {
+                            break 'outer; // goto finish
+                        }
+                    }
+                }
+            }
+
+            // Shift flag for next bit
+            flag >>= 1;
+        }
+    }
+
+    // Check excess bits in final flag byte
+    if flag & 0xFE != 0 {
+        return Err("Excess bits in final flag byte");
+    }
+
+    // Read checksum
+    if pi + 3 >= input.len() {
+        return Err("Cannot read checksum: unexpected end of input");
+    }
+
+    let read_checksum =
+        u32::from_ne_bytes([input[pi], input[pi + 1], input[pi + 2], input[pi + 3]]);
+
+    if read_checksum != calculated_checksum {
+        println!("Checksum mismatch");
+        println!("Expected: {:#010x}", calculated_checksum);
+        println!("Read: {:#010x}", read_checksum);
+    }
+    Ok(pi + 4)
 }
