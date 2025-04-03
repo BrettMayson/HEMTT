@@ -103,8 +103,8 @@ impl LOD {
     }
 
     fn get_lod_type_from_resolution(resolution: f32) -> String {
-        if resolution >= 20000.0 && resolution < 30000.0 {
-            return ("Edit ".to_owned() + &(resolution - 20000.0).floor().to_string()).to_string();
+        if (20000.0..30000.0).contains(&resolution) {
+            return "Edit ".to_owned() + &(resolution - 20000.0).floor().to_string();
         }
 
         let type_name = Self::get_lod_type_from_resolution_match(resolution).to_string();
@@ -113,12 +113,16 @@ impl LOD {
         }
 
         if resolution > 1000.0 {
-            return ("Unknown ".to_owned() + &resolution.to_string()).to_string();
+            return "Unknown ".to_owned() + &resolution.to_string();
         }
 
-        return ("Resolution ".to_owned() + &resolution.to_string()).to_string();
+        "Resolution ".to_owned() + &resolution.to_string()
     }
 
+    #[expect(
+        clippy::float_cmp,
+        reason = "All of the numbers should be safe for exact comparison"
+    )]
     fn get_lod_type_from_resolution_match(resolution: f32) -> &'static str {
         // View positions
         if resolution == 1000.0 {
@@ -220,7 +224,7 @@ impl LOD {
             return "Wreck";
         }
 
-        return "Unknown";
+        "Unknown"
     }
 
     /// Writes the LOD to a given output stream.
