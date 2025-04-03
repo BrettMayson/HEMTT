@@ -1,0 +1,59 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (numbers))
+---
+Config(
+    [
+        Class(
+            Local {
+                name: Ident {
+                    value: "numbers",
+                    span: 19..27,
+                },
+                parent: None,
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "hex",
+                            span: 39..43,
+                        },
+                        value: Number(
+                            Int32 {
+                                value: 26,
+                                span: 0..4,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                    Entry {
+                        name: Ident {
+                            value: "dec",
+                            span: 49..53,
+                        },
+                        value: Number(
+                            Int32 {
+                                value: 42,
+                                span: 0..4,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                    Entry {
+                        name: Ident {
+                            value: "float",
+                            span: 59..65,
+                        },
+                        value: Number(
+                            Float32 {
+                                value: 3.14,
+                                span: 0..4,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+    ],
+)

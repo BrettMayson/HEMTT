@@ -1,0 +1,7 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config.to_string()
+---
+class thing {
+    helloworld = "test";
+};

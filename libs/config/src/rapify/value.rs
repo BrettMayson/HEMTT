@@ -1,6 +1,6 @@
-use crate::Value;
+use crate::{Expression, Number, Str, Value};
 
-use super::Rapify;
+use super::{Derapify, Rapify};
 
 impl Rapify for Value {
     fn rapify<O: std::io::Write>(
@@ -36,6 +36,32 @@ impl Rapify for Value {
             Self::Expression(e) => e.rapified_code(),
             Self::Array(a) => a.rapified_code(),
             Self::UnexpectedArray(_) | Self::Invalid(_) => unreachable!(),
+        }
+    }
+}
+
+impl Value {
+    /// Derapify a value from the input stream
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or cannot be read
+    pub fn derapify<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+        subcode: u8,
+    ) -> Result<Self, std::io::Error>
+    where
+        Self: Sized,
+    {
+        match subcode {
+            0 => Ok(Self::Str(Str::derapify(input)?)),
+            1 => Ok(Self::Number(Number::derapify_float32(input)?)),
+            2 => Ok(Self::Number(Number::derapify_int32(input)?)),
+            4 => Ok(Self::Expression(Expression::derapify(input)?)),
+            6 => Ok(Self::Number(Number::derapify_int64(input)?)),
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid rapified value code: {subcode}"),
+            )),
         }
     }
 }

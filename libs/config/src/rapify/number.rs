@@ -1,4 +1,4 @@
-use byteorder::{LittleEndian, WriteBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::Number;
 
@@ -41,6 +41,41 @@ impl Rapify for Number {
             Self::Int64 { .. } => 6,
             Self::Float32 { .. } => 1,
         }
+    }
+}
+
+impl Number {
+    /// Derapify an in32 value from the input stream
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or cannot be read
+    pub fn derapify_int32<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+    ) -> Result<Self, std::io::Error> {
+        let value = input.read_i32::<LittleEndian>()?;
+        Ok(Self::Int32 { value, span: 0..4 })
+    }
+
+    /// Derapify an in64 value from the input stream
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or cannot be read
+    pub fn derapify_int64<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+    ) -> Result<Self, std::io::Error> {
+        let value = input.read_i64::<LittleEndian>()?;
+        Ok(Self::Int64 { value, span: 0..8 })
+    }
+
+    /// Derapify a float32 value from the input stream
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or cannot be read
+    pub fn derapify_float32<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+    ) -> Result<Self, std::io::Error> {
+        let value = input.read_f32::<LittleEndian>()?;
+        Ok(Self::Float32 { value, span: 0..4 })
     }
 }
 

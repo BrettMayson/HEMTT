@@ -1,0 +1,174 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (nested_array))
+---
+Config(
+    [
+        Entry {
+            name: Ident {
+                value: "value",
+                span: 19..25,
+            },
+            value: Array(
+                Array {
+                    expand: false,
+                    items: [
+                        Array(
+                            [
+                                Number(
+                                    Int32 {
+                                        value: 1,
+                                        span: 0..4,
+                                    },
+                                ),
+                            ],
+                        ),
+                        Array(
+                            [
+                                Number(
+                                    Int32 {
+                                        value: 2,
+                                        span: 0..4,
+                                    },
+                                ),
+                            ],
+                        ),
+                    ],
+                    span: 25..40,
+                },
+            ),
+            expected_array: true,
+        },
+        Entry {
+            name: Ident {
+                value: "value2",
+                span: 41..48,
+            },
+            value: Array(
+                Array {
+                    expand: false,
+                    items: [
+                        Array(
+                            [
+                                Str(
+                                    Str {
+                                        value: "test",
+                                        span: 52..57,
+                                    },
+                                ),
+                            ],
+                        ),
+                        Str(
+                            Str {
+                                value: "hello",
+                                span: 58..64,
+                            },
+                        ),
+                        Array(
+                            [
+                                Str(
+                                    Str {
+                                        value: "hello",
+                                        span: 67..73,
+                                    },
+                                ),
+                                Str(
+                                    Str {
+                                        value: "hello",
+                                        span: 74..80,
+                                    },
+                                ),
+                            ],
+                        ),
+                    ],
+                    span: 48..80,
+                },
+            ),
+            expected_array: true,
+        },
+        Entry {
+            name: Ident {
+                value: "modes",
+                span: 81..87,
+            },
+            value: Array(
+                Array {
+                    expand: false,
+                    items: [
+                        Str(
+                            Str {
+                                value: "Single",
+                                span: 89..96,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "manual",
+                                span: 97..104,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "close",
+                                span: 105..111,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "short",
+                                span: 112..118,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "medium",
+                                span: 119..126,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "far_optic1",
+                                span: 127..138,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "far_optic2",
+                                span: 139..150,
+                            },
+                        ),
+                        Str(
+                            Str {
+                                value: "ACE_Burst_far",
+                                span: 151..165,
+                            },
+                        ),
+                    ],
+                    span: 87..165,
+                },
+            ),
+            expected_array: true,
+        },
+        Entry {
+            name: Ident {
+                value: "values",
+                span: 170..177,
+            },
+            value: Array(
+                Array {
+                    expand: true,
+                    items: [
+                        Number(
+                            Int32 {
+                                value: 1,
+                                span: 0..4,
+                            },
+                        ),
+                    ],
+                    span: 177..183,
+                },
+            ),
+            expected_array: true,
+        },
+    ],
+)

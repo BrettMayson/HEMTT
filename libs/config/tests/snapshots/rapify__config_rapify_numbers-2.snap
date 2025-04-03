@@ -1,0 +1,9 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config.to_string()
+---
+class numbers {
+    hex = 26;
+    dec = 42;
+    float = 3.14;
+};

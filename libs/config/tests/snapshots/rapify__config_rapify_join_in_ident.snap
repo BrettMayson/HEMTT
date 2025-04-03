@@ -1,0 +1,33 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (join_in_ident))
+---
+Config(
+    [
+        Class(
+            Local {
+                name: Ident {
+                    value: "thing",
+                    span: 19..25,
+                },
+                parent: None,
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "helloworld",
+                            span: 37..48,
+                        },
+                        value: Str(
+                            Str {
+                                value: "test",
+                                span: 48..53,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+    ],
+)
