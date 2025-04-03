@@ -45,7 +45,7 @@ impl Rapify for Number {
 }
 
 impl Number {
-    /// Derapify an in32 value from the input stream
+    /// Derapify an int32 value from the input stream
     ///
     /// # Errors
     /// [`std::io::Error`] if the input stream is invalid or cannot be read
@@ -57,7 +57,7 @@ impl Number {
         Ok(Self::Int32 { value, span: start..start + 4 })
     }
 
-    /// Derapify an in64 value from the input stream
+    /// Derapify an int64 value from the input stream
     ///
     /// # Errors
     /// [`std::io::Error`] if the input stream is invalid or cannot be read
