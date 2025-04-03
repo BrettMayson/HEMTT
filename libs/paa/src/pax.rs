@@ -34,7 +34,7 @@ impl PaXType {
             [4, 255] => Some(Self::DXT4),    // 0x04FF
             [5, 255] => Some(Self::DXT5),    // 0x05FF
             [68, 68] => Some(Self::ARGB4),   // 0x4444
-            [85, 21] => Some(Self::ARGBA5),   // 0x1555
+            [85, 21] => Some(Self::ARGBA5),  // 0x1555
             [136, 136] => Some(Self::ARGB8), // 0x8888
             [128, 128] => Some(Self::GRAYA), // 0x8080
             _ => None,
@@ -111,10 +111,10 @@ impl PaXType {
                 for i in 0..(width * height) {
                     if i < data.len() {
                         let pixel = data[i];
-                        output[i * 4] = pixel;    // R
+                        output[i * 4] = pixel; // R
                         output[i * 4 + 1] = pixel; // G
                         output[i * 4 + 2] = pixel; // B
-                        output[i * 4 + 3] = 0xFF;  // A (full opacity)
+                        output[i * 4 + 3] = 0xFF; // A (full opacity)
                     }
                 }
             }

@@ -84,29 +84,33 @@ impl MipMap {
             Lz77,
         }
         let data = &*self.data;
-        
+
         // Determine if this is a DXT format
-        let is_dxt = matches!(self.format, 
-            PaXType::DXT1 | PaXType::DXT2 | PaXType::DXT3 | PaXType::DXT4 | PaXType::DXT5);
-        
+        let is_dxt = matches!(
+            self.format,
+            PaXType::DXT1 | PaXType::DXT2 | PaXType::DXT3 | PaXType::DXT4 | PaXType::DXT5
+        );
+
         // Get actual width - for DXT formats, check compression flag in width
         let actual_width = if is_dxt && self.width % 32768 != self.width {
             self.width - 32768
         } else {
             self.width
         };
-        
+
         // Calculate decompressed data size based on format
         let img_size = match self.format {
-            PaXType::GRAYA | PaXType::ARGB4 | PaXType::ARGBA5 => u32::from(actual_width) * u32::from(self.height) * 2,
+            PaXType::GRAYA | PaXType::ARGB4 | PaXType::ARGBA5 => {
+                u32::from(actual_width) * u32::from(self.height) * 2
+            }
             PaXType::ARGB8 => u32::from(actual_width) * u32::from(self.height) * 4,
             PaXType::DXT1 => (u32::from(actual_width) * u32::from(self.height)) / 2,
-            _ => u32::from(actual_width) * u32::from(self.height)
+            _ => u32::from(actual_width) * u32::from(self.height),
         };
-        
+
         // Output buffer is always RGBA8 (4 bytes per pixel)
         let mut out_buffer = vec![0u8; 4 * (actual_width as usize) * (self.height as usize)];
-        
+
         // Determine if we need to decompress
         let decompression = if !is_dxt {
             Compression::Lz77
@@ -115,7 +119,7 @@ impl MipMap {
         } else {
             Compression::None
         };
-        
+
         let mut buffer: Box<[u8]> = vec![0; img_size as usize].into_boxed_slice();
         if decompression == Compression::Lzss {
             match hemtt_lzo::decompress_to_slice(data, &mut buffer) {
@@ -126,9 +130,12 @@ impl MipMap {
                         usize::from(self.height),
                         &mut out_buffer,
                     );
-                },
+                }
                 Err(e) => {
-                    eprintln!("Failed to decompress LZSS data for {:?} ({}x{}): {}", self.format, actual_width, self.height, e);
+                    eprintln!(
+                        "Failed to decompress LZSS data for {:?} ({}x{}): {}",
+                        self.format, actual_width, self.height, e
+                    );
                     self.format.decompress(
                         data,
                         usize::from(actual_width),
@@ -176,9 +183,12 @@ impl MipMap {
 }
 
 /// Decompress data from input to a fixed-size output buffer
-/// 
+///
 /// Returns the number of bytes read from input on success, or an error message
-pub fn expand_unknown_input_length(input: &[u8], out_buf: &mut [u8]) -> Result<usize, &'static str> {
+pub fn expand_unknown_input_length(
+    input: &[u8],
+    out_buf: &mut [u8],
+) -> Result<usize, &'static str> {
     let outlen = out_buf.len();
     let mut flag: u8 = 0;
     let mut rpos: usize;
@@ -194,62 +204,63 @@ pub fn expand_unknown_input_length(input: &[u8], out_buf: &mut [u8]) -> Result<u
         if pi >= input.len() {
             return Err("Unexpected end of input data");
         }
-        
+
         flag = input[pi];
         pi += 1;
-        
+
         for _ in 0..8 {
-            if (flag & 0x01) != 0 {  // Raw data
+            if (flag & 0x01) != 0 {
+                // Raw data
                 if pi >= input.len() {
                     return Err("Unexpected end of input data during raw byte read");
                 }
-                
+
                 data = input[pi];
                 pi += 1;
                 calculated_checksum += data as u32;
                 out_buf[fl] = data;
                 fl += 1;
-                
+
                 remaining_outlen -= 1;
                 if remaining_outlen == 0 {
-                    break 'outer;  // goto finish
+                    break 'outer; // goto finish
                 }
             } else {
                 // Back reference - need 2 more bytes
                 if pi + 1 >= input.len() {
                     return Err("Unexpected end of input data during back reference read");
                 }
-                
+
                 rpos = input[pi] as usize;
                 pi += 1;
-                
+
                 rlen = (input[pi] & 0x0F) + 3;
                 rpos += ((input[pi] & 0xF0) as usize) << 4;
                 pi += 1;
-                
+
                 // Special case: space fill
                 let mut skip_backref = false;
                 while rpos > fl {
                     calculated_checksum += 0x20;
                     out_buf[fl] = 0x20;
                     fl += 1;
-                    
+
                     remaining_outlen -= 1;
                     if remaining_outlen == 0 {
-                        break 'outer;  // goto finish
+                        break 'outer; // goto finish
                     }
-                    
+
                     rlen -= 1;
                     if rlen == 0 {
                         skip_backref = true;
                         break;
                     }
                 }
-                
+
                 if !skip_backref {
                     // Standard back reference copy
                     rpos = fl - rpos;
-                    
+
                     // Need to copy byte-by-byte because source and destination might overlap
                     for _ in 0..rlen {
                         data = out_buf[rpos];
@@ -257,34 +268,33 @@ pub fn expand_unknown_input_length(input: &[u8], out_buf: &mut [u8]) -> Result<u
                         out_buf[fl] = data;
                         fl += 1;
                         rpos += 1;
-                        
+
                         remaining_outlen -= 1;
                         if remaining_outlen == 0 {
-                            break 'outer;  // goto finish
+                            break 'outer; // goto finish
                         }
                     }
                 }
             }
-            
+
             // Shift flag for next bit
             flag >>= 1;
         }
     }
-    
+
     // Check excess bits in final flag byte
     if flag & 0xFE != 0 {
         return Err("Excess bits in final flag byte");
     }
-    
+
     // Read checksum
     if pi + 3 >= input.len() {
         return Err("Cannot read checksum: unexpected end of input");
     }
-    
-    let read_checksum = u32::from_ne_bytes([
-        input[pi], input[pi+1], input[pi+2], input[pi+3]
-    ]);
-    
+
+    let read_checksum =
+        u32::from_ne_bytes([input[pi], input[pi + 1], input[pi + 2], input[pi + 3]]);
+
     if read_checksum != calculated_checksum {
         println!("Checksum mismatch");
         println!("Expected: {:#010x}", calculated_checksum);

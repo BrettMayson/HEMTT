@@ -89,8 +89,7 @@ impl Paa {
                     let seek = u32::from_le_bytes(seek);
                     if seek != 0 {
                         input.seek(SeekFrom::Start(u64::from(seek)))?;
-                        paa.maps
-                            .push(MipMap::from_stream(paa.format, &mut input)?);
+                        paa.maps.push(MipMap::from_stream(paa.format, &mut input)?);
                     }
                 }
             }
