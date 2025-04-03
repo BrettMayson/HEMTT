@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (ace_main))
+expression: config
 ---
 Config(
     [
@@ -69,7 +69,7 @@ Config(
                                     value: Number(
                                         Float32 {
                                             value: 2.1,
-                                            span: 0..4,
+                                            span: 234..238,
                                         },
                                     ),
                                     expected_array: false,
@@ -129,7 +129,7 @@ Config(
                                     value: Number(
                                         Float32 {
                                             value: 3.15,
-                                            span: 0..4,
+                                            span: 332..336,
                                         },
                                     ),
                                     expected_array: false,
@@ -159,25 +159,25 @@ Config(
                                                 Number(
                                                     Int32 {
                                                         value: 3,
-                                                        span: 0..4,
+                                                        span: 372..376,
                                                     },
                                                 ),
                                                 Number(
                                                     Int32 {
                                                         value: 15,
-                                                        span: 0..4,
+                                                        span: 377..381,
                                                     },
                                                 ),
                                                 Number(
                                                     Int32 {
                                                         value: 2,
-                                                        span: 0..4,
+                                                        span: 382..386,
                                                     },
                                                 ),
                                                 Number(
                                                     Int32 {
                                                         value: 69,
-                                                        span: 0..4,
+                                                        span: 387..391,
                                                     },
                                                 ),
                                             ],
@@ -427,19 +427,19 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 797..801,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 802..806,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 7,
-                                                                                                    span: 0..4,
+                                                                                                    span: 807..811,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -476,25 +476,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 863..867,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 868..872,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 873..877,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 878..882,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -531,25 +531,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 976..980,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 981..985,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 986..990,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 991..995,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -586,25 +586,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1094..1098,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1099..1103,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1104..1108,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1109..1113,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -641,25 +641,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1211..1215,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1216..1220,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1221..1225,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1226..1230,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -696,25 +696,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1321..1325,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1326..1330,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1331..1335,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1336..1340,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -751,25 +751,25 @@ Config(
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 3,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1432..1436,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 15,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1437..1441,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 2,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1442..1446,
                                                                                                 },
                                                                                             ),
                                                                                             Number(
                                                                                                 Int32 {
                                                                                                     value: 69,
-                                                                                                    span: 0..4,
+                                                                                                    span: 1447..1451,
                                                                                                 },
                                                                                             ),
                                                                                         ],
@@ -856,7 +856,7 @@ Config(
                                     value: Number(
                                         Int32 {
                                             value: 2,
-                                            span: 0..4,
+                                            span: 1595..1599,
                                         },
                                     ),
                                     expected_array: false,
@@ -869,7 +869,7 @@ Config(
                                     value: Number(
                                         Int32 {
                                             value: 7,
-                                            span: 0..4,
+                                            span: 1606..1610,
                                         },
                                     ),
                                     expected_array: false,

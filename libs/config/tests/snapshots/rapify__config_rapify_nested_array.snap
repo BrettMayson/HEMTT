@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (nested_array))
+expression: config
 ---
 Config(
     [
@@ -18,7 +18,7 @@ Config(
                                 Number(
                                     Int32 {
                                         value: 1,
-                                        span: 0..4,
+                                        span: 29..33,
                                     },
                                 ),
                             ],
@@ -28,7 +28,7 @@ Config(
                                 Number(
                                     Int32 {
                                         value: 2,
-                                        span: 0..4,
+                                        span: 36..40,
                                     },
                                 ),
                             ],
@@ -161,7 +161,7 @@ Config(
                         Number(
                             Int32 {
                                 value: 1,
-                                span: 0..4,
+                                span: 179..183,
                             },
                         ),
                     ],

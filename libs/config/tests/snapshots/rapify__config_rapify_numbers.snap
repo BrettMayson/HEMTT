@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (numbers))
+expression: config
 ---
 Config(
     [
@@ -20,7 +20,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 26,
-                                span: 0..4,
+                                span: 43..47,
                             },
                         ),
                         expected_array: false,
@@ -33,7 +33,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 42,
-                                span: 0..4,
+                                span: 53..57,
                             },
                         ),
                         expected_array: false,
@@ -46,7 +46,7 @@ Config(
                         value: Number(
                             Float32 {
                                 value: 3.14,
-                                span: 0..4,
+                                span: 65..69,
                             },
                         ),
                         expected_array: false,

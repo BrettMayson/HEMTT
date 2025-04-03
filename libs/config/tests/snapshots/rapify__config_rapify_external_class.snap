@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (external_class))
+expression: config
 ---
 Config(
     [
@@ -33,7 +33,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 12,
-                                span: 0..4,
+                                span: 87..91,
                             },
                         ),
                         expected_array: false,

@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (single_class))
+expression: config
 ---
 Config(
     [
@@ -12,7 +12,7 @@ Config(
             value: Number(
                 Int32 {
                     value: 10,
-                    span: 0..4,
+                    span: 28..32,
                 },
             ),
             expected_array: false,
@@ -42,19 +42,19 @@ Config(
                         Number(
                             Int32 {
                                 value: 1,
-                                span: 0..4,
+                                span: 55..59,
                             },
                         ),
                         Number(
                             Int32 {
                                 value: 2,
-                                span: 0..4,
+                                span: 60..64,
                             },
                         ),
                         Number(
                             Int32 {
                                 value: 3,
-                                span: 0..4,
+                                span: 65..69,
                             },
                         ),
                     ],
@@ -79,7 +79,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 10,
-                                span: 0..4,
+                                span: 105..109,
                             },
                         ),
                         expected_array: false,
@@ -92,7 +92,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 10,
-                                span: 0..4,
+                                span: 119..123,
                             },
                         ),
                         expected_array: false,
@@ -122,19 +122,19 @@ Config(
                                     Number(
                                         Int32 {
                                             value: 1,
-                                            span: 0..4,
+                                            span: 146..150,
                                         },
                                     ),
                                     Number(
                                         Int32 {
                                             value: 2,
-                                            span: 0..4,
+                                            span: 151..155,
                                         },
                                     ),
                                     Number(
                                         Int32 {
                                             value: 3,
-                                            span: 0..4,
+                                            span: 156..160,
                                         },
                                     ),
                                 ],
@@ -163,7 +163,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 10,
-                                span: 0..4,
+                                span: 176..180,
                             },
                         ),
                         expected_array: false,
@@ -176,7 +176,7 @@ Config(
                         value: Number(
                             Int32 {
                                 value: 10,
-                                span: 0..4,
+                                span: 190..194,
                             },
                         ),
                         expected_array: false,
@@ -206,19 +206,19 @@ Config(
                                     Number(
                                         Int32 {
                                             value: 1,
-                                            span: 0..4,
+                                            span: 217..221,
                                         },
                                     ),
                                     Number(
                                         Int32 {
                                             value: 2,
-                                            span: 0..4,
+                                            span: 222..226,
                                         },
                                     ),
                                     Number(
                                         Int32 {
                                             value: 3,
-                                            span: 0..4,
+                                            span: 227..231,
                                         },
                                     ),
                                 ],
