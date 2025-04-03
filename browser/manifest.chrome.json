@@ -1,6 +1,6 @@
 {
     "name": "HEMTT",
-    "version": "1.11.0",
+    "version": "1.15.1",
     "description": "HEMTT Extension for viewing PAA files in the browser",
     "manifest_version": 3,
     "background": {
