@@ -90,7 +90,7 @@ impl Paa {
                     if seek != 0 {
                         input.seek(SeekFrom::Start(u64::from(seek)))?;
                         paa.maps
-                            .push(MipMap::from_stream(paa.format.clone().into(), &mut input)?);
+                            .push(MipMap::from_stream(paa.format, &mut input)?);
                     }
                 }
             }
@@ -108,7 +108,7 @@ impl Paa {
     /// # Errors
     /// [`std::io::Error`] if the output is not writable
     pub fn write(image: &RgbaImage, output: &mut impl Write) -> Result<(), Error> {
-        let algo: Format = PaXType::DXT5.clone().into();
+        let algo: Format = PaXType::DXT5.into();
         output.write_all(&PaXType::DXT5.as_bytes())?; // 2
 
         // Average Color
