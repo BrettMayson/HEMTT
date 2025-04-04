@@ -54,7 +54,10 @@ impl Number {
     ) -> Result<Self, std::io::Error> {
         let start = input.stream_position()? as usize;
         let value = input.read_i32::<LittleEndian>()?;
-        Ok(Self::Int32 { value, span: start..start + 4 })
+        Ok(Self::Int32 {
+            value,
+            span: start..start + 4,
+        })
     }
 
     /// Derapify an int64 value from the input stream
@@ -66,7 +69,10 @@ impl Number {
     ) -> Result<Self, std::io::Error> {
         let start = input.stream_position()? as usize;
         let value = input.read_i64::<LittleEndian>()?;
-        Ok(Self::Int64 { value, span: start..start + 8 })
+        Ok(Self::Int64 {
+            value,
+            span: start..start + 8,
+        })
     }
 
     /// Derapify a float32 value from the input stream
@@ -78,7 +84,10 @@ impl Number {
     ) -> Result<Self, std::io::Error> {
         let start = input.stream_position()? as usize;
         let value = input.read_f32::<LittleEndian>()?;
-        Ok(Self::Float32 { value, span: start..start + 4 })
+        Ok(Self::Float32 {
+            value,
+            span: start..start + 4,
+        })
     }
 }
 
