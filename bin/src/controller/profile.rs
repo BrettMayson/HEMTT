@@ -26,20 +26,41 @@ pub fn setup(ctx: &Context) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn autotest(ctx: &Context, missions: &[(String, String)]) -> Result<(), Error> {
+#[derive(Debug, Clone)]
+pub enum AutotestMission {
+    Internal(String),
+    Custom(String),
+}
+
+impl AutotestMission {
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Custom(s) | Self::Internal(s) => s,
+        }
+    }
+}
+
+pub fn autotest(ctx: &Context, missions: &[(String, AutotestMission)]) -> Result<(), Error> {
     let mut autotest = File::create(ctx.profile().join("Users/hemtt/autotest.cfg"))?;
     autotest.write_all(b"class TestMissions {")?;
     for (name, file) in missions {
         autotest.write_all(
             format!(
-                r#"class {} {{campaign = "";mission = "{}\autotest\{}";}};"#,
+                r#"class {} {{campaign = "";mission = "{}";}};"#,
                 name,
-                ctx.profile()
-                    .display()
-                    .to_string()
-                    .replace('/', "\\")
-                    .replace('\n', "\r\n"),
-                file
+                match file {
+                    AutotestMission::Internal(s) => format!(
+                        r"{}\autotest\{}",
+                        ctx.profile()
+                            .display()
+                            .to_string()
+                            .replace('/', "\\")
+                            .replace('\n', "\r\n"),
+                        s
+                    ),
+                    AutotestMission::Custom(s) => s.to_string(),
+                }
             )
             .as_bytes(),
         )?;

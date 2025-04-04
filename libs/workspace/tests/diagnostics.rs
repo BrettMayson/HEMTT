@@ -2,8 +2,8 @@
 
 use codespan_reporting::diagnostic::Severity;
 use hemtt_workspace::{
-    reporting::{Diagnostic, Label, WorkspaceFiles},
     LayerType,
+    reporting::{Diagnostic, Label, WorkspaceFiles},
 };
 
 const ROOT: &str = "tests/diagnostics/";

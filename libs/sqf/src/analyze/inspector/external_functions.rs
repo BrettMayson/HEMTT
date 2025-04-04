@@ -1,6 +1,6 @@
 //! Emulate how common external functions will handle code
 
-use std::collections::HashSet;
+use indexmap::IndexSet;
 
 use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
 
@@ -10,7 +10,7 @@ impl SciptScope {
     #[allow(clippy::too_many_lines)]
     pub fn external_function(
         &mut self,
-        lhs: &HashSet<GameValue>,
+        lhs: &IndexSet<GameValue>,
         rhs: &Expression,
         database: &Database,
     ) {
@@ -29,7 +29,8 @@ impl SciptScope {
                         );
                     }
                 }
-                GameValue::Array(Some(gv_array)) => match ext_func.to_ascii_lowercase().as_str() {
+                GameValue::Array(Some(gv_array), _) => match ext_func.to_ascii_lowercase().as_str()
+                {
                     // Functions that will run in existing scope
                     "cba_fnc_hasheachpair" | "cba_fnc_hashfilter" => {
                         if gv_array.len() > 1 {
@@ -152,10 +153,16 @@ impl SciptScope {
             if self.code_used.contains(expression) {
                 return;
             }
-            let mut ext_scope = Self::create(&self.ignored_vars, false);
+            let mut ext_scope = Self::create(self.global.clone(), &self.ignored_vars, false);
+            ext_scope.code_used.insert(expression.clone()); // prevent infinite recursion
 
             for (var, value) in vars {
-                ext_scope.var_assign(var, true, HashSet::from([value.clone()]), VarSource::Ignore);
+                ext_scope.var_assign(
+                    var,
+                    true,
+                    IndexSet::from([value.clone()]),
+                    VarSource::Ignore,
+                );
             }
             self.code_used.insert(expression.clone());
             ext_scope.eval_statements(statements, database);
@@ -180,7 +187,12 @@ impl SciptScope {
             }
             self.push();
             for (var, value) in vars {
-                self.var_assign(var, true, HashSet::from([value.clone()]), VarSource::Ignore);
+                self.var_assign(
+                    var,
+                    true,
+                    IndexSet::from([value.clone()]),
+                    VarSource::Ignore,
+                );
             }
             self.code_used.insert(expression.clone());
             self.eval_statements(statements, database);

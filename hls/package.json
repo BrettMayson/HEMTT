@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.3.0",
+  "version": "0.6.4",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -32,6 +32,11 @@
         "language": "arma-config",
         "scopeName": "config",
         "path": "./languages/config.json"
+      },
+      {
+        "language": "model-config",
+        "scopeName": "config",
+        "path": "./languages/config.json"
       }
     ],
     "languages": [
@@ -55,12 +60,87 @@
         "extensions": [
           ".ext",
           ".hpp",
-          ".sqm"
+          ".sqm",
+          ".rvmat"
         ],
         "filenames": [
           "config.cpp"
         ],
         "configuration": "./languages/config.configuration.json"
+      },
+      {
+        "id": "model-config",
+        "aliases": [
+          "Model Config"
+        ],
+        "filenames": [
+          "model.cfg"
+        ],
+        "icon": {
+          "light": "./media/icons/model_cfg-light.png",
+          "dark": "./media/icons/model_cfg-dark.png"
+        }
+      },
+      {
+        "id": "paa",
+        "extensions": [
+          ".paa"
+        ],
+        "icon": {
+          "light": "./media/icons/image-light.png",
+          "dark": "./media/icons/image-dark.png"
+        }
+      },
+      {
+        "id": "p3d",
+        "extensions": [
+          ".p3d"
+        ],
+        "icon": {
+          "light": "./media/icons/3d-light.png",
+          "dark": "./media/icons/3d-dark.png"
+        }
+      },
+      {
+        "id": "rtm",
+        "extensions": [
+          ".rtm"
+        ],
+        "icon": {
+          "light": "./media/icons/anim-light.png",
+          "dark": "./media/icons/anim-dark.png"
+        }
+      },
+      {
+        "id": "wss",
+        "extensions": [
+          ".wss"
+        ],
+        "icon": {
+          "light": "./media/icons/audio-light.png",
+          "dark": "./media/icons/audio-dark.png"
+        }
+      },
+      {
+        "id": "rvmat",
+        "extensions": [
+          ".rvmat"
+        ],
+        "icon": {
+          "light": "./media/icons/mat-light.png",
+          "dark": "./media/icons/mat-dark.png"
+        }
+      },
+      {
+        "id": "addon-prefix",
+        "filenames": [
+          "$PBOPREFIX$",
+          "$PBOPREFIX$.txt"
+        ],
+        "icon": {
+          "light": "./media/icons/addon-light.png",
+          "dark": "./media/icons/addon-dark.png"
+        }
       }
     ],
     "semanticTokenScopes": [
@@ -75,25 +155,8 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "hemtt-language-server",
-      "properties": {
-        "hemtt-language-server.trace.server": {
-          "type": "string",
-          "scope": "window",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "enumDescriptions": [
-            "No traces",
-            "Error only",
-            "Full log"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the language server."
-        }
-      }
+      "title": "HEMTT",
+      "properties": {}
     },
     "configurationDefaults": {
       "[sqf]": {
@@ -102,12 +165,32 @@
     },
     "customEditors": [
       {
-        "viewType": "hemtt.paa",
+        "viewType": "hemtt.paaViewer",
         "displayName": "PAA",
         "priority": "default",
         "selector": [
           {
             "filenamePattern": "*.paa"
+          }
+        ]
+      },
+      {
+        "viewType": "hemtt.wssViewer",
+        "displayName": "WSS",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.wss"
+          }
+        ]
+      },
+      {
+        "viewType": "hemtt.p3dViewer",
+        "displayName": "P3D",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.p3d"
           }
         ]
       }
@@ -122,6 +205,36 @@
         "command": "hemtt.zoomOut",
         "title": "Zoom Out%",
         "category": "Image Preview"
+      },
+      {
+        "command": "hemtt.showProcessed",
+        "title": "Show Processed",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')"
+      },
+      {
+        "command": "hemtt.showCompiled",
+        "title": "Show Compiled",
+        "category": "HEMTT",
+        "enablement": "resourceLangId == 'sqf'"
+      },
+      {
+        "command": "hemtt.convertAudioWav",
+        "title": "Convert to wav",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+      },
+      {
+        "command": "hemtt.convertAudioOgg",
+        "title": "Convert to ogg",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+      },
+      {
+        "command": "hemtt.convertAudioWss",
+        "title": "Convert to wss",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
       }
     ],
     "menus": {
@@ -136,13 +249,56 @@
           "when": "activeCustomEditorId == 'hemtt.previewEditor'",
           "group": "1_imagePreview"
         }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == 'sqf' || (resourceLangId == 'arma-config' && resourceFilename == 'config.cpp')",
+          "command": "hemtt.showProcessed",
+          "group": "1_hemtt"
+        },
+        {
+          "when": "resourceLangId == 'sqf'",
+          "command": "hemtt.showCompiled",
+          "group": "1_hemtt"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'",
+          "submenu": "hemtt.audio"
+        }
+      ],
+      "hemtt.audio": [
+        {
+          "command": "hemtt.convertAudioWav",
+          "group": "1_convert",
+          "when": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        },
+        {
+          "command": "hemtt.convertAudioOgg",
+          "group": "1_convert",
+          "when": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        },
+        {
+          "command": "hemtt.convertAudioWss",
+          "group": "1_convert",
+          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+        }
       ]
-    }
+    },
+    "submenus": [
+      {
+        "id": "hemtt.audio",
+        "label": "HEMTT Audio"
+      }
+    ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "vscode:prepublish": "npm run esbuild-base -- --minify && npm run esbuild-p3d -- --minify && npm run esbuild-paa -- --minify",
     "esbuild-base": "esbuild ./vscode-src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-p3d": "esbuild ./webview-src/p3d/viewer.js --bundle --outfile=webview-dist/p3d/viewer.js --format=esm --platform=browser",
+    "esbuild-paa": "esbuild ./webview-src/paa/viewer.js --bundle --outfile=webview-dist/paa/viewer.js --format=esm --platform=browser",
+    "esbuild": "npm run esbuild-base -- --sourcemap --minify && npm run esbuild-p3d -- --sourcemap --minify && npm run esbuild-paa -- --sourcemap --minify",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
     "compile-lsp": "run-script-os",
@@ -153,24 +309,27 @@
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",
-    "@types/node": "22.10.2",
+    "@types/node": "22.10.6",
     "@types/vscode": "1.96.0",
     "@types/ws": "8.5.13",
-    "@typescript-eslint/eslint-plugin": "8.18.1",
-    "@typescript-eslint/parser": "8.18.1",
+    "@typescript-eslint/eslint-plugin": "8.20.0",
+    "@typescript-eslint/parser": "8.20.0",
     "@vscode/test-electron": "2.4.1",
-    "esbuild": "0.24.0",
-    "eslint": "9.17.0",
-    "glob": "11.0.0",
-    "mocha": "11.0.2",
+    "esbuild": "0.25.0",
+    "eslint": "9.18.0",
+    "glob": "11.0.1",
+    "mocha": "11.1.0",
     "run-script-os": "^1.1.6",
-    "ts-loader": "^9.5.1",
-    "typescript": "5.7.2",
+    "ts-loader": "9.5.2",
+    "typescript": "5.7.3",
     "vscode-uri": "3.0.8"
   },
   "dependencies": {
     "hemtt": "file:",
+    "image-js": "^0.36.0",
     "portfinder": "^1.0.32",
+    "three": "^0.174.0",
+    "three-viewport-gizmo": "^2.2.0",
     "vscode-languageclient": "^9.0.1"
   }
 }

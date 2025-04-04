@@ -51,7 +51,7 @@ All classes using inheritance with a parent class must use braces `{}`, even if 
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::error()
+        LintConfig::fatal()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

@@ -1,7 +1,10 @@
+use std::sync::{Arc, Mutex};
+
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     lint::LintManager,
     lint_manager,
+    position::Position,
     reporting::{Codes, Processed},
 };
 
@@ -14,6 +17,7 @@ pub mod lints {
 
 pub struct LintData {
     pub(crate) path: String,
+    pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
 }
 
 lint_manager!(config, vec![]);
@@ -45,21 +49,18 @@ impl Analyze for Expression {}
 impl Analyze for Config {
     fn analyze(
         &self,
-        _data: &LintData,
+        data: &LintData,
         project: Option<&ProjectConfig>,
         processed: &Processed,
         manager: &LintManager<LintData>,
     ) -> Codes {
-        let data = LintData {
-            path: String::new(),
-        };
         let mut codes = vec![];
-        codes.extend(manager.run(&data, project, Some(processed), self));
-        codes.extend(manager.run(&data, project, Some(processed), &self.to_class()));
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(manager.run(data, project, Some(processed), &self.to_class()));
         codes.extend(
             self.0
                 .iter()
-                .flat_map(|p| p.analyze(&data, project, processed, manager)),
+                .flat_map(|p| p.analyze(data, project, processed, manager)),
         );
         codes
     }
@@ -83,6 +84,7 @@ impl Analyze for Class {
                         || data.path.clone(),
                         |name| format!("{}/{}", data.path, name.value),
                     ),
+                    localizations: data.localizations.clone(),
                 };
                 properties
                     .iter()
@@ -108,6 +110,7 @@ impl Analyze for Property {
             Self::Entry { value, .. } => {
                 let data = LintData {
                     path: format!("{}.{}", data.path, self.name().value),
+                    localizations: data.localizations.clone(),
                 };
                 value.analyze(&data, project, processed, manager)
             }

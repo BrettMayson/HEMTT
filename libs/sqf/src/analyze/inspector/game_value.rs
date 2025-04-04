@@ -1,8 +1,7 @@
 //! Game Values and mapping them from commands
 
-use std::collections::HashSet;
-
 use arma3_wiki::model::{Arg, Call, Param, Value};
+use indexmap::IndexSet;
 use tracing::{trace, warn};
 
 use crate::{parser::database::Database, Expression};
@@ -11,7 +10,7 @@ use crate::{parser::database::Database, Expression};
 pub enum GameValue {
     Anything,
     // Assignment, // as in z = call {x=1}???
-    Array(Option<Vec<Vec<GameValue>>>),
+    Array(Option<Vec<Vec<GameValue>>>, Option<ArrayType>),
     Boolean(Option<Expression>),
     Code(Option<Expression>),
     Config,
@@ -30,6 +29,7 @@ pub enum GameValue {
     ScriptHandle,
     Side,
     String(Option<Expression>),
+    StructuredText,
     SwitchType,
     Task,
     TeamMember,
@@ -37,20 +37,34 @@ pub enum GameValue {
     WithType,
 }
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum ArrayType {
+    Color,
+    // Pos2d,
+    PosAGL,
+    // PosAGLS,
+    PosASL,
+    PosASLW,
+    PosATL,
+    /// from object's center `getPosWorld`
+    PosWorld,
+    PosRelative,
+}
+
 impl GameValue {
     #[must_use]
     /// Gets cmd return types based on input types
     pub fn from_cmd(
         expression: &Expression,
-        lhs_set: Option<&HashSet<Self>>,
-        rhs_set: Option<&HashSet<Self>>,
+        lhs_set: Option<&IndexSet<Self>>,
+        rhs_set: Option<&IndexSet<Self>>,
         database: &Database,
-    ) -> HashSet<Self> {
-        let mut return_types = HashSet::new();
+    ) -> IndexSet<Self> {
+        let mut return_types = IndexSet::new();
         let cmd_name = expression.command_name().expect("has a name");
         let Some(command) = database.wiki().commands().get(cmd_name) else {
             println!("cmd {cmd_name} not in db?");
-            return HashSet::from([Self::Anything]);
+            return IndexSet::from([Self::Anything]);
         };
 
         for syntax in command.syntax() {
@@ -93,8 +107,9 @@ impl GameValue {
                 }
             }
             let value = &syntax.ret().0;
+            let game_value = Self::from_wiki_value(value);
             // println!("match syntax {syntax:?}");
-            return_types.insert(Self::from_wiki_value(value));
+            return_types.insert(game_value);
         }
         // println!("lhs_set {lhs_set:?}");
         // println!("rhs_set {rhs_set:?}");
@@ -110,7 +125,7 @@ impl GameValue {
     #[must_use]
     pub fn match_set_to_arg(
         cmd_name: &str,
-        set: &HashSet<Self>,
+        set: &IndexSet<Self>,
         arg: &Arg,
         params: &[Param],
     ) -> bool {
@@ -150,18 +165,18 @@ impl GameValue {
 
                 set.iter().any(|s| {
                     match s {
-                        Self::Anything | Self::Array(None) => {
+                        Self::Anything | Self::Array(None, _) => {
                             // println!("array (any/generic) pass");
                             true
                         }
-                        Self::Array(Some(gv_array)) => {
+                        Self::Array(Some(gv_array), _) => {
                             // println!("array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
                                     gv_array[index].iter().cloned().collect()
                                 } else {
-                                    HashSet::new()
+                                    IndexSet::new()
                                 };
                                 if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
                                     return false;
@@ -177,7 +192,7 @@ impl GameValue {
     }
 
     #[must_use]
-    pub fn match_set_to_value(set: &HashSet<Self>, right_wiki: &Value, optional: bool) -> bool {
+    pub fn match_set_to_value(set: &IndexSet<Self>, right_wiki: &Value, optional: bool) -> bool {
         // println!("Checking {:?} against {:?} [O:{optional}]", set, right_wiki);
         if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
             return true;
@@ -189,11 +204,21 @@ impl GameValue {
     #[must_use]
     /// matches values are compatible (Anything will always match)
     pub fn match_values(left: &Self, right: &Self) -> bool {
-        if matches!(left, Self::Anything) {
+        if matches!(left, Self::Anything) || matches!(right, Self::Anything) {
             return true;
         }
-        if matches!(right, Self::Anything) {
-            return true;
+        if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right) {
+            if lpos != rpos {
+                // ToDo: Handle matching array types better eg: AGLS vs AGL
+                // false-positive:
+                /*
+                    private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
+                    _dropPos set [2, ((getPosASL _target) select 2)];
+                    _holder setPosASL _dropPos;
+                 */
+                // println!("array mismatch {lpos:?}!={rpos:?}");
+                // return false;
+            }
         }
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
@@ -210,8 +235,13 @@ impl GameValue {
             | Value::ArraySized { .. }
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
-            | Value::Position
-            | Value::Waypoint => Self::Array(None),
+            | Value::Position // position is often too generic to match?
+            | Value::Waypoint => Self::Array(None, None),
+            // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
+            Value::Position3dAGLS | Value::Position3dAGL => Self::Array(None, Some(ArrayType::PosAGL)), // merge
+            Value::Position3dASL => Self::Array(None, Some(ArrayType::PosASL)),
+            Value::Position3DASLW => Self::Array(None, Some(ArrayType::PosASLW)),
+            Value::Position3dATL => Self::Array(None, Some(ArrayType::PosATL)),
             Value::Boolean => Self::Boolean(None),
             Value::Code => Self::Code(None),
             Value::Config => Self::Config,
@@ -219,8 +249,9 @@ impl GameValue {
             Value::DiaryRecord => Self::DiaryRecord,
             Value::Display => Self::Display,
             Value::ForType => Self::ForType(None),
-            Value::IfType => Self::IfType,
             Value::Group => Self::Group,
+            Value::HashMapUnknown => Self::HashMap,
+            Value::IfType => Self::IfType,
             Value::Location => Self::Location,
             Value::Namespace => Self::Namespace,
             Value::Nothing => Self::Nothing,
@@ -230,6 +261,7 @@ impl GameValue {
             Value::Side => Self::Side,
             Value::String => Self::String(None),
             Value::SwitchType => Self::SwitchType,
+            Value::StructuredText => Self::StructuredText,
             Value::Task => Self::Task,
             Value::TeamMember => Self::TeamMember,
             Value::WhileType => Self::WhileType,
@@ -248,7 +280,7 @@ impl GameValue {
     /// Gets a generic version of a type
     pub fn make_generic(&self) -> Self {
         match self {
-            Self::Array(_) => Self::Array(None),
+            Self::Array(_, _) => Self::Array(None, None),
             Self::Boolean(_) => Self::Boolean(None),
             Self::Code(_) => Self::Code(None),
             Self::ForType(_) => Self::ForType(None),
@@ -293,14 +325,14 @@ impl GameValue {
                     "Boolean(GENERIC)".to_string()
                 }
             }
-            Self::Array(gv_array_option) =>
-            {
-                #[allow(clippy::option_if_let_else)]
-                if let Some(gv_array) = gv_array_option {
-                    format!("ArrayExp(len {})", gv_array.len())
-                } else {
-                    "ArrayExp(GENERIC)".to_string()
-                }
+            Self::Array(gv_array_option, position_option) => {
+                let str_len = gv_array_option
+                    .clone()
+                    .map_or("GENERIC".to_string(), |l| format!("len {}", l.len()));
+                let str_pos = position_option
+                    .clone()
+                    .map_or(String::new(), |p| format!(":{p:?}"));
+                format!("ArrayExp({str_len}{str_pos})")
             }
             Self::Code(expression) => {
                 if let Some(Expression::Code(statements)) = expression {

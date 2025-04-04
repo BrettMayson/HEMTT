@@ -1,17 +1,18 @@
 [package]
 name = "hemtt-book-gen"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 hemtt = { path = "../bin" }
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
 hemtt-sqf = { path = "../libs/sqf" }
+hemtt-stringtable = { path = "../libs/stringtable" }
 hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
-mdbook = "0.4.42"
+mdbook = "0.4.45"

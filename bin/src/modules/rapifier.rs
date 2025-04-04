@@ -2,16 +2,16 @@ use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{
-        atomic::{AtomicU16, Ordering},
         RwLock,
+        atomic::{AtomicU16, Ordering},
     },
 };
 
-use hemtt_config::{analyze::lint_check, parse, rapify::Rapify, Config};
+use hemtt_config::{Config, analyze::lint_check, parse, rapify::Rapify};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
-    addons::{Addon, Location},
     WorkspacePath,
+    addons::{Addon, Location},
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
@@ -20,11 +20,13 @@ use crate::{context::Context, error::Error, progress::progress_bar, report::Repo
 
 use super::Module;
 
+type InnerAddonConfig = RwLock<HashMap<(String, Location), Vec<(WorkspacePath, Config)>>>;
+
 #[derive(Default)]
-pub struct AddonConfigs(RwLock<HashMap<(String, Location), Config>>);
+pub struct AddonConfigs(InnerAddonConfig);
 
 impl std::ops::Deref for AddonConfigs {
-    type Target = RwLock<HashMap<(String, Location), Config>>;
+    type Target = InnerAddonConfig;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -41,7 +43,11 @@ impl Module for Rapifier {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().config().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().config().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 
@@ -131,6 +137,20 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
+    addon
+        .build_data()
+        .localizations()
+        .lock()
+        .expect("not poisoned")
+        .extend(
+            configreport
+                .localized()
+                .iter()
+                .map(|(s, p)| (s.to_owned(), p.clone())),
+        );
+    configreport.notes_and_helps().into_iter().for_each(|e| {
+        report.push(e.clone());
+    });
     configreport.warnings().into_iter().for_each(|e| {
         report.push(e.clone());
     });
@@ -162,10 +182,9 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 .get::<AddonConfigs>()
                 .write()
                 .expect("state is poisoned")
-                .insert(
-                    (addon.name().to_owned(), *addon.location()),
-                    configreport.config().clone(),
-                );
+                .entry((addon.name().to_owned(), *addon.location()))
+                .or_default()
+                .push((file.to_owned(), configreport.config().clone()));
         }
         path.with_extension("bin")?
     } else {

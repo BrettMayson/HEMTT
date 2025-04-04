@@ -8,7 +8,7 @@ mod display;
 
 pub use self::display::{DisplayConstant, DisplayInstructions};
 
-use byteorder::{ReadBytesExt, WriteBytesExt, LE};
+use byteorder::{LE, ReadBytesExt, WriteBytesExt};
 
 use std::cmp::Ordering;
 use std::io::{self, Read, Write};
@@ -73,7 +73,7 @@ impl CodePointer {
                 writer.write_u32::<LE>(*offset)?;
                 writer.write_u32::<LE>(*length | 0x8000_0000)?;
             }
-        };
+        }
 
         Ok(())
     }
@@ -178,7 +178,7 @@ impl Instruction {
                 source_info.serialize(writer)?;
                 writer.write_u16::<LE>(array_len)?;
             }
-        };
+        }
 
         Ok(())
     }
@@ -319,7 +319,7 @@ impl Constant {
             Self::NularCommand(ref command) => {
                 serialize_string(command, writer)?;
             }
-        };
+        }
 
         Ok(())
     }
@@ -487,7 +487,7 @@ impl Compiled {
             // Constants
             writer.write_u8(BlockType::Constants as u8)?;
             self.serialize_constants_cache(writer)?;
-        };
+        }
 
         // Location info
         writer.write_u8(BlockType::LocationInfo as u8)?;
@@ -545,7 +545,7 @@ impl Compiled {
         let version = reader.read_u32::<LE>()?;
         if version != VERSION {
             return Err(DeserializeError::IncorrectVersion(version));
-        };
+        }
 
         let mut names_cache = None;
         let mut constants_cache = None;
@@ -582,7 +582,7 @@ impl Compiled {
                     names_cache = Some(Self::deserialize_name_cache(&mut buffer.as_slice())?);
                 }
                 block => return Err(DeserializeError::UnexpectedBlock(block)),
-            };
+            }
         }
 
         Ok(Self {
@@ -599,7 +599,7 @@ fn decompress_buffer(reader: &mut impl Read, size: usize) -> DeserializeResult<V
     let buffer_size = reader.read_u32::<LE>()? as usize;
     if reader.read_u8()? != 2 {
         return Err(DeserializeError::InvalidCompressionMode);
-    };
+    }
 
     let mut buffer_uncompressed = vec![0; size];
     reader.read_exact(&mut buffer_uncompressed)?;
@@ -636,7 +636,7 @@ fn serialize_string(string: &str, writer: &mut impl Write) -> SerializeResult {
     let string_len = string.len();
     if string_len >= usize::pow(2, 24) {
         return Err(SerializeError::StringTooLong(string_len));
-    };
+    }
 
     writer.write_u24::<LE>(string_len as u32)?;
     writer.write_all(string.as_bytes())?;

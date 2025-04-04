@@ -1,4 +1,4 @@
-use crate::{report::Report, utils, Error};
+use crate::{Error, report::Report, utils};
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
@@ -13,8 +13,11 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    Inspect(utils::inspect::Command),
+    Audio(utils::audio::Command),
+    Bom(utils::bom::Command),
     Config(utils::config::Command),
+    Inspect(utils::inspect::Command),
+    P3d(utils::p3d::Command),
     Paa(utils::paa::Command),
     Pbo(utils::pbo::Command),
     Sqf(utils::sqf::Command),
@@ -27,11 +30,20 @@ enum Subcommands {
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     match &cmd.commands {
-        Subcommands::Inspect(cmd) => {
-            utils::inspect::execute(cmd)?;
+        Subcommands::Audio(cmd) => {
+            utils::audio::execute(cmd)?;
+        }
+        Subcommands::Bom(cmd) => {
+            utils::bom::execute(cmd)?;
         }
         Subcommands::Config(cmd) => {
             utils::config::execute(cmd)?;
+        }
+        Subcommands::Inspect(cmd) => {
+            utils::inspect::execute(cmd)?;
+        }
+        Subcommands::P3d(cmd) => {
+            utils::p3d::execute(cmd)?;
         }
         Subcommands::Paa(cmd) => {
             utils::paa::execute(cmd)?;

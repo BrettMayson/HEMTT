@@ -134,7 +134,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                     '-' => {
                         if matches!(
                             tokens.last(),
-                            Some(Token::Operator(_) | Token::LeftParenthesis)
+                            Some(Token::Operator(_) | Token::LeftParenthesis) | None
                         ) {
                             current_number.push(c);
                         } else {
@@ -165,6 +165,7 @@ mod tests {
     pub fn eval_addition() {
         assert_eq!(super::eval("1+1"), Some(2.0));
         assert_eq!(super::eval("1 + 1"), Some(2.0));
+        assert_eq!(super::eval("-1 + 1"), Some(0.0));
     }
 
     #[test]
@@ -177,6 +178,7 @@ mod tests {
     pub fn eval_multiplication() {
         assert_eq!(super::eval("2*2"), Some(4.0));
         assert_eq!(super::eval("2 * 2"), Some(4.0));
+        assert_eq!(super::eval("-0.01 * 0.5"), Some(-0.005));
     }
 
     #[test]

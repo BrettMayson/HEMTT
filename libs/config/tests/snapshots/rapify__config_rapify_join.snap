@@ -1,0 +1,60 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config
+---
+Config(
+    [
+        Class(
+            Local {
+                name: Ident {
+                    value: "myclass",
+                    span: 19..27,
+                },
+                parent: None,
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "value",
+                            span: 39..45,
+                        },
+                        value: Number(
+                            Int32 {
+                                value: 1,
+                                span: 45..49,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                    Entry {
+                        name: Ident {
+                            value: "test",
+                            span: 50..55,
+                        },
+                        value: Array(
+                            Array {
+                                expand: false,
+                                items: [
+                                    Number(
+                                        Int32 {
+                                            value: 1,
+                                            span: 57..61,
+                                        },
+                                    ),
+                                    Number(
+                                        Int32 {
+                                            value: 3,
+                                            span: 62..66,
+                                        },
+                                    ),
+                                ],
+                                span: 55..66,
+                            },
+                        ),
+                        expected_array: true,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+    ],
+)

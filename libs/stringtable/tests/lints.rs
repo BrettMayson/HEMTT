@@ -1,14 +1,12 @@
 #![allow(clippy::unwrap_used)]
 
-use std::io::BufReader;
-
 use hemtt_stringtable::{
-    analyze::{lint_all, lint_one},
     Project,
+    analyze::{lint_all, lint_one},
 };
 use hemtt_workspace::{
-    reporting::{Codes, WorkspaceFiles},
     LayerType,
+    reporting::{Codes, WorkspaceFiles},
 };
 
 const ROOT: &str = "tests/lints/";
@@ -34,16 +32,18 @@ fn lint(file: &str) -> String {
         .unwrap();
     let source = workspace.join(format!("{file}.xml")).unwrap();
     let workspace_files = WorkspaceFiles::new();
-
-    let existing = source.read_to_string().expect("vfs issue");
-    let stringtable = Project::from_reader(BufReader::new(existing.as_bytes())).unwrap();
+    let stringtable = Project::read(source).unwrap();
 
     let mut codes: Codes = Vec::new();
-    codes.extend(lint_one(
-        &(stringtable.clone(), workspace.clone(), existing.clone()),
-        None,
-    ));
-    codes.extend(lint_all(&vec![(stringtable, workspace, existing)], None));
+    codes.extend(lint_one(&stringtable, None, vec![]));
+    codes.extend(lint_all(&vec![stringtable], None, vec![]));
+
+    codes.retain(|e| {
+        e.ident().starts_with(&format!(
+            "L-{}",
+            file.split_once('_').unwrap().0.to_uppercase()
+        ))
+    });
 
     codes
         .iter()

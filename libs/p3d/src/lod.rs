@@ -2,23 +2,34 @@ use std::io::{Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
-use indexmap::IndexMap;
+use serde::Serialize;
 
 use crate::{Error, Face, Point};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct LOD {
     pub version_major: u32,
     pub version_minor: u32,
+    pub unknown_flags: u32,
     pub resolution: f32,
+    pub type_name: String,
     pub points: Vec<Point>,
     pub face_normals: Vec<(f32, f32, f32)>,
     pub faces: Vec<Face>,
-    pub taggs: IndexMap<String, Box<[u8]>>,
+    pub taggs: Vec<(String, Box<[u8]>)>,
 }
 
 impl LOD {
+    #[rustversion::attr(
+        since(1.87),
+        expect(
+            clippy::unbuffered_bytes,
+            reason = "The consumer should use a buffered reader if needed"
+        )
+    )]
     /// Reads a LOD from a given input stream.
+    ///
+    /// Uses `.bytes()` internally, a buffered reader should be used if performance is a concern.
     ///
     /// # Errors
     /// [`std::io::Error`] if an IO error occurs.
@@ -38,7 +49,7 @@ impl LOD {
         let num_face_normals = input.read_u32::<LittleEndian>()?;
         let num_faces = input.read_u32::<LittleEndian>()?;
 
-        input.bytes().nth(3);
+        let unknown_flags = input.read_u32::<LittleEndian>()?;
 
         let mut points: Vec<Point> = Vec::with_capacity(num_points as usize);
         let mut face_normals: Vec<(f32, f32, f32)> = Vec::with_capacity(num_face_normals as usize);
@@ -67,7 +78,7 @@ impl LOD {
             ));
         }
 
-        let mut taggs: IndexMap<String, Box<[u8]>> = IndexMap::new();
+        let mut taggs: Vec<(String, Box<[u8]>)> = Vec::new();
 
         loop {
             input.bytes().next();
@@ -81,20 +92,148 @@ impl LOD {
                 break;
             }
 
-            taggs.insert(name, buffer);
+            taggs.push((name, buffer));
         }
 
         let resolution = input.read_f32::<LittleEndian>()?;
+        let type_name = Self::get_lod_type_from_resolution(resolution);
 
         Ok(Self {
             version_major,
             version_minor,
+            unknown_flags,
             resolution,
+            type_name,
             points,
             face_normals,
             faces,
             taggs,
         })
+    }
+
+    fn get_lod_type_from_resolution(resolution: f32) -> String {
+        if (20000.0..30000.0).contains(&resolution) {
+            return "Edit ".to_owned() + &(resolution - 20000.0).floor().to_string();
+        }
+
+        let type_name = Self::get_lod_type_from_resolution_match(resolution).to_string();
+        if type_name != "Unknown" {
+            return type_name;
+        }
+
+        if resolution > 1000.0 {
+            return "Unknown ".to_owned() + &resolution.to_string();
+        }
+
+        "Resolution ".to_owned() + &resolution.to_string()
+    }
+
+    #[expect(
+        clippy::float_cmp,
+        reason = "All of the numbers should be safe for exact comparison"
+    )]
+    fn get_lod_type_from_resolution_match(resolution: f32) -> &'static str {
+        // View positions
+        if resolution == 1000.0 {
+            return "View Gunner";
+        }
+        if resolution == 1100.0 {
+            return "View Pilot";
+        }
+        if resolution == 1200.0 {
+            return "View Cargo";
+        }
+        // Shadow volumes
+        if resolution == 10000.0 {
+            return "Shadow Volume 0";
+        }
+        if resolution == 10010.0 {
+            return "Shadow Volume 10";
+        }
+        if resolution == 11000.0 {
+            return "Shadow Buffer 0";
+        }
+        if resolution == 11010.0 {
+            return "Shadow Buffer 10";
+        }
+        // Geometry types
+        if resolution == 1e13 {
+            return "Geometry";
+        }
+        if resolution == 2e13 {
+            return "Geometry Buoyancy";
+        }
+        if resolution == 4e13 {
+            return "Geometry PysX";
+        }
+        // Memory and special geometries
+        if resolution == 1e15 {
+            return "Memory";
+        }
+        if resolution == 2e15 {
+            return "Land Contact";
+        }
+        if resolution == 3e15 {
+            return "Roadway";
+        }
+        if resolution == 4e15 {
+            return "Paths";
+        }
+        if resolution == 5e15 {
+            return "Hit-points";
+        }
+        if resolution == 6e15 {
+            return "View Geometry";
+        }
+        if resolution == 7e15 {
+            return "Fire Geometry";
+        }
+        if resolution == 8e15 {
+            return "View Cargo Geom.";
+        }
+        if resolution == 9e15 {
+            return "View Cargo Fire Geom.";
+        }
+        // Commander, pilot, gunner views
+        if resolution == 1e16 {
+            return "View Commander";
+        }
+        if resolution == 1.1e16 {
+            return "View Commander Geom.";
+        }
+        if resolution == 1.2e16 {
+            return "View Commander Fire Geom.";
+        }
+        if resolution == 1.3e16 {
+            return "View Pilot Geom.";
+        }
+        if resolution == 1.4e16 {
+            return "View Pilot Fire Geom.";
+        }
+        if resolution == 1.5e16 {
+            return "View Gunner Geom.";
+        }
+        if resolution == 1.6e16 {
+            return "View Gunner Fire Geom.";
+        }
+        // Additional types
+        if resolution == 1.7e16 {
+            return "Sub Parts";
+        }
+        if resolution == 1.8e16 {
+            return "Shadow Volume - View Cargo";
+        }
+        if resolution == 1.9e16 {
+            return "Shadow Volume - View Pilot";
+        }
+        if resolution == 2e16 {
+            return "Shadow Volume - View Gunner";
+        }
+        if resolution == 2.1e16 {
+            return "Wreck";
+        }
+
+        "Unknown"
     }
 
     /// Writes the LOD to a given output stream.
@@ -115,7 +254,7 @@ impl LOD {
         output.write_u32::<LittleEndian>(points_count)?;
         output.write_u32::<LittleEndian>(face_normals_count)?;
         output.write_u32::<LittleEndian>(faces_count)?;
-        output.write_all(b"\0\0\0\0")?;
+        output.write_u32::<LittleEndian>(self.unknown_flags)?;
 
         for point in &self.points {
             point.write(output)?;

@@ -10,6 +10,7 @@
 use std::io::{BufReader, BufWriter, Read, Seek, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use serde::Serialize;
 
 mod error;
 mod face;
@@ -25,7 +26,7 @@ pub use lod::LOD;
 pub use point::Point;
 pub use vertex::Vertex;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct P3D {
     pub version: u32,
     pub lods: Vec<LOD>,

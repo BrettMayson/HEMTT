@@ -1,13 +1,13 @@
 use std::sync::{
-    atomic::{AtomicU16, Ordering},
     Arc,
+    atomic::{AtomicU16, Ordering},
 };
 
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
     analyze::{analyze, lint_check},
-    parser::{database::Database, ParserError},
+    parser::{ParserError, database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -43,7 +43,11 @@ impl Module for SQFCompiler {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        report.extend(lint_check(ctx.config().lints().sqf().clone()));
+        let default_enabled = ctx.config().runtime().is_pedantic();
+        report.extend(lint_check(
+            ctx.config().lints().sqf().clone(),
+            default_enabled,
+        ));
         Ok(report)
     }
 
@@ -90,13 +94,19 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let codes = analyze(
+                        let (codes, localizations) = analyze(
                             &sqf,
                             Some(ctx.config()),
                             &processed,
                             addon.clone(),
                             database.clone(),
                         );
+                        addon
+                            .build_data()
+                            .localizations()
+                            .lock()
+                            .expect("not poisoned")
+                            .extend(localizations);
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;

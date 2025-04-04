@@ -20,7 +20,10 @@ impl Code for WorkshopModNotFound {
     }
 
     fn help(&self) -> Option<String> {
-        Some(format!("HEMTT does not subscribe to mods, you must subscribe in Steam and allow it to download.\nWorkshop link: https://steamcommunity.com/sharedfiles/filedetails/?id={}", self.id))
+        Some(format!(
+            "HEMTT does not subscribe to mods, you must subscribe in Steam and allow it to download.\nWorkshop link: https://steamcommunity.com/sharedfiles/filedetails/?id={}",
+            self.id
+        ))
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

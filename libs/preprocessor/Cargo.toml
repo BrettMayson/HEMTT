@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-preprocessor"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "A preprocessor library for hemtt"
 license = "GPL-2.0"
 
@@ -12,10 +12,11 @@ workspace = true
 bench = false
 
 [dependencies]
-hemtt-common = { path = "../common", version = "1.0.0" }
-hemtt-workspace = { path = "../workspace", version = "1.0.0" }
+hemtt-common = { path = "../common" }
+hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
+dashmap = { workspace = true }
 lsp-types = { workspace = true, optional = true }
 peekmore = { workspace = true }
 pest = { workspace = true }

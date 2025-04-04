@@ -1,9 +1,0 @@
-[package]
-name = "hemtt-photoshoot"
-version = "1.0.0"
-edition = "2021"
-description = "A library for hemtt"
-license = "GPL-2.0"
-
-[lints]
-workspace = true

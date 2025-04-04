@@ -1,5 +1,5 @@
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     sync::Arc,
 };
 
@@ -151,7 +151,8 @@ pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Erro
         ctx.config().version().get(ctx.workspace_path().vfs())?
     );
     if let Some(suffix) = suffix {
-        authority.push_str(&format!("_{suffix}"));
+        authority.push('_');
+        authority.push_str(suffix);
     }
     Ok(authority)
 }

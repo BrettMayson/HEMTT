@@ -53,6 +53,48 @@ impl HemttConfig {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+pub struct RuntimeArguments {
+    is_release: bool,
+    is_pedantic: bool,
+    is_just: bool,
+}
+
+impl RuntimeArguments {
+    #[must_use]
+    pub const fn is_release(&self) -> bool {
+        self.is_release
+    }
+
+    #[must_use]
+    pub const fn with_release(self, is_release: bool) -> Self {
+        Self { is_release, ..self }
+    }
+
+    #[must_use]
+    pub const fn is_pedantic(&self) -> bool {
+        self.is_pedantic
+    }
+
+    #[must_use]
+    pub const fn with_pedantic(self, is_pedantic: bool) -> Self {
+        Self {
+            is_pedantic,
+            ..self
+        }
+    }
+
+    #[must_use]
+    pub const fn is_just(&self) -> bool {
+        self.is_just
+    }
+
+    #[must_use]
+    pub const fn with_just(self, is_just: bool) -> Self {
+        Self { is_just, ..self }
+    }
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 /// Feature specific configuration
@@ -93,6 +135,22 @@ impl HemttSectionFile {
         } else {
             self.launch
         };
+        if launch_source
+            .iter()
+            .any(|(k, v)| k != "photoshoot" && v.dev_mission.is_some())
+        {
+            return Err(Error::ConfigInvalid(
+                "dev_mission is only allowed in the photoshoot preset.".to_string(),
+            ));
+        }
+        if launch_source
+            .iter()
+            .any(|(k, v)| k == "photoshoot" && v.mission.is_some())
+        {
+            return Err(Error::ConfigInvalid(
+                "mission is not allowed in the photoshoot preset.".to_string(),
+            ));
+        }
         Ok(HemttConfig {
             check: self.check.into(),
             dev: self.dev.into(),
@@ -170,11 +228,13 @@ file_patching = false
                 .mission(),
             Some(&"test".to_string())
         );
-        assert!(!config
-            .launch()
-            .get("test")
-            .expect("has test preset")
-            .file_patching());
+        assert!(
+            !config
+                .launch()
+                .get("test")
+                .expect("has test preset")
+                .file_patching()
+        );
     }
 
     #[test]

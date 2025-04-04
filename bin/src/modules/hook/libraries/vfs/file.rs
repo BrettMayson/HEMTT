@@ -1,8 +1,8 @@
 use std::{cell::RefCell, io::Write, rc::Rc};
 
 use rhai::plugin::{
-    export_module, mem, Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module,
-    NativeCallContext, PluginFunc, RhaiResult, TypeId,
+    Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
+    RhaiResult, TypeId, export_module, mem,
 };
 use vfs::{SeekAndRead, SeekAndWrite};
 

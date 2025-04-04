@@ -1,0 +1,34 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (cba_multiline))
+---
+Config(
+    [
+        Entry {
+            name: Ident {
+                value: "multiline",
+                span: 20..30,
+            },
+            value: Str(
+                Str {
+                    value: "why\nis\nthis\na\nthing",
+                    span: 30..50,
+                },
+            ),
+            expected_array: false,
+        },
+        Entry {
+            name: Ident {
+                value: "singleline",
+                span: 52..63,
+            },
+            value: Str(
+                Str {
+                    value: "why\\nis\\nthis\\na\\nthing",
+                    span: 63..87,
+                },
+            ),
+            expected_array: false,
+        },
+    ],
+)

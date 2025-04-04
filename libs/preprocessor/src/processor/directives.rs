@@ -3,33 +3,33 @@ use std::sync::Arc;
 use hemtt_workspace::{
     path::LocateResult,
     position::Position,
-    reporting::{Output, Symbol, Token},
+    reporting::{Definition, FunctionDefinition, Output, Symbol, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 use tracing::debug;
 
 use crate::{
+    Error,
     codes::{
+        pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
+        pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
+        pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
         pe12_include_not_found::IncludeNotFound, pe13_include_not_encased::IncludeNotEncased,
         pe14_include_unexpected_suffix::IncludeUnexpectedSuffix,
         pe15_if_invalid_operator::IfInvalidOperator,
         pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
-        pe2_unexpected_eof::UnexpectedEOF, pe3_expected_ident::ExpectedIdent,
-        pe4_unknown_directive::UnknownDirective, pe6_change_builtin::ChangeBuiltin,
-        pe7_if_unit_or_function::IfUnitOrFunction, pe8_if_undefined::IfUndefined,
+        pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
     },
     defines::{DefineSource, Defines},
-    definition::{Definition, FunctionDefinition},
     ifstate::IfState,
     processor::pragma::Flag,
-    Error,
 };
 
 use super::{
-    pragma::{Pragma, Scope},
     Processor,
+    pragma::{Pragma, Scope},
 };
 
 impl Processor {
@@ -86,11 +86,17 @@ impl Processor {
                 Ok(())
             }
             ("else", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedElse::code(command.as_ref().clone()));
+                }
                 self.ifstates.flip(command)?;
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
             }
             ("endif", _) => {
+                if self.ifstates.is_empty() {
+                    return Err(UnexpectedEndif::code(command.as_ref().clone()));
+                }
                 self.ifstates.pop();
                 Self::expect_nothing_to_newline(stream)?;
                 Ok(())
@@ -145,7 +151,7 @@ impl Processor {
         };
         if !hit_end {
             Self::expect_nothing_to_newline(stream)?;
-        };
+        }
         Ok((code, scope))
     }
 
@@ -173,7 +179,7 @@ impl Processor {
             .symbol()
             .matching_enclosure()
             .expect("is_include_enclosure should always have a matching_enclosure");
-        let mut path = Vec::new();
+        let mut path_tokens = Vec::new();
         for token in stream.by_ref() {
             let symbol = token.symbol();
             if symbol == &close {
@@ -182,14 +188,14 @@ impl Processor {
             if symbol.is_newline() {
                 return Err(IncludeNotEncased::code(
                     token.as_ref().clone(),
-                    path,
+                    path_tokens,
                     Some(open.as_ref().clone()),
                 ));
             }
             if symbol.is_eoi() {
                 return Err(UnexpectedEOF::code(token.as_ref().clone()));
             }
-            path.push(token);
+            path_tokens.push(token);
         }
 
         if let Err(Error::Code(code)) = Self::expect_nothing_to_newline(stream) {
@@ -208,25 +214,24 @@ impl Processor {
                 path: found_path,
                 case_mismatch,
             })) = current.locate(
-                &path
+                &path_tokens
                     .iter()
                     .map(std::string::ToString::to_string)
                     .collect::<String>(),
             )
             else {
-                return Err(IncludeNotFound::code(path));
+                return Err(IncludeNotFound::code(path_tokens));
             };
             if let Some(case_mismatch) = case_mismatch {
                 self.warnings.push(Arc::new(IncludeCase::new(
-                    path.iter().map(|t| t.as_ref().clone()).collect(),
+                    path_tokens.iter().map(|t| t.as_ref().clone()).collect(),
                     case_mismatch,
                 )));
             }
             found_path
         };
         let tokens = crate::parse::file(&path)?;
-        self.file_stack.push(path.clone());
-        self.included_files.push(path);
+        self.add_include(path, path_tokens)?;
         let mut stream = tokens.into_iter().peekmore();
         let ret = self.file(&mut pragma.child(), &mut stream, buffer);
         self.file_stack.pop();
@@ -282,17 +287,17 @@ impl Processor {
                         ident.position().path().clone(),
                     )
                 };
-                FunctionDefinition::new(position, args, body)
+                Arc::new(FunctionDefinition::new(position, args, body))
             }),
             Symbol::Newline | Symbol::Eoi => Definition::Unit,
-            _ => Definition::Value(self.define_read_body(stream)),
+            _ => Definition::Value(Arc::new(self.define_read_body(stream))),
         };
         #[cfg(feature = "lsp")]
         self.usage.insert(ident.position().clone(), Vec::new());
         self.macros
             .entry(ident_string.clone())
             .or_default()
-            .push(ident.position().clone());
+            .push((ident.position().clone(), definition.clone()));
         self.defines.insert(
             &ident_string,
             (
@@ -341,10 +346,11 @@ impl Processor {
             }
             tokens
         }
+        #[allow(clippy::type_complexity)]
         fn resolve_value(
             defines: &mut Defines,
             token: Arc<Token>,
-        ) -> Result<(Vec<Arc<Token>>, bool), Error> {
+        ) -> Result<(Arc<Vec<Arc<Token>>>, bool), Error> {
             if let Some((_, definition, _)) = defines.get_with_gen(&token, Some(token.position())) {
                 if let Definition::Value(tokens) = definition {
                     return Ok((tokens, true));
@@ -354,7 +360,7 @@ impl Processor {
                     &defines.clone(),
                 ));
             }
-            Ok((vec![token], false))
+            Ok((Arc::new(vec![token]), false))
         }
         self.skip_whitespace(stream, None);
         let left = read_value(stream);
@@ -389,7 +395,7 @@ impl Processor {
                     .expect("length is 1, next will exist"),
             )?
         } else {
-            (left, false)
+            (Arc::new(left), false)
         };
         if left.is_empty() {
             return Err(UnexpectedEOF::code(command.as_ref().clone()));
@@ -409,7 +415,10 @@ impl Processor {
             }
             let equals = Arc::new(Token::new(Symbol::Equals, pos.clone()));
             operators = vec![equals.clone(), equals];
-            (vec![Arc::new(Token::new(Symbol::Digit(1), pos))], false)
+            (
+                Arc::new(vec![Arc::new(Token::new(Symbol::Digit(1), pos))]),
+                false,
+            )
         } else {
             operators = read_value(stream);
             self.skip_whitespace(stream, None);
@@ -432,7 +441,7 @@ impl Processor {
                         .expect("length is 1, next will exist"),
                 )?
             } else {
-                (right, false)
+                (Arc::new(right), false)
             }
         };
         let operator = operators
@@ -453,16 +462,16 @@ impl Processor {
             ">" | ">=" | "<" | "<=" => {
                 let Ok(left_f64) = left_string.parse::<f64>() else {
                     return Err(IfIncompatibleType::code(
-                        (left, left_defined),
+                        &(left, left_defined),
                         operators,
-                        (right, right_defined),
+                        &(right, right_defined),
                     ));
                 };
                 let Ok(right_f64) = right_string.parse::<f64>() else {
                     return Err(IfIncompatibleType::code(
-                        (left, left_defined),
+                        &(left, left_defined),
                         operators,
-                        (right, right_defined),
+                        &(right, right_defined),
                     ));
                 };
                 match operator.as_str() {
@@ -504,12 +513,9 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_workspace::reporting::Symbol;
+    use hemtt_workspace::reporting::{Definition, Symbol};
 
-    use crate::{
-        definition::Definition,
-        processor::{pragma::Pragma, tests, Processor},
-    };
+    use crate::processor::{Processor, pragma::Pragma, tests};
 
     #[test]
     fn directive_define_unit() {

@@ -1,7 +1,7 @@
 use hemtt_common::version::Version;
 use rhai::plugin::{
-    export_module, mem, Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module,
-    NativeCallContext, PluginFunc, RhaiResult, TypeId,
+    Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
+    RhaiResult, TypeId, export_module, mem,
 };
 
 use crate::context::Context;
@@ -36,9 +36,9 @@ pub mod project_functions {
     use rhai::EvalAltResult;
 
     use crate::{
-        modules::{hook::error::bhe1_script_not_found::ScriptNotFound, Hooks},
-        report::Report,
         Error,
+        modules::{Hooks, hook::error::bhe1_script_not_found::ScriptNotFound},
+        report::Report,
     };
 
     #[rhai_fn(global, pure)]

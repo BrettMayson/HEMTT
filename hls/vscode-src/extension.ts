@@ -8,19 +8,23 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
+import * as audio from "./audio";
+import * as p3d from "./p3d";
 import * as paa from "./paa";
+import * as preprocessor from "./preprocessor";
 
 import { getPortPromise } from "portfinder";
 
 let client: LanguageClient;
-let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
+export let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HEMTT");
 
 export async function activate(context: vscode.ExtensionContext) {
-  paa.activate(context);
+  context.subscriptions.push(channel);
   let command = context.asAbsolutePath("hemtt-language-server");
   if (process.platform === "win32") {
     command += ".exe";
   }
+
   const port = await getPortPromise({
     port: 12000,
   });
@@ -55,7 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
       { scheme: "file", language: "arma-config" },
     ],
     synchronize: {
-      // Notify the server about file changes to '.clientrc files contained in the workspace
       fileEvents: vscode.workspace.createFileSystemWatcher("**/.hemtt/**"),
     },
   };
@@ -69,6 +72,12 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   // activateInlayHints(context);
   client.start();
+
+  audio.init(client, channel, context);
+  p3d.init(client, channel, context);
+  paa.init(client, channel, context);
+  preprocessor.init(client, channel, context);
+  channel.appendLine("HEMTT initialized");
 }
 
 export function deactivate(): Thenable<void> | undefined {

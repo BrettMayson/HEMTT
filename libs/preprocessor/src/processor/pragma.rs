@@ -3,11 +3,11 @@ use std::{collections::HashMap, sync::Arc};
 use hemtt_workspace::reporting::Token;
 
 use crate::{
+    Error,
     codes::{
         pe21_pragma_invalid_suppress::PragmaInvalidSuppress,
         pe22_pragma_invalid_flag::PragmaInvalidFlag,
     },
-    Error,
 };
 
 #[derive(Debug, Clone)]

@@ -46,7 +46,7 @@ private _x = ["orange", "apple"] select _myVar;
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -202,7 +202,7 @@ impl CodeS05IfAssign {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let haystack = &processed.extract_from(self.rhs.1.end..);
+        let haystack = &processed.extract(self.rhs.1.end..processed.output_chars());
         let end_position = self.rhs.1.end + haystack.find('}').unwrap_or(0) + 1;
         self.diagnostic =
             Diagnostic::from_code_processed(&self, self.if_cmd.start..end_position, processed);

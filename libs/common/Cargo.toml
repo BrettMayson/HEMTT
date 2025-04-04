@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-common"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "A library for common Hemtt functionality"
 license = "GPL-2.0"
 
@@ -11,8 +11,9 @@ workspace = true
 [dependencies]
 codespan-reporting = { workspace = true }
 git2 = { workspace = true }
+rustversion = { workspace = true }
 serde = { workspace = true }
-steamlocate = "2.0.0-beta.2"
+steamlocate = "2.0.1"
 strsim = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }
@@ -20,5 +21,5 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
-strum = { version = "0.26.3", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
 tracing-test = { workspace = true }

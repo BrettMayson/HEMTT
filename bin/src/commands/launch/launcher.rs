@@ -7,21 +7,21 @@ use hemtt_common::{arma::dlc::DLC, config::LaunchOptions, steam};
 use regex::Regex;
 
 use crate::{
+    Error,
     commands::launch::{
         error::{bcle1_preset_not_found::PresetNotFound, bcle4_arma_not_found::ArmaNotFound},
         preset,
     },
     report::Report,
-    Error,
 };
 
 use super::{
+    LaunchArgs,
     error::{
         bcle2_workshop_not_found::WorkshopNotFound,
         bcle3_workshop_mod_not_found::WorkshopModNotFound,
         bcle8_mission_not_found::MissionNotFound, bcle9_mission_absolute::MissionAbsolutePath,
     },
-    LaunchArgs,
 };
 
 pub struct Launcher {
@@ -145,7 +145,7 @@ impl Launcher {
             if !workshop_folder.exists() {
                 report.push(WorkshopNotFound::code());
                 return Ok(None);
-            };
+            }
 
             let mut meta = None;
             let meta_path = std::env::current_dir()?.join("meta.cpp");
@@ -168,7 +168,7 @@ impl Launcher {
                 let mod_path = workshop_folder.join(load_mod);
                 if !mod_path.exists() {
                     report.push(WorkshopModNotFound::code(load_mod.to_string()));
-                };
+                }
                 if cfg!(windows) {
                     mods.push(mod_path.display().to_string());
                 } else {
@@ -292,7 +292,7 @@ impl Launcher {
         if !workshop_folder.exists() {
             report.push(WorkshopNotFound::code());
             return report;
-        };
+        }
         for m in mods {
             self.workshop.push(match m {
                 Mod::Workshop(id) => {

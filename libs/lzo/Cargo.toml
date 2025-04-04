@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-lzo"
 version = "1.0.1"
-edition = "2021"
+edition = "2024"
 description = "An LZO library for hemtt"
 license = "GPL-2.0"
 
@@ -9,7 +9,7 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-libc = "0.2.164"
+libc = "0.2.170"
 thiserror = { workspace = true }
 
 [dev-dependencies]

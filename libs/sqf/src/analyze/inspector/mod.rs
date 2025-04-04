@@ -1,19 +1,15 @@
 //! Inspects code, checking code args and variable usage
 //!
-use std::{
-    collections::{HashMap, HashSet},
-    hash::Hash,
-    ops::Range,
-    vec,
-};
+use std::{cell::RefCell, hash::Hash, ops::Range, rc::Rc, vec};
 
 use crate::{
     parser::database::Database, BinaryCommand, Expression, Statement, Statements, UnaryCommand,
 };
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
+use indexmap::{IndexMap, IndexSet};
 use regex::Regex;
-use tracing::{error, trace};
+use tracing::trace;
 
 mod commands;
 mod external_functions;
@@ -58,34 +54,38 @@ impl VarSource {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VarHolder {
-    possible: HashSet<GameValue>,
+    possible: IndexSet<GameValue>,
     usage: i32,
     source: VarSource,
 }
 
-pub type Stack = HashMap<String, VarHolder>;
+pub type Stack = IndexMap<String, VarHolder>;
 
 pub struct SciptScope {
-    errors: HashSet<Issue>,
-    global: Stack,
+    errors: IndexSet<Issue>,
+    global: Rc<RefCell<Stack>>,
     local: Vec<Stack>,
-    code_seen: HashSet<Expression>,
-    code_used: HashSet<Expression>,
+    code_seen: IndexSet<Expression>,
+    code_used: IndexSet<Expression>,
     /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
-    ignored_vars: HashSet<String>,
+    ignored_vars: IndexSet<String>,
 }
 
 impl SciptScope {
     #[must_use]
-    pub fn create(ignored_vars: &HashSet<String>, is_orphan_scope: bool) -> Self {
+    pub fn create(
+        global: Rc<RefCell<Stack>>,
+        ignored_vars: &IndexSet<String>,
+        is_orphan_scope: bool,
+    ) -> Self {
         // trace!("Creating ScriptScope");
         let mut scope = Self {
-            errors: HashSet::new(),
-            global: Stack::new(),
+            errors: IndexSet::new(),
+            global,
             local: Vec::new(),
-            code_seen: HashSet::new(),
-            code_used: HashSet::new(),
+            code_seen: IndexSet::new(),
+            code_used: IndexSet::new(),
             is_orphan_scope,
             ignored_vars: ignored_vars.clone(),
         };
@@ -94,30 +94,30 @@ impl SciptScope {
             scope.var_assign(
                 var,
                 true,
-                HashSet::from([GameValue::Anything]),
+                IndexSet::from([GameValue::Anything]),
                 VarSource::Ignore,
             );
         }
         scope
     }
     #[must_use]
-    pub fn finish(&mut self, check_child_scripts: bool, database: &Database) -> HashSet<Issue> {
+    pub fn finish(mut self, check_child_scripts: bool, database: &Database) -> IndexSet<Issue> {
         self.pop();
         if check_child_scripts {
             let unused = &self.code_seen - &self.code_used;
             for expression in unused {
                 let Expression::Code(statements) = expression else {
-                    error!("non-code in unused");
                     continue;
                 };
                 // trace!("-- Checking external scope");
-                let mut external_scope = Self::create(&self.ignored_vars, true);
+                let mut external_scope =
+                    Self::create(self.global.clone(), &self.ignored_vars, true);
                 external_scope.eval_statements(&statements, database);
                 self.errors
                     .extend(external_scope.finish(check_child_scripts, database));
             }
         }
-        self.errors.clone()
+        self.errors
     }
 
     pub fn push(&mut self) {
@@ -137,14 +137,15 @@ impl SciptScope {
         &mut self,
         var: &str,
         local: bool,
-        possible_values: HashSet<GameValue>,
+        possible_values: IndexSet<GameValue>,
         source: VarSource,
     ) {
-        trace!("var_assign: {} @ {}", var, self.local.len());
+        // println!("var_assign: `{var}` local:{local} lvl: {}", self.local.len());
         let var_lower = var.to_ascii_lowercase();
         if !var_lower.starts_with('_') {
-            let holder = self.global.entry(var_lower).or_insert(VarHolder {
-                possible: HashSet::new(),
+            let mut global_m = self.global.borrow_mut();
+            let holder = global_m.entry(var_lower).or_insert(VarHolder {
+                possible: IndexSet::new(),
                 usage: 0,
                 source,
             });
@@ -179,7 +180,7 @@ impl SciptScope {
         let holder = self.local[stack_level]
             .entry(var_lower)
             .or_insert(VarHolder {
-                possible: HashSet::new(),
+                possible: IndexSet::new(),
                 usage: 0,
                 source,
             });
@@ -193,8 +194,9 @@ impl SciptScope {
         var: &str,
         source: &Range<usize>,
         peek: bool,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         let var_lower = var.to_ascii_lowercase();
+        let mut global_m = self.global.borrow_mut();
         let holder_option = if var_lower.starts_with('_') {
             let stack_level_search = self
                 .local
@@ -214,14 +216,14 @@ impl SciptScope {
                 stack_level -= stack_level_search.expect("is_some");
             };
             self.local[stack_level].get_mut(&var_lower)
-        } else if self.global.contains_key(&var_lower) {
-            self.global.get_mut(&var_lower)
+        } else if global_m.contains_key(&var_lower) {
+            global_m.get_mut(&var_lower)
         } else {
-            return HashSet::from([GameValue::Anything]);
+            return IndexSet::from([GameValue::Anything]);
         };
         if holder_option.is_none() {
             // we've reported the error above, just return Any so it doesn't fail everything after
-            HashSet::from([GameValue::Anything])
+            IndexSet::from([GameValue::Anything])
         } else {
             let holder = holder_option.expect("is_some");
             holder.usage += 1;
@@ -232,6 +234,7 @@ impl SciptScope {
                 // Assume that a ignored global var could be anything
                 set.insert(GameValue::Anything);
             }
+            // println!("var_retrieve: `{var}` {set:?}");
             set
         }
     }
@@ -243,39 +246,41 @@ impl SciptScope {
         &mut self,
         expression: &Expression,
         database: &Database,
-    ) -> HashSet<GameValue> {
+    ) -> IndexSet<GameValue> {
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
-            Expression::Number(..) => HashSet::from([GameValue::Number(Some(expression.clone()))]),
+            Expression::Number(..) => IndexSet::from([GameValue::Number(Some(expression.clone()))]),
             Expression::Boolean(..) => {
-                HashSet::from([GameValue::Boolean(Some(expression.clone()))])
+                IndexSet::from([GameValue::Boolean(Some(expression.clone()))])
             }
-            Expression::String(..) => HashSet::from([GameValue::String(Some(expression.clone()))]),
+            Expression::String(..) => IndexSet::from([GameValue::String(Some(expression.clone()))]),
             Expression::Array(array, _) => {
                 let gv_array: Vec<Vec<GameValue>> = array
                     .iter()
                     .map(|e| self.eval_expression(e, database).into_iter().collect())
                     .collect();
-                HashSet::from([GameValue::Array(Some(gv_array))])
+                IndexSet::from([GameValue::Array(Some(gv_array), None)])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let cmd_set = GameValue::from_cmd(expression, None, None, database);
+                let mut cmd_set = GameValue::from_cmd(expression, None, None, database);
                 if cmd_set.is_empty() {
                     // is this possible?
                     self.errors
                         .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
+                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
                 cmd_set
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
                 let rhs_set = self.eval_expression(rhs, database);
-                let cmd_set = GameValue::from_cmd(expression, None, Some(&rhs_set), database);
+                let mut cmd_set = GameValue::from_cmd(expression, None, Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     self.errors
                         .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
+                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -300,16 +305,17 @@ impl SciptScope {
                 debug_type = format!("[B:{}]", cmd.as_str());
                 let lhs_set = self.eval_expression(lhs, database);
                 let rhs_set = self.eval_expression(rhs, database);
-                let cmd_set =
+                let mut cmd_set =
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
                     self.errors
                         .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
+                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
-                        // the : from case
+                        // the : from case ToDo: these run outside of the do scope
                         let _ = self.cmd_generic_call(&rhs_set, database);
                         None
                     }
@@ -327,6 +333,11 @@ impl SciptScope {
                         None
                     }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
+                        "set" | "pushback" | "pushbackunique" | "append" => {
+                            // these commands modify the LHS by lvalue, assume it is now a generic array
+                            self.cmd_generic_modify_lvalue(lhs);
+                            None
+                        }
                         "params" => Some(self.cmd_generic_params(&rhs_set)),
                         "call" => {
                             self.external_function(&lhs_set, rhs, database);
@@ -387,7 +398,7 @@ impl SciptScope {
             Expression::Code(statements) => {
                 self.code_seen.insert(expression.clone());
                 debug_type = format!("CODE:{}", statements.content().len());
-                HashSet::from([GameValue::Code(Some(expression.clone()))])
+                IndexSet::from([GameValue::Code(Some(expression.clone()))])
             }
             Expression::ConsumeableArray(_, _) => unreachable!(""),
         };
@@ -404,7 +415,7 @@ impl SciptScope {
 
     /// Evaluate statements in the current scope
     fn eval_statements(&mut self, statements: &Statements, database: &Database) {
-        // let mut return_value = HashSet::new();
+        // let mut return_value = IndexSet::new();
         for statement in statements.content() {
             match statement {
                 Statement::AssignGlobal(var, expression, source) => {
@@ -446,7 +457,7 @@ pub fn run_processed(
     processed: &Processed,
     database: &Database,
 ) -> Vec<Issue> {
-    let mut ignored_vars = HashSet::new();
+    let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_string());
     let Ok(re1) = Regex::new(r"\/\/ ?IGNORE_PRIVATE_WARNING ?\[(.*)\]") else {
         return Vec::new();
@@ -462,7 +473,32 @@ pub fn run_processed(
         }
     }
 
-    let mut scope = SciptScope::create(&ignored_vars, false);
+    let global = Rc::new(RefCell::new(Stack::new()));
+    let mut scope = SciptScope::create(global, &ignored_vars, false);
     scope.eval_statements(statements, database);
-    scope.finish(true, database).into_iter().collect()
+    let rv: Vec<Issue> = scope.finish(true, database).into_iter().collect();
+    // for ig in ignored_vars.clone() {
+    //     if ig == "_this" {
+    //         continue;
+    //     }
+    //     let mut igtest = ignored_vars.clone();
+    //     igtest.remove(&ig);
+
+    //     let global = Rc::new(RefCell::new(Stack::new()));
+    //     let mut scope = SciptScope::create(global, &igtest, false);
+    //     scope.eval_statements(statements, database);
+    //     let path = processed.sources();
+    //     let new = scope.finish(true, database).len();
+    //     if new <= rv.len() {
+    //         println!(
+    //             "in {:?}-{:?} and {} is undeeded [{}->{}]",
+    //             path[0].0,
+    //             path[path.len() - 1].0,
+    //             ig,
+    //             rv.len(),
+    //             new
+    //         );
+    //     }
+    // }
+    rv
 }

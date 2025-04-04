@@ -1,42 +1,17 @@
 import * as vscode from "vscode";
+import { LanguageClient } from 'vscode-languageclient/node';
+import { PaaViewerProvider } from './viewer';
 
-// PAa
-import { PaaViewerProvider } from "./paaViewer";
-import { SizeStatusBarEntry } from "./sizeStatusBarEntry";
-import { ZoomStatusBarEntry } from "./zoomStatusBarEntry";
-import { BinarySizeStatusBarEntry } from "./binarySizeStatusBarEntry";
-
-export function activate(context: vscode.ExtensionContext) {
-  // PAA
-  const sizeStatusBarEntry = new SizeStatusBarEntry();
-  context.subscriptions.push(sizeStatusBarEntry);
-  const binarySizeStatusBarEntry = new BinarySizeStatusBarEntry();
-  context.subscriptions.push(binarySizeStatusBarEntry);
-  const zoomStatusBarEntry = new ZoomStatusBarEntry();
-  context.subscriptions.push(zoomStatusBarEntry);
-  const previewManager = new PaaViewerProvider(
-    context.extensionUri,
-    sizeStatusBarEntry,
-    binarySizeStatusBarEntry,
-    zoomStatusBarEntry
-  );
+export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(
       PaaViewerProvider.viewType,
-      previewManager,
+      new PaaViewerProvider(context.extensionUri, client),
       {
-        supportsMultipleEditorsPerDocument: true,
+        webviewOptions: {
+          retainContextWhenHidden: true,
+        },
       }
     )
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("hemtt.zoomIn", () => {
-      previewManager.activePreview?.zoomIn();
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand("hemtt.zoomOut", () => {
-      previewManager.activePreview?.zoomOut();
-    })
   );
 }

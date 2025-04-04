@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 
 use crate::{Class, Config};
 
-use super::Rapify;
+use super::{Derapify, Rapify};
 
 impl Rapify for Config {
     fn rapify<O: std::io::Write>(
@@ -38,5 +38,35 @@ impl Rapify for Config {
             properties: self.0.clone(),
         };
         root_class.rapified_length() + 20 // metadata
+    }
+}
+
+impl Derapify for Config {
+    fn derapify<I: std::io::Read + std::io::Seek>(input: &mut I) -> Result<Self, std::io::Error>
+    where
+        Self: Sized,
+    {
+        let mut buffer = vec![0; 4];
+        input.read_exact(&mut buffer)?;
+        if &buffer != b"\0raP" {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid rapified config",
+            ));
+        }
+        input.seek_relative(8)?;
+        // skip enum offset
+        input.seek_relative(4)?;
+
+        let root_class = Class::derapify(input, None)?;
+
+        if let Class::Root { properties } = root_class {
+            Ok(Self(properties))
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid root class",
+            ))
+        }
     }
 }

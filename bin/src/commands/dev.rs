@@ -5,7 +5,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, Binarize, FilePatching, Files, Rapifier},
+    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse},
     report::Report,
 };
 
@@ -38,6 +38,9 @@ pub struct Command {
     pub(crate) dev: DevArgs,
 
     #[clap(flatten)]
+    pub(crate) binarize: BinarizeArgs,
+
+    #[clap(flatten)]
     pub(crate) just: JustArgs,
 
     #[clap(flatten)]
@@ -47,12 +50,6 @@ pub struct Command {
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DevArgs {
-    #[arg(long, short, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
-    /// Use BI's binarize on supported files
-    ///
-    /// By default, `hemtt dev` will not binarize any files, but rather pack them as-is.
-    /// Binarization is often not needed for development.
-    pub(crate) binarize: bool,
     #[arg(long, short, action = clap::ArgAction::Append, verbatim_doc_comment)]
     /// Include an optional addon folder
     ///
@@ -72,12 +69,29 @@ pub struct DevArgs {
     pub(crate) no_rap: bool,
 }
 
+#[derive(Clone, clap::Args)]
+pub struct BinarizeArgs {
+    #[arg(long, short, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
+    /// Use BI's binarize on supported files
+    ///
+    /// By default, `hemtt dev` will not binarize any files, but rather pack them as-is.
+    /// Binarization is often not needed for development.
+    pub(crate) binarize: bool,
+}
+
 /// Execute the dev command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<(Report, Context), Error> {
-    let mut executor = context(&cmd.dev, &cmd.just, launch_optionals, false, true)?;
+    let mut executor = context(
+        &cmd.dev,
+        &cmd.binarize,
+        &cmd.just,
+        launch_optionals,
+        false,
+        true,
+    )?;
     executor.run().map(|r| (r, executor.into_ctx()))
 }
 
@@ -87,6 +101,7 @@ pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<(Report, Co
 /// [`Error`] depending on the modules
 pub fn context(
     dev: &DevArgs,
+    binarize: &BinarizeArgs,
     just: &JustArgs,
     launch_optionals: &[String],
     force_binarize: bool,
@@ -105,7 +120,7 @@ pub fn context(
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
 
-    let ctx = Context::new(
+    let mut ctx = Context::new(
         Some("dev"),
         if just.is_empty() {
             crate::context::PreservePrevious::Remove
@@ -135,6 +150,12 @@ pub fn context(
             .any(|e| (a.folder() + "/").starts_with(&format!("{e}/")))
     });
 
+    if !just.is_empty() {
+        let runtime = ctx.config().runtime().clone().with_just(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
+    }
+
     for optional in optionals {
         if !ctx.addons().iter().any(|a| a.name() == optional) {
             return Err(Error::Addon(
@@ -153,7 +174,7 @@ pub fn context(
     }
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
-    if force_binarize || dev.binarize {
+    if force_binarize || binarize.binarize {
         executor.add_module(Box::<Binarize>::default());
     }
 

@@ -26,11 +26,11 @@ impl Lint<LintData> for LintC11FileType {
     fn documentation(&self) -> &'static str {
 r#"### Configuration
 
-- **allow_no_extension**: Allow properties to not have a file extension, default is `true`.
+- **allow_no_extension**: Allow properties to not have a file extension, default is `false`.
 
 ```toml
 [lints.config.file_type]
-options.allow_no_extension = false
+options.allow_no_extension = true
 ```
 
 ### Example
@@ -114,60 +114,83 @@ impl LintRunner<LintData> for Runner {
         let allow_no_extension = if let Some(toml::Value::Boolean(allow_no_extension)) = config.option("allow_no_extension") {
             *allow_no_extension
         } else {
-            true
+            false
         };
-        // Arrays
-        if let Value::Array(values) = value {
-            for value in &values.items {
-                if let Item::Str(value) = value {
-                    if let Some(code) = check(name.as_str(), value, allow_no_extension, processed, config) {
-                        codes.push(code);
-                    }
+        let name = name.as_str().to_lowercase();
+
+        match value {
+            Value::Array(arr) => {
+                for item in &arr.items {
+                    check_item(&name, item, allow_no_extension, processed, config, &mut codes);
                 }
             }
-        }
-        let Value::Str(value) = value else {
-            return codes;
-        };
-        if let Some(code) = check(name.as_str(), value, allow_no_extension, processed, config) {
-            codes.push(code);
+            Value::Str(value) => check_str(&name, value, allow_no_extension, processed, config, &mut codes),
+            _ => {}
         }
         codes
     }
 }
 
-fn check(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed, config: &LintConfig) -> Option<Arc<dyn Code>> {
+fn check_item(
+    name: &str,
+    target: &crate::Item,
+    allow_no_extension: bool,
+    processed: &Processed,
+    config: &LintConfig,
+    codes: &mut Vec<Arc<dyn Code>>,
+) {
+    match target {
+        Item::Array(values) => {
+            for value in values {
+                check_item(name, value, allow_no_extension, processed, config, codes);
+            }
+        }
+        Item::Str(value) => {
+            check_str(name, value, allow_no_extension, processed,  config, codes);
+        }
+        _ => {}
+    }
+}
+
+fn check_str(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed, config: &LintConfig, 
+    codes: &mut Vec<Arc<dyn Code>>) {
     let value_str = value.value();
+    // Skip if it contains no backslashes, probably a class name
+    if !value_str.contains('\\') {
+        return;
+    }
+    let value_str = value_str.to_lowercase();
+    if value_str.starts_with("\\a3") {
+        return;
+    }
     if name == "sound" && value_str.starts_with("db") {
-        return None;
+        return;
     }
     let allowed = allowed_ext(name);
     if !allowed.is_empty() {
         if value_str.is_empty() {
-            return None;
+            return;
         }
         let ext = if value_str.contains('.') {
-            value_str.split('.').last().unwrap_or("")
+            value_str.split('.').next_back().unwrap_or("")
         } else {
             ""
         };
         if ext.is_empty() {
             if !allow_no_extension {
                 let span = value.span().start + 1..value.span().end - 1;
-                return Some(Arc::new(CodeC11MissingExtension::new(span, processed, config.severity())));
+                codes.push(Arc::new(CodeC11MissingExtension::new(span, processed, config.severity())));
             }
-            return None;
+            return;
         }
         if !allowed.contains(&ext){
             let span = value.span().start + 2 + (value_str.len() - ext.len())..value.span().end - 1;
-            return Some(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed, config.severity())));
+            codes.push(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed, config.severity())));
         }
     }
-    None
 }
 
 fn allowed_ext(name: &str) -> Vec<&str> {
-    let name = name.to_lowercase();
     if name.starts_with("animation") {
         if name.starts_with("animationsource") || name == "animationlist" {
             return vec![];
@@ -186,7 +209,7 @@ fn allowed_ext(name: &str) -> Vec<&str> {
     if name.starts_with("scud") {
         return vec!["rtm"];
     }
-    match name.as_str() {
+    match name {
         "model" | "uimodel" | "modelspecial" | "modeloptics" | "modelmagazine" | "cartridge" => vec!["p3d"],
         "editorpreview" => vec!["jpg", "jpeg", "paa", "pac"],
         "uipicture" | "icon" | "picture" | "wounds" => vec!["paa", "pac"],

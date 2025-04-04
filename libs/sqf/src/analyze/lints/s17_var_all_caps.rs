@@ -48,7 +48,7 @@ Variables that are all caps are usually reserved for macros. This should should 
 ."#
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]

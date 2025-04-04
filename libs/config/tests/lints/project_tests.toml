@@ -1,0 +1,13 @@
+# Same name/prefix as ProjectConfig::test_project();
+# With additional pedantic lints enabled
+
+name = "Advanced Banana Environment"
+prefix = "abe"
+
+[lints.config.math_could_be_unquoted]
+enabled = true
+options.ignore = ["text", "name", "displayname", "icontext", "caseCheckIgnore"]
+options.forced = ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive", "specular", "specularpower", "caseCheckForced"]
+
+[lints.config.config_this_call]
+enabled = true

@@ -5,13 +5,13 @@ pub mod lexer;
 use std::ops::Range;
 use std::sync::Arc;
 
-use self::database::{is_special_command, Database};
+use self::database::{Database, is_special_command};
 use self::lexer::{Control, Operator, Token};
 use crate::analyze::inspector;
 use crate::{BinaryCommand, Expression, NularCommand, Statement, Statements, UnaryCommand};
 
-use chumsky::prelude::*;
 use chumsky::Stream;
+use chumsky::prelude::*;
 use hemtt_workspace::reporting::{Code, Processed};
 
 /// Parses a SQF string into a list of statements.
@@ -73,6 +73,10 @@ fn parser<'a>(
     statements(database, processed).then_ignore(end())
 }
 
+#[rustversion::attr(
+    since(1.87),
+    expect(clippy::let_and_return, reason = "chumsky requires for type inference")
+)]
 #[allow(clippy::too_many_lines)]
 fn statements<'a>(
     database: &'a Database,

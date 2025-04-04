@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{analyze::analyze, parser::database::Database};
-use hemtt_workspace::{addons::Addon, reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, addons::Addon, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 
@@ -23,8 +23,8 @@ macro_rules! lint {
 lint!(s02_event_handler_case, true);
 lint!(s03_static_typename, true);
 lint!(s04_command_case, true);
-lint!(s05_if_assign, true);
 lint!(s05_if_assign_emoji, true);
+lint!(s05_if_assign, true);
 lint!(s06_find_in_str, true);
 lint!(s07_select_parse_number, true);
 lint!(s08_format_args, true);
@@ -44,6 +44,9 @@ lint!(s22_this_call, true);
 lint!(s23_reassign_reserved_variable, true);
 lint!(s24_marker_spam, true);
 lint!(s25_count_array_comp, false);
+lint!(s26_short_circuit_bool_var, true);
+lint!(s27_select_count, true);
+lint!(s28_banned_macros, true);
 
 fn lint(file: &str, ignore_inspector: bool) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -64,7 +67,7 @@ fn lint(file: &str, ignore_inspector: bool) -> String {
             if ignore_inspector {
                 sqf.testing_clear_issues();
             }
-            let codes = analyze(
+            let (codes, _) = analyze(
                 &sqf,
                 Some(&config),
                 &processed,

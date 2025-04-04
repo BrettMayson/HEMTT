@@ -2,7 +2,7 @@
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{reporting::WorkspaceFiles, LayerType};
+use hemtt_workspace::{LayerType, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 
@@ -30,6 +30,8 @@ lint!(c08_missing_semicolon);
 lint!(c09_magwell_missing_magazine);
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
+lint!(c12_math_could_be_unquoted);
+lint!(c13_config_this_call);
 
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
@@ -43,7 +45,9 @@ fn lint(file: &str) -> String {
         .unwrap();
     let source = workspace.join(format!("{file}.hpp")).unwrap();
     let processed = Processor::run(&source).unwrap();
-    let parsed = hemtt_config::parse(Some(&ProjectConfig::test_project()), &processed);
+    let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
+    let test_config = ProjectConfig::from_file(&config_path_full).unwrap();
+    let parsed = hemtt_config::parse(Some(&test_config), &processed);
     let workspacefiles = WorkspaceFiles::new();
     match parsed {
         Ok(config) => config

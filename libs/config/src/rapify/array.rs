@@ -1,10 +1,11 @@
 use std::iter::Sum;
 
-use hemtt_common::io::{compressed_int_len, WriteExt};
+use byteorder::ReadBytesExt;
+use hemtt_common::io::{ReadExt, WriteExt, compressed_int_len};
 
-use crate::{Array, Item};
+use crate::{Array, Item, Number, Str};
 
-use super::Rapify;
+use super::{Derapify, Rapify};
 
 impl Rapify for Array {
     fn rapify<O: std::io::Write>(
@@ -24,6 +25,30 @@ impl Rapify for Array {
     fn rapified_length(&self) -> usize {
         compressed_int_len(self.items.len() as u32)
             + usize::sum(self.items.iter().map(|e| e.rapified_length() + 1))
+    }
+}
+
+impl Array {
+    /// Derapify an array from the input stream
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or cannot be read
+    pub fn derapify<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+        expand: bool,
+    ) -> Result<Self, std::io::Error> {
+        let start = input.stream_position()? as usize;
+        let length = input.read_compressed_int()?;
+        let mut items = Vec::with_capacity(length as usize);
+        for _ in 0..length {
+            let item = Item::derapify(input)?;
+            items.push(item);
+        }
+        Ok(Self {
+            items,
+            span: start..input.stream_position()? as usize,
+            expand,
+        })
     }
 }
 
@@ -66,6 +91,34 @@ impl Rapify for Item {
             Self::Number(n) => n.rapified_code(),
             Self::Array(_) => 3,
             Self::Invalid(_) => unreachable!(),
+        }
+    }
+}
+
+impl Derapify for Item {
+    fn derapify<I: std::io::Read + std::io::Seek>(input: &mut I) -> Result<Self, std::io::Error>
+    where
+        Self: Sized,
+    {
+        let code = input.read_u8()?;
+        match code {
+            0 => Ok(Self::Str(Str::derapify(input)?)),
+            1 => Ok(Self::Number(Number::derapify_float32(input)?)),
+            2 => Ok(Self::Number(Number::derapify_int32(input)?)),
+            3 => {
+                let length = input.read_compressed_int()?;
+                let mut items = Vec::with_capacity(length as usize);
+                for _ in 0..length {
+                    let item = Self::derapify(input)?;
+                    items.push(item);
+                }
+                Ok(Self::Array(items))
+            }
+            6 => Ok(Self::Number(Number::derapify_int64(input)?)),
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Invalid rapified item code: {code}"),
+            )),
         }
     }
 }

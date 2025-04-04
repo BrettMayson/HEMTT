@@ -26,7 +26,7 @@ debug(HEMTT.project().version.major());
 ```
 
 ```sh
-DEBUG [post_release/test.rhai] "1.14.2"
+DEBUG [post_release/test.rhai] "1.15.2"
 DEBUG [post_release/test.rhai] 1
 ```
 

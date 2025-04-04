@@ -1,11 +1,11 @@
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     sync::atomic::{AtomicU16, Ordering},
 };
 
 use git2::Repository;
 use hemtt_common::{
-    prefix::{Prefix, FILES},
+    prefix::{FILES, Prefix},
     version::Version,
 };
 use hemtt_pbo::WritablePbo;

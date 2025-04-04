@@ -1,6 +1,6 @@
 use hemtt_common::version::Version;
 
-use crate::{analyze::CfgPatch, Class, Number, Property, Value};
+use crate::{Class, Number, Property, Value, analyze::CfgPatch};
 
 #[derive(Clone, Debug, PartialEq)]
 /// A config file

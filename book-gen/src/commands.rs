@@ -27,14 +27,14 @@ pub fn run(chapter: &mut Chapter) {
     )];
 
     for item in &mut chapter.sub_items {
-        if let mdbook::BookItem::Chapter(ref mut chapter) = item {
+        if let mdbook::BookItem::Chapter(chapter) = item {
             if let Some((name, command)) = commands.iter().find(|(name, _)| *name == chapter.name) {
                 chapter.content = process_command(name, None, command.clone());
             } else if let Some((_, commands)) =
                 nested.iter().find(|(name, _)| *name == chapter.name)
             {
                 for item in &mut chapter.sub_items {
-                    if let mdbook::BookItem::Chapter(ref mut child_chapter) = item {
+                    if let mdbook::BookItem::Chapter(child_chapter) = item {
                         if let Some((name, command)) = commands
                             .iter()
                             .find(|(name, _)| *name == child_chapter.name)

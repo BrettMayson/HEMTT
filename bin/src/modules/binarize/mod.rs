@@ -4,8 +4,8 @@ use std::{
     path::PathBuf,
     process::Command,
     sync::{
-        atomic::{AtomicU16, Ordering},
         RwLock,
+        atomic::{AtomicU16, Ordering},
     },
 };
 

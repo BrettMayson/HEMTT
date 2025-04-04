@@ -27,6 +27,16 @@ pub trait ReadExt: Read {
 }
 
 impl<T: Read> ReadExt for T {
+    #[rustversion::attr(
+        since(1.87),
+        expect(
+            clippy::unbuffered_bytes,
+            reason = "The consumer should use a buffered reader if needed"
+        )
+    )]
+    /// Reads a null-terminated string from the input.
+    ///
+    /// Uses `.bytes()` internally, a buffered reader should be used if performance is a concern.
     fn read_cstring(&mut self) -> io::Result<String> {
         let mut bytes: Vec<u8> = Vec::new();
         for byte in self.bytes() {
@@ -46,6 +56,16 @@ impl<T: Read> ReadExt for T {
         )
     }
 
+    #[rustversion::attr(
+        since(1.87),
+        expect(
+            clippy::unbuffered_bytes,
+            reason = "The consumer should use a buffered reader if needed"
+        )
+    )]
+    /// Reads a null-terminated string from the input.
+    ///
+    /// Uses `.bytes()` internally, a buffered reader should be used if performance is a concern.
     fn read_compressed_int(&mut self) -> io::Result<u32> {
         let mut result: u32 = 0;
         for (i, byte) in self.bytes().enumerate() {

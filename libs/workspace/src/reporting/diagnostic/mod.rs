@@ -309,6 +309,8 @@ impl Diagnostic {
         &self,
         files: &WorkspaceFiles,
     ) -> Vec<(WorkspacePath, tower_lsp::lsp_types::Diagnostic)> {
+        use tower_lsp::lsp_types::Url;
+
         let mut diags = Vec::new();
         for label in &self.labels {
             let start = label.span.start;
@@ -344,7 +346,11 @@ impl Diagnostic {
                     message: self.message.clone(),
                     related_information: None,
                     tags: None,
-                    code_description: None,
+                    code_description: self.link.as_ref().and_then(|link| {
+                        Url::parse(&format!("https://hemtt.dev{link}")).map_or(None, |href| {
+                            Some(tower_lsp::lsp_types::CodeDescription { href })
+                        })
+                    }),
                     data: None,
                 },
             ));
@@ -358,7 +364,6 @@ const fn severity_to_lsp(severity: Severity) -> tower_lsp::lsp_types::Diagnostic
     match severity {
         Severity::Error | Severity::Bug => tower_lsp::lsp_types::DiagnosticSeverity::ERROR,
         Severity::Warning => tower_lsp::lsp_types::DiagnosticSeverity::WARNING,
-        Severity::Note => tower_lsp::lsp_types::DiagnosticSeverity::INFORMATION,
-        Severity::Help => tower_lsp::lsp_types::DiagnosticSeverity::HINT,
+        Severity::Help | Severity::Note => tower_lsp::lsp_types::DiagnosticSeverity::INFORMATION,
     }
 }

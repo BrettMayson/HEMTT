@@ -1,10 +1,10 @@
-use std::{collections::HashMap, io::BufReader};
+use std::collections::HashMap;
 
 use hemtt_stringtable::{Project, Totals};
 use serde::Serialize;
-use tabled::{settings::Style, Table, Tabled};
+use tabled::{Table, Tabled, settings::Style};
 
-use crate::{context::Context, report::Report, Error, TableFormat};
+use crate::{Error, TableFormat, context::Context, report::Report};
 
 #[derive(clap::Parser)]
 #[allow(clippy::module_name_repetitions)]
@@ -106,8 +106,7 @@ pub fn coverage(cmd: &Command) -> Result<Report, Error> {
             .join(addon.folder())?
             .join("stringtable.xml")?;
         if stringtable_path.exists()? {
-            let project = match Project::from_reader(BufReader::new(stringtable_path.open_file()?))
-            {
+            let project = match Project::read(stringtable_path) {
                 Ok(project) => project,
                 Err(e) => {
                     error!("Failed to read stringtable for {}", addon.folder());
