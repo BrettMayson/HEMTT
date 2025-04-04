@@ -145,7 +145,7 @@ impl Launcher {
             if !workshop_folder.exists() {
                 report.push(WorkshopNotFound::code());
                 return Ok(None);
-            };
+            }
 
             let mut meta = None;
             let meta_path = std::env::current_dir()?.join("meta.cpp");
@@ -168,7 +168,7 @@ impl Launcher {
                 let mod_path = workshop_folder.join(load_mod);
                 if !mod_path.exists() {
                     report.push(WorkshopModNotFound::code(load_mod.to_string()));
-                };
+                }
                 if cfg!(windows) {
                     mods.push(mod_path.display().to_string());
                 } else {
@@ -292,7 +292,7 @@ impl Launcher {
         if !workshop_folder.exists() {
             report.push(WorkshopNotFound::code());
             return report;
-        };
+        }
         for m in mods {
             self.workshop.push(match m {
                 Mod::Workshop(id) => {

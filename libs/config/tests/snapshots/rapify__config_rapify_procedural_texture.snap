@@ -1,0 +1,7 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (procedural_texture))
+---
+Config(
+    [],
+)

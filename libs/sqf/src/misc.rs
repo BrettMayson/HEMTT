@@ -12,7 +12,7 @@ where
         for (i, item) in self.0.clone().into_iter().enumerate() {
             if i != 0 {
                 f.write_str(", ")?;
-            };
+            }
             fmt::Display::fmt(&item, f)?;
         }
 

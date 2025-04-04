@@ -144,7 +144,7 @@ impl Statement {
             Self::Expression(ref expression, _) => {
                 expression.compile_instructions(instructions, processed, ctx)?;
             }
-        };
+        }
 
         Ok(())
     }
@@ -243,7 +243,7 @@ impl Expression {
                     unreachable!("constant should have been handled")
                 }
             },
-        };
+        }
 
         Ok(())
     }

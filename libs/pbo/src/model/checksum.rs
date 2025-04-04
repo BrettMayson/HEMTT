@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use crate::ReadPbo;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
@@ -29,7 +31,7 @@ impl Checksum {
     pub fn hex(&self) -> String {
         let mut out = String::new();
         for byte in &self.0 {
-            out.push_str(&format!("{byte:02x}"));
+            write!(out, "{byte:02x}").expect("Failed to write hex");
         }
         out
     }

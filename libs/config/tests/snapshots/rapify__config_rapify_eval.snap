@@ -1,0 +1,21 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (eval))
+---
+Config(
+    [
+        Entry {
+            name: Ident {
+                value: "value",
+                span: 20..26,
+            },
+            value: Expression(
+                Expression {
+                    value: "getResolution select 0",
+                    span: 26..49,
+                },
+            ),
+            expected_array: false,
+        },
+    ],
+)

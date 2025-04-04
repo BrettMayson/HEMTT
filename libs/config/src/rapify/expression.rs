@@ -1,8 +1,8 @@
-use hemtt_common::io::WriteExt;
+use hemtt_common::io::{ReadExt, WriteExt};
 
 use crate::Expression;
 
-use super::Rapify;
+use super::{Derapify, Rapify};
 
 impl Rapify for Expression {
     fn rapify<O: std::io::Write>(
@@ -20,6 +20,20 @@ impl Rapify for Expression {
 
     fn rapified_code(&self) -> u8 {
         4
+    }
+}
+
+impl Derapify for Expression {
+    fn derapify<I: std::io::Read + std::io::Seek>(input: &mut I) -> Result<Self, std::io::Error>
+    where
+        Self: Sized,
+    {
+        let start = input.stream_position()? as usize;
+        let value = input.read_cstring()?;
+        Ok(Self {
+            value,
+            span: start..input.stream_position()? as usize,
+        })
     }
 }
 
