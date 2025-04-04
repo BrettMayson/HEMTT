@@ -71,7 +71,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                         error!("{:?}", e);
                         return Ok(Report::new());
                     }
-                };
+                }
             }
         }
     }

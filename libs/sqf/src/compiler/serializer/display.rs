@@ -48,7 +48,7 @@ impl fmt::Display for DisplayInstructions<'_> {
                 Instruction::MakeArray(array_len, source_info) => {
                     write!(f, " {array_len} ({})", source_info.offset)?;
                 }
-            };
+            }
 
             writeln!(f)?;
         }
@@ -89,7 +89,7 @@ impl fmt::Display for DisplayConstant<'_> {
                 for (i, constant) in array.iter().enumerate() {
                     if i != 0 {
                         f.write_str(", ")?;
-                    };
+                    }
                     fmt::Display::fmt(
                         &DisplayConstant {
                             compiled: self.compiled,
@@ -101,7 +101,7 @@ impl fmt::Display for DisplayConstant<'_> {
                 }
                 f.write_str("]")?;
             }
-        };
+        }
 
         Ok(())
     }

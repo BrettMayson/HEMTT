@@ -108,7 +108,6 @@ impl LintRunner<LintData> for StatementsRunner {
             } else if let Expression::Variable(saved, new_saved_span) = exp {
                 if RESERVED.contains(&saved.as_str()) {
                     just_saved.replace((saved.to_string(), var.to_string(), new_saved_span.clone()));
-                    continue
                 }
             }
         }

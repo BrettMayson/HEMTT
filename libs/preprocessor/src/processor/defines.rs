@@ -135,7 +135,6 @@ impl Processor {
                 }
                 stream.next();
                 comma_next = false;
-                continue;
             } else if symbol.is_right_paren() {
                 stream.next();
                 break;
@@ -308,7 +307,7 @@ impl Processor {
                         .is_left_paren(),
                 ));
             }
-        };
+        }
         #[cfg(feature = "lsp")]
         self.usage.get_mut(source.position()).map_or_else(
             || {
