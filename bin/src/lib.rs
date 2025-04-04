@@ -29,7 +29,7 @@ pub struct Cli {
     global: GlobalArgs,
 }
 
-#[derive(Clone, clap::Args)]
+#[derive(Debug, Clone, clap::Args)]
 pub struct GlobalArgs {
     #[arg(global = true, long, short)]
     /// Number of threads, defaults to # of CPUs
@@ -37,8 +37,7 @@ pub struct GlobalArgs {
     #[arg(global = true, short, action = clap::ArgAction::Count)]
     /// Verbosity level
     verbosity: u8,
-    #[cfg(debug_assertions)]
-    #[arg(global = true, long)]
+    #[arg(global = true, hide = true, long)]
     /// Directory to run in
     dir: Option<String>,
     #[cfg(debug_assertions)]
@@ -86,6 +85,10 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::process::exit(1);
     }
 
+    if let Some(dir) = &cli.global.dir {
+        std::env::set_current_dir(dir).expect("Failed to set current directory");
+    }
+
     #[cfg(debug_assertions)]
     let in_test = cli.global.in_test;
     #[cfg(not(debug_assertions))]
@@ -99,11 +102,6 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 Some(Commands::Utils(_) | Commands::Wiki(_) | Commands::New(_) | Commands::Book(_))
             ),
         )?;
-    }
-
-    #[cfg(debug_assertions)]
-    if let Some(dir) = &cli.global.dir {
-        std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
     let update_thread = std::thread::spawn(check_for_update);

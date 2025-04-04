@@ -40,12 +40,12 @@ future_incompatible = "warn"
 nonstandard_style = "warn"
 
 [workspace.dependencies]
-arma3-wiki = "0.4.0"
+arma3-wiki = "0.4.1"
 automod =  "1.0.15"
 byteorder = "1.5.0"
 chumsky = "0.9.3"
 clap = "4.5.35"
-codespan-reporting = { version = "0.11.1", features = ["serialization"] }
+codespan-reporting = { version = "0.12.0", features = ["serialization"] }
 dashmap = "6.1.0"
 dirs = "6.0.0"
 git2 = "0.20.1"
@@ -75,5 +75,5 @@ vfs = "0.12.1"
 walkdir = "2.5.0"
 zip = "2.5.0"
 
-# [profile.release]
-# debug = true
+[profile.release]
+debug = true
