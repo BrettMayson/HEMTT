@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::Error;
 
+mod derapify;
 mod inspect;
 
 pub use inspect::inspect;
@@ -16,6 +17,8 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Derapify a config file
+    Derapify(derapify::DerapifyArgs),
     /// Inspect a config file
     Inspect(inspect::InspectArgs),
 }
@@ -29,6 +32,9 @@ enum Subcommands {
 /// If the args are not present from clap
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     match &cmd.commands {
+        Subcommands::Derapify(args) => {
+            derapify::derapify(&PathBuf::from(&args.file), args.output.as_ref())
+        }
         Subcommands::Inspect(args) => inspect::inspect(&PathBuf::from(&args.config)),
     }
 }
