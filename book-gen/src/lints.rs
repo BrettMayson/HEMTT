@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use hemtt_common::config::LintEnabled;
 use hemtt_config::analyze::CONFIG_LINTS;
+use hemtt_stringtable::analyze::STRINGTABLE_LINTS;
 use hemtt_sqf::analyze::{
     LintData, SQF_LINTS,
     lints::s02_event_handlers::{
@@ -19,6 +20,9 @@ pub fn run(chapter: &mut Chapter) {
             }
             if chapter.name == "SQF" {
                 sqf(chapter);
+            }
+            if chapter.name == "Stringtables" {
+                stringtables(chapter);
             }
         }
     }
@@ -55,6 +59,19 @@ fn sqf(chapter: &mut Chapter) {
         .collect::<Vec<_>>();
     for lint in lints {
         lint_text.push((lint.sort(), get_text(&lint, "L-S")));
+    }
+    lint_text.sort_by(|a, b| a.0.cmp(&b.0));
+    for (_, text) in lint_text {
+        output.push_str(&text);
+    }
+    chapter.content = output;
+}
+
+fn stringtables(chapter: &mut Chapter) {
+    let mut output = String::from("# Lints - Stringtables\n\n");
+    let mut lint_text: Vec<(u32, String)> = Vec::new();
+    for lint in STRINGTABLE_LINTS.iter().filter(|l| l.display()) {
+        lint_text.push((lint.sort(), get_text(&**lint, "L-L")));
     }
     lint_text.sort_by(|a, b| a.0.cmp(&b.0));
     for (_, text) in lint_text {

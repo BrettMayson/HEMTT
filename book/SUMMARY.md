@@ -55,10 +55,11 @@
 
 # Reference
 
-- [Analysis](analysis/index.md)
+- [Lints](analysis/index.md)
   - [Preprocessor](analysis/preprocessor.md)
   - [Config](analysis/config.md)
   - [SQF](analysis/sqf.md)
+  - [Stringtables](analysis/strintables.md)
 
 <!--
 # Modding Guide
