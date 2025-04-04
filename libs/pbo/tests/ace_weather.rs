@@ -126,11 +126,7 @@ fn ace_weather_cba6f72c() {
             writeln!(pbo_summary, "  timestamp {}", file.timestamp()).unwrap();
             writeln!(pbo_summary, "  size {}", file.size()).unwrap();
             writeln!(pbo_summary, "  offset {:?}", {
-                let t = &new_files[file.filename()];
-                let mut hasher = Sha1::new();
-                hasher.update(t);
-                let result: Checksum = hasher.finalize().to_vec().into();
-                result.hex()
+                pbo.file_offset(file.filename()).unwrap()
             })
             .unwrap();
             writeln!(pbo_summary, " hash {}", {
