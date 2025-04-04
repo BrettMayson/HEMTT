@@ -194,7 +194,7 @@ pub fn expand_unknown_input_length(
     let mut rpos: usize;
     let mut rlen: u8;
     let mut fl: usize = 0;
-    #[expect(unused_variables, reason="not used right now")]
+    #[expect(unused_variables, reason = "not used right now")]
     let mut calculated_checksum: u32 = 0;
     let mut pi: usize = 0;
     let mut data: u8;
@@ -297,9 +297,9 @@ pub fn expand_unknown_input_length(
     //     u32::from_ne_bytes([input[pi], input[pi + 1], input[pi + 2], input[pi + 3]]);
 
     // if read_checksum != calculated_checksum {
-        // this is expected right now with PAAs
-        // they store the checksum in a different format and
-        // I don't feel like fixing it right now
+    // this is expected right now with PAAs
+    // they store the checksum in a different format and
+    // I don't feel like fixing it right now
     // }
     Ok(pi + 4)
 }

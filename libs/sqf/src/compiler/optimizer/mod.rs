@@ -456,7 +456,7 @@ impl Expression {
                             range.clone(),
                         ));
                     }
-                };
+                }
                 warn!(
                     "Skipping Optimization on float chain [B:{}] ({})",
                     new_op.as_str(),

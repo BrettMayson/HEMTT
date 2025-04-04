@@ -151,7 +151,7 @@ impl Processor {
         };
         if !hit_end {
             Self::expect_nothing_to_newline(stream)?;
-        };
+        }
         Ok((code, scope))
     }
 

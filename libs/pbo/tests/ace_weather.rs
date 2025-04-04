@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
-use std::{fs::File, io::Read};
+use std::{fmt::Write, fs::File, io::Read};
 
 use hemtt_pbo::{
     Checksum, Mime, WritablePbo,
@@ -52,21 +52,23 @@ fn ace_weather_cba6f72c() {
     {
         let mut pbo_summary = String::from("# Properties\n");
         for ext in pbo.properties() {
-            pbo_summary.push_str(&format!("{}: {}\n", ext.0, ext.1));
+            writeln!(pbo_summary, "{}: {}", ext.0, ext.1).unwrap();
         }
         pbo_summary.push_str("\n# Files\n");
         for file in pbo.files_sorted() {
-            pbo_summary.push_str(&format!("{}\n", file.filename()));
-            pbo_summary.push_str(&format!("  mime {}\n", file.mime()));
-            pbo_summary.push_str(&format!("  original {}\n", file.original()));
-            pbo_summary.push_str(&format!("  reserved {}\n", file.reserved()));
-            pbo_summary.push_str(&format!("  timestamp {}\n", file.timestamp()));
-            pbo_summary.push_str(&format!("  size {}\n", file.size()));
-            pbo_summary.push_str(&format!(
-                "  offset {:?}\n",
+            writeln!(pbo_summary, "{}", file.filename()).unwrap();
+            writeln!(pbo_summary, "  mime {}", file.mime()).unwrap();
+            writeln!(pbo_summary, "  original {}", file.original()).unwrap();
+            writeln!(pbo_summary, "  reserved {}", file.reserved()).unwrap();
+            writeln!(pbo_summary, "  timestamp {}", file.timestamp()).unwrap();
+            writeln!(pbo_summary, "  size {}", file.size()).unwrap();
+            writeln!(
+                pbo_summary,
+                "  offset {:?}",
                 pbo.file_offset(file.filename()).unwrap()
-            ));
-            pbo_summary.push_str(&format!(" hash {}\n", {
+            )
+            .unwrap();
+            writeln!(pbo_summary, " hash {}", {
                 let mut content = pbo.file(file.filename()).unwrap().unwrap();
                 let mut data = Vec::new();
                 content.read_to_end(&mut data).unwrap();
@@ -74,7 +76,8 @@ fn ace_weather_cba6f72c() {
                 hasher.update(data);
                 let result: Checksum = hasher.finalize().to_vec().into();
                 result.hex()
-            }));
+            })
+            .unwrap();
         }
         pbo_summary.push_str("\n# Checksum\n");
         pbo_summary.push_str(checksum.hex().as_str());
@@ -112,27 +115,32 @@ fn ace_weather_cba6f72c() {
     {
         let mut pbo_summary = String::from("# Properties\n");
         for ext in new_pbo.properties() {
-            pbo_summary.push_str(&format!("{}: {}\n", ext.0, ext.1));
+            writeln!(pbo_summary, "{}: {}", ext.0, ext.1).unwrap();
         }
         pbo_summary.push_str("\n# Files\n");
         for file in new_pbo.files_sorted() {
-            pbo_summary.push_str(&format!("{}\n", file.filename()));
-            pbo_summary.push_str(&format!("  mime {}\n", file.mime()));
-            pbo_summary.push_str(&format!("  original {}\n", file.original()));
-            pbo_summary.push_str(&format!("  reserved {}\n", file.reserved()));
-            pbo_summary.push_str(&format!("  timestamp {}\n", file.timestamp()));
-            pbo_summary.push_str(&format!("  size {}\n", file.size()));
-            pbo_summary.push_str(&format!(
-                "  offset {:?}\n",
-                pbo.file_offset(file.filename()).unwrap()
-            ));
-            pbo_summary.push_str(&format!(" hash {}\n", {
+            writeln!(pbo_summary, "{}", file.filename()).unwrap();
+            writeln!(pbo_summary, "  mime {}", file.mime()).unwrap();
+            writeln!(pbo_summary, "  original {}", file.original()).unwrap();
+            writeln!(pbo_summary, "  reserved {}", file.reserved()).unwrap();
+            writeln!(pbo_summary, "  timestamp {}", file.timestamp()).unwrap();
+            writeln!(pbo_summary, "  size {}", file.size()).unwrap();
+            writeln!(pbo_summary, "  offset {:?}", {
                 let t = &new_files[file.filename()];
                 let mut hasher = Sha1::new();
                 hasher.update(t);
                 let result: Checksum = hasher.finalize().to_vec().into();
                 result.hex()
-            }));
+            })
+            .unwrap();
+            writeln!(pbo_summary, " hash {}", {
+                let t = &new_files[file.filename()];
+                let mut hasher = Sha1::new();
+                hasher.update(t);
+                let result: Checksum = hasher.finalize().to_vec().into();
+                result.hex()
+            })
+            .unwrap();
         }
         pbo_summary.push_str("\n# Checksum\n");
         pbo_summary.push_str(checksum.hex().as_str());

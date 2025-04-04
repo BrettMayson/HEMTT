@@ -106,7 +106,7 @@ impl Context {
                 builder = builder.physical(&include, LayerType::Include);
             }
             maybe_build_folder = Some(build_folder);
-        };
+        }
         let workspace = builder.memory().finish(
             Some(config.clone()),
             folder.is_some(),
@@ -244,7 +244,7 @@ fn version_check(
         );
         println!("\n[version]\ngit_hash = 0\n");
         std::process::exit(1);
-    };
+    }
     if let Err(hemtt_common::Error::Version(e)) = version {
         match e {
             hemtt_common::version::Error::UnknownVersion => {
@@ -296,7 +296,7 @@ fn version_check(
             }
         }
         std::process::exit(1);
-    };
+    }
     if print_info {
         info!("Config loaded for {} {}", config.name(), version?);
     }

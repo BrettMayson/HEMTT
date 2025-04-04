@@ -51,7 +51,7 @@ fn rapify(dir: &str) {
         std::fs::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();
         std::fs::write(folder.join("processed.txt"), processed.as_str()).unwrap();
         panic!("failed to parse")
-    };
+    }
     let parsed = parsed.unwrap();
     let mut expected = Vec::new();
     let expected_path = folder.join("expected.bin");
@@ -59,7 +59,7 @@ fn rapify(dir: &str) {
         let mut file = std::fs::File::create(&expected_path).unwrap();
         parsed.config().rapify(&mut file, 0).unwrap();
         panic!("expected file did not exist, created it");
-    };
+    }
     std::fs::File::open(expected_path)
         .unwrap()
         .read_to_end(&mut expected)
@@ -74,5 +74,5 @@ fn rapify(dir: &str) {
         let mut file = std::fs::File::open(&vanilla_path).unwrap();
         file.read_to_end(&mut expected).unwrap();
         assert_eq!(output, expected);
-    };
+    }
 }

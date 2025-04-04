@@ -254,7 +254,7 @@ fn check_for_update() -> Option<Vec<String>> {
                 let mut home = dirs::home_dir().expect("home directory exists");
                 if os == "linux" {
                     home = home.join(".local");
-                };
+                }
                 home.join("bin").display().to_string()
             },
         ),

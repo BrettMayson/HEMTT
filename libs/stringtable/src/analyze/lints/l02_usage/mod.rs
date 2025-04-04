@@ -220,7 +220,7 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
                 missing.len() as u64,
                 Severity::Warning,
             )));
-        };
+        }
     }
     codes
 }

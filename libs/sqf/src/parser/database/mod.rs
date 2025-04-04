@@ -159,19 +159,19 @@ impl Database {
     pub fn add_nular_command(&mut self, command: &str) {
         if is_valid_name(command) && !is_in(NULAR_COMMANDS_SPECIAL, command) {
             self.nular_commands.insert(command.to_ascii_lowercase());
-        };
+        }
     }
 
     pub fn add_unary_command(&mut self, command: &str) {
         if is_valid_name(command) {
             self.unary_commands.insert(command.to_ascii_lowercase());
-        };
+        }
     }
 
     pub fn add_binary_command(&mut self, command: &str) {
         if is_valid_name(command) && !is_in(BINARY_COMMANDS_SPECIAL, command) {
             self.binary_commands.insert(command.to_ascii_lowercase());
-        };
+        }
     }
 
     #[must_use]
