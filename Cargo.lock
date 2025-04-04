@@ -1626,6 +1626,7 @@ dependencies = [
  "hemtt-common",
  "hemtt-config",
  "hemtt-sqf",
+ "hemtt-stringtable",
  "hemtt-workspace",
  "mdbook",
  "serde_json",
