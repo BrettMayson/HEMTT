@@ -59,7 +59,7 @@
   - [Preprocessor](analysis/preprocessor.md)
   - [Config](analysis/config.md)
   - [SQF](analysis/sqf.md)
-  - [Stringtables](analysis/strintables.md)
+  - [Stringtables](analysis/stringtables.md)
 
 <!--
 # Modding Guide

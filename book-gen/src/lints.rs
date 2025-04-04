@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use hemtt_common::config::LintEnabled;
 use hemtt_config::analyze::CONFIG_LINTS;
-use hemtt_stringtable::analyze::STRINGTABLE_LINTS;
 use hemtt_sqf::analyze::{
     LintData, SQF_LINTS,
     lints::s02_event_handlers::{
         LintS02EventIncorrectCommand, LintS02EventInsufficientVersion, LintS02EventUnknown,
     },
 };
+use hemtt_stringtable::analyze::STRINGTABLE_LINTS;
 use hemtt_workspace::lint::{Lint, Lints};
 use mdbook::book::Chapter;
 
