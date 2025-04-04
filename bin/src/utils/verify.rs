@@ -45,7 +45,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     let signature = bisign(std::fs::File::open(&signature_path)?, &signature_path)?;
 
     println!();
-    println!("PBO: {pbo_path:?}");
+    println!("PBO: {}", pbo_path.display());
     let stored = *pbo.checksum();
     println!("  - Stored SHA1 Hash:  {}", stored.hex());
     let actual = pbo.gen_checksum()?;

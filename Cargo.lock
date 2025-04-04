@@ -1647,6 +1647,7 @@ version = "1.0.0"
 dependencies = [
  "codespan-reporting",
  "git2",
+ "rustversion",
  "serde",
  "steamlocate",
  "strsim",
@@ -1721,6 +1722,7 @@ dependencies = [
  "byteorder",
  "hemtt-common",
  "hemtt-workspace",
+ "rustversion",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -1802,6 +1804,7 @@ dependencies = [
  "insta",
  "linkme",
  "paste",
+ "rustversion",
  "thiserror 2.0.12",
  "toml 0.8.20",
  "tracing",

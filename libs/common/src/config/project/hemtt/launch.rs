@@ -137,7 +137,7 @@ impl LaunchOptions {
     }
 
     #[must_use]
-    /// Overlay two launch options  
+    /// Overlay two launch options
     /// Other will take precedence
     pub fn overlay(self, other: Self) -> Self {
         let mut base = self;

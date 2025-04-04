@@ -1,7 +1,7 @@
 use std::{
     fs::File,
     io::{Read, Seek},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use hemtt_signing::{BIPublicKey, BISign};
@@ -101,9 +101,9 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
 ///
 /// # Errors
 /// [`hemtt_signing::Error`] if the file is not a valid [`BIPublicKey`]
-pub fn bikey(mut file: File, path: &PathBuf) -> Result<BIPublicKey, Error> {
+pub fn bikey(mut file: File, path: &Path) -> Result<BIPublicKey, Error> {
     let publickey = BIPublicKey::read(&mut file)?;
-    println!("Public Key: {path:?}");
+    println!("Public Key: {}", path.display());
     println!("  - Authority: {}", publickey.authority());
     println!("  - Length: {}", publickey.length());
     println!("  - Exponent: {}", publickey.exponent());
@@ -115,9 +115,9 @@ pub fn bikey(mut file: File, path: &PathBuf) -> Result<BIPublicKey, Error> {
 ///
 /// # Errors
 /// [`hemtt_signing::Error`] if the file is not a valid [`BISign`]
-pub fn bisign(mut file: File, path: &PathBuf) -> Result<BISign, Error> {
+pub fn bisign(mut file: File, path: &Path) -> Result<BISign, Error> {
     let signature = BISign::read(&mut file)?;
-    println!("Signature: {path:?}");
+    println!("Signature: {}", path.display());
     println!("  - Authority: {}", signature.authority());
     println!("  - Version: {}", signature.version());
     println!("  - Length: {}", signature.length());

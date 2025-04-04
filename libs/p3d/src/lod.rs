@@ -20,7 +20,16 @@ pub struct LOD {
 }
 
 impl LOD {
+    #[rustversion::attr(
+        since(1.87),
+        expect(
+            clippy::unbuffered_bytes,
+            reason = "The consumer should use a buffered reader if needed"
+        )
+    )]
     /// Reads a LOD from a given input stream.
+    ///
+    /// Uses `.bytes()` internally, a buffered reader should be used if performance is a concern.
     ///
     /// # Errors
     /// [`std::io::Error`] if an IO error occurs.
