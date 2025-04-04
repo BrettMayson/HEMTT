@@ -74,6 +74,3 @@ tracing-test = "0.2.5"
 vfs = "0.12.1"
 walkdir = "2.5.0"
 zip = "2.5.0"
-
-[profile.release]
-debug = true
