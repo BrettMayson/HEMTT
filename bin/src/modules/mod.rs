@@ -26,6 +26,10 @@ pub use stringtables::Stringtables;
 
 pub trait Module {
     fn name(&self) -> &'static str;
+    /// priority (lower goes first)
+    fn priority(&self) -> i32 {
+        0
+    }
     /// Executes the module's `init` phase
     ///
     /// # Errors
@@ -45,13 +49,6 @@ pub trait Module {
     /// # Errors
     /// Any error that the module encounters
     fn pre_build(&self, _ctx: &Context) -> Result<Report, Error> {
-        Ok(Report::new())
-    }
-    /// Executes the module's `pre_build: Episode II` phase
-    ///
-    /// # Errors
-    /// Any error that the module encounters
-    fn pre_build2(&self, _ctx: &Context) -> Result<Report, Error> {
         Ok(Report::new())
     }
     /// Executes the module's `post_build` phase

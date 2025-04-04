@@ -31,6 +31,9 @@ impl Module for Stringtables {
     fn name(&self) -> &'static str {
         "Stringtables"
     }
+    fn priority(&self) -> i32 {
+        4000
+    }
 
     fn check(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
         let mut report = Report::new();
@@ -42,7 +45,7 @@ impl Module for Stringtables {
         Ok(report)
     }
 
-    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
+    fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let report = Arc::new(Mutex::new(Report::new()));
         let mut paths = Vec::new();
         for root in ["addons", "optionals"] {

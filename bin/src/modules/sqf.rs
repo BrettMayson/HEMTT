@@ -32,6 +32,9 @@ impl Module for SQFCompiler {
     fn name(&self) -> &'static str {
         "SQF"
     }
+    fn priority(&self) -> i32 {
+        3000
+    }
 
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         self.database = Some(Arc::new(Database::a3_with_workspace(
@@ -103,7 +106,7 @@ impl Module for SQFCompiler {
                         );
                         if let Some(sqf_report) = sqf_report {
                             sqf_report.push_to_addon(addon);
-                        };
+                        }
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
@@ -141,16 +144,6 @@ impl Module for SQFCompiler {
         }
         progress.finish_and_clear();
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
-        Ok(report)
-    }
-
-    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
-        let mut report = Report::new();
-        let database = self
-            .database
-            .as_ref()
-            .expect("database not initialized")
-            .clone();
 
         report.extend(lint_all(
             Some(ctx.config()),
@@ -160,7 +153,6 @@ impl Module for SQFCompiler {
 
         Ok(report)
     }
-
     fn post_build(&self, ctx: &Context) -> Result<Report, crate::Error> {
         let mut report = Report::new();
         let mut required_version = Version::new(0, 0, 0, None);

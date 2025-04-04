@@ -109,7 +109,7 @@ impl LintRunner<LintData> for RunnerScan {
                     classes.push(name);
                 }
             }
-        };
+        }
 
         if let Some(Property::Class(Class::Local {
             properties: magwells,
@@ -158,7 +158,7 @@ impl LintRunner<LintData> for RunnerScan {
                     }
                 }
             }
-        };
+        }
         {
         let mut magazine_well_error_info = data.magazine_well_info.lock().expect("mutex safety");
         magazine_well_error_info
@@ -170,7 +170,7 @@ impl LintRunner<LintData> for RunnerScan {
     }
 }
 
-/// Runner for finale during `pre_build2`
+/// Runner for finale during `pre_build`
 struct RunnerFinal;
 impl LintRunner<LintData> for RunnerFinal {
     type Target = Vec<Addon>;

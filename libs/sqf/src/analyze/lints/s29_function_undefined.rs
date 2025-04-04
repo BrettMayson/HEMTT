@@ -174,7 +174,7 @@ impl LintRunner<LintData> for RunnerStatement {
     }
 }
 
-/// Runner for finale during `pre_build2`
+/// Runner for finale during `pre_build`
 struct RunnerFinal;
 impl LintRunner<LintData> for RunnerFinal {
     type Target = Vec<Addon>;
@@ -203,7 +203,7 @@ impl LintRunner<LintData> for RunnerFinal {
             for i in ignore {
                 if let Value::String(i) = i {
                     all_defined.insert(i.to_lowercase());
-                };
+                }
             }
         }
 

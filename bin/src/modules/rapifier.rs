@@ -45,6 +45,9 @@ impl Module for Rapifier {
     fn name(&self) -> &'static str {
         "Rapifier"
     }
+    fn priority(&self) -> i32 {
+        2000
+    }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
@@ -113,14 +116,7 @@ impl Module for Rapifier {
 
         progress.finish_and_clear();
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
-        Ok(report)
-    }
-
-    fn pre_build2(&self, ctx: &Context) -> Result<Report, Error> {
-        let mut report = Report::new();
-
         report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
-
         Ok(report)
     }
 }
