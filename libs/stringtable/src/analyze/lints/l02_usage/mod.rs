@@ -38,7 +38,7 @@ impl Lint<LintData> for LintL02Usage {
         
 Configuration
 
-- **ignore**: Array of stringtable entries to ignore
+- **ignore**: Array of stringtable entries to ignore, supports regex or wildcards (`*`)
 - **ignore_missing**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
 - **ignore_unused**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
 - **ignore_duplicate**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
@@ -137,8 +137,16 @@ impl LintRunner<LintData> for Runner {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             for i in ignore {
                 let i_lower = i.as_str().map_or(String::new(), str::to_lowercase);
-                unused.retain(|s| *s != i_lower);
-                missing.retain(|sp| *sp.0 != i_lower);
+                if i_lower.contains('*') {
+                    let regex_pattern = &i_lower.replace('*', ".*");
+                    if let Ok(re) = Regex::new(&format!("^{regex_pattern}$")) {
+                        unused.retain(|s| !re.is_match(s));
+                        missing.retain(|sp| !re.is_match(&sp.0));
+                    }
+                } else {
+                    unused.retain(|s| *s != i_lower);
+                    missing.retain(|sp| *sp.0 != i_lower);
+                }
             }
         }
         let ignore_missing = config
@@ -220,7 +228,7 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
                 missing.len() as u64,
                 Severity::Warning,
             )));
-        };
+        }
     }
     codes
 }

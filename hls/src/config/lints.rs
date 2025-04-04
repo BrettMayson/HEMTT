@@ -163,7 +163,7 @@ pub async fn process(url: Url, client: Client) {
                 if project_change {
                     return Some(path.clone());
                 }
-                if &saved == path || bundle.sources.iter().any(|source| saved == *source) {
+                if &saved == path || bundle.sources.contains(&saved) {
                     Some(path.clone())
                 } else {
                     None

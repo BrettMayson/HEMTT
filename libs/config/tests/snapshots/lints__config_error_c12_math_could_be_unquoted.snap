@@ -36,3 +36,12 @@ expression: lint(stringify! (c12_math_could_be_unquoted))
    [0m[36m│[0m                      [0m[36m^^^[0m [0m[36mreducible to: 300[0m
    [0m[36m│[0m
    [0m[36m=[0m [36mnote[0m: Could remove quotes to allow evaluation at build-time
+
+
+[0m[1m[38;5;9merror[L-C08][0m[1m: property is missing a semicolon[0m
+   [0m[36m┌─[0m c12_math_could_be_unquoted.hpp:13:27
+   [0m[36m│[0m
+[0m[36m13[0m [0m[36m│[0m     caseCheckForced = "60"
+   [0m[36m│[0m                           [0m[31m^[0m [0m[31mmissing semicolon[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [33mhelp[0m: add a semicolon [33m;[0m to the end of the property

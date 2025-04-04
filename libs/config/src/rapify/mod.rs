@@ -25,3 +25,13 @@ pub trait Rapify {
         3
     }
 }
+
+pub trait Derapify {
+    /// Derapify the object from the input stream
+    ///
+    /// # Errors
+    /// if the input stream fails
+    fn derapify<I: std::io::Read + std::io::Seek>(input: &mut I) -> Result<Self, std::io::Error>
+    where
+        Self: Sized;
+}

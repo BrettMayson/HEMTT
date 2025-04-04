@@ -10,9 +10,11 @@ use std::{
 };
 
 pub mod analyze;
+pub mod display;
 mod model;
 pub mod parse;
 pub mod rapify;
+
 pub use model::*;
 
 use analyze::{Analyze, CfgPatch, ChumskyCode, LintData};

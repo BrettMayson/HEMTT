@@ -69,7 +69,7 @@ pub fn compress(data: &[Vec<i16>]) -> Vec<u8> {
 
 #[allow(clippy::cast_possible_truncation)]
 fn compress_mono(data: &[i16]) -> Vec<u8> {
-    let output_size = (data.len() + 1) / 2; // Round up for odd number of samples
+    let output_size = data.len().div_ceil(2); // Round up for odd number of samples
     let mut output = Vec::with_capacity(output_size);
 
     let mut delta: i32 = 0;

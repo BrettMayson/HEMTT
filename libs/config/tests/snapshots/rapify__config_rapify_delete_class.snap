@@ -1,0 +1,45 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config
+---
+Config(
+    [
+        Class(
+            Local {
+                name: Ident {
+                    value: "thing",
+                    span: 19..25,
+                },
+                parent: None,
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "value",
+                            span: 44..50,
+                        },
+                        value: Number(
+                            Int32 {
+                                value: 123,
+                                span: 50..54,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                    Delete(
+                        Ident {
+                            value: "hello",
+                            span: 55..61,
+                        },
+                    ),
+                ],
+                err_missing_braces: false,
+            },
+        ),
+        Delete(
+            Ident {
+                value: "world",
+                span: 30..36,
+            },
+        ),
+    ],
+)

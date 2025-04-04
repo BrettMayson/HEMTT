@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { LanguageClient } from "vscode-languageclient/node";
 import { channel } from '../extension';
 
-export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
-  public static readonly viewType = 'hemtt.p3dViewer';
+export class PaaViewerProvider implements vscode.CustomReadonlyEditorProvider {
+  public static readonly viewType = 'hemtt.paaViewer';
   
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -32,17 +32,17 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
     };
 
     try {
-      channel.appendLine(`Processing P3D file: ${document.uri.toString()}`);
-      const modelData = await this.client.sendRequest("hemtt/p3d/json", {
+      channel.appendLine(`Processing PAA file: ${document.uri.toString()}`);
+      const paaData = await this.client.sendRequest("hemtt/paa/json", {
         url: document.uri.toString()
       });
       
-      if (!modelData) {
-        webview.html = this.getErrorHtml("Failed to load P3D file");
+      if (!paaData) {
+        webview.html = this.getErrorHtml("Failed to load PAA file");
         return;
       }
 
-      webview.html = this.getHtml(webview, modelData);
+      webview.html = this.getHtml(webview, paaData);
       
       webview.onDidReceiveMessage(message => {
         switch (message.command) {
@@ -57,12 +57,12 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
     }
   }
 
-  private getHtml(webview: vscode.Webview, modelData: any): string {
+  private getHtml(webview: vscode.Webview, paaData: any): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'webview-dist', 'p3d', 'viewer.js')
+      vscode.Uri.joinPath(this.extensionUri, 'webview-dist', 'paa', 'viewer.js')
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'p3d', 'styles.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'paa', 'styles.css')
     );
     
     const nonce = getNonce();
@@ -73,41 +73,36 @@ export class P3dViewerProvider implements vscode.CustomReadonlyEditorProvider {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
-        <title>P3D Model Viewer</title>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+        <title>PAA Texture Viewer</title>
         <link rel="stylesheet" href="${styleUri}">
       </head>
       <body>
+        <div id="imageContainer">
+            <div id="imageWrapper">
+                <img id="paaImage" alt="PAA Image">
+            </div>
+        </div>
+
         <div id="controls">
           <div>
-            <label for="lodLevel">LOD:</label>
-            <select id="lodLevel"></select>
+            <label for="mipmapLevel">Mipmap:</label>
+            <select id="mipmapLevel"></select>
           </div>
-          <div id="displayOptions">
-            <label><input type="checkbox" id="wireframeToggle"> Wireframe</label>
+          <div>
+            <label><input type="checkbox" id="channelRed" checked=true> Red</label>
+            <label><input type="checkbox" id="channelGreen" checked=true> Green</label>
+            <label><input type="checkbox" id="channelBlue" checked=true> Blue</label>
+            <label><input type="checkbox" id="channelAlpha"> Alpha</label>
+          </div>
+          <div id="displayInfo">
+            <div>Format: <span id="formatInfo"></span></div>
+            <div>Dimensions: <span id="dimensionsInfo"></span></div>
           </div>
         </div>
-
-        <div id="light">
-          <h4>Light Position</h4>
-          <div>
-              <label>X</label>
-              <input type="range" id="lightXSlider" min="-10" max="10" value="2" step="0.1">
-          </div>
-          <div>
-              <label>Y</label>
-              <input type="range" id="lightYSlider" min="-10" max="10" value="5" step="0.1">
-          </div>
-          <div>
-              <label>Z</label>
-              <input type="range" id="lightZSlider" min="-10" max="10" value="1" step="0.1">
-          </div>
-        </div>
-        
-        <div id="stats"></div>
 
         <script nonce="${nonce}" type="module">
-          window.modelData = ${JSON.stringify(modelData)};
+          window.paaData = ${JSON.stringify(paaData)};
         </script>
         <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
       </body>

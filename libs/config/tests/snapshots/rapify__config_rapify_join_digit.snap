@@ -1,0 +1,21 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config
+---
+Config(
+    [
+        Entry {
+            name: Ident {
+                value: "data",
+                span: 20..25,
+            },
+            value: Number(
+                Int32 {
+                    value: 12,
+                    span: 25..29,
+                },
+            ),
+            expected_array: false,
+        },
+    ],
+)

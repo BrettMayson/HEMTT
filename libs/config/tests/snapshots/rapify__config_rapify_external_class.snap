@@ -1,0 +1,110 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config
+---
+Config(
+    [
+        Class(
+            External {
+                name: Ident {
+                    value: "test",
+                    span: 19..24,
+                },
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "thing",
+                    span: 25..31,
+                },
+                parent: Some(
+                    Ident {
+                        value: "test",
+                        span: 73..78,
+                    },
+                ),
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "value",
+                            span: 81..87,
+                        },
+                        value: Number(
+                            Int32 {
+                                value: 12,
+                                span: 87..91,
+                            },
+                        ),
+                        expected_array: false,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "thing2",
+                    span: 36..43,
+                },
+                parent: None,
+                properties: [
+                    Class(
+                        External {
+                            name: Ident {
+                                value: "things",
+                                span: 98..105,
+                            },
+                        },
+                    ),
+                ],
+                err_missing_braces: false,
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "another",
+                    span: 48..56,
+                },
+                parent: Some(
+                    Ident {
+                        value: "thing",
+                        span: 109..115,
+                    },
+                ),
+                properties: [],
+                err_missing_braces: false,
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "yet",
+                    span: 61..65,
+                },
+                parent: Some(
+                    Ident {
+                        value: "another",
+                        span: 120..128,
+                    },
+                ),
+                properties: [
+                    Class(
+                        Local {
+                            name: Ident {
+                                value: "things",
+                                span: 130..137,
+                            },
+                            parent: None,
+                            properties: [],
+                            err_missing_braces: false,
+                        },
+                    ),
+                ],
+                err_missing_braces: false,
+            },
+        ),
+    ],
+)

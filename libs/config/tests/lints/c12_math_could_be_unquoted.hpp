@@ -9,4 +9,6 @@ class test {
     class myMagazine {
         initSpeed = "300"; // forced because name
     };
+    caseCheckIgnore = "1 + 1";
+    caseCheckForced = "60"
 };

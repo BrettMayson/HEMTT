@@ -11,6 +11,7 @@ workspace = true
 [dependencies]
 codespan-reporting = { workspace = true }
 git2 = { workspace = true }
+rustversion = { workspace = true }
 serde = { workspace = true }
 steamlocate = "2.0.1"
 strsim = { workspace = true }

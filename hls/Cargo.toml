@@ -1,12 +1,13 @@
 [package]
 name = "hemtt-language-server"
-version = "0.6.2"
+version = "0.6.4"
 edition = "2024"
 
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
 hemtt-p3d = { path = "../libs/p3d" }
+hemtt-paa = { path = "../libs/paa", features = ["json"] }
 hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
@@ -20,7 +21,7 @@ regex = { workspace = true }
 ropey = "1.6.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1.44.1", features = ["full"] }
 tower-lsp = { workspace = true, features = ["proposed"]}
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["json"] }

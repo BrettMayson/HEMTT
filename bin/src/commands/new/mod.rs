@@ -34,7 +34,7 @@ pub struct Command {
     #[clap(name = "name", verbatim_doc_comment)]
     /// The name of the new project
     ///
-    /// This will create a new folder with the name you provide in the current directory.  
+    /// This will create a new folder with the name you provide in the current directory.
     /// It should be a valid folder name, using only letters, numbers, and underscores.
     ///
     /// Example: `hemtt new my_mod`

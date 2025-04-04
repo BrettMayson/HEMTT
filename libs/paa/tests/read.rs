@@ -1,7 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
 use hemtt_paa::PaXType;
-use texpresso::Format;
 
 #[test]
 fn read_dxt1() {
@@ -15,7 +14,7 @@ fn read_dxt1() {
     let mipmap = &paa.maps()[0];
     assert_eq!(mipmap.width(), 512);
     assert!(mipmap.is_compressed());
-    assert_eq!(mipmap.format(), &Format::Bc1);
+    assert_eq!(mipmap.format(), &PaXType::DXT1);
     assert_eq!(mipmap.data().len(), 4716);
     let _ = paa.maps()[0].get_image();
 }
@@ -33,7 +32,7 @@ fn read_dxt5() {
     let mipmap = &paa.maps()[0];
     assert_eq!(mipmap.width(), 64);
     assert!(!mipmap.is_compressed());
-    assert_eq!(mipmap.format(), &Format::Bc3);
+    assert_eq!(mipmap.format(), &PaXType::DXT5);
     assert_eq!(mipmap.data().len(), 4096);
     let _ = paa.maps()[0].get_image();
 }

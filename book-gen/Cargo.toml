@@ -8,6 +8,7 @@ hemtt = { path = "../bin" }
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
 hemtt-sqf = { path = "../libs/sqf" }
+hemtt-stringtable = { path = "../libs/stringtable" }
 hemtt-workspace = { path = "../libs/workspace" }
 
 arma3-wiki = { workspace = true }

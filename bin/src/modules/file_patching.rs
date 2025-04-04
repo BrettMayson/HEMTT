@@ -63,10 +63,13 @@ impl Module for FilePatching {
         let link = prefix_folder.join(ctx.config().prefix());
         if link.exists() {
             trace!("removing existing symlink at {}", link.display());
+            #[cfg(windows)]
             std::fs::remove_dir(&link)?;
+            #[cfg(not(windows))]
+            std::fs::remove_file(&link)?;
         }
         create_link(&link, ctx.build_folder().expect("build folder exists"))?;
-        info!("created symlink to build folder for file patching");
+        info!("Symlink created at {}", link.display());
         Ok(report)
     }
 }

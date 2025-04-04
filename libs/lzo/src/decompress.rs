@@ -349,7 +349,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 ip = ip.offset(2isize);
                                 m_pos = m_pos.offset(-((next >> 2i32) as isize));
                                 next &= 3usize;
-                                if m_pos == op.cast_const() {
+                                if std::ptr::eq(m_pos, op.cast_const()) {
                                     current_block = 21;
                                     break;
                                 }
@@ -438,7 +438,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                         as usize;
                     return if t != 3usize {
                         -1i32
-                    } else if ip == ip_end {
+                    } else if std::ptr::eq(ip, ip_end) {
                         0i32
                     } else if ip < ip_end {
                         -8i32

@@ -1,0 +1,9 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config.to_string()
+---
+class thing {
+    value = 123;
+    delete hello;
+};
+delete world;

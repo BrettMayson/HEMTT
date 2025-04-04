@@ -461,7 +461,7 @@ pub unsafe extern "C" fn lzo1x_1_compress(
         t = t.wrapping_add(l);
         if t > 0usize {
             let mut ii: *const u8 = in_.add(in_len).offset(-(t as isize));
-            if op == out && (t <= 238usize) {
+            if std::ptr::eq(op, out) && (t <= 238usize) {
                 *{
                     let old = op;
                     op = op.offset(1isize);
