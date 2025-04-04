@@ -2,7 +2,10 @@
 
 use std::io::Read;
 
-use hemtt_config::rapify::Rapify;
+use hemtt_config::{
+    Config,
+    rapify::{Derapify, Rapify},
+};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::LayerType;
 
@@ -13,7 +16,9 @@ macro_rules! rapify {
         paste::paste! {
             #[test]
             fn [<config_rapify_ $dir>]() {
-                rapify(stringify!($dir));
+                let config = rapify(stringify!($dir));
+                insta::assert_debug_snapshot!(config);
+                insta::assert_snapshot!(config.to_string());
             }
         }
     };
@@ -33,7 +38,7 @@ rapify!(numbers);
 rapify!(procedural_texture);
 rapify!(single_class);
 
-fn rapify(dir: &str) {
+fn rapify(dir: &str) -> Config {
     let folder = std::path::PathBuf::from(ROOT).join(dir);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -60,7 +65,7 @@ fn rapify(dir: &str) {
         parsed.config().rapify(&mut file, 0).unwrap();
         panic!("expected file did not exist, created it");
     }
-    std::fs::File::open(expected_path)
+    std::fs::File::open(&expected_path)
         .unwrap()
         .read_to_end(&mut expected)
         .unwrap();
@@ -75,4 +80,7 @@ fn rapify(dir: &str) {
         file.read_to_end(&mut expected).unwrap();
         assert_eq!(output, expected);
     }
+
+    let mut expected_input = std::fs::File::open(expected_path).unwrap();
+    Config::derapify(&mut expected_input).unwrap()
 }

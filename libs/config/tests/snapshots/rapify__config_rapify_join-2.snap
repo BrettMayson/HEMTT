@@ -1,0 +1,8 @@
+---
+source: libs/config/tests/rapify.rs
+expression: config.to_string()
+---
+class myclass {
+    value = 1;
+    test[] = {1, 3};
+};

@@ -21,6 +21,11 @@ pub struct Ident {
 
 impl Ident {
     #[must_use]
+    pub const fn new(value: String, span: Range<usize>) -> Self {
+        Self { value, span }
+    }
+
+    #[must_use]
     /// Get the value of the identifier
     pub fn as_str(&self) -> &str {
         &self.value

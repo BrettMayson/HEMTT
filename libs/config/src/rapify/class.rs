@@ -1,11 +1,11 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use hemtt_common::io::{WriteExt, compressed_int_len};
+use hemtt_common::io::{ReadExt, WriteExt, compressed_int_len};
 
 use crate::{Class, Ident, Property};
 
-use super::Rapify;
+use super::{Derapify, Rapify};
 
 impl Rapify for Class {
     fn rapify<O: std::io::Write>(
@@ -108,5 +108,47 @@ impl Rapify for Class {
                         .sum::<usize>()
             }
         }
+    }
+}
+
+impl Class {
+    /// Derapifies a class from the input stream.
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the input stream is invalid or if the class cannot be read.
+    pub fn derapify<I: std::io::Read + std::io::Seek>(
+        input: &mut I,
+        name: Option<Ident>,
+    ) -> Result<Self, std::io::Error>
+    where
+        Self: Sized,
+    {
+        let start = input.stream_position()? as usize;
+        let parent = input.read_cstring()?;
+        let parent = if parent.is_empty() {
+            None
+        } else {
+            Some(Ident::new(parent, start..input.stream_position()? as usize))
+        };
+        let properties_len = input.read_compressed_int()?;
+        let mut properties = Vec::with_capacity(properties_len as usize);
+        let mut end_offset = 0;
+        for _ in 0..properties_len {
+            let prop = Property::derapify(input)?;
+            end_offset += prop.derapify_offset();
+            properties.push(prop);
+        }
+        #[allow(clippy::cast_possible_wrap)]
+        input.seek_relative(end_offset as i64)?;
+        Ok(if let Some(name) = name {
+            Self::Local {
+                name,
+                parent,
+                properties,
+                err_missing_braces: false,
+            }
+        } else {
+            Self::Root { properties }
+        })
     }
 }

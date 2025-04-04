@@ -1,0 +1,159 @@
+---
+source: libs/config/tests/rapify.rs
+expression: rapify(stringify! (inheritence_array_extend))
+---
+Config(
+    [
+        Class(
+            External {
+                name: Ident {
+                    value: "external",
+                    span: 19..28,
+                },
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "local",
+                    span: 29..35,
+                },
+                parent: Some(
+                    Ident {
+                        value: "external",
+                        span: 53..62,
+                    },
+                ),
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "extend",
+                            span: 68..75,
+                        },
+                        value: Array(
+                            Array {
+                                expand: true,
+                                items: [
+                                    Str(
+                                        Str {
+                                            value: "item1",
+                                            span: 77..83,
+                                        },
+                                    ),
+                                    Str(
+                                        Str {
+                                            value: "item2",
+                                            span: 84..90,
+                                        },
+                                    ),
+                                ],
+                                span: 75..90,
+                            },
+                        ),
+                        expected_array: true,
+                    },
+                    Entry {
+                        name: Ident {
+                            value: "complete",
+                            span: 91..100,
+                        },
+                        value: Array(
+                            Array {
+                                expand: false,
+                                items: [
+                                    Str(
+                                        Str {
+                                            value: "item3",
+                                            span: 102..108,
+                                        },
+                                    ),
+                                    Str(
+                                        Str {
+                                            value: "item4",
+                                            span: 109..115,
+                                        },
+                                    ),
+                                ],
+                                span: 100..115,
+                            },
+                        ),
+                        expected_array: true,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+        Class(
+            Local {
+                name: Ident {
+                    value: "solo",
+                    span: 40..45,
+                },
+                parent: None,
+                properties: [
+                    Entry {
+                        name: Ident {
+                            value: "extend",
+                            span: 126..133,
+                        },
+                        value: Array(
+                            Array {
+                                expand: true,
+                                items: [
+                                    Str(
+                                        Str {
+                                            value: "item1",
+                                            span: 135..141,
+                                        },
+                                    ),
+                                    Str(
+                                        Str {
+                                            value: "item2",
+                                            span: 142..148,
+                                        },
+                                    ),
+                                ],
+                                span: 133..148,
+                            },
+                        ),
+                        expected_array: true,
+                    },
+                    Entry {
+                        name: Ident {
+                            value: "complete",
+                            span: 149..158,
+                        },
+                        value: Array(
+                            Array {
+                                expand: false,
+                                items: [
+                                    Str(
+                                        Str {
+                                            value: "item3",
+                                            span: 160..166,
+                                        },
+                                    ),
+                                    Str(
+                                        Str {
+                                            value: "item4",
+                                            span: 167..173,
+                                        },
+                                    ),
+                                    Str(
+                                        Str {
+                                            value: "item5",
+                                            span: 174..180,
+                                        },
+                                    ),
+                                ],
+                                span: 158..180,
+                            },
+                        ),
+                        expected_array: true,
+                    },
+                ],
+                err_missing_braces: false,
+            },
+        ),
+    ],
+)
