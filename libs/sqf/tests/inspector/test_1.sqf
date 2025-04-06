@@ -138,3 +138,5 @@ format _varP;
     [_test13] call some_func; // undef, is orphan
 }, player] call unknown_fnc_Usage;
 
+private _test14 = str 12345678 splitString "5";
+if (count _test14 == 0) then { call b };

@@ -43,6 +43,7 @@ lint!(s21_invalid_comparisons, true);
 lint!(s22_this_call, true);
 lint!(s23_reassign_reserved_variable, true);
 lint!(s24_marker_spam, true);
+lint!(s25_count_array_comp, false);
 lint!(s26_short_circuit_bool_var, true);
 lint!(s27_select_count, true);
 lint!(s28_banned_macros, true);

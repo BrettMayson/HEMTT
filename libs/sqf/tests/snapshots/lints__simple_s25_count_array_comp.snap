@@ -1,0 +1,11 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s25_count_array_comp), false)"
+---
+[0m[1m[38;5;14mhelp[L-S25][0m[1m: count array comparison[0m
+  [0m[36m┌─[0m s25_count_array_comp.sqf:2:14
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m if (count _z [0m[36m==[0m 0) then { call b };
+  [0m[36m│[0m              [0m[36m^^[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: use `isEqualTo []`
