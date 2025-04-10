@@ -34,7 +34,7 @@ count [] == 0
 Checks for unoptimized `count array` checks."
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Enabled)
+        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
