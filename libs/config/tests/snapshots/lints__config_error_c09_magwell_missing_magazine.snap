@@ -1,5 +1,0 @@
----
-source: libs/config/tests/lints.rs
-expression: lint(stringify! (c09_magwell_missing_magazine))
----
-

@@ -28,17 +28,11 @@ lint!(c05_parent_case);
 lint!(c06_unexpected_array);
 lint!(c07_expected_array);
 lint!(c08_missing_semicolon);
-// lint!(c09_magwell_missing_magazine);
+// c09_magwell_missing_magazine is handled bellow
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
 lint!(c12_math_could_be_unquoted);
 lint!(c13_config_this_call);
-
-#[test]
-fn test_c09_magwell_missing_magazine() {
-    let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
-    insta::assert_compact_debug_snapshot!(report.magazine_well_info);
-}
 
 fn lint(file: &str) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
@@ -75,4 +69,19 @@ fn lint(file: &str) -> (String, ConfigReport) {
             panic!("Error parsing config");
         }
     }
+}
+
+#[test]
+/// Test C09_magwell_missing_magazine - Checking results from the report (will not create errors directly)
+fn test_c09_magwell_missing_magazine() {
+    let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
+    insta::assert_compact_debug_snapshot!(report.magazine_well_info());
+}
+
+#[test]
+fn test_collect_cfgfunctions() {
+    let (_, report) = lint(stringify!(collect_cfgfunctions));
+    let mut functions_defined: Vec<&String> = report.functions_defined().into_iter().collect();
+    functions_defined.sort();
+    insta::assert_compact_debug_snapshot!(functions_defined);
 }

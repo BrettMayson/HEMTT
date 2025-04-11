@@ -191,7 +191,7 @@ impl LintRunner<LintData> for RunnerFinal {
                 .build_data()
                 .magazine_well_info()
                 .lock()
-                .expect("not poision")
+                .expect("not poisoned")
                 .clone();
             all_magazines.extend(mags);
             all_codes.extend(magwell_codes);

@@ -8,7 +8,7 @@ use hemtt_sqf::{
     analyze::{SqfReport, analyze},
     parser::database::Database,
 };
-use hemtt_workspace::{LayerType, addons::Addon, reporting::WorkspaceFiles};
+use hemtt_workspace::{LayerType, addons::Addon, position::Position, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 
@@ -48,11 +48,12 @@ lint!(s28_banned_macros);
 #[test]
 fn test_s29_function_undefined() {
     let (_, report) = lint(stringify!(s29_undefined_functions));
-    assert!(report.functions_defined.contains("test_fnc_a"));
-    assert!(report.functions_defined.contains("test_fnc_b"));
-    assert!(report.functions_defined.contains("test_fnc_c"));
-    assert!(report.functions_used.iter().any(|x| x.0 == "test_fnc_x"));
-    assert!(report.functions_used.iter().any(|x| x.0 == "test_fnc_y"));
+    let mut functions_defined: Vec<&String> = report.functions_defined().into_iter().collect();
+    functions_defined.sort();
+    let mut functions_used: Vec<&(String, Position)> =
+        report.functions_used().into_iter().collect();
+    functions_used.sort_by(|a, b| a.0.cmp(&b.0));
+    insta::assert_compact_debug_snapshot!((functions_defined, functions_used));
 }
 
 fn lint(file: &str) -> (String, SqfReport) {

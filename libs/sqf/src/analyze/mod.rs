@@ -117,9 +117,9 @@ pub struct LintData {
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
 }
 pub struct SqfReport {
-    pub localizations: Localizations,
-    pub functions_used: UsedFunctions,
-    pub functions_defined: DefinedFunctions,
+    localizations: Localizations,
+    functions_used: UsedFunctions,
+    functions_defined: DefinedFunctions,
 }
 
 impl SqfReport {
@@ -143,6 +143,18 @@ impl SqfReport {
             .lock()
             .expect("not poisoned")
             .extend(self.functions_defined.clone());
+    }
+    #[must_use]
+    pub fn localizations(&self) -> &Localizations {
+        &self.localizations
+    }
+    #[must_use]
+    pub fn functions_used(&self) -> &UsedFunctions {
+        &self.functions_used
+    }
+    #[must_use]
+    pub fn functions_defined(&self) -> &DefinedFunctions {
+        &self.functions_defined
     }
 }
 

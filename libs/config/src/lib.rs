@@ -105,7 +105,7 @@ pub struct ConfigReport {
     patches: Vec<CfgPatch>,
     localized: Vec<(String, Position)>,
     functions_defined: DefinedFunctions,
-    pub magazine_well_info: MagazineWellInfo,
+    magazine_well_info: MagazineWellInfo,
 }
 
 impl ConfigReport {
@@ -114,7 +114,6 @@ impl ConfigReport {
     pub const fn config(&self) -> &Config {
         &self.config
     }
-
     #[must_use]
     /// Consumes the report and returns the config
     pub fn into_config(self) -> Config {
@@ -205,5 +204,17 @@ impl ConfigReport {
             .expect("not poisoned")
             .1
             .extend(magwell_codes);
+    }
+
+    #[must_use]
+    /// Get the `DefinedFunctions`
+    pub const fn functions_defined(&self) -> &DefinedFunctions {
+        &self.functions_defined
+    }
+
+    #[must_use]
+    /// Get the `MagazineWellInfo`
+    pub const fn magazine_well_info(&self) -> &MagazineWellInfo {
+        &self.magazine_well_info
     }
 }

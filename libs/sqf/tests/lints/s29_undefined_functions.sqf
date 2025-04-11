@@ -4,3 +4,5 @@ test_fnc_A = {1};
 
 [] call test_fnc_x;
 [] spawn test_fnc_Y;
+
+[] call a3_fnc_shuffle;

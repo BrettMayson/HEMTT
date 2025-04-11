@@ -299,12 +299,12 @@ impl BuildData {
         self.functions_used.clone()
     }
     #[must_use]
-    /// Fetches the used functions
+    /// Fetches the defined functions
     pub fn functions_defined(&self) -> Arc<Mutex<DefinedFunctions>> {
         self.functions_defined.clone()
     }
     #[must_use]
-    /// Fetches the used functions
+    /// Fetches the `MagazineWellInfos` (tuple of missing mag and error)
     pub fn magazine_well_info(&self) -> Arc<Mutex<MagazineWellInfo>> {
         self.magazine_well_info.clone()
     }
