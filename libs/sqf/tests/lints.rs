@@ -48,10 +48,10 @@ lint!(s28_banned_macros);
 #[test]
 fn test_s29_function_undefined() {
     let (_, report) = lint(stringify!(s29_undefined_functions));
-    let mut functions_defined: Vec<&String> = report.functions_defined().into_iter().collect();
+    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
     functions_defined.sort();
     let mut functions_used: Vec<&(String, Position)> =
-        report.functions_used().into_iter().collect();
+        report.functions_used().iter().collect();
     functions_used.sort_by(|a, b| a.0.cmp(&b.0));
     insta::assert_compact_debug_snapshot!((functions_defined, functions_used));
 }

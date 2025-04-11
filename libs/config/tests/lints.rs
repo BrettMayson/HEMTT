@@ -72,7 +72,7 @@ fn lint(file: &str) -> (String, ConfigReport) {
 }
 
 #[test]
-/// Test C09_magwell_missing_magazine - Checking results from the report (will not create errors directly)
+/// Test `C09_gwell_missing_magazine` - maChecking results from the report (will not create errors directly)
 fn test_c09_magwell_missing_magazine() {
     let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
     insta::assert_compact_debug_snapshot!(report.magazine_well_info());
@@ -81,7 +81,7 @@ fn test_c09_magwell_missing_magazine() {
 #[test]
 fn test_collect_cfgfunctions() {
     let (_, report) = lint(stringify!(collect_cfgfunctions));
-    let mut functions_defined: Vec<&String> = report.functions_defined().into_iter().collect();
+    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
     functions_defined.sort();
     insta::assert_compact_debug_snapshot!(functions_defined);
 }
