@@ -197,7 +197,7 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
                     config.get("event_unknown"),
                 ));
                 codes.extend(check_version(
-                    &data.addon, &ns, &name, &id, &eh, processed, &data.database,
+                    data.addon.as_ref().expect("addon will exist"), &ns, &name, &id, &eh, processed, &data.database,
                 ));
             }
         }

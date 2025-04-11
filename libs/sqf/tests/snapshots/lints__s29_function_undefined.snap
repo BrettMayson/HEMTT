@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "(functions_defined, functions_used)"
+---
+(["test_fnc_a", "test_fnc_b", "test_fnc_c"], [("test_fnc_x", Position { start: LineCol(127, (5, 8)), end: LineCol(137, (5, 18)), path: "/s29_undefined_functions.sqf" }), ("test_fnc_y", Position { start: LineCol(148, (6, 9)), end: LineCol(158, (6, 19)), path: "/s29_undefined_functions.sqf" })])
