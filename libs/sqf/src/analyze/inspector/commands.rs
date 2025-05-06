@@ -5,12 +5,12 @@ use std::ops::Range;
 use indexmap::IndexSet;
 
 use crate::{
+    Expression,
     analyze::inspector::{Issue, VarSource},
     parser::database::Database,
-    Expression,
 };
 
-use super::{game_value::GameValue, SciptScope};
+use super::{SciptScope, game_value::GameValue};
 
 impl SciptScope {
     #[must_use]
@@ -412,17 +412,17 @@ impl SciptScope {
 
     pub fn cmd_eqx_count_lint(
         &mut self,
-        lhs: &Box<Expression>,
-        rhs: &Box<Expression>,
+        lhs: &Expression,
+        rhs: &Expression,
         source: &Range<usize>,
         database: &Database,
         equal_zero: bool,
     ) {
-        let Expression::Number(float_ord::FloatOrd(0.0), _) = **rhs else {
+        let Expression::Number(float_ord::FloatOrd(0.0), _) = *rhs else {
             return;
         };
         let Expression::UnaryCommand(crate::UnaryCommand::Named(ref lhs_cmd), ref count_input, _) =
-            **lhs
+            *lhs
         else {
             return;
         };

@@ -4,7 +4,7 @@ use arma3_wiki::model::{Arg, Call, Param, Value};
 use indexmap::IndexSet;
 use tracing::{trace, warn};
 
-use crate::{parser::database::Database, Expression};
+use crate::{Expression, parser::database::Database};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum GameValue {
@@ -212,10 +212,10 @@ impl GameValue {
                 // ToDo: Handle matching array types better eg: AGLS vs AGL
                 // false-positive:
                 /*
-                    private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
-                    _dropPos set [2, ((getPosASL _target) select 2)];
-                    _holder setPosASL _dropPos;
-                 */
+                   private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
+                   _dropPos set [2, ((getPosASL _target) select 2)];
+                   _holder setPosASL _dropPos;
+                */
                 // println!("array mismatch {lpos:?}!={rpos:?}");
                 // return false;
             }

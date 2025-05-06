@@ -2,9 +2,9 @@
 
 use indexmap::IndexSet;
 
-use crate::{analyze::inspector::VarSource, parser::database::Database, Expression};
+use crate::{Expression, analyze::inspector::VarSource, parser::database::Database};
 
-use super::{game_value::GameValue, SciptScope};
+use super::{SciptScope, game_value::GameValue};
 
 impl SciptScope {
     #[allow(clippy::too_many_lines)]
@@ -137,7 +137,7 @@ impl SciptScope {
             }
         }
     }
-    fn external_new_scope(
+    pub fn external_new_scope(
         &mut self,
         code_arg: &Vec<GameValue>,
         vars: &Vec<(&str, GameValue)>,
@@ -148,10 +148,10 @@ impl SciptScope {
                 continue;
             };
             let Expression::Code(statements) = expression else {
-                return;
+                continue;
             };
             if self.code_used.contains(expression) {
-                return;
+                continue;
             }
             let mut ext_scope = Self::create(self.global.clone(), &self.ignored_vars, false);
             ext_scope.code_used.insert(expression.clone()); // prevent infinite recursion

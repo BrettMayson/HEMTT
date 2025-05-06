@@ -36,6 +36,9 @@ enabled = true
 [lints.sqf.short_circuit_bool_var]
 enabled = true
 
+[lints.sqf.count_array_comp]
+enabled = true
+
 [lints.sqf.banned_macros]
 options.always = [
     "FREEZE_GAME",

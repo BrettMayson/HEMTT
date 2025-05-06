@@ -3,7 +3,7 @@
 use std::{cell::RefCell, hash::Hash, ops::Range, rc::Rc, vec};
 
 use crate::{
-    parser::database::Database, BinaryCommand, Expression, Statement, Statements, UnaryCommand,
+    BinaryCommand, Expression, Statement, Statements, UnaryCommand, parser::database::Database,
 };
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
@@ -214,7 +214,7 @@ impl SciptScope {
                 }
             } else {
                 stack_level -= stack_level_search.expect("is_some");
-            };
+            }
             self.local[stack_level].get_mut(&var_lower)
         } else if global_m.contains_key(&var_lower) {
             global_m.get_mut(&var_lower)
@@ -294,6 +294,26 @@ impl SciptScope {
                         }
                         "for" => Some(self.cmd_for(&rhs_set)),
                         "tostring" => Some(self.cmd_u_to_string(&rhs_set)),
+                        "addmissioneventhandler" => {
+                            for possible in rhs_set {
+                                let GameValue::Array(Some(gv_array), _) = possible else {
+                                    continue;
+                                };
+                                if gv_array.len() > 1 {
+                                    self.external_new_scope(
+                                        &gv_array[1],
+                                        &vec![
+                                            ("_this", GameValue::Anything),
+                                            ("_thisEvent", GameValue::String(None)),
+                                            ("_thisEventHandler", GameValue::Number(None)),
+                                            ("_thisArgs", GameValue::Anything), // gv_array[2]?
+                                        ],
+                                        database,
+                                    );
+                                }
+                            }
+                            None
+                        }
                         _ => None,
                     },
                     _ => None,
@@ -325,11 +345,11 @@ impl SciptScope {
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
                     BinaryCommand::Eq => {
-                        self.cmd_eqx_count_lint(&lhs, &rhs, source, database, true);
+                        self.cmd_eqx_count_lint(lhs, rhs, source, database, true);
                         None
                     }
                     BinaryCommand::Greater | BinaryCommand::NotEq => {
-                        self.cmd_eqx_count_lint(&lhs, &rhs, source, database, false);
+                        self.cmd_eqx_count_lint(lhs, rhs, source, database, false);
                         None
                     }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -387,6 +407,28 @@ impl SciptScope {
                         }
                         "select" => {
                             Some(self.cmd_b_select(&lhs_set, &rhs_set, &cmd_set, source, database))
+                        }
+                        "addeventhandler"
+                        | "addmpeventhandler"
+                        | "ctrladdeventhandler"
+                        | "displayaddeventhandler" => {
+                            for possible in rhs_set {
+                                let GameValue::Array(Some(gv_array), _) = possible else {
+                                    continue;
+                                };
+                                if gv_array.len() > 1 {
+                                    self.external_new_scope(
+                                        &gv_array[1],
+                                        &vec![
+                                            ("_this", GameValue::Anything),
+                                            ("_thisEvent", GameValue::String(None)),
+                                            ("_thisEventHandler", GameValue::Number(None)),
+                                        ],
+                                        database,
+                                    );
+                                }
+                            }
+                            None
                         }
                         _ => None,
                     },
@@ -482,7 +524,7 @@ pub fn run_processed(
     //         continue;
     //     }
     //     let mut igtest = ignored_vars.clone();
-    //     igtest.remove(&ig);
+    //     igtest.shift_remove(&ig);
 
     //     let global = Rc::new(RefCell::new(Stack::new()));
     //     let mut scope = SciptScope::create(global, &igtest, false);

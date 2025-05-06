@@ -54,7 +54,7 @@ impl LintRunner<LintData> for Runner {
     ) -> hemtt_workspace::reporting::Codes {
         if target.issues().is_empty() {
             return Vec::new();
-        };
+        }
         let Some(processed) = processed else {
             return Vec::new();
         };

@@ -140,3 +140,10 @@ format _varP;
 
 private _test14 = str 12345678 splitString "5";
 if (count _test14 == 0) then { call b };
+
+player addEventHandler ["InventoryClosed", {
+    missionNamespace setVariable ["test", nil ];
+    player removeEventHandler [_thisEvent, _thisEventhandler]; // magic vars
+}];
+
+addMissionEventHandler ["EachFrame", { systemChat str [_thisArgs, time] }, [time]];

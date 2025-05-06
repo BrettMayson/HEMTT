@@ -144,9 +144,11 @@ mod tests {
                 false
             }
         }));
-        assert!(result
-            .iter()
-            .any(|i| { matches!(i, Issue::CountArrayComparison(true, _)) }));
+        assert!(
+            result
+                .iter()
+                .any(|i| { matches!(i, Issue::CountArrayComparison(true, _)) })
+        );
     }
 
     #[test]

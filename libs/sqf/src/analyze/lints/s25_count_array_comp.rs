@@ -54,7 +54,7 @@ impl LintRunner<LintData> for Runner {
     ) -> hemtt_workspace::reporting::Codes {
         if target.issues().is_empty() {
             return Vec::new();
-        };
+        }
         let Some(processed) = processed else {
             return Vec::new();
         };
@@ -90,7 +90,7 @@ impl Code for CodeS25CountArrayComp {
     }
     /// Top message
     fn message(&self) -> String {
-        format!("count array comparison")
+        "count array comparison".into()
     }
     /// Under ^^^span hint
     fn label_message(&self) -> String {
