@@ -1,6 +1,6 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s06_find_in_str))
+expression: "lint(stringify! (s06_find_in_str), true)"
 ---
 [0m[1m[38;5;11mwarning[L-S06][0m[1m: string search using `in` is faster than `find`[0m
   [0m[36m┌─[0m s06_find_in_str.sqf:1:1
@@ -14,7 +14,7 @@ expression: lint(stringify! (s06_find_in_str))
 [0m[1m[38;5;11mwarning[L-S06][0m[1m: string search using `in` is faster than `find`[0m
   [0m[36m┌─[0m s06_find_in_str.sqf:2:19
   [0m[36m│[0m
-[0m[36m2[0m [0m[36m│[0m private _hasBar = [0m[33m_things find "bar" > -1[0m;
-  [0m[36m│[0m                   [0m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33musing `find` with -1[0m
+[0m[36m2[0m [0m[36m│[0m private _hasBar = [0m[33mthings find "bar" > -1[0m;
+  [0m[36m│[0m                   [0m[33m^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33musing `find` with -1[0m
   [0m[36m│[0m
-  [0m[36m=[0m [32mtry[0m: "bar" in _things
+  [0m[36m=[0m [32mtry[0m: "bar" in things

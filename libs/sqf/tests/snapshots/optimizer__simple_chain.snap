@@ -241,4 +241,5 @@ Statements {
     ],
     source: "\naa * 3 * 5; \nbb / 3 * 5; \ncc * 3 / 5; \ndd / 3 / 5; \n\nee * 2 * 3 / 4 * 5;\n3 * 4 * ff / 5 / 6;\n\ngg * 1 / 0;\n\n\n\nmm + 20 + 30;\nnn + 20 - 30;\noo - 20 + 30;\npp - 20 - 30;\n\nzz * 6 - 7;\n",
     span: 1..178,
+    issues: [],
 }
