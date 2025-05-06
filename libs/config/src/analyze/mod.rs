@@ -1,7 +1,11 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
+    addons::{Addon, DefinedFunctions, MagazineWellInfo},
     lint::LintManager,
     lint_manager,
     position::Position,
@@ -18,6 +22,8 @@ pub mod lints {
 pub struct LintData {
     pub(crate) path: String,
     pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
+    pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
+    pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
 }
 
 lint_manager!(config, vec![]);
@@ -85,6 +91,8 @@ impl Analyze for Class {
                         |name| format!("{}/{}", data.path, name.value),
                     ),
                     localizations: data.localizations.clone(),
+                    functions_defined: data.functions_defined.clone(),
+                    magazine_well_info: data.magazine_well_info.clone(),
                 };
                 properties
                     .iter()
@@ -111,6 +119,8 @@ impl Analyze for Property {
                 let data = LintData {
                     path: format!("{}.{}", data.path, self.name().value),
                     localizations: data.localizations.clone(),
+                    functions_defined: data.functions_defined.clone(),
+                    magazine_well_info: data.magazine_well_info.clone(),
                 };
                 value.analyze(&data, project, processed, manager)
             }
@@ -188,4 +198,32 @@ impl Analyze for Item {
         });
         codes
     }
+}
+
+#[must_use]
+#[allow(clippy::ptr_arg)]
+pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
+    let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
+    let mut manager = LintManager::new(
+        project.map_or_else(Default::default, |project| project.lints().config().clone()),
+    );
+    let _e = manager.extend(
+        crate::analyze::CONFIG_LINTS
+            .iter()
+            .map(|l| (**l).clone())
+            .collect::<Vec<_>>(),
+        default_enabled,
+    );
+
+    manager.run(
+        &LintData {
+            path: String::new(),
+            localizations: Arc::new(Mutex::new(vec![])),
+            functions_defined: Arc::new(Mutex::new(HashSet::new())),
+            magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),
+        },
+        project,
+        None,
+        addons,
+    )
 }

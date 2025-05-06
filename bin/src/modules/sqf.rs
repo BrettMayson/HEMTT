@@ -6,7 +6,7 @@ use std::sync::{
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
-    analyze::{analyze, lint_check},
+    analyze::{analyze, lint_all, lint_check},
     parser::{ParserError, database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
@@ -31,6 +31,9 @@ impl SQFCompiler {
 impl Module for SQFCompiler {
     fn name(&self) -> &'static str {
         "SQF"
+    }
+    fn priority(&self) -> i32 {
+        3000
     }
 
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
@@ -94,19 +97,16 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (codes, localizations) = analyze(
+                        let (codes, sqf_report) = analyze(
                             &sqf,
                             Some(ctx.config()),
                             &processed,
                             addon.clone(),
                             database.clone(),
                         );
-                        addon
-                            .build_data()
-                            .localizations()
-                            .lock()
-                            .expect("not poisoned")
-                            .extend(localizations);
+                        if let Some(sqf_report) = sqf_report {
+                            sqf_report.push_to_addon(addon);
+                        }
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
@@ -144,9 +144,15 @@ impl Module for SQFCompiler {
         }
         progress.finish_and_clear();
         info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
+
+        report.extend(lint_all(
+            Some(ctx.config()),
+            &ctx.addons().to_vec(),
+            database,
+        ));
+
         Ok(report)
     }
-
     fn post_build(&self, ctx: &Context) -> Result<Report, crate::Error> {
         let mut report = Report::new();
         let mut required_version = Version::new(0, 0, 0, None);
