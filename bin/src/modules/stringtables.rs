@@ -31,6 +31,9 @@ impl Module for Stringtables {
     fn name(&self) -> &'static str {
         "Stringtables"
     }
+    fn priority(&self) -> i32 {
+        4000
+    }
 
     fn check(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
         let mut report = Report::new();

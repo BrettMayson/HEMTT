@@ -2,6 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
+    addons::Addon,
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
@@ -24,7 +25,7 @@ impl Lint<LintData> for LintC09MagwellMissingMagazine {
     }
 
     fn documentation(&self) -> &'static str {
-r#"### Example
+        r#"### Example
 
 **Incorrect**
 ```hpp
@@ -63,7 +64,6 @@ class CfgMagazines {
 
 Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe in this case) must be defined in `CfgMagazines` as well. This is to prevent accidental typos or forgotten magazines.
 "#
-
     }
 
     fn default_config(&self) -> LintConfig {
@@ -75,12 +75,12 @@ Magazines defined in `CfgMagazineWells` that are using the project's prefix (abe
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
-        vec![Box::new(Runner)]
+        vec![Box::new(RunnerScan), Box::new(RunnerFinal)]
     }
 }
 
-struct Runner;
-impl LintRunner<LintData> for Runner {
+struct RunnerScan;
+impl LintRunner<LintData> for RunnerScan {
     type Target = Config;
     fn run(
         &self,
@@ -88,84 +88,125 @@ impl LintRunner<LintData> for Runner {
         _config: &LintConfig,
         processed: Option<&Processed>,
         target: &Config,
-        _data: &LintData,
+        data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
-        let mut codes: Codes = Vec::new();
+        let mut codes = Vec::new();
         let mut classes = Vec::new();
-        let Some(Property::Class(Class::Local {
-            properties: magwells,
-            ..
-        })) = target
-            .0
-            .iter()
-            .find(|p| p.name().value.to_lowercase() == "cfgmagazinewells")
-        else {
-            return codes;
-        };
-        let Some(Property::Class(Class::Local {
+
+        if let Some(Property::Class(Class::Local {
             properties: magazines,
             ..
         })) = target
             .0
             .iter()
             .find(|p| p.name().value.to_lowercase() == "cfgmagazines")
-        else {
-            return codes;
-        };
-        for property in magazines {
-            if let Property::Class(Class::Local { name, .. }) = property {
-                classes.push(name);
+        {
+            for property in magazines {
+                if let Property::Class(Class::Local { name, .. }) = property {
+                    classes.push(name);
+                }
             }
         }
-        for magwell in magwells {
-            let Property::Class(Class::Local {
-                properties: addons, ..
-            }) = magwell
-            else {
-                continue;
-            };
-            for addon in addons {
-                let Property::Entry {
-                    name,
-                    value: Value::Array(magazines),
-                    ..
-                } = addon
+
+        if let Some(Property::Class(Class::Local {
+            properties: magwells,
+            ..
+        })) = target
+            .0
+            .iter()
+            .find(|p| p.name().value.to_lowercase() == "cfgmagazinewells")
+        {
+            for magwell in magwells {
+                let Property::Class(Class::Local {
+                    properties: addons, ..
+                }) = magwell
                 else {
                     continue;
                 };
-                for mag in &magazines.items {
-                    let Item::Str(Str { value, span }) = mag else {
+                for addon in addons {
+                    let Property::Entry {
+                        name,
+                        value: Value::Array(magazines),
+                        ..
+                    } = addon
+                    else {
                         continue;
                     };
-                    if let Some(project) = project {
-                        if !value
-                            .to_lowercase()
-                            .starts_with(&project.prefix().to_lowercase())
-                        {
+                    for mag in &magazines.items {
+                        let Item::Str(Str { value, span }) = mag else {
                             continue;
+                        };
+                        if let Some(project) = project {
+                            if !value
+                                .to_lowercase()
+                                .starts_with(&project.prefix().to_lowercase())
+                            {
+                                continue;
+                            }
                         }
-                    }
-                    if !classes.iter().any(|c| c.value == *value) {
-                        codes.push(Arc::new(Code09MagwellMissingMagazine::new(
-                            name.clone(),
-                            span.clone(),
-                            processed,
-                        )));
+                        if !classes.iter().any(|c| c.value == *value) {
+                            let code: Arc<dyn Code> = Arc::new(Code09MagwellMissingMagazine::new(
+                                name.clone(),
+                                span.clone(),
+                                processed,
+                            ));
+                            codes.push((value.clone(), code));
+                        }
                     }
                 }
             }
         }
-        codes
+        {
+        let mut magazine_well_error_info = data.magazine_well_info.lock().expect("mutex safety");
+        magazine_well_error_info
+            .0
+            .extend(classes.iter().map(|i| i.as_str().to_string()));
+        magazine_well_error_info.1.extend(codes);
+        }
+        vec![]
+    }
+}
+
+/// Runner for finale during `pre_build`
+struct RunnerFinal;
+impl LintRunner<LintData> for RunnerFinal {
+    type Target = Vec<Addon>;
+
+    fn run(
+        &self,
+        _project: Option<&hemtt_common::config::ProjectConfig>,
+        _config: &LintConfig,
+        _processed: Option<&hemtt_workspace::reporting::Processed>,
+        target: &Self::Target,
+        _data: &LintData,
+    ) -> Codes {
+        let mut all_magazines = Vec::new();
+        let mut all_codes = Vec::new();
+
+        for addon in target {
+            let (mags, magwell_codes) = addon
+                .build_data()
+                .magazine_well_info()
+                .lock()
+                .expect("not poisoned")
+                .clone();
+            all_magazines.extend(mags);
+            all_codes.extend(magwell_codes);
+        }
+        all_codes
+            .iter()
+            .filter(|(missing_mag, _)| !all_magazines.iter().any(|c| c == missing_mag))
+            .map(|(_, code)| code.clone())
+            .collect()
     }
 }
 
 pub struct Code09MagwellMissingMagazine {
     array: Ident,
     span: Range<usize>,
-
     diagnostic: Option<Diagnostic>,
 }
 
@@ -199,7 +240,6 @@ impl Code09MagwellMissingMagazine {
         Self {
             array,
             span,
-
             diagnostic: None,
         }
         .diagnostic_generate_processed(processed)
