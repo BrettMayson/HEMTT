@@ -141,7 +141,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let mut ps = Photoshoot::new(
         command,
         ctx.profile().join("Users/hemtt/Screenshots"),
-        launch.dev_mission().cloned(),
+        launch.dev_mission().map(|x| x.to_string()),
     );
 
     ps.add_weapons(find_weapons(&dev_ctx));

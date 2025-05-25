@@ -74,9 +74,7 @@ impl Module for Rapifier {
                     }
                 }
                 for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
-                    if entry.metadata()?.file_type == VfsFileType::File
-                        && can_rapify(&entry)?
-                    {
+                    if entry.metadata()?.file_type == VfsFileType::File && can_rapify(&entry)? {
                         if globs
                             .iter()
                             .any(|pat| pat.matches_with(entry.as_str(), glob_options))
@@ -223,10 +221,14 @@ pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
             path.trim_start_matches('/')
         );
     }
-    let mut buffer = vec![0; 4];
-    entry.open_file()?.read_exact(&mut buffer)?;
-    if buffer == b"\0raP" {
+    if !["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext) {
         return Ok(false);
     }
-    Ok(["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext))
+    let mut buffer = vec![0; 4];
+    debug!("checking if {} is a rapified file", path);
+    if entry.open_file()?.read_exact(&mut buffer).is_err() {
+        // The file is less than 4 bytes, so it is not rapified
+        return Ok(true);
+    }
+    Ok(buffer != b"\0raP")
 }
