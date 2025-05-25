@@ -222,5 +222,5 @@ pub fn can_rapify(path: &str) -> bool {
             path.trim_start_matches('/')
         );
     }
-    ["cpp", "rvmat", "ext"].contains(&ext)
+    ["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext)
 }
