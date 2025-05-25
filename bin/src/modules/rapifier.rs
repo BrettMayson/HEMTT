@@ -74,9 +74,7 @@ impl Module for Rapifier {
                     }
                 }
                 for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
-                    if entry.metadata()?.file_type == VfsFileType::File
-                        && can_rapify(entry.as_str())
-                    {
+                    if entry.metadata()?.file_type == VfsFileType::File && can_rapify(&entry)? {
                         if globs
                             .iter()
                             .any(|pat| pat.matches_with(entry.as_str(), glob_options))
@@ -209,8 +207,9 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     Ok(report)
 }
 
-pub fn can_rapify(path: &str) -> bool {
-    let pathbuf = PathBuf::from(path);
+pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
+    let path = entry.as_str();
+    let pathbuf = PathBuf::from(&path);
     let ext = pathbuf
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
@@ -222,5 +221,13 @@ pub fn can_rapify(path: &str) -> bool {
             path.trim_start_matches('/')
         );
     }
-    ["cpp", "rvmat", "ext"].contains(&ext)
+    if !["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext) {
+        return Ok(false);
+    }
+    let mut buffer = vec![0; 4];
+    if entry.open_file()?.read_exact(&mut buffer).is_err() {
+        // The file is less than 4 bytes, so it is not rapified
+        return Ok(true);
+    }
+    Ok(buffer != b"\0raP")
 }
