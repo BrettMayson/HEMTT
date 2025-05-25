@@ -111,6 +111,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             just: JustArgs { just: Vec::new() },
         },
         launch.optionals(),
+        launch.binarize(),
     )?;
 
     if let Some(dev_mission) = launch.dev_mission() {
@@ -141,7 +142,11 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let mut ps = Photoshoot::new(
         command,
         ctx.profile().join("Users/hemtt/Screenshots"),
+<<<<<<< HEAD
         launch.dev_mission().map(|x| x.to_string()),
+=======
+        launch.dev_mission().map(std::string::ToString::to_string),
+>>>>>>> main
     );
 
     ps.add_weapons(find_weapons(&dev_ctx));

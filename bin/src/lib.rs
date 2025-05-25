@@ -127,7 +127,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Book(cmd) => commands::book::execute(cmd),
         Commands::New(cmd) => commands::new::execute(cmd, in_test),
         Commands::Check(cmd) => commands::check::execute(cmd),
-        Commands::Dev(cmd) => commands::dev::execute(cmd, &[]).map(|(r, _)| r),
+        Commands::Dev(cmd) => commands::dev::execute(cmd, &[], false).map(|(r, _)| r),
         Commands::Launch(cmd) => commands::launch::execute(cmd),
         Commands::Build(cmd) => commands::build::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
