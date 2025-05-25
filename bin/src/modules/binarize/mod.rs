@@ -139,7 +139,7 @@ impl Module for Binarize {
 
     #[allow(clippy::too_many_lines)]
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
-        let pdrive_option = if ctx.folder() == Some(&"check".to_string()) {
+        let pdrive_option = if ctx.folder() == Some("check") {
             ctx.config().hemtt().check().pdrive()
         } else {
             ctx.config().hemtt().build().pdrive()

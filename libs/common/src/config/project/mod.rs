@@ -54,7 +54,7 @@ pub struct ProjectConfig {
 impl ProjectConfig {
     #[must_use]
     /// The name of the project
-    pub const fn name(&self) -> &String {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
@@ -66,14 +66,14 @@ impl ProjectConfig {
 
     #[must_use]
     /// Prefix for the project
-    pub const fn prefix(&self) -> &String {
+    pub fn prefix(&self) -> &str {
         &self.prefix
     }
 
     #[must_use]
     /// Main prefix for the project
-    pub const fn mainprefix(&self) -> Option<&String> {
-        self.mainprefix.as_ref()
+    pub fn mainprefix(&self) -> Option<&str> {
+        self.mainprefix.as_deref()
     }
 
     #[must_use]

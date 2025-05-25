@@ -47,7 +47,7 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
         .to_vec()
         .iter()
         .map(|addon| {
-            internal_build(ctx, addon, collapse, &version, git_hash.as_ref())?;
+            internal_build(ctx, addon, collapse, &version, git_hash.as_deref())?;
             progress.inc(1);
             counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
@@ -63,7 +63,7 @@ fn internal_build(
     addon: &Addon,
     collapse: Collapse,
     version: &Version,
-    git_hash: Option<&String>,
+    git_hash: Option<&str>,
 ) -> Result<(), Error> {
     let mut pbo = WritablePbo::new();
     let target = ctx.build_folder().expect("build folder exists");

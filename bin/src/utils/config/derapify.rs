@@ -14,7 +14,7 @@ pub struct DerapifyArgs {
 }
 
 /// Derapify a config file
-pub fn derapify(path: &PathBuf, output: Option<&String>) -> Result<(), Error> {
+pub fn derapify(path: &PathBuf, output: Option<&str>) -> Result<(), Error> {
     let mut file = std::fs::File::open(path)?;
     let config = hemtt_config::Config::derapify(&mut file)?;
     let output = output.map_or_else(
