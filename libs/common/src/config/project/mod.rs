@@ -22,6 +22,8 @@ pub mod version;
 pub struct ProjectConfig {
     /// The name of the project
     name: String,
+    /// The author of the project, if any
+    author: Option<String>,
     /// Prefix for the project
     prefix: String,
     /// Main prefix for the project
@@ -54,6 +56,12 @@ impl ProjectConfig {
     /// The name of the project
     pub const fn name(&self) -> &String {
         &self.name
+    }
+
+    #[must_use]
+    /// The author of the project, if any
+    pub const fn author(&self) -> Option<&String> {
+        self.author.as_ref()
     }
 
     #[must_use]
@@ -131,6 +139,9 @@ impl ProjectConfig {
 pub struct ProjectFile {
     /// The name of the project
     name: String,
+    #[serde(default)]
+    /// The author of the project, if any
+    author: Option<String>,
     /// Prefix for the project
     prefix: String,
     /// Main prefix for the project
@@ -204,6 +215,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
         let ret = Self {
             hemtt: file.hemtt.into_config(&file.meta_path, &file.prefix)?,
             name: file.name,
+            author: file.author,
             prefix: file.prefix,
             mainprefix: file.mainprefix,
             version: file.version.try_into()?,
@@ -253,6 +265,7 @@ mod test_helper {
         pub fn test_project() -> Self {
             super::ProjectFile {
                 name: "Advanced Banana Environment".to_string(),
+                author: Some("ACE Team".to_string()),
                 prefix: "abe".to_string(),
                 mainprefix: None,
                 version: version::VersionSectionFile::default(),
