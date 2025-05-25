@@ -75,7 +75,7 @@ impl Module for Rapifier {
                 }
                 for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                     if entry.metadata()?.file_type == VfsFileType::File
-                        && can_rapify(entry.as_str())
+                        && can_rapify(&entry)?
                     {
                         if globs
                             .iter()
@@ -209,8 +209,9 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     Ok(report)
 }
 
-pub fn can_rapify(path: &str) -> bool {
-    let pathbuf = PathBuf::from(path);
+pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
+    let path = entry.as_str();
+    let pathbuf = PathBuf::from(&path);
     let ext = pathbuf
         .extension()
         .unwrap_or_else(|| std::ffi::OsStr::new(""))
@@ -222,5 +223,10 @@ pub fn can_rapify(path: &str) -> bool {
             path.trim_start_matches('/')
         );
     }
-    ["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext)
+    let mut buffer = vec![0; 4];
+    entry.open_file()?.read_exact(&mut buffer)?;
+    if buffer == b"\0raP" {
+        return Ok(false);
+    }
+    Ok(["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext))
 }
