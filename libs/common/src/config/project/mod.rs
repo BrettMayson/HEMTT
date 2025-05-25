@@ -139,7 +139,7 @@ impl ProjectConfig {
 pub struct ProjectFile {
     /// The name of the project
     name: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     /// The author of the project, if any
     author: Option<String>,
     /// Prefix for the project
