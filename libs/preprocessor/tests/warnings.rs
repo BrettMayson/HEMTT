@@ -48,8 +48,8 @@ fn check(dir: &str) {
         }
         Err(e) => {
             panic!(
-                "`{:?}` should have succeeded: {:#?}",
-                folder,
+                "`{}` should have succeeded: {:#?}",
+                folder.display(),
                 e.1.get_code()
                     .unwrap()
                     .diagnostic()
