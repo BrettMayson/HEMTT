@@ -225,7 +225,6 @@ pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
         return Ok(false);
     }
     let mut buffer = vec![0; 4];
-    debug!("checking if {} is a rapified file", path);
     if entry.open_file()?.read_exact(&mut buffer).is_err() {
         // The file is less than 4 bytes, so it is not rapified
         return Ok(true);
