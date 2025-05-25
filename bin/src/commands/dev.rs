@@ -83,13 +83,17 @@ pub struct BinarizeArgs {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-pub fn execute(cmd: &Command, launch_optionals: &[String]) -> Result<(Report, Context), Error> {
+pub fn execute(
+    cmd: &Command,
+    launch_optionals: &[String],
+    force_binarize: bool,
+) -> Result<(Report, Context), Error> {
     let mut executor = context(
         &cmd.dev,
         &cmd.binarize,
         &cmd.just,
         launch_optionals,
-        false,
+        force_binarize,
         true,
     )?;
     executor.run().map(|r| (r, executor.into_ctx()))
