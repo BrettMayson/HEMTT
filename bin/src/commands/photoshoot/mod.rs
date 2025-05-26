@@ -163,7 +163,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
 
     if ps.weapons.is_empty() && ps.vehicles.is_empty() && ps.previews.is_empty() {
-
         warn!("No weapons, vehicles or previews found for photoshoot");
         return Ok(report);
     }
