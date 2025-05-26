@@ -27,7 +27,7 @@ sleep 0.5;
 
 screenshot format ["%1.png", _class];
 sleep 0.3;
-"hemtt_comm" callExtension ["photoshoot:weapon", [_class]];
+"hemtt_comm" callExtension ["photoshoot:items:weapon", [_class]];
 
 deleteVehicle _holder;
 

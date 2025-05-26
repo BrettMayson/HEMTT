@@ -35,7 +35,7 @@ mod items {
 
     pub fn weapon(ctx: Context, weapon: String) {
         let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
-            println!("`photoshoot:weapon` called without a sender");
+            println!("`photoshoot:items:weapon` called without a sender");
             return;
         };
         sender
@@ -45,7 +45,7 @@ mod items {
 
     pub fn weapon_unsupported(ctx: Context, weapon: String) {
         let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
-            println!("`photoshoot:weapon_unsupported` called without a sender");
+            println!("`photoshoot:items:weapon_unsupported` called without a sender");
             return;
         };
         sender
