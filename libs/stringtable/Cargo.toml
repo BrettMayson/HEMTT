@@ -13,6 +13,7 @@ hemtt-common = { path = "../common" }
 hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
+byteorder = { workspace = true }
 casey = "0.4.2"
 indexmap = { workspace = true }
 linkme = { workspace = true }

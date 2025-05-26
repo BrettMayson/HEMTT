@@ -1820,6 +1820,7 @@ name = "hemtt-stringtable"
 version = "1.0.0"
 dependencies = [
  "automod",
+ "byteorder",
  "casey",
  "hemtt-common",
  "hemtt-workspace",

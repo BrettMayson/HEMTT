@@ -55,7 +55,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                             project.sort();
                         }
                         let mut writer = String::new();
-                        if let Err(e) = project.to_writer(&mut writer) {
+                        if let Err(e) = project.to_writer(&mut writer, false) {
                             error!("Failed to write stringtable for {}", path.display());
                             error!("{:?}", e);
                             return Ok(Report::new());
