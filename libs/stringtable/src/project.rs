@@ -117,7 +117,11 @@ impl Project {
     ///
     /// # Errors
     /// [`quick_xml::SeError`] if the writer fails to write
-    pub fn to_writer<W: std::fmt::Write>(&self, writer: &mut W, disclosure: bool) -> Result<(), quick_xml::SeError> {
+    pub fn to_writer<W: std::fmt::Write>(
+        &self,
+        writer: &mut W,
+        disclosure: bool,
+    ) -> Result<(), quick_xml::SeError> {
         let writeable: WriteableProject = self.into();
         writeable.to_writer(writer, disclosure)
     }
@@ -205,13 +209,15 @@ impl WriteableProject {
     ///
     /// # Errors
     /// [`quick_xml::SeError`] if the writer fails to write
-    pub fn to_writer<W: std::fmt::Write>(&self, writer: &mut W, disclosure: bool) -> Result<(), quick_xml::SeError> {
+    pub fn to_writer<W: std::fmt::Write>(
+        &self,
+        writer: &mut W,
+        disclosure: bool,
+    ) -> Result<(), quick_xml::SeError> {
         writer.write_str(r#"<?xml version="1.0" encoding="utf-8"?>"#)?;
         writer.write_char('\n')?;
         if disclosure {
-            writer.write_str(
-                r"<!-- Converted by HEMTT from stringtable.bin -->",
-            )?;
+            writer.write_str(r"<!-- Converted by HEMTT from stringtable.bin -->")?;
             writer.write_char('\n')?;
         }
         let mut buffer = String::new();
