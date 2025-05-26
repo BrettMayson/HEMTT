@@ -149,9 +149,11 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     ps.add_vehicles(find_vehicles(&dev_ctx));
     ps.add_previews(find_previews(&dev_ctx));
 
-    for (_, path) in ps.weapons.iter().chain(
-        ps.vehicles.iter().chain(ps.previews.iter()),
-    ) {
+    for (_, path) in ps
+        .weapons
+        .iter()
+        .chain(ps.vehicles.iter().chain(ps.previews.iter()))
+    {
         const ILLEGAL_CHARS: &[char] = &['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
         if path.contains(ILLEGAL_CHARS) {
             // TODO add an error to the report
