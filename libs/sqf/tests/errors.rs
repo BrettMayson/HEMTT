@@ -30,11 +30,10 @@ fn errors(file: &str) -> String {
     let processed = Processor::run(&source).unwrap();
     let parsed = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap_err();
     let codes = parsed.codes();
-    let errors = codes
+    codes
         .iter()
         .map(|e| e.diagnostic().unwrap().to_string(&WorkspaceFiles::new()))
         .collect::<Vec<_>>()
         .join("\n")
-        .replace('\r', "");
-    errors
+        .replace('\r', "")
 }

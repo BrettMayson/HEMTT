@@ -43,4 +43,9 @@ pub mod version_functions {
     pub fn build(version: &mut Version) -> i64 {
         version.build().map(i64::from).unwrap_or_default()
     }
+
+    #[rhai_fn(global, pure)]
+    pub fn hash(version: &mut Version) -> String {
+        version.hash().unwrap_or_default()
+    }
 }

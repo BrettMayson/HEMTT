@@ -156,8 +156,8 @@ impl Context {
     }
 
     #[must_use]
-    pub const fn folder(&self) -> Option<&String> {
-        self.folder.as_ref()
+    pub fn folder(&self) -> Option<&str> {
+        self.folder.as_deref()
     }
 
     #[must_use]

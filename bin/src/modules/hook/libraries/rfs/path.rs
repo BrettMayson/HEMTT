@@ -50,9 +50,14 @@ pub mod path_functions {
     #[rhai_fn(global, name = "copy", return_raw, pure)]
     pub fn copy(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir() {
-            fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new())
+            std::fs::create_dir_all(&other)
                 .map_err(|e| e.to_string().into())
                 .err()
+                .and_then(|_: Box<EvalAltResult>| {
+                    fs_extra::dir::copy(path, other, &fs_extra::dir::CopyOptions::new())
+                        .map_err(|e| e.to_string().into())
+                        .err()
+                })
         } else {
             std::fs::copy(path, other)
                 .map_err(|e| e.to_string().into())
@@ -63,16 +68,10 @@ pub mod path_functions {
 
     #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
-        let res = if path.is_dir() {
-            fs_extra::dir::move_dir(path, other, &fs_extra::dir::CopyOptions::new())
-                .map_err(|e| e.to_string().into())
-                .err()
-        } else {
-            std::fs::rename(path, other)
-                .map_err(|e| e.to_string().into())
-                .err()
-        };
-        res.map_or_else(|| Ok(true), Err)
+        std::fs::rename(path, other)
+            .map_err(|e| e.to_string().into())
+            .err()
+            .map_or_else(|| Ok(true), Err)
     }
 
     #[rhai_fn(global, pure)]

@@ -112,8 +112,8 @@ impl<I: Seek + Read> WritablePbo<I> {
 
     #[must_use]
     /// Get an property from the PBO
-    pub fn property(&self, key: &str) -> Option<&String> {
-        self.properties.get(key)
+    pub fn property(&self, key: &str) -> Option<&str> {
+        self.properties.get(key).map(std::string::String::as_str)
     }
 
     #[must_use]

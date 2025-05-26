@@ -86,6 +86,12 @@ impl Version {
         self.build
     }
 
+    /// Git hash
+    #[must_use]
+    pub fn hash(&self) -> Option<String> {
+        self.hash.clone()
+    }
+
     fn extract_version(lines: &[&str], component: &str) -> Result<u32, Error> {
         let error = match component {
             "MAJOR" => Error::ExpectedMajor,

@@ -10,6 +10,7 @@ use crate::context::Context;
 #[derive(Debug, Clone)]
 pub struct RhaiProject {
     name: String,
+    author: String,
     prefix: String,
     mainprefix: String,
     version: Version,
@@ -20,6 +21,10 @@ impl RhaiProject {
     pub fn new(ctx: &Context) -> Self {
         Self {
             name: ctx.config().name().to_string(),
+            author: ctx
+                .config()
+                .author()
+                .map_or_else(String::new, std::string::ToString::to_string),
             prefix: ctx.config().prefix().to_string(),
             mainprefix: ctx
                 .config()
@@ -44,6 +49,11 @@ pub mod project_functions {
     #[rhai_fn(global, pure)]
     pub fn name(project: &mut RhaiProject) -> String {
         project.name.clone()
+    }
+
+    #[rhai_fn(global, pure)]
+    pub fn author(project: &mut RhaiProject) -> String {
+        project.author.clone()
     }
 
     #[rhai_fn(global, pure)]

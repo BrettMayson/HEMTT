@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - runner: ubuntu-latest
+          - runner: ubuntu-22.04
             name: ubuntu
             artifact: linux-x64
             exe: hemtt-language-server

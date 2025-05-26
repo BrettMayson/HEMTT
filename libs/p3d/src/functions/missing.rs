@@ -25,7 +25,7 @@ impl SearchCache {
     ///
     /// # Panics
     /// Panics if the cache is poisoned
-    pub fn exists(&self, file_id: &String) -> Option<bool> {
+    pub fn exists(&self, file_id: &str) -> Option<bool> {
         let cache = self.cache.read().expect("failed to lock cache");
         cache.get(file_id).copied()
     }

@@ -226,7 +226,7 @@ file_patching = false
                 .get("test")
                 .expect("has test preset")
                 .mission(),
-            Some(&"test".to_string())
+            Some("test")
         );
         assert!(
             !config

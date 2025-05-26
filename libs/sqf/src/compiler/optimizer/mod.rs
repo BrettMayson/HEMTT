@@ -258,7 +258,7 @@ impl Expression {
     /// Trys to get a consumable array from an existing array if it can be made a constant
     #[must_use]
     #[allow(unused_variables)]
-    fn get_consumable_array(&self, direct: bool, op: &String) -> Option<Self> {
+    fn get_consumable_array(&self, direct: bool, op: &str) -> Option<Self> {
         if let Self::Array(array, range) = &self {
             if !self.is_constant() {
                 #[cfg(debug_assertions)]

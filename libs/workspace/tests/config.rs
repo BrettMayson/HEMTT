@@ -13,6 +13,6 @@ fn extends() {
     assert_eq!(launch.presets().len(), 3);
     assert_eq!(launch.optionals().len(), 3);
     assert_eq!(launch.parameters().len(), 3);
-    assert_eq!(launch.mission(), Some(&"base".to_string()));
+    assert_eq!(launch.mission(), Some("base"));
     assert!(!launch.executable().starts_with("arma"));
 }
