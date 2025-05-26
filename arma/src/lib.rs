@@ -58,8 +58,7 @@ fn init() -> Extension {
                         }
                         toarma::Photoshoot::PreviewRun => {
                             println!("PreviewRun");
-                            ctx.callback_null("hemtt_ps_previews", "run")
-                                .unwrap();
+                            ctx.callback_null("hemtt_ps_previews", "run").unwrap();
                         }
                         toarma::Photoshoot::Done => {
                             println!("Done");

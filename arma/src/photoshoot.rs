@@ -3,16 +3,20 @@ use hemtt_common::arma::control::fromarma::{Message, Photoshoot};
 
 pub fn group() -> Group {
     Group::new()
-        .group("items", Group::new()
-            .command("ready", items::ready)
-            .command("weapon", items::weapon)
-            .command("weapon_unsupported", items::weapon_unsupported)
-            .command("vehicle", items::vehicle)
-            .command("vehicle_unsupported", items::vehicle_unsupported)
+        .group(
+            "items",
+            Group::new()
+                .command("ready", items::ready)
+                .command("weapon", items::weapon)
+                .command("weapon_unsupported", items::weapon_unsupported)
+                .command("vehicle", items::vehicle)
+                .command("vehicle_unsupported", items::vehicle_unsupported),
         )
-        .group("previews", Group::new()
-            .command("ready", previews::ready)
-            .command("done", previews::done)
+        .group(
+            "previews",
+            Group::new()
+                .command("ready", previews::ready)
+                .command("done", previews::done),
         )
 }
 
@@ -24,7 +28,9 @@ mod items {
             println!("`photoshoot:ready` called without a sender");
             return;
         };
-        sender.send(Message::Photoshoot(Photoshoot::ItemsReady)).unwrap();
+        sender
+            .send(Message::Photoshoot(Photoshoot::ItemsReady))
+            .unwrap();
     }
 
     pub fn weapon(ctx: Context, weapon: String) {
