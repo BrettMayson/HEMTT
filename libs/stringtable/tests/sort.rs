@@ -25,7 +25,7 @@ fn sort_comments() {
     insta::assert_debug_snapshot!(stringtable);
 
     let mut out = String::new();
-    stringtable.to_writer(&mut out).unwrap();
+    stringtable.to_writer(&mut out, false).unwrap();
 
     insta::assert_snapshot!(out);
 }
@@ -39,7 +39,7 @@ fn sort_gh822() {
     insta::assert_debug_snapshot!(stringtable);
 
     let mut out = String::new();
-    stringtable.to_writer(&mut out).unwrap();
+    stringtable.to_writer(&mut out, false).unwrap();
 
     insta::assert_snapshot!(out);
 }
@@ -53,7 +53,7 @@ fn sort_containers() {
     insta::assert_debug_snapshot!(stringtable);
 
     let mut out = String::new();
-    stringtable.to_writer(&mut out).unwrap();
+    stringtable.to_writer(&mut out, false).unwrap();
 
     insta::assert_snapshot!(out);
 }

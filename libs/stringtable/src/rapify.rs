@@ -1,14 +1,35 @@
+use std::io::Write;
+
 use crate::{ALL_LANGUAGES, Key, Project};
+use byteorder::{LittleEndian, WriteBytesExt};
+use hemtt_common::io::WriteExt;
 use tracing::{trace, warn};
 
 #[derive(Default, Debug)]
 pub struct XmlbLayout {
     //  4 byte numbers, little end?, nul term strings
-    header: Vec<u8>,            // Version
-    languages: Vec<u8>,         // Language Count, [Languages]
-    offsets: Vec<u8>,           // Offset Count, [Offsets]
-    keys: Vec<u8>,              // Key Count, [Keys]
-    translations: Vec<Vec<u8>>, // [Translation Count, [Translations], ...] (size may be less than lang count)
+    pub header: Vec<u8>,            // Version
+    pub languages: Vec<u8>,         // Language Count, [Languages]
+    pub offsets: Vec<u8>,           // Offset Count, [Offsets]
+    pub keys: Vec<u8>,              // Key Count, [Keys]
+    pub translations: Vec<Vec<u8>>, // [Translation Count, [Translations], ...] (size may be less than lang count)
+}
+
+impl XmlbLayout {
+    /// Writes the XMLB layout to a writer
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if writing to the writer fails
+    pub fn write(&self, writer: &mut dyn Write) -> std::io::Result<()> {
+        writer.write_all(&self.header)?;
+        writer.write_all(&self.languages)?;
+        writer.write_all(&self.offsets)?;
+        writer.write_all(&self.keys)?;
+        for translation_buffer in &self.translations {
+            writer.write_all(translation_buffer)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -34,13 +55,8 @@ pub fn convert_stringtable(project: &Project) {
 
         // Write data to virtual file
         let data = result.expect("data struct valid");
-        xmlb_file.write_all(&data.header).expect("IO Error");
-        xmlb_file.write_all(&data.languages).expect("IO Error");
-        xmlb_file.write_all(&data.offsets).expect("IO Error");
-        xmlb_file.write_all(&data.keys).expect("IO Error");
-        for translation_buffer in &data.translations {
-            xmlb_file.write_all(translation_buffer).expect("IO Error");
-        }
+        data.write(&mut xmlb_file)
+            .expect("failed to write XMLB layout");
         trace!(
             "binned stringtable{:?} [Unique {}]",
             xmlb_path,
@@ -49,15 +65,6 @@ pub fn convert_stringtable(project: &Project) {
     } else {
         trace!("skpping binerization of stringtable{:?}", project.path());
     }
-}
-
-/// Write string with null-termination
-fn write_string(buffer: &mut Vec<u8>, input: &str) {
-    buffer.extend(input.as_bytes());
-    buffer.push(0);
-}
-fn write_int(buffer: &mut Vec<u8>, input: i32) {
-    buffer.extend(&input.to_le_bytes());
 }
 
 #[must_use]
@@ -93,34 +100,33 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
     }
 
     // Header
-    write_int(&mut data.header, 1_481_460_802); // aka XMLB in LE
+    data.header
+        .write_all(b"BLMX") // XMLB in LE
+        .expect("failed to write header magic");
 
     // Languages
-    write_int(
-        &mut data.languages,
-        i32::try_from(ALL_LANGUAGES.len()).expect("overflow"),
-    );
+    data.languages
+        .write_i32::<LittleEndian>(i32::try_from(ALL_LANGUAGES.len()).expect("overflow"))
+        .expect("failed to write language count");
     for language in ALL_LANGUAGES {
-        write_string(&mut data.languages, language);
+        let _ = data.languages.write_cstring(language);
     }
 
     // Keys
-    write_int(
-        &mut data.keys,
-        i32::try_from(all_keys.len()).expect("overflow"),
-    );
+    data.keys
+        .write_i32::<LittleEndian>(i32::try_from(all_keys.len()).expect("overflow"))
+        .expect("failed to write key count");
     for key in &all_keys {
-        write_string(&mut data.keys, key);
+        let _ = data.keys.write_cstring(key);
     }
 
     // Offset
     let offset_size = 4 + 4 * ALL_LANGUAGES.len();
     let mut rolling_offset =
         data.header.len() + data.languages.len() + offset_size + data.keys.len();
-    write_int(
-        &mut data.offsets,
-        i32::try_from(ALL_LANGUAGES.len()).expect("overflow"),
-    );
+    data.offsets
+        .write_i32::<LittleEndian>(i32::try_from(ALL_LANGUAGES.len()).expect("overflow"))
+        .expect("failed to write offset count");
 
     all_translations[0].have_unique = true; // Always write first set (english)
     let first_offset = rolling_offset;
@@ -134,17 +140,18 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
             let offset_start = rolling_offset;
             let mut translation_buffer: Vec<u8> =
                 Vec::with_capacity(32 * translation.phrases.len());
-            write_int(
-                &mut translation_buffer,
-                i32::try_from(translation.phrases.len()).expect("overflow"),
-            );
+            translation_buffer
+                .write_i32::<LittleEndian>(
+                    i32::try_from(translation.phrases.len()).expect("overflow"),
+                )
+                .expect("failed to write translation count");
             for phrase in &translation.phrases {
                 let unescaped = quick_xml::escape::unescape(phrase.as_str());
                 if unescaped.is_err() {
                     warn!("failed to unescape stringtable entry [{}]", phrase);
                     return None;
                 }
-                write_string(&mut translation_buffer, &unescaped.unwrap_or_default());
+                let _ = translation_buffer.write_cstring(&*unescaped.unwrap_or_default());
             }
             rolling_offset += translation_buffer.len();
             data.translations.push(translation_buffer);
@@ -154,7 +161,9 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
             first_offset
         };
 
-        write_int(&mut data.offsets, i32::try_from(offset).expect("overflow"));
+        data.offsets
+            .write_i32::<LittleEndian>(i32::try_from(offset).expect("overflow"))
+            .expect("failed to write offset");
     }
     debug_assert_eq!(offset_size, data.offsets.len());
 

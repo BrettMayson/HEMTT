@@ -12,7 +12,7 @@ where
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Key {
     #[serde(rename = "@ID")]
@@ -98,6 +98,15 @@ pub struct Key {
 }
 
 impl Key {
+    #[must_use]
+    /// Create a new Key with the given ID
+    pub fn new(id: String) -> Self {
+        Self {
+            id,
+            ..Default::default()
+        }
+    }
+
     #[must_use]
     pub fn id(&self) -> &str {
         &self.id
@@ -231,5 +240,40 @@ impl Key {
     #[must_use]
     pub fn danish(&self) -> Option<&str> {
         self.danish.as_deref()
+    }
+
+    /// Set the value for a specific language.
+    ///
+    /// # Panics
+    /// If the language is unknown or not supported.
+    pub fn set(&mut self, language: &str, value: String) {
+        match language.to_lowercase().as_str() {
+            "original" | "english" => self.english = Some(value),
+            "czech" => self.czech = Some(value),
+            "french" => self.french = Some(value),
+            "spanish" => self.spanish = Some(value),
+            "italian" => self.italian = Some(value),
+            "polish" => self.polish = Some(value),
+            "portuguese" => self.portuguese = Some(value),
+            "russian" => self.russian = Some(value),
+            "german" => self.german = Some(value),
+            "korean" => self.korean = Some(value),
+            "japanese" => self.japanese = Some(value),
+            "chinese" => self.chinese = Some(value),
+            "chinesesimp" => self.chinesesimp = Some(value),
+            "turkish" => self.turkish = Some(value),
+            "swedish" => self.swedish = Some(value),
+            "slovak" => self.slovak = Some(value),
+            "serbocroatian" => self.serbocroatian = Some(value),
+            "norwegian" => self.norwegian = Some(value),
+            "icelandic" => self.icelandic = Some(value),
+            "hungarian" => self.hungarian = Some(value),
+            "greek" => self.greek = Some(value),
+            "finnish" => self.finnish = Some(value),
+            "dutch" => self.dutch = Some(value),
+            "ukrainian" => self.ukrainian = Some(value),
+            "danish" => self.danish = Some(value),
+            _ => panic!("Unknown language: {language}"),
+        }
     }
 }
