@@ -2,11 +2,14 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
-    addons::Addon,
+    addons::{Addon, DefinedFunctions, UsedFunctions},
     lint::LintManager,
     lint_manager,
     position::Position,
@@ -45,7 +48,7 @@ pub fn analyze(
     processed: &Processed,
     addon: Arc<Addon>,
     database: Arc<Database>,
-) -> (Codes, Localizations) {
+) -> (Codes, Option<SqfReport>) {
     let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager: LintManager<LintData> = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
@@ -54,7 +57,7 @@ pub fn analyze(
         SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>(),
         default_enabled,
     ) {
-        return (lint_errors, vec![]);
+        return (lint_errors, None);
     }
     if let Err(lint_errors) = manager.push_group(
         vec![
@@ -65,33 +68,94 @@ pub fn analyze(
         Box::new(EventHandlerRunner),
         default_enabled,
     ) {
-        return (lint_errors, vec![]);
+        return (lint_errors, None);
     }
     let localizations = Arc::new(Mutex::new(vec![]));
+    let functions_used = Arc::new(Mutex::new(vec![]));
+    let functions_defined = Arc::new(Mutex::new(HashSet::new()));
     let codes = statements.analyze(
         &LintData {
-            addon,
+            addon: Some(addon),
             database,
             localizations: localizations.clone(),
+            functions_used: functions_used.clone(),
+            functions_defined: functions_defined.clone(),
         },
         project,
         processed,
         &manager,
     );
+
+    let localizations = Arc::<Mutex<Localizations>>::try_unwrap(localizations)
+        .expect("not poisoned")
+        .into_inner()
+        .expect("not poisoned");
+    let functions_used = Arc::<Mutex<UsedFunctions>>::try_unwrap(functions_used)
+        .expect("not poisoned")
+        .into_inner()
+        .expect("not poisoned");
+    let functions_defined = Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
+        .expect("not poisoned")
+        .into_inner()
+        .expect("not poisoned");
     (
         codes,
-        Arc::<Mutex<Vec<(String, Position)>>>::try_unwrap(localizations)
-            .expect("not poisoned")
-            .into_inner()
-            .expect("not poisoned"),
+        Some(SqfReport {
+            localizations,
+            functions_used,
+            functions_defined,
+        }),
     )
 }
 
 pub type Localizations = Vec<(String, Position)>;
 pub struct LintData {
-    pub(crate) addon: Arc<Addon>,
+    pub(crate) addon: Option<Arc<Addon>>,
     pub(crate) database: Arc<Database>,
     pub(crate) localizations: Arc<Mutex<Localizations>>,
+    pub(crate) functions_used: Arc<Mutex<UsedFunctions>>,
+    pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
+}
+pub struct SqfReport {
+    localizations: Localizations,
+    functions_used: UsedFunctions,
+    functions_defined: DefinedFunctions,
+}
+
+impl SqfReport {
+    /// Pushes the report into an Addon
+    /// # Panics
+    pub fn push_to_addon(&self, addon: &Addon) {
+        let build_data = addon.build_data();
+        build_data
+            .localizations()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.localizations.clone());
+        build_data
+            .functions_used()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.functions_used.clone());
+        addon
+            .build_data()
+            .functions_defined()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.functions_defined.clone());
+    }
+    #[must_use]
+    pub fn localizations(&self) -> &Localizations {
+        &self.localizations
+    }
+    #[must_use]
+    pub fn functions_used(&self) -> &UsedFunctions {
+        &self.functions_used
+    }
+    #[must_use]
+    pub fn functions_defined(&self) -> &DefinedFunctions {
+        &self.functions_defined
+    }
 }
 
 pub trait Analyze: Sized + 'static {
@@ -203,4 +267,36 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
         }
     }
     None
+}
+
+#[must_use]
+#[allow(clippy::ptr_arg)]
+pub fn lint_all(
+    project_config: Option<&ProjectConfig>,
+    addons: &Vec<Addon>,
+    database: Arc<Database>,
+) -> Codes {
+    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
+    let mut manager = LintManager::new(
+        project_config.map_or_else(Default::default, |project| project.lints().sqf().clone()),
+    );
+    if let Err(e) = manager.extend(
+        SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>(),
+        default_enabled,
+    ) {
+        return e;
+    }
+
+    manager.run(
+        &LintData {
+            addon: None,
+            database,
+            localizations: Arc::new(Mutex::new(vec![])),
+            functions_used: Arc::new(Mutex::new(vec![])),
+            functions_defined: Arc::new(Mutex::new(HashSet::new())),
+        },
+        project_config,
+        None,
+        addons,
+    )
 }

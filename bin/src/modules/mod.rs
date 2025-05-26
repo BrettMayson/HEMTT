@@ -26,6 +26,10 @@ pub use stringtables::Stringtables;
 
 pub trait Module {
     fn name(&self) -> &'static str;
+    /// priority (lower goes first)
+    fn priority(&self) -> i32 {
+        0
+    }
     /// Executes the module's `init` phase
     ///
     /// # Errors

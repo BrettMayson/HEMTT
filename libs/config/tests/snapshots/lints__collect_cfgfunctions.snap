@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/lints.rs
+expression: functions_defined
+---
+["test_apple_fnc_f1", "test_blueberry_fnc_f2"]

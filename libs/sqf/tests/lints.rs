@@ -4,8 +4,11 @@ use std::sync::Arc;
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::{analyze::analyze, parser::database::Database};
-use hemtt_workspace::{LayerType, addons::Addon, reporting::WorkspaceFiles};
+use hemtt_sqf::{
+    analyze::{SqfReport, analyze},
+    parser::database::Database,
+};
+use hemtt_workspace::{LayerType, addons::Addon, position::Position, reporting::WorkspaceFiles};
 
 const ROOT: &str = "tests/lints/";
 
@@ -14,7 +17,7 @@ macro_rules! lint {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                insta::assert_snapshot!(lint(stringify!($dir)));
+                insta::assert_snapshot!(lint(stringify!($dir)).0);
             }
         }
     };
@@ -42,7 +45,17 @@ lint!(s26_short_circuit_bool_var);
 lint!(s27_select_count);
 lint!(s28_banned_macros);
 
-fn lint(file: &str) -> String {
+#[test]
+fn test_s29_function_undefined() {
+    let (_, report) = lint(stringify!(s29_undefined_functions));
+    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
+    functions_defined.sort();
+    let mut functions_used: Vec<&(String, Position)> = report.functions_used().iter().collect();
+    functions_used.sort_by(|a, b| a.0.cmp(&b.0));
+    insta::assert_compact_debug_snapshot!((functions_defined, functions_used));
+}
+
+fn lint(file: &str) -> (String, SqfReport) {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -58,19 +71,22 @@ fn lint(file: &str) -> String {
 
     match hemtt_sqf::parser::run(&database, &processed) {
         Ok(sqf) => {
-            let (codes, _) = analyze(
+            let (codes, report) = analyze(
                 &sqf,
                 Some(&config),
                 &processed,
                 Arc::new(Addon::test_addon()),
                 database.clone(),
             );
-            codes
-                .iter()
-                .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
-                .collect::<Vec<_>>()
-                .join("\n")
-                .replace('\r', "")
+            (
+                codes
+                    .iter()
+                    .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    .replace('\r', ""),
+                report.expect("exist"),
+            )
         }
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
             for error in e {

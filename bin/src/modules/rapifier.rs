@@ -7,7 +7,12 @@ use std::{
     },
 };
 
-use hemtt_config::{Config, analyze::lint_check, parse, rapify::Rapify};
+use hemtt_config::{
+    Config,
+    analyze::{lint_all, lint_check},
+    parse,
+    rapify::Rapify,
+};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
     WorkspacePath,
@@ -39,6 +44,9 @@ pub struct Rapifier;
 impl Module for Rapifier {
     fn name(&self) -> &'static str {
         "Rapifier"
+    }
+    fn priority(&self) -> i32 {
+        2000
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
@@ -106,6 +114,7 @@ impl Module for Rapifier {
 
         progress.finish_and_clear();
         info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
+        report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
         Ok(report)
     }
 }
@@ -135,17 +144,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Ok(report);
         }
     };
-    addon
-        .build_data()
-        .localizations()
-        .lock()
-        .expect("not poisoned")
-        .extend(
-            configreport
-                .localized()
-                .iter()
-                .map(|(s, p)| (s.to_owned(), p.clone())),
-        );
+    configreport.push_to_addon(addon);
     configreport.notes_and_helps().into_iter().for_each(|e| {
         report.push(e.clone());
     });
