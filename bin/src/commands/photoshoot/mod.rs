@@ -154,7 +154,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         .iter()
         .chain(ps.vehicles.iter().chain(ps.previews.iter()))
     {
-        const ILLEGAL_CHARS: &[char] = &['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+        const ILLEGAL_CHARS: &[char] = &['<', '>', ':', '"', '/', '\n', '\t', '|', '?', '*'];
         if path.contains(ILLEGAL_CHARS) {
             // TODO add an error to the report
             error!("Path {:?} contains illegal characters", path);
