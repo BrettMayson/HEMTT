@@ -26,7 +26,7 @@ impl Lint<LintData> for LocalizeStringtable {
     }
 
     fn documentation(&self) -> &'static str {
-        r"This should not be visable"
+        r"This should not be visible"
     }
 
     fn default_config(&self) -> LintConfig {
@@ -59,14 +59,13 @@ impl LintRunner<LintData> for Runner {
         
         // `localize`` strings are case-insensitive and optionally can start with $
         if lstring.to_lowercase().starts_with("str_") || lstring.to_lowercase().starts_with("$str_") {
-            let mut locations = data.localizations.lock().expect("mutex safety");
             let pos = if let Some(mapping) = processed.mapping(range.start) {
                 mapping.token().position().clone()
             } else {
                 // No position found for token
                 return vec![];
             };
-            locations.push((lstring.trim_start_matches('$').to_lowercase(), pos));
+            data.localizations.push((lstring.trim_start_matches('$').to_lowercase(), pos));
         }
 
         vec![]

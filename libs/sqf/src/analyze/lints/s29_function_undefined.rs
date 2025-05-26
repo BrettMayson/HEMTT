@@ -96,8 +96,7 @@ impl LintRunner<LintData> for RunnerExpression {
                         // No position found for token?
                         return vec![];
                     };
-                    let mut used_functions = data.functions_used.lock().expect("mutex safety");
-                    used_functions.push((var_name, pos));
+                    data.functions_used.push((var_name, pos));
                 }
             }
             Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _span) => {
@@ -133,9 +132,7 @@ impl LintRunner<LintData> for RunnerExpression {
                 };
                 let func_name = func_name.to_lowercase();
                 if is_project_func(&func_name, project) {
-                    let mut functions_defined =
-                        data.functions_defined.lock().expect("mutex safety");
-                    functions_defined.insert(func_name);
+                    data.functions_defined.push(func_name);
                 }
             }
             _ => {}
@@ -166,8 +163,7 @@ impl LintRunner<LintData> for RunnerStatement {
         };
         let func_name = func_name.to_lowercase();
         if is_project_func(&func_name, project) {
-            let mut functions_defined = data.functions_defined.lock().expect("mutex safety");
-            functions_defined.insert(func_name);
+            data.functions_defined.push(func_name);
         }
 
         vec![]

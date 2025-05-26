@@ -20,6 +20,7 @@ arma3-wiki = { workspace = true }
 automod = { workspace = true }
 byteorder = { workspace = true, optional = true }
 chumsky = { workspace = true, optional = true}
+crossbeam = { workspace = true }
 float-ord = "0.3.2"
 linkme = { workspace = true }
 rustversion = { workspace = true }

@@ -26,7 +26,7 @@ impl Lint<LintData> for LintColectCfgFunctions {
     }
 
     fn documentation(&self) -> &'static str {
-        r"This should not be visable"
+        r"This should not be visible"
     }
 
     fn default_config(&self) -> LintConfig {

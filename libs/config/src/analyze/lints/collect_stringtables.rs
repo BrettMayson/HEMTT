@@ -28,7 +28,7 @@ impl Lint<LintData> for LintColectStringtables {
     }
 
     fn documentation(&self) -> &'static str {
-        r"This should not be visable"
+        r"This should not be visible"
     }
 
     fn default_config(&self) -> LintConfig {

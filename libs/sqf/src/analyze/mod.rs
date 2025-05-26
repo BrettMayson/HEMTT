@@ -2,11 +2,9 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashSet, sync::Arc};
 
+use crossbeam::queue::SegQueue;
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, UsedFunctions},
@@ -70,9 +68,9 @@ pub fn analyze(
     ) {
         return (lint_errors, None);
     }
-    let localizations = Arc::new(Mutex::new(vec![]));
-    let functions_used = Arc::new(Mutex::new(vec![]));
-    let functions_defined = Arc::new(Mutex::new(HashSet::new()));
+    let localizations = Arc::new(SegQueue::new());
+    let functions_used = Arc::new(SegQueue::new());
+    let functions_defined = Arc::new(SegQueue::new());
     let codes = statements.analyze(
         &LintData {
             addon: Some(addon),
@@ -86,18 +84,31 @@ pub fn analyze(
         &manager,
     );
 
-    let localizations = Arc::<Mutex<Localizations>>::try_unwrap(localizations)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
-    let functions_used = Arc::<Mutex<UsedFunctions>>::try_unwrap(functions_used)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
-    let functions_defined = Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
+    let localizations = {
+        let mut locs = Vec::new();
+        for (localization, position) in
+            Arc::<SegQueue<(String, Position)>>::try_unwrap(localizations).expect("not poisoned")
+        {
+            locs.push((localization, position));
+        }
+        locs
+    };
+    let functions_used = {
+        let mut used = Vec::new();
+        for (function, position) in
+            Arc::<SegQueue<(String, Position)>>::try_unwrap(functions_used).expect("not poisoned")
+        {
+            used.push((function, position));
+        }
+        used
+    };
+    let functions_defined = {
+        let mut defined = HashSet::new();
+        for func in Arc::<SegQueue<String>>::try_unwrap(functions_defined).expect("not poisoned") {
+            defined.insert(func);
+        }
+        defined
+    };
     (
         codes,
         Some(SqfReport {
@@ -112,9 +123,9 @@ pub type Localizations = Vec<(String, Position)>;
 pub struct LintData {
     pub(crate) addon: Option<Arc<Addon>>,
     pub(crate) database: Arc<Database>,
-    pub(crate) localizations: Arc<Mutex<Localizations>>,
-    pub(crate) functions_used: Arc<Mutex<UsedFunctions>>,
-    pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
+    pub(crate) localizations: Arc<SegQueue<(String, Position)>>,
+    pub(crate) functions_used: Arc<SegQueue<(String, Position)>>,
+    pub(crate) functions_defined: Arc<SegQueue<String>>,
 }
 pub struct SqfReport {
     localizations: Localizations,
@@ -291,9 +302,9 @@ pub fn lint_all(
         &LintData {
             addon: None,
             database,
-            localizations: Arc::new(Mutex::new(vec![])),
-            functions_used: Arc::new(Mutex::new(vec![])),
-            functions_defined: Arc::new(Mutex::new(HashSet::new())),
+            localizations: Arc::new(SegQueue::new()),
+            functions_used: Arc::new(SegQueue::new()),
+            functions_defined: Arc::new(SegQueue::new()),
         },
         project_config,
         None,
