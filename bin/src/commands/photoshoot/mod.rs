@@ -162,7 +162,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
     }
 
-    if !ps.prepare() {
+    if ps.weapons.is_empty() && ps.vehicles.is_empty() && ps.previews.is_empty() {
+
         warn!("No weapons, vehicles or previews found for photoshoot");
         return Ok(report);
     }
@@ -210,26 +211,6 @@ impl Photoshoot {
         self.previews.extend(previews);
     }
 
-    fn prepare(&self) -> bool {
-        let mut pending = self.pending.lock().expect("pending lock");
-        pending.extend(
-            self.weapons
-                .keys()
-                .map(|weapon| toarma::Photoshoot::Weapon(weapon.clone())),
-        );
-        pending.extend(
-            self.vehicles
-                .keys()
-                .map(|vehicle| toarma::Photoshoot::Vehicle(vehicle.clone())),
-        );
-        if pending.is_empty() && self.previews.is_empty() {
-            info!("No missing items to photoshoot");
-            return false;
-        }
-        drop(pending);
-        true
-    }
-
     fn next_message(&self) -> toarma::Message {
         let mut pending = self.pending.lock().expect("pending lock");
         pending.pop().map_or_else(
@@ -241,13 +222,23 @@ impl Photoshoot {
 
 impl Action for Photoshoot {
     fn missions(&self, _: &Context) -> Vec<(String, AutotestMission)> {
-        vec![(
-            String::from("photoshoot"),
-            self.dev_mission.as_ref().map_or_else(
-                || AutotestMission::Internal(String::from("photoshoot.VR")),
-                |dev_mission| AutotestMission::Custom(dev_mission.clone()),
-            ),
-        )]
+        let mut missions = Vec::new();
+        if !self.previews.is_empty() {
+            missions.push((
+                String::from("ps_previews"),
+                AutotestMission::Internal(String::from("ps_previews.VR")),
+            ));
+        }
+        if !self.weapons.is_empty() || !self.vehicles.is_empty() {
+            missions.push((
+                String::from("ps_items"),
+                self.dev_mission.as_ref().map_or_else(
+                    || AutotestMission::Internal(String::from("ps_items.VR")),
+                    |dev_mission| AutotestMission::Custom(dev_mission.clone()),
+                ),
+            ));
+        }
+        missions
     }
 
     #[allow(clippy::too_many_lines)]
@@ -256,20 +247,23 @@ impl Action for Photoshoot {
             return Vec::new();
         };
         match &msg {
-            fromarma::Photoshoot::Ready => {
-                debug!("Photoshoot: Ready");
-                if self.previews.is_empty() {
-                    vec![self.next_message()]
-                } else {
-                    let mut messages = Vec::new();
-                    for class in self.previews.keys() {
-                        messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Preview(
-                            class.clone(),
-                        )));
-                    }
-                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::PreviewRun));
-                    messages
+            fromarma::Photoshoot::ItemsReady => {
+                debug!("Photoshoot: Items Ready");
+                if self.weapons.is_empty() && self.vehicles.is_empty() {
+                    return vec![self.next_message()];
                 }
+                let mut messages = Vec::new();
+                for weapon in self.weapons.keys() {
+                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Weapon(
+                        weapon.clone(),
+                    )));
+                }
+                for vehicle in self.vehicles.keys() {
+                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Vehicle(
+                        vehicle.clone(),
+                    )));
+                }
+                messages
             }
             fromarma::Photoshoot::Weapon(class) | fromarma::Photoshoot::Vehicle(class) => {
                 let target = if matches!(msg, fromarma::Photoshoot::Weapon(_)) {
@@ -311,7 +305,22 @@ impl Action for Photoshoot {
                 warn!("Photoshoot: VehicleUnsupported: {}", vehicle);
                 vec![self.next_message()]
             }
-            fromarma::Photoshoot::Previews => {
+            fromarma::Photoshoot::PreviewsReady => {
+                debug!("Photoshoot: Previews Ready");
+                if self.previews.is_empty() {
+                    vec![self.next_message()]
+                } else {
+                    let mut messages = Vec::new();
+                    for class in self.previews.keys() {
+                        messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Preview(
+                            class.clone(),
+                        )));
+                    }
+                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::PreviewRun));
+                    messages
+                }
+            }
+            fromarma::Photoshoot::PreviewsDone => {
                 debug!("Photoshoot: Previews");
                 let source = self
                     .from
@@ -351,7 +360,7 @@ impl Action for Photoshoot {
                         )
                         .expect("encode");
                 }
-                vec![self.next_message()]
+                vec![toarma::Message::Photoshoot(toarma::Photoshoot::Done)]
             }
         }
     }
