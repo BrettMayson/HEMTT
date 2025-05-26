@@ -1,0 +1,17 @@
+---
+source: libs/stringtable/tests/derapify.rs
+expression: out
+---
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted by HEMTT from stringtable.bin -->
+<Project name="pass">
+    <Package name="pass">
+        <Key ID="A1">
+            <English>Origin</English>
+        </Key>
+        <Key ID="A2">
+            <English>EN</English>
+            <German>DE</German>
+        </Key>
+    </Package>
+</Project>

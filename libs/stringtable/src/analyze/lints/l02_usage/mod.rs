@@ -80,7 +80,7 @@ impl LintRunner<LintData> for Runner {
         let mut codes: Codes = Vec::new();
         let mut all = HashMap::new();
         for stringtable in target {
-            for (key, positions) in &stringtable.keys {
+            for (key, positions) in stringtable.keys() {
                 all.entry(key.to_lowercase())
                     .or_insert_with(Vec::new)
                     .extend(positions.clone());
@@ -169,7 +169,7 @@ impl LintRunner<LintData> for Runner {
 
 fn unused_codes(
     mut unused: Vec<String>,
-    all: &HashMap<String, Vec<crate::Position>>,
+    all: &HashMap<String, Vec<Position>>,
     ignore: bool,
 ) -> Codes {
     let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
@@ -233,7 +233,7 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
     codes
 }
 
-fn duplicate_codes(all: &HashMap<String, Vec<crate::Position>>, ignore: bool) -> Codes {
+fn duplicate_codes(all: &HashMap<String, Vec<Position>>, ignore: bool) -> Codes {
     let _ = std::fs::remove_file(".hemttout/duplicate_stringtables.txt");
     let mut codes: Codes = Vec::new();
     let duplicates = all

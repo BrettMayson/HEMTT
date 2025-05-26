@@ -16,6 +16,15 @@ pub struct Package {
 
 impl Package {
     #[must_use]
+    pub fn new(name: String) -> Self {
+        Self {
+            name,
+            keys: Vec::new(),
+            containers: Vec::new(),
+        }
+    }
+
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -23,6 +32,18 @@ impl Package {
     #[must_use]
     pub fn keys(&self) -> &[Key] {
         &self.keys
+    }
+
+    pub fn keys_mut(&mut self) -> &mut Vec<Key> {
+        &mut self.keys
+    }
+
+    pub fn add_key(&mut self, key: Key) {
+        self.keys.push(key);
+    }
+
+    pub fn extend_keys<I: IntoIterator<Item = Key>>(&mut self, iter: I) {
+        self.keys.extend(iter);
     }
 
     #[must_use]

@@ -53,7 +53,7 @@ impl LintRunner<LintData> for Runner {
                 project.sort();
             }
             let mut writer = String::new();
-            if let Err(e) = project.to_writer(&mut writer) {
+            if let Err(e) = project.to_writer(&mut writer, false) {
                 panic!("Failed to write stringtable for {}: {e}", project.path());
             }
             if writer.trim() != project.source().trim() {
