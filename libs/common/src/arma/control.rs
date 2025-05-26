@@ -50,11 +50,13 @@ pub mod fromarma {
 
     #[derive(Debug, Serialize, Deserialize)]
     pub enum Photoshoot {
-        Ready,
+        ItemsReady,
         Weapon(String),
         WeaponUnsupported(String),
         Vehicle(String),
         VehicleUnsupported(String),
-        Previews,
+
+        PreviewsReady,
+        PreviewsDone,
     }
 }
