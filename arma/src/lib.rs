@@ -30,7 +30,6 @@ fn init() -> Extension {
                 && len_buf != [255u8; 4]
             {
                 let len = u32::from_le_bytes(len_buf);
-                println!("Receiving: {len}");
                 let mut buf = vec![0u8; len as usize];
                 socket.read_exact(&mut buf).unwrap();
                 let buf = String::from_utf8(buf).unwrap();
@@ -44,27 +43,26 @@ fn init() -> Extension {
                     toarma::Message::Photoshoot(photoshoot) => match photoshoot {
                         toarma::Photoshoot::Weapon(weapon) => {
                             println!("Weapon: {weapon}");
-                            ctx.callback_data("hemtt_photoshoot", "weapon_add", weapon.clone())
+                            ctx.callback_data("hemtt_ps_items", "weapon_add", weapon.clone())
                                 .unwrap();
                         }
                         toarma::Photoshoot::Vehicle(vehicle) => {
                             println!("Vehicle: {vehicle}");
-                            ctx.callback_data("hemtt_photoshoot", "vehicle_add", vehicle.clone())
+                            ctx.callback_data("hemtt_ps_items", "vehicle_add", vehicle.clone())
                                 .unwrap();
                         }
                         toarma::Photoshoot::Preview(class) => {
                             println!("Preview: {class}");
-                            ctx.callback_data("hemtt_photoshoot", "preview_add", class.clone())
+                            ctx.callback_data("hemtt_ps_previews", "add", class.clone())
                                 .unwrap();
                         }
                         toarma::Photoshoot::PreviewRun => {
                             println!("PreviewRun");
-                            ctx.callback_null("hemtt_photoshoot", "preview_run")
-                                .unwrap();
+                            ctx.callback_null("hemtt_ps_previews", "run").unwrap();
                         }
                         toarma::Photoshoot::Done => {
                             println!("Done");
-                            ctx.callback_null("hemtt_photoshoot", "done").unwrap();
+                            ctx.callback_null("hemtt_ps", "done").unwrap();
                         }
                     },
                 }
