@@ -26,6 +26,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         "project.name" => {
             println!("{}", ctx.config().name());
         }
+        "project.author" => {
+            println!("{}", ctx.config().author().unwrap_or(&default));
+        }
         "project.prefix" => {
             println!("{}", ctx.config().prefix());
         }

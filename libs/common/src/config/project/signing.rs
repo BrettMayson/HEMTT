@@ -15,8 +15,8 @@ impl SigningConfig {
         self.version
     }
 
-    pub const fn authority(&self) -> Option<&String> {
-        self.authority.as_ref()
+    pub fn authority(&self) -> Option<&str> {
+        self.authority.as_deref()
     }
 }
 
@@ -51,7 +51,7 @@ authority = "test"
         let file: SigningSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = SigningConfig::from(file);
         assert_eq!(config.version(), BISignVersion::V2);
-        assert_eq!(config.authority(), Some(&"test".to_string()));
+        assert_eq!(config.authority(), Some("test"));
     }
 
     #[test]

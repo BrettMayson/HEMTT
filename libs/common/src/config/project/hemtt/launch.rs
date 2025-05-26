@@ -70,14 +70,14 @@ impl LaunchOptions {
 
     #[must_use]
     /// Mission to launch directly into the editor with
-    pub const fn mission(&self) -> Option<&String> {
-        self.mission.as_ref()
+    pub fn mission(&self) -> Option<&str> {
+        self.mission.as_deref()
     }
 
     #[must_use]
     /// Mission to launch with `hemtt launch`, used for development purposes only
-    pub const fn dev_mission(&self) -> Option<&String> {
-        self.dev_mission.as_ref()
+    pub fn dev_mission(&self) -> Option<&str> {
+        self.dev_mission.as_deref()
     }
 
     pub fn set_mission(&mut self, mission: Option<String>) {
@@ -305,7 +305,7 @@ rapify = false
         assert_eq!(config.dlc(), &[DLC::Contact]);
         assert_eq!(config.presets(), &["test"]);
         assert_eq!(config.optionals(), &["test"]);
-        assert_eq!(config.mission(), Some(&"test".to_string()));
+        assert_eq!(config.mission(), Some("test"));
         assert_eq!(config.parameters(), &["test"]);
         assert_eq!(config.executable(), "test.exe");
         assert!(config.binarize());
