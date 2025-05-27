@@ -74,35 +74,39 @@ _fnc_getDlc = {
 
 // Original had a check for scope = 2
 _cfgVehicles = "
-    getNumber (_x >> 'side') in _sides
+    getNumber (_x >> 'scope') > 0
     &&
     {
-        _class = configName _x;
-        _isAllVehicles = _class isKindOf 'allvehicles';
-        (_allVehicles == 0 || (_allVehicles == 1 && _isAllVehicles) || (_allVehicles == -1 && !_isAllVehicles))
+        getNumber (_x >> 'side') in _sides
         &&
         {
-            (_allMods || {(toLower _x) in _mods} count (configSourceModList _x) > 0)
+            _class = configName _x;
+            _isAllVehicles = _class isKindOf 'allvehicles';
+            (_allVehicles == 0 || (_allVehicles == 1 && _isAllVehicles) || (_allVehicles == -1 && !_isAllVehicles))
             &&
             {
-                (_allPatches || {(toLower _x) in _patches} count (configSourceAddonList _x) > 0)
+                (_allMods || {(toLower _x) in _mods} count (configSourceModList _x) > 0)
                 &&
                 {
-                    (_allClasses || {(toLower _class) in _classes})
+                    (_allPatches || {(toLower _x) in _patches} count (configSourceAddonList _x) > 0)
                     &&
                     {
-                        !(getText (_x >> 'model') in _restrictedModels)
+                        (_allClasses || {(toLower _class) in _classes})
                         &&
                         {
-                            inheritsFrom _x != _cfgAll
+                            !(getText (_x >> 'model') in _restrictedModels)
                             &&
                             {
-                                {_class isKindOf _x} count _blacklist == 0
+                                inheritsFrom _x != _cfgAll
+                                &&
+                                {
+                                    {_class isKindOf _x} count _blacklist == 0
+                                }
                             }
                         }
                     }
-                }
-            };
+                };
+            }
         }
     }
 " configClasses (configFile >> "cfgVehicles");
@@ -190,7 +194,7 @@ _screenRight = safezoneX + safezoneW;
     _object switchAction "default";
     _timeCapture = time + _delay;
     if (_object isKindOf "FlagCarrierCore") then {
-        _object spawn {_this enableSimulation false;}; 
+        _object spawn {_this enableSimulation false;};
     } else {
         _object enableSimulation false;
     };
@@ -221,7 +225,7 @@ _screenRight = safezoneX + safezoneW;
     _sphere setPos _pos;
 
     _camAngle = _camDirV;
-    _camDis = (1.5 * ((sizeof _class) max 0.1)) min 124 max 0.2; 
+    _camDis = (1.5 * ((sizeof _class) max 0.1)) min 124 max 0.2;
     _camPos = [_posLocal,_camDis,_camDirH] call bis_fnc_relpos;
     _camPos set [2,((_object modelToWorld [0,0,0]) select 2) + (tan _camAngle * _camDis)];
     _cam camPreparePos _camPos;
