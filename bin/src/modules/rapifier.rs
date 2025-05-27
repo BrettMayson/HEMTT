@@ -102,6 +102,7 @@ impl Module for Rapifier {
             .par_iter()
             .map(|(addon, entry)| {
                 let report = rapify(addon, entry, ctx)?;
+                counter.fetch_add(1, Ordering::Relaxed);
                 progress.inc(1);
                 Ok(report)
             })
