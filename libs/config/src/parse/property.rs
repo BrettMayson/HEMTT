@@ -88,6 +88,7 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                             .padded()
                             .ignore_then(
                                 value()
+                                    .then_ignore(just(';').rewind())
                                     .recover_with(skip_until([';'], Value::Invalid))
                                     .padded()
                                     .labelled("property value"),
