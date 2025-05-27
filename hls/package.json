@@ -61,7 +61,10 @@
           ".ext",
           ".hpp",
           ".sqm",
-          ".rvmat"
+          ".rvmat",
+          ".fsm",
+          ".bikb",
+          ".bisurf"
         ],
         "filenames": [
           "config.cpp"
