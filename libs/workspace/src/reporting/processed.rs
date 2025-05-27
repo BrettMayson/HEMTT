@@ -224,7 +224,7 @@ pub fn clean_output(processed: &mut Processed) {
 
         let Some(map) = processed
             .mappings_newlines
-            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
+            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset)))
             .ok()
             .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
             .or_else(|| processed.mapping(cursor_offset + 1))
