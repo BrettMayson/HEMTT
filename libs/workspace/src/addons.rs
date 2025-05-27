@@ -12,7 +12,7 @@ use tracing::{trace, warn};
 
 use crate::WorkspacePath;
 use crate::position::Position;
-use crate::reporting::Code;
+use crate::reporting::{Code, Mapping};
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -237,7 +237,7 @@ impl Display for Location {
 }
 
 type RequiredVersion = (Version, WorkspacePath, Range<usize>);
-pub type UsedFunctions = Vec<(String, Position)>;
+pub type UsedFunctions = Vec<(String, Position, Mapping, Mapping, WorkspacePath)>;
 pub type DefinedFunctions = HashSet<String>;
 pub type MagazineWellInfo = (Vec<String>, Vec<(String, Arc<dyn Code>)>);
 
@@ -246,7 +246,7 @@ pub struct BuildData {
     required_version: Arc<RwLock<Option<RequiredVersion>>>,
     localizations: Arc<Mutex<Vec<(String, Position)>>>,
     functions_defined: Arc<Mutex<HashSet<String>>>,
-    functions_used: Arc<Mutex<Vec<(String, Position)>>>,
+    functions_used: Arc<Mutex<UsedFunctions>>,
     magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
 }
 
