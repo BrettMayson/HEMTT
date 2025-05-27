@@ -216,7 +216,7 @@ impl LintRunner<LintData> for RunnerFinal {
                 .lock()
                 .expect("not juliet")
                 .clone();
-            for (func, position, start, end ,file) in used {
+            for (func, position, start, end, file) in used {
                 if !all_defined.contains(&func) {
                     all_missing.entry(func).or_insert(Vec::new()).push((position, start, end, file));
                 }
