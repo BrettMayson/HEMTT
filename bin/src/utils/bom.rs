@@ -6,7 +6,9 @@ use crate::Error;
 /// Convert UTF-8 with BOM to UTF-8 without BOM
 pub struct Command {}
 
-const ALLOWED_EXTENSIONS: [&str; 6] = ["sqf", "hpp", "cpp", "rvmat", "ext", "xml"];
+const ALLOWED_EXTENSIONS: [&str; 10] = [
+    "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
+];
 
 /// Execute the bom command
 ///
