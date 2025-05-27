@@ -27,12 +27,9 @@ fn class_missing_braces() -> impl Parser<char, Class, Error = Simple<char>> {
 #[allow(clippy::too_many_lines)]
 pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
     recursive(|rec| {
-        let properties = rec
-            .labelled("class property")
-            .padded()
-            .repeated()
-            .padded()
-            .delimited_by(just('{'), just('}'));
+        let properties = just('{')
+            .ignore_then(rec.labelled("class property").padded().repeated().padded())
+            .then_ignore(just('}').padded().or_not());
 
         let class_external = just("class ")
             .padded()

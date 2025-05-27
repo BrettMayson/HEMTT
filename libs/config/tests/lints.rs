@@ -28,6 +28,7 @@ lint!(c05_parent_case);
 lint!(c06_unexpected_array);
 lint!(c07_expected_array);
 lint!(c08_missing_semicolon);
+lint!(c08_class_missing_final_brace);
 // c09_magwell_missing_magazine is handled bellow
 lint!(c10_class_missing_braces);
 lint!(c11_file_type);
