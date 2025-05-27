@@ -88,7 +88,8 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                             .padded()
                             .ignore_then(
                                 value()
-                                    .recover_with(skip_until([';'], Value::Invalid))
+                                    .then_ignore(just(';').rewind())
+                                    .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
                                     .padded()
                                     .labelled("property value"),
                             )
@@ -448,16 +449,7 @@ mod tests {
                 expected_array: false,
             })
         );
-        assert_eq!(
-            property().parse("math = 1 + one;"),
-            Ok(Property::MissingSemicolon(
-                crate::Ident {
-                    value: "math".to_string(),
-                    span: 0..4,
-                },
-                0..9,
-            ))
-        );
+        assert!(property().parse("math = 1 + one;").is_err());
     }
 
     #[test]
