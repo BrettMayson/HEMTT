@@ -469,7 +469,7 @@ pub struct CacheProcessed {
     pub usage: HashMap<Position, Vec<Position>>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 /// A mapping from the stringified output to the original source
 pub struct Mapping {
     source: usize,

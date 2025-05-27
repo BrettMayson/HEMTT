@@ -531,7 +531,6 @@ impl CodeS02IncorrectCommand {
             alternatives: {
                 let mut alternatives = Vec::new();
                 for ns in namespaces {
-                    println!("Possible alternatives: {:?}", ns.commands());
                     ns.commands()
                         .iter()
                         .filter(|c| c.contains(&prefix))
