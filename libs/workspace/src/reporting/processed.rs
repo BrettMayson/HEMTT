@@ -125,7 +125,7 @@ fn append_token(
         });
         processed
             .mappings_newlines
-            .push((processed.total_chars + 1, processed.mappings.len() + 1));
+            .push((processed.total_chars + 1, processed.mappings.len()));
     } else {
         let str = token.to_source();
         if str.is_empty() {
