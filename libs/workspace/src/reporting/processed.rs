@@ -24,7 +24,6 @@ pub struct Processed {
 
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
-    mappings_newlines: Vec<(usize, usize)>,
 
     macros: HashMap<String, Vec<(Position, Definition)>>,
 
@@ -123,9 +122,6 @@ fn append_token(
             token,
             was_macro: false,
         });
-        processed
-            .mappings_newlines
-            .push((processed.total_chars + 1, processed.mappings.len()));
     } else {
         let str = token.to_source();
         if str.is_empty() {
@@ -212,6 +208,7 @@ pub fn clean_output(processed: &mut Processed) {
     let mut cursor_offset = 0;
     let mut clean_cursor = 0;
     let mut pending_empty = 0;
+    let mut mapping_skip = 0;
     loop {
         let Some(line) = lines.next() else {
             break;
@@ -222,15 +219,13 @@ pub fn clean_output(processed: &mut Processed) {
             continue;
         }
 
-        let Some(map) = processed
-            .mappings_newlines
-            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
-            .ok()
-            .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
-            .or_else(|| processed.mapping(cursor_offset + 1))
+        let Some((index, map)) = processed
+            .mapping_skip(cursor_offset + 1, mapping_skip)
+            .or_else(|| processed.mapping_index(cursor_offset + 1))
         else {
             panic!("mapping not found for offset {cursor_offset}");
         };
+        mapping_skip = index;
 
         let pending_line = comitted_line + pending_empty;
         let linenum = map.original().start().line();
@@ -367,6 +362,34 @@ impl Processed {
         self.mappings.iter().rev().find(|map| {
             map.processed_start().offset() <= offset && map.processed_end().offset() > offset
         })
+    }
+
+    #[must_use]
+    /// Get the deepest tree mapping at a position in the stringified output
+    pub fn mapping_index(&self, offset: usize) -> Option<(usize, &Mapping)> {
+        self.mappings.iter().enumerate().rev().find(|(_, map)| {
+            map.processed_start().offset() <= offset && map.processed_end().offset() > offset
+        })
+    }
+
+    #[must_use]
+    /// Get the deepest tree mapping at a position in the stringified output
+    pub fn mapping_skip(&self, offset: usize, skip: usize) -> Option<(usize, &Mapping)> {
+        let mut last_valid = None;
+        let mut since_valid = 0;
+        for (i, map) in self.mappings.iter().enumerate().skip(skip) {
+            if map.processed_start().offset() <= offset && map.processed_end().offset() > offset {
+                last_valid = Some((i, map));
+                since_valid = 0;
+            } else {
+                since_valid += 1;
+            }
+            // Largesst gap in ACE is 1715
+            if since_valid > 10_000 {
+                break;
+            }
+        }
+        last_valid
     }
 
     #[must_use]
