@@ -1603,7 +1603,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "similar 1.3.0",
  "state",
  "supports-hyperlinks",
  "tabled",
@@ -2335,7 +2334,7 @@ checksum = "154934ea70c58054b556dd430b99a98c2a7ff5309ac9891597e339b5c28f4371"
 dependencies = [
  "console",
  "once_cell",
- "similar 2.7.0",
+ "similar",
 ]
 
 [[package]]
@@ -4372,12 +4371,6 @@ checksum = "95890f873bec569a0362c235787f3aca6e1e887302ba4840839bcc6459c42da6"
 dependencies = [
  "quote",
 ]
-
-[[package]]
-name = "similar"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ad1d488a557b235fc46dae55512ffbfc429d2482b08b4d9435ab07384ca8aec"
 
 [[package]]
 name = "similar"
