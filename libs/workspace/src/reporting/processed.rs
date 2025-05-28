@@ -24,7 +24,7 @@ pub struct Processed {
 
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
-    mappings_newlines: Vec<(usize, usize)>,
+    mappings_interval: Option<intervaltree::IntervalTree<usize, usize>>,
 
     macros: HashMap<String, Vec<(Position, Definition)>>,
 
@@ -123,9 +123,6 @@ fn append_token(
             token,
             was_macro: false,
         });
-        processed
-            .mappings_newlines
-            .push((processed.total_chars, processed.mappings.len()));
     } else {
         let str = token.to_source();
         if str.is_empty() {
@@ -222,13 +219,7 @@ pub fn clean_output(processed: &mut Processed) {
             continue;
         }
 
-        let Some(map) = processed
-            .mappings_newlines
-            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
-            .ok()
-            .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
-            .or_else(|| processed.mapping(cursor_offset + 1))
-        else {
+        let Some(map) = processed.mapping(cursor_offset + 1) else {
             panic!("mapping not found for offset {cursor_offset}");
         };
 
@@ -297,6 +288,28 @@ impl Processed {
             &mut next_is_escape,
             output,
         )?;
+
+        // let mut tree = intervaltree::IntervalTree::new();
+        // for (idx, map) in processed.mappings.iter().enumerate() {
+        //     tree.insert(
+        //         map.processed_start().offset()..map.processed_end().offset(),
+        //         idx,
+        //     );
+        // }
+        processed.mappings_interval = Some(
+            processed
+                .mappings
+                .iter()
+                .enumerate()
+                .map(|(idx, map)| {
+                    (
+                        map.processed_start().offset()..map.processed_end().offset(),
+                        idx,
+                    )
+                })
+                .collect(),
+        );
+
         clean_output(&mut processed);
         Ok(processed)
     }
@@ -363,10 +376,16 @@ impl Processed {
 
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
+    ///
+    /// # Panics
+    /// Panics if used internally in `Processed::new` before the `IntervalTree` is created
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
-        self.mappings.iter().rev().find(|map| {
-            map.processed_start().offset() <= offset && map.processed_end().offset() > offset
-        })
+        self.mappings_interval
+            .as_ref()
+            .expect("using mapping before processed built")
+            .query_point(offset)
+            .max_by_key(|item| item.value)
+            .map(|item| &self.mappings[item.value])
     }
 
     #[must_use]
