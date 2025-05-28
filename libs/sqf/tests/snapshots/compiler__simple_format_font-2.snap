@@ -1,0 +1,101 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 4,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "<font color='#FF0000'>%1</font>",
+        ),
+        String(
+            "thing",
+        ),
+        String(
+            "<font color='#00FF00'>%1</font>",
+        ),
+        String(
+            "#line 6 \"\\format_font.sqf\"\nprivate _redTextDisabled = format[(\"<font color='#FF0000'>%1</font>\"), \"thing\"];\nprivate _greenTextEnabled = format[(\"<font color='#00FF00'>%1</font>\"), \"thing\"];\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        0,
+                        SourceInfo {
+                            offset: 54,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    AssignToLocal(
+                        1,
+                        SourceInfo {
+                            offset: 27,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        0,
+                        SourceInfo {
+                            offset: 136,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    AssignToLocal(
+                        2,
+                        SourceInfo {
+                            offset: 108,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    3,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "format",
+        "_redtextdisabled",
+        "_greentextenabled",
+    ],
+    file_names: [
+        "/format_font.sqf",
+    ],
+}

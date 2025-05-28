@@ -1,0 +1,46 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 1,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "#line 1 \"\\dev.sqf\"\nprivate _target = playerTargetLock;\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    CallNular(
+                        0,
+                        SourceInfo {
+                            offset: 37,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    AssignToLocal(
+                        1,
+                        SourceInfo {
+                            offset: 19,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    0,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "playertargetlock",
+        "_target",
+    ],
+    file_names: [
+        "/dev.sqf",
+    ],
+}

@@ -1,0 +1,212 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 6,
+    constants_cache_compression: true,
+    constants_cache: [
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 43,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 29,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 29,
+                    length: 17,
+                },
+            },
+        ),
+        String(
+            "%1",
+        ),
+        Scalar(
+            1.0,
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 119,
+                            file_index: 0,
+                            file_line: 10,
+                        },
+                    ),
+                    Push(
+                        2,
+                    ),
+                    CallBinary(
+                        6,
+                        SourceInfo {
+                            offset: 122,
+                            file_index: 0,
+                            file_line: 10,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 119,
+                    length: 15,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 100,
+                            file_index: 0,
+                            file_line: 8,
+                        },
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 94,
+                            file_index: 0,
+                            file_line: 8,
+                        },
+                    ),
+                    CallUnary(
+                        4,
+                        SourceInfo {
+                            offset: 86,
+                            file_index: 0,
+                            file_line: 8,
+                        },
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 75,
+                            file_index: 0,
+                            file_line: 8,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        3,
+                    ),
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 154,
+                            file_index: 0,
+                            file_line: 11,
+                        },
+                    ),
+                    CallUnary(
+                        7,
+                        SourceInfo {
+                            offset: 149,
+                            file_index: 0,
+                            file_line: 11,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 141,
+                            file_index: 0,
+                            file_line: 11,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 75,
+                    length: 82,
+                },
+            },
+        ),
+        String(
+            "#line 2 \"\\foreach.sqf\"\n{\n    deleteVehicle _x;\n} forEach allUnits;\n\n\n{\n    systemChat format [\"%1\", _x];\n    {\n        _x setDamage 1;\n    } forEach crew _x;\n} forEach allUnits;\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 57,
+                            file_index: 0,
+                            file_line: 4,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 49,
+                            file_index: 0,
+                            file_line: 4,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 168,
+                            file_index: 0,
+                            file_line: 12,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 160,
+                            file_index: 0,
+                            file_line: 12,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    5,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_x",
+        "deletevehicle",
+        "allunits",
+        "foreach",
+        "format",
+        "systemchat",
+        "setdamage",
+        "crew",
+    ],
+    file_names: [
+        "/foreach.sqf",
+    ],
+}

@@ -1,0 +1,148 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 4,
+    constants_cache_compression: true,
+    constants_cache: [
+        Boolean(
+            true,
+        ),
+        String(
+            "this is a test",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 179,
+                            file_index: 0,
+                            file_line: 9,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 179,
+                    length: 28,
+                },
+            },
+        ),
+        String(
+            "#line 1 \"\\semicolons.sqf\"\n; ;\nprivate _test = true;\n; ;\nsystemChat \"this is a test\";\n; ;\nprivate _variable = \"this is a test\";\nif (_variable == \"this is a test\") then {\n    ;\n    systemChat \"this is a test\";\n    ;\n};\nsystemChat \"this is a test\";\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    AssignToLocal(
+                        0,
+                        SourceInfo {
+                            offset: 30,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 56,
+                            file_index: 0,
+                            file_line: 4,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    AssignToLocal(
+                        2,
+                        SourceInfo {
+                            offset: 89,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    EndStatement,
+                    GetVariable(
+                        2,
+                        SourceInfo {
+                            offset: 131,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    Push(
+                        1,
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 141,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    CallUnary(
+                        4,
+                        SourceInfo {
+                            offset: 127,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    Push(
+                        2,
+                    ),
+                    CallBinary(
+                        5,
+                        SourceInfo {
+                            offset: 162,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 217,
+                            file_index: 0,
+                            file_line: 12,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    3,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_test",
+        "systemchat",
+        "_variable",
+        "==",
+        "if",
+        "then",
+    ],
+    file_names: [
+        "/semicolons.sqf",
+    ],
+}
