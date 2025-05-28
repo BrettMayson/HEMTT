@@ -10,7 +10,7 @@ use super::{Code, Codes, Output, Token, definition::Definition};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 /// A processed file
 pub struct Processed {
     sources: Sources,
@@ -18,13 +18,14 @@ pub struct Processed {
     output: String,
     clean_output: String,
     clean_output_line_indexes: Vec<(usize, usize)>,
+    total_chars: usize,
 
     /// character offset for each line
     line_offsets: HashMap<WorkspacePath, HashMap<usize, usize>>,
 
     /// string offset(start, stop), source, source position
     mappings: Vec<Mapping>,
-    mappings_newlines: Vec<(usize, usize)>,
+    mappings_interval: intervaltree::IntervalTree<usize, usize>,
 
     macros: HashMap<String, Vec<(Position, Definition)>>,
 
@@ -34,10 +35,6 @@ pub struct Processed {
     /// (definition, usages)
     usage: HashMap<Position, Vec<Position>>,
 
-    line: usize,
-    col: usize,
-    total_chars: usize,
-
     /// Warnings
     warnings: Codes,
 
@@ -45,9 +42,26 @@ pub struct Processed {
     no_rapify: bool,
 }
 
+#[derive(Default, Debug)]
+struct Processing {
+    sources: Sources,
+
+    output: String,
+
+    /// character offset for each line
+    line_offsets: HashMap<WorkspacePath, HashMap<usize, usize>>,
+
+    /// string offset(start, stop), source, source position
+    mappings: Vec<Mapping>,
+
+    line: usize,
+    col: usize,
+    total_chars: usize,
+}
+
 #[allow(clippy::too_many_lines)]
 fn append_token(
-    processed: &mut Processed,
+    processing: &mut Processing,
     string_stack: &mut Vec<char>,
     next_is_escape: &mut Option<Arc<Token>>,
     token: Arc<Token>,
@@ -61,25 +75,25 @@ fn append_token(
             *next_is_escape = None;
         } else if let Some(escape_token) = next_is_escape.clone() {
             *next_is_escape = None;
-            append_token(processed, string_stack, next_is_escape, escape_token)?;
+            append_token(processing, string_stack, next_is_escape, escape_token)?;
         } else {
             *next_is_escape = Some(token);
             return Ok(());
         }
     }
     if let Some(escape_token) = next_is_escape.clone() {
-        append_token(processed, string_stack, next_is_escape, escape_token)?;
+        append_token(processing, string_stack, next_is_escape, escape_token)?;
     }
     let path = token.position().path().clone();
-    let source = processed
+    let source = processing
         .sources
         .iter()
         .position(|(s, _)| s == &path)
         .map_or_else(
             || {
                 let content = path.read_to_string()?;
-                processed.sources.push((path.clone(), content));
-                Ok::<usize, Error>(processed.sources.len() - 1)
+                processing.sources.push((path.clone(), content));
+                Ok::<usize, Error>(processing.sources.len() - 1)
             },
             Ok,
         )?;
@@ -103,19 +117,19 @@ fn append_token(
         }
     }
     if token.symbol().is_newline() {
-        processed.line_offsets.entry(path).or_default().insert(
+        processing.line_offsets.entry(path).or_default().insert(
             token.position().end().line() - 1,
             token.position().end().offset(),
         );
-        processed.output.push('\n');
-        processed.mappings.push(Mapping {
+        processing.output.push('\n');
+        processing.mappings.push(Mapping {
             processed: (
-                LineCol(processed.total_chars, (processed.line, processed.col)),
+                LineCol(processing.total_chars, (processing.line, processing.col)),
                 {
-                    processed.line += 1;
-                    processed.col = 0;
-                    processed.total_chars += 1;
-                    LineCol(processed.total_chars, (processed.line, processed.col))
+                    processing.line += 1;
+                    processing.col = 0;
+                    processing.total_chars += 1;
+                    LineCol(processing.total_chars, (processing.line, processing.col))
                 },
             ),
             source,
@@ -123,9 +137,6 @@ fn append_token(
             token,
             was_macro: false,
         });
-        processed
-            .mappings_newlines
-            .push((processed.total_chars, processed.mappings.len()));
     } else {
         let str = token.to_source();
         if str.is_empty() {
@@ -134,17 +145,17 @@ fn append_token(
         if str == "##" && string_stack.is_empty() {
             return Ok(());
         }
-        processed.mappings.push(Mapping {
+        processing.mappings.push(Mapping {
             processed: (
-                LineCol(processed.total_chars, (processed.line, processed.col)),
+                LineCol(processing.total_chars, (processing.line, processing.col)),
                 {
                     let chars = str.chars().count();
-                    processed.col += chars;
-                    processed.total_chars += chars;
-                    processed.output.push_str(&str);
+                    processing.col += chars;
+                    processing.total_chars += chars;
+                    processing.output.push_str(&str);
                     LineCol(
-                        processed.total_chars + chars,
-                        (processed.line, processed.col + chars),
+                        processing.total_chars + chars,
+                        (processing.line, processing.col + chars),
                     )
                 },
             ),
@@ -158,7 +169,7 @@ fn append_token(
 }
 
 fn append_output(
-    processed: &mut Processed,
+    processing: &mut Processing,
     string_stack: &mut Vec<char>,
     next_is_escape: &mut Option<Arc<Token>>,
     output: Vec<Output>,
@@ -166,31 +177,31 @@ fn append_output(
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processed, string_stack, next_is_escape, t)?;
+                append_token(processing, string_stack, next_is_escape, t)?;
             }
             Output::Macro(root, o) => {
-                let start = processed.total_chars;
-                let line = processed.line;
-                let col = processed.col;
-                append_output(processed, string_stack, next_is_escape, o)?;
-                let end = processed.total_chars;
+                let start = processing.total_chars;
+                let line = processing.line;
+                let col = processing.col;
+                append_output(processing, string_stack, next_is_escape, o)?;
+                let end = processing.total_chars;
                 let path = root.position().path().clone();
-                let source = processed
+                let source = processing
                     .sources
                     .iter()
                     .position(|(s, _)| s.as_str() == path.as_str())
                     .map_or_else(
                         || {
                             let content = path.read_to_string().expect("file should exist if used");
-                            processed.sources.push((path, content));
-                            processed.sources.len() - 1
+                            processing.sources.push((path, content));
+                            processing.sources.len() - 1
                         },
                         |i| i,
                     );
-                processed.mappings.push(Mapping {
+                processing.mappings.push(Mapping {
                     processed: (
                         LineCol(start, (line, col)),
-                        LineCol(end, (processed.line, processed.col)),
+                        LineCol(end, (processing.line, processing.col)),
                     ),
                     source,
                     original: root.position().clone(),
@@ -222,13 +233,7 @@ pub fn clean_output(processed: &mut Processed) {
             continue;
         }
 
-        let Some(map) = processed
-            .mappings_newlines
-            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
-            .ok()
-            .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
-            .or_else(|| processed.mapping(cursor_offset + 1))
-        else {
+        let Some(map) = processed.mapping(cursor_offset + 1) else {
             panic!("mapping not found for offset {cursor_offset}");
         };
 
@@ -281,22 +286,42 @@ impl Processed {
         warnings: Codes,
         no_rapify: bool,
     ) -> Result<Self, Error> {
+        let mut processing = Processing::default();
+        let mut string_stack = Vec::new();
+        let mut next_is_escape = None;
+        append_output(
+            &mut processing,
+            &mut string_stack,
+            &mut next_is_escape,
+            output,
+        )?;
+
         let mut processed = Self {
+            sources: processing.sources,
+            output: processing.output,
+            clean_output: String::new(),
+            clean_output_line_indexes: Vec::new(),
+            line_offsets: processing.line_offsets,
+            mappings_interval: processing
+                .mappings
+                .iter()
+                .enumerate()
+                .map(|(idx, map)| {
+                    (
+                        map.processed_start().offset()..map.processed_end().offset(),
+                        idx,
+                    )
+                })
+                .collect(),
+            mappings: processing.mappings,
+            total_chars: processing.total_chars,
             macros,
             #[cfg(feature = "lsp")]
             usage,
             warnings,
             no_rapify,
-            ..Default::default()
         };
-        let mut string_stack = Vec::new();
-        let mut next_is_escape = None;
-        append_output(
-            &mut processed,
-            &mut string_stack,
-            &mut next_is_escape,
-            output,
-        )?;
+
         clean_output(&mut processed);
         Ok(processed)
     }
@@ -347,26 +372,24 @@ impl Processed {
     #[must_use]
     /// Get the tree mapping at a position in the stringified output
     pub fn mappings(&self, offset: usize) -> Vec<&Mapping> {
-        self.mappings
+        let mut mappings = self
+            .mappings_interval
+            .query_point(offset)
+            .collect::<Vec<_>>();
+        mappings.sort_by_key(|item| item.value);
+        mappings
             .iter()
-            .filter(|map| {
-                map.processed_start().offset() <= offset && map.processed_end().offset() > offset
-            })
+            .map(|item| &self.mappings[item.value])
             .collect()
-    }
-
-    #[must_use]
-    /// Get the raw mappings
-    pub fn raw_mappings(&self) -> &[Mapping] {
-        &self.mappings
     }
 
     #[must_use]
     /// Get the deepest tree mapping at a position in the stringified output
     pub fn mapping(&self, offset: usize) -> Option<&Mapping> {
-        self.mappings.iter().rev().find(|map| {
-            map.processed_start().offset() <= offset && map.processed_end().offset() > offset
-        })
+        self.mappings_interval
+            .query_point(offset)
+            .max_by_key(|item| item.value)
+            .map(|item| &self.mappings[item.value])
     }
 
     #[must_use]

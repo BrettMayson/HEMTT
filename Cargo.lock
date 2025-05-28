@@ -1845,6 +1845,7 @@ dependencies = [
  "dirs",
  "hemtt-common",
  "hemtt-pbo",
+ "intervaltree",
  "linkme",
  "paste",
  "serde",
@@ -2367,6 +2368,15 @@ dependencies = [
  "recvmsg",
  "widestring",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "intervaltree"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "270bc34e57047cab801a8c871c124d9dc7132f6473c6401f645524f4e6edd111"
+dependencies = [
+ "smallvec",
 ]
 
 [[package]]
