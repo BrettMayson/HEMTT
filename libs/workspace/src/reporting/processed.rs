@@ -301,7 +301,7 @@ impl Processed {
             output: processing.output,
             clean_output: String::new(),
             clean_output_line_indexes: Vec::new(),
-            line_offsets: HashMap::new(),
+            line_offsets: processing.line_offsets,
             mappings_interval: processing
                 .mappings
                 .iter()
