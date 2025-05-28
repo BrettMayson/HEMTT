@@ -184,7 +184,7 @@ fn check_str(name: &str, value: &Str, allow_no_extension: bool, processed: &Proc
             return;
         }
         if !allowed.contains(&ext){
-            let span = value.span().start + 2 + (value_str.len() - ext.len())..value.span().end - 1;
+            let span = value.span().start + 2 + (value_str.len() - ext.len()) + 1..value.span().end;
             codes.push(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed, config.severity())));
         }
     }
