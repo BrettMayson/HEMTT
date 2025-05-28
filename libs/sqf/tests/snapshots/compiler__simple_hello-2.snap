@@ -1,0 +1,84 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 3,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "HEMTT",
+        ),
+        String(
+            "Hello, %1!",
+        ),
+        String(
+            "#line 1 \"\\hello.sqf\"\nprivate _name = \"HEMTT\";\nsystemChat format [\"Hello, %1!\", _name];\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    AssignToLocal(
+                        0,
+                        SourceInfo {
+                            offset: 21,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        1,
+                    ),
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 79,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 65,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 57,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    CallUnary(
+                        2,
+                        SourceInfo {
+                            offset: 46,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    2,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_name",
+        "format",
+        "systemchat",
+    ],
+    file_names: [
+        "/hello.sqf",
+    ],
+}

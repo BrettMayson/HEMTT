@@ -1,0 +1,52 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 2,
+    constants_cache_compression: true,
+    constants_cache: [
+        Scalar(
+            0.0,
+        ),
+        String(
+            "#line 1 \"\\hash_select.sqf\"\n_explosive # 0\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 27,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        0,
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 38,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    1,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_explosive",
+        "#",
+    ],
+    file_names: [
+        "/hash_select.sqf",
+    ],
+}

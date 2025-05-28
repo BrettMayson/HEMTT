@@ -1,0 +1,61 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 2,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "1",
+        ),
+        String(
+            "#line 1 \"\\oneline.sqf\"\nprivate value = a + \"1\";\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 39,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        0,
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 41,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    AssignToLocal(
+                        2,
+                        SourceInfo {
+                            offset: 23,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    1,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "a",
+        "+",
+        "value",
+    ],
+    file_names: [
+        "/oneline.sqf",
+    ],
+}

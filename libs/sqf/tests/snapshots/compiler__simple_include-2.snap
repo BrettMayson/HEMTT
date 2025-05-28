@@ -1,0 +1,235 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 8,
+    constants_cache_compression: true,
+    constants_cache: [
+        Scalar(
+            1.0,
+        ),
+        Scalar(
+            2.0,
+        ),
+        Scalar(
+            3.0,
+        ),
+        Scalar(
+            4.0,
+        ),
+        String(
+            "test",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        1,
+                        SourceInfo {
+                            offset: 158,
+                            file_index: 1,
+                            file_line: 6,
+                        },
+                    ),
+                    Push(
+                        4,
+                    ),
+                    CallBinary(
+                        2,
+                        SourceInfo {
+                            offset: 161,
+                            file_index: 1,
+                            file_line: 6,
+                        },
+                    ),
+                    AssignToLocal(
+                        3,
+                        SourceInfo {
+                            offset: 140,
+                            file_index: 1,
+                            file_line: 6,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 140,
+                    length: 30,
+                },
+            },
+        ),
+        Scalar(
+            0.0,
+        ),
+        String(
+            "#line 1 \"\\something.hpp\"\nprivate _things = [1,2,3,4];\n\nprivate _things = [1,2,3,4];\n\nprivate _things = [1,2,3,4];\n#line 5 \"\\include.sqf\"\n{\n\tprivate thinghi = _x + \"test\";\n} forEach [0,1,2,3];\nsystemChat str _things;\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        3,
+                    ),
+                    MakeArray(
+                        4,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    AssignToLocal(
+                        0,
+                        SourceInfo {
+                            offset: 25,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        3,
+                    ),
+                    MakeArray(
+                        4,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    AssignToLocal(
+                        0,
+                        SourceInfo {
+                            offset: 55,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        3,
+                    ),
+                    MakeArray(
+                        4,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    AssignToLocal(
+                        0,
+                        SourceInfo {
+                            offset: 85,
+                            file_index: 0,
+                            file_line: 5,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        5,
+                    ),
+                    Push(
+                        6,
+                    ),
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        2,
+                    ),
+                    MakeArray(
+                        4,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallBinary(
+                        4,
+                        SourceInfo {
+                            offset: 173,
+                            file_index: 1,
+                            file_line: 7,
+                        },
+                    ),
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 207,
+                            file_index: 1,
+                            file_line: 8,
+                        },
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 203,
+                            file_index: 1,
+                            file_line: 8,
+                        },
+                    ),
+                    CallUnary(
+                        6,
+                        SourceInfo {
+                            offset: 192,
+                            file_index: 1,
+                            file_line: 8,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    7,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_things",
+        "_x",
+        "+",
+        "thinghi",
+        "foreach",
+        "str",
+        "systemchat",
+    ],
+    file_names: [
+        "/something.hpp",
+        "/include.sqf",
+    ],
+}
