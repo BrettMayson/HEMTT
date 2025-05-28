@@ -289,13 +289,6 @@ impl Processed {
             output,
         )?;
 
-        // let mut tree = intervaltree::IntervalTree::new();
-        // for (idx, map) in processed.mappings.iter().enumerate() {
-        //     tree.insert(
-        //         map.processed_start().offset()..map.processed_end().offset(),
-        //         idx,
-        //     );
-        // }
         processed.mappings_interval = Some(
             processed
                 .mappings
