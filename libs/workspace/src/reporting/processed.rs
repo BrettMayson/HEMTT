@@ -125,7 +125,7 @@ fn append_token(
         });
         processed
             .mappings_newlines
-            .push((processed.total_chars, processed.mappings.len()));
+            .push((processed.total_chars + 1, processed.mappings.len() + 1));
     } else {
         let str = token.to_source();
         if str.is_empty() {
@@ -224,7 +224,7 @@ pub fn clean_output(processed: &mut Processed) {
 
         let Some(map) = processed
             .mappings_newlines
-            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset)))
+            .binary_search_by(|(offset, _)| offset.cmp(&(cursor_offset + 1)))
             .ok()
             .map(|index| &processed.raw_mappings()[processed.mappings_newlines[index].1])
             .or_else(|| processed.mapping(cursor_offset + 1))
