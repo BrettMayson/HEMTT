@@ -300,6 +300,7 @@ Statements {
                                 ],
                                 source: "1;2;3;4;",
                                 span: 247..255,
+                                issues: [],
                             },
                         ),
                         Code(
@@ -326,6 +327,7 @@ Statements {
                                 ],
                                 source: "-1;-2;",
                                 span: 265..271,
+                                issues: [],
                             },
                         ),
                     ],
@@ -380,4 +382,5 @@ Statements {
     ],
     source: "params [\"_a\", \"_b\"];\n\nparams [\"_a\", \"_b\", [\"_c\", []]];\n\nmissionNamespace getVariable [\"a\", -1];\n\nz setVariable [\"b\", [], true];\n\n[1,0] vectorAdd p;\n\npositionCameraToWorld [10000, 0, 10000];\n\n\nrandom [0, _x, 1];\n\nprivate _z = if (time > 10) then { 1;2;3;4; } else { -1;-2; };\n\nparam [\"_d\"];\n\n[] param [\"_e\"];\n",
     span: 0..307,
+    issues: [],
 }
