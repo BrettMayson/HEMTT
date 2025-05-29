@@ -75,9 +75,9 @@ jobs:
             artifact: windows-x64
         mod:
           - repo: CBATeam/CBA_A3
-            commit: a587b46cf91278ee7391daac76f3ff78dac1e515
+            commit: de3ef9f713de3f49a2a1a72ecd7efa73785ce288
           - repo: acemod/ACE3
-            commit: eb57fa49c404e662abcd18c7e52c1f7c4b67a9b0
+            commit: 2e82454ae5733b678a9da4bcd33f772eb547481f
           - repo: IDI-Systems/acre2
             commit: e5c1bba58b63e18d03721a68d32efd39748af551
           - repo: ArmaForces/Mods

@@ -63,7 +63,7 @@ pub struct DevArgs {
     /// Include all optional addon folders
     pub(crate) all_optionals: bool,
     #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
-    /// Do not rapify (cpp, rvmat, ext, sqm, fsm, bikb, bisurf)
+    /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)
     ///
     /// They will be copied directly into the PBO, not .bin version is created.
     pub(crate) no_rap: bool,
