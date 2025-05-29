@@ -220,7 +220,7 @@ pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
             path.trim_start_matches('/')
         );
     }
-    if !["cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf"].contains(&ext) {
+    if !["cpp", "rvmat", "ext", "sqm", "bikb", "bisurf"].contains(&ext) {
         return Ok(false);
     }
     let mut buffer = vec![0; 4];

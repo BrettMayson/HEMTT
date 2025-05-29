@@ -48,11 +48,11 @@ pub struct BuildArgs {
     /// Do not binarize the project
     ///
     /// They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext`, `*.sqm`,
-    /// `*.fsm`, `*.bikb`, `*.bisurf` will still be rapified.
+    /// `*.bikb`, `*.bisurf` will still be rapified.
     /// This can be configured per addon in [`addon.toml`](../configuration/addon#binarize).
     no_bin: bool,
     #[arg(long, action = clap::ArgAction::SetTrue)]
-    /// Do not rapify (cpp, rvmat, ext, sqm, fsm, bikb, bisurf)
+    /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)
     ///
     /// They will be copied directly into the PBO.
     /// This can be configured per addon in [`addon.toml`](../configuration/addon#rapify).
