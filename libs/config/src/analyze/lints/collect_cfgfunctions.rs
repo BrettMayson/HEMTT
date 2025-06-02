@@ -73,7 +73,8 @@ impl LintRunner<LintData> for Runner {
                 let Property::Class(class) = p else { continue };
                 let Class::Local { properties: properties_category, .. } = class else { continue };
                 for function in properties_category {
-                    let Property::Class(Class::Local { name: class_name, .. }) = function else { continue };
+                    let Property::Class(func_class) = function else { continue };
+                    let Some(class_name) = func_class.name() else { continue; }; 
                     let func_name = format!("{prefix_real}_fnc_{}",class_name.as_str()).to_lowercase();
                     let mut functions_defined = data.functions_defined.lock().expect("mutex safety");
                     functions_defined.insert(func_name);
