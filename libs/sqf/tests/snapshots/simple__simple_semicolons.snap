@@ -78,6 +78,7 @@ expression: ast
                     ],
                     source: "systemChat \"this is a test\";",
                     span: 153..181,
+                    issues: [],
                 },
             ),
             136..140,
