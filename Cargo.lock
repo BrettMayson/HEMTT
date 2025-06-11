@@ -1822,6 +1822,7 @@ dependencies = [
  "automod",
  "byteorder",
  "casey",
+ "criterion",
  "hemtt-common",
  "hemtt-workspace",
  "indexmap",
