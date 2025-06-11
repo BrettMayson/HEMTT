@@ -181,8 +181,8 @@ fn process_keys(
                 keys.entry(key_str.to_lowercase())
                     .or_insert_with(Vec::new)
                     .push(Position::new(
-                        LineCol(offset + key.start() + 1, (linenum + 1, key.start() + 2)),
-                        LineCol(offset + key.end() + 1, (linenum + 1, key.end() + 2)),
+                        LineCol(offset + key.start(), (linenum + 1, key.start() + 1)),
+                        LineCol(offset + key.end(), (linenum + 1, key.end() + 1)),
                         path.clone(),
                     ));
             }
