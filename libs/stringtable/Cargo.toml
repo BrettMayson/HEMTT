@@ -26,4 +26,9 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
+criterion = "0.6.0"
 insta = { workspace = true }
+
+[[bench]]
+name = "read"
+harness = false
