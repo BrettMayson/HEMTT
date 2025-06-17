@@ -4,7 +4,10 @@
     "ext",
     "cpp",
     "sqm",
-    "rvmat"
+    "rvmat",
+    "fsm",
+    "bikb",
+    "bisurf"
   ],
   "name": "arma-config",
   "patterns": [

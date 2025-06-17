@@ -1,0 +1,22 @@
+version=54;
+class EditorData
+{
+	moveGridStep=1;
+	angleGridStep=0.2617994;
+	scaleGridStep=1;
+	autoGroupingDist=10;
+	toggles=1;
+	class Camera
+	{
+		pos[]={5987.8726,15,1551.0996};
+		dir[]={-0.86877549,-0.17364818,0.46376228};
+		up[]={-0.15318854,0.98480767,0.081773795};
+		aside[]={0.47091654,0,0.88217765};
+	};
+};
+binarizationWanted=0;
+sourceName="previews";
+class AddonsMetaData
+{
+};
+randomSeed=4323153;

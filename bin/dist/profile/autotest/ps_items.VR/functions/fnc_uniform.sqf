@@ -27,4 +27,4 @@ waitUntil { 10 preloadObject model_clothing };
 screenshot format ["%1.png", _uniform];
 sleep 0.3;
 model_clothing hideObject true;
-"hemtt_comm" callExtension ["photoshoot:weapon", [_uniform]];
+"hemtt_comm" callExtension ["photoshoot:items:weapon", [_uniform]];

@@ -14,7 +14,7 @@ fn main() {
 
     for section in &mut book.sections {
         if let mdbook::BookItem::Chapter(chapter) = section {
-            if chapter.name == "Analysis" {
+            if chapter.name == "Lints" {
                 lints::run(chapter);
             } else if chapter.name == "Commands" {
                 commands::run(chapter);

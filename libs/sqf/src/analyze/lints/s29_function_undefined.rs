@@ -1,14 +1,10 @@
 use std::{
-    collections::{BTreeMap, HashSet},
-    sync::Arc,
-    vec,
+    collections::{BTreeMap, HashSet}, sync::Arc, vec
 };
 
-use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_common::{config::{LintConfig, ProjectConfig}, similar_values};
 use hemtt_workspace::{
-    addons::Addon,
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Severity},
+    addons::Addon, lint::{AnyLintRunner, Lint, LintRunner}, position::Position, reporting::{Code, Codes, Diagnostic, Label, Mapping, Severity}, WorkspacePath
 };
 use toml::Value;
 
@@ -30,24 +26,20 @@ impl Lint<LintData> for CollectFunctions {
     }
 
     fn description(&self) -> &'static str {
-        "Using undefined functions is bad"
+        "Reports on undefined functions using the project's prefix"
     }
 
     fn documentation(&self) -> &'static str {
         r#"### Configuration
 
-- **ignore**: An funcs to ignore
+- **ignore**: Functions to ignore
 
 ```toml
 [lints.sqf.function_undefined]
 options.ignore = [
     "myproject_fnc_piano",
 ]
-```
-
-### Explanation
-
-Checks for usage of undefined functions"#
+```"#
     }
 
     fn default_config(&self) -> LintConfig {
@@ -97,7 +89,16 @@ impl LintRunner<LintData> for RunnerExpression {
                         return vec![];
                     };
                     let mut used_functions = data.functions_used.lock().expect("mutex safety");
-                    used_functions.push((var_name, pos));
+                    let Some(map_start) = processed.mapping(var_span.start) else {
+                        return vec![];
+                    };
+                    let Some(map_end) = processed.mapping(var_span.end) else {
+                        return vec![];
+                    };
+                    let Some(map_file) = processed.source(map_start.source()) else {
+                        return vec![];
+                    };
+                    used_functions.push((var_name, pos, map_start.to_owned(), map_end.to_owned(), map_file.0.clone()));
                 }
             }
             Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _span) => {
@@ -215,23 +216,22 @@ impl LintRunner<LintData> for RunnerFinal {
                 .lock()
                 .expect("not juliet")
                 .clone();
-            for (func, span) in used {
+            for (func, position, start, end, file) in used {
                 if !all_defined.contains(&func) {
-                    all_missing.entry(func).or_insert(Vec::new()).push(span);
+                    all_missing.entry(func).or_insert(Vec::new()).push((position, start, end, file));
                 }
             }
         }
 
-        for (func, spans) in all_missing {
-            let joined = spans
-                .iter()
-                .map(|s| format!("{}:{}:{}", s.path(), s.start().line(), s.start().column()))
-                .collect::<Vec<_>>()
-                .join("\n");
-
+        for (func, positions) in all_missing {
+            let similar = similar_values(&func, &all_defined.iter().map(std::string::String::as_str).collect::<Vec<_>>())
+                .into_iter()
+                .map(std::string::ToString::to_string)
+                .collect();
             codes.push(Arc::new(Code29FunctionUndefined::new(
                 func,
-                joined,
+                positions,
+                similar,
                 config.severity(),
             )));
         }
@@ -242,8 +242,9 @@ impl LintRunner<LintData> for RunnerFinal {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct Code29FunctionUndefined {
-    func_name: String,
-    spans: String,
+    name: String,
+    usage: Vec<(Position, Mapping, Mapping, WorkspacePath)>,
+    suggestions: Vec<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -259,10 +260,33 @@ impl Code for Code29FunctionUndefined {
         self.severity
     }
     fn message(&self) -> String {
-        format!("Undefined Function: {}", self.func_name)
+        format!("Undefined Function: {}", self.name)
+    }
+    fn label_message(&self) -> String {
+        "undefined function".to_string()
     }
     fn note(&self) -> Option<String> {
-        Some(format!("Used in:\n{}", self.spans))
+        if self.usage.len() == 1 {
+            return None;
+        }
+        Some(format!("Used in:\n{}", self.usage
+            .iter()
+            .map(|s| {
+                let s = &s.0;
+                format!("{}:{}:{}", s.path(), s.start().line(), s.start().column())
+            })
+            .collect::<Vec<_>>()
+            .join("\n")))
+    }
+    fn help(&self) -> Option<String> {
+        if self.suggestions.is_empty() {
+            None
+        } else {
+            Some(format!(
+                "Did you mean: `{}`?",
+                self.suggestions.join("`, `")
+            ))
+        }
     }
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
@@ -271,10 +295,11 @@ impl Code for Code29FunctionUndefined {
 
 impl Code29FunctionUndefined {
     #[must_use]
-    pub fn new(func_name: String, spans: String, severity: Severity) -> Self {
+    pub fn new(name: String, usage: Vec<(Position, Mapping, Mapping, WorkspacePath)>, suggestions: Vec<String>, severity: Severity) -> Self {
         Self {
-            func_name,
-            spans,
+            name,
+            usage,
+            suggestions,
             severity,
             diagnostic: None,
         }
@@ -282,7 +307,17 @@ impl Code29FunctionUndefined {
     }
 
     fn generate_processed(mut self) -> Self {
-        self.diagnostic = Some(Diagnostic::from_code(&self));
+        let mut diag = Diagnostic::from_code(&self);
+        if let Some((_, map_start, map_end, map_file)) = self.usage.first() {
+            diag.labels.push(
+                Label::primary(
+                    map_file.clone(),
+                    map_start.original_start()..map_end.original_start(),
+                )
+                .with_message(self.label_message()),
+            );
+        }
+        self.diagnostic = Some(diag);
         self
     }
 }

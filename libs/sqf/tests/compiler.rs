@@ -2,7 +2,7 @@
 
 pub use float_ord::FloatOrd as Scalar;
 use hemtt_preprocessor::Processor;
-use hemtt_sqf::parser::database::Database;
+use hemtt_sqf::{compiler::serializer::Compiled, parser::database::Database};
 use hemtt_workspace::LayerType;
 
 macro_rules! compile {
@@ -10,10 +10,11 @@ macro_rules! compile {
         paste::paste! {
             #[test]
             fn [<simple_ $file>]() {
-                let bin = optimize($dir, stringify!($file));
+                let (bin, compiled) = optimize($dir, stringify!($file));
                 // bin to hex
                 let hex = bin.iter().map(|b| format!("{:02x}", b)).collect::<String>();
                 insta::assert_snapshot!(hex);
+                insta::assert_debug_snapshot!(compiled);
             }
         }
     };
@@ -36,7 +37,7 @@ compile!("simple", semicolons);
 
 const ROOT: &str = "tests/";
 
-fn optimize(folder: &str, file: &str) -> Vec<u8> {
+fn optimize(folder: &str, file: &str) -> (Vec<u8>, Compiled) {
     let folder = std::path::PathBuf::from(ROOT).join(folder);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -45,10 +46,11 @@ fn optimize(folder: &str, file: &str) -> Vec<u8> {
     let source = workspace.join(format!("{file}.sqf")).unwrap();
     let processed = Processor::run(&source).unwrap();
     let mut writer = Vec::new();
-    hemtt_sqf::parser::run(&Database::a3(false), &processed)
-        .unwrap()
+    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+    let compiled = statements.compile(&processed).unwrap();
+    statements
         .optimize()
         .compile_to_writer(&processed, &mut writer)
         .unwrap();
-    writer
+    (writer, compiled)
 }

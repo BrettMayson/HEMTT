@@ -1,0 +1,404 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 10,
+    constants_cache_compression: true,
+    constants_cache: [
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 44,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 30,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 30,
+                    length: 16,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 148,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 142,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 142,
+                    length: 8,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 190,
+                            file_index: 0,
+                            file_line: 9,
+                        },
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 176,
+                            file_index: 0,
+                            file_line: 9,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 176,
+                    length: 17,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 122,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    Push(
+                        1,
+                    ),
+                    CallBinary(
+                        7,
+                        SourceInfo {
+                            offset: 133,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        2,
+                    ),
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 212,
+                            file_index: 0,
+                            file_line: 10,
+                        },
+                    ),
+                    CallBinary(
+                        8,
+                        SourceInfo {
+                            offset: 204,
+                            file_index: 0,
+                            file_line: 10,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 122,
+                    length: 101,
+                },
+            },
+        ),
+        String(
+            "something",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    CallNular(
+                        4,
+                        SourceInfo {
+                            offset: 99,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 93,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    CallUnary(
+                        6,
+                        SourceInfo {
+                            offset: 89,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    Push(
+                        3,
+                    ),
+                    CallBinary(
+                        9,
+                        SourceInfo {
+                            offset: 107,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 89,
+                    length: 141,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    GetVariable(
+                        0,
+                        SourceInfo {
+                            offset: 335,
+                            file_index: 0,
+                            file_line: 17,
+                        },
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 321,
+                            file_index: 0,
+                            file_line: 17,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 321,
+                    length: 16,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        6,
+                    ),
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 346,
+                            file_index: 0,
+                            file_line: 17,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 340,
+                            file_index: 0,
+                            file_line: 17,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 319,
+                    length: 38,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    CallNular(
+                        4,
+                        SourceInfo {
+                            offset: 296,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 290,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    CallUnary(
+                        6,
+                        SourceInfo {
+                            offset: 286,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    Push(
+                        7,
+                    ),
+                    CallBinary(
+                        9,
+                        SourceInfo {
+                            offset: 304,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 286,
+                    length: 78,
+                },
+            },
+        ),
+        String(
+            "#line 2 \"\\eventhandler.sqf\"\n{ deleteVehicle _x } count allPlayers;\n\n\n[\"something\", {\n    if (alive player) then {\n        allPlayers findIf { alive _x };\n        {\n            deleteVehicle _x;\n        } forEach allPlayers;\n    };\n}] call CBA_fnc_addEventHandler;\n\n\n[\"something\", {\n    if (alive player) then {\n        { deleteVehicle _x } count allPlayers;\n    };\n}] call CBA_fnc_addEventHandler;\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    CallNular(
+                        2,
+                        SourceInfo {
+                            offset: 55,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 49,
+                            file_index: 0,
+                            file_line: 2,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    Push(
+                        5,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    GetVariable(
+                        10,
+                        SourceInfo {
+                            offset: 239,
+                            file_index: 0,
+                            file_line: 12,
+                        },
+                    ),
+                    CallBinary(
+                        11,
+                        SourceInfo {
+                            offset: 234,
+                            file_index: 0,
+                            file_line: 12,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    Push(
+                        8,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    GetVariable(
+                        10,
+                        SourceInfo {
+                            offset: 373,
+                            file_index: 0,
+                            file_line: 19,
+                        },
+                    ),
+                    CallBinary(
+                        11,
+                        SourceInfo {
+                            offset: 368,
+                            file_index: 0,
+                            file_line: 19,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    9,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "_x",
+        "deletevehicle",
+        "allplayers",
+        "count",
+        "player",
+        "alive",
+        "if",
+        "findif",
+        "foreach",
+        "then",
+        "cba_fnc_addeventhandler",
+        "call",
+    ],
+    file_names: [
+        "/eventhandler.sqf",
+    ],
+}

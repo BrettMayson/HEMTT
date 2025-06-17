@@ -1,0 +1,11 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c08_class_missing_final_brace)).0
+---
+[0m[1m[38;5;9merror[L-C08][0m[1m: property is missing a semicolon[0m
+  [0m[36m┌─[0m c08_class_missing_final_brace.hpp:1:16
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m class MyClass {
+  [0m[36m│[0m                [0m[31m^[0m [0m[31mmissing semicolon[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: add a semicolon [33m;[0m to the end of the property

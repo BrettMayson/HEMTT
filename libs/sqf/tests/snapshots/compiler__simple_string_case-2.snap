@@ -1,0 +1,113 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 5,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "A",
+        ),
+        String(
+            "b",
+        ),
+        String(
+            "C",
+        ),
+        String(
+            "d",
+        ),
+        String(
+            "#line 1 \"\\string_case.sqf\"\ntoLower \"A\" + toUpper \"b\" + toUpperAnsi \"C\" + toLowerAnsi \"d\";\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    CallUnary(
+                        0,
+                        SourceInfo {
+                            offset: 27,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        1,
+                    ),
+                    CallUnary(
+                        1,
+                        SourceInfo {
+                            offset: 41,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        2,
+                        SourceInfo {
+                            offset: 39,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        2,
+                    ),
+                    CallUnary(
+                        3,
+                        SourceInfo {
+                            offset: 55,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        2,
+                        SourceInfo {
+                            offset: 53,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        3,
+                    ),
+                    CallUnary(
+                        4,
+                        SourceInfo {
+                            offset: 73,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        2,
+                        SourceInfo {
+                            offset: 71,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    4,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "tolower",
+        "toupper",
+        "+",
+        "toupperansi",
+        "toloweransi",
+    ],
+    file_names: [
+        "/string_case.sqf",
+    ],
+}

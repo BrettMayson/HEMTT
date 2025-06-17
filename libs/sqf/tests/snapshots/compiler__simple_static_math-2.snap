@@ -1,0 +1,200 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 8,
+    constants_cache_compression: true,
+    constants_cache: [
+        Scalar(
+            1.0,
+        ),
+        Scalar(
+            2.0,
+        ),
+        Scalar(
+            36.0,
+        ),
+        Scalar(
+            31.0,
+        ),
+        Scalar(
+            6.0,
+        ),
+        Scalar(
+            100.0,
+        ),
+        Scalar(
+            3.0,
+        ),
+        String(
+            "#line 1 \"\\static_math.sqf\"\n1 + (2 * 2) + (36 % 31) + (36 / 6) + (sqrt 100) - 3;\n\nsqrt -100;\n\n\nz + z;\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    CallBinary(
+                        0,
+                        SourceInfo {
+                            offset: 34,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 29,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        3,
+                    ),
+                    CallBinary(
+                        2,
+                        SourceInfo {
+                            offset: 45,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 39,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        2,
+                    ),
+                    Push(
+                        4,
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 57,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 51,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        5,
+                    ),
+                    CallUnary(
+                        4,
+                        SourceInfo {
+                            offset: 65,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 62,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    Push(
+                        6,
+                    ),
+                    CallBinary(
+                        5,
+                        SourceInfo {
+                            offset: 75,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        5,
+                    ),
+                    CallUnary(
+                        5,
+                        SourceInfo {
+                            offset: 86,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                    CallUnary(
+                        4,
+                        SourceInfo {
+                            offset: 81,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                    EndStatement,
+                    GetVariable(
+                        6,
+                        SourceInfo {
+                            offset: 94,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    GetVariable(
+                        6,
+                        SourceInfo {
+                            offset: 98,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                    CallBinary(
+                        1,
+                        SourceInfo {
+                            offset: 96,
+                            file_index: 0,
+                            file_line: 6,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    7,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "*",
+        "+",
+        "%",
+        "/",
+        "sqrt",
+        "-",
+        "z",
+    ],
+    file_names: [
+        "/static_math.sqf",
+    ],
+}

@@ -1,0 +1,487 @@
+---
+source: libs/sqf/tests/compiler.rs
+expression: compiled
+---
+Compiled {
+    entry_point: 18,
+    constants_cache_compression: true,
+    constants_cache: [
+        String(
+            "_a",
+        ),
+        String(
+            "_b",
+        ),
+        String(
+            "_c",
+        ),
+        String(
+            "a",
+        ),
+        Scalar(
+            1.0,
+        ),
+        String(
+            "b",
+        ),
+        Boolean(
+            true,
+        ),
+        Scalar(
+            0.0,
+        ),
+        Scalar(
+            10000.0,
+        ),
+        Scalar(
+            10.0,
+        ),
+        Scalar(
+            2.0,
+        ),
+        Scalar(
+            3.0,
+        ),
+        Scalar(
+            4.0,
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    EndStatement,
+                    Push(
+                        10,
+                    ),
+                    EndStatement,
+                    Push(
+                        11,
+                    ),
+                    EndStatement,
+                    Push(
+                        12,
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 276,
+                    length: 8,
+                },
+            },
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    CallUnary(
+                        2,
+                        SourceInfo {
+                            offset: 294,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        10,
+                    ),
+                    CallUnary(
+                        2,
+                        SourceInfo {
+                            offset: 297,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                ],
+                source_pointer: Source {
+                    offset: 294,
+                    length: 6,
+                },
+            },
+        ),
+        String(
+            "_d",
+        ),
+        String(
+            "_e",
+        ),
+        String(
+            "#line 1 \"\\consume_array.sqf\"\nparams [\"_a\", \"_b\"];\n\nparams [\"_a\", \"_b\", [\"_c\", []]];\n\nmissionNamespace getVariable [\"a\", -1];\n\nz setVariable [\"b\", [], true];\n\n[1,0] vectorAdd p;\n\npositionCameraToWorld [10000, 0, 10000];\n\n\nrandom [0, _x, 1];\n\nprivate _z = if (time > 10) then { 1;2;3;4; } else { -1;-2; };\n\nparam [\"_d\"];\n\n[] param [\"_e\"];\n",
+        ),
+        Code(
+            Instructions {
+                contents: [
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        0,
+                        SourceInfo {
+                            offset: 29,
+                            file_index: 0,
+                            file_line: 1,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        0,
+                    ),
+                    Push(
+                        1,
+                    ),
+                    Push(
+                        2,
+                    ),
+                    MakeArray(
+                        0,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    MakeArray(
+                        3,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        0,
+                        SourceInfo {
+                            offset: 51,
+                            file_index: 0,
+                            file_line: 3,
+                        },
+                    ),
+                    EndStatement,
+                    CallNular(
+                        1,
+                        SourceInfo {
+                            offset: 85,
+                            file_index: 0,
+                            file_line: 5,
+                        },
+                    ),
+                    Push(
+                        3,
+                    ),
+                    Push(
+                        4,
+                    ),
+                    CallUnary(
+                        2,
+                        SourceInfo {
+                            offset: 120,
+                            file_index: 0,
+                            file_line: 5,
+                        },
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 115,
+                            file_index: 0,
+                            file_line: 5,
+                        },
+                    ),
+                    CallBinary(
+                        3,
+                        SourceInfo {
+                            offset: 102,
+                            file_index: 0,
+                            file_line: 5,
+                        },
+                    ),
+                    EndStatement,
+                    GetVariable(
+                        4,
+                        SourceInfo {
+                            offset: 126,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    Push(
+                        5,
+                    ),
+                    MakeArray(
+                        0,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    Push(
+                        6,
+                    ),
+                    MakeArray(
+                        3,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallBinary(
+                        5,
+                        SourceInfo {
+                            offset: 128,
+                            file_index: 0,
+                            file_line: 7,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        4,
+                    ),
+                    Push(
+                        7,
+                    ),
+                    MakeArray(
+                        2,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    GetVariable(
+                        6,
+                        SourceInfo {
+                            offset: 174,
+                            file_index: 0,
+                            file_line: 9,
+                        },
+                    ),
+                    CallBinary(
+                        7,
+                        SourceInfo {
+                            offset: 164,
+                            file_index: 0,
+                            file_line: 9,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        8,
+                    ),
+                    Push(
+                        7,
+                    ),
+                    Push(
+                        8,
+                    ),
+                    MakeArray(
+                        3,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        8,
+                        SourceInfo {
+                            offset: 178,
+                            file_index: 0,
+                            file_line: 11,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        7,
+                    ),
+                    GetVariable(
+                        9,
+                        SourceInfo {
+                            offset: 232,
+                            file_index: 0,
+                            file_line: 14,
+                        },
+                    ),
+                    Push(
+                        4,
+                    ),
+                    MakeArray(
+                        3,
+                        SourceInfo {
+                            offset: 229,
+                            file_index: 0,
+                            file_line: 14,
+                        },
+                    ),
+                    CallUnary(
+                        10,
+                        SourceInfo {
+                            offset: 221,
+                            file_index: 0,
+                            file_line: 14,
+                        },
+                    ),
+                    EndStatement,
+                    CallNular(
+                        11,
+                        SourceInfo {
+                            offset: 258,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    Push(
+                        9,
+                    ),
+                    CallBinary(
+                        12,
+                        SourceInfo {
+                            offset: 263,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    CallUnary(
+                        13,
+                        SourceInfo {
+                            offset: 254,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    Push(
+                        13,
+                    ),
+                    Push(
+                        14,
+                    ),
+                    CallBinary(
+                        14,
+                        SourceInfo {
+                            offset: 287,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    CallBinary(
+                        15,
+                        SourceInfo {
+                            offset: 269,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    AssignToLocal(
+                        16,
+                        SourceInfo {
+                            offset: 241,
+                            file_index: 0,
+                            file_line: 16,
+                        },
+                    ),
+                    EndStatement,
+                    Push(
+                        15,
+                    ),
+                    MakeArray(
+                        1,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallUnary(
+                        17,
+                        SourceInfo {
+                            offset: 305,
+                            file_index: 0,
+                            file_line: 18,
+                        },
+                    ),
+                    EndStatement,
+                    MakeArray(
+                        0,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    Push(
+                        16,
+                    ),
+                    MakeArray(
+                        1,
+                        SourceInfo {
+                            offset: 0,
+                            file_index: 0,
+                            file_line: 0,
+                        },
+                    ),
+                    CallBinary(
+                        17,
+                        SourceInfo {
+                            offset: 323,
+                            file_index: 0,
+                            file_line: 20,
+                        },
+                    ),
+                ],
+                source_pointer: Constant(
+                    17,
+                ),
+            },
+        ),
+    ],
+    names_cache: [
+        "params",
+        "missionnamespace",
+        "-",
+        "getvariable",
+        "z",
+        "setvariable",
+        "p",
+        "vectoradd",
+        "positioncameratoworld",
+        "_x",
+        "random",
+        "time",
+        ">",
+        "if",
+        "else",
+        "then",
+        "_z",
+        "param",
+    ],
+    file_names: [
+        "/consume_array.sqf",
+    ],
+}
