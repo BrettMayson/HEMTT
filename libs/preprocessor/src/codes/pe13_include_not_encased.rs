@@ -55,19 +55,34 @@ impl Code for IncludeNotEncased {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
-        let start = self.start.as_ref()?;
-        let end = self.token.as_ref();
-        let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
-            Label::primary(
-                start.position().path().clone(),
-                start.position().span().start..end.position().span().end,
-            )
-            .with_message(self.label_message()),
-        );
-        if let Some(suggestion) = self.suggestion() {
-            diag = diag.with_suggestion(suggestion);
+        if let Some(start) = self.start.as_ref() {
+            let end = self.token.as_ref();
+            let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
+                Label::primary(
+                    start.position().path().clone(),
+                    start.position().span().start..end.position().span().end,
+                )
+                .with_message(self.label_message()),
+            );
+            if let Some(suggestion) = self.suggestion() {
+                diag = diag.with_suggestion(suggestion);
+            }
+            Some(diag)
+        } else {
+            let start = self.path.first()?;
+            let end = self.path.last()?;
+            let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
+                Label::primary(
+                    start.position().path().clone(),
+                    start.position().span().start..end.position().span().end,
+                )
+                .with_message(self.label_message()),
+            );
+            if let Some(suggestion) = self.suggestion() {
+                diag = diag.with_suggestion(suggestion);
+            }
+            Some(diag)
         }
-        Some(diag)
     }
 }
 
