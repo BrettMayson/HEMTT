@@ -16,6 +16,7 @@ enum Subcommands {
     Audio(utils::audio::Command),
     Bom(utils::bom::Command),
     Config(utils::config::Command),
+    Fnl(utils::fnl::Command),
     Inspect(utils::inspect::Command),
     P3d(utils::p3d::Command),
     Paa(utils::paa::Command),
@@ -38,6 +39,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
         Subcommands::Config(cmd) => {
             utils::config::execute(cmd)?;
+        }
+        Subcommands::Fnl(cmd) => {
+            utils::fnl::execute(cmd)?;
         }
         Subcommands::Inspect(cmd) => {
             utils::inspect::execute(cmd)?;

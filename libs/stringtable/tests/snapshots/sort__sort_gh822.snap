@@ -238,6 +238,25 @@ Project {
                 path: "/gh822.xml",
             },
         ],
+        "new entry used in future release, not yet used": [
+            Position {
+                start: LineCol(
+                    1276,
+                    (
+                        33,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    1322,
+                    (
+                        33,
+                        64,
+                    ),
+                ),
+                path: "/gh822.xml",
+            },
+        ],
     },
     source: "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<Project name=\"test\">\n    <Package name=\"test\">\n        <!-- The I copy paste this part of my language entry thing -->\n        <Key ID=\"I will change the xml structure a little\">\n            <Original></Original>\n            <English></English>\n            <Czech></Czech>\n            <French></French>\n        </Key>\n        <Key ID=\"I will be empty\">\n            <original>hey</original>\n            <english>hey</english>\n            <german>hey</german>\n            <russian>hey</russian>\n        </Key>\n        <Key ID=\"My things get unescaped\">\n            <Original>&quot;&apos;</Original>\n            <English>&quot;&apos;</English>\n            <German>&quot;&apos;</German>\n            <Russian>&quot;&apos;</Russian>\n            <Spanish>\"Hello World\"</Spanish>\n        </Key>\n        <!-- a maybe more legitimate use of a comment which gets removed -->\n        <Key ID=\"Comments be gone!\">\n            <Original>I leave this for later</Original>\n            <English>I leave this for later</English>\n            <!-- <German>I am totally a correct translated entry waiting for approval!</German> -->\n            <!-- <Russian></Russian> -->\n            <!-- <Polish></Polish> -->\n        </Key>\n        <!--\n        <Key ID=\"new entry used in future release, not yet used\">\n            <Original>The future</Original>\n            <English>The future</English>\n        </Key>\n        -->\n    </Package>\n</Project>\n",
     comments: [

@@ -6,6 +6,7 @@ use hemtt_workspace::{
 };
 use indexmap::IndexMap;
 use quick_xml::se::Serializer;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::Package;
@@ -163,25 +164,25 @@ fn process_keys(
     for package in &inner.packages {
         for package_inner in package.containers() {
             for key in package_inner.keys() {
-                all_keys.push((key.id(), format!("\"{}\"", key.id())));
+                all_keys.push((key.id(), key.id().to_lowercase()));
             }
         }
         for key in package.keys() {
-            all_keys.push((key.id(), format!("\"{}\"", key.id())));
+            all_keys.push((key.id(), key.id().to_lowercase()));
         }
     }
     let mut offset = 0;
+    let regex = Regex::new(r#"(?m)ID\s?=\s?\"([^\"]+?)\""#).expect("Failed to compile regex");
     for (linenum, line) in source.lines().enumerate() {
-        for (key, needle) in &all_keys {
-            if let Some(pos) = line.find(needle.as_str()) {
-                keys.entry(key.to_lowercase())
+        let result = regex.captures_iter(line);
+        for cap in result {
+            if let Some(key) = cap.get(1) {
+                let key_str = key.as_str();
+                keys.entry(key_str.to_lowercase())
                     .or_insert_with(Vec::new)
                     .push(Position::new(
-                        LineCol(offset + pos + 1, (linenum + 1, pos + 2)),
-                        LineCol(
-                            offset + pos + 1 + key.len(),
-                            (linenum + 1, pos + 2 + key.len()),
-                        ),
+                        LineCol(offset + key.start(), (linenum + 1, key.start() + 1)),
+                        LineCol(offset + key.end(), (linenum + 1, key.end() + 1)),
                         path.clone(),
                     ));
             }
