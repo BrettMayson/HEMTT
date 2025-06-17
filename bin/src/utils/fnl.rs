@@ -19,7 +19,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
         let entry = entry?;
         let path = entry.path();
         if path.display().to_string().contains(".hemttout") {
-            continue; // Skip hemttout files
+            continue;
         }
         if path.is_file() {
             let ext = path
@@ -34,13 +34,11 @@ pub fn execute(_: &Command) -> Result<(), Error> {
                     .open(path)?;
                 let len = file.seek(SeekFrom::End(0))?;
                 if len == 0 {
-                    // Empty file, add newline
                     file.write_all(b"\n")?;
                     info!("Inserted final newline into {}", path.display());
                     count += 1;
                     continue;
                 }
-                // Seek to last byte
                 file.seek(SeekFrom::End(-1))?;
                 let mut last_byte = [0u8; 1];
                 file.read_exact(&mut last_byte)?;
