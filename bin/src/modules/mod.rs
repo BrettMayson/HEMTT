@@ -10,6 +10,7 @@ mod stringtables;
 
 pub mod archive;
 pub mod bom;
+pub mod fnl;
 pub mod hook;
 pub mod pbo;
 pub(crate) mod sign;
