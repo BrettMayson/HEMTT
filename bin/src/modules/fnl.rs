@@ -35,7 +35,7 @@ impl Module for FineNewLineCheck {
                 .filter(|e| {
                     e.path()
                         .file_name()
-                        .is_some_and(|f| f.to_ascii_lowercase() != "license.txt")
+                        .is_some_and(|f| !f.eq_ignore_ascii_case("license.txt"))
                 })
                 .map(|e| e.path().to_path_buf())
                 .collect::<Vec<_>>()
