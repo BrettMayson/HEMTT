@@ -32,6 +32,11 @@ impl Module for FineNewLineCheck {
                         .extension()
                         .is_some_and(|e| TEXT_EXTENSIONS.contains(&e.to_str().unwrap_or_default()))
                 })
+                .filter(|e| {
+                    e.path()
+                        .file_name()
+                        .is_some_and(|f| f.to_ascii_lowercase() != "license.txt")
+                })
                 .map(|e| e.path().to_path_buf())
                 .collect::<Vec<_>>()
         }
