@@ -1,0 +1,6 @@
+[0m[1m[38;5;9merror[PE13][0m[1m: include not encased[0m
+  [0m[36m┌─[0m source.hpp:1:10
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #include [0m[31msomething.hpp"[0m
+  [0m[36m│[0m          [0m[31m^^^^^^^^^^^^^^[0m [0m[31mnot encased[0m
+

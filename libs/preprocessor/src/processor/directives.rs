@@ -165,9 +165,16 @@ impl Processor {
         self.skip_whitespace(stream, None);
         let open = stream.next().expect("was peeked in directive()");
         if !open.symbol().is_include_enclosure() {
+            let mut path = vec![open.clone()];
+            while let Some(token) = stream.peek() {
+                if token.symbol().is_newline() {
+                    break;
+                }
+                path.push(stream.next().expect("was peeked in directive()"));
+            }
             return Err(IncludeNotEncased::code(
                 open.as_ref().clone(),
-                Vec::new(),
+                path,
                 if open.symbol().is_word() {
                     None
                 } else {

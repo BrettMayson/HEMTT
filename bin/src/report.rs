@@ -31,6 +31,7 @@ impl Report {
                 .open(".hemttout/ci_annotations.txt")?,
         );
         let workspace_files = WorkspaceFiles::new();
+        let mut wrote = 0;
         for code in self
             .helps(WithIncludes::No)
             .iter()
@@ -41,12 +42,15 @@ impl Report {
                 let annotations = diag.to_annotations(&workspace_files);
                 for annotation in annotations {
                     ci_annotation.write_all(annotation.line().as_bytes())?;
+                    wrote += 1;
                 }
+            } else {
+                trace!("Code {} does not have a diagnostic, skipping", code.ident());
             }
         }
         trace!(
             "wrote {} ci annotations to .hemttout/ci_annotations.txt",
-            self.codes.len()
+            wrote
         );
         Ok(())
     }
