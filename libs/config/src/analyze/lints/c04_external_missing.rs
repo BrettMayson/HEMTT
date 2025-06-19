@@ -73,23 +73,21 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        let root = Rc::new(RefCell::new(Cfg {
+        let root = Rc::new(RefCell::new(ClassNode {
             class: Class::Root { properties: vec![] },
             upper: None,
             subclasses: HashMap::new(),
         }));
-        let codes = check(&target.0, &root, processed);
-        // println!("root: {root:?}");
-        codes
+        check(&target.0, &root, processed)
     }
 }
 
-struct Cfg {
+struct ClassNode {
     class: Class,
-    upper: Option<Rc<RefCell<Cfg>>>,
-    subclasses: HashMap<String, Rc<RefCell<Cfg>>>,
+    upper: Option<Rc<RefCell<ClassNode>>>,
+    subclasses: HashMap<String, Rc<RefCell<ClassNode>>>,
 }
-impl fmt::Debug for Cfg {
+impl fmt::Debug for ClassNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let upper_name = self.upper.as_ref().map_or_else(
             || "None".to_string(),
@@ -110,7 +108,7 @@ impl fmt::Debug for Cfg {
     }
 }
 
-impl Cfg {
+impl ClassNode {
     fn insert_class(cfg: &Rc<RefCell<Self>>, class: &Class) -> Rc<RefCell<Self>> {
         let name = class
             .name()
@@ -125,6 +123,7 @@ impl Cfg {
         cfg.borrow_mut().subclasses.insert(name, new_class.clone());
         new_class
     }
+
     #[allow(clippy::assigning_clones)]
     fn insert_inherited(
         cfg: &Rc<RefCell<Self>>,
@@ -168,16 +167,16 @@ impl Cfg {
     }
 }
 
-fn check(properties: &[Property], base: &Rc<RefCell<Cfg>>, processed: &Processed) -> Codes {
+fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Processed) -> Codes {
     let mut codes: Codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {
                 Class::Root { properties } => {
-                    codes.extend(check(properties, &base.clone(), processed));
+                    codes.extend(check(properties, base, processed));
                 }
                 Class::External { .. } => {
-                    let _class = Cfg::insert_class(base, c);
+                    ClassNode::insert_class(base, c);
                 }
                 Class::Local {
                     name: _,
@@ -186,9 +185,9 @@ fn check(properties: &[Property], base: &Rc<RefCell<Cfg>>, processed: &Processed
                     err_missing_braces: _,
                 } => {
                     let new_class = if parent.is_none() {
-                        Cfg::insert_class(base, c)
+                        ClassNode::insert_class(base, c)
                     } else {
-                        let (class, found) = Cfg::insert_inherited(
+                        let (class, found) = ClassNode::insert_inherited(
                             base,
                             c,
                             &parent.clone().expect("parent exists").value,

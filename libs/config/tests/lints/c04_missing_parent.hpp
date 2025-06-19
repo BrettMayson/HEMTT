@@ -24,5 +24,10 @@ class CfgVehicles {
                 displayName = "example";
             };
         };
+        class Attributes2: AttributesBase { // correct example
+            class Side: Combo {
+                displayName = "example";
+            };
+        };
     };
 };
