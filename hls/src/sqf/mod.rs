@@ -1,7 +1,6 @@
 mod compiled;
 mod hover;
 mod lints;
-mod semantic;
 
 use std::{
     collections::HashMap,
@@ -13,17 +12,14 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Token;
 use tokio::sync::RwLock;
 use tower_lsp::{Client, lsp_types::SemanticToken};
-use tracing::{error, warn};
+use tracing::error;
 use url::Url;
 
-use crate::{
-    TextDocumentItem,
-    files::FileCache,
-    workspace::{EditorWorkspace, EditorWorkspaces},
-};
+use crate::{TextDocumentItem, workspace::EditorWorkspace};
 
 #[derive(Clone)]
 pub struct SqfAnalyzer {
+    semantic_commands: Vec<String>,
     tokens: Arc<DashMap<Url, Vec<Arc<Token>>>>,
     semantic: Arc<RwLock<HashMap<Url, Vec<SemanticToken>>>>,
     databases: Arc<DashMap<EditorWorkspace, Arc<Database>>>,
@@ -35,6 +31,14 @@ impl SqfAnalyzer {
             tokens: Arc::new(DashMap::new()),
             semantic: Arc::new(RwLock::new(HashMap::new())),
             databases: Arc::new(DashMap::new()),
+            semantic_commands: {
+                let commands = include_str!("../../languages/runtime.txt");
+                commands
+                    .lines()
+                    .filter(|line| !line.is_empty())
+                    .map(String::from)
+                    .collect()
+            },
         });
         (*SINGLETON).clone()
     }
@@ -43,28 +47,6 @@ impl SqfAnalyzer {
         if !document.uri.path().ends_with(".sqf") {
             return;
         }
-        let Some(workspace) = EditorWorkspaces::get()
-            .guess_workspace_retry(&document.uri)
-            .await
-        else {
-            warn!("Failed to find workspace for {:?}", document.uri);
-            return;
-        };
-        let source = if let Ok(source) = workspace.join_url(&document.uri) {
-            source
-        } else {
-            hemtt_workspace::Workspace::builder()
-                .memory()
-                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-                .unwrap()
-        };
-
-        let database = self.get_database(&workspace).await;
-
-        let text = FileCache::get().text(&document.uri).unwrap();
-
-        self.process_semantic_tokens(document.uri.clone(), text, source, database)
-            .await;
     }
 
     pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
