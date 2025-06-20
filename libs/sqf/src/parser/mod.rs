@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use self::database::{Database, is_special_command};
 use self::lexer::{Control, Operator, Token};
+use crate::analyze::inspector;
 use crate::{BinaryCommand, Expression, NularCommand, Statement, Statements, UnaryCommand};
 
 use chumsky::Stream;
@@ -42,6 +43,7 @@ pub fn run(database: &Database, processed: &Processed) -> Result<Statements, Par
         ParserError::ParsingError(errors)
     })?;
     statements.source = processed.as_str().into();
+    statements.issues = inspector::run_processed(&statements, processed, database);
     Ok(statements)
 }
 
@@ -231,6 +233,7 @@ fn statements<'a>(
                 source: processed.extract(span.clone()),
                 span,
                 content,
+                issues: vec![],
             })
     })
 }
