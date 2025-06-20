@@ -120,6 +120,22 @@
       "match": "\\s*(?i)(player|cursorTarget)\\b",
       "name": "variable.language.vobject.sqf"
     },
+    "commands-1": {
+      "match": "\\s*(?i)($commands1$)\\b",
+      "name": "entity.name.function.sqf"
+    },
+    "commands-2": {
+      "match": "\\s*(?i)($commands2$)\\b",
+      "name": "entity.name.function.sqf"
+    },
+    "commands-3": {
+      "match": "\\s*(?i)($commands3$)\\b",
+      "name": "entity.name.function.sqf"
+    },
+    "commands-4": {
+      "match": "\\s*(?i)($commands4$)\\b",
+      "name": "entity.name.function.sqf"
+    },
     "other": {
       "name": "meta.expression.sqf",
       "patterns": [
@@ -183,6 +199,18 @@
       "patterns": [
         {
           "include": "#vObject-statements"
+        },
+        {
+          "include": "#commands-1"
+        },
+        {
+          "include": "#commands-2"
+        },
+        {
+          "include": "#commands-3"
+        },
+        {
+          "include": "#commands-4"
         }
       ]
     },
