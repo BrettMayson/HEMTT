@@ -30,8 +30,6 @@ pub struct Command {
     port: u16,
 }
 
-pub const LEGEND_TYPE: &[SemanticTokenType] = &[SemanticTokenType::FUNCTION];
-
 #[derive(Debug)]
 struct Backend {
     client: Client,
@@ -187,22 +185,6 @@ impl LanguageServer for Backend {
                 params.text_document_position_params.position,
             )
             .await)
-    }
-
-    async fn semantic_tokens_full(
-        &self,
-        params: SemanticTokensParams,
-    ) -> Result<Option<SemanticTokensResult>> {
-        Ok(SqfAnalyzer::get()
-            .get_tokens(&params.text_document.uri)
-            .await
-            .map(|tokens| {
-                debug!("sending tokens: {}", tokens.len());
-                SemanticTokensResult::Tokens(SemanticTokens {
-                    data: tokens,
-                    ..Default::default()
-                })
-            }))
     }
 
     async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {

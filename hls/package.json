@@ -146,25 +146,10 @@
         }
       }
     ],
-    "semanticTokenScopes": [
-      {
-        "language": "sqf",
-        "scopes": {
-          "property.function": [
-            "entity.name.function.sqf"
-          ]
-        }
-      }
-    ],
     "configuration": {
       "type": "object",
       "title": "HEMTT",
       "properties": {}
-    },
-    "configurationDefaults": {
-      "[sqf]": {
-        "editor.semanticHighlighting.enabled": true
-      }
     },
     "customEditors": [
       {
