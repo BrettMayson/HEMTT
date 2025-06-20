@@ -8,10 +8,14 @@ use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Token;
 use tower_lsp::Client;
-use tracing::error;
+use tracing::{error, warn};
 use url::Url;
 
-use crate::{TextDocumentItem, workspace::EditorWorkspace};
+use crate::{
+    TextDocumentItem,
+    files::FileCache,
+    workspace::{EditorWorkspace, EditorWorkspaces},
+};
 
 #[derive(Clone)]
 pub struct SqfAnalyzer {
@@ -32,6 +36,27 @@ impl SqfAnalyzer {
         if !document.uri.path().ends_with(".sqf") {
             return;
         }
+        let Some(workspace) = EditorWorkspaces::get()
+            .guess_workspace_retry(&document.uri)
+            .await
+        else {
+            warn!("Failed to find workspace for {:?}", document.uri);
+            return;
+        };
+        let source = if let Ok(source) = workspace.join_url(&document.uri) {
+            source
+        } else {
+            hemtt_workspace::Workspace::builder()
+                .memory()
+                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+                .unwrap()
+        };
+        let text = FileCache::get().text(&document.uri).unwrap();
+        let Ok(tokens) = hemtt_preprocessor::parse::str(&text, &source) else {
+            warn!("Failed to parse file");
+            return;
+        };
+        self.tokens.insert(document.uri.clone(), tokens.clone());
     }
 
     pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
