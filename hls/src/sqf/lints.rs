@@ -201,6 +201,14 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", url);
             return;
         };
+        let Ok(url_workspacepath) = workspace.join_url(&url) else {
+            warn!(
+                "Failed to join URL {:?} in workspace {:?}",
+                url,
+                workspace.url()
+            );
+            return;
+        };
         let project_change = url.as_str().contains(".toml");
         let recheck_files = {
             let cache = Cache::get();
@@ -211,12 +219,14 @@ impl SqfAnalyzer {
                     if project_change {
                         return Some(path.clone());
                     }
-                    if bundle.sources.iter().any(|source| {
-                        workspace
-                            .join_url(&url)
-                            .map(|joined| joined == *source)
-                            .unwrap_or(false)
-                    }) {
+                    if path == &url_workspacepath
+                        || bundle.sources.iter().any(|source| {
+                            workspace
+                                .join_url(&url)
+                                .map(|joined| joined == *source)
+                                .unwrap_or(false)
+                        })
+                    {
                         Some(path.clone())
                     } else {
                         None
