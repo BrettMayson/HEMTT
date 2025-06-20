@@ -7,8 +7,8 @@ class B {};
 class C {};
 
 class A {
-class b: B {};
+    class b: B {};
 
-// Will be ignored, because the parent case can match the child case
-class c: c {};
+    // Will be ignored, because the parent case can match the child case
+    class c: c {};
 };
