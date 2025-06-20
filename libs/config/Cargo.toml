@@ -19,6 +19,7 @@ hemtt-workspace = { path = "../workspace" }
 automod = { workspace = true }
 byteorder = { workspace = true }
 chumsky = { workspace = true }
+indexmap = { workspace = true }
 linkme = { workspace = true }
 lsp-types = { workspace = true }
 toml = { workspace = true }

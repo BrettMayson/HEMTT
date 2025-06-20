@@ -1,10 +1,11 @@
-use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc, sync::Arc};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
+use indexmap::IndexMap;
 
 use crate::{analyze::LintData, Class, Config, Property};
 
@@ -14,15 +15,12 @@ impl Lint<LintData> for LintC14UnusedExternal {
     fn ident(&self) -> &'static str {
         "unused_external"
     }
-
     fn sort(&self) -> u32 {
         140
     }
-
     fn description(&self) -> &'static str {
-        "Reports on external classes that are never used in the config"
+        "Reports on external classes that are never used"
     }
-
     fn documentation(&self) -> &'static str {
         "### Example
 
@@ -36,11 +34,9 @@ class x;
 ```
 "
     }
-
     fn default_config(&self) -> LintConfig {
-        LintConfig::help() // todo pedantic
+        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
     }
-
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
@@ -60,59 +56,41 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        let root = Rc::new(RefCell::new(Cfg {
+        let root = Rc::new(RefCell::new(ClassNode {
             class: Class::Root { properties: vec![] },
             used: true,
             upper: None,
-            subclasses: HashMap::new(),
+            subclasses: IndexMap::new(),
         }));
         check(&target.0, &root);
-        // println!("root: {root:?}");
-        Cfg::check_unused(&root, processed)
+        ClassNode::check_unused(&root, &mut vec![], processed)
     }
 }
 
-struct Cfg {
+struct ClassNode {
     class: Class,
     used: bool,
-    upper: Option<Rc<RefCell<Cfg>>>,
-    subclasses: HashMap<String, Rc<RefCell<Cfg>>>,
-}
-impl fmt::Debug for Cfg {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let upper_name = self.upper.as_ref().map_or_else(
-            || "None".to_string(),
-            |p| {
-                p.borrow()
-                    .class
-                    .name()
-                    .map_or_else(|| "None".to_string(), |c| c.value.clone())
-            },
-        );
-        write!(
-            f,
-            "Cfg {{ name: {}, used: {}, upper: {}",
-            self.class, self.used, upper_name
-        )?;
-        for subclass in &self.subclasses {
-            write!(f, "\n-{:?}", subclass.1.borrow())?;
-        }
-        write!(f, " }}")
-    }
+    upper: Option<Rc<RefCell<ClassNode>>>,
+    subclasses: IndexMap<String, Rc<RefCell<ClassNode>>>, // keep insertion order constant
 }
 
-impl Cfg {
+impl ClassNode {
     #[must_use]
-    fn check_unused(cfg: &Rc<RefCell<Self>>, processed: &Processed) -> Codes {
+    fn check_unused(
+        cfg: &Rc<RefCell<Self>>,
+        reported: &mut Vec<Class>,
+        processed: &Processed,
+    ) -> Codes {
         let mut codes: Codes = Vec::new();
-        if !cfg.borrow().used {
+        if !cfg.borrow().used && !reported.contains(&cfg.borrow().class) {
+            reported.push(cfg.borrow().class.clone());
             codes.push(Arc::new(CodeC14UnusedExternal::new(
                 cfg.borrow().class.clone(),
                 processed,
             )));
         }
         for subclass in cfg.borrow().subclasses.values() {
-            codes.extend(Self::check_unused(subclass, processed));
+            codes.extend(Self::check_unused(subclass, reported, processed));
         }
         codes
     }
@@ -127,7 +105,7 @@ impl Cfg {
             class: class.clone(),
             used: !external,
             upper: Some(cfg.clone()),
-            subclasses: HashMap::new(),
+            subclasses: IndexMap::new(),
         }));
         cfg.borrow_mut().subclasses.insert(name, new_class.clone());
         new_class
@@ -169,7 +147,7 @@ impl Cfg {
                 class: class.clone(),
                 used: true,
                 upper: Some(cfg.clone()),
-                subclasses: HashMap::new(),
+                subclasses: IndexMap::new(),
             })));
         }
         cfg.borrow_mut()
@@ -179,15 +157,15 @@ impl Cfg {
     }
 }
 
-fn check(properties: &[Property], base: &Rc<RefCell<Cfg>>) {
+fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
     for property in properties {
         if let Property::Class(c) = property {
             match c {
                 Class::Root { properties } => {
-                    check(properties, &base.clone());
+                    check(properties, base);
                 }
                 Class::External { .. } => {
-                    let _class = Cfg::insert_class(base, c, true);
+                    let _class = ClassNode::insert_class(base, c, true);
                 }
                 Class::Local {
                     name: _,
@@ -196,9 +174,9 @@ fn check(properties: &[Property], base: &Rc<RefCell<Cfg>>) {
                     err_missing_braces: _,
                 } => {
                     let new_class = if parent.is_none() {
-                        Cfg::insert_class(base, c, false)
+                        ClassNode::insert_class(base, c, false)
                     } else {
-                        let (class, _found) = Cfg::insert_inherited(
+                        let (class, _found) = ClassNode::insert_inherited(
                             base,
                             c,
                             &parent.clone().expect("parent exists").value,
@@ -223,7 +201,6 @@ impl Code for CodeC14UnusedExternal {
     fn ident(&self) -> &'static str {
         "L-C14"
     }
-
     fn link(&self) -> Option<&str> {
         Some("/analysis/config.html#unused_external")
     }
@@ -231,17 +208,14 @@ impl Code for CodeC14UnusedExternal {
         Severity::Warning
     }
     fn message(&self) -> String {
-        "external class is never used".to_string()
+        format!("external class {} is never used", self.class_name)
     }
-
     fn label_message(&self) -> String {
-        format!("{} is never used", self.class_name)
+        format!("never used")
     }
-
     fn help(&self) -> Option<String> {
         None
     }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
