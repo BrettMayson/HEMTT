@@ -1,18 +1,13 @@
 mod compiled;
 mod hover;
 mod lints;
-mod semantic;
 
-use std::{
-    collections::HashMap,
-    sync::{Arc, LazyLock},
-};
+use std::sync::{Arc, LazyLock};
 
 use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Token;
-use tokio::sync::RwLock;
-use tower_lsp::{Client, lsp_types::SemanticToken};
+use tower_lsp::Client;
 use tracing::{error, warn};
 use url::Url;
 
@@ -25,7 +20,6 @@ use crate::{
 #[derive(Clone)]
 pub struct SqfAnalyzer {
     tokens: Arc<DashMap<Url, Vec<Arc<Token>>>>,
-    semantic: Arc<RwLock<HashMap<Url, Vec<SemanticToken>>>>,
     databases: Arc<DashMap<EditorWorkspace, Arc<Database>>>,
 }
 
@@ -33,7 +27,6 @@ impl SqfAnalyzer {
     pub fn get() -> Self {
         static SINGLETON: LazyLock<SqfAnalyzer> = LazyLock::new(|| SqfAnalyzer {
             tokens: Arc::new(DashMap::new()),
-            semantic: Arc::new(RwLock::new(HashMap::new())),
             databases: Arc::new(DashMap::new()),
         });
         (*SINGLETON).clone()
@@ -58,13 +51,12 @@ impl SqfAnalyzer {
                 .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
                 .unwrap()
         };
-
-        let database = self.get_database(&workspace).await;
-
         let text = FileCache::get().text(&document.uri).unwrap();
-
-        self.process_semantic_tokens(document.uri.clone(), text, source, database)
-            .await;
+        let Ok(tokens) = hemtt_preprocessor::parse::str(&text, &source) else {
+            warn!("Failed to parse file");
+            return;
+        };
+        self.tokens.insert(document.uri.clone(), tokens.clone());
     }
 
     pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
@@ -81,7 +73,6 @@ impl SqfAnalyzer {
 
     pub async fn on_close(&self, url: &Url) {
         self.tokens.remove(url);
-        self.semantic.write().await.remove(url);
     }
 
     async fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
