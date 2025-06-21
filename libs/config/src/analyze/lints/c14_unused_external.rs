@@ -211,7 +211,7 @@ impl Code for CodeC14UnusedExternal {
         format!("external class {} is never used", self.class_name)
     }
     fn label_message(&self) -> String {
-        format!("never used")
+        "never used".to_string()
     }
     fn help(&self) -> Option<String> {
         None
