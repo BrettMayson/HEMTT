@@ -34,6 +34,7 @@ lint!(c10_class_missing_braces);
 lint!(c11_file_type);
 lint!(c12_math_could_be_unquoted);
 lint!(c13_config_this_call);
+lint!(c14_unused_external);
 
 fn lint(file: &str) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
