@@ -223,6 +223,11 @@
         "title": "Convert to wss",
         "category": "HEMTT Audio",
         "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+      },
+      {
+        "command": "hemtt.openLastRPT",
+        "title": "Open Last RPT",
+        "category": "HEMTT"
       }
     ],
     "menus": {
