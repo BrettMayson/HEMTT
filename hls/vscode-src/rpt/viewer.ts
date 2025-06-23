@@ -6,6 +6,7 @@ export class LogFileViewer {
   private static provider: LogFileContentProvider | undefined;
   private static autoScroll = true;
   private static statusBarItem: vscode.StatusBarItem | undefined;
+  private static disposables: Map<string, vscode.Disposable> = new Map();
 
   public static async watch(filePath: string) {
     const uri = vscode.Uri.from({ scheme: this.scheme, path: filePath });
@@ -22,18 +23,20 @@ export class LogFileViewer {
     vscode.languages.setTextDocumentLanguage(doc, 'log');
 
     let timeout: NodeJS.Timeout | undefined;
-    fs.watch(filePath, {}, () => {
+    const watcher = fs.watch(filePath, {}, () => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
         this.provider?.update(uri);
       }, 100);
     });
 
-    vscode.workspace.onDidCloseTextDocument(closedDoc => {
+    this.disposables.set(uri.toString(), vscode.workspace.onDidCloseTextDocument(closedDoc => {
       if (closedDoc.uri.toString() === uri.toString()) {
-        fs.unwatchFile(filePath);
+        watcher.close();
+        this.disposables.get(uri.toString())?.dispose();
+        this.disposables.delete(uri.toString());
       }
-    });
+    }));
 
     if (this.autoScroll) {
       scrollToBottom(vscode.window.activeTextEditor!);
