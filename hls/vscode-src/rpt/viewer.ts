@@ -94,14 +94,35 @@ function scrollToBottom(editor: vscode.TextEditor) {
 class LogFileContentProvider implements vscode.TextDocumentContentProvider {
   private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
   public onDidChange = this._onDidChange.event;
+  private filePositions: Map<string, number> = new Map();
+  private fileContents: Map<string, string> = new Map();
 
-  provideTextDocumentContent(uri: vscode.Uri): string {
+  provideTextDocumentContent(uri: vscode.Uri): Thenable<string> {
     const filePath = uri.path;
-    try {
-      return fs.readFileSync(filePath, 'utf8');
-    } catch (error) {
-      return `Failed to read file: ${error}`;
-    }
+    return new Promise((resolve) => {
+      const lastPos = this.filePositions.get(filePath) ?? 0;
+      let start = lastPos;
+      let data = '';
+      let bytesRead = 0;
+      const stream = fs.createReadStream(filePath, { encoding: 'utf8', start });
+      stream.on('data', chunk => {
+        data += chunk;
+        bytesRead += Buffer.byteLength(chunk, 'utf8');
+      });
+      stream.on('end', () => {
+        const prev = start === 0 ? '' : (this.fileContents.get(filePath) ?? '');
+        const content = prev + data;
+        this.fileContents.set(filePath, content);
+        this.filePositions.set(filePath, start + bytesRead);
+        resolve(content);
+      });
+      stream.on('error', error => {
+        this.filePositions.set(filePath, 0);
+        this.fileContents.set(filePath, '');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        resolve(`Failed to read file: ${errorMessage}`);
+      });
+    });
   }
 
   update(uri: vscode.Uri) {
@@ -113,6 +134,6 @@ class LogFileContentProvider implements vscode.TextDocumentContentProvider {
           scrollToBottom(editor);
         }
       }
-    }, 50);
+    }, 100);
   }
 }
