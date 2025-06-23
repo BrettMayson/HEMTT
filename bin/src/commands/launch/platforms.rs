@@ -55,6 +55,22 @@ pub fn linux(args: &[String]) -> Result<Child, Error> {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn()?
+    } else if std::path::Path::new("/bin/distrobox-host-exec").exists()
+        || std::path::Path::new("/usr/bin/distrobox-host-exec").exists()
+    {
+        info!(
+            "Using distrobox-host-exec steam with:\n  {}",
+            args.join("\n  ")
+        );
+        std::process::Command::new("distrobox-host-exec")
+            .arg("steam")
+            .arg("-applaunch")
+            .arg("107410")
+            .arg("-nolauncher")
+            .args(args)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()?
     } else {
         info!("Using native steam with:\n  {}", args.join("\n  "));
         std::process::Command::new("steam")
