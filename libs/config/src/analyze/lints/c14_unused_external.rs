@@ -262,7 +262,7 @@ impl Code for CodeC14UnusedExternal {
             self.diagnostic.clone()
         } else if self.first {
             Some(
-                Diagnostic::from_code(self).set_message(format!("There are {count} unused external classes, They have been written to {PATH}"))
+                Diagnostic::from_code(self).set_message(format!("There are {count} unused external classes")),
             )
         } else {
             None
@@ -274,7 +274,9 @@ impl Code for CodeC14UnusedExternal {
         }
         let count = self.count.load(std::sync::atomic::Ordering::Relaxed);
         if count > 5 && self.first {
-            Some(String::from("To view them in your terminal, run `hemtt check -Lc14`"))
+            Some(format!(
+                "A list has been generated in {PATH}, use `hemtt check -Lc14` to output warnings",
+            ))
         } else {
             None
         }
