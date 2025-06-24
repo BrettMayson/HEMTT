@@ -1,6 +1,6 @@
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+use std::{cell::RefCell, io::Write, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}};
 
-use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
@@ -8,6 +8,8 @@ use hemtt_workspace::{
 use indexmap::IndexMap;
 
 use crate::{analyze::LintData, Class, Config, Property};
+
+const PATH: &str = ".hemttout/unused_external_classes.txt";
 
 crate::analyze::lint!(LintC14UnusedExternal);
 
@@ -35,7 +37,7 @@ class x;
 "
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
+        LintConfig::warning()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
@@ -48,11 +50,16 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _config: &LintConfig,
+        config: &LintConfig,
         processed: Option<&Processed>,
+        runtime: &hemtt_common::config::RuntimeArguments,
         target: &Config,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
+        static CLEANUP_PATH: Once = Once::new();
+        CLEANUP_PATH.call_once(|| {
+            let _ = std::fs::remove_file(PATH);
+        });
         let Some(processed) = processed else {
             return vec![];
         };
@@ -63,7 +70,17 @@ impl LintRunner<LintData> for Runner {
             subclasses: IndexMap::new(),
         }));
         check(&target.0, &root);
-        ClassNode::check_unused(&root, &mut vec![], processed)
+        let mut file = match std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(PATH) {
+            Ok(file) => file,
+            Err(e) => {
+                eprintln!("Failed to open {PATH}: {e}");
+                return vec![];
+            }
+        };
+        ClassNode::check_unused(&root, &mut vec![], processed, config, &mut file, runtime)
     }
 }
 
@@ -80,6 +97,9 @@ impl ClassNode {
         cfg: &Rc<RefCell<Self>>,
         reported: &mut Vec<Class>,
         processed: &Processed,
+        config: &LintConfig,
+        file: &mut std::fs::File,
+        runtime: &hemtt_common::config::RuntimeArguments,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
         if !cfg.borrow().used && !reported.contains(&cfg.borrow().class) {
@@ -87,10 +107,23 @@ impl ClassNode {
             codes.push(Arc::new(CodeC14UnusedExternal::new(
                 cfg.borrow().class.clone(),
                 processed,
+                config.severity(),
+                runtime,
             )));
+            let name = cfg.borrow().class.name().expect("class has a name").clone();
+            let pos = processed.mapping(name.span.start).expect("start position exists").original();
+            writeln!(
+                file,
+                "{} - {}:{}:{}",
+                name.as_str(),
+                pos.path().as_str().trim_start_matches('/'),
+                pos.start().1.0,
+                pos.start().1.1 + 1,
+            )
+            .expect("Failed to write to file");
         }
         for subclass in cfg.borrow().subclasses.values() {
-            codes.extend(Self::check_unused(subclass, reported, processed));
+            codes.extend(Self::check_unused(subclass, reported, processed, config, file, runtime));
         }
         codes
     }
@@ -192,9 +225,13 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeC14UnusedExternal {
+    severity: Severity,
     class: Class,
     class_name: String,
     diagnostic: Option<Diagnostic>,
+    count: Arc<AtomicU16>,
+    first: bool,
+    explicit: bool,
 }
 
 impl Code for CodeC14UnusedExternal {
@@ -205,7 +242,7 @@ impl Code for CodeC14UnusedExternal {
         Some("/analysis/config.html#unused_external")
     }
     fn severity(&self) -> Severity {
-        Severity::Warning
+        self.severity
     }
     fn message(&self) -> String {
         format!("external class {} is never used", self.class_name)
@@ -217,17 +254,47 @@ impl Code for CodeC14UnusedExternal {
         None
     }
     fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
+        if self.explicit {
+            return self.diagnostic.clone();
+        }
+        let count = self.count.load(std::sync::atomic::Ordering::Relaxed);
+        if count <= 5 {
+            self.diagnostic.clone()
+        } else if self.first {
+            Some(
+                Diagnostic::from_code(self).set_message(format!("There are {count} unused external classes, They have been written to {PATH}"))
+            )
+        } else {
+            None
+        }
+    }
+    fn note(&self) -> Option<String> {
+        if self.explicit {
+            return None
+        }
+        let count = self.count.load(std::sync::atomic::Ordering::Relaxed);
+        if count > 5 && self.first {
+            Some(String::from("To view them in your terminal, run `hemtt check -Lc14`"))
+        } else {
+            None
+        }
     }
 }
 
 impl CodeC14UnusedExternal {
     #[must_use]
-    pub fn new(class: Class, processed: &Processed) -> Self {
+    pub fn new(class: Class, processed: &Processed, severity: Severity, runtime: &RuntimeArguments) -> Self {
+        static COUNT: OnceLock<Arc<AtomicU16>> = OnceLock::new();
+        let count = COUNT.get_or_init(|| Arc::new(AtomicU16::new(0))).clone();
+        let first = count.fetch_add(1, std::sync::atomic::Ordering::Relaxed) == 0;
         Self {
+            severity,
             class,
             class_name: String::new(),
             diagnostic: None,
+            count,
+            first,
+            explicit: runtime.explicit_lints().iter().any(|l| l.eq_ignore_ascii_case("c14")),
         }
         .generate_processed(processed)
     }

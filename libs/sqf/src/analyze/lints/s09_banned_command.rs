@@ -70,6 +70,7 @@ impl LintRunner<LintData> for Runner {
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         data: &LintData,
     ) -> Codes {

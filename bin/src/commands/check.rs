@@ -27,6 +27,9 @@ pub struct CheckArgs {
     #[arg(long, short = 'p', action = clap::ArgAction::SetTrue)]
     /// Run all lints that are disabled by default (but not explicitly disabled via project config)
     pedantic: bool,
+    #[arg(long, short = 'L', action = clap::ArgAction::Append)]
+    /// Run all lints that are disabled by default (but not explicitly disabled via project config)
+    lints: Vec<String>,
 }
 
 /// Execute the check command
@@ -42,6 +45,16 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
     if cmd.check.pedantic {
         let runtime = ctx.config().runtime().clone().with_pedantic(true);
+        let config = ctx.config().clone().with_runtime(runtime);
+        ctx = ctx.with_config(config);
+    }
+
+    if !cmd.check.lints.is_empty() {
+        let runtime = ctx
+            .config()
+            .runtime()
+            .clone()
+            .with_explicit_lints(cmd.check.lints.clone());
         let config = ctx.config().clone().with_runtime(runtime);
         ctx = ctx.with_config(config);
     }

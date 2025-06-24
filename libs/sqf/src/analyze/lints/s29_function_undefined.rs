@@ -69,6 +69,7 @@ impl LintRunner<LintData> for RunnerExpression {
         project: Option<&hemtt_common::config::ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         data: &LintData,
     ) -> Codes {
@@ -156,6 +157,7 @@ impl LintRunner<LintData> for RunnerStatement {
         project: Option<&hemtt_common::config::ProjectConfig>,
         _config: &LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         data: &LintData,
     ) -> Codes {
@@ -185,6 +187,7 @@ impl LintRunner<LintData> for RunnerFinal {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {

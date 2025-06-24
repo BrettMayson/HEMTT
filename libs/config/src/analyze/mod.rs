@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, MagazineWellInfo},
     lint::LintManager,
@@ -203,16 +203,15 @@ impl Analyze for Item {
 #[must_use]
 #[allow(clippy::ptr_arg)]
 pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
-    let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().config().clone()),
+        project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
     );
     let _e = manager.extend(
         crate::analyze::CONFIG_LINTS
             .iter()
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
-        default_enabled,
     );
 
     manager.run(

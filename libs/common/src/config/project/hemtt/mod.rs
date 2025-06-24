@@ -4,7 +4,7 @@ pub mod dev;
 pub mod launch;
 pub mod release;
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 use launch::LaunchOptions;
 use serde::{Deserialize, Serialize};
@@ -58,6 +58,8 @@ pub struct RuntimeArguments {
     is_release: bool,
     is_pedantic: bool,
     is_just: bool,
+
+    explicit_lints: Arc<[String]>,
 }
 
 impl RuntimeArguments {
@@ -67,7 +69,7 @@ impl RuntimeArguments {
     }
 
     #[must_use]
-    pub const fn with_release(self, is_release: bool) -> Self {
+    pub fn with_release(self, is_release: bool) -> Self {
         Self { is_release, ..self }
     }
 
@@ -77,7 +79,7 @@ impl RuntimeArguments {
     }
 
     #[must_use]
-    pub const fn with_pedantic(self, is_pedantic: bool) -> Self {
+    pub fn with_pedantic(self, is_pedantic: bool) -> Self {
         Self {
             is_pedantic,
             ..self
@@ -90,8 +92,21 @@ impl RuntimeArguments {
     }
 
     #[must_use]
-    pub const fn with_just(self, is_just: bool) -> Self {
+    pub fn with_just(self, is_just: bool) -> Self {
         Self { is_just, ..self }
+    }
+
+    #[must_use]
+    pub fn explicit_lints(&self) -> &[String] {
+        &self.explicit_lints
+    }
+
+    #[must_use]
+    pub fn with_explicit_lints(self, explicit_lints: Vec<String>) -> Self {
+        Self {
+            explicit_lints: explicit_lints.into(),
+            ..self
+        }
     }
 }
 
