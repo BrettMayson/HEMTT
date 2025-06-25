@@ -166,6 +166,7 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
         _project: Option<&ProjectConfig>,
         config: std::collections::HashMap<String, LintConfig>,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Statements,
         data: &LintData,
     ) -> Codes {

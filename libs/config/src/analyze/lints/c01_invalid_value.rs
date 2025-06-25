@@ -63,6 +63,7 @@ impl LintRunner<LintData> for RunnerValue {
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Value,
         _data: &LintData,
     ) -> Codes {
@@ -92,6 +93,7 @@ impl LintRunner<LintData> for RunnerItem {
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Item,
         _data: &LintData,
     ) -> Codes {
