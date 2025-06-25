@@ -28,7 +28,7 @@ pub struct CheckArgs {
     /// Run all lints that are disabled by default (but not explicitly disabled via project config)
     pedantic: bool,
     #[arg(long, short = 'L', action = clap::ArgAction::Append)]
-    /// Run all lints that are disabled by default (but not explicitly disabled via project config)
+    /// Explicit Lints
     lints: Vec<String>,
 }
 
