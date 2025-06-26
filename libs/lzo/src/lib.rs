@@ -57,7 +57,7 @@ pub fn compress(input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
             input.as_ptr(),
             input.len(),
             output.as_mut_ptr(),
-            &mut out_len,
+            &raw mut out_len,
             wrkmem,
         );
 
@@ -85,7 +85,7 @@ pub fn compress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut [u
             in_.as_ptr(),
             in_.len(),
             out.as_mut_ptr(),
-            &mut out_len,
+            &raw mut out_len,
             wrkmem,
         );
         libc::free(wrkmem);
@@ -110,7 +110,7 @@ pub fn decompress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut 
             in_.as_ptr(),
             in_.len(),
             out.as_mut_ptr(),
-            &mut out_len,
+            &raw mut out_len,
         );
         let res = mem::transmute::<i32, LzoError>(err);
         if res == LzoError::Ok {
