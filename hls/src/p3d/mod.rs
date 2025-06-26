@@ -8,8 +8,8 @@ pub fn json(url: Url) -> Result<serde_json::Value, String> {
         .to_file_path()
         .map_err(|_| "Only file URLs are supported".to_string())?;
     let mut file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
-    let p3d = hemtt_p3d::P3D::read(&mut file).map_err(|e| format!("{:?}", e))?;
-    serde_json::to_value(&p3d).map_err(|e| format!("{:?}", e))
+    let p3d = hemtt_p3d::P3D::read(&mut file).map_err(|e| format!("{e:?}"))?;
+    serde_json::to_value(&p3d).map_err(|e| format!("{e:?}"))
 }
 
 impl Backend {

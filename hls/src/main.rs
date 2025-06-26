@@ -250,7 +250,7 @@ async fn server() {
     // second argument is the port
     let port = std::env::args().nth(1).expect("port is required");
 
-    let stream = TcpStream::connect(format!("127.0.0.1:{}", port))
+    let stream = TcpStream::connect(format!("127.0.0.1:{port}"))
         .await
         .unwrap();
 
