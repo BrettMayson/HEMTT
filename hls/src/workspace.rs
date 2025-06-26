@@ -154,7 +154,7 @@ impl EditorWorkspace {
         let Some(path) = url.path().strip_prefix(self.url.path()) else {
             return Err("URL is not in workspace".to_string());
         };
-        self.workspace.join(path).map_err(|e| format!("{}", e))
+        self.workspace.join(path).map_err(|e| format!("{e}"))
     }
 
     pub fn to_url(&self, path: &WorkspacePath) -> Url {
