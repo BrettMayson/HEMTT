@@ -8,7 +8,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, UsedFunctions},
     lint::LintManager,
@@ -50,14 +50,13 @@ pub fn analyze(
     addon: Arc<Addon>,
     database: Arc<Database>,
 ) -> (Codes, Option<SqfReport>) {
-    let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager: LintManager<LintData> = LintManager::new(
         project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
+        project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
     );
-    if let Err(lint_errors) = manager.extend(
-        SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>(),
-        default_enabled,
-    ) {
+    if let Err(lint_errors) =
+        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
+    {
         return (lint_errors, None);
     }
     if let Err(lint_errors) = manager.push_group(
@@ -67,7 +66,6 @@ pub fn analyze(
             Arc::new(Box::new(LintS02EventInsufficientVersion)),
         ],
         Box::new(EventHandlerRunner),
-        default_enabled,
     ) {
         return (lint_errors, None);
     }
@@ -277,14 +275,11 @@ pub fn lint_all(
     addons: &Vec<Addon>,
     database: Arc<Database>,
 ) -> Codes {
-    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
     let mut manager = LintManager::new(
         project_config.map_or_else(Default::default, |project| project.lints().sqf().clone()),
+        project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
     );
-    if let Err(e) = manager.extend(
-        SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>(),
-        default_enabled,
-    ) {
+    if let Err(e) = manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>()) {
         return e;
     }
 

@@ -19,7 +19,7 @@ pub use model::*;
 
 use analyze::{Analyze, CfgPatch, ChumskyCode, LintData};
 use chumsky::Parser;
-use hemtt_common::version::Version;
+use hemtt_common::{config::RuntimeArguments, version::Version};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
@@ -52,16 +52,15 @@ pub fn parse(
                 .collect())
         },
         |config| {
-            let default_enabled = project.is_some_and(|p| p.runtime().is_pedantic());
             let mut manager = LintManager::new(
                 project.map_or_else(Default::default, |project| project.lints().config().clone()),
+                project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
             );
             manager.extend(
                 analyze::CONFIG_LINTS
                     .iter()
                     .map(|l| (**l).clone())
                     .collect::<Vec<_>>(),
-                default_enabled,
             )?;
             let localizations = Arc::new(Mutex::new(vec![]));
             let functions_defined = Arc::new(Mutex::new(HashSet::new()));

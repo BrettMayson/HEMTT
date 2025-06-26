@@ -93,7 +93,7 @@ fn log(ctx: Context, level: String, message: String) {
         "warn" => fromarma::Level::Warn,
         "error" => fromarma::Level::Error,
         _ => {
-            println!("Unknown log level: {}", level);
+            println!("Unknown log level: {level}");
             fromarma::Level::Info
         }
     };

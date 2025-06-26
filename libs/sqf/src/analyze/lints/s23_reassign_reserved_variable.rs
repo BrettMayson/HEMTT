@@ -68,6 +68,7 @@ impl LintRunner<LintData> for StatementsRunner {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {
@@ -130,6 +131,7 @@ impl LintRunner<LintData> for ExpressionRunner {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {

@@ -38,14 +38,14 @@ pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, Str
             return Err("Unsupported file type".to_string());
         }
     }
-    .map_err(|e| format!("Error reading file: {}", e))?;
+    .map_err(|e| format!("Error reading file: {e}"))?;
 
     let data = match to.as_str() {
         "wss" => {
             let mut buffer = Vec::new();
             wss.set_compression(hemtt_wss::Compression::Nibble);
             wss.write(&mut buffer)
-                .map_err(|e| format!("Error writing file: {}", e))?;
+                .map_err(|e| format!("Error writing file: {e}"))?;
             Ok(buffer)
         }
         "wav" => wss.to_wav(),
@@ -54,7 +54,7 @@ pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, Str
             return Err("Unsupported file type to convert to".to_string());
         }
     }
-    .map_err(|e| format!("Error converting file: {}", e))?;
+    .map_err(|e| format!("Error converting file: {e}"))?;
     let mut out_file =
         std::fs::File::create(&output).map_err(|_| "Error creating file".to_string())?;
     std::io::Write::write_all(&mut out_file, &data)
@@ -72,11 +72,11 @@ impl Backend {
         &self,
         params: ConvertParams,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
-        println!("Converting audio: {:?}", params);
+        println!("Converting audio: {params:?}");
         match convert(params.url, params.to, params.out) {
             Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
             Err(e) => {
-                error!("Error converting audio: {}", e);
+                error!("Error converting audio: {e}");
                 Ok(None)
             }
         }

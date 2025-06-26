@@ -1,4 +1,4 @@
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{addons::Addon, lint::LintManager, lint_manager, reporting::Codes};
 
 use crate::Project;
@@ -19,16 +19,17 @@ pub fn lint_one(
     project_config: Option<&ProjectConfig>,
     addons: Vec<Addon>,
 ) -> Codes {
-    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
-    let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
-        project.lints().stringtables().clone()
-    }));
+    let mut manager = LintManager::new(
+        project_config.map_or_else(Default::default, |project| {
+            project.lints().stringtables().clone()
+        }),
+        project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
+    );
     if let Err(e) = manager.extend(
         STRINGTABLE_LINTS
             .iter()
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
-        default_enabled,
     ) {
         return e;
     }
@@ -42,16 +43,17 @@ pub fn lint_all(
     project_config: Option<&ProjectConfig>,
     addons: Vec<Addon>,
 ) -> Codes {
-    let default_enabled = project_config.is_some_and(|p| p.runtime().is_pedantic());
-    let mut manager = LintManager::new(project_config.map_or_else(Default::default, |project| {
-        project.lints().stringtables().clone()
-    }));
+    let mut manager = LintManager::new(
+        project_config.map_or_else(Default::default, |project| {
+            project.lints().stringtables().clone()
+        }),
+        project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
+    );
     if let Err(e) = manager.extend(
         STRINGTABLE_LINTS
             .iter()
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
-        default_enabled,
     ) {
         return e;
     }

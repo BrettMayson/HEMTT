@@ -111,8 +111,8 @@ fn markdown_links(name: &str, source: String) -> String {
             continue;
         }
         string = string.replace(
-            &format!("[[{}]]", link),
-            &format!("[{}](https://community.bistudio.com/wiki/{})", link, link),
+            &format!("[[{link}]]"),
+            &format!("[{link}](https://community.bistudio.com/wiki/{link})"),
         );
     }
 
@@ -132,7 +132,7 @@ fn markdown_links(name: &str, source: String) -> String {
                     link.replace(' ', "_"),
                 )
             } else {
-                format!("[{}](https://community.bistudio.com/wiki/{})", link, link)
+                format!("[{link}](https://community.bistudio.com/wiki/{link})")
             },
         );
     }
@@ -171,7 +171,7 @@ fn markdown_code(source: &str) -> String {
     let mut string = source.to_string();
     for mat in result {
         let text = mat.get(1).unwrap().as_str();
-        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{}`", text));
+        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{text}`"));
     }
 
     // <sqf>...</sqf>
@@ -182,7 +182,7 @@ fn markdown_code(source: &str) -> String {
         let text = mat.get(1).unwrap().as_str();
         string = string.replace(
             mat.get(0).unwrap().as_str(),
-            &format!("```sqf\n{}\n```", text),
+            &format!("```sqf\n{text}\n```"),
         );
     }
 
@@ -192,7 +192,7 @@ fn markdown_code(source: &str) -> String {
     let mut string = string.clone();
     for mat in result {
         let text = mat.get(1).unwrap().as_str();
-        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{}`", text));
+        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{text}`"));
     }
     string
 }
@@ -213,8 +213,7 @@ fn markdown_locality(locality: &Locality, context: &str) -> String {
 fn markdown_since(since: &Since) -> String {
     if let Some(arma3) = since.arma_3() {
         format!(
-            "Since [Arma 3 {}](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3_version_{})\n\n",
-            arma3, arma3
+            "Since [Arma 3 {arma3}](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3_version_{arma3})\n\n"
         )
     } else {
         "".to_string()
@@ -267,7 +266,7 @@ fn markdown_syntax(command: &Command, syntax: &Syntax) -> String {
                 if desc.is_empty() {
                     "".to_string()
                 } else {
-                    format!(" - {}", desc)
+                    format!(" - {desc}")
                 }
             }
         ));

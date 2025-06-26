@@ -30,8 +30,6 @@ pub struct Command {
     port: u16,
 }
 
-pub const LEGEND_TYPE: &[SemanticTokenType] = &[SemanticTokenType::FUNCTION];
-
 #[derive(Debug)]
 struct Backend {
     client: Client,
@@ -54,31 +52,6 @@ impl LanguageServer for Backend {
                     }),
                     file_operations: None,
                 }),
-                semantic_tokens_provider: Some(
-                    SemanticTokensServerCapabilities::SemanticTokensRegistrationOptions(
-                        SemanticTokensRegistrationOptions {
-                            text_document_registration_options: {
-                                TextDocumentRegistrationOptions {
-                                    document_selector: Some(vec![DocumentFilter {
-                                        language: Some("sqf".to_string()),
-                                        scheme: Some("file".to_string()),
-                                        pattern: None,
-                                    }]),
-                                }
-                            },
-                            semantic_tokens_options: SemanticTokensOptions {
-                                work_done_progress_options: WorkDoneProgressOptions::default(),
-                                legend: SemanticTokensLegend {
-                                    token_types: LEGEND_TYPE.into(),
-                                    token_modifiers: vec![],
-                                },
-                                range: Some(false),
-                                full: Some(SemanticTokensFullOptions::Bool(true)),
-                            },
-                            static_registration_options: StaticRegistrationOptions::default(),
-                        },
-                    ),
-                ),
                 signature_help_provider: Some(SignatureHelpOptions {
                     trigger_characters: Some(vec!["(".to_string()]),
                     retrigger_characters: Some(vec![",".to_string(), ")".to_string()]),
@@ -214,22 +187,6 @@ impl LanguageServer for Backend {
             .await)
     }
 
-    async fn semantic_tokens_full(
-        &self,
-        params: SemanticTokensParams,
-    ) -> Result<Option<SemanticTokensResult>> {
-        Ok(SqfAnalyzer::get()
-            .get_tokens(&params.text_document.uri)
-            .await
-            .map(|tokens| {
-                debug!("sending tokens: {}", tokens.len());
-                SemanticTokensResult::Tokens(SemanticTokens {
-                    data: tokens,
-                    ..Default::default()
-                })
-            }))
-    }
-
     async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
         Ok(PreprocessorAnalyzer::get().signature_help(&params).await)
     }
@@ -293,7 +250,7 @@ async fn server() {
     // second argument is the port
     let port = std::env::args().nth(1).expect("port is required");
 
-    let stream = TcpStream::connect(format!("127.0.0.1:{}", port))
+    let stream = TcpStream::connect(format!("127.0.0.1:{port}"))
         .await
         .unwrap();
 

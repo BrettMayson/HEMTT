@@ -10,11 +10,11 @@ pub fn json(url: Url) -> Result<serde_json::Value, String> {
     let mut file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
     let value: serde_json::Value = serde_json::from_str(
         hemtt_paa::Paa::read(&mut file)
-            .map_err(|e| format!("{:?}", e))?
+            .map_err(|e| format!("{e:?}"))?
             .json()?
             .as_str(),
     )
-    .map_err(|e| format!("{:?}", e))?;
+    .map_err(|e| format!("{e:?}"))?;
     Ok(value)
 }
 
@@ -60,7 +60,7 @@ impl Backend {
             tracing::warn!("Failed to open file {:?}", source.path);
             return Ok(None);
         };
-        let Ok(paa) = hemtt_paa::Paa::read(&mut source).map_err(|e| format!("{:?}", e)) else {
+        let Ok(paa) = hemtt_paa::Paa::read(&mut source).map_err(|e| format!("{e:?}")) else {
             tracing::warn!("Failed to read paa {:?}", params.url);
             return Ok(None);
         };

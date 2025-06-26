@@ -52,7 +52,7 @@ pub fn run(chapter: &mut Chapter) {
 fn process_command(name: &str, nested: Option<&str>, mut command: Command) -> String {
     let mut output = format!(
         "# hemtt {}{}\n\n",
-        nested.map(|s| format!("{} ", s)).unwrap_or_default(),
+        nested.map(|s| format!("{s} ")).unwrap_or_default(),
         name,
     );
 
@@ -101,10 +101,10 @@ fn process_command(name: &str, nested: Option<&str>, mut command: Command) -> St
                     arg.get_action(),
                     clap::ArgAction::Set | clap::ArgAction::Append
                 ) {
-                    header.push_str(&format!(" &lt;{}&gt;", name));
+                    header.push_str(&format!(" &lt;{name}&gt;"));
                 }
             }
-            output.push_str(&format!("### {}\n\n", header));
+            output.push_str(&format!("### {header}\n\n"));
             output.push_str(
                 &arg.get_long_help()
                     .unwrap_or_else(|| arg.get_help().unwrap_or_default())

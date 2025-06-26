@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.16.2"
+version = "1.16.3"
 edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -42,12 +42,12 @@ glob = "0.3.2"
 image = "0.25.6"
 indicatif = "0.17.11"
 interprocess = { workspace = true }
-num_cpus = "1.16.0"
+num_cpus = "1.17.0"
 paste = { workspace = true }
 rayon = "1.10.0"
 regex = { workspace = true }
-reqwest = { version = "0.12.15", features = ["blocking", "json"] }
-rhai = "1.21.0"
+reqwest = { version = "0.12.20", features = ["blocking", "json"] }
+rhai = "1.22.2"
 rust-embed = "8.7.2"
 semver = "1.0.26"
 serde = { workspace = true, features = ["derive"] }
@@ -62,7 +62,7 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.0.4"
+webbrowser = "1.0.5"
 whoami = "1.6.0"
 zip = { workspace = true }
 
