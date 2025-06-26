@@ -58,6 +58,7 @@ impl LintRunner<LintData> for Runner {
     ) -> Vec<std::sync::Arc<dyn Code>> {
         static CLEANUP_PATH: Once = Once::new();
         CLEANUP_PATH.call_once(|| {
+            let _ = std::fs::create_dir_all(".hemttout");
             let _ = std::fs::remove_file(PATH);
         });
         let Some(processed) = processed else {
