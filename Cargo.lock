@@ -1697,6 +1697,7 @@ dependencies = [
  "hemtt-common",
  "hemtt-preprocessor",
  "hemtt-workspace",
+ "indexmap",
  "insta",
  "linkme",
  "lsp-types 0.97.0",

@@ -51,10 +51,9 @@ impl Module for Rapifier {
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let default_enabled = ctx.config().runtime().is_pedantic();
         report.extend(lint_check(
             ctx.config().lints().config().clone(),
-            default_enabled,
+            ctx.config().runtime().clone(),
         ));
         Ok(report)
     }

@@ -68,6 +68,7 @@ impl LintRunner<LintData> for Runner {
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &crate::Property,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {

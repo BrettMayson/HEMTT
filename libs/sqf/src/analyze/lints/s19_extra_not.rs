@@ -55,6 +55,7 @@ impl LintRunner<LintData> for Runner {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {

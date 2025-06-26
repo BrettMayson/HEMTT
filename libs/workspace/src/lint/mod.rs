@@ -3,7 +3,9 @@ pub mod macros;
 use std::{collections::HashMap, sync::Arc};
 
 use codespan_reporting::diagnostic::Severity;
-use hemtt_common::config::{LintConfig, LintConfigOverride, LintEnabled, ProjectConfig};
+use hemtt_common::config::{
+    LintConfig, LintConfigOverride, LintEnabled, ProjectConfig, RuntimeArguments,
+};
 
 use crate::reporting::{Code, Codes, Diagnostic, Processed};
 
@@ -36,6 +38,7 @@ pub trait LintRunner<D> {
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
+        runtime: &RuntimeArguments,
         target: &Self::Target,
         data: &D,
     ) -> Codes {
@@ -49,6 +52,7 @@ pub trait AnyLintRunner<D> {
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
+        runtime: &RuntimeArguments,
         target: &dyn std::any::Any,
         data: &D,
     ) -> Codes;
@@ -60,13 +64,14 @@ impl<T: LintRunner<D>, D> AnyLintRunner<D> for T {
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
+        runtime: &RuntimeArguments,
         target: &dyn std::any::Any,
         data: &D,
     ) -> Codes {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, config, processed, target, data)
+                self.run(project, config, processed, runtime, target, data)
             })
     }
 }
@@ -80,6 +85,7 @@ pub trait LintGroupRunner<D> {
         project: Option<&ProjectConfig>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         data: &D,
     ) -> Codes {
@@ -93,6 +99,7 @@ pub trait AnyLintGroupRunner<D> {
         project: Option<&ProjectConfig>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
         target: &dyn std::any::Any,
         data: &D,
     ) -> Codes;
@@ -104,13 +111,14 @@ impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
         project: Option<&ProjectConfig>,
         config: HashMap<String, LintConfig>,
         processed: Option<&Processed>,
+        runtime: &hemtt_common::config::RuntimeArguments,
         target: &dyn std::any::Any,
         data: &D,
     ) -> Codes {
         target
             .downcast_ref::<T::Target>()
             .map_or_else(std::vec::Vec::new, |target| {
-                self.run(project, config, processed, target, data)
+                self.run(project, config, processed, runtime, target, data)
             })
     }
 }
@@ -122,15 +130,17 @@ pub struct LintManager<D> {
     lints: Lints<D>,
     groups: Vec<(Lints<D>, Box<dyn AnyLintGroupRunner<D>>)>,
     configs: HashMap<String, LintConfigOverride>,
+    runtime: RuntimeArguments,
 }
 
 impl<D> LintManager<D> {
     #[must_use]
-    pub fn new(configs: HashMap<String, LintConfigOverride>) -> Self {
+    pub fn new(configs: HashMap<String, LintConfigOverride>, runtime: RuntimeArguments) -> Self {
         Self {
             lints: vec![],
             groups: vec![],
             configs,
+            runtime,
         }
     }
 
@@ -138,13 +148,9 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn push(
-        &mut self,
-        lint: Arc<Box<dyn Lint<D>>>,
-        default_enabled: bool,
-    ) -> Result<(), Codes> {
+    pub fn push(&mut self, lint: Arc<Box<dyn Lint<D>>>) -> Result<(), Codes> {
         let lints: Lints<D> = vec![lint];
-        let lints = self.check_and_filter(lints, default_enabled)?;
+        let lints = self.check_and_filter(lints)?;
         self.lints.extend(lints);
         Ok(())
     }
@@ -153,8 +159,8 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of codes if the lint config is invalid
-    pub fn extend(&mut self, lints: Lints<D>, default_enabled: bool) -> Result<(), Codes> {
-        let lints = self.check_and_filter(lints, default_enabled)?;
+    pub fn extend(&mut self, lints: Lints<D>) -> Result<(), Codes> {
+        let lints = self.check_and_filter(lints)?;
         self.lints.extend(lints);
         Ok(())
     }
@@ -167,9 +173,8 @@ impl<D> LintManager<D> {
         &mut self,
         lints: Lints<D>,
         runner: Box<dyn AnyLintGroupRunner<D>>,
-        default_enabled: bool,
     ) -> Result<(), Codes> {
-        let lints = self.check_and_filter(lints, default_enabled)?;
+        let lints = self.check_and_filter(lints)?;
         self.groups.push((lints, runner));
         Ok(())
     }
@@ -178,10 +183,10 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of lints that are enabled OR codes if the lint config is invalid
-    pub fn check_and_filter(&self, lints: Lints<D>, pedantic: bool) -> Result<Lints<D>, Codes> {
-        fn enabled(config: &LintConfig, pedantic: bool) -> bool {
+    pub fn check_and_filter(&self, lints: Lints<D>) -> Result<Lints<D>, Codes> {
+        fn enabled(config: &LintConfig, runtime: &RuntimeArguments) -> bool {
             config.enabled() == LintEnabled::Enabled
-                || (pedantic && config.enabled() == LintEnabled::Pedantic)
+                || (runtime.is_pedantic() && config.enabled() == LintEnabled::Pedantic)
         }
         let mut enabled_lints = vec![];
         let mut errors: Codes = vec![];
@@ -203,13 +208,13 @@ impl<D> LintManager<D> {
                         ),
                     }));
                 }
-                if !enabled(&config, pedantic) && lint.minimum_severity() == Severity::Error {
+                if !enabled(&config, &self.runtime) && lint.minimum_severity() == Severity::Error {
                     errors.push(Arc::new(InvalidLintConfig {
                         message: format!("Lint `{}` cannot be disabled", lint.ident()),
                     }));
                 }
             }
-            if enabled(&config, pedantic) {
+            if enabled(&config, &self.runtime) {
                 enabled_lints.push(lint);
             }
         }
@@ -237,7 +242,9 @@ impl<D> LintManager<D> {
                     .map_or_else(|| lint.default_config(), |c| c.apply(lint.default_config()));
                 lint.runners()
                     .iter()
-                    .flat_map(|runner| runner.run(project, &config, processed, target, data))
+                    .flat_map(|runner| {
+                        runner.run(project, &config, processed, &self.runtime, target, data)
+                    })
                     .collect::<Codes>()
             })
             .chain(self.groups.iter().flat_map(|(lints, runner)| {
@@ -253,7 +260,7 @@ impl<D> LintManager<D> {
                 if configs.is_empty() {
                     return vec![];
                 }
-                runner.run(project, configs, processed, target, data)
+                runner.run(project, configs, processed, &self.runtime, target, data)
             }))
             .collect()
     }
@@ -358,6 +365,7 @@ mod tests {
             _project: Option<&ProjectConfig>,
             _config: &LintConfig,
             _processed: Option<&Processed>,
+            _runtime: &RuntimeArguments,
             _target: &TypeA,
             _data: &(),
         ) -> Codes {
@@ -401,6 +409,7 @@ mod tests {
             _project: Option<&ProjectConfig>,
             _config: &LintConfig,
             _processed: Option<&Processed>,
+            _runtime: &RuntimeArguments,
             _target: &TypeB,
             _data: &(),
         ) -> Codes {
@@ -414,6 +423,7 @@ mod tests {
             lints: vec![Arc::new(Box::new(LintA)), Arc::new(Box::new(LintB))],
             groups: vec![],
             configs: HashMap::new(),
+            runtime: RuntimeArguments::default(),
         };
 
         let target_a = TypeA;
