@@ -10,7 +10,7 @@ use crate::{context::Context, report::Report};
 
 use super::Module;
 
-pub const TEXT_EXTENSIONS: [&str; 6] = ["sqf", "txt", "hpp", "cpp", "rvmat", "ext", "inc"];
+pub const TEXT_EXTENSIONS: [&str; 7] = ["sqf", "txt", "hpp", "cpp", "rvmat", "ext", "inc"];
 
 #[derive(Default)]
 pub struct FineNewLineCheck {}
