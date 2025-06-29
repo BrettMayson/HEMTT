@@ -1702,6 +1702,8 @@ dependencies = [
  "linkme",
  "lsp-types 0.97.0",
  "paste",
+ "serde",
+ "serde_json",
  "toml 0.8.23",
  "vfs",
 ]

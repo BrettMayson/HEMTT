@@ -5,6 +5,7 @@ use crate::Property;
 use super::Ident;
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 /// A class definition
 pub enum Class {
     /// The root class definition

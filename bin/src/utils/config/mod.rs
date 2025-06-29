@@ -4,7 +4,6 @@ use crate::Error;
 
 mod derapify;
 mod inspect;
-mod json;
 
 pub use inspect::inspect;
 

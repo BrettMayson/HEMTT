@@ -21,7 +21,7 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 
-hemtt-config = { path = "../libs/config" }
+hemtt-config = { path = "../libs/config", features=["json"] }
 hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa" }
 hemtt-pbo = { path = "../libs/pbo" }

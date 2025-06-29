@@ -3,6 +3,7 @@ use hemtt_common::version::Version;
 use crate::{Class, Number, Property, Value, analyze::CfgPatch};
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 /// A config file
 pub struct Config(pub Vec<Property>);
 

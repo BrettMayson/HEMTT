@@ -3,6 +3,7 @@ use std::ops::Range;
 use crate::{Class, Ident, Value};
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 /// A property of a class
 pub enum Property {
     /// A property entry

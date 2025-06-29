@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
 /// A string value
 pub struct Str {
     pub(crate) value: String,

@@ -4,7 +4,6 @@ use serde_json;
 use hemtt_config::rapify::Derapify;
 
 use crate::Error;
-use crate::utils::config::json::json_from_config_class;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum OutputFormat {
@@ -50,12 +49,10 @@ pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> R
     match format {
         OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,
         OutputFormat::Json => {
-            let (_, json) = json_from_config_class(&config.to_class());
-            output.write_all(serde_json::to_string(&json)?.as_bytes())?;
+            output.write_all(serde_json::to_string(&config)?.as_bytes())?;
         },
         OutputFormat::JsonPretty => {
-            let (_, json) = json_from_config_class(&config.to_class());
-            output.write_all(serde_json::to_string_pretty(&json)?.as_bytes())?;
+            output.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
         },
     }
     output.flush()?;
