@@ -4,6 +4,7 @@ use crate::Error;
 
 mod derapify;
 mod inspect;
+mod json;
 
 pub use inspect::inspect;
 
@@ -33,7 +34,7 @@ enum Subcommands {
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     match &cmd.commands {
         Subcommands::Derapify(args) => {
-            derapify::derapify(&PathBuf::from(&args.file), args.output.as_deref())
+            derapify::derapify(&PathBuf::from(&args.file), args.output.as_deref(), args.output_format)
         }
         Subcommands::Inspect(args) => inspect::inspect(&PathBuf::from(&args.config)),
     }
