@@ -130,6 +130,7 @@ expression: ast
                     ],
                     source: "private thinghi = _x + \"test\";",
                     span: 94..124,
+                    issues: [],
                 },
             ),
             Array(

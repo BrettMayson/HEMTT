@@ -2,6 +2,7 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
+pub mod inspector;
 use std::{
     collections::HashSet,
     sync::{Arc, Mutex},
