@@ -2,9 +2,9 @@ use serde_json;
 
 use hemtt_config::{Class, Property, Value, Number, Item};
 
-pub fn json_from_config_array(items: &Vec<Item>) -> serde_json::Value {
+pub fn json_from_config_array(items: &[Item]) -> serde_json::Value {
     let mut values = Vec::new();
-    for item in items.iter() {
+    for item in items {
         values.push(match item {
             Item::Str(value) => json_from_config_value(&Value::Str(value.clone())),
             Item::Number(value) => json_from_config_value(&Value::Number(value.clone())),
@@ -30,7 +30,7 @@ pub fn json_from_config_value(value: &Value) -> serde_json::Value {
                 Number::Int32 { value, .. } => serde_json::Number::from_i128(value.into()),
                 Number::Int64 { value, .. } => serde_json::Number::from_i128(value.into()),
                 Number::Float32 { value, .. } => serde_json::Number::from_f64(value.into()),
-            }.unwrap();
+            }.expect("config property needs to be valid number");
             serde_json::Value::Number(serde_number)
         }
     }
@@ -39,9 +39,8 @@ pub fn json_from_config_value(value: &Value) -> serde_json::Value {
 pub fn json_from_config_property(property: &Property) -> (String, serde_json::Value) {
     match property {
         Property::Class(class) => json_from_config_class(class),
-        Property::Delete(name) => (name.value.clone(), serde_json::Value::Null),
-        Property::MissingSemicolon(name, _) => (name.value.clone(), serde_json::Value::Null),
         Property::Entry { name, value, .. } => (name.value.clone(), json_from_config_value(value)),
+        Property::Delete(name) | Property::MissingSemicolon(name, _) => (name.value.clone(), serde_json::Value::Null),
     }
 }
 
@@ -49,7 +48,7 @@ pub fn json_from_config_class(class: &Class) -> (String, serde_json::Value) {
     match class {
         Class::Root { properties} => {
             let mut value_map = serde_json::Map::new();
-            for root_property in properties.iter() {
+            for root_property in properties {
                 let (key, value) = json_from_config_property(root_property);
                 value_map.insert(key, value);
             }
@@ -57,7 +56,7 @@ pub fn json_from_config_class(class: &Class) -> (String, serde_json::Value) {
         }
         Class::Local { name, properties, .. } => {
             let mut value_map = serde_json::Map::new();
-            for root_property in properties.iter() {
+            for root_property in properties {
                 let (key, value) = json_from_config_property(root_property);
                 value_map.insert(key, value);
             }
