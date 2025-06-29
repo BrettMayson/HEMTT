@@ -5,9 +5,9 @@ use crate::{Number, Str};
 #[derive(Debug, Clone, PartialEq)]
 /// An array of entries
 pub struct Array {
-    pub(crate) expand: bool,
-    pub(crate) items: Vec<Item>,
-    pub(crate) span: Range<usize>,
+    pub expand: bool,
+    pub items: Vec<Item>,
+    pub span: Range<usize>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
