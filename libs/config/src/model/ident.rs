@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// An identifier
 ///
 /// ```cpp

@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A number value
 pub enum Number {
     /// A 32-bit integer

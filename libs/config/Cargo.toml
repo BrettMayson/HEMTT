@@ -26,7 +26,6 @@ toml = { workspace = true }
 vfs = { workspace = true }
 
 serde = { version = "1.0.219", features = ["derive"], optional = true }
-serde_json = { version = "1.0.140", optional = true }
 
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
@@ -34,4 +33,4 @@ insta = { workspace = true }
 paste = { workspace = true }
 
 [features]
-json = ["serde", "serde_json"]
+serde = ["dep:serde"]

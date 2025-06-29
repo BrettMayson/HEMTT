@@ -3,7 +3,7 @@ use std::ops::Range;
 use crate::{Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// An array of entries
 pub struct Array {
     pub expand: bool,
@@ -12,7 +12,7 @@ pub struct Array {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// An array value
 pub enum Item {
     /// A string value

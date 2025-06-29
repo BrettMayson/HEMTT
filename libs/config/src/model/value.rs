@@ -3,7 +3,7 @@ use std::ops::Range;
 use super::{Array, Expression, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "json", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A value in a config file
 pub enum Value {
     /// A string value
