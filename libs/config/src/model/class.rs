@@ -79,7 +79,7 @@ impl Class {
 impl serde::Serialize for Class {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
         match self {
-            Class::Local { properties, .. } | Class::Root { properties } => {
+            Self::Local { properties, .. } | Self::Root { properties } => {
                 use serde::ser::SerializeMap;
                 let mut state = serializer.serialize_map(Some(properties.len()))?;
                 for property in properties {
@@ -87,7 +87,7 @@ impl serde::Serialize for Class {
                 }
                 state.end()
             },
-            Class::External { name  } => {
+            Self::External { name  } => {
                 use serde::ser::SerializeMap;
                 let mut state = serializer.serialize_map(Some(1))?;
                 state.serialize_entry(name.as_str(), &{})?;

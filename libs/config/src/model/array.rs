@@ -39,9 +39,9 @@ impl serde::Serialize for Array {
 impl serde::Serialize for Item {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
         match self {
-            Item::Str(str) => str.serialize(serializer),
-            Item::Number(number) => number.serialize(serializer),
-            Item::Array(items) => {
+            Self::Str(str) => str.serialize(serializer),
+            Self::Number(number) => number.serialize(serializer),
+            Self::Array(items) => {
                 use serde::ser::SerializeSeq;
                 let mut state = serializer.serialize_seq(Some(items.len()))?;
                 for item in items {
@@ -49,7 +49,7 @@ impl serde::Serialize for Item {
                 }
                 state.end()
             },
-            Item::Invalid(_) => serializer.serialize_none()
+            Self::Invalid(_) => serializer.serialize_none()
         }
     }
 }

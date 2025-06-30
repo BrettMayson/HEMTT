@@ -55,11 +55,11 @@ impl Value {
 impl serde::Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
         match self {
-            Value::Str(string) => string.serialize(serializer),
-            Value::Number(number) => number.serialize(serializer),
-            Value::Expression(expression) => expression.serialize(serializer),
-            Value::Array(array) | Value::UnexpectedArray(array) => array.serialize(serializer),
-            Value::Invalid(..) => serializer.serialize_none(),
+            Self::Str(string) => string.serialize(serializer),
+            Self::Number(number) => number.serialize(serializer),
+            Self::Expression(expression) => expression.serialize(serializer),
+            Self::Array(array) | Self::UnexpectedArray(array) => array.serialize(serializer),
+            Self::Invalid(..) => serializer.serialize_none(),
         }
     }
 }

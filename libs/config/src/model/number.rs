@@ -84,9 +84,9 @@ impl Number {
 impl serde::Serialize for Number {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
         match self {
-            Number::Int32 { value, .. } => serializer.serialize_i32(*value),
-            Number::Int64 { value, .. } => serializer.serialize_i64(*value),
-            Number::Float32 { value, .. } => serializer.serialize_f32(*value),
+            Self::Int32 { value, .. } => serializer.serialize_i32(*value),
+            Self::Int64 { value, .. } => serializer.serialize_i64(*value),
+            Self::Float32 { value, .. } => serializer.serialize_f32(*value),
         }
     }
 }
