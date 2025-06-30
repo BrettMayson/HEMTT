@@ -3,7 +3,6 @@ use std::ops::Range;
 use super::{Array, Expression, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A value in a config file
 pub enum Value {
     /// A string value
@@ -48,6 +47,19 @@ impl Value {
             Self::Expression(e) => e.span.clone(),
             Self::Array(a) | Self::UnexpectedArray(a) => a.span.clone(),
             Self::Invalid(span) => span.clone(),
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Value {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        match self {
+            Value::Str(string) => string.serialize(serializer),
+            Value::Number(number) => number.serialize(serializer),
+            Value::Expression(expression) => expression.serialize(serializer),
+            Value::Array(array) | Value::UnexpectedArray(array) => array.serialize(serializer),
+            Value::Invalid(..) => serializer.serialize_none(),
         }
     }
 }

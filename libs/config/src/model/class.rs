@@ -5,7 +5,6 @@ use crate::Property;
 use super::Ident;
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A class definition
 pub enum Class {
     /// The root class definition
@@ -72,6 +71,28 @@ impl Class {
         match self {
             Self::Root { properties } | Self::Local { properties, .. } => properties,
             Self::External { .. } => &[],
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Class {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        match self {
+            Class::Local { properties, .. } | Class::Root { properties } => {
+                use serde::ser::SerializeMap;
+                let mut state = serializer.serialize_map(Some(properties.len()))?;
+                for property in properties {
+                    state.serialize_entry(property.name().as_str(), property)?;
+                }
+                state.end()
+            },
+            Class::External { name  } => {
+                use serde::ser::SerializeMap;
+                let mut state = serializer.serialize_map(Some(1))?;
+                state.serialize_entry(name.as_str(), &{})?;
+                state.end()
+            }
         }
     }
 }

@@ -3,7 +3,6 @@ use std::ops::Range;
 use crate::{Class, Ident, Value};
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A property of a class
 pub enum Property {
     /// A property entry
@@ -40,5 +39,16 @@ impl Property {
     /// Is the property a class
     pub const fn is_class(&self) -> bool {
         matches!(self, Self::Class(_))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Property {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        match self {
+            Property::Entry { value, .. } => value.serialize(serializer),
+            Property::Class(class) => class.serialize(serializer),
+            Property::MissingSemicolon(..) | Property::Delete(..) => serializer.serialize_none(),
+        }
     }
 }

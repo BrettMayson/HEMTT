@@ -3,7 +3,6 @@ use hemtt_common::version::Version;
 use crate::{Class, Number, Property, Value, analyze::CfgPatch};
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A config file
 pub struct Config(pub Vec<Property>);
 
@@ -50,5 +49,12 @@ impl Config {
             }
         }
         patches
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Config {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.to_class().serialize(serializer)
     }
 }

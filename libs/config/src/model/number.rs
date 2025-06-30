@@ -1,7 +1,6 @@
 use std::ops::Range;
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// A number value
 pub enum Number {
     /// A 32-bit integer
@@ -77,6 +76,17 @@ impl Number {
             Self::Int32 { span, .. } | Self::Int64 { span, .. } | Self::Float32 { span, .. } => {
                 span.clone()
             }
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Number {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        match self {
+            Number::Int32 { value, .. } => serializer.serialize_i32(*value),
+            Number::Int64 { value, .. } => serializer.serialize_i64(*value),
+            Number::Float32 { value, .. } => serializer.serialize_f32(*value),
         }
     }
 }
