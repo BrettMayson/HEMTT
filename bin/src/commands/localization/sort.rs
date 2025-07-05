@@ -37,7 +37,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
             .into_iter()
             .filter_map(|p| {
                 p.map(|p| {
-                    if p.file_name().to_ascii_lowercase() == "stringtable.xml" {
+                    if p.file_name().eq_ignore_ascii_case("stringtable.xml") {
                         Some(p.path().to_path_buf())
                     } else {
                         None
