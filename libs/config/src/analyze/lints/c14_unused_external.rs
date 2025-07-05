@@ -1,4 +1,4 @@
-use std::{cell::RefCell, io::Write, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}};
+use std::{cell::RefCell, io::Write, rc::{Rc, Weak}, sync::{atomic::AtomicU16, Arc, Once, OnceLock}};
 
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
@@ -81,7 +81,8 @@ impl LintRunner<LintData> for Runner {
                 return vec![];
             }
         };
-        ClassNode::check_unused(&root, &mut vec![], processed, config, &mut file, runtime)
+        let (_, codes) = ClassNode::check_unused(&root, processed, config, &mut file, runtime);
+        codes
     }
 }
 
@@ -96,12 +97,13 @@ impl ClassNode {
     #[must_use]
     fn check_unused(
         cfg: &Rc<RefCell<Self>>,
-        reported: &mut Vec<Class>,
+        // reported: &mut Vec<Class>,
         processed: &Processed,
         config: &LintConfig,
         file: &mut std::fs::File,
         runtime: &hemtt_common::config::RuntimeArguments,
-    ) -> Codes {
+    ) -> (Vec<Class>, Codes) {
+        let mut reported: Vec<Class> = Vec::new();
         let mut codes: Codes = Vec::new();
         if !cfg.borrow().used && !reported.contains(&cfg.borrow().class) {
             reported.push(cfg.borrow().class.clone());
@@ -124,10 +126,14 @@ impl ClassNode {
             .expect("Failed to write to file");
         }
         for subclass in cfg.borrow().subclasses.values() {
-            codes.extend(Self::check_unused(subclass, reported, processed, config, file, runtime));
+            println!("Checking subclass {:?}", subclass.borrow().class.name());
+            let (inner_reported, inner_codes) = Self::check_unused(subclass, processed, config, file, runtime);
+            reported.extend(inner_reported);
+            codes.extend(inner_codes);
         }
-        codes
+        (reported, codes)
     }
+
     #[must_use]
     fn insert_class(cfg: &Rc<RefCell<Self>>, class: &Class, external: bool) -> Rc<RefCell<Self>> {
         let name = class
@@ -144,6 +150,7 @@ impl ClassNode {
         cfg.borrow_mut().subclasses.insert(name, new_class.clone());
         new_class
     }
+
     #[must_use]
     #[allow(clippy::assigning_clones)]
     fn insert_inherited(

@@ -83,7 +83,7 @@ fn test_c09_magwell_missing_magazine() {
 #[test]
 fn test_collect_cfgfunctions() {
     let (_, report) = lint(stringify!(collect_cfgfunctions));
-    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
+    let mut functions_defined: Vec<&String> = report.functions_defined().iter().map(|(s, _)| s).collect();
     functions_defined.sort();
     insta::assert_compact_debug_snapshot!(functions_defined);
 }

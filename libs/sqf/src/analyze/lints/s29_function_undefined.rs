@@ -133,11 +133,11 @@ impl LintRunner<LintData> for RunnerExpression {
                         return vec![];
                     }
                 };
-                let func_name = func_name.to_lowercase();
-                if is_project_func(&func_name, project) {
+                let func_name_lower = func_name.to_lowercase();
+                if is_project_func(&func_name_lower, project) {
                     let mut functions_defined =
                         data.functions_defined.lock().expect("mutex safety");
-                    functions_defined.insert(func_name);
+                    functions_defined.insert((func_name_lower, func_name.clone()));
                 }
             }
             _ => {}
@@ -167,10 +167,10 @@ impl LintRunner<LintData> for RunnerStatement {
         let Statement::AssignGlobal(func_name, _, _) = target else {
             return Vec::new();
         };
-        let func_name = func_name.to_lowercase();
-        if is_project_func(&func_name, project) {
+        let func_name_lower = func_name.to_lowercase();
+        if is_project_func(&func_name_lower, project) {
             let mut functions_defined = data.functions_defined.lock().expect("mutex safety");
-            functions_defined.insert(func_name);
+            functions_defined.insert((func_name_lower, func_name.clone().into()));
         }
 
         vec![]
@@ -206,7 +206,7 @@ impl LintRunner<LintData> for RunnerFinal {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             for i in ignore {
                 if let Value::String(i) = i {
-                    all_defined.insert(i.to_lowercase());
+                    all_defined.insert((i.to_lowercase(), i.clone().into()));
                 }
             }
         }
@@ -220,14 +220,14 @@ impl LintRunner<LintData> for RunnerFinal {
                 .expect("not juliet")
                 .clone();
             for (func, position, start, end, file) in used {
-                if !all_defined.contains(&func) {
+                if !all_defined.iter().any(|(s, _)| s == &func) {
                     all_missing.entry(func).or_insert(Vec::new()).push((position, start, end, file));
                 }
             }
         }
 
         for (func, positions) in all_missing {
-            let similar = similar_values(&func, &all_defined.iter().map(std::string::String::as_str).collect::<Vec<_>>())
+            let similar = similar_values(&func, &all_defined.iter().map(|(s, _)| s.as_str()).collect::<Vec<_>>())
                 .into_iter()
                 .map(std::string::ToString::to_string)
                 .collect();

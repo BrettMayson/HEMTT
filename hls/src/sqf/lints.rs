@@ -41,6 +41,7 @@ impl Cache {
 async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, client: Client) {
     debug!("sqf: checking addons");
     let mut futures = JoinSet::new();
+    let mut next_addons = Vec::new();
     for addon in workspace.root().addons() {
         let Ok(source) = workspace.root().join(addon.as_str()) else {
             warn!("failed to join addon {:?}", addon);
@@ -68,6 +69,7 @@ async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, clien
                 ));
             }
         }
+        next_addons.push(addon);
     }
     tokio::spawn(async move {
         futures.join_all().await;
@@ -104,13 +106,24 @@ async fn check_sqf(
                 let workspace_files = WorkspaceFiles::new();
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (codes, _) = hemtt_sqf::analyze::analyze(
+                        let (codes, report) = hemtt_sqf::analyze::analyze(
                             &sqf,
                             workspace.config().as_ref(),
                             &processed,
-                            addon,
+                            addon.clone(),
                             database,
                         );
+                        if let Some(report) = report {
+                            let cache = SqfAnalyzer::get();
+                            let mut functions_defined = cache
+                                .functions_defined
+                                .entry(addon.name().to_string())
+                                .or_insert_with(HashMap::new);
+                            functions_defined.insert(
+                                source.as_str().to_string(),
+                                report.functions_defined().clone(),
+                            );
+                        }
                         for code in codes {
                             let Some(diag) = code.diagnostic() else {
                                 warn!("failed to get diagnostic");
