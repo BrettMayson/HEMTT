@@ -31,3 +31,7 @@ class CfgVehicles {
         };
     };
 };
+
+class tango {
+    class tango: tango {}; // cannot inherit from it's own parent
+};
