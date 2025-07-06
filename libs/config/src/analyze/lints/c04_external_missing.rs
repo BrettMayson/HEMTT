@@ -1,10 +1,11 @@
-use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc, sync::Arc};
+use std::{cell::RefCell, fmt, rc::Rc, sync::Arc};
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed},
 };
+use indexmap::IndexMap;
 
 use crate::{analyze::LintData, Class, Config, Property};
 
@@ -77,7 +78,7 @@ impl LintRunner<LintData> for Runner {
         let root = Rc::new(RefCell::new(ClassNode {
             class: Class::Root { properties: vec![] },
             upper: None,
-            subclasses: HashMap::new(),
+            subclasses: IndexMap::new(),
         }));
         check(&target.0, &root, processed)
     }
@@ -86,7 +87,7 @@ impl LintRunner<LintData> for Runner {
 struct ClassNode {
     class: Class,
     upper: Option<Rc<RefCell<ClassNode>>>,
-    subclasses: HashMap<String, Rc<RefCell<ClassNode>>>,
+    subclasses: IndexMap<String, Rc<RefCell<ClassNode>>>, // keep insertion order constant
 }
 impl fmt::Debug for ClassNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -96,9 +97,7 @@ impl fmt::Debug for ClassNode {
                 p.borrow()
                     .class
                     .name()
-                    .expect("class has a name")
-                    .value
-                    .clone()
+                    .map_or_else(|| "None".to_string(), |name| name.value.clone())
             },
         );
         write!(f, "Cfg {{ name: {}, upper: {}", self.class, upper_name)?;
@@ -108,34 +107,22 @@ impl fmt::Debug for ClassNode {
         write!(f, " }}")
     }
 }
-
 impl ClassNode {
-    fn insert_class(cfg: &Rc<RefCell<Self>>, class: &Class) -> Rc<RefCell<Self>> {
-        let name = class
-            .name()
-            .expect("class has a name")
-            .value
-            .to_ascii_lowercase();
-        let new_class = Rc::new(RefCell::new(Self {
+    #[must_use]
+    fn get_standalone_class(cfg: &Rc<RefCell<Self>>, class: &Class) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self {
             class: class.clone(),
             upper: Some(cfg.clone()),
-            subclasses: HashMap::new(),
-        }));
-        cfg.borrow_mut().subclasses.insert(name, new_class.clone());
-        new_class
+            subclasses: IndexMap::new(),
+        }))
     }
-
+    #[must_use]
     #[allow(clippy::assigning_clones)]
-    fn insert_inherited(
+    fn get_inherited_class(
         cfg: &Rc<RefCell<Self>>,
         class: &Class,
         parent: &str,
     ) -> (Rc<RefCell<Self>>, bool) {
-        let name = class
-            .name()
-            .expect("class has a name")
-            .value
-            .to_ascii_lowercase();
         let mut new_class = None;
         let mut search_tier = Some(cfg.clone());
         while let Some(search) = search_tier {
@@ -145,7 +132,7 @@ impl ClassNode {
                 search_tier = search.borrow().upper.clone();
                 continue;
             };
-            let parent_cfg = result_parent.borrow_mut();
+            let parent_cfg = result_parent.borrow();
             new_class = Some(Rc::new(RefCell::new(Self {
                 class: class.clone(),
                 upper: Some(cfg.clone()),
@@ -158,12 +145,9 @@ impl ClassNode {
             new_class = Some(Rc::new(RefCell::new(Self {
                 class: class.clone(),
                 upper: Some(cfg.clone()),
-                subclasses: HashMap::new(),
+                subclasses: IndexMap::new(),
             })));
         }
-        cfg.borrow_mut()
-            .subclasses
-            .insert(name, new_class.clone().expect("new_class exists"));
         (new_class.expect("new_class exists"), found)
     }
 }
@@ -172,12 +156,17 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Pro
     let mut codes: Codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
+            let name = c
+                .name()
+                .map_or_else(|| "None".to_string(), |name| name.value.clone())
+                .to_ascii_lowercase();
             match c {
                 Class::Root { properties } => {
                     codes.extend(check(properties, base, processed));
                 }
                 Class::External { .. } => {
-                    ClassNode::insert_class(base, c);
+                    let new_class = ClassNode::get_standalone_class(base, c);
+                    base.borrow_mut().subclasses.insert(name, new_class);
                 }
                 Class::Local {
                     name: _,
@@ -186,9 +175,9 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Pro
                     err_missing_braces: _,
                 } => {
                     let new_class = if parent.is_none() {
-                        ClassNode::insert_class(base, c)
+                        ClassNode::get_standalone_class(base, c)
                     } else {
-                        let (class, found) = ClassNode::insert_inherited(
+                        let (class, found) = ClassNode::get_inherited_class(
                             base,
                             c,
                             &parent.clone().expect("parent exists").value,
@@ -199,11 +188,11 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Pro
                         class
                     };
                     codes.extend(check(properties, &new_class, processed));
+                    base.borrow_mut().subclasses.insert(name, new_class);
                 }
             }
         }
     }
-
     codes
 }
 
