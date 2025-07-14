@@ -1306,7 +1306,7 @@ Project {
                             "Hlavní zásobník",
                         ),
                         french: Some(
-                            "Chargeur principal",
+                            "Chargeur principal ",
                         ),
                         spanish: Some(
                             "Cargador principal",
@@ -1510,7 +1510,7 @@ Project {
                             "导出",
                         ),
                         turkish: Some(
-                            "Dışa Aktar",
+                            "Dışa Aktar ",
                         ),
                         swedish: None,
                         slovak: None,
@@ -1543,7 +1543,7 @@ Project {
                             "Esporta l'equipaggiamento attuale oppure la lista degli equipaggiamenti di base",
                         ),
                         polish: Some(
-                            "Eksportuj obecne / domyślne zestawy wyposażenia",
+                            "Eksportuj obecne / domyślne zestawy wyposażenia ",
                         ),
                         portuguese: Some(
                             "Exporta loadout atual / loadouts padrões",
@@ -2272,7 +2272,7 @@ Project {
                             "[Shift+Click per salvare come equipaggiamento predefinito della missione]",
                         ),
                         polish: Some(
-                            "Shift + Klik aby zapisac jako domyślne dla misji",
+                            "Shift + Klik aby zapisac jako domyślne dla misji ",
                         ),
                         portuguese: Some(
                             "[Shift+Clique para salvar nos padrões da missão]",
@@ -3219,7 +3219,7 @@ Project {
                             "提供的格式错误",
                         ),
                         turkish: Some(
-                            "Yanlış format",
+                            "Yanlış format ",
                         ),
                         swedish: None,
                         slovak: None,
