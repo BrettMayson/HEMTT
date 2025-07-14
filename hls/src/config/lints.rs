@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, f32::consts::E, sync::{Arc, LazyLock}
+    collections::HashMap, sync::{Arc, LazyLock}
 };
 
 use hemtt_preprocessor::Processor;
