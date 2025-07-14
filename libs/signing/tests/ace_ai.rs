@@ -4,7 +4,7 @@ use std::{fs::File, path::PathBuf};
 
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::{BIPrivateKey, BIPublicKey, BISign};
-use rsa::BigUint;
+use rsa::BoxedUint;
 
 #[test]
 fn write() {
@@ -74,10 +74,10 @@ fn read_signature() {
     assert_eq!(bisign.authority(), "test");
     assert_eq!(bisign.version(), hemtt_pbo::BISignVersion::V3);
     assert_eq!(bisign.length(), 1024);
-    assert_eq!(bisign.exponent(), &BigUint::from_slice_native(&[65537]));
+    assert_eq!(bisign.exponent(), &BoxedUint::from_words([65537u64]));
     assert_eq!(
         bisign.modulus(),
-        &BigUint::from_slice_native(&[
+        &BoxedUint::from_words([
             3_383_022_893_987_068_657,
             211_522_787_039_626_673,
             12_924_607_435_213_790_771,

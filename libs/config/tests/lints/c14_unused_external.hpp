@@ -27,7 +27,36 @@ class CfgAmmo {
             class delta: delta { cool = 3; };
         };
     };
+};
 
+// Controls inside of Controls
+class RscDisplayAttributes {
+    class Controls {
+        class Background;
+        class Title;
+        class Content;
+    };
+};
+class RscControlsGroupNoScrollbars;
+class RscAttributeText: RscControlsGroupNoScrollbars {
+    class Controls {
+        class Title;
+    };
+};
+class test: RscDisplayAttributes {
+    class Controls: Controls {
+        class Background: Background {};
+        class Title: Title {};
+        class Content: Content {
+            class Controls: Controls {
+                class Text: RscAttributeText {
+                    class Controls: Controls {
+                        class Title: Title {};
+                    };
+                };
+            };
+        };
+    };
 };
 
 class Controls: Controls {
