@@ -18,7 +18,7 @@ casey = "0.4.2"
 indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.37.5", features = ["serialize"] }
+quick-xml = { version = "0.38.0", features = ["serialize"] }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
