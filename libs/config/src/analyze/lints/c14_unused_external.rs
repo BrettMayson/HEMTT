@@ -4,7 +4,6 @@ use std::{
     rc::Rc,
     sync::{atomic::AtomicU16, Arc, Once, OnceLock},
 };
-use std::{cell::RefCell, io::Write, rc::{Rc, Weak}, sync::{atomic::AtomicU16, Arc, Once, OnceLock}};
 
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
