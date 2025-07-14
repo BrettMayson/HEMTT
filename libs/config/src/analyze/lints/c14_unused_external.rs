@@ -102,7 +102,6 @@ impl ClassNode {
     #[must_use]
     fn check_unused(
         cfg: &Rc<RefCell<Self>>,
-        // reported: &mut Vec<Class>,
         processed: &Processed,
         config: &LintConfig,
         file: &mut std::fs::File,
@@ -140,7 +139,6 @@ impl ClassNode {
         }
         (reported, codes)
     }
-
 
     #[must_use]
     fn get_standalone_class(

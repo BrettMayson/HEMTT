@@ -2,14 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Launch",
-      "program": "${workspaceFolder}/target/debug/hemtt",
-      "args": ["build", "-t1", "--just", "assigngear"],
-      "cwd": "/home/brett/Documents/GitHub/scatch/ARCOMM-TMF"
-    },
-    {
       "type": "extensionHost",
       "request": "launch",
       "name": "VSCode Extension",
