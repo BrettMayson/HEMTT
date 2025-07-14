@@ -187,7 +187,7 @@ fn get_functions_defined(addon: &str) -> Vec<String> {
             items.insert(func.to_string());
         }
     }
-    items
+    let mut ret = items
         .into_iter()
         .map(|item| {
             if item.contains("_fnc_") {
@@ -196,7 +196,9 @@ fn get_functions_defined(addon: &str) -> Vec<String> {
                 item.clone()
             }
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+    ret.sort();
+    ret
 }
 
 fn get_addons() -> Vec<String> {

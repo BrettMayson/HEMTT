@@ -1,6 +1,5 @@
 use std::{
-    collections::HashMap,
-    sync::{Arc, LazyLock},
+    collections::HashMap, f32::consts::E, sync::{Arc, LazyLock}
 };
 
 use hemtt_preprocessor::Processor;
@@ -93,7 +92,11 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                                 let parts: Vec<&str> = source.as_str().split('/').collect();
                                 if parts.len() < 3 {
                                     warn!("Invalid config path: {}", source.as_str());
-                                    parts[1].to_string()
+                                    if parts.len() == 2 {
+                                        parts[1].to_string()
+                                    } else {
+                                        source.as_str().to_string()
+                                    }
                                 } else {
                                     parts[2].to_string()
                                 }

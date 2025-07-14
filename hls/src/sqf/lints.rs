@@ -41,7 +41,6 @@ impl Cache {
 async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, client: Client) {
     debug!("sqf: checking addons");
     let mut futures = JoinSet::new();
-    let mut next_addons = Vec::new();
     for addon in workspace.root().addons() {
         let Ok(source) = workspace.root().join(addon.as_str()) else {
             warn!("failed to join addon {:?}", addon);
@@ -69,7 +68,6 @@ async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, clien
                 ));
             }
         }
-        next_addons.push(addon);
     }
     tokio::spawn(async move {
         futures.join_all().await;
