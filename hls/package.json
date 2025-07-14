@@ -284,6 +284,13 @@
         "id": "hemtt.audio",
         "label": "HEMTT Audio"
       }
+    ],
+    "keybindings": [
+      {
+        "command": "hemtt.openLastRPT",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r"
+      }
     ]
   },
   "scripts": {
