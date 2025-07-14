@@ -58,9 +58,3 @@ class test: RscDisplayAttributes {
         };
     };
 };
-
-class Controls: Controls {
-    class Content: Content {
-        class Controls: Controls {};
-    };
-};
