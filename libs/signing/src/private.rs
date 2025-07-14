@@ -4,11 +4,11 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
 use hemtt_pbo::{BISignVersion, ReadablePbo};
 use rsa::{
-    BigUint, RsaPrivateKey,
+    BoxedUint, RsaPrivateKey,
     traits::{PrivateKeyParts, PublicKeyParts},
 };
 
-use crate::{error::Error, generate_hashes, public::BIPublicKey, signature::BISign};
+use crate::{error::Error, generate_hashes, modpow, public::BIPublicKey, signature::BISign};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
@@ -16,14 +16,14 @@ use crate::{error::Error, generate_hashes, public::BIPublicKey, signature::BISig
 pub struct BIPrivateKey {
     authority: String,
     length: u32,
-    exponent: BigUint,
-    n: BigUint,
-    p: BigUint,
-    q: BigUint,
-    dp: BigUint,
-    dq: BigUint,
-    qinv: BigUint,
-    d: BigUint,
+    exponent: BoxedUint,
+    n: BoxedUint,
+    p: BoxedUint,
+    q: BoxedUint,
+    dp: BoxedUint,
+    dq: BoxedUint,
+    qinv: BoxedUint,
+    d: BoxedUint,
 }
 
 impl BIPrivateKey {
@@ -35,20 +35,18 @@ impl BIPrivateKey {
     /// # Errors
     /// If RSA generation fails.
     pub fn generate(length: u32, authority: &str) -> Result<Self, Error> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut rsa = RsaPrivateKey::new(&mut rng, length as usize)?;
         rsa.precompute()?;
         let primes = rsa.primes();
-        let Some(qinv) = rsa.qinv().expect(
+        let qinv = rsa.qinv().expect(
             "qinv should be precomputed, if it's not, the precompute failed and we should return",
-        ).to_biguint() else {
-            return Err(Error::Rsa(rsa::errors::Error::Internal));
-        };
+        ).to_montgomery();
         Ok(Self {
             authority: authority.to_string(),
             length,
             exponent: rsa.e().clone(),
-            n: rsa.n().clone(),
+            n: rsa.n().clone().get(),
             p: primes[0].clone(),
             q: primes[1].clone(),
             dp: rsa.dp().expect(
@@ -92,49 +90,49 @@ impl BIPrivateKey {
         let exponent = {
             let mut buffer = vec![0; 4];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let n = {
             let mut buffer = vec![0; (length / 8) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let p = {
             let mut buffer = vec![0; (length / 16) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let q = {
             let mut buffer = vec![0; (length / 16) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let dp = {
             let mut buffer = vec![0; (length / 16) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let dq = {
             let mut buffer = vec![0; (length / 16) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let qinv = {
             let mut buffer = vec![0; (length / 16) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         let d = {
             let mut buffer = vec![0; (length / 8) as usize];
             input.read_exact(&mut buffer)?;
-            BigUint::from_bytes_le(&buffer)
+            BoxedUint::from_le_slice_vartime(&buffer)
         };
 
         Ok(Self {
@@ -162,9 +160,9 @@ impl BIPrivateKey {
     ) -> Result<BISign, Error> {
         let (hash1, hash2, hash3) = generate_hashes(pbo, version, self.length)?;
 
-        let sig1 = hash1.modpow(&self.d, &self.n);
-        let sig2 = hash2.modpow(&self.d, &self.n);
-        let sig3 = hash3.modpow(&self.d, &self.n);
+        let sig1 = modpow(&hash1, &self.d, &self.n);
+        let sig2 = modpow(&hash2, &self.d, &self.n);
+        let sig3 = modpow(&hash3, &self.d, &self.n);
 
         Ok(BISign {
             version,
@@ -191,21 +189,21 @@ impl BIPrivateKey {
         output.write_all(b"\x07\x02\x00\x00\x00\x24\x00\x00")?;
         output.write_all(b"RSA2")?;
         output.write_u32::<LittleEndian>(self.length)?;
-        super::write_biguint(output, &self.exponent, 4)?;
+        super::write_boxeduint(output, &self.exponent, 4)?;
         // output.write_all(&self.exponent.to_bytes_le())?;
-        super::write_biguint(output, &self.n, (self.length / 8) as usize)?;
+        super::write_boxeduint(output, &self.n, (self.length / 8) as usize)?;
         // output.write_all(&self.n.to_bytes_le())?;
-        super::write_biguint(output, &self.p, (self.length / 16) as usize)?;
+        super::write_boxeduint(output, &self.p, (self.length / 16) as usize)?;
         // output.write_all(&self.p.to_bytes_le())?;
-        super::write_biguint(output, &self.q, (self.length / 16) as usize)?;
+        super::write_boxeduint(output, &self.q, (self.length / 16) as usize)?;
         // output.write_all(&self.q.to_bytes_le())?;
-        super::write_biguint(output, &self.dp, (self.length / 16) as usize)?;
+        super::write_boxeduint(output, &self.dp, (self.length / 16) as usize)?;
         // output.write_all(&self.dp.to_bytes_le())?;
-        super::write_biguint(output, &self.dq, (self.length / 16) as usize)?;
+        super::write_boxeduint(output, &self.dq, (self.length / 16) as usize)?;
         // output.write_all(&self.dq.to_bytes_le())?;
-        super::write_biguint(output, &self.qinv, (self.length / 16) as usize)?;
+        super::write_boxeduint(output, &self.qinv, (self.length / 16) as usize)?;
         // output.write_all(&self.qinv.to_bytes_le())?;
-        super::write_biguint(output, &self.d, (self.length / 8) as usize)?;
+        super::write_boxeduint(output, &self.d, (self.length / 8) as usize)?;
         // output.write_all(&self.d.to_bytes_le())?;
         Ok(())
     }

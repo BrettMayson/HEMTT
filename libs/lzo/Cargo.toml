@@ -9,11 +9,11 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-libc = "0.2.172"
+libc = "0.2.174"
 thiserror = { workspace = true }
 
 [dev-dependencies]
-rand = "0.8.5"
+rand = { workspace = true }
 
 [features]
 default = ["compress", "decompress"]
