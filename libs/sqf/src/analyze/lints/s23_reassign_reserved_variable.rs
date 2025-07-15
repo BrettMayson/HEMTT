@@ -198,7 +198,7 @@ impl Code for CodeS23ReassignReservedVariable {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#reasign_reserved_variable")
+        Some("/lints/sqf.html#reasign_reserved_variable")
     }
 
     fn severity(&self) -> Severity {

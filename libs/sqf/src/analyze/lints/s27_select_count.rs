@@ -121,7 +121,7 @@ impl Code for CodeS27SelectCount {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#select_count")
+        Some("/lints/sqf.html#select_count")
     }
 
     fn severity(&self) -> Severity {

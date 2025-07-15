@@ -230,7 +230,7 @@ impl Code for CodeC11MissingExtension {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#file_type")
+        Some("/lints/config.html#file_type")
     }
 
     fn message(&self) -> String {
@@ -280,7 +280,7 @@ impl Code for CodeC11UnusualExtension {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#file_type")
+        Some("/lints/config.html#file_type")
     }
 
     fn message(&self) -> String {

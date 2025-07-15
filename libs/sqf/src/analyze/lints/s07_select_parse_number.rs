@@ -154,7 +154,7 @@ impl Code for CodeS07SelectParseNumber {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#select_parse_number")
+        Some("/lints/sqf.html#select_parse_number")
     }
 
     fn severity(&self) -> Severity {

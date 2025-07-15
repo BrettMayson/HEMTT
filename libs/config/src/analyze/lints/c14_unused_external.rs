@@ -246,7 +246,7 @@ impl Code for CodeC14UnusedExternal {
         "L-C14"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#unused_external")
+        Some("/lints/config.html#unused_external")
     }
     fn severity(&self) -> Severity {
         self.severity

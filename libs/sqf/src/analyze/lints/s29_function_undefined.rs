@@ -260,7 +260,7 @@ impl Code for Code29FunctionUndefined {
         "L-S29"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#function_undefined")
+        Some("/lints/sqf.html#function_undefined")
     }
     fn severity(&self) -> Severity {
         self.severity

@@ -100,7 +100,7 @@ impl Code for CodeS11IfNot {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#if_not_else")
+        Some("/lints/sqf.html#if_not_else")
     }
 
     fn severity(&self) -> Severity {

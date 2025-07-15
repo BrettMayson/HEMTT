@@ -120,7 +120,7 @@ impl Code for CodeS05IfAssign {
     }
     
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#if_assign")
+        Some("/lints/sqf.html#if_assign")
     }
 
     fn severity(&self) -> Severity {

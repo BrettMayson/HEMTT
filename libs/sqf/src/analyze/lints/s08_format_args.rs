@@ -177,7 +177,7 @@ impl Code for CodeS08FormatArgs {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#format_args")
+        Some("/lints/sqf.html#format_args")
     }
 
     fn severity(&self) -> Severity {

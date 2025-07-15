@@ -178,7 +178,7 @@ impl Code for Code12MathCouldBeUnquoted {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#math_could_be_unquoted")
+        Some("/lints/config.html#math_could_be_unquoted")
     }
 
     fn severity(&self) -> Severity {

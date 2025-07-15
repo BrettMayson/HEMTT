@@ -220,7 +220,7 @@ impl Code for Code09MagwellMissingMagazine {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#magwell_missing_magazine")
+        Some("/lints/config.html#magwell_missing_magazine")
     }
 
     fn message(&self) -> String {
