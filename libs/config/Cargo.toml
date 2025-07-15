@@ -25,7 +25,10 @@ lsp-types = { workspace = true }
 toml = { workspace = true }
 vfs = { workspace = true }
 
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+
 [dev-dependencies]
 hemtt-preprocessor = { path = "../preprocessor" }
 insta = { workspace = true }
 paste = { workspace = true }
+

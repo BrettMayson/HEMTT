@@ -51,3 +51,13 @@ impl Config {
         patches
     }
 }
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Config {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_class().serialize(serializer)
+    }
+}
