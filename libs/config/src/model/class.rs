@@ -85,6 +85,9 @@ impl serde::Serialize for Class {
             Self::Local { properties, .. } | Self::Root { properties } => {
                 use serde::ser::SerializeMap;
                 let mut state = serializer.serialize_map(Some(properties.len()))?;
+                if let Self::Local { parent, .. } = self && let Some(parent) = parent {
+                    state.serialize_entry("__parent", parent.as_str())?;
+                }
                 for property in properties {
                     state.serialize_entry(property.name().as_str(), property)?;
                 }
