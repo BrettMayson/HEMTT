@@ -98,7 +98,7 @@ impl Code for Code10ClassMissingBraces {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#class_missing_braces")
+        Some("/lints/config.html#class_missing_braces")
     }
 
     fn message(&self) -> String {

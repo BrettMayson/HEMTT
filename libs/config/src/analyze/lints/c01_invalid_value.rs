@@ -128,7 +128,7 @@ impl Code for CodeC01InvalidValue {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#invalid_value")
+        Some("/lints/config.html#invalid_value")
     }
 
     fn message(&self) -> String {
@@ -185,7 +185,7 @@ impl Code for CodeC01InvalidValueMacro {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#invalid_value")
+        Some("/lints/config.html#invalid_value")
     }
 
     fn message(&self) -> String {

@@ -135,7 +135,7 @@ impl Code for CodeC03DuplicateClasses {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#duplicate_classes")
+        Some("/lints/config.html#duplicate_classes")
     }
 
     fn message(&self) -> String {

@@ -4,7 +4,7 @@ HEMTT runs lints against your config and SQF files to check for errors, common m
 
 Lints can be kept in the `project.toml` file under the `lints` section, or in a separate `.hemtt/lints.toml` file. When kept in `lints.toml`, the `lints.` prefix is not required.
 
-See the Analysis section for [Config](../analysis/config.md) and [SQF](../analysis/sqf.md) lints.
+See the Analysis section for [Config](../lints/config.md) and [SQF](../lints/sqf.md) lints.
 
 ## Configuration
 

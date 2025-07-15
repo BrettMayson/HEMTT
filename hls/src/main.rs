@@ -15,6 +15,7 @@ use crate::workspace::EditorWorkspaces;
 
 mod audio;
 mod color;
+mod completion;
 mod config;
 mod diag_manager;
 mod files;
@@ -58,6 +59,19 @@ impl LanguageServer for Backend {
                     work_done_progress_options: WorkDoneProgressOptions {
                         work_done_progress: None,
                     },
+                }),
+                completion_provider: Some(CompletionOptions {
+                    resolve_provider: Some(false),
+                    trigger_characters: Some(vec![
+                        "(".to_string(),
+                        ",".to_string(),
+                        "\\".to_string(),
+                    ]),
+                    all_commit_characters: None,
+                    work_done_progress_options: WorkDoneProgressOptions {
+                        work_done_progress: None,
+                    },
+                    completion_item: None,
                 }),
                 definition_provider: Some(OneOf::Left(true)),
                 color_provider: Some(ColorProviderCapability::Options(
@@ -110,7 +124,6 @@ impl LanguageServer for Backend {
     }
 
     async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
-        debug!("did_change_watched_files");
         for x in params.changes {
             if x.uri.path().contains(".toml") {
                 ConfigAnalyzer::get()
@@ -124,7 +137,6 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        debug!("did_open: {:?}", params.text_document.uri);
         let document = TextDocumentItem {
             uri: params.text_document.uri.clone(),
             text: TextInformation::Full(&params.text_document.text),
@@ -151,7 +163,6 @@ impl LanguageServer for Backend {
     }
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
-        debug!("did_save: {:?}", params.text_document.uri);
         ConfigAnalyzer::get()
             .on_save(params.text_document.uri.clone(), self.client.clone())
             .await;
@@ -170,7 +181,6 @@ impl LanguageServer for Backend {
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        debug!("did_close: {:?}", params.text_document.uri);
         FileCache::get().on_close(&params.text_document.uri).await;
         SqfAnalyzer::get().on_close(&params.text_document.uri).await;
         PreprocessorAnalyzer::get()
@@ -207,6 +217,16 @@ impl LanguageServer for Backend {
         params: ColorPresentationParams,
     ) -> Result<Vec<ColorPresentation>> {
         color::presentation(params).await
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let uri = &params.text_document_position.text_document.uri;
+        let (_, ext) = uri.path().rsplit_once('.').unwrap_or((uri.path(), ""));
+        let ext = ext.to_lowercase();
+        if ["sqf", "ext", "cpp", "hpp", "inc"].contains(&ext.as_str()) {
+            return completion::completion(params.text_document_position, params.context).await;
+        }
+        Ok(None)
     }
 }
 

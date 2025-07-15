@@ -132,7 +132,7 @@ impl Code for CodeC02DuplicateProperty {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#duplicate_property")
+        Some("/lints/config.html#duplicate_property")
     }
 
     fn message(&self) -> String {

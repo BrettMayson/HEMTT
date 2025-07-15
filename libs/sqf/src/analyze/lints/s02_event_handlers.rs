@@ -349,7 +349,7 @@ impl Code for CodeS02UnknownEvent {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#event_unknown")
+        Some("/lints/sqf.html#event_unknown")
     }
 
     fn severity(&self) -> Severity {
@@ -451,7 +451,7 @@ impl Code for CodeS02IncorrectCommand {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#event_incorrect_command")
+        Some("/lints/sqf.html#event_incorrect_command")
     }
 
     fn severity(&self) -> Severity {
@@ -574,7 +574,7 @@ impl Code for CodeS02InsufficientVersion {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#event_insufficient_version")
+        Some("/lints/sqf.html#event_insufficient_version")
     }
 
     fn message(&self) -> String {

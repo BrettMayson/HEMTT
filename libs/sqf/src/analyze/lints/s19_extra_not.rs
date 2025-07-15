@@ -102,7 +102,7 @@ impl Code for Code19ExtraNot {
         "L-S19"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#extra_not")
+        Some("/lints/sqf.html#extra_not")
     }
     fn severity(&self) -> Severity {
         self.severity

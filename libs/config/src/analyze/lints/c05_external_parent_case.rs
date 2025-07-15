@@ -135,7 +135,7 @@ impl Code for Code05ExternalParentCase {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#external_parent_case")
+        Some("/lints/config.html#external_parent_case")
     }
 
     fn message(&self) -> String {

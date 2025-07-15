@@ -17,7 +17,7 @@ pub struct FineNewLineCheck {}
 
 impl Module for FineNewLineCheck {
     fn name(&self) -> &'static str {
-        "Fine New Line Check"
+        "Final New Line Check"
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, crate::Error> {

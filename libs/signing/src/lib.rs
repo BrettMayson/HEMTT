@@ -9,9 +9,13 @@
 
 use std::io::{Read, Seek, Write};
 
+use crypto_bigint::{
+    Odd, Resize,
+    modular::{BoxedMontyForm, BoxedMontyParams},
+};
 use hemtt_common::BISignVersion;
 use hemtt_pbo::ReadablePbo;
-use rsa::BigUint;
+use rsa::BoxedUint;
 use sha1::{Digest, Sha1};
 
 mod error;
@@ -24,19 +28,19 @@ pub use private::BIPrivateKey;
 pub use public::BIPublicKey;
 pub use signature::BISign;
 
-/// Writes a [`BigUint`] to the given output.
+/// Writes a [`BoxedUint`] to the given output.
 ///
 /// # Errors
 /// If the output fails to write.
-pub fn write_biguint<O: Write>(output: &mut O, bn: &BigUint, size: usize) -> Result<(), Error> {
-    let mut vec: Vec<u8> = bn.to_bytes_le();
+pub fn write_boxeduint<O: Write>(output: &mut O, bn: &BoxedUint, size: usize) -> Result<(), Error> {
+    let mut vec: Vec<u8> = bn.to_le_bytes().to_vec();
     vec.resize(size, 0);
     output.write_all(&vec).map_err(std::convert::Into::into)
 }
 
-fn display_hashes(a: &BigUint, b: &BigUint) -> (String, String) {
-    let hex_a = a.to_str_radix(16).to_lowercase();
-    let hex_b = b.to_str_radix(16).to_lowercase();
+fn display_hashes(a: &BoxedUint, b: &BoxedUint) -> (String, String) {
+    let hex_a = a.to_string_radix_vartime(16).to_lowercase();
+    let hex_b = b.to_string_radix_vartime(16).to_lowercase();
 
     if hex_a.len() != hex_b.len() || hex_a.len() <= 40 {
         return (hex_a, hex_b);
@@ -60,7 +64,7 @@ pub fn generate_hashes<I: Seek + Read>(
     pbo: &mut ReadablePbo<I>,
     version: BISignVersion,
     length: u32,
-) -> Result<(BigUint, BigUint, BigUint), Error> {
+) -> Result<(BoxedUint, BoxedUint, BoxedUint), Error> {
     let mut hasher = Sha1::new();
     let hash1 = pbo.gen_checksum()?;
 
@@ -94,23 +98,40 @@ pub fn generate_hashes<I: Seek + Read>(
 
 #[must_use]
 /// Pad a hash to the given size
-pub fn pad_hash(hash: &[u8], size: usize) -> BigUint {
+pub fn pad_hash(hash: &[u8], size: usize) -> BoxedUint {
     let mut vec: Vec<u8> = vec![0, 1];
     vec.resize(size - 36, 255);
     vec.extend(b"\x00\x30\x21\x30\x09\x06\x05\x2b");
     vec.extend(b"\x0e\x03\x02\x1a\x05\x00\x04\x14");
     vec.extend(hash);
 
-    BigUint::from_bytes_be(&vec)
+    BoxedUint::from_be_slice_vartime(&vec)
+}
+
+#[must_use]
+pub fn modpow(base: &BoxedUint, exponent: &BoxedUint, modulus: &BoxedUint) -> BoxedUint {
+    let n_params = BoxedMontyParams::new(Odd::new(modulus.clone()).unwrap());
+    pow_mod_params(base, exponent, &n_params)
+}
+
+fn pow_mod_params(base: &BoxedUint, exp: &BoxedUint, n_params: &BoxedMontyParams) -> BoxedUint {
+    let base = reduce_vartime(base, n_params);
+    base.pow(exp).retrieve()
+}
+
+fn reduce_vartime(n: &BoxedUint, p: &BoxedMontyParams) -> BoxedMontyForm {
+    let modulus = p.modulus().as_nz_ref().clone();
+    let n_reduced = n.rem_vartime(&modulus).resize_unchecked(p.bits_precision());
+    BoxedMontyForm::new(n_reduced, p.clone())
 }
 
 #[cfg(test)]
 mod tests {
-    use rsa::BigUint;
+    use rsa::BoxedUint;
 
     #[test]
     fn display_hashes() {
-        let bu = &BigUint::from_slice_native(&[
+        let bu = &BoxedUint::from_words([
             3_383_022_893_987_068_657,
             211_522_787_039_626_673,
             12_924_607_435_213_790_771,

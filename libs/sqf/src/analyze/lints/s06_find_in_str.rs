@@ -119,7 +119,7 @@ impl Code for CodeS06FindInStr {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#find_in_str")
+        Some("/lints/sqf.html#find_in_str")
     }
 
     fn severity(&self) -> Severity {

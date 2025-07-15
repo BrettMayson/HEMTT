@@ -1,4 +1,9 @@
-use std::{cell::RefCell, io::Write, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}};
+use std::{
+    cell::RefCell,
+    io::Write,
+    rc::Rc,
+    sync::{atomic::AtomicU16, Arc, Once, OnceLock},
+};
 
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
@@ -74,17 +79,17 @@ impl LintRunner<LintData> for Runner {
         let mut file = match std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(PATH) {
+            .open(PATH)
+        {
             Ok(file) => file,
             Err(e) => {
                 eprintln!("Failed to open {PATH}: {e}");
                 return vec![];
             }
         };
-        ClassNode::check_unused(&root, &mut vec![], processed, config, &mut file, runtime)
+        ClassNode::check_unused(&root, &mut Vec::new(), processed, config, &mut file, runtime)
     }
 }
-
 struct ClassNode {
     class: Class,
     used: bool,
@@ -112,50 +117,48 @@ impl ClassNode {
                 runtime,
             )));
             let name = cfg.borrow().class.name().expect("class has a name").clone();
-            let pos = processed.mapping(name.span.start).expect("start position exists").original();
+            let pos = processed
+                .mapping(name.span.start)
+                .expect("start position exists")
+                .original();
             writeln!(
                 file,
                 "{} - {}:{}:{}",
                 name.as_str(),
                 pos.path().as_str().trim_start_matches('/'),
-                pos.start().1.0,
-                pos.start().1.1 + 1,
+                pos.start().1 .0,
+                pos.start().1 .1 + 1,
             )
             .expect("Failed to write to file");
         }
         for subclass in cfg.borrow().subclasses.values() {
-            codes.extend(Self::check_unused(subclass, reported, processed, config, file, runtime));
+            let inner_codes = Self::check_unused(subclass, reported, processed, config, file, runtime);
+            codes.extend(inner_codes);
         }
         codes
     }
+
     #[must_use]
-    fn insert_class(cfg: &Rc<RefCell<Self>>, class: &Class, external: bool) -> Rc<RefCell<Self>> {
-        let name = class
-            .name()
-            .expect("class has a name")
-            .value
-            .to_ascii_lowercase();
-        let new_class = Rc::new(RefCell::new(Self {
+    fn get_standalone_class(
+        cfg: &Rc<RefCell<Self>>,
+        class: &Class,
+        external: bool,
+    ) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self {
             class: class.clone(),
             used: !external,
             upper: Some(cfg.clone()),
             subclasses: IndexMap::new(),
-        }));
-        cfg.borrow_mut().subclasses.insert(name, new_class.clone());
-        new_class
+        }))
     }
+
     #[must_use]
     #[allow(clippy::assigning_clones)]
-    fn insert_inherited(
+    fn get_inherited_class(
         cfg: &Rc<RefCell<Self>>,
         class: &Class,
         parent: &str,
     ) -> (Rc<RefCell<Self>>, bool) {
-        let name = class
-            .name()
-            .expect("class has a name")
-            .value
-            .to_ascii_lowercase();
         let mut new_class = None;
         let mut search_tier = Some(cfg.clone());
         while let Some(search) = search_tier {
@@ -184,9 +187,6 @@ impl ClassNode {
                 subclasses: IndexMap::new(),
             })));
         }
-        cfg.borrow_mut()
-            .subclasses
-            .insert(name, new_class.clone().expect("new_class exists"));
         (new_class.expect("new_class exists"), found)
     }
 }
@@ -194,12 +194,17 @@ impl ClassNode {
 fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
     for property in properties {
         if let Property::Class(c) = property {
+            let name = c
+                .name()
+                .map_or_else(|| "None".to_string(), |name| name.value.clone())
+                .to_ascii_lowercase();
             match c {
                 Class::Root { properties } => {
                     check(properties, base);
                 }
                 Class::External { .. } => {
-                    let _class = ClassNode::insert_class(base, c, true);
+                    let new_class = ClassNode::get_standalone_class(base, c, true);
+                    base.borrow_mut().subclasses.insert(name, new_class);
                 }
                 Class::Local {
                     name: _,
@@ -208,9 +213,9 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
                     err_missing_braces: _,
                 } => {
                     let new_class = if parent.is_none() {
-                        ClassNode::insert_class(base, c, false)
+                        ClassNode::get_standalone_class(base, c, false)
                     } else {
-                        let (class, _found) = ClassNode::insert_inherited(
+                        let (class, _found) = ClassNode::get_inherited_class(
                             base,
                             c,
                             &parent.clone().expect("parent exists").value,
@@ -218,6 +223,7 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
                         class
                     };
                     check(properties, &new_class);
+                    base.borrow_mut().subclasses.insert(name, new_class);
                 }
             }
         }
@@ -240,7 +246,7 @@ impl Code for CodeC14UnusedExternal {
         "L-C14"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#unused_external")
+        Some("/lints/config.html#unused_external")
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -263,7 +269,8 @@ impl Code for CodeC14UnusedExternal {
             self.diagnostic.clone()
         } else if self.first {
             Some(
-                Diagnostic::from_code(self).set_message(format!("There are {count} unused external classes")),
+                Diagnostic::from_code(self)
+                    .set_message(format!("There are {count} unused external classes")),
             )
         } else {
             None
@@ -271,7 +278,7 @@ impl Code for CodeC14UnusedExternal {
     }
     fn note(&self) -> Option<String> {
         if self.explicit {
-            return None
+            return None;
         }
         let count = self.count.load(std::sync::atomic::Ordering::Relaxed);
         if count > 5 && self.first {
@@ -286,7 +293,12 @@ impl Code for CodeC14UnusedExternal {
 
 impl CodeC14UnusedExternal {
     #[must_use]
-    pub fn new(class: Class, processed: &Processed, severity: Severity, runtime: &RuntimeArguments) -> Self {
+    pub fn new(
+        class: Class,
+        processed: &Processed,
+        severity: Severity,
+        runtime: &RuntimeArguments,
+    ) -> Self {
         static COUNT: OnceLock<Arc<AtomicU16>> = OnceLock::new();
         let count = COUNT.get_or_init(|| Arc::new(AtomicU16::new(0))).clone();
         let first = count.fetch_add(1, std::sync::atomic::Ordering::Relaxed) == 0;
@@ -297,7 +309,10 @@ impl CodeC14UnusedExternal {
             diagnostic: None,
             count,
             first,
-            explicit: runtime.explicit_lints().iter().any(|l| l.eq_ignore_ascii_case("c14")),
+            explicit: runtime
+                .explicit_lints()
+                .iter()
+                .any(|l| l.eq_ignore_ascii_case("c14")),
         }
         .generate_processed(processed)
     }
