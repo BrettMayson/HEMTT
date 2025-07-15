@@ -495,7 +495,7 @@ fn up_to_date(artifact: &Artifact, search_cache: &SearchCache) -> bool {
                 modified == artifact.modified && size == artifact.size
             } else {
                 debug!("missing metadata for {d}, assuming out-of-date");
-                false
+                d.starts_with("a3\\")
             }
         }) {
             return false;
@@ -506,7 +506,7 @@ fn up_to_date(artifact: &Artifact, search_cache: &SearchCache) -> bool {
             modified == artifact.modified && size == artifact.size
         } else {
             debug!("missing metadata for {name}, assuming out-of-date");
-            false
+            name.starts_with("a3\\")
         }
     }
     artifact

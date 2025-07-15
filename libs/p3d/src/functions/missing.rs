@@ -103,7 +103,13 @@ impl P3D {
                             .modified
                             .expect("has modified")
                             .duration_since(std::time::UNIX_EPOCH)
-                            .expect("should be able to get duration since epoch")
+                            .unwrap_or_else(|_| {
+                                println!(
+                                    "failed to epoch, {:?}",
+                                    metadata.modified.expect("has modified")
+                                );
+                                std::time::Duration::from_secs(0)
+                            })
                             .as_secs(),
                         metadata.len,
                     )),
