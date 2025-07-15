@@ -1,11 +1,4 @@
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::{
-        RwLock,
-        atomic::{AtomicU16, Ordering},
-    },
-};
+use std::{collections::HashMap, path::PathBuf, sync::RwLock};
 
 use hemtt_config::{
     Config,
@@ -61,7 +54,6 @@ impl Module for Rapifier {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         ctx.state().set(AddonConfigs::default());
         let mut report = Report::new();
-        let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
@@ -101,7 +93,6 @@ impl Module for Rapifier {
             .par_iter()
             .map(|(addon, entry)| {
                 let report = rapify(addon, entry, ctx)?;
-                counter.fetch_add(1, Ordering::Relaxed);
                 progress.inc(1);
                 Ok(report)
             })
@@ -112,7 +103,7 @@ impl Module for Rapifier {
         }
 
         progress.finish_and_clear();
-        info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
+        info!("Rapified {} addon configs", entries.len());
         report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
         Ok(report)
     }

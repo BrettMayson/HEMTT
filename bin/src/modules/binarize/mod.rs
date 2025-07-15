@@ -1,13 +1,4 @@
-use std::{
-    ffi::OsStr,
-    fs::create_dir_all,
-    path::PathBuf,
-    process::Command,
-    sync::{
-        RwLock,
-        atomic::{AtomicU16, Ordering},
-    },
-};
+use std::{ffi::OsStr, fs::create_dir_all, path::PathBuf, process::Command, sync::RwLock};
 
 use hemtt_common::config::PDriveOption;
 use hemtt_p3d::SearchCache;
@@ -289,7 +280,6 @@ impl Module for Binarize {
             return Ok(Report::new());
         }
         let mut report = Report::new();
-        let counter = AtomicU16::new(0);
         self.prechecked
             .read()
             .expect("can read in pre_build")
@@ -359,7 +349,6 @@ impl Module for Binarize {
                     output.status.code().unwrap_or(-1)
                 );
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
-                    counter.fetch_add(1, Ordering::Relaxed);
                     None
                 } else {
                     Some(BinarizeFailed::code(target.entry.clone()))
@@ -372,7 +361,13 @@ impl Module for Binarize {
                 report.push(error);
             });
 
-        info!("Binarized {} files", counter.load(Ordering::Relaxed));
+        info!(
+            "Binarized {} files",
+            self.prechecked
+                .read()
+                .expect("prechecked should not be poisoned")
+                .len()
+        );
         Ok(report)
     }
 }

@@ -1,7 +1,4 @@
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicU16, Ordering},
-};
+use std::sync::{Arc, Mutex};
 
 use hemtt_stringtable::{
     Project,
@@ -67,8 +64,8 @@ impl Module for Stringtables {
                     }),
             );
         }
-        let counter = AtomicU16::new(0);
-        let progress = progress_bar(paths.len() as u64).with_message("Processing Stringtables");
+        let length = paths.len();
+        let progress = progress_bar(length as u64).with_message("Processing Stringtables");
         let results = paths
             .into_par_iter()
             .map(|path| match Project::read(path.clone()) {
@@ -77,7 +74,6 @@ impl Module for Stringtables {
                     if !codes.iter().any(|c| c.severity() == Severity::Error) {
                         convert_stringtable(&project);
                     }
-                    counter.fetch_add(1, Ordering::Relaxed);
                     progress.inc(1);
                     Some((project, codes))
                 }
@@ -109,7 +105,7 @@ impl Module for Stringtables {
             ctx.addons().to_vec(),
         ));
         progress.finish_and_clear();
-        info!("Checked {} stringtables", counter.load(Ordering::Relaxed));
+        info!("Checked {} stringtables", length);
         Ok(report)
     }
 }
