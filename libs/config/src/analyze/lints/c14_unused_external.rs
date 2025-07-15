@@ -87,8 +87,7 @@ impl LintRunner<LintData> for Runner {
                 return vec![];
             }
         };
-        let (_, codes) = ClassNode::check_unused(&root, processed, config, &mut file, runtime);
-        codes
+        ClassNode::check_unused(&root, &mut Vec::new(), processed, config, &mut file, runtime)
     }
 }
 struct ClassNode {
@@ -102,12 +101,12 @@ impl ClassNode {
     #[must_use]
     fn check_unused(
         cfg: &Rc<RefCell<Self>>,
+        reported: &mut Vec<Class>,
         processed: &Processed,
         config: &LintConfig,
         file: &mut std::fs::File,
         runtime: &hemtt_common::config::RuntimeArguments,
-    ) -> (Vec<Class>, Codes) {
-        let mut reported: Vec<Class> = Vec::new();
+    ) -> Codes {
         let mut codes: Codes = Vec::new();
         if !cfg.borrow().used && !reported.contains(&cfg.borrow().class) {
             reported.push(cfg.borrow().class.clone());
@@ -133,11 +132,10 @@ impl ClassNode {
             .expect("Failed to write to file");
         }
         for subclass in cfg.borrow().subclasses.values() {
-            let (inner_reported, inner_codes) = Self::check_unused(subclass, processed, config, file, runtime);
-            reported.extend(inner_reported);
+            let inner_codes = Self::check_unused(subclass, reported, processed, config, file, runtime);
             codes.extend(inner_codes);
         }
-        (reported, codes)
+        codes
     }
 
     #[must_use]
