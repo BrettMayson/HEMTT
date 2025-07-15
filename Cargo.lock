@@ -1643,6 +1643,7 @@ name = "hemtt"
 version = "1.16.3"
 dependencies = [
  "arma3-wiki",
+ "byteorder",
  "clap",
  "dialoguer",
  "dirs",
