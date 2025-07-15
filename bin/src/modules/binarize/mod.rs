@@ -58,6 +58,10 @@ impl Module for Binarize {
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
 
+        if self.check_only {
+            return Ok(report);
+        }
+
         let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
             trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
             PathBuf::from(path)
@@ -90,6 +94,10 @@ impl Module for Binarize {
         use hemtt_common::steam;
 
         let mut report = Report::new();
+
+        if self.check_only {
+            return Ok(report);
+        }
 
         if cfg!(target_os = "macos") {
             report.push(PlatformNotSupported::code());
