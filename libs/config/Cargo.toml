@@ -32,5 +32,3 @@ hemtt-preprocessor = { path = "../preprocessor" }
 insta = { workspace = true }
 paste = { workspace = true }
 
-[features]
-serde = ["serde"]

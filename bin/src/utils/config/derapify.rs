@@ -1,5 +1,5 @@
-use std::{io::Write as _, path::PathBuf};
 use serde_json;
+use std::{io::Write as _, path::PathBuf};
 
 use hemtt_config::rapify::Derapify;
 
@@ -9,7 +9,7 @@ use crate::Error;
 pub enum OutputFormat {
     Debin,
     Json,
-    JsonPretty
+    JsonPretty,
 }
 
 impl OutputFormat {
@@ -27,7 +27,7 @@ pub struct DerapifyArgs {
     /// file to derapify
     pub(crate) file: String,
     /// output format
-    #[arg(short='f', long="format", default_value="debin")]
+    #[arg(short = 'f', long = "format", default_value = "debin")]
     pub(crate) output_format: OutputFormat,
     /// output file
     pub(crate) output: Option<String>,
@@ -50,10 +50,10 @@ pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> R
         OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,
         OutputFormat::Json => {
             output.write_all(serde_json::to_string(&config)?.as_bytes())?;
-        },
+        }
         OutputFormat::JsonPretty => {
             output.write_all(serde_json::to_string_pretty(&config)?.as_bytes())?;
-        },
+        }
     }
     output.flush()?;
     Ok(())

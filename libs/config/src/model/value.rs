@@ -53,7 +53,10 @@ impl Value {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Value {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Str(string) => string.serialize(serializer),
             Self::Number(number) => number.serialize(serializer),

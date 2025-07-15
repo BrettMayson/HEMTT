@@ -25,7 +25,10 @@ pub enum Item {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Array {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         use serde::ser::SerializeSeq;
         let mut state = serializer.serialize_seq(Some(self.items.len()))?;
         for item in &self.items {
@@ -37,7 +40,10 @@ impl serde::Serialize for Array {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Item {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Str(str) => str.serialize(serializer),
             Self::Number(number) => number.serialize(serializer),
@@ -48,8 +54,8 @@ impl serde::Serialize for Item {
                     state.serialize_element(item)?;
                 }
                 state.end()
-            },
-            Self::Invalid(_) => serializer.serialize_none()
+            }
+            Self::Invalid(_) => serializer.serialize_none(),
         }
     }
 }

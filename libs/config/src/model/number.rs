@@ -82,7 +82,10 @@ impl Number {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Number {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Int32 { value, .. } => serializer.serialize_i32(*value),
             Self::Int64 { value, .. } => serializer.serialize_i64(*value),

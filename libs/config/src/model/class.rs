@@ -77,7 +77,10 @@ impl Class {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Class {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Local { properties, .. } | Self::Root { properties } => {
                 use serde::ser::SerializeMap;
@@ -86,11 +89,11 @@ impl serde::Serialize for Class {
                     state.serialize_entry(property.name().as_str(), property)?;
                 }
                 state.end()
-            },
-            Self::External { name  } => {
+            }
+            Self::External { name } => {
                 use serde::ser::SerializeMap;
                 let mut state = serializer.serialize_map(Some(1))?;
-                state.serialize_entry(name.as_str(), &serializer.serialize_map(Some(0))?.end())?;
+                state.serialize_entry(name.as_str(), &{})?;
                 state.end()
             }
         }

@@ -44,7 +44,10 @@ impl Property {
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Property {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Entry { value, .. } => value.serialize(serializer),
             Self::Class(class) => class.serialize(serializer),
