@@ -54,12 +54,23 @@ mkdir -p "$binaryLocation"
 if ! echo "$PATH" | grep -q "$binaryLocation"; then
     config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile"
     for config in $config_files; do
+        addedByHEMTT=false
         if [ -f "$config" ]; then
             if ! grep -q -s "export PATH=$binaryLocation:\$PATH" "$config"; then
                 echo "Appending $binaryLocation to $config"
                 echo "" >>"$config"
                 echo "# Added by HEMTT" >>"$config"
                 echo "export PATH=$binaryLocation:\$PATH" >>"$config"
+                addedByHEMTT=true
+                fi
+            fi
+            if ! grep -q -s "source <(hemtt manage completions" "$config"; then
+                echo "Adding completions to $config"
+                echo "" >>"$config"
+                if [ "$addedByHEMTT" = false ]; then
+                    echo "# Added by HEMTT" >>"$config"
+                fi
+                echo "source <(hemtt manage completions \$(basename \$SHELL))" >>"$config"
             fi
         fi
     done
@@ -70,6 +81,11 @@ if [ -w "$binaryLocation" ]; then
     mv /tmp/hemtt-installer/hemtt "$binaryLocation"
 else
     echo "The installer was unable to move the binary to $binaryLocation"
+    exit 1
+fi
+
+if ! "$binaryLocation/hemtt" --version >/dev/null 2>&1; then
+    echo "Error: HEMTT binary was installed, but is not compatible with your system"
     exit 1
 fi
 
