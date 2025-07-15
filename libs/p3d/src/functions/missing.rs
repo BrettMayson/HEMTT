@@ -9,7 +9,7 @@ use crate::P3D;
 
 #[derive(Default)]
 pub struct SearchCache {
-    cache: RwLock<HashMap<String, bool>>,
+    cache: RwLock<HashMap<String, Option<(u64, u64)>>>,
 }
 
 impl SearchCache {
@@ -27,24 +27,45 @@ impl SearchCache {
     /// Panics if the cache is poisoned
     pub fn exists(&self, file_id: &str) -> Option<bool> {
         let cache = self.cache.read().expect("failed to lock cache");
-        cache.get(file_id).copied()
+        cache.get(file_id).copied().map(|path| path.is_some())
     }
 
     /// Insert a file into the cache
     ///
     /// # Panics
     /// Panics if the cache is poisoned
-    pub fn insert(&self, file_id: String, exists: bool) {
+    pub fn insert(&self, file_id: String, metadata: Option<(u64, u64)>) {
         let mut cache = self.cache.write().expect("failed to lock cache");
-        cache.insert(file_id, exists);
+        cache.insert(file_id, metadata);
+    }
+
+    /// Get the metadata for a file
+    ///
+    /// # Panics
+    /// Panics if the cache is poisoned
+    pub fn get_metadata(&self, file_id: &str) -> Option<(u64, u64)> {
+        if file_id.is_empty() || file_id.starts_with('#') {
+            return None;
+        }
+        let file_id = if file_id.starts_with('\\') {
+            file_id.to_string()
+        } else {
+            format!("\\{file_id}")
+        };
+        let cache = self.cache.read().expect("failed to lock cache");
+        cache.get(&file_id).copied().flatten()
     }
 }
 
 impl P3D {
+    #[allow(clippy::too_many_lines)]
     /// Find missing textures and materials in the P3D
     ///
     /// # Errors
     /// [`Error::Vfs`] if the path could not be checked
+    ///
+    /// # Panics
+    /// Panics if the modified time cannot be retrieved
     pub fn missing(
         &self,
         workspace: &WorkspacePath,
@@ -73,7 +94,21 @@ impl P3D {
                 if !exists {
                     missing_textures.push(texture);
                 }
-            } else if workspace.locate(&texture)?.is_none() {
+            } else if let Some(located) = workspace.locate(&texture)? {
+                let metadata = located.path.metadata()?;
+                cache.insert(
+                    texture.clone(),
+                    Some((
+                        metadata
+                            .modified
+                            .expect("has modified")
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .expect("should be able to get duration since epoch")
+                            .as_secs(),
+                        metadata.len,
+                    )),
+                );
+            } else {
                 #[allow(clippy::case_sensitive_file_extension_comparisons)]
                 // working on lowercase paths
                 let (replaced, ext) = if texture.ends_with(".paa") {
@@ -85,14 +120,28 @@ impl P3D {
                 } else {
                     (texture.clone(), "")
                 };
-                if ext.is_empty() || workspace.locate(&replaced)?.is_none() {
-                    cache.insert(texture.clone(), false);
+                let located = workspace.locate(&replaced)?;
+                if ext.is_empty() || located.is_none() {
+                    cache.insert(texture.clone(), None);
                     missing_textures.push(texture);
+                } else if let Some(located) = located {
+                    let metadata = located.path.metadata()?;
+                    cache.insert(
+                        texture.clone(),
+                        Some((
+                            metadata
+                                .modified
+                                .expect("has modified")
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .expect("should be able to get duration since epoch")
+                                .as_secs(),
+                            metadata.len,
+                        )),
+                    );
                 } else {
-                    cache.insert(texture.clone(), true);
+                    cache.insert(texture.clone(), None);
+                    missing_textures.push(texture);
                 }
-            } else {
-                cache.insert(texture.clone(), true);
             }
         }
         let mut missing_materials = Vec::new();
@@ -109,11 +158,23 @@ impl P3D {
                 if !exists {
                     missing_materials.push(material);
                 }
-            } else if workspace.locate(&material)?.is_none() {
-                cache.insert(material.clone(), false);
-                missing_materials.push(material);
+            } else if let Some(located) = workspace.locate(&material)? {
+                let metadata = located.path.metadata()?;
+                cache.insert(
+                    material.clone(),
+                    Some((
+                        metadata
+                            .modified
+                            .expect("has modified")
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .expect("should be able to get duration since epoch")
+                            .as_secs(),
+                        metadata.len,
+                    )),
+                );
             } else {
-                cache.insert(material.clone(), true);
+                cache.insert(material.clone(), None);
+                missing_materials.push(material);
             }
         }
         Ok((missing_textures, missing_materials))

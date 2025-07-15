@@ -1,5 +1,13 @@
-use std::{ffi::OsStr, fs::create_dir_all, path::PathBuf, process::Command, sync::RwLock};
+use std::{
+    collections::HashMap,
+    ffi::OsStr,
+    fs::create_dir_all,
+    path::PathBuf,
+    process::Command,
+    sync::{RwLock, atomic::AtomicUsize},
+};
 
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::config::PDriveOption;
 use hemtt_p3d::SearchCache;
 use hemtt_workspace::reporting::Severity;
@@ -15,7 +23,8 @@ use self::error::{bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::M
 use super::Module;
 use crate::{
     context::Context, error::Error, link::create_link,
-    modules::binarize::error::bbe5_missing_material::MissingMaterials, report::Report,
+    modules::binarize::error::bbe5_missing_material::MissingMaterials, progress::progress_bar,
+    report::Report,
 };
 
 mod error;
@@ -24,18 +33,20 @@ mod error;
 pub struct Binarize {
     check_only: bool,
     command: Option<String>,
-    proton: bool,
+    compatibility: CompatibiltyTool,
     prechecked: RwLock<Vec<BinarizeTarget>>,
+    search_cache: SearchCache,
 }
 
 impl Binarize {
     #[must_use]
-    pub const fn new(check_only: bool) -> Self {
+    pub fn new(check_only: bool) -> Self {
         Self {
             check_only,
             command: None,
-            proton: false,
+            compatibility: CompatibiltyTool::Wine64,
             prechecked: RwLock::new(Vec::new()),
+            search_cache: SearchCache::new(),
         }
     }
 }
@@ -81,7 +92,6 @@ impl Module for Binarize {
 
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        use dirs::home_dir;
         use hemtt_common::steam;
 
         let mut report = Report::new();
@@ -114,20 +124,14 @@ impl Module for Binarize {
         let path = tools_path.join("Binarize").join("binarize_x64.exe");
         if path.exists() {
             self.command = Some(path.display().to_string());
-            let mut cmd = Command::new("wine64");
-            cmd.arg("--version");
-            if cmd.output().is_err() {
-                if home_dir()
-                    .expect("home directory exists")
-                    .join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-                    .exists()
-                {
-                    self.proton = true;
-                } else {
-                    debug!("tools found, but not wine64 or proton");
-                    report.push(ToolsNotFound::code(Severity::Warning));
-                    self.command = None;
-                }
+            let compatibility = CompatibiltyTool::determine();
+            if let Some(tool) = compatibility {
+                info!("Using {} for binarization compatibilty", tool.to_string());
+                self.compatibility = tool;
+            } else {
+                debug!("tools found, but not wine64 or proton");
+                report.push(ToolsNotFound::code(Severity::Warning));
+                self.command = None;
             }
         } else {
             report.push(ToolsNotFound::code(Severity::Warning));
@@ -146,7 +150,6 @@ impl Module for Binarize {
 
         let mut report = Report::new();
         let tmp_out = ctx.tmp().join("hemtt_binarize_output");
-        let search_cache = SearchCache::new();
         if let Some(pdrive) = ctx.workspace().pdrive() {
             info!("P Drive at {}", pdrive.link().display());
         } else if pdrive_option == &PDriveOption::Require {
@@ -210,6 +213,8 @@ impl Module for Binarize {
                         continue;
                     }
 
+                    let mut dependencies = Vec::new();
+
                     // check mlod for textures
                     if buf == [0x4D, 0x4C, 0x4F, 0x44] {
                         trace!("checking textures & materials for {}", entry.as_str());
@@ -217,8 +222,9 @@ impl Module for Binarize {
                             &mut entry.open_file().expect("file should exist from walk_dir"),
                         )
                         .expect("p3d should be able to be read if it is a valid p3d file");
+                        dependencies = p3d.dependencies();
                         let (missing_textures, missing_materials) =
-                            p3d.missing(ctx.workspace_path(), &search_cache)?;
+                            p3d.missing(ctx.workspace_path(), &self.search_cache)?;
                         if !missing_textures.is_empty() {
                             let diag = MissingTextures::code(
                                 entry.as_str().to_string(),
@@ -260,6 +266,7 @@ impl Module for Binarize {
                                 .expect("tmp output path should be valid utf-8")
                                 .to_owned(),
                             entry: entry.filename().trim_start_matches('/').to_owned(),
+                            dependencies,
                         });
                 }
             }
@@ -279,47 +286,83 @@ impl Module for Binarize {
         if self.command.is_none() || self.check_only {
             return Ok(Report::new());
         }
+        let cache_path = ctx.out_folder().join("binarize.hcb");
+        let cache_dir = ctx.out_folder().join("bincache");
+        if !cache_dir.exists() {
+            create_dir_all(&cache_dir)?;
+        }
+        let cache = if !ctx.config().runtime().is_release() && cache_path.exists() {
+            let mut cache_file = std::fs::File::open(&cache_path)?;
+            debug!("Using existing build cache");
+            BuildCache::read(&mut cache_file).expect("should be able to read build cache")
+        } else {
+            BuildCache::default()
+        };
         let mut report = Report::new();
+        let file_count = self
+            .prechecked
+            .read()
+            .expect("prechecked should not be poisoned")
+            .len();
+        let progress = progress_bar(file_count as u64).with_message("Binarizing files");
+        let cache_hits = AtomicUsize::new(0);
         self.prechecked
             .read()
             .expect("can read in pre_build")
             .par_iter()
             .map(|target| {
-                debug!("binarizing {}", target.entry);
                 create_dir_all(&target.output)
                     .expect("should be able to create output dir for target");
+                let path = PathBuf::from(&target.output).join(&target.entry);
+                let path_hash = hash_filename(path.to_str().expect("path should be valid utf-8"));
+                if cache.artifacts.contains_key(&path_hash) {
+                    let artifact = cache.artifacts.get(&path_hash).expect("should be able to get artifact from cache");
+                    if up_to_date(artifact, &self.search_cache) {
+                        debug!("skipping binarization of {} as it is already up-to-date", target.entry);
+                        std::fs::copy(cache_dir.join(path_hash).with_extension("hb"), &path).expect("should be able to copy from cache to output");
+                        progress.inc(1);
+                        cache_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        return None;
+                    }
+                }
+                debug!("binarizing {}", target.entry);
                 let exe = self
                     .command
                     .as_ref()
                     .expect("command should be set if we attempted to binarize");
                 let mut cmd = if cfg!(windows) {
                     Command::new(exe)
-                } else if self.proton {
-                    let mut home = dirs::home_dir().expect("home directory exists");
-                    if exe.contains("/.var/") {
-                        home = home.join(".var/app/com.valvesoftware.Steam");
-                    }
-                    let mut cmd = Command::new({
-                        home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-                    });
-                    cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
-                        home.join(".local/share/Steam")
-                    ).env(
-                        "STEAM_COMPAT_DATA_PATH",
-                        home.join(".local/share/Steam/steamapps/compatdata/233800")
-                    ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
-                        home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
-                    ).arg("run").arg(
-                        home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
-                    );
-                    cmd
                 } else {
-                    let mut cmd = Command::new("wine64");
-                    cmd.arg(exe);
-                    cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                    std::fs::create_dir_all("/tmp/hemtt-wine")
-                        .expect("should be able to create wine prefix");
-                    cmd
+                    match self.compatibility {
+                        CompatibiltyTool::Wine64 | CompatibiltyTool::Wine => {
+                            let mut cmd = Command::new(self.compatibility.to_string());
+                            cmd.arg(exe);
+                            cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
+                            std::fs::create_dir_all("/tmp/hemtt-wine")
+                                .expect("should be able to create wine prefix");
+                            cmd
+                        }
+                        CompatibiltyTool::Proton => {
+                            let mut home = dirs::home_dir().expect("home directory exists");
+                            if exe.contains("/.var/") {
+                                home = home.join(".var/app/com.valvesoftware.Steam");
+                            }
+                            let mut cmd = Command::new({
+                                home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+                            });
+                            cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
+                                home.join(".local/share/Steam")
+                            ).env(
+                                "STEAM_COMPAT_DATA_PATH",
+                                home.join(".local/share/Steam/steamapps/compatdata/233800")
+                            ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
+                                home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
+                            ).arg("run").arg(
+                                home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
+                            );
+                            cmd
+                        }
+                    }
                 };
                 cmd.args([
                     "-norecurse",
@@ -348,6 +391,7 @@ impl Module for Binarize {
                     "binarize failed with code {:?}",
                     output.status.code().unwrap_or(-1)
                 );
+                progress.inc(1);
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
                     None
                 } else {
@@ -360,22 +404,122 @@ impl Module for Binarize {
             .for_each(|error| {
                 report.push(error);
             });
+        let mut new_cache = HashMap::new();
+        for target in self
+            .prechecked
+            .read()
+            .expect("can read in pre_build")
+            .iter()
+        {
+            let path = PathBuf::from(&target.output).join(&target.entry);
+            if path.exists() {
+                let metadata = path
+                    .metadata()
+                    .expect("should be able to get metadata for binarized file");
+                let modified = metadata
+                    .modified()
+                    .expect("should be able to get modified time")
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("should be able to get duration since epoch")
+                    .as_secs();
+                let size = metadata.len();
+                let hash = hash_filename(path.to_str().expect("path should be valid utf-8"));
+                let cache_path = cache_dir.join(format!("{hash}.hb"));
+                std::fs::copy(&path, &cache_path)?;
+                new_cache.insert(
+                    hash,
+                    Artifact {
+                        modified,
+                        size,
+                        dependencies: target
+                            .dependencies
+                            .iter()
+                            .map(|d| {
+                                (
+                                    d.clone(),
+                                    self.search_cache.get_metadata(d).map_or_else(
+                                        || Artifact {
+                                            modified: 0,
+                                            size: 0,
+                                            dependencies: HashMap::new(),
+                                        },
+                                        |(modified, size)| Artifact {
+                                            modified,
+                                            size,
+                                            dependencies: HashMap::new(),
+                                        },
+                                    ),
+                                )
+                            })
+                            .collect(),
+                    },
+                );
+            }
+        }
+        if !new_cache.is_empty() {
+            let mut cache_file = std::fs::File::create(cache_path)?;
+            BuildCache {
+                artifacts: new_cache,
+            }
+            .write(&mut cache_file)?;
+        } else if cache_path.exists() {
+            std::fs::remove_file(cache_path)?;
+        }
 
+        progress.finish_and_clear();
         info!(
-            "Binarized {} files",
-            self.prechecked
-                .read()
-                .expect("prechecked should not be poisoned")
-                .len()
+            "Binarized {} files{}",
+            file_count,
+            if cache_hits.load(std::sync::atomic::Ordering::Relaxed) > 0 {
+                format!(
+                    ", {} from cache",
+                    cache_hits.load(std::sync::atomic::Ordering::Relaxed)
+                )
+            } else {
+                String::new()
+            }
         );
         Ok(report)
     }
+}
+
+fn up_to_date(artifact: &Artifact, search_cache: &SearchCache) -> bool {
+    fn check_dependency(name: &str, artifact: &Artifact, search_cache: &SearchCache) -> bool {
+        if !artifact.dependencies.iter().all(|(d, children)| {
+            if !check_dependency(d, children, search_cache) {
+                return false;
+            }
+            if let Some((modified, size)) = search_cache.get_metadata(d) {
+                debug!("checking metadata for {d}: {modified} {size}");
+                debug!("against artifact: {} {}", artifact.modified, artifact.size);
+                modified == artifact.modified && size == artifact.size
+            } else {
+                debug!("missing metadata for {d}, assuming out-of-date");
+                false
+            }
+        }) {
+            return false;
+        }
+        if let Some((modified, size)) = search_cache.get_metadata(name) {
+            debug!("checking metadata for {name}: {modified} {size}");
+            debug!("against artifact: {} {}", artifact.modified, artifact.size);
+            modified == artifact.modified && size == artifact.size
+        } else {
+            debug!("missing metadata for {name}, assuming out-of-date");
+            false
+        }
+    }
+    artifact
+        .dependencies
+        .iter()
+        .all(|(d, children)| check_dependency(d, children, search_cache))
 }
 
 struct BinarizeTarget {
     source: String,
     output: String,
     entry: String,
+    dependencies: Vec<String>,
 }
 
 /// Check if the file signature indicates that it is already binarized
@@ -460,4 +604,138 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     };
     create_link(&ctx.tmp().join("a3"), &pdrive.link())?;
     Ok(())
+}
+
+#[derive(Debug, Clone, Default)]
+struct BuildCache {
+    artifacts: HashMap<String, Artifact>,
+}
+
+impl BuildCache {
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+        writer.write_u32::<LittleEndian>(1)?;
+        writer.write_u32::<LittleEndian>(self.artifacts.len() as u32)?;
+        for (name, artifact) in &self.artifacts {
+            writer.write_u32::<LittleEndian>(name.len() as u32)?;
+            writer.write_all(name.as_bytes())?;
+            artifact.write(writer)?;
+        }
+        Ok(())
+    }
+
+    pub fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+        let version = reader.read_u32::<LittleEndian>()?;
+        if version != 1 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("unsupported build cache version {version}"),
+            ));
+        }
+        let count = reader.read_u32::<LittleEndian>()? as usize;
+        let mut artifacts = HashMap::with_capacity(count);
+        for _ in 0..count {
+            let len = reader.read_u32::<LittleEndian>()? as usize;
+            let mut buf = vec![0; len];
+            reader.read_exact(&mut buf)?;
+            let name = String::from_utf8(buf).expect("artifact name should be valid utf-8");
+            let artifact = Artifact::read(reader)?;
+            artifacts.insert(name, artifact);
+        }
+        Ok(Self { artifacts })
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+struct Artifact {
+    modified: u64,
+    size: u64,
+    dependencies: HashMap<String, Artifact>,
+}
+
+impl Artifact {
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+        writer.write_u64::<LittleEndian>(self.modified)?;
+        writer.write_u64::<LittleEndian>(self.size)?;
+        writer.write_u32::<LittleEndian>(self.dependencies.len() as u32)?;
+        for dep in &self.dependencies {
+            writer.write_u32::<LittleEndian>(dep.0.len() as u32)?;
+            writer.write_all(dep.0.as_bytes())?;
+            dep.1.write(writer)?;
+        }
+        Ok(())
+    }
+
+    pub fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+        let modified = reader.read_u64::<LittleEndian>()?;
+        let size = reader.read_u64::<LittleEndian>()?;
+        let dep_count = reader.read_u32::<LittleEndian>()? as usize;
+        let mut dependencies = HashMap::with_capacity(dep_count);
+        for _ in 0..dep_count {
+            let len = reader.read_u32::<LittleEndian>()? as usize;
+            let mut buf = vec![0; len];
+            reader.read_exact(&mut buf)?;
+            let name = String::from_utf8(buf).expect("dependency name should be valid utf-8");
+            let dep = Self::read(reader)?;
+            dependencies.insert(name, dep);
+        }
+        Ok(Self {
+            modified,
+            size,
+            dependencies,
+        })
+    }
+}
+
+#[derive(Default)]
+pub enum CompatibiltyTool {
+    #[default]
+    Wine64,
+    Wine,
+    Proton,
+}
+
+impl CompatibiltyTool {
+    pub fn determine() -> Option<Self> {
+        use dirs::home_dir;
+        if cfg!(windows) {
+            return None;
+        }
+        let mut cmd = Command::new("wine64");
+        cmd.arg("--version");
+        if cmd.output().is_ok() {
+            return Some(Self::Wine64);
+        }
+        let mut cmd = Command::new("wine");
+        cmd.arg("--version");
+        if cmd.output().is_ok() {
+            return Some(Self::Wine);
+        }
+        if home_dir()
+            .expect("home directory exists")
+            .join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+            .exists()
+        {
+            return Some(Self::Proton);
+        }
+        None
+    }
+}
+
+impl std::fmt::Display for CompatibiltyTool {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Wine64 => write!(f, "wine64"),
+            Self::Wine => write!(f, "wine"),
+            Self::Proton => write!(f, "proton"),
+        }
+    }
+}
+
+fn hash_filename(filename: &str) -> String {
+    use sha1::{Digest, Sha1};
+    let mut hasher = Sha1::new();
+    hasher.update(filename.as_bytes());
+    format!("{:x}", hasher.finalize())
 }
