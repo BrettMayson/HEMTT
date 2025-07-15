@@ -2,7 +2,7 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{pbo::Collapse, summary::Summary, Binarize, Files, Rapifier},
+    modules::{Binarize, Files, Rapifier, pbo::Collapse, summary::Summary},
     report::Report,
 };
 

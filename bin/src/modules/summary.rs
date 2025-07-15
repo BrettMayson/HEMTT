@@ -24,7 +24,10 @@ impl Module for Summary {
         1000
     }
 
-    fn post_build(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
+    fn post_build(
+        &self,
+        ctx: &crate::context::Context,
+    ) -> Result<crate::report::Report, crate::Error> {
         // give a build summary, sizes of pbos, copied files, etc.
         let report = crate::report::Report::new();
 
@@ -85,7 +88,8 @@ impl Module for Summary {
             if total_size == last_build.last.size || last_build.last.size == 0 {
                 String::new()
             } else {
-                format!(" ({}{} from last build)",
+                format!(
+                    " ({}{} from last build)",
                     if total_size > last_build.last.size {
                         "↑"
                     } else {
@@ -146,7 +150,10 @@ struct LastBuild {
 }
 
 impl LastBuild {
-    #[expect(clippy::cast_possible_truncation, reason="u32 is sufficient for file count and name length")]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "u32 is sufficient for file count and name length"
+    )]
     pub fn write<W: std::io::Write>(&self, mut writer: W) -> std::io::Result<()> {
         // Write the version
         writer.write_u32::<LittleEndian>(1u32)?;
