@@ -187,11 +187,14 @@ impl LintRunner<LintData> for RunnerFinal {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
-        _runtime: &hemtt_common::config::RuntimeArguments,
+        runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
+        if runtime.is_just() { // --just build will be missing EFUNCS
+            return codes;
+        }
         let mut all_defined = HashSet::new();
         for addon in target {
             let defined = addon
