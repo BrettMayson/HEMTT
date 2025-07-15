@@ -104,13 +104,24 @@ async fn check_sqf(
                 let workspace_files = WorkspaceFiles::new();
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (codes, _) = hemtt_sqf::analyze::analyze(
+                        let (codes, report) = hemtt_sqf::analyze::analyze(
                             &sqf,
                             workspace.config().as_ref(),
                             &processed,
-                            addon,
+                            addon.clone(),
                             database,
                         );
+                        if let Some(report) = report {
+                            let cache = SqfAnalyzer::get();
+                            let mut functions_defined = cache
+                                .functions_defined
+                                .entry(addon.name().to_string())
+                                .or_insert_with(HashMap::new);
+                            functions_defined.insert(
+                                source.as_str().to_string(),
+                                report.functions_defined().clone(),
+                            );
+                        }
                         for code in codes {
                             let Some(diag) = code.diagnostic() else {
                                 warn!("failed to get diagnostic");
