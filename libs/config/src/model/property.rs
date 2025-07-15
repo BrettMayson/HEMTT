@@ -48,7 +48,7 @@ impl serde::Serialize for Property {
         match self {
             Self::Entry { value, .. } => value.serialize(serializer),
             Self::Class(class) => class.serialize(serializer),
-            Self::MissingSemicolon(..) | Self::Delete(..) => serializer.serialize_none(),
+            Self::MissingSemicolon(..) | Self::Delete(..) => serializer.serialize_unit(),
         }
     }
 }

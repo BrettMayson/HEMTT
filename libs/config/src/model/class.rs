@@ -90,7 +90,7 @@ impl serde::Serialize for Class {
             Self::External { name  } => {
                 use serde::ser::SerializeMap;
                 let mut state = serializer.serialize_map(Some(1))?;
-                state.serialize_entry(name.as_str(), &{})?;
+                state.serialize_entry(name.as_str(), &serializer.serialize_map(Some(0))?.end())?;
                 state.end()
             }
         }

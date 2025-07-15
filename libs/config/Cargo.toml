@@ -33,4 +33,4 @@ insta = { workspace = true }
 paste = { workspace = true }
 
 [features]
-serde = ["dep:serde"]
+serde = ["serde"]
