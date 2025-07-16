@@ -37,11 +37,18 @@ pub enum Item {
 }
 
 impl Item {
+    #[must_use]
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Str(s) => s.span.clone(),
             Self::Number(n) => n.span(),
-            Self::Array(items) => items.first().map_or(0..0, Self::span),
+            Self::Array(items) => {
+                if let (Some(first), Some(last)) = (items.first(), items.last()) {
+                    first.span().start..last.span().end
+                } else {
+                    0..0
+                }
+            },
             Self::Invalid(span) => span.clone(),
         }
     }
