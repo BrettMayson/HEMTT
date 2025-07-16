@@ -46,7 +46,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             );
         }
         #[cfg(windows)]
-        Subcommands::Powershell {} => {
+        Subcommands::Powershell => {
             install_powershell_completions_sourced()?;
         }
     }
@@ -58,7 +58,7 @@ fn install_powershell_completions_sourced() -> std::io::Result<()> {
     let script_path = dirs::config_dir()
         .expect("Could not locate config directory (APPDATA)")
         .join("hemtt")
-        .join("hemtt-completions.ps1");
+        .join("_hemtt.ps1");
 
     let script_dir = script_path
         .parent()
@@ -82,7 +82,7 @@ fn install_powershell_completions_sourced() -> std::io::Result<()> {
         File::create(&profile_path)?;
     }
 
-    let import_line = r#". "$env:APPDATA\hemtt\hemtt-completions.ps1""#;
+    let import_line = r#". "$env:APPDATA\hemtt\_hemtt.ps1""#;
 
     let mut profile_content = String::new();
     File::open(&profile_path)?.read_to_string(&mut profile_content)?;
@@ -106,7 +106,7 @@ fn install_powershell_completions_sourced() -> std::io::Result<()> {
 fn get_powershell_profile_path() -> Option<PathBuf> {
     dirs::home_dir().map(|home| {
         home.join("Documents")
-            .join("PowerShell")
+            .join("WindowsPowerShell")
             .join("Microsoft.PowerShell_profile.ps1")
     })
 }
