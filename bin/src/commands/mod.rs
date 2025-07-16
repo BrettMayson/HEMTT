@@ -4,6 +4,7 @@ pub mod check;
 pub mod dev;
 pub mod launch;
 pub mod localization;
+pub mod manage;
 pub mod new;
 pub mod release;
 pub mod script;

@@ -1645,6 +1645,7 @@ dependencies = [
  "arma3-wiki",
  "byteorder",
  "clap",
+ "clap_complete",
  "dialoguer",
  "dirs",
  "enable-ansi-support",

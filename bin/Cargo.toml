@@ -35,6 +35,7 @@ hemtt-wss = { path = "../libs/wss" }
 arma3-wiki = { workspace = true }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+clap_complete = "4.5.55"
 dialoguer = "0.11.0"
 dirs = { workspace = true }
 fs_extra = "1.3.0"
