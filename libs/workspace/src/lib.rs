@@ -74,7 +74,7 @@ impl Workspace {
             vfs,
             layers,
             project,
-            pointers: HashMap::new(),
+            pointers: HashMap::with_capacity(64),
             addons: Vec::new(),
             missions: Vec::new(),
             pdrive: if pdrive == &PDriveOption::Require {

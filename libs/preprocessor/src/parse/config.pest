@@ -5,23 +5,23 @@ file = _{ SOI ~ (
     single_quote | left_angle | right_angle |
     equals | unicode | newline
 )* ~ EOI }
-word = ${ ( underscore | alpha ) ~ ( alpha | digit | underscore )* }
+word = ${ ( alpha | underscore ) ~ ( alpha | digit | underscore )* }
 alpha = { LETTER }
 digit = { ASCII_DIGIT }
 underscore = { "_" }
+newline = { NEWLINE }
 left_parentheses = { "(" }
 right_parentheses = { ")" }
-join = { "##" }
 directive = { "#" }
+equals = { "=" }
 comma = { "," }
+join = { "##" }
 escape = { "\\" }
 double_quote = { "\"" }
 single_quote = { "'" }
 left_angle = { "<" }
 right_angle = { ">" }
-equals = { "=" }
 unicode = { LETTER | MARK | NUMBER | SYMBOL | PUNCTUATION | MATH | OTHER_MATH }
-newline = { NEWLINE }
 
 space = { " " }
 tab = { "\t" }
