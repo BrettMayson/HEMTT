@@ -78,6 +78,27 @@ impl Number {
             }
         }
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new(value: f64) -> Self {
+        if value.fract() == 0.0 {
+            if value >= f64::from(i32::MIN) && value <= f64::from(i32::MAX) {
+                return Self::Int32 {
+                    value: value as i32,
+                    span: 0..0,
+                };
+            }
+            return Self::Int64 {
+                value: value as i64,
+                span: 0..0,
+            };
+        }
+        Self::Float32 {
+            value: value as f32,
+            span: 0..0,
+        }
+    }
 }
 
 #[cfg(feature = "serde")]

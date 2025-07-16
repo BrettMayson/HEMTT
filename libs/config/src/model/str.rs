@@ -22,10 +22,11 @@ impl Str {
 
     #[cfg(test)]
     #[must_use]
-    pub fn test_new(value: &str) -> Self {
+    pub fn test_new<S: Into<String>>(value: S) -> Self {
+        let value = value.into();
         Self {
-            value: value.to_string(),
             span: 0..value.len(),
+            value,
         }
     }
 }
