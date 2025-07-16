@@ -19,6 +19,16 @@ impl Str {
     pub fn span(&self) -> Range<usize> {
         self.span.clone()
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new<S: Into<String>>(value: S) -> Self {
+        let value = value.into();
+        Self {
+            span: 0..value.len(),
+            value,
+        }
+    }
 }
 
 #[cfg(feature = "serde")]

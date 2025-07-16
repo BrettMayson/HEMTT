@@ -32,3 +32,19 @@ impl std::fmt::Display for Property {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Ident, Str, Value};
+
+    #[test]
+    fn test_property_entry() {
+        let property = Property::Entry {
+            name: Ident::test_new("test"),
+            value: Value::Str(Str::test_new("value")),
+            expected_array: false,
+        };
+        assert_eq!(property.to_string(), "test = \"value\";\n");
+    }
+}

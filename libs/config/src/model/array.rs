@@ -10,6 +10,19 @@ pub struct Array {
     pub(crate) span: Range<usize>,
 }
 
+impl Array {
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new(items: Vec<Item>) -> Self {
+        let span = items.first().map_or(0..0, Item::span);
+        Self {
+            expand: false,
+            items,
+            span,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 /// An array value
 pub enum Item {
@@ -21,6 +34,24 @@ pub enum Item {
     Array(Vec<Item>),
     /// An invalid value
     Invalid(Range<usize>),
+}
+
+impl Item {
+    #[must_use]
+    pub fn span(&self) -> Range<usize> {
+        match self {
+            Self::Str(s) => s.span.clone(),
+            Self::Number(n) => n.span(),
+            Self::Array(items) => {
+                if let (Some(first), Some(last)) = (items.first(), items.last()) {
+                    first.span().start..last.span().end
+                } else {
+                    0..0
+                }
+            },
+            Self::Invalid(span) => span.clone(),
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
