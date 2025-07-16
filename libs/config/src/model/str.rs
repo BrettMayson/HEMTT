@@ -19,6 +19,15 @@ impl Str {
     pub fn span(&self) -> Range<usize> {
         self.span.clone()
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new(value: &str) -> Self {
+        Self {
+            value: value.to_string(),
+            span: 0..value.len(),
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
