@@ -48,7 +48,7 @@ impl Item {
                 } else {
                     0..0
                 }
-            },
+            }
             Self::Invalid(span) => span.clone(),
         }
     }
