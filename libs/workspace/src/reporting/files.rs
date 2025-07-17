@@ -41,7 +41,7 @@ impl WorkspaceFiles {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            cache: RwLock::new(HashMap::new()),
+            cache: RwLock::new(HashMap::with_capacity(1024)),
         }
     }
 
@@ -56,7 +56,7 @@ impl WorkspaceFiles {
             .or_insert_with(|| {
                 let source = file_id.read_to_string().unwrap_or_default();
                 let line_starts = source
-                    .lines()
+                    .split('\n')
                     .scan(0, |pos, line| {
                         let start = *pos;
                         *pos += line.len() + 1;

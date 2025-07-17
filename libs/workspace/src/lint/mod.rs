@@ -248,7 +248,7 @@ impl<D> LintManager<D> {
                     .collect::<Codes>()
             })
             .chain(self.groups.iter().flat_map(|(lints, runner)| {
-                let mut configs = HashMap::new();
+                let mut configs = HashMap::with_capacity(lints.len());
                 for lint in lints {
                     let config = self
                         .configs

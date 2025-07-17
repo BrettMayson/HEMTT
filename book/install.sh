@@ -51,20 +51,38 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 mkdir -p "$binaryLocation"
 
-if ! echo "$PATH" | grep -q "$binaryLocation"; then
-    config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile"
-    for config in $config_files; do
-        if [ -f "$config" ]; then
+
+config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile"
+addedBash=false
+for config in $config_files; do
+    addedByHEMTT=false
+    if [ -f "$config" ]; then
+        if ! echo "$PATH" | grep -q "$binaryLocation"; then
             if ! grep -q -s "export PATH=$binaryLocation:\$PATH" "$config"; then
                 echo "Appending $binaryLocation to $config"
                 echo "" >>"$config"
                 echo "# Added by HEMTT" >>"$config"
                 echo "export PATH=$binaryLocation:\$PATH" >>"$config"
+                addedByHEMTT=true
             fi
+            export PATH=$binaryLocation:$PATH
         fi
-    done
-    export PATH=$binaryLocation:$PATH
-fi
+        if ! grep -q -s "source <(hemtt manage completions" "$config"; then
+            if [ "$config" = "$HOME/.bashrc" ] || [ "$config" = "$HOME/.bash_profile" ]; then
+                if [ "$addedBash" = true ]; then
+                    continue
+                fi
+                addedBash=true
+            fi
+            echo "Adding completions to $config"
+            echo "" >>"$config"
+            if [ "$addedByHEMTT" = false ]; then
+                echo "# Added by HEMTT" >>"$config"
+            fi
+            echo "source <(hemtt manage completions \$(basename \$SHELL))" >>"$config"
+        fi
+    fi
+done
 
 if [ -w "$binaryLocation" ]; then
     mv /tmp/hemtt-installer/hemtt "$binaryLocation"

@@ -36,7 +36,8 @@ impl LOD {
     pub fn read<I: Read + Seek>(input: &mut I) -> Result<Self, Error> {
         let mut buffer = [0; 4];
         input.read_exact(&mut buffer)?;
-        if &buffer != b"P3DM" {
+        let is_sp3x = &buffer == b"SP3X";
+        if &buffer != b"P3DM" && !is_sp3x {
             return Err(Error::UnsupportedLODType(
                 String::from_utf8_lossy(&buffer).to_string(),
             ));
@@ -68,7 +69,7 @@ impl LOD {
         }
 
         for _i in 0..num_faces {
-            faces.push(Face::read(input)?);
+            faces.push(Face::read(input, is_sp3x)?);
         }
 
         input.read_exact(&mut buffer)?;
@@ -81,12 +82,24 @@ impl LOD {
         let mut taggs: Vec<(String, Box<[u8]>)> = Vec::new();
 
         loop {
-            input.bytes().next();
+            if !is_sp3x {
+                // Skip the Active flag (always 1)
+                input.bytes().next();
+            }
 
-            let name = input.read_cstring()?;
+            let name = if is_sp3x {
+                let mut name_buffer = vec![0; 64];
+                input.read_exact(&mut name_buffer)?;
+                let null_pos = name_buffer.iter().position(|&b| b == 0).unwrap_or(64);
+                String::from_utf8_lossy(&name_buffer[..null_pos]).into_owned()
+            } else {
+                input.read_cstring()?
+            };
             let size = input.read_u32::<LittleEndian>()?;
             let mut buffer = vec![0; size as usize].into_boxed_slice();
-            input.read_exact(&mut buffer)?;
+            if size != 0 {
+                input.read_exact(&mut buffer)?;
+            }
 
             if name == "#EndOfFile#" {
                 break;

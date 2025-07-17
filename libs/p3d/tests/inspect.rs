@@ -18,7 +18,7 @@ fn ace_gunbag() {
                 {
                     let mut buffer = Vec::new();
                     face.write(&mut buffer).unwrap();
-                    hemtt_p3d::Face::read(&mut std::io::Cursor::new(buffer)).unwrap()
+                    hemtt_p3d::Face::read(&mut std::io::Cursor::new(buffer), false).unwrap()
                 },
                 *face
             );
@@ -49,11 +49,5 @@ fn ace_gunbag() {
 
 #[test]
 fn kat_iv() {
-    assert_eq!(
-        format!(
-            "{:?}",
-            P3D::read(&mut std::fs::File::open("tests/kat_iv.p3d").unwrap())
-        ),
-        "Err(UnsupportedLODType(\"SP3X\"))"
-    );
+    assert!(P3D::read(&mut std::fs::File::open("tests/kat_iv.p3d").unwrap()).is_ok());
 }

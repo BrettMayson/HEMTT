@@ -110,7 +110,7 @@ impl Code for CodeS17VarAllCaps {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#var_all_caps")
+        Some("/lints/sqf.html#var_all_caps")
     }
 
     fn severity(&self) -> Severity {

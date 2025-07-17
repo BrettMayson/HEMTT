@@ -119,7 +119,7 @@ impl Code for CodeS18InVehicleCheck {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#in_vehicle_check")
+        Some("/lints/sqf.html#in_vehicle_check")
     }
 
     fn severity(&self) -> Severity {

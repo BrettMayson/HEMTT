@@ -17,7 +17,7 @@ impl SearchCache {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            cache: RwLock::new(HashMap::new()),
+            cache: RwLock::new(HashMap::with_capacity(128)),
         }
     }
 

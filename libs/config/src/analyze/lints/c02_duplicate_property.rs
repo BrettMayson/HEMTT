@@ -74,7 +74,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::new();
+        let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::with_capacity(target.0.len());
         duplicate_properties_inner("", &target.0, &mut seen);
         let mut codes: Codes = Vec::new();
         for (_, idents) in seen {
@@ -132,7 +132,7 @@ impl Code for CodeC02DuplicateProperty {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#duplicate_property")
+        Some("/lints/config.html#duplicate_property")
     }
 
     fn message(&self) -> String {

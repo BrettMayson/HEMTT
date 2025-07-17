@@ -87,7 +87,7 @@ impl LintRunner<LintData> for Runner {
                 return vec![];
             }
         };
-        ClassNode::check_unused(&root, &mut vec![], processed, config, &mut file, runtime)
+        ClassNode::check_unused(&root, &mut Vec::new(), processed, config, &mut file, runtime)
     }
 }
 struct ClassNode {
@@ -132,9 +132,8 @@ impl ClassNode {
             .expect("Failed to write to file");
         }
         for subclass in cfg.borrow().subclasses.values() {
-            codes.extend(Self::check_unused(
-                subclass, reported, processed, config, file, runtime,
-            ));
+            let inner_codes = Self::check_unused(subclass, reported, processed, config, file, runtime);
+            codes.extend(inner_codes);
         }
         codes
     }
@@ -152,6 +151,7 @@ impl ClassNode {
             subclasses: IndexMap::new(),
         }))
     }
+
     #[must_use]
     #[allow(clippy::assigning_clones)]
     fn get_inherited_class(
@@ -246,7 +246,7 @@ impl Code for CodeC14UnusedExternal {
         "L-C14"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#unused_external")
+        Some("/lints/config.html#unused_external")
     }
     fn severity(&self) -> Severity {
         self.severity

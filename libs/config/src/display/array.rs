@@ -47,3 +47,50 @@ impl std::fmt::Display for Item {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Number, Str};
+
+    #[test]
+    fn test_array_one_item() {
+        let array = Array::test_new(vec![Item::Str(Str::test_new("value"))]);
+        assert_eq!(array.to_string(), "{\"value\"}");
+    }
+
+    #[test]
+    fn test_array_multiple_items() {
+        let array = Array::test_new(vec![
+            Item::Str(Str::test_new("value1")),
+            Item::Str(Str::test_new("value2")),
+            Item::Str(Str::test_new("value3")),
+        ]);
+        assert_eq!(array.to_string(), "{\"value1\", \"value2\", \"value3\"}");
+    }
+
+    #[test]
+    fn test_array_empty() {
+        let array = Array::test_new(vec![]);
+        assert_eq!(array.to_string(), "{}");
+    }
+
+    #[test]
+    fn test_array_nested() {
+        let array = Array::test_new(vec![
+            Item::Str(Str::test_new("value1")),
+            Item::Array(vec![Item::Str(Str::test_new("nested"))]),
+        ]);
+        assert_eq!(array.to_string(), "{\"value1\", {\"nested\"}}");
+    }
+
+    #[test]
+    fn test_array_mix() {
+        let array = Array::test_new(vec![
+            Item::Str(Str::test_new("value1")),
+            Item::Number(Number::test_new(42f64)),
+            Item::Array(vec![Item::Str(Str::test_new("nested"))]),
+        ]);
+        assert_eq!(array.to_string(), "{\"value1\", 42, {\"nested\"}}");
+    }
+}

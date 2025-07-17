@@ -126,7 +126,7 @@ impl Code for CodeS28BannedMacros {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#banned_macros")
+        Some("/lints/sqf.html#banned_macros")
     }
 
     fn severity(&self) -> Severity {

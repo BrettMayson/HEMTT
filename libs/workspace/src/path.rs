@@ -175,11 +175,14 @@ impl WorkspacePath {
     pub fn as_virtual_str(&self) -> String {
         let mut path = self.data.path.as_str().replace('\\', "/");
         let path_lower = path.to_lowercase();
-        if let Some((base, root)) =
-            self.data.workspace.pointers.iter().find(|(_, vfs)| {
-                path_lower.starts_with(&format!("{}/", vfs.as_str().to_lowercase()))
-            })
-        {
+        if let Some((base, root)) = self.data.workspace.pointers.iter().find(|(_, vfs)| {
+            let vfs_str = vfs.as_str();
+            if path_lower.len() < vfs_str.len() {
+                return false;
+            }
+            path_lower[..vfs_str.len()].eq_ignore_ascii_case(vfs_str)
+                && path_lower.chars().nth(vfs_str.len()) == Some('/')
+        }) {
             path = format!("{}{}", base, &path[root.as_str().len()..].to_string());
         }
 

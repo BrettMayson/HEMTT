@@ -79,7 +79,12 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         }
         let mut codes: Codes = Vec::new();
-        let mut all = HashMap::new();
+        let mut all = HashMap::with_capacity({
+            target
+                .iter()
+                .map(|p| p.keys().iter().map(|(_, v)| v.len()).sum::<usize>())
+                .sum::<usize>()
+        });
         for stringtable in target {
             for (key, positions) in stringtable.keys() {
                 all.entry(key.to_lowercase())

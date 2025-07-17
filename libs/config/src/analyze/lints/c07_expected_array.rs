@@ -107,7 +107,7 @@ impl Code for Code07ExpectedArray {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#expected_array")
+        Some("/lints/config.html#expected_array")
     }
 
     fn message(&self) -> String {

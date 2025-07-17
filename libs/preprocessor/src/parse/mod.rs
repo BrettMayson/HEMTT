@@ -40,24 +40,32 @@ impl Cache {
 /// If the file is invalid
 pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     let cache = Cache::get();
-    if cache.tokens.contains_key(path) {
-        return Ok(cache.tokens.get(path).expect("exists").value().clone());
-    }
-    let source = path.read_to_string()?;
-    let res = str(&source, path)?;
-    // The LSP manages its own caches, having this enabled would cause the LSP to never see any changes
-    // This will make the LSP slower, in the future it could have a way to invalidate the cache (when a file is saved)
-    #[cfg(not(feature = "lsp"))]
-    {
-        let path_str = path.as_str();
-        if ["macros", "common", "script", "component"]
-            .iter()
-            .any(|&x| path_str.contains(x))
-        {
-            cache.tokens.insert(path.clone(), res.clone());
+
+    // Use entry API to avoid double lookup
+    match cache.tokens.entry(path.clone()) {
+        dashmap::mapref::entry::Entry::Occupied(entry) => Ok(entry.get().clone()),
+        dashmap::mapref::entry::Entry::Vacant(entry) => {
+            let source = path.read_to_string()?;
+            let res = str(&source, path)?;
+
+            // The LSP manages its own caches, having this enabled would cause the LSP to never see any changes
+            // This will make the LSP slower, in the future it could have a way to invalidate the cache (when a file is saved)
+            #[cfg(not(feature = "lsp"))]
+            {
+                let path_str = path.as_str();
+                if ["macros", "common", "script", "component"]
+                    .iter()
+                    .any(|&x| path_str.contains(x))
+                {
+                    entry.insert(res.clone());
+                }
+            }
+            #[cfg(feature = "lsp")]
+            drop(entry); // Avoid unused variable warning
+
+            Ok(res)
         }
     }
-    Ok(res)
 }
 
 /// Parse a string into tokens
@@ -70,13 +78,14 @@ pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
 pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
     let pairs = PreprocessorParser::parse(Rule::file, source)
         .map_err(|e| ParsingFailed::code(e, path.clone()))?;
-    let mut tokens = Vec::new();
+    let mut tokens = Vec::with_capacity(source.len() / 4); // rough estimate: 1 token per 4 chars
     let mut line = 1;
     let mut col = 0;
     let mut offset = 0;
     let mut in_single_string = false;
     let mut in_double_string = false;
     let mut skipping_comment = false;
+
     for pair in pairs {
         let start = LineCol(offset, (line, col));
         match pair.as_rule() {
@@ -100,20 +109,19 @@ pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error>
                         )));
                     }
                 } else {
-                    let lines = pair.as_str().split('\n').collect::<Vec<_>>();
-                    let count = lines.len() - 1;
-                    line += count;
-                    if count > 0 {
-                        col = lines
-                            .last()
-                            .expect("exists because count is greater than 0")
-                            .len()
-                            + 1;
+                    let comment_str = pair.as_str();
+                    let newline_count = comment_str.bytes().filter(|&b| b == b'\n').count();
+                    line += newline_count;
+                    if newline_count > 0 {
+                        if let Some(last_newline) = comment_str.rfind('\n') {
+                            col = comment_str.len() - last_newline;
+                        } else {
+                            col += comment_str.len();
+                        }
                     } else {
-                        col = 0;
+                        col += comment_str.len();
                     }
-                    if pair.as_str() == "//" {
-                        // skip to end of line
+                    if comment_str == "//" {
                         skipping_comment = true;
                     }
                 }
@@ -156,17 +164,19 @@ impl Parse for Symbol {
     fn to_symbol(pair: pest::iterators::Pair<Rule>) -> Self {
         match pair.as_rule() {
             Rule::word => Self::from_word(pair.as_str().to_string()),
-            Rule::alpha => Self::Alpha(
-                pair.as_str()
-                    .chars()
-                    .next()
-                    .expect("at least one character should exist"),
-            ),
-            Rule::digit => Self::Digit(
-                pair.as_str()
-                    .parse::<usize>()
-                    .expect("should be a parseable number"),
-            ),
+            Rule::alpha => {
+                // Use unsafe to avoid bounds check since we know the char exists
+                let ch = unsafe { pair.as_str().chars().next().unwrap_unchecked() };
+                Self::Alpha(ch)
+            }
+            Rule::digit => {
+                let s = pair.as_str();
+                if s.len() == 1 {
+                    Self::Digit((s.as_bytes()[0] - b'0') as usize)
+                } else {
+                    Self::Digit(s.parse().expect("should be a parseable number"))
+                }
+            }
             Rule::underscore => Self::Underscore,
             Rule::left_parentheses => Self::LeftParenthesis,
             Rule::right_parentheses => Self::RightParenthesis,

@@ -50,3 +50,19 @@ impl Value {
         }
     }
 }
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Value {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Str(string) => string.serialize(serializer),
+            Self::Number(number) => number.serialize(serializer),
+            Self::Expression(expression) => expression.serialize(serializer),
+            Self::Array(array) | Self::UnexpectedArray(array) => array.serialize(serializer),
+            Self::Invalid(..) => serializer.serialize_none(),
+        }
+    }
+}

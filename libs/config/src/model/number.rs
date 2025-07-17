@@ -78,4 +78,39 @@ impl Number {
             }
         }
     }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new(value: f64) -> Self {
+        if value.fract() == 0.0 {
+            if value >= f64::from(i32::MIN) && value <= f64::from(i32::MAX) {
+                return Self::Int32 {
+                    value: value as i32,
+                    span: 0..0,
+                };
+            }
+            return Self::Int64 {
+                value: value as i64,
+                span: 0..0,
+            };
+        }
+        Self::Float32 {
+            value: value as f32,
+            span: 0..0,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Number {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Int32 { value, .. } => serializer.serialize_i32(*value),
+            Self::Int64 { value, .. } => serializer.serialize_i64(*value),
+            Self::Float32 { value, .. } => serializer.serialize_f32(*value),
+        }
+    }
 }

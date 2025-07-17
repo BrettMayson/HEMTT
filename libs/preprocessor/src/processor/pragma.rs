@@ -30,7 +30,7 @@ impl Pragma {
         Self {
             root: false,
             suppress: {
-                let mut map = HashMap::new();
+                let mut map = HashMap::with_capacity(self.suppress.len());
                 for (k, v) in &self.suppress {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);
@@ -39,7 +39,7 @@ impl Pragma {
                 map
             },
             flags: {
-                let mut map = HashMap::new();
+                let mut map = HashMap::with_capacity(self.flags.len());
                 for (k, v) in &self.flags {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);

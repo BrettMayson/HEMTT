@@ -136,7 +136,7 @@ impl Code for CodeS24MarkerSpam {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#marker_update_spam")
+        Some("/lints/sqf.html#marker_update_spam")
     }
 
     fn severity(&self) -> Severity {

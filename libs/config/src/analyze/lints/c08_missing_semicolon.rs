@@ -107,7 +107,7 @@ impl Code for Code08MissingSemicolon {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#missing_semicolon")
+        Some("/lints/config.html#missing_semicolon")
     }
 
     fn message(&self) -> String {

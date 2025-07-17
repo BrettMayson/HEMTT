@@ -128,7 +128,7 @@ impl Code for CodeS09BannedCommand {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#banned_commands")
+        Some("/lints/sqf.html#banned_commands")
     }
 
     fn severity(&self) -> Severity {

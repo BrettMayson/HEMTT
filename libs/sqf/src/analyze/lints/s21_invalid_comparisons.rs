@@ -377,7 +377,7 @@ impl Code for CodeS21InvalidComparisons {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#invalid_comparisons")
+        Some("/lints/sqf.html#invalid_comparisons")
     }
 
     fn severity(&self) -> Severity {

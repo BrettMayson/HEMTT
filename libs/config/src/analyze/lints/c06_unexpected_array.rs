@@ -96,7 +96,7 @@ impl Code for Code06UnexpectedArray {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#unexpected_array")
+        Some("/lints/config.html#unexpected_array")
     }
 
     fn message(&self) -> String {

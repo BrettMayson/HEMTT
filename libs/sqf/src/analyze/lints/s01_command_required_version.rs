@@ -112,7 +112,7 @@ impl Code for CodeS01CommandRequiredVersion {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#required_version")
+        Some("/lints/sqf.html#required_version")
     }
 
     fn message(&self) -> String {

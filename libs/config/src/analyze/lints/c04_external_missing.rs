@@ -208,7 +208,7 @@ impl Code for CodeC04ExternalMissing {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#external_missing")
+        Some("/lints/config.html#external_missing")
     }
 
     fn message(&self) -> String {

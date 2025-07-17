@@ -138,7 +138,7 @@ impl Code for CodeS03StaticTypename {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#static_typename")
+        Some("/lints/sqf.html#static_typename")
     }
 
     fn severity(&self) -> Severity {

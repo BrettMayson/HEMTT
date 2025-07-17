@@ -219,7 +219,7 @@ impl Processor {
                         &self.defines.clone(),
                     ));
                 }
-                let mut arg_defines = HashMap::new();
+                let mut arg_defines = HashMap::with_capacity(function.args().len());
                 for (arg, value) in function.args().iter().zip(args) {
                     if !pragma.is_suppressed(&Suppress::Pw3PaddedArg)
                         && (!pragma.is_flagged(&Flag::Pw3IgnoreFormat) || {

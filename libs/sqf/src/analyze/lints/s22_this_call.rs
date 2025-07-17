@@ -99,7 +99,7 @@ impl Code for CodeS22ThisCall {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#this_call")
+        Some("/lints/sqf.html#this_call")
     }
 
     fn severity(&self) -> Severity {

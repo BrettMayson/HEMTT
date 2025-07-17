@@ -14,6 +14,7 @@ pub mod fnl;
 pub mod hook;
 pub mod pbo;
 pub(crate) mod sign;
+pub mod summary;
 
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;

@@ -115,7 +115,7 @@ impl Code for CodeS04CommandCase {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#command_case")
+        Some("/lints/sqf.html#command_case")
     }
 
     fn severity(&self) -> Severity {
