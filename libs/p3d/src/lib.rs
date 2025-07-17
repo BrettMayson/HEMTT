@@ -80,4 +80,21 @@ impl P3D {
 
         Ok(())
     }
+
+    #[must_use]
+    pub fn dependencies(&self) -> Vec<String> {
+        use std::collections::HashSet;
+        let mut dependencies: HashSet<String> = HashSet::new();
+        for lod in &self.lods {
+            for face in &lod.faces {
+                if !face.texture.is_empty() && !face.texture.starts_with('#') {
+                    dependencies.insert(face.texture.clone());
+                }
+                if !face.material.is_empty() && !face.material.starts_with('#') {
+                    dependencies.insert(face.material.clone());
+                }
+            }
+        }
+        dependencies.into_iter().collect()
+    }
 }
