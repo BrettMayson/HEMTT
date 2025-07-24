@@ -45,7 +45,8 @@ impl Processor {
         }
         stream.next().expect("peeked above");
         let mut quotes = false;
-        let mut depth = 0;
+        let mut paren_depth = 0;
+        let mut brace_depth = 0;
         let mut args = Vec::new();
         let mut arg = Vec::new();
         while let Some(token) = stream.peek() {
@@ -71,14 +72,18 @@ impl Processor {
                     continue;
                 }
             } else if symbol.is_left_paren() {
-                depth += 1;
+                paren_depth += 1;
             } else if symbol.is_right_paren() {
-                if depth == 0 {
+                if paren_depth == 0 {
                     stream.next();
                     break;
                 }
-                depth -= 1;
-            } else if symbol.is_comma() {
+                paren_depth -= 1;
+            } else if symbol.is_left_brace() {
+                brace_depth += 1;
+            } else if symbol.is_right_brace() {
+                brace_depth -= 1;
+            } else if symbol.is_comma() && paren_depth == 0 && brace_depth == 0 {
                 args.push(arg);
                 arg = Vec::new();
                 stream.next();
@@ -466,21 +471,126 @@ mod tests {
             )
             .unwrap()
             .unwrap();
-        assert_eq!(args.len(), 4);
-        assert_eq!(args[0].len(), 3);
+        assert_eq!(args.len(), 2);
+        assert_eq!(args[0].len(), 6);
         assert_eq!(*args[0][0].symbol(), Symbol::Word("set".to_string()));
         assert_eq!(*args[0][1].symbol(), Symbol::LeftParenthesis);
         assert_eq!(*args[0][2].symbol(), Symbol::Digit(1));
-        assert_eq!(args[1].len(), 2);
-        assert_eq!(*args[1][0].symbol(), Symbol::Digit(2));
-        assert_eq!(*args[1][1].symbol(), Symbol::RightParenthesis);
-        assert_eq!(args[2].len(), 3);
-        assert_eq!(*args[2][0].symbol(), Symbol::Word("set".to_string()));
-        assert_eq!(*args[2][1].symbol(), Symbol::LeftParenthesis);
-        assert_eq!(*args[2][2].symbol(), Symbol::Digit(3));
-        assert_eq!(args[3].len(), 2);
-        assert_eq!(*args[3][0].symbol(), Symbol::Digit(4));
-        assert_eq!(*args[3][1].symbol(), Symbol::RightParenthesis);
+        assert_eq!(*args[0][3].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][4].symbol(), Symbol::Digit(2));
+        assert_eq!(*args[0][5].symbol(), Symbol::RightParenthesis);
+        assert_eq!(args[1].len(), 6);
+        assert_eq!(*args[1][0].symbol(), Symbol::Word("set".to_string()));
+        assert_eq!(*args[1][1].symbol(), Symbol::LeftParenthesis);
+        assert_eq!(*args[1][2].symbol(), Symbol::Digit(3));
+        assert_eq!(*args[1][3].symbol(), Symbol::Comma);
+        assert_eq!(*args[1][4].symbol(), Symbol::Digit(4));
+        assert_eq!(*args[1][5].symbol(), Symbol::RightParenthesis);
+    }
+
+    #[test]
+    fn array_single_arg() {
+        let mut stream = tests::setup("({1,2,3})");
+        let mut processor = Processor::default();
+        let args = processor
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(args.len(), 1);
+        assert_eq!(args[0].len(), 7);
+        assert_eq!(*args[0][0].symbol(), Symbol::LeftBrace);
+        assert_eq!(*args[0][1].symbol(), Symbol::Digit(1));
+        assert_eq!(*args[0][2].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][3].symbol(), Symbol::Digit(2));
+        assert_eq!(*args[0][4].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][5].symbol(), Symbol::Digit(3));
+        assert_eq!(*args[0][6].symbol(), Symbol::RightBrace);
+    }
+
+    #[test]
+    fn array_multi_arg() {
+        let mut stream = tests::setup("({1,2,3},{4,5,6})");
+        let mut processor = Processor::default();
+        let args = processor
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(args.len(), 2);
+        assert_eq!(args[0].len(), 7);
+        assert_eq!(*args[0][0].symbol(), Symbol::LeftBrace);
+        assert_eq!(*args[0][1].symbol(), Symbol::Digit(1));
+        assert_eq!(*args[0][2].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][3].symbol(), Symbol::Digit(2));
+        assert_eq!(*args[0][4].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][5].symbol(), Symbol::Digit(3));
+        assert_eq!(*args[0][6].symbol(), Symbol::RightBrace);
+        assert_eq!(args[1].len(), 7);
+        assert_eq!(*args[1][0].symbol(), Symbol::LeftBrace);
+        assert_eq!(*args[1][1].symbol(), Symbol::Digit(4));
+        assert_eq!(*args[1][2].symbol(), Symbol::Comma);
+        assert_eq!(*args[1][3].symbol(), Symbol::Digit(5));
+        assert_eq!(*args[1][4].symbol(), Symbol::Comma);
+        assert_eq!(*args[1][5].symbol(), Symbol::Digit(6));
+        assert_eq!(*args[1][6].symbol(), Symbol::RightBrace);
+    }
+
+    #[test]
+    fn array_mixed_args() {
+        let mut stream = tests::setup("(test,{1,2,3})");
+        let mut processor = Processor::default();
+        let args = processor
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(args.len(), 2);
+        assert_eq!(args[0].len(), 1);
+        assert_eq!(*args[0][0].symbol(), Symbol::Word("test".to_string()));
+        assert_eq!(args[1].len(), 7);
+        assert_eq!(*args[1][0].symbol(), Symbol::LeftBrace);
+        assert_eq!(*args[1][1].symbol(), Symbol::Digit(1));
+        assert_eq!(*args[1][2].symbol(), Symbol::Comma);
+        assert_eq!(*args[1][3].symbol(), Symbol::Digit(2));
+        assert_eq!(*args[1][4].symbol(), Symbol::Comma);
+        assert_eq!(*args[1][5].symbol(), Symbol::Digit(3));
+        assert_eq!(*args[1][6].symbol(), Symbol::RightBrace);
+    }
+
+    #[test]
+    fn nested_array_paren() {
+        let mut stream = tests::setup("({func(1,2),3})");
+        let mut processor = Processor::default();
+        let args = processor
+            .call_read_args(
+                &stream.peek().unwrap().position().clone(),
+                &mut Pragma::root(),
+                &mut stream,
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(args.len(), 1);
+        assert_eq!(args[0].len(), 10);
+        assert_eq!(*args[0][0].symbol(), Symbol::LeftBrace);
+        assert_eq!(*args[0][1].symbol(), Symbol::Word("func".to_string()));
+        assert_eq!(*args[0][2].symbol(), Symbol::LeftParenthesis);
+        assert_eq!(*args[0][3].symbol(), Symbol::Digit(1));
+        assert_eq!(*args[0][4].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][5].symbol(), Symbol::Digit(2));
+        assert_eq!(*args[0][6].symbol(), Symbol::RightParenthesis);
+        assert_eq!(*args[0][7].symbol(), Symbol::Comma);
+        assert_eq!(*args[0][8].symbol(), Symbol::Digit(3));
+        assert_eq!(*args[0][9].symbol(), Symbol::RightBrace);
     }
 
     #[test]
