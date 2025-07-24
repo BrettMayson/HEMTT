@@ -189,6 +189,18 @@ impl Symbol {
     }
 
     #[must_use]
+    /// Check if a symbol is [`LeftBrace`](Symbol::LeftBrace)
+    pub const fn is_left_brace(&self) -> bool {
+        matches!(self, Self::LeftBrace)
+    }
+
+    #[must_use]
+    /// Check if a symbol is [`RightBrace`](Symbol::RightBrace)
+    pub const fn is_right_brace(&self) -> bool {
+        matches!(self, Self::RightBrace)
+    }
+
+    #[must_use]
     /// Get the opposite symbol of a symbol
     pub const fn matching_enclosure(&self) -> Option<Self> {
         match self {

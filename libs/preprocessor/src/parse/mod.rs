@@ -180,6 +180,8 @@ impl Parse for Symbol {
             Rule::underscore => Self::Underscore,
             Rule::left_parentheses => Self::LeftParenthesis,
             Rule::right_parentheses => Self::RightParenthesis,
+            Rule::left_brace => Self::LeftBrace,
+            Rule::right_brace => Self::RightBrace,
             Rule::join => Self::Join,
             Rule::directive => Self::Directive,
             Rule::escape => Self::Escape,

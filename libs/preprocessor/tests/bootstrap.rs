@@ -47,6 +47,7 @@ fn check(dir: &str) {
 
 bootstrap!(ace_main);
 bootstrap!(addon_in_ifdef);
+bootstrap!(array_support);
 bootstrap!(cba_is_admin);
 bootstrap!(cba_multiline);
 bootstrap!(comment_edgecase);
