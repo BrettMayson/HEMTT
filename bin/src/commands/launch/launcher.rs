@@ -215,7 +215,14 @@ impl Launcher {
             }
 
             if path.is_file() {
-                args.push(format!("\"{}\"", path.display()));
+                if cfg!(windows) {
+                    args.push(format!("\"{}\"", path.display()));
+                } else {
+                    args.push(format!(
+                        "\"Z:{}\"",
+                        path.display().to_string().replace('/', "\\")
+                    ));
+                }
             } else {
                 report.push(MissionNotFound::code(
                     mission.to_string(),
