@@ -61,7 +61,7 @@ terminal-link = { workspace = true }
 thiserror = { workspace = true }
 time = { version = "0.3.41", features = ["formatting"] }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["json"] }
+tracing-subscriber = { version = "0.3.20", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
 webbrowser = "1.0.5"
