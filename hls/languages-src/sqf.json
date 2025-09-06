@@ -454,7 +454,7 @@
       ]
     },
     "reserved-literal": {
-      "match": "\\s*(?i)(this|_this|_x|_forEachIndex|_exception|_thisScript|_thisFSM|thisList|thisTrigger|west|east|resistance|civilian|independent|blufor|opfor)\\b",
+      "match": "\\s*(?i)(this|_this|_x|_y|_forEachIndex|_exception|_thisScript|_thisFSM|thisList|thisTrigger|west|east|resistance|civilian|independent|blufor|opfor)\\b",
       "name": "variable.language.reserved.sqf"
     }
   },
