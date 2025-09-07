@@ -16,8 +16,8 @@ use crate::reporting::{Code, Mapping};
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
-    #[error("Addon duplicated with different case: {0}")]
-    NameDuplicate(String),
+    #[error("Addon duplicated with different case: {0}, {1}")]
+    NameDuplicate(String, String),
     #[error("Addon present in addons and optionals: {0}")]
     Duplicate(String),
     #[error("Invalid addon location: {0}")]
@@ -151,11 +151,12 @@ impl Addon {
                     addon.name()
                 );
             }
-            if addons.iter().any(|a| {
+            if let Some(a) = addons.iter().find(|a| {
                 a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
             }) {
                 return Err(crate::error::Error::Addon(Error::NameDuplicate(
                     addon.name().to_string(),
+                    a.name().to_string(),
                 )));
             }
             if addons.iter().any(|a| {
