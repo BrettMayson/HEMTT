@@ -398,11 +398,15 @@ pub enum BinaryCommand {
     Sub,
     Max,
     Min,
+    /// `*`
     Mul,
+    /// `/`
     Div,
+    /// `%`
     Rem,
     Mod,
     Atan2,
+    /// `^`
     Exp,
     /// `#`
     Select,

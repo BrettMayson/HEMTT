@@ -66,19 +66,19 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::ConfigPath, lhs, rhs, _) = target else {
+        let Expression::BinaryCommand(BinaryCommand::ConfigPath | BinaryCommand::Div, lhs, rhs, _) = target else {
             return Vec::new();
         };
 
         if let Expression::UnaryCommand(UnaryCommand::Named(rhs_cmd), rhs_rhs, _ ) = &**rhs
         && rhs_cmd.eq_ignore_ascii_case("typeof")
-        && let Expression::BinaryCommand(BinaryCommand::ConfigPath, lhs_lhs, lhs_rhs, _) = &**lhs
+        && let Expression::BinaryCommand(BinaryCommand::ConfigPath | BinaryCommand::Div, lhs_lhs, lhs_rhs, _) = &**lhs
         && let Expression::NularCommand(NularCommand { name }, _) = lhs_lhs.as_ref()
         && name.eq_ignore_ascii_case("configfile")
         && let Expression::String(str, _, _) = lhs_rhs.as_ref()
         && (str.eq_ignore_ascii_case("cfgvehicles") || str.eq_ignore_ascii_case("cfgammo"))
     {
-        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(), lhs_lhs.span().start .. rhs_rhs.span().end, processed, config.severity()))];
+        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(), lhs_lhs.full_span().start .. rhs_rhs.full_span().end, processed, config.severity()))];
     }
         Vec::new()
     }
@@ -114,7 +114,7 @@ impl Code for CodeS30ConfigOf {
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(format!("configOf {}", self.variable))
+        Some(format!("configOf {}", if self.variable.contains(' ') { format!("({})", self.variable) } else { self.variable.clone() }))
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
