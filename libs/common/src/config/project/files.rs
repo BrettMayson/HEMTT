@@ -42,7 +42,7 @@ impl From<FilesSectionFile> for FilesConfig {
                     .iter()
                     .map(|i| {
                         if i.starts_with('/') {
-                            i.to_string()
+                            i.clone()
                         } else {
                             format!("/{i}")
                         }

@@ -59,7 +59,7 @@ pub fn autotest(ctx: &Context, missions: &[(String, AutotestMission)]) -> Result
                             .replace('\n', "\r\n"),
                         s
                     ),
-                    AutotestMission::Custom(s) => s.to_string(),
+                    AutotestMission::Custom(s) => s.clone(),
                 }
             )
             .as_bytes(),

@@ -45,13 +45,12 @@ It is always best to the include the log and a link to your project when reporti
     };
 
     if let Err(e) = hemtt::execute(&cli) {
-        if let hemtt::Error::Preprocessor(e) = &e {
-            if let Some(code) = e.get_code() {
-                if let Some(diag) = code.diagnostic() {
-                    eprintln!("{}", diag.to_string(&WorkspaceFiles::new()));
-                    std::process::exit(1);
-                }
-            }
+        if let hemtt::Error::Preprocessor(e) = &e
+            && let Some(code) = e.get_code()
+            && let Some(diag) = code.diagnostic()
+        {
+            eprintln!("{}", diag.to_string(&WorkspaceFiles::new()));
+            std::process::exit(1);
         }
         error!("{}", e);
         std::process::exit(1);

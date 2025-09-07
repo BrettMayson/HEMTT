@@ -30,17 +30,14 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
             Token::Number(_) => output_queue.push(token),
             Token::Operator(op) => {
                 while let Some(Token::Operator(top_op)) = operator_stack.last() {
-                    if let Some((precedence, associativity)) = operators.get(&op) {
-                        if let Some((top_precedence, _top_associativity)) = operators.get(top_op) {
-                            if (associativity == &Associativity::Left
-                                && precedence <= top_precedence)
-                                || (associativity == &Associativity::Right
-                                    && precedence < top_precedence)
-                            {
-                                output_queue.push(operator_stack.pop()?);
-                                continue;
-                            }
-                        }
+                    if let Some((precedence, associativity)) = operators.get(&op)
+                        && let Some((top_precedence, _top_associativity)) = operators.get(top_op)
+                        && ((associativity == &Associativity::Left && precedence <= top_precedence)
+                            || (associativity == &Associativity::Right
+                                && precedence < top_precedence))
+                    {
+                        output_queue.push(operator_stack.pop()?);
+                        continue;
                     }
                     break;
                 }

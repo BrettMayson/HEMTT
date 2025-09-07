@@ -5,7 +5,6 @@ pub mod parser;
 
 pub mod analyze;
 mod error;
-mod misc;
 
 use std::{ops::Range, sync::Arc};
 
@@ -94,12 +93,11 @@ impl Statements {
                 Statement::AssignGlobal(_, expression, _)
                 | Statement::AssignLocal(_, expression, _)
                 | Statement::Expression(expression, _) => extract_expression(expression, database),
-            } {
-                if command_version > version {
-                    command = used_command.to_string();
-                    version = command_version;
-                    span = command_span.clone();
-                }
+            } && command_version > version
+            {
+                command.clone_from(&used_command);
+                version = command_version;
+                span = command_span.clone();
             }
         }
         (command, version, span)
@@ -223,7 +221,7 @@ impl Expression {
                     maybe_enclose(right)
                 )
             }
-            Self::Variable(variable, _) => variable.to_string(),
+            Self::Variable(variable, _) => variable.clone(),
         }
     }
 

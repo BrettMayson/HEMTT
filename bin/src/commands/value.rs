@@ -39,7 +39,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             println!("{}", {
                 let mut props = String::new();
                 for (key, value) in ctx.config().properties() {
-                    writeln!(&mut props, "{key}: {value}").unwrap();
+                    writeln!(&mut props, "{key}: {value}").expect("writing to string");
                 }
                 props
             });

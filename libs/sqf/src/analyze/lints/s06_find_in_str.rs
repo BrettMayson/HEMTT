@@ -88,7 +88,7 @@ impl LintRunner<LintData> for Runner {
                 Expression::String(s, _, wrapper) => {
                     format!("{}{s}{}", wrapper.as_str(), wrapper.as_str())
                 }
-                Expression::Variable(name, _) => name.to_string(),
+                Expression::Variable(name, _) => name.clone(),
                 _ => return Vec::new(),
             };
             return vec![Arc::new(CodeS06FindInStr::new(

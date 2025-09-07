@@ -96,110 +96,105 @@ impl Defines {
         site: Option<&Position>,
     ) -> Option<(Arc<Token>, Definition, DefineSource)> {
         let ident = key.to_string();
-        if let Some(site) = site {
-            if BUILTIN_GEN.contains(&ident.as_str()) {
-                match ident.as_str() {
-                    "__COUNTER__" => {
-                        let counter = self.counter;
-                        self.counter += 1;
-                        return Some((
-                            key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Digit(counter.into()),
-                                key.position().clone(),
-                            ))])),
-                            DefineSource::Generated,
-                        ));
-                    }
-                    "__COUNTER_RESET__" => {
-                        self.counter = 0;
-                        return Some((key.clone(), Definition::Void, DefineSource::Generated));
-                    }
-                    "__FILE__" => {
-                        let path = site.path().as_str().replace('/', "\\");
-                        return Some((
-                            key.clone(),
-                            Definition::Value(Arc::new(vec![
-                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                                Arc::new(site.path().workspace().project().map_or_else(
-                                    || {
-                                        Token::new(
-                                            Symbol::Word(path.clone()),
-                                            key.position().clone(),
-                                        )
-                                    },
-                                    |project| {
-                                        Token::new(
-                                            project.mainprefix().map_or_else(
-                                                || {
-                                                    Symbol::Word(format!(
-                                                        "{}{}",
-                                                        project.prefix(),
-                                                        path,
-                                                    ))
-                                                },
-                                                |mainprefix| {
-                                                    Symbol::Word(format!(
-                                                        "{}\\{}{}",
-                                                        mainprefix,
-                                                        project.prefix(),
-                                                        path,
-                                                    ))
-                                                },
-                                            ),
-                                            key.position().clone(),
-                                        )
-                                    },
-                                )),
-                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                            ])),
-                            DefineSource::Generated,
-                        ));
-                    }
-                    "__FILE_NAME__" => {
-                        let path = site.path().filename();
-                        return Some((
-                            key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Word(path),
-                                key.position().clone(),
-                            ))])),
-                            DefineSource::Generated,
-                        ));
-                    }
-                    "__FILE_SHORT__" => {
-                        // drop the last extension, `test.inc.sqf` -> `test.inc`
-                        let path = site.path().filename();
-                        let path = path
-                            .chars()
-                            .rev()
-                            .skip_while(|c| *c != '.')
-                            .skip(1)
-                            .collect::<Vec<_>>()
-                            .iter()
-                            .rev()
-                            .collect::<String>();
-                        return Some((
-                            key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Word(path),
-                                key.position().clone(),
-                            ))])),
-                            DefineSource::Generated,
-                        ));
-                    }
-                    "__LINE__" => {
-                        return Some((
-                            key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Digit(site.start().1.0),
-                                key.position().clone(),
-                            ))])),
-                            DefineSource::Generated,
-                        ));
-                    }
-                    _ => unreachable!(),
+        if let Some(site) = site
+            && BUILTIN_GEN.contains(&ident.as_str())
+        {
+            match ident.as_str() {
+                "__COUNTER__" => {
+                    let counter = self.counter;
+                    self.counter += 1;
+                    return Some((
+                        key.clone(),
+                        Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                            Symbol::Digit(counter.into()),
+                            key.position().clone(),
+                        ))])),
+                        DefineSource::Generated,
+                    ));
                 }
+                "__COUNTER_RESET__" => {
+                    self.counter = 0;
+                    return Some((key.clone(), Definition::Void, DefineSource::Generated));
+                }
+                "__FILE__" => {
+                    let path = site.path().as_str().replace('/', "\\");
+                    return Some((
+                        key.clone(),
+                        Definition::Value(Arc::new(vec![
+                            Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                            Arc::new(site.path().workspace().project().map_or_else(
+                                || Token::new(Symbol::Word(path.clone()), key.position().clone()),
+                                |project| {
+                                    Token::new(
+                                        project.mainprefix().map_or_else(
+                                            || {
+                                                Symbol::Word(format!(
+                                                    "{}{}",
+                                                    project.prefix(),
+                                                    path,
+                                                ))
+                                            },
+                                            |mainprefix| {
+                                                Symbol::Word(format!(
+                                                    "{}\\{}{}",
+                                                    mainprefix,
+                                                    project.prefix(),
+                                                    path,
+                                                ))
+                                            },
+                                        ),
+                                        key.position().clone(),
+                                    )
+                                },
+                            )),
+                            Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                        ])),
+                        DefineSource::Generated,
+                    ));
+                }
+                "__FILE_NAME__" => {
+                    let path = site.path().filename();
+                    return Some((
+                        key.clone(),
+                        Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                            Symbol::Word(path),
+                            key.position().clone(),
+                        ))])),
+                        DefineSource::Generated,
+                    ));
+                }
+                "__FILE_SHORT__" => {
+                    // drop the last extension, `test.inc.sqf` -> `test.inc`
+                    let path = site.path().filename();
+                    let path = path
+                        .chars()
+                        .rev()
+                        .skip_while(|c| *c != '.')
+                        .skip(1)
+                        .collect::<Vec<_>>()
+                        .iter()
+                        .rev()
+                        .collect::<String>();
+                    return Some((
+                        key.clone(),
+                        Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                            Symbol::Word(path),
+                            key.position().clone(),
+                        ))])),
+                        DefineSource::Generated,
+                    ));
+                }
+                "__LINE__" => {
+                    return Some((
+                        key.clone(),
+                        Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                            Symbol::Digit(site.start().1.0),
+                            key.position().clone(),
+                        ))])),
+                        DefineSource::Generated,
+                    ));
+                }
+                _ => unreachable!(),
             }
         }
         let ret = self.get_readonly(&ident);

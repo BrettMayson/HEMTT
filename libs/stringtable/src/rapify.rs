@@ -45,7 +45,7 @@ struct Translation {
 pub fn convert_stringtable(project: &Project) {
     let result = rapify(project);
 
-    if result.is_some() {
+    if let Some(data) = result {
         // Create stringtable.bin
         let xmlb_path = project.path().with_extension("bin").expect("vfs error");
         let mut xmlb_file = xmlb_path.create_file().expect("vfs error");
@@ -54,7 +54,6 @@ pub fn convert_stringtable(project: &Project) {
         project.path().vfs().remove_file().expect("vfs error");
 
         // Write data to virtual file
-        let data = result.expect("data struct valid");
         data.write(&mut xmlb_file)
             .expect("failed to write XMLB layout");
         trace!(

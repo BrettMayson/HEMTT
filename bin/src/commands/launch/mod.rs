@@ -327,7 +327,7 @@ pub fn read_config(
             config.hemtt().launch().get(c).cloned().map_or_else(
                 || {
                     report.push(LaunchConfigNotFound::code(
-                        c.to_string(),
+                        c.clone(),
                         &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                     ));
                     None

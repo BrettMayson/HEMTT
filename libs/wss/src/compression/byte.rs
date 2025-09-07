@@ -1,7 +1,4 @@
-#[allow(clippy::excessive_precision)]
-const LN_10: f64 = 2.302_585_092_994_045_684_084_0;
-#[allow(clippy::excessive_precision)]
-const LOG2: f64 = 1.442_695_040_888_963_407_0;
+use std::f64::consts::{LN_10, LOG2_E};
 
 pub fn decompress(data: &[u8], channels: u16) -> Vec<Vec<i16>> {
     let channels = channels as usize;
@@ -33,7 +30,7 @@ pub fn decompress(data: &[u8], channels: u16) -> Vec<Vec<i16>> {
 
 #[allow(clippy::suboptimal_flops)]
 fn decompress_mono(data: &[u8]) -> Vec<i16> {
-    let magic_number: f64 = (LN_10 * LOG2) / 28.125_740_425_151_72;
+    let magic_number: f64 = (LN_10 * LOG2_E) / 28.125_740_425_151_72;
     let mut output_data = Vec::with_capacity(data.len());
     let mut last_val: i16 = 0;
 
@@ -81,7 +78,7 @@ pub fn compress(data: &[Vec<i16>]) -> Vec<u8> {
 
 #[allow(clippy::suboptimal_flops)]
 fn compress_mono(data: &[i16]) -> Vec<u8> {
-    let magic_number: f64 = (LN_10 * LOG2) / 28.125_740_425_151_72;
+    let magic_number: f64 = (LN_10 * LOG2_E) / 28.125_740_425_151_72;
     let mut output_data = Vec::with_capacity(data.len());
     let mut last_val: i16 = 0;
 

@@ -213,7 +213,7 @@ impl Diagnostic {
                                 terminal_link::Link::new(
                                     &self.code,
                                     &if link.starts_with("http") {
-                                        link.to_string()
+                                        link.clone()
                                     } else {
                                         format!("https://hemtt.dev{link}")
                                     }

@@ -60,7 +60,7 @@ pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
 
     let path = Path::new(&cmd.name);
     if path.exists() {
-        report.push(FolderExists::code(cmd.name.to_string()));
+        report.push(FolderExists::code(cmd.name.clone()));
         return Ok(report);
     }
 

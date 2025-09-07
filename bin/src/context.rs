@@ -92,8 +92,7 @@ impl Context {
         create_dir_all(&out_folder)?;
         std::fs::File::create(out_folder.join("ci_annotations.txt"))?;
         let mut builder = Workspace::builder().physical(&root, LayerType::Source);
-        let mut maybe_build_folder = None;
-        if let Some(folder) = folder {
+        let maybe_build_folder = if let Some(folder) = folder {
             let build_folder = out_folder.join(folder);
             trace!("using build folder: {:?}", build_folder.display());
             if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
@@ -105,8 +104,10 @@ impl Context {
             if include.is_dir() {
                 builder = builder.physical(&include, LayerType::Include);
             }
-            maybe_build_folder = Some(build_folder);
-        }
+            Some(build_folder)
+        } else {
+            None
+        };
         let workspace = builder.memory().finish(
             Some(config.clone()),
             folder.is_some(),

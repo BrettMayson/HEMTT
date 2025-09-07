@@ -110,7 +110,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     ///
     /// # Errors
     /// if the file cannot be read
-    pub fn file(&mut self, name: &str) -> Result<Option<File<I>>, Error> {
+    pub fn file(&'_ mut self, name: &str) -> Result<Option<File<'_, I>>, Error> {
         self.input.seek(SeekFrom::Start(self.blob_start))?;
         for header in &self.headers {
             if header.filename().to_lowercase() == name.replace('/', "\\").to_lowercase() {

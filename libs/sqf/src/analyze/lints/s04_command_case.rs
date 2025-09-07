@@ -73,11 +73,10 @@ impl LintRunner<LintData> for Runner {
         let Some(command) = target.command_name() else {
             return Vec::new();
         };
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
+        if let Some(toml::Value::Array(ignore)) = config.option("ignore")
+            && ignore.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
                 return Vec::new();
             }
-        }
         let Some(wiki) = data.database.wiki().commands().get(command) else {
             return Vec::new();
         };

@@ -140,14 +140,13 @@ impl LintRunner<LintData> for RunnerScan {
                         let Item::Str(Str { value, span }) = mag else {
                             continue;
                         };
-                        if let Some(project) = project {
-                            if !value
+                        if let Some(project) = project
+                            && !value
                                 .to_lowercase()
                                 .starts_with(&project.prefix().to_lowercase())
                             {
                                 continue;
                             }
-                        }
                         if !classes.iter().any(|c| c.value == *value) {
                             let code: Arc<dyn Code> = Arc::new(Code09MagwellMissingMagazine::new(
                                 name.clone(),

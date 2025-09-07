@@ -78,14 +78,13 @@ impl LintRunner<LintData> for Runner {
         {
             return Vec::new();
         }
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| {
+        if let Some(toml::Value::Array(ignore)) = config.option("ignore")
+            && ignore.iter().any(|i| {
                 let s = i.as_str().unwrap_or_default();
                 s == var || (s.ends_with('*') && var.starts_with(&s[0..s.len() - 1]))
             }) {
                 return Vec::new();
             }
-        }
         vec![Arc::new(CodeS17VarAllCaps::new(
             span.clone(),
             var.clone(),

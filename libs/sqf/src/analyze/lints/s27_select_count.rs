@@ -74,8 +74,8 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         }
 
-        if let Expression::BinaryCommand(BinaryCommand::Sub, slhs, srhs, _) = &**rhs {
-            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), array, _) = &**slhs {
+        if let Expression::BinaryCommand(BinaryCommand::Sub, slhs, srhs, _) = &**rhs
+            && let Expression::UnaryCommand(UnaryCommand::Named(cmd), array, _) = &**slhs {
                 if cmd.to_lowercase() != "count" {
                     return Vec::new();
                 }
@@ -100,7 +100,6 @@ impl LintRunner<LintData> for Runner {
                     ))];
                 }
             }
-        }
 
         Vec::new()
     }

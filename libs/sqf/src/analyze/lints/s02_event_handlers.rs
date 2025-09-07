@@ -217,13 +217,11 @@ fn check_unknown(
     database: &Database,
     config: Option<&LintConfig>,
 ) -> Codes {
-    if let Some(config) = config {
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| i.as_str() == Some(name)) {
+    if let Some(config) = config
+        && let Some(toml::Value::Array(ignore)) = config.option("ignore")
+            && ignore.iter().any(|i| i.as_str() == Some(name)) {
                 return Vec::new();
             }
-        }
-    }
 
     if eh.is_empty() {
         return vec![Arc::new(CodeS02UnknownEvent::new(

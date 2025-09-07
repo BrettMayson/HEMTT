@@ -27,7 +27,7 @@ impl FileCache {
         self.ropes.insert(url, text);
     }
 
-    pub fn entry(&self, url: Url) -> dashmap::Entry<Url, Rope> {
+    pub fn entry(&'_ self, url: Url) -> dashmap::Entry<'_, Url, Rope> {
         self.ropes.entry(url)
     }
 

@@ -31,7 +31,7 @@ impl Code for RuntimeError {
                     self.script.clone(),
                     get_offset(&content, self.location)..get_offset(&content, self.location),
                 )
-                .with_message(self.error.to_string()),
+                .with_message(self.error.clone()),
             ),
         )
     }
