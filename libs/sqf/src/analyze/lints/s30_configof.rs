@@ -76,7 +76,7 @@ impl LintRunner<LintData> for Runner {
         && let Expression::NularCommand(NularCommand { name }, _) = lhs_lhs.as_ref()
         && name.eq_ignore_ascii_case("configfile")
         && let Expression::String(str, _, _) = lhs_rhs.as_ref()
-        && str.eq_ignore_ascii_case("cfgvehicles")
+        && (str.eq_ignore_ascii_case("cfgvehicles") || str.eq_ignore_ascii_case("cfgammo"))
     {
         return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(), lhs_lhs.span().start .. rhs_rhs.span().end, processed, config.severity()))];
     }
