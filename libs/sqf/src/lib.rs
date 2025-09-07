@@ -390,6 +390,7 @@ pub enum BinaryCommand {
     Less,
     GreaterEq,
     LessEq,
+    /// `>>`
     ConfigPath,
     Associate,
     Else,
@@ -397,12 +398,17 @@ pub enum BinaryCommand {
     Sub,
     Max,
     Min,
+    /// `*`
     Mul,
+    /// `/`
     Div,
+    /// `%`
     Rem,
     Mod,
     Atan2,
+    /// `^`
     Exp,
+    /// `#`
     Select,
 }
 
