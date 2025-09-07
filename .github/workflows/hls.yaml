@@ -61,11 +61,11 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: linux-x64
           path: linux
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: windows-x64
           path: windows
@@ -80,7 +80,7 @@ jobs:
         run: |
           rm -rf hls/languages
       - name: Download Languages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: languages
           path: hls/languages
