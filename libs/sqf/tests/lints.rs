@@ -44,6 +44,7 @@ lint!(s24_marker_spam);
 lint!(s26_short_circuit_bool_var);
 lint!(s27_select_count);
 lint!(s28_banned_macros);
+lint!(s30_configof);
 
 #[test]
 fn test_s29_function_undefined() {
