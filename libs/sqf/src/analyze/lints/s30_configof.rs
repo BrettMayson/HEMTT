@@ -42,7 +42,7 @@ The `configOf` command is specifically designed to retrieve configuration data f
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
