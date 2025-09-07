@@ -170,7 +170,7 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
 }
 
 fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
-    let tranlations = [
+    let translations = [
         key.english(),
         key.czech(),
         key.french(),
@@ -197,9 +197,9 @@ fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
         key.ukrainian(),
         key.danish(),
     ];
-    debug_assert_eq!(tranlations.len(), ALL_LANGUAGES.len()); // order needs to be synced // Todo: meta programing?
+    debug_assert_eq!(translations.len(), ALL_LANGUAGES.len()); // order needs to be synced // Todo: meta programing?
 
-    for (index, result) in tranlations.into_iter().enumerate() {
+    for (index, result) in translations.into_iter().enumerate() {
         if let Some(native) = result {
             languages[index].have_unique = true;
             languages[index].phrases.push(native.into());
