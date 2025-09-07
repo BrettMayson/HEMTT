@@ -16,15 +16,15 @@ hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = fal
 
 byteorder = { workspace = true }
 texpresso = "2.0.2"
-image = "0.25.6"
+image = "0.25.8"
 
 # WASM
-js-sys = { version = "0.3.77", optional = true }
-wasm-bindgen = { version = "0.2.100", optional = true }
+js-sys = { version = "0.3.78", optional = true }
+wasm-bindgen = { version = "0.2.101", optional = true }
 
 # JSON
 serde = { version = "1.0.219", features = ["derive"], optional = true }
-serde_json = { version = "1.0.140", optional = true }
+serde_json = { version = "1.0.143", optional = true }
 base64 = { version = "0.22.1", optional = true }
 
 [features]
