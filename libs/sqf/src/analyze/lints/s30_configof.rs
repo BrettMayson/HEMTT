@@ -71,12 +71,12 @@ impl LintRunner<LintData> for Runner {
         };
 
         if let Expression::UnaryCommand(UnaryCommand::Named(rhs_cmd), rhs_rhs, _ ) = &**rhs
-        && rhs_cmd.to_lowercase() == "typeof"
+        && rhs_cmd.eq_ignore_ascii_case("typeof")
         && let Expression::BinaryCommand(BinaryCommand::ConfigPath, lhs_lhs, lhs_rhs, _) = &**lhs
         && let Expression::NularCommand(NularCommand { name }, _) = lhs_lhs.as_ref()
-        && name.to_lowercase() == "configfile"
+        && name.eq_ignore_ascii_case("configfile")
         && let Expression::String(str, _, _) = lhs_rhs.as_ref()
-        && str.to_lowercase() == "cfgvehicles"
+        && str.eq_ignore_ascii_case("cfgvehicles")
     {
         return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(), lhs_lhs.span().start .. rhs_rhs.span().end, processed, config.severity()))];
     }
