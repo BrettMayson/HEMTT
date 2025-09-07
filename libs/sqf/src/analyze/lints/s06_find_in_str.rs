@@ -79,7 +79,7 @@ impl LintRunner<LintData> for Runner {
         else {
             return Vec::new();
         };
-        if name.to_lowercase() != "find" {
+        if !name.eq_ignore_ascii_case("find") {
             return Vec::new();
         }
     
