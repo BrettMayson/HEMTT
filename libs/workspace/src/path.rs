@@ -247,7 +247,7 @@ impl WorkspacePath {
     pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
             let on_disk = on_disk.as_str().replace('\\', "/");
-            on_disk.to_lowercase() == requested.to_lowercase() && on_disk != requested
+            on_disk.eq_ignore_ascii_case(requested) && on_disk != requested
         }
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();

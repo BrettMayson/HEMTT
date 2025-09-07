@@ -391,7 +391,7 @@ fn weapons_from_config(ctx: &Context, config: &Config) -> HashMap<String, String
             name, properties, ..
         }) = root
         {
-            if name.as_str().to_lowercase() != "cfgweapons" {
+            if !name.as_str().eq_ignore_ascii_case("cfgweapons") {
                 return;
             }
             weapons.extend(find_pictures(ctx, &mainprefix, properties));
@@ -426,7 +426,7 @@ fn vehicles_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
             name, properties, ..
         }) = root
         {
-            if name.as_str().to_lowercase() != "cfgvehicles" {
+            if !name.as_str().eq_ignore_ascii_case("cfgvehicles") {
                 return;
             }
             vehicles.extend(find_pictures(ctx, &mainprefix, properties));
@@ -454,7 +454,7 @@ fn find_pictures(
                     ..
                 } = prop
                 {
-                    if name.as_str().to_lowercase() == "picture" {
+                    if name.as_str().eq_ignore_ascii_case("picture") {
                         Some(value.value().to_string())
                     } else {
                         None
@@ -513,7 +513,7 @@ fn previews_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
             name, properties, ..
         }) = root
         {
-            if name.as_str().to_lowercase() != "cfgvehicles" {
+            if !name.as_str().eq_ignore_ascii_case("cfgvehicles") {
                 return;
             }
             for prop in properties {
@@ -529,7 +529,7 @@ fn previews_from_config(ctx: &Context, config: &Config) -> HashMap<String, Strin
                             ..
                         } = prop
                         {
-                            if name.as_str().to_lowercase() == "editorpreview" {
+                            if name.as_str().eq_ignore_ascii_case("editorpreview") {
                                 Some(value.value().to_string())
                             } else {
                                 None

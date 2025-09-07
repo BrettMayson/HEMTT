@@ -151,17 +151,17 @@ impl Addon {
                     addon.name()
                 );
             }
-            if let Some(a) = addons.iter().find(|a| {
-                a.name().to_lowercase() == addon.name().to_lowercase() && a.name() != addon.name()
-            }) {
+            if let Some(a) = addons
+                .iter()
+                .find(|a| a.name().eq_ignore_ascii_case(addon.name()) && a.name() != addon.name())
+            {
                 return Err(crate::error::Error::Addon(Error::NameDuplicate(
                     addon.name().to_string(),
                     a.name().to_string(),
                 )));
             }
             if addons.iter().any(|a| {
-                a.name().to_lowercase() == addon.name().to_lowercase()
-                    && a.location() != addon.location()
+                a.name().eq_ignore_ascii_case(addon.name()) && a.location() != addon.location()
             }) {
                 return Err(crate::error::Error::Addon(Error::Duplicate(
                     addon.name().to_string(),

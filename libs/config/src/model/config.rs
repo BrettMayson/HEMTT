@@ -24,7 +24,7 @@ impl Config {
             if let Property::Class(Class::Local {
                 name, properties, ..
             }) = property
-                && name.as_str().to_lowercase() == "cfgpatches"
+                && name.as_str().eq_ignore_ascii_case("cfgpatches")
             {
                 for patch in properties {
                     if let Property::Class(Class::Local {
@@ -34,7 +34,7 @@ impl Config {
                         let mut required_version = Version::new(0, 0, 0, None);
                         for property in properties {
                             if let Property::Entry { name, value, .. } = property
-                                && name.as_str().to_lowercase() == "requiredversion"
+                                && name.as_str().eq_ignore_ascii_case("requiredversion")
                                 && let Value::Number(Number::Float32 { value, .. }) = value
                             {
                                 required_version = Version::from(*value);

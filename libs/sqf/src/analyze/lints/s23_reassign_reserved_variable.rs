@@ -138,7 +138,7 @@ impl LintRunner<LintData> for ExpressionRunner {
         
         let exp = match target {
             Expression::UnaryCommand(UnaryCommand::Named(cmd), exp, _) |
-            Expression::BinaryCommand(BinaryCommand::Named(cmd), _, exp, _) if cmd.to_lowercase() == "params" => exp,
+            Expression::BinaryCommand(BinaryCommand::Named(cmd), _, exp, _) if cmd.eq_ignore_ascii_case("params") => exp,
             _ => return Vec::new(),
         };
 

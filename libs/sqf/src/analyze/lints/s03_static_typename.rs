@@ -70,7 +70,7 @@ impl LintRunner<LintData> for Runner {
         let Expression::UnaryCommand(UnaryCommand::Named(name), expresssion, _) = target else {
             return Vec::new();
         };
-        if name.to_lowercase() != "typename" {
+        if !name.eq_ignore_ascii_case("typename") {
             return Vec::new();
         }
         let target_span = expresssion.span();

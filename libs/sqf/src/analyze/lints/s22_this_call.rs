@@ -70,7 +70,7 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
-        if cmd.to_lowercase() != "call" {
+        if !cmd.eq_ignore_ascii_case("call") {
             return Vec::new();
         }
 

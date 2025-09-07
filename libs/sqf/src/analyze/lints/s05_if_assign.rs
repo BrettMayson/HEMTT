@@ -72,7 +72,7 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target
-            && name.to_lowercase() == "then" {
+            && name.eq_ignore_ascii_case("then") {
                 let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
                     return Vec::new();
                 };
@@ -82,8 +82,8 @@ impl LintRunner<LintData> for Runner {
                     if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
                         if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
-                            && name.to_lowercase() == "isnil" {
-                                return Vec::new();
+                            && name.eq_ignore_ascii_case("isnil") {
+                                 return Vec::new();
                             }
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),

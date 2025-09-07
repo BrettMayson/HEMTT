@@ -89,7 +89,7 @@ impl LintRunner<LintData> for Runner {
         } else {
             vec!["text", "name", "displayname", "icontext"]
         };
-        if ignore.iter().any(|s| s.to_lowercase() == name) {
+        if ignore.iter().any(|s| s.eq_ignore_ascii_case(name.as_str())) {
             return vec![];
         }
         let check_if_equation = !match config.option("forced") {
