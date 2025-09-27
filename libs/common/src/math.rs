@@ -44,8 +44,6 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
                 operator_stack.push(token);
             }
             Token::UnaryMinus => {
-                // Unary minus has high precedence and is right associative
-                // It should be handled immediately, but we need to be careful about the stack
                 operator_stack.push(token);
             }
             Token::LeftParenthesis => operator_stack.push(token),
@@ -127,8 +125,6 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
             '0'..='9' | '.' => current_number.push(c),
             _ => {
                 if !current_number.is_empty() {
-                    // Special case: if current_number is just "-", it's not a valid number
-                    // This happens when we have a unary minus followed by a non-digit
                     if current_number == "-" {
                         tokens.push(Token::UnaryMinus);
                     } else {
@@ -162,7 +158,6 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     }
 
     if !current_number.is_empty() {
-        // Special case: if current_number is just "-", it's not a valid number
         if current_number == "-" {
             tokens.push(Token::UnaryMinus);
         } else {
