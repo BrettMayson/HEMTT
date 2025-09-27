@@ -44,6 +44,8 @@ pub struct GlobalArgs {
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     /// we are in a test
     in_test: bool,
+    #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
+    exp_bin_cache: bool,
 }
 
 #[derive(clap::Subcommand)]

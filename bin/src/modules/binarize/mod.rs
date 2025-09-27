@@ -290,7 +290,9 @@ impl Module for Binarize {
         if !cache_dir.exists() {
             create_dir_all(&cache_dir)?;
         }
-        let cache = if !ctx.config().runtime().is_release() && cache_path.exists() {
+        let exp_bin_cache = std::env::args().any(|a| a == "--exp-bin-cache");
+        let cache = if exp_bin_cache && !ctx.config().runtime().is_release() && cache_path.exists()
+        {
             let mut cache_file = std::fs::File::open(&cache_path)?;
             debug!("Using existing build cache");
             BuildCache::read(&mut cache_file).expect("should be able to read build cache")
