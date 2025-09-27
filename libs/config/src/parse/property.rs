@@ -329,6 +329,21 @@ mod tests {
                 expected_array: false,
             })
         );
+        assert_eq!(
+            property().parse("MyProperty = 1.2;"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "MyProperty".to_string(),
+                    span: 0..10,
+                },
+                value: Value::Number(crate::Number::Float32 {
+                    value: 1.2,
+                    span: 13..16,
+                }),
+                expected_array: false,
+            })
+        );
+        assert!(property().parse("MyProperty = 1.0.2;").is_err());
     }
 
     #[test]
