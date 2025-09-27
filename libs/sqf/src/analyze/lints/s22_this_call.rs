@@ -111,7 +111,7 @@ impl Code for CodeS22ThisCall {
     }
 
     fn label_message(&self) -> String {
-        String::new()
+        "unnecessary `_this`".to_string()
     }
 
     fn note(&self) -> Option<String> {

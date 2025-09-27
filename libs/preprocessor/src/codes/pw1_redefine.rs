@@ -28,6 +28,10 @@ impl Code for RedefineMacro {
         "redefining macro".to_string()
     }
 
+    fn label_message(&self) -> String {
+        self.message()
+    }
+
     fn help(&self) -> Option<String> {
         if self.token.position() == self.original.position() {
             return Some("A file is being included multiple times".to_string());

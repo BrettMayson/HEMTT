@@ -391,10 +391,6 @@ impl Code for CodeS21InvalidComparisons {
         }
     }
 
-    fn label_message(&self) -> String {
-        String::new()
-    }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }

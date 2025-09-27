@@ -413,7 +413,6 @@ impl SciptScope {
         &mut self,
         lhs: &Expression,
         rhs: &Expression,
-        source: &Range<usize>,
         database: &Database,
         equal_zero: bool,
     ) {
@@ -436,8 +435,11 @@ impl SciptScope {
         {
             return;
         }
-        self.errors
-            .insert(Issue::CountArrayComparison(equal_zero, source.clone()));
+        self.errors.insert(Issue::CountArrayComparison(
+            equal_zero,
+            lhs.span().start..rhs.span().end,
+            count_input.source(),
+        ));
     }
     /// emulate a possibly modified l-value array by a command
     pub fn cmd_generic_modify_lvalue(&mut self, lhs: &Expression) {

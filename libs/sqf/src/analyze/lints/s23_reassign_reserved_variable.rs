@@ -210,10 +210,6 @@ impl Code for CodeS23ReassignReservedVariable {
         }
     }
 
-    fn label_message(&self) -> String {
-        String::new()
-    }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }

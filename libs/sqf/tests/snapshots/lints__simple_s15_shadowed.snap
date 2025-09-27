@@ -1,9 +1,9 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: "lint(stringify! (s15_shadowed), false)"
+expression: "lint(stringify! (s15_shadowed), false).0"
 ---
-[0m[1m[38;5;14mhelp[L-S15][0m[1m: Shadowed Var - _z[0m
-  [0m[36m┌─[0m s15_shadowed.sqf:2:1
+[0m[1m[38;5;14mhelp[L-S15][0m[1m: Shadowing variable `_z`[0m
+  [0m[36m┌─[0m s15_shadowed.sqf:2:9
   [0m[36m│[0m
-[0m[36m2[0m [0m[36m│[0m [0m[36mprivate _z = 5[0m;
-  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^[0m
+[0m[36m2[0m [0m[36m│[0m private [0m[36m_z[0m = 5;
+  [0m[36m│[0m         [0m[36m^^[0m [0m[36mshadowed variable[0m

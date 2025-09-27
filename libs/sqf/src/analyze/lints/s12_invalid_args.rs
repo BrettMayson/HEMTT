@@ -78,7 +78,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS12InvalidArgs {
     span: Range<usize>,
-    token_name: String,
+    command: String,
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -91,15 +91,12 @@ impl Code for CodeS12InvalidArgs {
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#invalid_args")
     }
-    /// Top message
     fn message(&self) -> String {
-        format!("Invalid Args - {}", self.token_name)
+        format!("Invalid arguments to command `{}`", self.command)
     }
-    /// Under ^^^span hint
     fn label_message(&self) -> String {
-        String::new()
+        String::from("invalid arguments")
     }
-    /// bottom note
     fn note(&self) -> Option<String> {
         self.error_hint.clone()
     }
@@ -115,14 +112,14 @@ impl CodeS12InvalidArgs {
     #[must_use]
     pub fn new(
         span: Range<usize>,
-        error_type: String,
+        command: String,
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
-            token_name: error_type,
+            command,
             error_hint,
             severity,
             diagnostic: None,

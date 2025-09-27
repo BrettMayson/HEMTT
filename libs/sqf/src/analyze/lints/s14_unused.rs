@@ -72,7 +72,7 @@ impl LintRunner<LintData> for Runner {
         for issue in target.issues() {
             if let Issue::Unused(var, source) = issue {
                 match source {
-                    VarSource::Assignment(_) => {}
+                    VarSource::Assignment(_, _) => {}
                     VarSource::Params(_) => {
                         if !check_params {
                             continue;
@@ -98,7 +98,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS14Unused {
     span: Range<usize>,
-    token_name: String,
+    variable: String,
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -111,15 +111,12 @@ impl Code for CodeS14Unused {
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#unused")
     }
-    /// Top message
     fn message(&self) -> String {
-        format!("Unused Var - {}", self.token_name)
+        format!("Unused variable `{}`", self.variable)
     }
-    /// Under ^^^span hint
     fn label_message(&self) -> String {
-        String::new()
+        String::from("unused variable")
     }
-    /// bottom note
     fn note(&self) -> Option<String> {
         self.error_hint.clone()
     }
@@ -135,14 +132,14 @@ impl CodeS14Unused {
     #[must_use]
     pub fn new(
         span: Range<usize>,
-        error_type: String,
+        variable: String,
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
-            token_name: error_type,
+            variable,
             error_hint,
             severity,
             diagnostic: None,

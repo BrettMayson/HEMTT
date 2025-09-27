@@ -85,7 +85,7 @@ impl LintRunner<LintData> for Runner {
         };
         if args.is_empty() {
             return vec![Arc::new(CodeS08FormatArgs::new(
-                target.full_span(),
+                expression.full_span(),
                 "format string: empty array".to_string(),
                 processed,
                 config.severity(),
@@ -186,6 +186,11 @@ impl Code for CodeS08FormatArgs {
 
     fn message(&self) -> String {
         self.problem.clone()
+    }
+
+    fn label_message(&self) -> String {
+        // TODO: provide a label message
+        String::new()
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

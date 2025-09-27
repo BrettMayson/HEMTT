@@ -1,8 +1,8 @@
-[0m[1m[38;5;9merror[PE15][0m[1m: invalid #if operator[0m
+[0m[1m[38;5;9merror[PE15][0m[1m: invalid #if operator `===`[0m
   [0m[36m┌─[0m source.hpp:2:7
   [0m[36m│[0m
 [0m[36m2[0m [0m[36m│[0m #if A [0m[31m===[0m 1
-  [0m[36m│[0m       [0m[31m^^^[0m [0m[31minvalid #if operator[0m
+  [0m[36m│[0m       [0m[31m^^^[0m [0m[31minvalid operator[0m
   [0m[36m│[0m
   [0m[36m=[0m [33mhelp[0m: valid operators are [33m== != < > <= >=[0m
 

@@ -78,7 +78,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS16NotPrivate {
     span: Range<usize>,
-    token_name: String,
+    variable: String,
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -91,17 +91,17 @@ impl Code for CodeS16NotPrivate {
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#not_private")
     }
-    /// Top message
     fn message(&self) -> String {
-        format!("Not Private - {}", self.token_name)
+        format!("Local variable `{}` is not private", self.variable)
     }
-    /// Under ^^^span hint
     fn label_message(&self) -> String {
-        String::new()
+        String::from("can be private")
     }
-    /// bottom note
     fn note(&self) -> Option<String> {
         self.error_hint.clone()
+    }
+    fn suggestion(&self) -> Option<String> {
+        Some(format!("private {}", self.variable))
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -115,14 +115,14 @@ impl CodeS16NotPrivate {
     #[must_use]
     pub fn new(
         span: Range<usize>,
-        error_type: String,
+        variable: String,
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
-            token_name: error_type,
+            variable,
             error_hint,
             severity,
             diagnostic: None,

@@ -1,12 +1,12 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s22_this_call))
+expression: "lint(stringify! (s22_this_call), true).0"
 ---
 [0m[1m[38;5;11mwarning[L-S22][0m[1m: Unnecessary `_this` in `call`[0m
   [0m[36m┌─[0m s22_this_call.sqf:5:1
   [0m[36m│[0m
 [0m[36m5[0m [0m[36m│[0m [0m[33m_this[0m call _my_fnc;
-  [0m[36m│[0m [0m[33m^^^^^[0m
+  [0m[36m│[0m [0m[33m^^^^^[0m [0m[33munnecessary `_this`[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: `call` inherits `_this` from the calling scope
   [0m[36m=[0m [33mhelp[0m: Remove `_this` from the call

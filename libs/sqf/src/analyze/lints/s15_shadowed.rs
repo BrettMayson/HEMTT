@@ -79,7 +79,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS15Shadowed {
     span: Range<usize>,
-    token_name: String,
+    variable: String,
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -92,15 +92,12 @@ impl Code for CodeS15Shadowed {
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#shadowed")
     }
-    /// Top message
     fn message(&self) -> String {
-        format!("Shadowed Var - {}", self.token_name)
+        format!("Shadowing variable `{}`", self.variable)
     }
-    /// Under ^^^span hint
     fn label_message(&self) -> String {
-        String::new()
+        String::from("shadowed variable")
     }
-    /// bottom note
     fn note(&self) -> Option<String> {
         self.error_hint.clone()
     }
@@ -116,14 +113,14 @@ impl CodeS15Shadowed {
     #[must_use]
     pub fn new(
         span: Range<usize>,
-        error_type: String,
+        variable: String,
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
-            token_name: error_type,
+            variable,
             error_hint,
             severity,
             diagnostic: None,

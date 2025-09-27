@@ -290,7 +290,13 @@ impl Expression {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::ConsumeableArray(_, span) | Self::Array(_, span) => span.start - 1..span.end,
+            Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
+                if items.is_empty() {
+                    span.start - 1..span.end
+                } else {
+                    span.start - 1..span.end + 1
+                }
+            }
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)

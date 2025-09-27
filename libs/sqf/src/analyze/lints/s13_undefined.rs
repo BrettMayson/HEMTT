@@ -92,7 +92,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS13Undefined {
     span: Range<usize>,
-    token_name: String,
+    variable: String,
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -105,15 +105,12 @@ impl Code for CodeS13Undefined {
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#undefined")
     }
-    /// Top message
     fn message(&self) -> String {
-        format!("Undefined Var - {}", self.token_name)
+        format!("Undefined variable `{}`", self.variable)
     }
-    /// Under ^^^span hint
     fn label_message(&self) -> String {
-        String::new()
+        String::from("undefined variable")
     }
-    /// bottom note
     fn note(&self) -> Option<String> {
         self.error_hint.clone()
     }
@@ -129,14 +126,14 @@ impl CodeS13Undefined {
     #[must_use]
     pub fn new(
         span: Range<usize>,
-        error_type: String,
+        variable: String,
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
-            token_name: error_type,
+            variable,
             error_hint,
             severity,
             diagnostic: None,

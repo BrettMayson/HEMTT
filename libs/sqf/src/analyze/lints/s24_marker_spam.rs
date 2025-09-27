@@ -146,10 +146,6 @@ impl Code for CodeS24MarkerSpam {
         "Repeated calls to global marker updates".to_string()
     }
 
-    fn label_message(&self) -> String {
-        String::new()
-    }
-
     fn note(&self) -> Option<String> {
         Some("Global marker commands update the entire state of the marker".to_string())
     }

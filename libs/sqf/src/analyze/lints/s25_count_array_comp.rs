@@ -19,22 +19,26 @@ impl Lint<LintData> for LintS25CountArrayComparison {
         250
     }
     fn description(&self) -> &'static str {
-        "Count Array Comp"
+        "Count Array Comparison"
     }
     fn documentation(&self) -> &'static str {
         r"### Example
 
 **Incorrect**
 ```sqf
-count [] == 0
+count _myArray == 0
+```
+**Correct**
+```sqf
+_myArray isEqualTo []
 ```
 
 ### Explanation
 
-Checks for unoptimized `count array` checks."
+Checks for unoptimized array `count` checks."
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
+        LintConfig::help()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
@@ -61,10 +65,11 @@ impl LintRunner<LintData> for Runner {
         };
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
-            if let Issue::CountArrayComparison(equal_zero, range) = issue {
+            if let Issue::CountArrayComparison(equal_zero, range, variable) = issue {
                 errors.push(Arc::new(CodeS25CountArrayComp::new(
                     range.to_owned(),
                     equal_zero.to_owned(),
+                    variable.to_owned(),
                     config.severity(),
                     processed,
                 )));
@@ -78,6 +83,7 @@ impl LintRunner<LintData> for Runner {
 pub struct CodeS25CountArrayComp {
     span: Range<usize>,
     equal_zero: bool,
+    variable: String,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -86,28 +92,31 @@ impl Code for CodeS25CountArrayComp {
     fn ident(&self) -> &'static str {
         "L-S25"
     }
+
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#count_array_comp")
     }
-    /// Top message
+
     fn message(&self) -> String {
-        "count array comparison".into()
+        "Unoptimized `count` array comparison".into()
     }
-    /// Under ^^^span hint
+
     fn label_message(&self) -> String {
-        String::new()
+        "unoptimized comparison".to_string()
     }
-    /// bottom note
-    fn note(&self) -> Option<String> {
+
+    fn suggestion(&self) -> Option<String> {
         if self.equal_zero {
-            Some("use `isEqualTo []`".into())
+            Some(format!("{} isEqualTo []", self.variable))
         } else {
-            Some("use `isNotEqualTo []`".into())
+            Some(format!("{} isNotEqualTo []", self.variable))
         }
     }
+
     fn severity(&self) -> Severity {
         self.severity
     }
+
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
@@ -118,12 +127,14 @@ impl CodeS25CountArrayComp {
     pub fn new(
         span: Range<usize>,
         equal_zero: bool,
+        variable: String,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
             equal_zero,
+            variable,
             severity,
             diagnostic: None,
         }

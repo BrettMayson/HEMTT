@@ -16,7 +16,11 @@ impl Code for IfInvalidOperator {
     }
 
     fn message(&self) -> String {
-        "invalid #if operator".to_string()
+        format!("invalid #if operator `{}`", self.tokens.iter().map(std::string::ToString::to_string).collect::<String>())
+    }
+
+    fn label_message(&self) -> String {
+        "invalid operator".to_string()
     }
 
     fn help(&self) -> Option<String> {

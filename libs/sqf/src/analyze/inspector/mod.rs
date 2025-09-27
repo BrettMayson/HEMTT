@@ -22,12 +22,12 @@ pub enum Issue {
     Unused(String, VarSource),
     Shadowed(String, Range<usize>),
     NotPrivate(String, Range<usize>),
-    CountArrayComparison(bool, Range<usize>),
+    CountArrayComparison(bool, Range<usize>, String),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum VarSource {
-    Assignment(Range<usize>),
+    Assignment(Range<usize>, Range<usize>),
     ForLoop(Range<usize>),
     Params(Range<usize>),
     Private(Range<usize>),
@@ -42,7 +42,7 @@ impl VarSource {
     #[must_use]
     pub fn get_range(&self) -> Option<Range<usize>> {
         match self {
-            Self::Assignment(range)
+            Self::Assignment(range, _)
             | Self::ForLoop(range)
             | Self::Params(range)
             | Self::Private(range)
@@ -342,11 +342,11 @@ impl SciptScope {
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
                     BinaryCommand::Eq => {
-                        self.cmd_eqx_count_lint(lhs, rhs, source, database, true);
+                        self.cmd_eqx_count_lint(lhs, rhs, database, true);
                         None
                     }
                     BinaryCommand::Greater | BinaryCommand::NotEq => {
-                        self.cmd_eqx_count_lint(lhs, rhs, source, database, false);
+                        self.cmd_eqx_count_lint(lhs, rhs, database, false);
                         None
                     }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -464,7 +464,10 @@ impl SciptScope {
                         var,
                         false,
                         possible_values,
-                        VarSource::Assignment(source.clone()),
+                        VarSource::Assignment(
+                            source.start..source.start + var.len(),
+                            expression.span().clone(),
+                        ),
                     );
                     // return_value = vec![GameValue::Assignment()];
                 }
@@ -475,7 +478,10 @@ impl SciptScope {
                         var,
                         true,
                         possible_values,
-                        VarSource::Assignment(source.clone()),
+                        VarSource::Assignment(
+                            8 + source.start..8 + source.start + var.len(),
+                            expression.span().clone(),
+                        ),
                     );
                     // return_value = vec![GameValue::Assignment()];
                 }

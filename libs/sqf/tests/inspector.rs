@@ -67,7 +67,7 @@ mod tests {
         }));
         assert!(result.iter().any(|i| {
             if let Issue::Unused(var, source) = i {
-                var == "_test4" && matches!(source, VarSource::Assignment(_))
+                var == "_test4" && matches!(source, VarSource::Assignment(_, _))
             } else {
                 false
             }
@@ -152,7 +152,7 @@ mod tests {
         assert!(
             result
                 .iter()
-                .any(|i| { matches!(i, Issue::CountArrayComparison(true, _)) })
+                .any(|i| { matches!(i, Issue::CountArrayComparison(true, _, _)) })
         );
     }
 

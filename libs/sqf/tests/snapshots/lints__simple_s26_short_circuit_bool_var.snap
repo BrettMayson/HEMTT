@@ -1,11 +1,11 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s26_short_circuit_bool_var))
+expression: "lint(stringify! (s26_short_circuit_bool_var), true).0"
 ---
 [0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:7:16
   [0m[36m│[0m
 [0m[36m7[0m [0m[36m│[0m if (_test1 && {[0m[36m_test2[0m}) then { };
-  [0m[36m│[0m                [0m[36m^^^^^^[0m
+  [0m[36m│[0m                [0m[36m^^^^^^[0m [0m[36munnecessary { }[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: remove the { } and use the variable directly (if safe to do so)
