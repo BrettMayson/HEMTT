@@ -152,7 +152,7 @@ fn check_str(
         return;
     }
     // attempt to parse it as a number
-    let Some(num) = Number::try_evaulation(raw_string, target_str.span()) else {
+    let Some(num) = Number::try_evaluation(raw_string, target_str.span()) else {
         return;
     };
     let span = target_str.span().start + 1..target_str.span().end - 1;

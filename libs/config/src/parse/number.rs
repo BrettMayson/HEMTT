@@ -47,7 +47,6 @@ fn number_hex() -> impl Parser<char, i64, Error = Simple<char>> {
 fn number_int() -> impl Parser<char, i64, Error = Simple<char>> {
     number_digits()
         .collect::<String>()
-        //.then_ignore(just('.').not().rewind())
         .from_str::<i64>()
         .try_map(error_map)
 }
