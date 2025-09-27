@@ -55,7 +55,8 @@ lint!(s30_configof, true);
 #[test]
 fn test_s29_function_undefined() {
     let (_, report) = lint(stringify!(s29_undefined_functions), true);
-    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
+    let mut functions_defined: Vec<&String> =
+        report.functions_defined().iter().map(|(s, _)| s).collect();
     functions_defined.sort();
     let mut functions_used: Vec<(&String, &Position)> = report
         .functions_used()

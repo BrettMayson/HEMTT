@@ -397,13 +397,12 @@ impl SciptScope {
             && rhs
                 .iter()
                 .any(|r| matches!(r, GameValue::Boolean(..)) || matches!(r, GameValue::Number(..)))
+            && let Some(GameValue::Array(Some(gv_array), _)) = lhs.iter().next()
         {
-            if let Some(GameValue::Array(Some(gv_array), _)) = lhs.iter().next() {
-                // return_value.clear(); // todo: could clear if we handle pushBack
-                for gv_index in gv_array {
-                    for element in gv_index {
-                        return_value.insert(element.clone());
-                    }
+            // return_value.clear(); // todo: could clear if we handle pushBack
+            for gv_index in gv_array {
+                for element in gv_index {
+                    return_value.insert(element.clone());
                 }
             }
         }

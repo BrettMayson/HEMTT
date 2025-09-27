@@ -14,7 +14,11 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .expect("for test");
     let source = workspace.join(file).expect("for test");
-    let processed = Processor::run(&source).expect("for test");
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .expect("for test");
     let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
     let database = Database::a3(false);
     (processed, statements, database)
@@ -33,6 +37,7 @@ mod tests {
         println!("done: {}, {result:?}", result.len());
     }
 
+    #[allow(clippy::too_many_lines)]
     #[test]
     pub fn test_1() {
         let (_pro, sqf, _database) = get_statements("test_1.sqf");

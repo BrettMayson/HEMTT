@@ -204,16 +204,14 @@ impl SciptScope {
                 .rev()
                 .position(|s| s.contains_key(&var_lower));
             let mut stack_level = self.local.len() - 1;
-            if stack_level_search.is_none() {
-                if !peek {
-                    self.errors.insert(Issue::Undefined(
-                        var.to_owned(),
-                        source.clone(),
-                        self.is_orphan_scope,
-                    ));
-                }
-            } else {
-                stack_level -= stack_level_search.expect("is_some");
+            if let Some(stack_level_search) = stack_level_search {
+                stack_level -= stack_level_search;
+            } else if !peek {
+                self.errors.insert(Issue::Undefined(
+                    var.to_owned(),
+                    source.clone(),
+                    self.is_orphan_scope,
+                ));
             }
             self.local[stack_level].get_mut(&var_lower)
         } else if global_m.contains_key(&var_lower) {
@@ -221,11 +219,7 @@ impl SciptScope {
         } else {
             return IndexSet::from([GameValue::Anything]);
         };
-        if holder_option.is_none() {
-            // we've reported the error above, just return Any so it doesn't fail everything after
-            IndexSet::from([GameValue::Anything])
-        } else {
-            let holder = holder_option.expect("is_some");
+        if let Some(holder) = holder_option {
             holder.usage += 1;
             let mut set = holder.possible.clone();
 
@@ -236,6 +230,9 @@ impl SciptScope {
             }
             // println!("var_retrieve: `{var}` {set:?}");
             set
+        } else {
+            // we've reported the error above, just return Any so it doesn't fail everything after
+            IndexSet::from([GameValue::Anything])
         }
     }
 

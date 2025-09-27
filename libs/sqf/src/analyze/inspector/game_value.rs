@@ -207,18 +207,18 @@ impl GameValue {
         if matches!(left, Self::Anything) || matches!(right, Self::Anything) {
             return true;
         }
-        if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right) {
-            if lpos != rpos {
-                // ToDo: Handle matching array types better eg: AGLS vs AGL
-                // false-positive:
-                /*
-                   private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
-                   _dropPos set [2, ((getPosASL _target) select 2)];
-                   _holder setPosASL _dropPos;
-                */
-                // println!("array mismatch {lpos:?}!={rpos:?}");
-                // return false;
-            }
+        if let (Self::Array(_, Some(lpos)), Self::Array(_, Some(rpos))) = (left, right)
+            && lpos != rpos
+        {
+            // ToDo: Handle matching array types better eg: AGLS vs AGL
+            // false-positive:
+            /*
+               private _dropPos = _target modelToWorld [0.4, 0.75, 0]; //offset someone unconscious isn't lying over it
+               _dropPos set [2, ((getPosASL _target) select 2)];
+               _holder setPosASL _dropPos;
+            */
+            // println!("array mismatch {lpos:?}!={rpos:?}");
+            // return false;
         }
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
@@ -328,10 +328,10 @@ impl GameValue {
             Self::Array(gv_array_option, position_option) => {
                 let str_len = gv_array_option
                     .clone()
-                    .map_or("GENERIC".to_string(), |l| format!("len {}", l.len()));
+                    .map_or_else(|| "GENERIC".to_string(), |l| format!("len {}", l.len()));
                 let str_pos = position_option
                     .clone()
-                    .map_or(String::new(), |p| format!(":{p:?}"));
+                    .map_or_else(String::new, |p| format!(":{p:?}"));
                 format!("ArrayExp({str_len}{str_pos})")
             }
             Self::Code(expression) => {
