@@ -125,10 +125,12 @@ impl Workspace {
                                 "/{}",
                                 prefix.to_string().to_lowercase().replace('\\', "/")
                             );
-                            if self.pointers.contains_key(&prefix_str) {
+                            if let Some(pointer) = self.pointers.get(&prefix_str) {
                                 return Err(Error::Prefix(
                                     hemtt_common::prefix::Error::DuplicatePrefix(
-                                        prefix.to_string(),
+                                        prefix_str,
+                                        entry.as_str().to_string(),
+                                        pointer.as_str().to_string(),
                                     ),
                                 ));
                             }

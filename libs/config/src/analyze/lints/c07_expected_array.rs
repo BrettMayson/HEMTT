@@ -169,7 +169,7 @@ impl Code07ExpectedArray {
             .expect("mapping should exist");
         let haystack = &processed.extract(ident_end.original_start()..value.span().start);
         let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
-        self.suggestion = Some(name.value.to_string());
+        self.suggestion = Some(name.value.clone());
         self.diagnostic = Diagnostic::from_code_processed(
             &self,
             ident_start.original_start()..possible_end,

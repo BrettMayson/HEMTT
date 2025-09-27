@@ -38,7 +38,7 @@ jobs:
             artifact: macos-arm64
             exe: hemtt
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
@@ -88,12 +88,12 @@ jobs:
             commit: b04fb1ea3a291366017026e2ec94f95a0f28eb8b
     steps:
       - name: Download HEMTT
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ matrix.os.artifact }}
           path: hemtt
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ matrix.mod.repo }}
           path: mod
@@ -125,10 +125,10 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download Linux x64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: linux-x64
           path: release
@@ -142,7 +142,7 @@ jobs:
           cd release && mv hemtt linux-x64
 
       - name: Download Windows x64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: windows-x64
           path: release
@@ -152,7 +152,7 @@ jobs:
           cd release && zip windows-x64.zip hemtt.exe && rm hemtt.exe
 
       - name: Download MacOS x64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: macos-x64
           path: release
@@ -166,7 +166,7 @@ jobs:
           cd release && mv hemtt darwin-x64
 
       - name: Download MacOS ARM64
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: macos-arm64
           path: release

@@ -77,7 +77,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     pub fn header(&self, name: &str) -> Option<&Header> {
         self.headers
             .iter()
-            .find(|h| h.filename() == name.replace('/', "\\"))
+            .find(|h| h.filename().eq_ignore_ascii_case(&name.replace('/', "\\")))
     }
 
     /// Get the PBO's properties
@@ -110,10 +110,13 @@ impl<I: Seek + Read> ReadablePbo<I> {
     ///
     /// # Errors
     /// if the file cannot be read
-    pub fn file(&mut self, name: &str) -> Result<Option<File<I>>, Error> {
+    pub fn file(&'_ mut self, name: &str) -> Result<Option<File<'_, I>>, Error> {
         self.input.seek(SeekFrom::Start(self.blob_start))?;
         for header in &self.headers {
-            if header.filename().to_lowercase() == name.replace('/', "\\").to_lowercase() {
+            if header
+                .filename()
+                .eq_ignore_ascii_case(&name.replace('/', "\\"))
+            {
                 return Ok(Some(File::new(header, &mut self.input)));
             }
             self.input
@@ -129,7 +132,10 @@ impl<I: Seek + Read> ReadablePbo<I> {
     pub fn file_offset(&self, name: &str) -> Result<Option<u64>, Error> {
         let mut offset = self.blob_start;
         for header in &self.headers {
-            if header.filename().to_lowercase() == name.replace('/', "\\").to_lowercase() {
+            if header
+                .filename()
+                .eq_ignore_ascii_case(&name.replace('/', "\\"))
+            {
                 return Ok(Some(offset));
             }
             offset += header.size() as u64;

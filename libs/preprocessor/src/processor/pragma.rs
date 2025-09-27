@@ -63,10 +63,10 @@ impl Pragma {
         let Ok(suppress) = Suppress::try_from(code.as_str()) else {
             return Err(PragmaInvalidSuppress::code((**token).clone()));
         };
-        if let Some(existing) = self.suppress.get(&suppress) {
-            if *existing as u8 > scope as u8 {
-                return Ok(());
-            }
+        if let Some(existing) = self.suppress.get(&suppress)
+            && *existing as u8 > scope as u8
+        {
+            return Ok(());
         }
         self.suppress.insert(suppress, scope);
         Ok(())
@@ -81,10 +81,10 @@ impl Pragma {
         let Ok(flag) = Flag::try_from(code.as_str()) else {
             return Err(PragmaInvalidFlag::code((**token).clone()));
         };
-        if let Some(existing) = self.flags.get(&flag) {
-            if *existing as u8 > scope as u8 {
-                return Ok(());
-            }
+        if let Some(existing) = self.flags.get(&flag)
+            && *existing as u8 > scope as u8
+        {
+            return Ok(());
         }
         self.flags.insert(flag, scope);
         Ok(())

@@ -44,6 +44,7 @@ lint!(s24_marker_spam);
 lint!(s26_short_circuit_bool_var);
 lint!(s27_select_count);
 lint!(s28_banned_macros);
+lint!(s30_configof);
 
 #[test]
 fn test_s29_function_undefined() {
@@ -67,7 +68,11 @@ fn lint(file: &str) -> (String, SqfReport) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let database = Arc::new(Database::a3(false));
     let workspace_files = WorkspaceFiles::new();
 

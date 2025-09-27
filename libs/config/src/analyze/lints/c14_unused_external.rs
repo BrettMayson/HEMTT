@@ -1,8 +1,5 @@
 use std::{
-    cell::RefCell,
-    io::Write,
-    rc::Rc,
-    sync::{atomic::AtomicU16, Arc, Once, OnceLock},
+    cell::RefCell, io::Write, path::Path, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}
 };
 
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
@@ -63,8 +60,10 @@ impl LintRunner<LintData> for Runner {
     ) -> Vec<std::sync::Arc<dyn Code>> {
         static CLEANUP_PATH: Once = Once::new();
         CLEANUP_PATH.call_once(|| {
-            let _ = std::fs::create_dir_all(".hemttout");
-            let _ = std::fs::remove_file(PATH);
+            if Path::new(".hemttout").exists() {
+                let _ = std::fs::remove_file(PATH);
+                let _ = std::fs::File::create(PATH);
+            }
         });
         let Some(processed) = processed else {
             return vec![];
@@ -76,16 +75,20 @@ impl LintRunner<LintData> for Runner {
             subclasses: IndexMap::new(),
         }));
         check(&target.0, &root);
-        let mut file = match std::fs::OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(PATH)
-        {
-            Ok(file) => file,
-            Err(e) => {
-                eprintln!("Failed to open {PATH}: {e}");
-                return vec![];
-            }
+        let mut file = if Path::new(PATH).exists() {
+            Some(match std::fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(PATH)
+            {
+                Ok(file) => file,
+                Err(e) => {
+                    eprintln!("Failed to open {PATH}: {e}");
+                    return vec![];
+                }
+            })
+        } else {
+            None
         };
         ClassNode::check_unused(&root, &mut Vec::new(), processed, config, &mut file, runtime)
     }
@@ -104,7 +107,7 @@ impl ClassNode {
         reported: &mut Vec<Class>,
         processed: &Processed,
         config: &LintConfig,
-        file: &mut std::fs::File,
+        file: &mut Option<std::fs::File>,
         runtime: &hemtt_common::config::RuntimeArguments,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
@@ -121,15 +124,17 @@ impl ClassNode {
                 .mapping(name.span.start)
                 .expect("start position exists")
                 .original();
-            writeln!(
-                file,
-                "{} - {}:{}:{}",
-                name.as_str(),
-                pos.path().as_str().trim_start_matches('/'),
-                pos.start().1 .0,
-                pos.start().1 .1 + 1,
-            )
-            .expect("Failed to write to file");
+            if let Some(file) = file {
+                writeln!(
+                    file,
+                    "{} - {}:{}:{}",
+                    name.as_str(),
+                    pos.path().as_str().trim_start_matches('/'),
+                    pos.start().1 .0,
+                    pos.start().1 .1 + 1,
+                )
+                .expect("Failed to write to file");
+            }
         }
         for subclass in cfg.borrow().subclasses.values() {
             let inner_codes = Self::check_unused(subclass, reported, processed, config, file, runtime);

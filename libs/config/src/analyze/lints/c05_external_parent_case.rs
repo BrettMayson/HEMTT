@@ -102,17 +102,15 @@ fn check(
                     let name_lower = name.value.to_lowercase();
                     if let Some(parent) = parent {
                         let parent_lower = parent.value.to_lowercase();
-                        if parent_lower != name_lower || parent.value != name.value {
-                            if let Some(parent_class) = defined.get(&parent_lower) {
-                                if parent_class.name().map(|p| &p.value) != Some(&parent.value) {
+                        if (parent_lower != name_lower || parent.value != name.value)
+                            && let Some(parent_class) = defined.get(&parent_lower)
+                                && parent_class.name().map(|p| &p.value) != Some(&parent.value) {
                                     codes.push(Arc::new(Code05ExternalParentCase::new(
                                         c.clone(),
                                         parent_class.clone(),
                                         processed,
                                     )));
                                 }
-                            }
-                        }
                     }
                     defined.insert(name_lower, c.clone());
                     codes.extend(check(properties, defined, processed));

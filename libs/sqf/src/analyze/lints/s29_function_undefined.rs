@@ -103,8 +103,8 @@ impl LintRunner<LintData> for RunnerExpression {
                 }
             }
             Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _span) => {
-                if cmd.to_lowercase() != "call" {
-                    return Vec::new();
+                if !cmd.eq_ignore_ascii_case("call") {
+                    return vec![];
                 }
                 let Expression::Variable(rhs_name, _) = &**rhs else {
                     return vec![];

@@ -16,7 +16,15 @@ impl SqfAnalyzer {
         };
         let source = workspace.join_url(&url).ok()?;
         let database = self.get_database(&workspace).await;
-        match Processor::run(&source) {
+        match Processor::run(
+            &source,
+            workspace
+                .config()
+                .as_ref()
+                .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
+                    f.preprocessor()
+                }),
+        ) {
             Ok(processed) => match hemtt_sqf::parser::run(&database, &processed) {
                 Ok(sqf) => match sqf.optimize().compile(&processed) {
                     Ok(compiled) => Some(compiled.display().to_string()),

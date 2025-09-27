@@ -76,7 +76,7 @@ impl LintRunner<LintData> for Runner {
         else {
             return Vec::new();
         };
-        if name.to_lowercase() != "select" {
+        if !name.eq_ignore_ascii_case("select") {
             return Vec::new();
         }
         let Expression::Array(args, _) = &**expression else {

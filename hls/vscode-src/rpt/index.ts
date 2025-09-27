@@ -2,10 +2,9 @@ import { existsSync, lstatSync } from "fs";
 import { readdir } from "fs/promises";
 import path = require("path");
 import * as vscode from "vscode";
-import { LanguageClient } from "vscode-languageclient/node";
 import { LogFileViewer } from "./viewer";
 
-export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
+export function init(channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
   LogFileViewer.setupRptStatusBarVisibility();
   context.subscriptions.push(vscode.commands.registerCommand("hemtt.openLastRPT", async () => {
     let rptPath = "";
@@ -46,6 +45,7 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
     if (!existsSync(rptFile.path)) {
       return vscode.window.showErrorMessage(`Could not find rpt file: ${rptFile.path}`);
     }
+    channel.appendLine(`Opening rpt file: ${rptFile.path}`);
     LogFileViewer.watch(rptFile.path);
   }));
 }

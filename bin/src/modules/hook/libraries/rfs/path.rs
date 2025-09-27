@@ -53,8 +53,12 @@ pub mod path_functions {
             std::fs::create_dir_all(&other)
                 .map_err(|e| e.to_string().into())
                 .and_then(|()| {
-                    fs_extra::dir::copy(&path, other, &fs_extra::dir::CopyOptions::new())
-                        .map_err(|e| e.to_string().into())
+                    fs_extra::dir::copy(
+                        &path,
+                        other,
+                        &fs_extra::dir::CopyOptions::new().content_only(true),
+                    )
+                    .map_err(|e| e.to_string().into())
                 })
                 .err()
         } else {

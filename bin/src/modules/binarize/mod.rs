@@ -156,11 +156,11 @@ impl Module for Binarize {
             report.push(MissingPDrive::code());
         }
         for addon in ctx.addons() {
-            if let Some(config) = addon.config() {
-                if !config.binarize().enabled() {
-                    debug!("binarization disabled for {}", addon.name());
-                    continue;
-                }
+            if let Some(config) = addon.config()
+                && !config.binarize().enabled()
+            {
+                debug!("binarization disabled for {}", addon.name());
+                continue;
             }
             for entry in ctx
                 .workspace_path()
@@ -177,8 +177,8 @@ impl Module for Binarize {
                     && ["rtm", "p3d", "wrp"]
                         .contains(&entry.extension().unwrap_or_default().as_str())
                 {
-                    if let Some(config) = addon.config() {
-                        if config
+                    if let Some(config) = addon.config()
+                        && config
                             .binarize()
                             .exclude()
                             .iter()
@@ -192,10 +192,9 @@ impl Module for Binarize {
                                         .trim_start_matches(&format!("/{}/", addon.folder())),
                                 )
                             })
-                        {
-                            debug!("skipping binarization of {}", entry.as_str());
-                            continue;
-                        }
+                    {
+                        debug!("skipping binarization of {}", entry.as_str());
+                        continue;
                     }
 
                     // skip OLOD & BMTR files as they are already binarized
@@ -247,7 +246,7 @@ impl Module for Binarize {
                         entry
                             .as_str()
                             .trim_start_matches('/')
-                            .trim_start_matches(&addon.folder().to_string())
+                            .trim_start_matches(&addon.folder().clone())
                             .trim_start_matches('/')
                             .trim_end_matches(&entry.filename()),
                     );

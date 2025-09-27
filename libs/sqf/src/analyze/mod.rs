@@ -251,18 +251,17 @@ impl Analyze for Expression {
 ///
 /// Returns a tuple of the constant and a boolean indicating if quotes are needed
 fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
-    if let Expression::Code(code) = &expression {
-        if code.content.len() == 1 {
-            if let Statement::Expression(expr, _) = &code.content[0] {
-                return match expr {
-                    Expression::Boolean(bool, _) => Some((bool.to_string(), false)),
-                    Expression::Number(num, _) => Some((num.0.to_string(), false)),
-                    Expression::String(string, _, _) => Some((string.to_string(), true)),
-                    Expression::Variable(var, _) => Some((var.to_string(), false)),
-                    _ => None,
-                };
-            }
-        }
+    if let Expression::Code(code) = &expression
+        && code.content.len() == 1
+        && let Statement::Expression(expr, _) = &code.content[0]
+    {
+        return match expr {
+            Expression::Boolean(bool, _) => Some((bool.to_string(), false)),
+            Expression::Number(num, _) => Some((num.0.to_string(), false)),
+            Expression::String(string, _, _) => Some((string.to_string(), true)),
+            Expression::Variable(var, _) => Some((var.clone(), false)),
+            _ => None,
+        };
     }
     None
 }

@@ -244,7 +244,7 @@ pub fn clean_output(processed: &mut Processed) {
             .original()
             .path()
             .as_virtual_str()
-            .to_string()
+            .clone()
             .replace('/', "\\");
         if file != comitted_file || pending_line != linenum {
             comitted_file = file;

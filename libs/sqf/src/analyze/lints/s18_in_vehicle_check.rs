@@ -89,7 +89,7 @@ fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<String> {
     let Expression::UnaryCommand(UnaryCommand::Named(name), object, _) = lhs else {
         return None;
     };
-    if name.to_lowercase() != "vehicle" {
+    if !name.eq_ignore_ascii_case("vehicle") {
         return None;
     }
     let (Expression::Variable(var, _) | Expression::NularCommand(NularCommand { name: var}, _)) = &**object else {

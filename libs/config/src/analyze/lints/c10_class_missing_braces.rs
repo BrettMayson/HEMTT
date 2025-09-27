@@ -75,14 +75,13 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        if let Property::Class(Class::Local { err_missing_braces, parent, .. }) = target {
-            if *err_missing_braces {
+        if let Property::Class(Class::Local { err_missing_braces, parent, .. }) = target
+            && *err_missing_braces {
                 return vec![Arc::new(Code10ClassMissingBraces::new(
                     parent.clone().expect("parent must be present for err_missing_braces").span,
                     processed,
                 ))];
             }
-        }
         vec![]
     }
 }

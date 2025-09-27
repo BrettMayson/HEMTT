@@ -2,7 +2,7 @@ use clap::{Command, CommandFactory};
 use mdbook::book::Chapter;
 
 pub fn run(chapter: &mut Chapter) {
-    let commands = vec![
+    let commands = [
         ("new", hemtt::commands::new::Command::command()),
         ("check", hemtt::commands::check::Command::command()),
         ("dev", hemtt::commands::dev::Command::command()),
@@ -34,14 +34,13 @@ pub fn run(chapter: &mut Chapter) {
                 nested.iter().find(|(name, _)| *name == chapter.name)
             {
                 for item in &mut chapter.sub_items {
-                    if let mdbook::BookItem::Chapter(child_chapter) = item {
-                        if let Some((name, command)) = commands
+                    if let mdbook::BookItem::Chapter(child_chapter) = item
+                        && let Some((name, command)) = commands
                             .iter()
                             .find(|(name, _)| *name == child_chapter.name)
-                        {
-                            child_chapter.content =
-                                process_command(name, Some(&chapter.name), command.clone());
-                        }
+                    {
+                        child_chapter.content =
+                            process_command(name, Some(&chapter.name), command.clone());
                     }
                 }
             }
@@ -96,13 +95,12 @@ fn process_command(name: &str, nested: Option<&str>, mut command: Command) -> St
                 .get_value_names()
                 .map(|w| w.iter().map(|s| s.to_string()))
                 .and_then(|mut l| l.next())
-            {
-                if matches!(
+                && matches!(
                     arg.get_action(),
                     clap::ArgAction::Set | clap::ArgAction::Append
-                ) {
-                    header.push_str(&format!(" &lt;{name}&gt;"));
-                }
+                )
+            {
+                header.push_str(&format!(" &lt;{name}&gt;"));
             }
             output.push_str(&format!("### {header}\n\n"));
             output.push_str(

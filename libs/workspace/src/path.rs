@@ -216,8 +216,8 @@ impl WorkspacePath {
                         .rev()
                         .collect::<String>()
                         .split_once('.')
-                        .map_or(
-                            self.data.path.filename().as_str().chars().rev().collect(),
+                        .map_or_else(
+                            || self.data.path.filename().as_str().chars().rev().collect(),
                             |(_, s)| s.to_string(),
                         )
                         .chars()
@@ -247,28 +247,27 @@ impl WorkspacePath {
     pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
             let on_disk = on_disk.as_str().replace('\\', "/");
-            on_disk.to_lowercase() == requested.to_lowercase() && on_disk != requested
+            on_disk.eq_ignore_ascii_case(requested) && on_disk != requested
         }
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
-        if path_lower.starts_with("/a3/") {
-            if let Some(pdrive) = &self.workspace().pdrive {
-                if let Some(pdrive_path) = pdrive.path_to(&path) {
-                    return Ok(Some(LocateResult {
-                        case_mismatch: if is_wrong_case(&pdrive_path, &path) {
-                            Some(pdrive_path.as_str().to_string())
-                        } else {
-                            None
-                        },
-                        path: Self {
-                            data: Arc::new(WorkspacePathData {
-                                path: pdrive_path,
-                                workspace: self.data.workspace.clone(),
-                            }),
-                        },
-                    }));
-                }
-            }
+        if path_lower.starts_with("/a3/")
+            && let Some(pdrive) = &self.workspace().pdrive
+            && let Some(pdrive_path) = pdrive.path_to(&path)
+        {
+            return Ok(Some(LocateResult {
+                case_mismatch: if is_wrong_case(&pdrive_path, &path) {
+                    Some(pdrive_path.as_str().to_string())
+                } else {
+                    None
+                },
+                path: Self {
+                    data: Arc::new(WorkspacePathData {
+                        path: pdrive_path,
+                        workspace: self.data.workspace.clone(),
+                    }),
+                },
+            }));
         }
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {

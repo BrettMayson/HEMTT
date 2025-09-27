@@ -182,10 +182,7 @@ impl HemttSectionFile {
                             if let Some(extends) = launch_source.get(extends) {
                                 base = base.extend(extends.clone());
                             } else {
-                                return Err(Error::LaunchConfigExtendsMissing(
-                                    k,
-                                    extends.to_string(),
-                                ));
+                                return Err(Error::LaunchConfigExtendsMissing(k, extends.clone()));
                             }
                         }
                         base.dedup();

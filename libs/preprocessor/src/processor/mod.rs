@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use hemtt_common::config::PreprocessorOptions;
 use hemtt_workspace::{
     WorkspacePath,
     position::Position,
@@ -68,8 +69,13 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    pub fn run(path: &WorkspacePath) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
+    pub fn run(
+        path: &WorkspacePath,
+        options: &PreprocessorOptions,
+    ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
+
+        processor.defines.option_runtime(options.runtime_macros());
 
         processor.file_stack.push(path.clone());
 
@@ -174,21 +180,19 @@ impl Processor {
                     }
                 }
                 (Symbol::Directive, false) => {
-                    if just_whitespace {
-                        if let Some(command) = stream.peek_forward(1) {
-                            if [
-                                "if", "else", "endif", "ifdef", "ifndef", "define", "undef",
-                                "include", "pragma",
-                            ]
-                            .contains(&command.to_string().as_str())
-                            {
-                                let _ = stream.peek_backward(1);
-                                self.directive(pragma, stream, buffer)?;
-                                just_whitespace = true;
-                                continue;
-                            }
+                    if just_whitespace && let Some(command) = stream.peek_forward(1) {
+                        if [
+                            "if", "else", "endif", "ifdef", "ifndef", "define", "undef", "include",
+                            "pragma",
+                        ]
+                        .contains(&command.to_string().as_str())
+                        {
                             let _ = stream.peek_backward(1);
+                            self.directive(pragma, stream, buffer)?;
+                            just_whitespace = true;
+                            continue;
                         }
+                        let _ = stream.peek_backward(1);
                     }
                     let token = stream.next().expect("peeked above");
                     if in_macro.is_some()
@@ -288,10 +292,10 @@ impl Processor {
         buffer: Option<&mut Vec<Output>>,
     ) -> Result<Arc<Token>, Error> {
         self.skip_whitespace(stream, buffer);
-        if let Some(token) = stream.peek() {
-            if token.symbol().is_eoi() {
-                return Err(UnexpectedEOF::code(token.as_ref().clone()));
-            }
+        if let Some(token) = stream.peek()
+            && token.symbol().is_eoi()
+        {
+            return Err(UnexpectedEOF::code(token.as_ref().clone()));
         }
         Ok(stream.next().expect("just checked"))
     }

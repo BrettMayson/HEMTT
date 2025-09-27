@@ -11,6 +11,8 @@ pub struct IfUndefined {
     token: Box<Token>,
     /// Similar defines
     similar: Vec<String>,
+    /// Is this a runtime macro?
+    is_runtime: bool,
 }
 
 impl Code for IfUndefined {
@@ -34,7 +36,9 @@ impl Code for IfUndefined {
     }
 
     fn help(&self) -> Option<String> {
-        if self.similar.is_empty() {
+        if self.is_runtime {
+            Some("this is a runtime macro, you may not want to use it.\nthe intended effects won't be applied in rapified configs.\nif you understand what you're doing\nand you want to enable it with a default value, add:\n[preprocessor]\nruntime_macros = true".to_string())
+        } else if self.similar.is_empty() {
             None
         } else {
             Some(format!(
@@ -58,6 +62,7 @@ impl IfUndefined {
                 .iter()
                 .map(std::string::ToString::to_string)
                 .collect(),
+            is_runtime: Defines::is_runtime(token.symbol().to_string().trim()),
             token,
         }
     }

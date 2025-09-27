@@ -39,9 +39,9 @@ jobs:
     needs: build-wasm
     steps:
     - name: Checkout the source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Download wasm
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: wasm
         path: wasm
@@ -68,9 +68,9 @@ jobs:
     needs: build-wasm
     steps:
     - name: Checkout the source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Download wasm
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: wasm
         path: wasm

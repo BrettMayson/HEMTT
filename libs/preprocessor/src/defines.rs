@@ -22,6 +22,9 @@ pub struct Defines {
     global: InnerDefines,
     stack: Vec<(Arc<str>, InnerDefines)>,
     counter: u16,
+
+    /// Allow built-in runtime macros
+    runtime: bool,
 }
 
 /// Built-in macros that HEMTT supports, constants
@@ -41,7 +44,7 @@ const BUILTIN_GEN: [&str; 6] = [
 const BUILTIN_SPECIAL: [&str; 1] = ["__EVAL"];
 
 /// Built-in macros that HEMTT intentionally does not support
-const BUILTIN_PROTEST: [&str; 18] = [
+const BUILTIN_PROTEST: [&str; 16] = [
     "__DATE_ARR__",
     "__DATE_STR__",
     "__DATE_STR_ISO8601__",
@@ -57,21 +60,36 @@ const BUILTIN_PROTEST: [&str; 18] = [
     "__GAME_VER_MAJ__",
     "__GAME_VER_MIN__",
     "__GAME_BUILD__",
-    "__A3_DIAG__",
-    "__A3_DEBUG__",
     "__EXEC",
 ];
 
+// Built-in runtime macros that can be opt-in to be supported
+const BUILTIN_RUNTIME: [(&str, u8); 4] = [
+    ("__A3_DIAG__", 0),
+    ("__A3_DEBUG__", 0),
+    ("__A3_EXPERIMENTAL__", 0),
+    ("__A3_PROFILING__", 0),
+];
+
 impl Defines {
+    pub fn option_runtime(&mut self, enable: bool) {
+        self.runtime = enable;
+    }
+
     pub fn is_builtin(key: &str) -> bool {
         BUILTIN_GEN.contains(&key)
             || BUILTIN_SPECIAL.contains(&key)
             || BUILTIN_PROTEST.contains(&key)
             || BUILTIN_CONST.iter().any(|(k, _)| *k == key)
+            || BUILTIN_RUNTIME.iter().any(|(k, _)| *k == key)
     }
 
     pub fn is_unsupported_builtin(key: &str) -> bool {
         BUILTIN_PROTEST.contains(&key)
+    }
+
+    pub fn is_runtime(key: &str) -> bool {
+        BUILTIN_RUNTIME.iter().any(|(k, _)| *k == key)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
@@ -97,6 +115,34 @@ impl Defines {
     ) -> Option<(Arc<Token>, Definition, DefineSource)> {
         let ident = key.to_string();
         if let Some(site) = site {
+            if self.runtime
+                && let Some((_, value)) = BUILTIN_RUNTIME.iter().find(|(k, _)| *k == ident)
+            {
+                return Some((
+                    Arc::new(Token::new(
+                        Symbol::Word(key.to_string()),
+                        key.position().clone(),
+                    )),
+                    Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                        Symbol::Digit(*value as usize),
+                        key.position().clone(),
+                    ))])),
+                    DefineSource::Generated,
+                ));
+            }
+            if let Some((_, value)) = BUILTIN_CONST.iter().find(|(k, _)| *k == ident) {
+                return Some((
+                    Arc::new(Token::new(
+                        Symbol::Word(key.to_string()),
+                        key.position().clone(),
+                    )),
+                    Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                        Symbol::Digit(*value as usize),
+                        key.position().clone(),
+                    ))])),
+                    DefineSource::Generated,
+                ));
+            }
             if BUILTIN_GEN.contains(&ident.as_str()) {
                 match ident.as_str() {
                     "__COUNTER__" => {

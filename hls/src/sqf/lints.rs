@@ -98,7 +98,15 @@ async fn check_sqf(
     PreprocessorAnalyzer::get()
         .mark_in_progress(source.clone())
         .await;
-    let sources = match Processor::run(&source) {
+    let sources = match Processor::run(
+        &source,
+        workspace
+            .config()
+            .as_ref()
+            .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
+                f.preprocessor()
+            }),
+    ) {
         Ok(processed) => {
             {
                 let workspace_files = WorkspaceFiles::new();

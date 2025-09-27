@@ -45,7 +45,7 @@ struct Translation {
 pub fn convert_stringtable(project: &Project) {
     let result = rapify(project);
 
-    if result.is_some() {
+    if let Some(data) = result {
         // Create stringtable.bin
         let xmlb_path = project.path().with_extension("bin").expect("vfs error");
         let mut xmlb_file = xmlb_path.create_file().expect("vfs error");
@@ -54,7 +54,6 @@ pub fn convert_stringtable(project: &Project) {
         project.path().vfs().remove_file().expect("vfs error");
 
         // Write data to virtual file
-        let data = result.expect("data struct valid");
         data.write(&mut xmlb_file)
             .expect("failed to write XMLB layout");
         trace!(
@@ -171,7 +170,7 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
 }
 
 fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
-    let tranlations = [
+    let translations = [
         key.english(),
         key.czech(),
         key.french(),
@@ -198,9 +197,9 @@ fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
         key.ukrainian(),
         key.danish(),
     ];
-    debug_assert_eq!(tranlations.len(), ALL_LANGUAGES.len()); // order needs to be synced // Todo: meta programing?
+    debug_assert_eq!(translations.len(), ALL_LANGUAGES.len()); // order needs to be synced // Todo: meta programing?
 
-    for (index, result) in tranlations.into_iter().enumerate() {
+    for (index, result) in translations.into_iter().enumerate() {
         if let Some(native) = result {
             languages[index].have_unique = true;
             languages[index].phrases.push(native.into());

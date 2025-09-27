@@ -103,7 +103,7 @@ impl LintRunner<LintData> for RunnerScan {
         })) = target
             .0
             .iter()
-            .find(|p| p.name().value.to_lowercase() == "cfgmagazines")
+            .find(|p| p.name().value.eq_ignore_ascii_case("cfgmagazines"))
         {
             for property in magazines {
                 if let Property::Class(Class::Local { name, .. }) = property {
@@ -118,7 +118,7 @@ impl LintRunner<LintData> for RunnerScan {
         })) = target
             .0
             .iter()
-            .find(|p| p.name().value.to_lowercase() == "cfgmagazinewells")
+            .find(|p| p.name().value.eq_ignore_ascii_case("cfgmagazinewells"))
         {
             for magwell in magwells {
                 let Property::Class(Class::Local {
@@ -140,14 +140,13 @@ impl LintRunner<LintData> for RunnerScan {
                         let Item::Str(Str { value, span }) = mag else {
                             continue;
                         };
-                        if let Some(project) = project {
-                            if !value
+                        if let Some(project) = project
+                            && !value
                                 .to_lowercase()
                                 .starts_with(&project.prefix().to_lowercase())
                             {
                                 continue;
                             }
-                        }
                         if !classes.iter().any(|c| c.value == *value) {
                             let code: Arc<dyn Code> = Arc::new(Code09MagwellMissingMagazine::new(
                                 name.clone(),

@@ -217,13 +217,11 @@ fn check_unknown(
     database: &Database,
     config: Option<&LintConfig>,
 ) -> Codes {
-    if let Some(config) = config {
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| i.as_str() == Some(name)) {
+    if let Some(config) = config
+        && let Some(toml::Value::Array(ignore)) = config.option("ignore")
+            && ignore.iter().any(|i| i.as_str() == Some(name)) {
                 return Vec::new();
             }
-        }
-    }
 
     if eh.is_empty() {
         return vec![Arc::new(CodeS02UnknownEvent::new(
@@ -353,7 +351,7 @@ impl Code for CodeS02UnknownEvent {
     }
 
     fn severity(&self) -> Severity {
-        if self.id.to_lowercase() == "damaged" {
+        if self.id.eq_ignore_ascii_case("damaged") {
             Severity::Error
         } else {
             self.severity
@@ -378,7 +376,7 @@ impl Code for CodeS02UnknownEvent {
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone().map(|d| {
-            if self.id.to_lowercase() == "damaged" {
+            if self.id.eq_ignore_ascii_case("damaged") {
                 d.with_help("Damaged is a common typo for `Dammaged`. An error has been raised to prevent accidental usage.")
             } else {
                 d
