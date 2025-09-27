@@ -142,7 +142,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                             tokens.last(),
                             Some(Token::Operator(_) | Token::LeftParenthesis) | None
                         );
-                        
+
                         if is_unary_context {
                             let next_char = chars.get(i + 1);
                             if matches!(next_char, Some('0'..='9' | '.')) {
