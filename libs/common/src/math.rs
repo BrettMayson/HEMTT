@@ -119,21 +119,18 @@ enum Associativity {
 fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut current_number = String::new();
+    let chars: Vec<char> = expression.chars().collect();
 
-    for c in expression.chars() {
+    for (i, &c) in chars.iter().enumerate() {
         match c {
             '0'..='9' | '.' => current_number.push(c),
             _ => {
                 if !current_number.is_empty() {
-                    if current_number == "-" {
-                        tokens.push(Token::UnaryMinus);
-                    } else {
-                        tokens.push(Token::Number(
-                            current_number
-                                .parse()
-                                .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
-                        ));
-                    }
+                    tokens.push(Token::Number(
+                        current_number
+                            .parse()
+                            .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
+                    ));
                     current_number.clear();
                 }
                 match c {
@@ -141,11 +138,18 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                     '(' => tokens.push(Token::LeftParenthesis),
                     ')' => tokens.push(Token::RightParenthesis),
                     '-' => {
-                        if matches!(
+                        let is_unary_context = matches!(
                             tokens.last(),
                             Some(Token::Operator(_) | Token::LeftParenthesis) | None
-                        ) {
-                            current_number.push(c);
+                        );
+                        
+                        if is_unary_context {
+                            let next_char = chars.get(i + 1);
+                            if matches!(next_char, Some('0'..='9' | '.')) {
+                                current_number.push(c);
+                            } else {
+                                tokens.push(Token::UnaryMinus);
+                            }
                         } else {
                             tokens.push(Token::Operator(c));
                         }
@@ -158,15 +162,11 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     }
 
     if !current_number.is_empty() {
-        if current_number == "-" {
-            tokens.push(Token::UnaryMinus);
-        } else {
-            tokens.push(Token::Number(
-                current_number
-                    .parse()
-                    .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
-            ));
-        }
+        tokens.push(Token::Number(
+            current_number
+                .parse()
+                .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
+        ));
     }
 
     Ok(tokens)
@@ -289,5 +289,8 @@ mod tests {
         assert_eq!(super::eval("-(1 + 1)"), Some(-2.0));
         assert_eq!(super::eval("-(-(1 + 1))"), Some(2.0));
         assert_eq!(super::eval("2 * -(3 + 1)"), Some(-8.0));
+        assert_eq!(super::eval("(-1)"), Some(-1.0));
+        assert_eq!(super::eval("2--1"), Some(3.0));
+        assert_eq!(super::eval("(-1) + 2"), Some(1.0));
     }
 }
