@@ -23,7 +23,10 @@ fn check(dir: &str) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source);
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    );
     if let Err(e) = processed {
         panic!(
             "{}",
@@ -79,6 +82,7 @@ bootstrap!(include_empty);
 bootstrap!(include);
 bootstrap!(join_digit);
 bootstrap!(join_ignore);
+bootstrap!(macro_const);
 bootstrap!(name_collision);
 bootstrap!(procedural_texture);
 bootstrap!(quote_recursive);

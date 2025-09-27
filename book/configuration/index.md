@@ -107,3 +107,47 @@ You can add a list of properties to be added to every PBO.
 author = "ABE Team"
 url = "https://github.com/ABE-Mod/ABE"
 ```
+
+### Preprocessor
+
+#### runtime_macros
+
+Some runtime macros can be enabled to allow their use in included files. This option should not be enabled unless you need it, and understand what it does.
+
+A table of the currently supported runtime macros is:
+
+| Macro | Value | Description |
+|-------|-----------|-------------|
+| `__A3_DEBUG__` | `false` | Indicates if the game is running in debug mode. |
+| `__A3_DIAG__` | `false` | Indicates if the game is using the _diag build. |
+
+**hemtt/project.toml**
+
+```toml
+[preprocessor]
+runtime_macros = true
+```
+
+### Signing
+
+#### authority
+
+You can specify the authority to use for BI Signing. By default, this will be `{prefix}_{version}`, e.g. `abe_3.1.0`.
+
+**.hemtt/project.toml**
+
+```toml
+[signing]
+authority = "my_authority"
+```
+
+#### version
+
+You can specify the version of BI Signing to use. The default is `3`. This should not be changed unless you know what you are doing.
+
+**.hemtt/project.toml**
+
+```toml
+[signing]
+version = 3
+```

@@ -78,7 +78,11 @@ pub fn get_report(file: &PathBuf) -> Result<Result<ConfigReport, Vec<Arc<dyn Cod
                 .expect("valid utf-8"),
         )
         .expect("File is valid");
-    let processed = Processor::run(&source).map_err(|e| e.1)?;
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .map_err(|e| e.1)?;
     Ok(hemtt_config::parse(
         Some(&ProjectConfig::test_project()),
         &processed,

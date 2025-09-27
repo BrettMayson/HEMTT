@@ -25,7 +25,10 @@ fn check(dir: &str) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source);
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    );
     match processed {
         Ok(config) => {
             panic!(
@@ -65,6 +68,7 @@ bootstrap!(pe5_define_multitoken_argument);
 bootstrap!(pe6_change_builtin);
 bootstrap!(pe7_if_unit_or_function);
 bootstrap!(pe8_if_undefined);
+bootstrap!(pe8_if_undefined_runtime);
 bootstrap!(pe9_function_call_argument_count);
 bootstrap!(pe10_function_as_value);
 bootstrap!(pe11_expected_function_or_value);
@@ -88,3 +92,20 @@ bootstrap!(pe26_unsupported_builtin);
 bootstrap!(pe27_unexpected_endif);
 bootstrap!(pe28_unexpected_else);
 bootstrap!(pe29_circular_include);
+
+#[test]
+fn options_runtime() {
+    let folder = std::path::PathBuf::from(ROOT).join("pe8_if_undefined_runtime");
+    let workspace = hemtt_workspace::Workspace::builder()
+        .physical(&folder, LayerType::Source)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+        .unwrap();
+    let source = workspace.join("source.hpp").unwrap();
+    assert!(
+        Processor::run(
+            &source,
+            &hemtt_common::config::PreprocessorOptions::default().with_runtime_macros(true),
+        )
+        .is_ok()
+    );
+}

@@ -1,0 +1,1 @@
+isArma = true;
