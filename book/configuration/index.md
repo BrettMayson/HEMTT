@@ -118,8 +118,10 @@ A table of the currently supported runtime macros is:
 
 | Macro | Value | Description |
 |-------|-----------|-------------|
-| `__A3_DEBUG__` | `false` | Indicates if the game is running in debug mode. |
-| `__A3_DIAG__` | `false` | Indicates if the game is using the _diag build. |
+| `__A3_DEBUG__` | `0` | Indicates if the game is running in debug mode. |
+| `__A3_DIAG__` | `0` | Indicates if the game is using the _diag build. |
+| `__A3_EXPERIMENTAL__` | `0` | Indicates if the game is running an experimental build (dev or profiling branch). |
+| `__A3_PROFILING__` | `0` | Indicates if the game is running in profiling mode. (dev branch diag binary or profiling branch profiling binary)  |
 
 **hemtt/project.toml**
 
