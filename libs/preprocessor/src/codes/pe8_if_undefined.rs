@@ -37,7 +37,7 @@ impl Code for IfUndefined {
 
     fn help(&self) -> Option<String> {
         if self.is_runtime {
-            Some("this is a runtime macro, you may not want to use it.\nthe intended effects won't be applied in rapified configs\nif you want to enable it with a default value, add:\n[hemtt.preprocessor]\nruntime_macros = true".to_string())
+            Some("this is a runtime macro, you may not want to use it.\nthe intended effects won't be applied in rapified configs\nif you want to enable it with a default value, add:\n[preprocessor]\nruntime_macros = true".to_string())
         } else if self.similar.is_empty() {
             None
         } else {

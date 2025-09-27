@@ -7,6 +7,6 @@
   [0m[36m=[0m [33mhelp[0m: this is a runtime macro, you may not want to use it.
           the intended effects won't be applied in rapified configs
           if you want to enable it with a default value, add:
-          [hemtt.preprocessor]
+          [preprocessor]
           runtime_macros = true
 
