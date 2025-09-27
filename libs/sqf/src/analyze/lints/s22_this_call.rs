@@ -70,7 +70,7 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
-        if cmd.to_lowercase() != "call" {
+        if !cmd.eq_ignore_ascii_case("call") {
             return Vec::new();
         }
 
@@ -99,7 +99,7 @@ impl Code for CodeS22ThisCall {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#this_call")
+        Some("/lints/sqf.html#this_call")
     }
 
     fn severity(&self) -> Severity {

@@ -70,7 +70,7 @@ impl LintRunner<LintData> for Runner {
         let Expression::UnaryCommand(UnaryCommand::Named(name), expresssion, _) = target else {
             return Vec::new();
         };
-        if name.to_lowercase() != "typename" {
+        if !name.eq_ignore_ascii_case("typename") {
             return Vec::new();
         }
         let target_span = expresssion.span();
@@ -138,7 +138,7 @@ impl Code for CodeS03StaticTypename {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#static_typename")
+        Some("/lints/sqf.html#static_typename")
     }
 
     fn severity(&self) -> Severity {

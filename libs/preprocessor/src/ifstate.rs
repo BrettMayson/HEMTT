@@ -83,15 +83,14 @@ impl IfStates {
             .iter()
             .take(self.stack.len() - 1)
             .all(IfState::reading)
-        {
-            if let Some(new) = match self.pop() {
+            && let Some(new) = match self.pop() {
                 Some(IfState::PassingChild(t)) => Some(IfState::PassingChild(t)),
                 Some(IfState::PassingIf(t)) => Some(IfState::ReadingElse(t)),
                 Some(IfState::ReadingIf(t)) => Some(IfState::PassingElse(t)),
                 Some(IfState::PassingElse(_) | IfState::ReadingElse(_)) | None => None,
-            } {
-                self.push(new);
             }
+        {
+            self.push(new);
         }
         self.did_else = Some(token);
         Ok(())

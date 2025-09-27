@@ -1,11 +1,4 @@
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::{
-        RwLock,
-        atomic::{AtomicU16, Ordering},
-    },
-};
+use std::{collections::HashMap, path::PathBuf, sync::RwLock};
 
 use hemtt_config::{
     Config,
@@ -61,7 +54,6 @@ impl Module for Rapifier {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         ctx.state().set(AddonConfigs::default());
         let mut report = Report::new();
-        let counter = AtomicU16::new(0);
         let glob_options = glob::MatchOptions {
             require_literal_separator: true,
             ..Default::default()
@@ -101,7 +93,6 @@ impl Module for Rapifier {
             .par_iter()
             .map(|(addon, entry)| {
                 let report = rapify(addon, entry, ctx)?;
-                counter.fetch_add(1, Ordering::Relaxed);
                 progress.inc(1);
                 Ok(report)
             })
@@ -112,7 +103,7 @@ impl Module for Rapifier {
         }
 
         progress.finish_and_clear();
-        info!("Rapified {} addon configs", counter.load(Ordering::Relaxed));
+        info!("Rapified {} addon configs", entries.len());
         report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
         Ok(report)
     }
@@ -121,7 +112,7 @@ impl Module for Rapifier {
 #[allow(clippy::too_many_lines)]
 pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
     let mut report = Report::new();
-    let processed = match Processor::run(path) {
+    let processed = match Processor::run(path, ctx.config().preprocessor()) {
         Ok(processed) => processed,
         Err((_, hemtt_preprocessor::Error::Code(e))) => {
             report.push(e);
@@ -163,14 +154,13 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         if path.filename() == "config.cpp" {
             let (version, cfgpatch) = configreport.required_version();
             let mut file = path;
-            let mut span = 0..0;
-            if let Some(cfgpatch) = cfgpatch {
+            let span = cfgpatch.map_or(0..0, |cfgpatch| {
                 let map = processed
                     .mapping(cfgpatch.name().span.start)
                     .expect("mapping should exist");
                 file = map.original().path();
-                span = map.original().start().0..map.original().end().0;
-            }
+                map.original().start().0..map.original().end().0
+            });
             addon
                 .build_data()
                 .set_required_version(version, file.to_owned(), span);

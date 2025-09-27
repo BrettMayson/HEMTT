@@ -108,7 +108,7 @@ impl Code for CodeS20BoolStaticComparison {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#bool_static_comparison")
+        Some("/lints/sqf.html#bool_static_comparison")
     }
 
     fn severity(&self) -> Severity {

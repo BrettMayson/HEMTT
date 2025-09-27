@@ -1,7 +1,4 @@
-use std::{
-    fs::{File, create_dir_all},
-    sync::atomic::{AtomicU16, Ordering},
-};
+use std::fs::{File, create_dir_all};
 
 use git2::Repository;
 use hemtt_common::{
@@ -41,20 +38,18 @@ pub fn build(ctx: &Context, collapse: Collapse) -> Result<Report, Error> {
             })
         })
     };
-    let counter = AtomicU16::new(0);
-    let progress = progress_bar(ctx.addons().to_vec().len() as u64).with_message("Building PBOs");
-    ctx.addons()
-        .to_vec()
+    let addons = ctx.addons().to_vec();
+    let progress = progress_bar(addons.len() as u64).with_message("Building PBOs");
+    addons
         .iter()
         .map(|addon| {
             internal_build(ctx, addon, collapse, &version, git_hash.as_deref())?;
             progress.inc(1);
-            counter.fetch_add(1, Ordering::Relaxed);
             Ok(())
         })
         .collect::<Result<Vec<_>, Error>>()?;
     progress.finish_and_clear();
-    info!("Built {} PBOs", counter.load(Ordering::Relaxed));
+    info!("Built {} PBOs", addons.len());
     Ok(Report::new())
 }
 

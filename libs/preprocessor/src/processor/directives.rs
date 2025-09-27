@@ -39,15 +39,15 @@ impl Processor {
         stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
         buffer: &mut Vec<Output>,
     ) -> Result<bool, Error> {
-        if let Some(token) = stream.peek() {
-            if token.symbol().is_directive() {
-                stream.next();
-                if let Some(command) = stream.peek() {
-                    if command.symbol().is_word() {
-                        self.directive_command(pragma, stream, buffer)?;
-                        return Ok(true);
-                    }
-                }
+        if let Some(token) = stream.peek()
+            && token.symbol().is_directive()
+        {
+            stream.next();
+            if let Some(command) = stream.peek()
+                && command.symbol().is_word()
+            {
+                self.directive_command(pragma, stream, buffer)?;
+                return Ok(true);
             }
         }
         Ok(false)

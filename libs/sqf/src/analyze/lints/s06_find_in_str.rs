@@ -79,7 +79,7 @@ impl LintRunner<LintData> for Runner {
         else {
             return Vec::new();
         };
-        if name.to_lowercase() != "find" {
+        if !name.eq_ignore_ascii_case("find") {
             return Vec::new();
         }
     
@@ -88,7 +88,7 @@ impl LintRunner<LintData> for Runner {
                 Expression::String(s, _, wrapper) => {
                     format!("{}{s}{}", wrapper.as_str(), wrapper.as_str())
                 }
-                Expression::Variable(name, _) => name.to_string(),
+                Expression::Variable(name, _) => name.clone(),
                 _ => return Vec::new(),
             };
             return vec![Arc::new(CodeS06FindInStr::new(
@@ -119,7 +119,7 @@ impl Code for CodeS06FindInStr {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#find_in_str")
+        Some("/lints/sqf.html#find_in_str")
     }
 
     fn severity(&self) -> Severity {

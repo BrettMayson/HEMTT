@@ -47,7 +47,11 @@ fn lint(file: &str) -> (String, ConfigReport) {
         )
         .unwrap();
     let source = workspace.join(format!("{file}.hpp")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
     let test_config = ProjectConfig::from_file(&config_path_full).unwrap();
     let parsed = hemtt_config::parse(Some(&test_config), &processed);
@@ -83,7 +87,8 @@ fn test_c09_magwell_missing_magazine() {
 #[test]
 fn test_collect_cfgfunctions() {
     let (_, report) = lint(stringify!(collect_cfgfunctions));
-    let mut functions_defined: Vec<&String> = report.functions_defined().iter().collect();
+    let mut functions_defined: Vec<&String> =
+        report.functions_defined().iter().map(|(s, _)| s).collect();
     functions_defined.sort();
     insta::assert_compact_debug_snapshot!(functions_defined);
 }

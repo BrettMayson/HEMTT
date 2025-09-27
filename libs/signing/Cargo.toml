@@ -17,7 +17,8 @@ hemtt-common = { path = "../common" }
 hemtt-pbo = { path = "../pbo" }
 
 byteorder = { workspace = true }
-rand = "0.8.5"
-rsa = "0.9.8"
+crypto-bigint = { version = "0.7.0-pre.6", features = ["alloc"] }
+rand = { workspace = true }
+rsa = "0.10.0-rc.3"
 sha-1 = { workspace = true }
 thiserror = { workspace = true }

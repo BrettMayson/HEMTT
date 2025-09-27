@@ -27,7 +27,11 @@ fn errors(file: &str) -> String {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let parsed = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap_err();
     let codes = parsed.codes();
     codes

@@ -37,7 +37,11 @@ fn simple(file: &str) -> Vec<Statement> {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     std::fs::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
     let parsed = match hemtt_sqf::parser::run(&Database::a3(false), &processed) {
         Ok(sqf) => sqf,

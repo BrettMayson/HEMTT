@@ -25,7 +25,10 @@ fn check(dir: &str) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source);
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    );
     match processed {
         Ok(config) => {
             let mut expected = Vec::new();

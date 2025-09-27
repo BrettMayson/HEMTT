@@ -41,12 +41,12 @@ impl Code for IncludeNotEncased {
             "{}{}{}",
             self.start
                 .as_ref()
-                .map_or("<".to_string(), |t| t.symbol().to_string()),
+                .map_or_else(|| "<".to_string(), |t| t.symbol().to_string()),
             self.path
                 .iter()
                 .map(|t| t.symbol().to_string())
                 .collect::<String>(),
-            self.start.as_ref().map_or(">".to_string(), |t| t
+            self.start.as_ref().map_or_else(|| ">".to_string(), |t| t
                 .symbol()
                 .matching_enclosure()
                 .expect("matching enclosure should exist if first exists")

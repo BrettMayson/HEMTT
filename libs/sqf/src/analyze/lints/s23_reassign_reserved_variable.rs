@@ -86,31 +86,28 @@ impl LintRunner<LintData> for StatementsRunner {
                 continue
             };
     
-            if let Some((saved, original, saved_span)) = just_saved.as_ref() {
-                if saved == var {
-                    need_to_restore.insert(original.to_string(), (saved.to_string(), span.clone(), saved_span.clone()));
+            if let Some((saved, original, saved_span)) = just_saved.as_ref()
+                && saved == var {
+                    need_to_restore.insert(original.clone(), (saved.clone(), span.clone(), saved_span.clone()));
                     just_saved.take();
                     continue
                 }
-            }
 
             if let Some((saved, original_save, saved_span)) = need_to_restore.get(var) {
-                codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::SavedWhileSaved(var.to_string(), span.clone(), original_save.clone(), saved.clone(), saved_span.clone()), processed, config.severity())));
+                codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::SavedWhileSaved(var.clone(), span.clone(), original_save.clone(), saved.clone(), saved_span.clone()), processed, config.severity())));
             }
 
-            if let Expression::Variable(restoring, _) = exp {
-                if need_to_restore.remove(restoring).is_some() {
+            if let Expression::Variable(restoring, _) = exp
+                && need_to_restore.remove(restoring).is_some() {
                     continue
                 }
-            }
     
             if RESERVED.contains(&var.as_str()) {
-                codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::Overwrite(var.to_string(), span.clone()), processed, config.severity())));
-            } else if let Expression::Variable(saved, new_saved_span) = exp {
-                if RESERVED.contains(&saved.as_str()) {
-                    just_saved.replace((saved.to_string(), var.to_string(), new_saved_span.clone()));
+                codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::Overwrite(var.clone(), span.clone()), processed, config.severity())));
+            } else if let Expression::Variable(saved, new_saved_span) = exp
+                && RESERVED.contains(&saved.as_str()) {
+                    just_saved.replace((saved.clone(), var.clone(), new_saved_span.clone()));
                 }
-            }
         }
 
         for (saved, (original, span, saved_span)) in need_to_restore {
@@ -141,7 +138,7 @@ impl LintRunner<LintData> for ExpressionRunner {
         
         let exp = match target {
             Expression::UnaryCommand(UnaryCommand::Named(cmd), exp, _) |
-            Expression::BinaryCommand(BinaryCommand::Named(cmd), _, exp, _) if cmd.to_lowercase() == "params" => exp,
+            Expression::BinaryCommand(BinaryCommand::Named(cmd), _, exp, _) if cmd.eq_ignore_ascii_case("params") => exp,
             _ => return Vec::new(),
         };
 
@@ -198,7 +195,7 @@ impl Code for CodeS23ReassignReservedVariable {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#reasign_reserved_variable")
+        Some("/lints/sqf.html#reasign_reserved_variable")
     }
 
     fn severity(&self) -> Severity {

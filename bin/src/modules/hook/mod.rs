@@ -27,7 +27,7 @@ mod time;
 ///
 /// # Panics
 /// If the build folder does not exist
-pub fn scope(ctx: &Context, vfs: bool) -> Result<Scope, Error> {
+pub fn scope(ctx: &'_ Context, vfs: bool) -> Result<Scope<'_>, Error> {
     let mut scope = Scope::new();
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace_path().vfs().clone());

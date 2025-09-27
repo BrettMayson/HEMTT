@@ -89,7 +89,7 @@ impl LintRunner<LintData> for Runner {
         } else {
             vec!["text", "name", "displayname", "icontext"]
         };
-        if ignore.iter().any(|s| s.to_lowercase() == name) {
+        if ignore.iter().any(|s| s.eq_ignore_ascii_case(name.as_str())) {
             return vec![];
         }
         let check_if_equation = !match config.option("forced") {
@@ -152,7 +152,7 @@ fn check_str(
         return;
     }
     // attempt to parse it as a number
-    let Some(num) = Number::try_evaulation(raw_string, target_str.span()) else {
+    let Some(num) = Number::try_evaluation(raw_string, target_str.span()) else {
         return;
     };
     let span = target_str.span().start + 1..target_str.span().end - 1;
@@ -178,7 +178,7 @@ impl Code for Code12MathCouldBeUnquoted {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#math_could_be_unquoted")
+        Some("/lints/config.html#math_could_be_unquoted")
     }
 
     fn severity(&self) -> Severity {

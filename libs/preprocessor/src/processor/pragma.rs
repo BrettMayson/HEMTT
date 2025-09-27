@@ -30,7 +30,7 @@ impl Pragma {
         Self {
             root: false,
             suppress: {
-                let mut map = HashMap::new();
+                let mut map = HashMap::with_capacity(self.suppress.len());
                 for (k, v) in &self.suppress {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);
@@ -39,7 +39,7 @@ impl Pragma {
                 map
             },
             flags: {
-                let mut map = HashMap::new();
+                let mut map = HashMap::with_capacity(self.flags.len());
                 for (k, v) in &self.flags {
                     if *v as u8 == Scope::Config as u8 {
                         map.insert(k.clone(), *v);
@@ -63,10 +63,10 @@ impl Pragma {
         let Ok(suppress) = Suppress::try_from(code.as_str()) else {
             return Err(PragmaInvalidSuppress::code((**token).clone()));
         };
-        if let Some(existing) = self.suppress.get(&suppress) {
-            if *existing as u8 > scope as u8 {
-                return Ok(());
-            }
+        if let Some(existing) = self.suppress.get(&suppress)
+            && *existing as u8 > scope as u8
+        {
+            return Ok(());
         }
         self.suppress.insert(suppress, scope);
         Ok(())
@@ -81,10 +81,10 @@ impl Pragma {
         let Ok(flag) = Flag::try_from(code.as_str()) else {
             return Err(PragmaInvalidFlag::code((**token).clone()));
         };
-        if let Some(existing) = self.flags.get(&flag) {
-            if *existing as u8 > scope as u8 {
-                return Ok(());
-            }
+        if let Some(existing) = self.flags.get(&flag)
+            && *existing as u8 > scope as u8
+        {
+            return Ok(());
         }
         self.flags.insert(flag, scope);
         Ok(())

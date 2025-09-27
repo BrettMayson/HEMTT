@@ -1,7 +1,4 @@
-use std::sync::{
-    Arc,
-    atomic::{AtomicU16, Ordering},
-};
+use std::sync::Arc;
 
 use hemtt_common::version::Version;
 use hemtt_preprocessor::Processor;
@@ -57,7 +54,6 @@ impl Module for SQFCompiler {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let sqf_ext = Some(String::from("sqf"));
-        let counter = AtomicU16::new(0);
         let mut entries = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
@@ -81,16 +77,17 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed = match Processor::run(entry).map_err(|(_, e)| e) {
-                    Ok(p) => p,
-                    Err(e) => {
-                        if let hemtt_preprocessor::Error::Code(code) = e {
-                            report.push(code);
-                            return Ok(report);
+                let processed =
+                    match Processor::run(entry, ctx.config().preprocessor()).map_err(|(_, e)| e) {
+                        Ok(p) => p,
+                        Err(e) => {
+                            if let hemtt_preprocessor::Error::Code(code) = e {
+                                report.push(code);
+                                return Ok(report);
+                            }
+                            return Err(e.into());
                         }
-                        return Err(e.into());
-                    }
-                };
+                    };
                 for warning in processed.warnings() {
                     report.push(warning.clone());
                 }
@@ -109,7 +106,6 @@ impl Module for SQFCompiler {
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
-                            counter.fetch_add(1, Ordering::Relaxed);
                             progress.inc(1);
                         }
                         for code in codes {
@@ -142,7 +138,7 @@ impl Module for SQFCompiler {
             report.merge(new_report);
         }
         progress.finish_and_clear();
-        info!("Compiled {} sqf files", counter.load(Ordering::Relaxed));
+        info!("Compiled {} sqf files", entries.len());
 
         report.extend(lint_all(
             Some(ctx.config()),

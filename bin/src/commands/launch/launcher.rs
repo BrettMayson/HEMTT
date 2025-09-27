@@ -167,7 +167,7 @@ impl Launcher {
                 }
                 let mod_path = workshop_folder.join(load_mod);
                 if !mod_path.exists() {
-                    report.push(WorkshopModNotFound::code(load_mod.to_string()));
+                    report.push(WorkshopModNotFound::code(load_mod.clone()));
                 }
                 if cfg!(windows) {
                     mods.push(mod_path.display().to_string());
@@ -197,7 +197,7 @@ impl Launcher {
             let mut path = PathBuf::from(mission);
 
             if path.is_absolute() {
-                report.push(MissionAbsolutePath::code(mission.to_string()));
+                report.push(MissionAbsolutePath::code(mission.clone()));
                 return Ok(None);
             }
             path = std::env::current_dir()?.join(mission);
@@ -215,10 +215,17 @@ impl Launcher {
             }
 
             if path.is_file() {
-                args.push(format!("\"{}\"", path.display()));
+                if cfg!(windows) {
+                    args.push(format!("\"{}\"", path.display()));
+                } else {
+                    args.push(format!(
+                        "\"Z:{}\"",
+                        path.display().to_string().replace('/', "\\")
+                    ));
+                }
             } else {
                 report.push(MissionNotFound::code(
-                    mission.to_string(),
+                    mission.clone(),
                     &std::env::current_dir()?,
                 ));
                 return Ok(None);

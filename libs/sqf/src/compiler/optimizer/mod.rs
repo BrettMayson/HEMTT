@@ -245,12 +245,11 @@ impl Expression {
     /// ```
     #[must_use]
     fn is_not_array_default_value(&self) -> bool {
-        if let Self::Array(array, _) = self {
-            if let Some(param_default) = array.get(1) {
-                if param_default.is_array() {
-                    return false;
-                }
-            }
+        if let Self::Array(array, _) = self
+            && let Some(param_default) = array.get(1)
+            && param_default.is_array()
+        {
+            return false;
         }
         true
     }
@@ -365,30 +364,30 @@ impl Expression {
         right: &Self,
         op: fn(&str, &str) -> String,
     ) -> Option<Self> {
-        if let Self::String(left_string, _, _left_wrapper) = left {
-            if let Self::String(right_string, _, right_wrapper) = right {
-                if right_string.is_ascii() && left_string.is_ascii() {
-                    let new_string = op(left_string.as_ref(), right_string.as_ref());
-                    #[cfg(debug_assertions)]
-                    trace!(
-                        "optimizing [B:{}] ({}) => {}",
-                        op_type.as_str(),
-                        self.source(),
-                        new_string
-                    );
-                    return Some(Self::String(
-                        new_string.into(),
-                        range.clone(),
-                        right_wrapper.clone(),
-                    ));
-                }
-                warn!(
-                    "Skipping Optimization because unicode [B:{}] ({}) => {}",
+        if let Self::String(left_string, _, _left_wrapper) = left
+            && let Self::String(right_string, _, right_wrapper) = right
+        {
+            if right_string.is_ascii() && left_string.is_ascii() {
+                let new_string = op(left_string.as_ref(), right_string.as_ref());
+                #[cfg(debug_assertions)]
+                trace!(
+                    "optimizing [B:{}] ({}) => {}",
                     op_type.as_str(),
                     self.source(),
-                    right_string.to_string()
+                    new_string
                 );
+                return Some(Self::String(
+                    new_string.into(),
+                    range.clone(),
+                    right_wrapper.clone(),
+                ));
             }
+            warn!(
+                "Skipping Optimization because unicode [B:{}] ({}) => {}",
+                op_type.as_str(),
+                self.source(),
+                right_string.to_string()
+            );
         }
         None
     }
@@ -439,23 +438,23 @@ impl Expression {
                     range.clone(),
                 )
                 .optimize();
-                if let Self::Number(crate::Scalar(ref new_number), _) = result {
-                    if new_number.is_finite() {
-                        #[cfg(debug_assertions)]
-                        trace!(
-                            "optimizing pair ([B:{}], [B:{}]) ({}) => {}",
-                            op_type.as_str(),
-                            left_op_type.as_str(),
-                            self.source(),
-                            new_number
-                        );
-                        return Some(Self::BinaryCommand(
-                            left_op_type.clone(),
-                            left_op_lhs.clone(),
-                            Box::new(result),
-                            range.clone(),
-                        ));
-                    }
+                if let Self::Number(crate::Scalar(ref new_number), _) = result
+                    && new_number.is_finite()
+                {
+                    #[cfg(debug_assertions)]
+                    trace!(
+                        "optimizing pair ([B:{}], [B:{}]) ({}) => {}",
+                        op_type.as_str(),
+                        left_op_type.as_str(),
+                        self.source(),
+                        new_number
+                    );
+                    return Some(Self::BinaryCommand(
+                        left_op_type.clone(),
+                        left_op_lhs.clone(),
+                        Box::new(result),
+                        range.clone(),
+                    ));
                 }
                 warn!(
                     "Skipping Optimization on float chain [B:{}] ({})",

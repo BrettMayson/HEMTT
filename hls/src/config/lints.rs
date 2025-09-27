@@ -11,6 +11,7 @@ use tracing::{debug, warn};
 use url::Url;
 
 use crate::{
+    config::ConfigAnalyzer,
     diag_manager::DiagManager,
     preprocessor::PreprocessorAnalyzer,
     workspace::{EditorWorkspace, EditorWorkspaces},
@@ -66,7 +67,15 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     PreprocessorAnalyzer::get()
         .mark_in_progress(source.clone())
         .await;
-    let sources = match Processor::run(&source) {
+    let sources = match Processor::run(
+        &source,
+        workspace
+            .config()
+            .as_ref()
+            .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
+                f.preprocessor()
+            }),
+    ) {
         Ok(processed) => {
             {
                 let workspace_files = WorkspaceFiles::new();
@@ -85,6 +94,24 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                                 lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
                             }
                         }
+                        let config_analyzer = ConfigAnalyzer::get();
+                        config_analyzer.functions_defined.insert(
+                            {
+                                // `/folder/addon/blah` => addon
+                                let parts: Vec<&str> = source.as_str().split('/').collect();
+                                if parts.len() < 3 {
+                                    warn!("Invalid config path: {}", source.as_str());
+                                    if parts.len() == 2 {
+                                        parts[1].to_string()
+                                    } else {
+                                        source.as_str().to_string()
+                                    }
+                                } else {
+                                    parts[2].to_string()
+                                }
+                            },
+                            report.functions_defined().clone(),
+                        );
                     }
                     Err(err) => {
                         warn!("failed to process config: {:?}", err);

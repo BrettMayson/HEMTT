@@ -70,13 +70,13 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
-        if cmd.to_lowercase() != "select" {
+        if !cmd.eq_ignore_ascii_case("select") {
             return Vec::new();
         }
 
-        if let Expression::BinaryCommand(BinaryCommand::Sub, slhs, srhs, _) = &**rhs {
-            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), array, _) = &**slhs {
-                if cmd.to_lowercase() != "count" {
+        if let Expression::BinaryCommand(BinaryCommand::Sub, slhs, srhs, _) = &**rhs
+            && let Expression::UnaryCommand(UnaryCommand::Named(cmd), array, _) = &**slhs {
+                if !cmd.eq_ignore_ascii_case("count") {
                     return Vec::new();
                 }
                 if array.source() != lhs.source() {
@@ -100,7 +100,6 @@ impl LintRunner<LintData> for Runner {
                     ))];
                 }
             }
-        }
 
         Vec::new()
     }
@@ -121,7 +120,7 @@ impl Code for CodeS27SelectCount {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#select_count")
+        Some("/lints/sqf.html#select_count")
     }
 
     fn severity(&self) -> Severity {

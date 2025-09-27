@@ -115,39 +115,39 @@ impl Database {
     pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
         let mut database = Self::a3(force_pull);
         let custom_root = workspace.join("/.hemtt/commands");
-        if let Ok(custom_root) = custom_root {
-            if custom_root.exists().unwrap_or(false) {
-                for entry in custom_root
-                    .read_dir()
-                    .expect("failed to read custom commands dir")
-                {
-                    if !entry.is_file().unwrap_or(false) {
-                        continue;
-                    }
-                    let content = entry
-                        .read_to_string()
-                        .expect("failed to read custom command file");
-                    let command = database
-                        .wiki
-                        .add_custom_command_parse(&content)
-                        .map_err(Error::CustomCommandError)?;
-                    for syntax in command.syntax() {
-                        match syntax.call() {
-                            Call::Nular => {
-                                database
-                                    .nular_commands
-                                    .insert(command.name().to_ascii_lowercase());
-                            }
-                            Call::Unary(_) => {
-                                database
-                                    .unary_commands
-                                    .insert(command.name().to_ascii_lowercase());
-                            }
-                            Call::Binary(_, _) => {
-                                database
-                                    .binary_commands
-                                    .insert(command.name().to_ascii_lowercase());
-                            }
+        if let Ok(custom_root) = custom_root
+            && custom_root.exists().unwrap_or(false)
+        {
+            for entry in custom_root
+                .read_dir()
+                .expect("failed to read custom commands dir")
+            {
+                if !entry.is_file().unwrap_or(false) {
+                    continue;
+                }
+                let content = entry
+                    .read_to_string()
+                    .expect("failed to read custom command file");
+                let command = database
+                    .wiki
+                    .add_custom_command_parse(&content)
+                    .map_err(Error::CustomCommandError)?;
+                for syntax in command.syntax() {
+                    match syntax.call() {
+                        Call::Nular => {
+                            database
+                                .nular_commands
+                                .insert(command.name().to_ascii_lowercase());
+                        }
+                        Call::Unary(_) => {
+                            database
+                                .unary_commands
+                                .insert(command.name().to_ascii_lowercase());
+                        }
+                        Call::Binary(_, _) => {
+                            database
+                                .binary_commands
+                                .insert(command.name().to_ascii_lowercase());
                         }
                     }
                 }

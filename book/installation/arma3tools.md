@@ -10,7 +10,7 @@ Arma 3 Tools can be installed using [Steam](https://store.steampowered.com/app/2
 
 ### Linux
 
-HEMTT can use either Proton or Wine to run the tools. `wine64` is highly recommended, as using Proton will be much slower and may cause windows to pop up while running the tools. HEMTT will always use `wine64` if it is available.
+HEMTT can use either Proton or Wine to run the tools. `wine` or `wine64` is highly recommended, as using Proton will be much slower and may cause windows to pop up while running the tools. HEMTT will always use `wine64` or `wine` if they are available.
 
 #### Steam
 

@@ -80,11 +80,10 @@ impl LintRunner<LintData> for Runner {
         let Some(command) = target.command_name() else {
             return Vec::new();
         };
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
-            if ignore.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
+        if let Some(toml::Value::Array(ignore)) = config.option("ignore")
+            && ignore.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
                 return Vec::new();
             }
-        }
         let Some(wiki) = data.database.wiki().commands().get(command) else {
             return Vec::new();
         };
@@ -97,8 +96,8 @@ impl LintRunner<LintData> for Runner {
                 true,
             ))];
         }
-        if let Some(toml::Value::Array(banned)) = config.option("banned") {
-            if banned.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
+        if let Some(toml::Value::Array(banned)) = config.option("banned")
+            && banned.iter().any(|i| i.as_str().map(str::to_lowercase) == Some(command.to_lowercase())) {
                 return vec![Arc::new(CodeS09BannedCommand::new(
                     target.span(),
                     command.to_string(),
@@ -107,7 +106,6 @@ impl LintRunner<LintData> for Runner {
                     false,
                 ))];
             }
-        }
         Vec::new()
     }
 }
@@ -128,7 +126,7 @@ impl Code for CodeS09BannedCommand {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#banned_commands")
+        Some("/lints/sqf.html#banned_commands")
     }
 
     fn severity(&self) -> Severity {

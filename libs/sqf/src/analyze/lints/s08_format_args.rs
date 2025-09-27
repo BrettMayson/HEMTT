@@ -77,7 +77,7 @@ impl LintRunner<LintData> for Runner {
         let Expression::UnaryCommand(UnaryCommand::Named(name), expression, _) = target else {
             return Vec::new();
         };
-        if name.to_lowercase() != "format" && name.to_lowercase() != "formattext" {
+        if !name.eq_ignore_ascii_case("format") && !name.eq_ignore_ascii_case("formattext") {
             return Vec::new();
         }
         let Expression::Array(args, _) = &**expression else {
@@ -177,7 +177,7 @@ impl Code for CodeS08FormatArgs {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#format_args")
+        Some("/lints/sqf.html#format_args")
     }
 
     fn severity(&self) -> Severity {

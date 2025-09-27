@@ -103,7 +103,7 @@ impl Code for Code13ConfigThisCall {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#config_this_call")
+        Some("/lints/config.html#config_this_call")
     }
 
     fn severity(&self) -> Severity {

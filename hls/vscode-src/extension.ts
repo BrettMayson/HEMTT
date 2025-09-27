@@ -21,6 +21,8 @@ export let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HE
 
 export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(channel);
+  rpt.init(channel, context);
+
   let command = context.asAbsolutePath("hemtt-language-server");
   if (process.platform === "win32") {
     command += ".exe";
@@ -71,14 +73,12 @@ export async function activate(context: vscode.ExtensionContext) {
     serverOptions,
     clientOptions
   );
-  // activateInlayHints(context);
   client.start();
 
   audio.init(client, channel, context);
   p3d.init(client, channel, context);
   paa.init(client, channel, context);
   preprocessor.init(client, channel, context);
-  rpt.init(client, channel, context);
   channel.appendLine("HEMTT initialized");
 }
 

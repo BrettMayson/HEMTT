@@ -14,25 +14,50 @@ pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
     ))
 }
 
+#[derive(Debug, Clone)]
+enum Token {
+    Number(String),
+    Op(char),
+}
+
+impl std::fmt::Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Number(n) => write!(f, "{n}"),
+            Self::Op(op) => write!(f, "{op}"),
+        }
+    }
+}
+
 pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     choice((
-        super::number::number().map(|n| n.to_string()),
-        just("-".to_string()),
-        just("+".to_string()),
-        just("*".to_string()),
-        just("/".to_string()),
-        just("%".to_string()),
-        just("^".to_string()),
-        just("(".to_string()),
-        just(")".to_string()),
-        just(" ".to_string()),
+        super::number::number().map(|n| Token::Number(n.to_string())),
+        just("-").to(Token::Op('-')),
+        just("+").to(Token::Op('+')),
+        just("*").to(Token::Op('*')),
+        just("/").to(Token::Op('/')),
+        just("%").to(Token::Op('%')),
+        just("^").to(Token::Op('^')),
+        just("(").to(Token::Op('(')),
+        just(")").to(Token::Op(')')),
     ))
+    .padded()
     .repeated()
     .at_least(2)
-    .collect::<String>()
-    .map(|s| s.trim().to_string())
-    .try_map(|expr, span: Range<usize>| {
-        let number = Number::try_evaulation(&expr, span.clone());
+    .collect::<Vec<_>>()
+    .try_map(|tokens, span: Range<usize>| {
+        let has_operator = tokens.iter().any(|t| matches!(t, Token::Op(_)));
+        if !has_operator {
+            return Err(Simple::custom(
+                span,
+                "math expression must contain at least one operator",
+            ));
+        }
+        let expr = tokens
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>();
+        let number = Number::try_evaluation(&expr, span.clone());
         number.map_or_else(
             || {
                 Err(Simple::custom(
@@ -204,6 +229,7 @@ mod tests {
         );
     }
 
+    #[allow(clippy::too_many_lines)]
     #[test]
     fn math() {
         assert_eq!(
@@ -302,6 +328,20 @@ mod tests {
             Ok(Value::Number(Number::Float32 {
                 value: -0.005,
                 span: 0..9
+            }))
+        );
+        assert_eq!(
+            value().parse("-(0.01*0.5)"),
+            Ok(Value::Number(Number::Float32 {
+                value: -0.005,
+                span: 0..11
+            }))
+        );
+        assert_eq!(
+            value().parse("(-0.01)"),
+            Ok(Value::Number(Number::Float32 {
+                value: -0.01,
+                span: 0..7
             }))
         );
     }

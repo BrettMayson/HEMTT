@@ -103,8 +103,8 @@ impl LintRunner<LintData> for RunnerExpression {
                 }
             }
             Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _span) => {
-                if cmd.to_lowercase() != "call" {
-                    return Vec::new();
+                if !cmd.eq_ignore_ascii_case("call") {
+                    return vec![];
                 }
                 let Expression::Variable(rhs_name, _) = &**rhs else {
                     return vec![];
@@ -133,11 +133,11 @@ impl LintRunner<LintData> for RunnerExpression {
                         return vec![];
                     }
                 };
-                let func_name = func_name.to_lowercase();
-                if is_project_func(&func_name, project) {
+                let func_name_lower = func_name.to_lowercase();
+                if is_project_func(&func_name_lower, project) {
                     let mut functions_defined =
                         data.functions_defined.lock().expect("mutex safety");
-                    functions_defined.insert(func_name);
+                    functions_defined.insert((func_name_lower, func_name.clone()));
                 }
             }
             _ => {}
@@ -167,10 +167,10 @@ impl LintRunner<LintData> for RunnerStatement {
         let Statement::AssignGlobal(func_name, _, _) = target else {
             return Vec::new();
         };
-        let func_name = func_name.to_lowercase();
-        if is_project_func(&func_name, project) {
+        let func_name_lower = func_name.to_lowercase();
+        if is_project_func(&func_name_lower, project) {
             let mut functions_defined = data.functions_defined.lock().expect("mutex safety");
-            functions_defined.insert(func_name);
+            functions_defined.insert((func_name_lower, func_name.clone().into()));
         }
 
         vec![]
@@ -187,11 +187,14 @@ impl LintRunner<LintData> for RunnerFinal {
         _project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
         _processed: Option<&hemtt_workspace::reporting::Processed>,
-        _runtime: &hemtt_common::config::RuntimeArguments,
+        runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
         _data: &LintData,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
+        if runtime.is_just() { // --just build will be missing EFUNCS
+            return codes;
+        }
         let mut all_defined = HashSet::new();
         for addon in target {
             let defined = addon
@@ -206,7 +209,7 @@ impl LintRunner<LintData> for RunnerFinal {
         if let Some(toml::Value::Array(ignore)) = config.option("ignore") {
             for i in ignore {
                 if let Value::String(i) = i {
-                    all_defined.insert(i.to_lowercase());
+                    all_defined.insert((i.to_lowercase(), i.clone().into()));
                 }
             }
         }
@@ -220,14 +223,14 @@ impl LintRunner<LintData> for RunnerFinal {
                 .expect("not juliet")
                 .clone();
             for (func, position, start, end, file) in used {
-                if !all_defined.contains(&func) {
+                if !all_defined.iter().any(|(s, _)| s == &func) {
                     all_missing.entry(func).or_insert(Vec::new()).push((position, start, end, file));
                 }
             }
         }
 
         for (func, positions) in all_missing {
-            let similar = similar_values(&func, &all_defined.iter().map(std::string::String::as_str).collect::<Vec<_>>())
+            let similar = similar_values(&func, &all_defined.iter().map(|(s, _)| s.as_str()).collect::<Vec<_>>())
                 .into_iter()
                 .map(std::string::ToString::to_string)
                 .collect();
@@ -257,7 +260,7 @@ impl Code for Code29FunctionUndefined {
         "L-S29"
     }
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#function_undefined")
+        Some("/lints/sqf.html#function_undefined")
     }
     fn severity(&self) -> Severity {
         self.severity

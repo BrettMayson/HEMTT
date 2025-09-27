@@ -44,6 +44,8 @@ pub struct GlobalArgs {
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     /// we are in a test
     in_test: bool,
+    #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
+    exp_bin_cache: bool,
 }
 
 #[derive(clap::Subcommand)]
@@ -61,6 +63,7 @@ enum Commands {
     Utils(commands::utils::Command),
     Value(commands::value::Command),
     Wiki(commands::wiki::Command),
+    Manage(commands::manage::Command),
     #[cfg(windows)]
     Photoshoot(commands::photoshoot::Command),
 }
@@ -99,7 +102,13 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             cli.global.verbosity,
             !matches!(
                 cli.command,
-                Some(Commands::Utils(_) | Commands::Wiki(_) | Commands::New(_) | Commands::Book(_))
+                Some(
+                    Commands::Utils(_)
+                        | Commands::Wiki(_)
+                        | Commands::New(_)
+                        | Commands::Book(_)
+                        | Commands::Manage(_)
+                )
             ),
         )?;
     }
@@ -136,6 +145,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Utils(cmd) => commands::utils::execute(cmd),
         Commands::Value(cmd) => commands::value::execute(cmd),
         Commands::Wiki(cmd) => commands::wiki::execute(cmd),
+        Commands::Manage(cmd) => commands::manage::execute(cmd),
         #[cfg(windows)]
         Commands::Photoshoot(cmd) => commands::photoshoot::execute(cmd),
     };

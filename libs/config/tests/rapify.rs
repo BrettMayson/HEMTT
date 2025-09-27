@@ -45,7 +45,11 @@ fn rapify(dir: &str) -> Config {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join("source.hpp").unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let parsed = hemtt_config::parse(None, &processed);
     let workspacefiles = hemtt_workspace::reporting::WorkspaceFiles::new();
     if let Err(e) = &parsed {

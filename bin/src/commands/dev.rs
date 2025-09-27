@@ -5,7 +5,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse},
+    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary},
     report::Report,
 };
 
@@ -181,6 +181,7 @@ pub fn context(
     if force_binarize || binarize.binarize {
         executor.add_module(Box::<Binarize>::default());
     }
+    executor.add_module(Box::<Summary>::default());
 
     info!("Creating `dev` version");
 

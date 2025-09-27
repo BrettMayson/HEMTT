@@ -1,4 +1,5 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
+
 use tracing::warn;
 
 use crate::{
@@ -243,7 +244,7 @@ pub fn clean_output(processed: &mut Processed) {
             .original()
             .path()
             .as_virtual_str()
-            .to_string()
+            .clone()
             .replace('/', "\\");
         if file != comitted_file || pending_line != linenum {
             comitted_file = file;
@@ -449,13 +450,15 @@ impl Processed {
     /// Return a string with the source from the span
     pub fn clean_span(&self, span: &Range<usize>) -> Range<usize> {
         fn find_point(processed: &Processed, target: usize) -> usize {
-            let mut last_start = (0, 0);
-            for (original, clean) in &processed.clean_output_line_indexes {
-                if original > &target {
-                    break;
-                }
-                last_start = (*original, *clean);
-            }
+            let idx = processed
+                .clean_output_line_indexes
+                .binary_search_by(|(original, _)| original.cmp(&target))
+                .unwrap_or_else(|i| i.saturating_sub(1));
+            let last_start = processed
+                .clean_output_line_indexes
+                .get(idx)
+                .copied()
+                .unwrap_or((0, 0));
             processed
                 .clean_output
                 .chars()

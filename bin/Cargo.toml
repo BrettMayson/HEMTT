@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.16.3"
+version = "1.16.5"
 edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -21,7 +21,7 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 
-hemtt-config = { path = "../libs/config" }
+hemtt-config = { path = "../libs/config", features=["serde"] }
 hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa" }
 hemtt-pbo = { path = "../libs/pbo" }
@@ -33,37 +33,40 @@ hemtt-workspace = { path = "../libs/workspace" }
 hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
+byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-dialoguer = "0.11.0"
+clap_complete = "4.5.57"
+dialoguer = "0.12.0"
 dirs = { workspace = true }
 fs_extra = "1.3.0"
 git2 = { workspace = true }
-glob = "0.3.2"
-image = "0.25.6"
-indicatif = "0.17.11"
+glob = "0.3.3"
+image = "0.25.8"
+indicatif = "0.18.0"
 interprocess = { workspace = true }
 num_cpus = "1.17.0"
 paste = { workspace = true }
 rayon = "1.10.0"
 regex = { workspace = true }
-reqwest = { version = "0.12.20", features = ["blocking", "json"] }
+reqwest = { version = "0.12.23", features = ["blocking", "json"] }
 rhai = "1.22.2"
 rust-embed = "8.7.2"
 semver = "1.0.26"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+sha-1 = { workspace = true }
 state = "0.6.0"
 supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3.41", features = ["formatting"] }
+time = { version = "0.3.43", features = ["formatting"] }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["json"] }
+tracing-subscriber = { version = "0.3.20", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
 webbrowser = "1.0.5"
-whoami = "1.6.0"
+whoami = "1.6.1"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

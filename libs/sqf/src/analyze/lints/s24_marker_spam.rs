@@ -84,15 +84,14 @@ impl LintRunner<LintData> for Runner {
                     let Some(name) = marker_name(name) else {
                         continue;
                     };
-                    pending.entry(name.clone()).or_default().push((cmd.to_string(), cmd_span.clone()));
+                    pending.entry(name.clone()).or_default().push((cmd.clone(), cmd_span.clone()));
                 }
                 Statement::Expression(_, _) => {}
                 Statement::AssignGlobal(name, _, _) | Statement::AssignLocal(name, _, _) => {
-                    if let Some(existing) = pending.remove(name) {
-                        if existing.len() > 1 {
+                    if let Some(existing) = pending.remove(name)
+                        && existing.len() > 1 {
                             codes.push(Arc::new(CodeS24MarkerSpam::new(existing, processed, config.severity())));
                         }
-                    }
                 }
             }
         }
@@ -136,7 +135,7 @@ impl Code for CodeS24MarkerSpam {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#marker_update_spam")
+        Some("/lints/sqf.html#marker_update_spam")
     }
 
     fn severity(&self) -> Severity {

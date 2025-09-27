@@ -29,31 +29,61 @@ impl Face {
     ///
     /// # Errors
     /// [`std::io::Error`] if an IO error occurs.
-    pub fn read<I: Read>(input: &mut I) -> Result<Self, Error> {
-        let num_verts = input.read_u32::<LittleEndian>()?;
-        if num_verts != 3 && num_verts != 4 {
-            return Err(Error::InvalidFaceVertexCount(num_verts));
+    pub fn read<I: Read>(input: &mut I, is_sp3x: bool) -> Result<Self, Error> {
+        if is_sp3x {
+            let mut texture_buffer = vec![0; 32];
+            input.read_exact(&mut texture_buffer)?;
+            let null_pos = texture_buffer.iter().position(|&b| b == 0).unwrap_or(32);
+            let texture = String::from_utf8_lossy(&texture_buffer[..null_pos]).into_owned();
+
+            let num_verts = input.read_u32::<LittleEndian>()?;
+            if num_verts != 3 && num_verts != 4 {
+                return Err(Error::InvalidFaceVertexCount(num_verts));
+            }
+
+            let mut vertices: Vec<Vertex> = Vec::with_capacity(num_verts as usize);
+            for _i in 0..num_verts {
+                vertices.push(Vertex::read(input)?);
+            }
+
+            if num_verts == 3 {
+                Vertex::read(input)?;
+            }
+
+            let flags = input.read_u32::<LittleEndian>()?;
+
+            Ok(Self {
+                vertices,
+                flags,
+                texture,
+                material: String::new(),
+            })
+        } else {
+            let num_verts = input.read_u32::<LittleEndian>()?;
+            if num_verts != 3 && num_verts != 4 {
+                return Err(Error::InvalidFaceVertexCount(num_verts));
+            }
+
+            let mut vertices: Vec<Vertex> = Vec::with_capacity(num_verts as usize);
+            for _i in 0..num_verts {
+                vertices.push(Vertex::read(input)?);
+            }
+
+            if num_verts == 3 {
+                Vertex::read(input)?;
+            }
+
+            let flags = input.read_u32::<LittleEndian>()?;
+            let texture = input.read_cstring()?;
+            let material = input.read_cstring()?;
+
+            Ok(Self {
+                vertices,
+                flags,
+                texture,
+                material,
+            })
         }
-
-        let mut vertices: Vec<Vertex> = Vec::with_capacity(num_verts as usize);
-        for _i in 0..num_verts {
-            vertices.push(Vertex::read(input)?);
-        }
-
-        if num_verts == 3 {
-            Vertex::read(input)?;
-        }
-
-        let flags = input.read_u32::<LittleEndian>()?;
-        let texture = input.read_cstring()?;
-        let material = input.read_cstring()?;
-
-        Ok(Self {
-            vertices,
-            flags,
-            texture,
-            material,
-        })
     }
 
     /// Writes the Face to a given output stream.

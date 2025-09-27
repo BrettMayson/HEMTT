@@ -84,7 +84,7 @@ impl LintRunner<LintData> for Runner {
 
 #[must_use]
 pub fn check(properties: &[Property], processed: &Processed) -> Codes {
-    let mut defined: HashMap<String, Vec<Class>> = HashMap::new();
+    let mut defined: HashMap<String, Vec<Class>> = HashMap::with_capacity(properties.len());
     let mut codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
@@ -135,7 +135,7 @@ impl Code for CodeC03DuplicateClasses {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/config.html#duplicate_classes")
+        Some("/lints/config.html#duplicate_classes")
     }
 
     fn message(&self) -> String {

@@ -57,7 +57,7 @@ impl LintRunner<LintData> for Runner {
         })) = target
             .0
             .iter()
-            .find(|p| p.name().value.to_lowercase() == "cfgfunctions")
+            .find(|p| p.name().value.eq_ignore_ascii_case("cfgfunctions"))
         else {
             return Vec::new();
         };
@@ -66,7 +66,7 @@ impl LintRunner<LintData> for Runner {
             let mut prefix_real = tag_name.as_str();
             for p in tag_properties {
                 let Property::Entry { name, value, .. } = p else { continue };
-                if name.as_str().to_lowercase() != "tag" { continue; }
+                if !name.as_str().eq_ignore_ascii_case("tag") { continue; }
                 let Value::Str(value) = value else { continue; };
                 prefix_real = value.value();
             }
@@ -76,9 +76,10 @@ impl LintRunner<LintData> for Runner {
                 for function in properties_category {
                     let Property::Class(func_class) = function else { continue };
                     let Some(class_name) = func_class.name() else { continue; }; 
-                    let func_name = format!("{prefix_real}_fnc_{}",class_name.as_str()).to_lowercase();
+                    let func_name = format!("{prefix_real}_fnc_{}",class_name.as_str());
+                    let func_name_lower = func_name.to_lowercase();
                     let mut functions_defined = data.functions_defined.lock().expect("mutex safety");
-                    functions_defined.insert(func_name);
+                    functions_defined.insert((func_name_lower, func_name.into()));
                 }
             }
         }

@@ -2,7 +2,7 @@ use hemtt_workspace::reporting::Definition;
 use tower_lsp::lsp_types::{
     ParameterInformation, ParameterLabel, SignatureHelp, SignatureHelpParams, SignatureInformation,
 };
-use tracing::{debug, warn};
+use tracing::warn;
 
 use crate::{files::FileCache, workspace::EditorWorkspaces};
 
@@ -10,7 +10,6 @@ use super::PreprocessorAnalyzer;
 
 impl PreprocessorAnalyzer {
     pub async fn signature_help(&self, params: &SignatureHelpParams) -> Option<SignatureHelp> {
-        debug!("signature_help: {:?}", params);
         let url = &params.text_document_position_params.text_document.uri;
         let path = url.to_file_path().ok()?;
         #[derive(Debug, PartialEq, Eq)]

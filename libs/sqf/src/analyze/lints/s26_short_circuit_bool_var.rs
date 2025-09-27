@@ -106,7 +106,7 @@ impl Code for CodeS26ShortCircuitBoolVar {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#short_circuit_bool_var")
+        Some("/lints/sqf.html#short_circuit_bool_var")
     }
 
     fn severity(&self) -> Severity {

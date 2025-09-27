@@ -67,7 +67,7 @@ impl LintRunner<LintData> for Runner {
         let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target else {
             return Vec::new();
         };
-        if name.to_lowercase() != "then" {
+        if !name.eq_ignore_ascii_case("then") {
             return Vec::new();
         }
         let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
@@ -100,7 +100,7 @@ impl Code for CodeS11IfNot {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/analysis/sqf.html#if_not_else")
+        Some("/lints/sqf.html#if_not_else")
     }
 
     fn severity(&self) -> Severity {

@@ -25,6 +25,16 @@ impl Ident {
         Self { value, span }
     }
 
+    #[cfg(test)]
+    #[must_use]
+    pub fn test_new<S: Into<String>>(value: S) -> Self {
+        let value = value.into();
+        Self {
+            span: 0..value.len(),
+            value,
+        }
+    }
+
     #[must_use]
     /// Get the value of the identifier
     pub fn as_str(&self) -> &str {
