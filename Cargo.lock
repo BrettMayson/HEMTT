@@ -1710,6 +1710,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "sha-1",
  "state",
  "supports-hyperlinks",
  "tabled",
