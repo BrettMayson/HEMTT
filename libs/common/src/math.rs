@@ -43,6 +43,9 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
                 }
                 operator_stack.push(token);
             }
+            Token::UnaryMinus => {
+                operator_stack.push(token);
+            }
             Token::LeftParenthesis => operator_stack.push(token),
             Token::RightParenthesis => {
                 let mut hit_left = false;
@@ -87,6 +90,10 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
                 };
                 stack.push(result);
             }
+            Token::UnaryMinus => {
+                let operand = stack.pop()?;
+                stack.push(-operand);
+            }
             _ => return None,
         }
     }
@@ -98,6 +105,7 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
 enum Token {
     Number(f64),
     Operator(char),
+    UnaryMinus,
     LeftParenthesis,
     RightParenthesis,
 }
@@ -111,8 +119,9 @@ enum Associativity {
 fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut current_number = String::new();
+    let chars: Vec<char> = expression.chars().collect();
 
-    for c in expression.chars() {
+    for (i, &c) in chars.iter().enumerate() {
         match c {
             '0'..='9' | '.' => current_number.push(c),
             _ => {
@@ -129,11 +138,18 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                     '(' => tokens.push(Token::LeftParenthesis),
                     ')' => tokens.push(Token::RightParenthesis),
                     '-' => {
-                        if matches!(
+                        let is_unary_context = matches!(
                             tokens.last(),
                             Some(Token::Operator(_) | Token::LeftParenthesis) | None
-                        ) {
-                            current_number.push(c);
+                        );
+
+                        if is_unary_context {
+                            let next_char = chars.get(i + 1);
+                            if matches!(next_char, Some('0'..='9' | '.')) {
+                                current_number.push(c);
+                            } else {
+                                tokens.push(Token::UnaryMinus);
+                            }
                         } else {
                             tokens.push(Token::Operator(c));
                         }
@@ -263,5 +279,18 @@ mod tests {
         assert_eq!(super::eval("1 + -1 * 2"), Some(-1.0));
         assert_eq!(super::eval("1 + -1 * 2 / 2"), Some(0.0));
         assert_eq!(super::eval("1 - -1"), Some(2.0));
+    }
+
+    #[test]
+    fn minus() {
+        assert_eq!(super::eval("-2"), Some(-2.0));
+        assert_eq!(super::eval("-(2)"), Some(-2.0));
+        assert_eq!(super::eval("-(-2)"), Some(2.0));
+        assert_eq!(super::eval("-(1 + 1)"), Some(-2.0));
+        assert_eq!(super::eval("-(-(1 + 1))"), Some(2.0));
+        assert_eq!(super::eval("2 * -(3 + 1)"), Some(-8.0));
+        assert_eq!(super::eval("(-1)"), Some(-1.0));
+        assert_eq!(super::eval("2--1"), Some(3.0));
+        assert_eq!(super::eval("(-1) + 2"), Some(1.0));
     }
 }
