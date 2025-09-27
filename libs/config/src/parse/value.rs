@@ -17,9 +17,7 @@ pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
 #[derive(Debug, Clone)]
 enum Token {
     Number(String),
-    Op(String),
-    LParen,
-    RParen,
+    Op(char),
 }
 
 impl std::fmt::Display for Token {
@@ -27,8 +25,6 @@ impl std::fmt::Display for Token {
         match self {
             Self::Number(n) => write!(f, "{n}"),
             Self::Op(op) => write!(f, "{op}"),
-            Self::LParen => write!(f, "("),
-            Self::RParen => write!(f, ")"),
         }
     }
 }
@@ -36,15 +32,14 @@ impl std::fmt::Display for Token {
 pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     choice((
         super::number::number().map(|n| Token::Number(n.to_string())),
-        just("-").to(Token::Op("-".into())),
-        just("+").to(Token::Op("+".into())),
-        just("*").to(Token::Op("*".into())),
-        just("/").to(Token::Op("/".into())),
-        just("%").to(Token::Op("%".into())),
-        just("^").to(Token::Op("^".into())),
-        just("(").to(Token::LParen),
-        just(")").to(Token::RParen),
-        // just(" ").ignored(), // ignore whitespace entirely
+        just("-").to(Token::Op('-')),
+        just("+").to(Token::Op('+')),
+        just("*").to(Token::Op('*')),
+        just("/").to(Token::Op('/')),
+        just("%").to(Token::Op('%')),
+        just("^").to(Token::Op('^')),
+        just("(").to(Token::Op('(')),
+        just(")").to(Token::Op(')')),
     ))
     .padded()
     .repeated()
@@ -234,6 +229,7 @@ mod tests {
         );
     }
 
+    #[allow(clippy::too_many_lines)]
     #[test]
     fn math() {
         assert_eq!(
@@ -332,6 +328,20 @@ mod tests {
             Ok(Value::Number(Number::Float32 {
                 value: -0.005,
                 span: 0..9
+            }))
+        );
+        assert_eq!(
+            value().parse("-(0.01*0.5)"),
+            Ok(Value::Number(Number::Float32 {
+                value: -0.005,
+                span: 0..11
+            }))
+        );
+        assert_eq!(
+            value().parse("(-0.01)"),
+            Ok(Value::Number(Number::Float32 {
+                value: -0.01,
+                span: 0..7
             }))
         );
     }

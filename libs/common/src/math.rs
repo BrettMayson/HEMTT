@@ -43,6 +43,11 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
                 }
                 operator_stack.push(token);
             }
+            Token::UnaryMinus => {
+                // Unary minus has high precedence and is right associative
+                // It should be handled immediately, but we need to be careful about the stack
+                operator_stack.push(token);
+            }
             Token::LeftParenthesis => operator_stack.push(token),
             Token::RightParenthesis => {
                 let mut hit_left = false;
@@ -87,6 +92,10 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
                 };
                 stack.push(result);
             }
+            Token::UnaryMinus => {
+                let operand = stack.pop()?;
+                stack.push(-operand);
+            }
             _ => return None,
         }
     }
@@ -98,6 +107,7 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
 enum Token {
     Number(f64),
     Operator(char),
+    UnaryMinus,
     LeftParenthesis,
     RightParenthesis,
 }
@@ -117,11 +127,17 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
             '0'..='9' | '.' => current_number.push(c),
             _ => {
                 if !current_number.is_empty() {
-                    tokens.push(Token::Number(
-                        current_number
-                            .parse()
-                            .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
-                    ));
+                    // Special case: if current_number is just "-", it's not a valid number
+                    // This happens when we have a unary minus followed by a non-digit
+                    if current_number == "-" {
+                        tokens.push(Token::UnaryMinus);
+                    } else {
+                        tokens.push(Token::Number(
+                            current_number
+                                .parse()
+                                .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
+                        ));
+                    }
                     current_number.clear();
                 }
                 match c {
@@ -146,11 +162,16 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     }
 
     if !current_number.is_empty() {
-        tokens.push(Token::Number(
-            current_number
-                .parse()
-                .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
-        ));
+        // Special case: if current_number is just "-", it's not a valid number
+        if current_number == "-" {
+            tokens.push(Token::UnaryMinus);
+        } else {
+            tokens.push(Token::Number(
+                current_number
+                    .parse()
+                    .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
+            ));
+        }
     }
 
     Ok(tokens)
@@ -263,5 +284,15 @@ mod tests {
         assert_eq!(super::eval("1 + -1 * 2"), Some(-1.0));
         assert_eq!(super::eval("1 + -1 * 2 / 2"), Some(0.0));
         assert_eq!(super::eval("1 - -1"), Some(2.0));
+    }
+
+    #[test]
+    fn minus() {
+        assert_eq!(super::eval("-2"), Some(-2.0));
+        assert_eq!(super::eval("-(2)"), Some(-2.0));
+        assert_eq!(super::eval("-(-2)"), Some(2.0));
+        assert_eq!(super::eval("-(1 + 1)"), Some(-2.0));
+        assert_eq!(super::eval("-(-(1 + 1))"), Some(2.0));
+        assert_eq!(super::eval("2 * -(3 + 1)"), Some(-8.0));
     }
 }
