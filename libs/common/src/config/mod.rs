@@ -14,6 +14,7 @@ pub use project::{
     ProjectConfig,
     hemtt::{RuntimeArguments, launch::LaunchOptions},
     lint::{LintConfig, LintConfigOverride, LintEnabled},
+    preprocessor::PreprocessorOptions,
 };
 
 fn deprecated(file: &str, key: &str, replacement: &str, info: Option<&str>) {

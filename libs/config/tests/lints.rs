@@ -47,7 +47,11 @@ fn lint(file: &str) -> (String, ConfigReport) {
         )
         .unwrap();
     let source = workspace.join(format!("{file}.hpp")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
     let test_config = ProjectConfig::from_file(&config_path_full).unwrap();
     let parsed = hemtt_config::parse(Some(&test_config), &processed);

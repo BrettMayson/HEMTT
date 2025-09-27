@@ -44,7 +44,11 @@ fn optimize(folder: &str, file: &str) -> (Vec<u8>, Compiled) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
     let source = workspace.join(format!("{file}.sqf")).unwrap();
-    let processed = Processor::run(&source).unwrap();
+    let processed = Processor::run(
+        &source,
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
     let mut writer = Vec::new();
     let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
     let compiled = statements.compile(&processed).unwrap();

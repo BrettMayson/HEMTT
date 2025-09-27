@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use hemtt_common::config::PreprocessorOptions;
 use hemtt_workspace::{
     WorkspacePath,
     position::Position,
@@ -68,8 +69,13 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    pub fn run(path: &WorkspacePath) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
+    pub fn run(
+        path: &WorkspacePath,
+        options: &PreprocessorOptions,
+    ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
+
+        processor.defines.option_runtime(options.runtime_macros());
 
         processor.file_stack.push(path.clone());
 

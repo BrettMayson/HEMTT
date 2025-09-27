@@ -1,0 +1,13 @@
+[0m[1m[38;5;9merror[PE8][0m[1m: attempted to use `#if` on an undefined macro[0m
+  [0m[36m┌─[0m source.hpp:1:5
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #if [0m[31m__A3_DIAG__[0m
+  [0m[36m│[0m     [0m[31m^^^^^^^^^^^[0m [0m[31mundefined macro `__A3_DIAG__`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: this is a runtime macro, you may not want to use it.
+          the intended effects won't be applied in rapified configs.
+          if you understand what you're doing
+          and you want to enable it with a default value, add:
+          [preprocessor]
+          runtime_macros = true
+
