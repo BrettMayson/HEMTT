@@ -1,0 +1,38 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (comments))
+---
+value = 1; // Comment after value
+string /* Comment after ident */ = "test"; // Another comment
+/*class Weapon_launch_Titan_F: Launcher_Base_F {
+    displayName = CSTRING(launch_Titan_Name);
+};
+
+class Weapon_launch_Titan_short_F: Launcher_Base_F {
+    displayName = CSTRING(launch_Titan_short_Name);
+};
+
+class Weapon_launch_B_Titan_F: Launcher_Base_F {
+    displayName = CSTRING(launch_Titan_Name);
+};*/
+value = 2;
+class MyClass { // Comment after class
+    value = 1; // Comment in class
+    class External; // Comment after external
+    class MyClass { // Comment after nested class
+        value = 2; // Comment in nested class
+    };
+    // Comment after class
+
+    class AnotherClass {
+        value = 0;
+    };
+
+    // Comment, but after a newline
+};
+
+class MyClass2 {
+    class Child: Parent { // Comment after child
+        value = 3; // Comment in child
+    };
+};

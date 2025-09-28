@@ -1,0 +1,8 @@
+private _result = call FUNC(test);
+private _result = call EFUNC(main,test);
+
+TRACE_2("ace_glassesChanged eh",_unit,_glasses);
+["ace_glassesChanged", {
+    params["_unit","_glasses"];
+    TRACE_2("ace_glassesChanged eh",_unit,_glasses);
+}] call CBA_fnc_addEventHandler;

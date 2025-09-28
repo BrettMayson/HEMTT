@@ -56,6 +56,7 @@ enum Commands {
     Release(commands::release::Command),
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
+    Format(commands::format::Command),
     Script(commands::script::Command),
     Utils(commands::utils::Command),
     Value(commands::value::Command),
@@ -101,6 +102,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 | Commands::License(_)
                 | Commands::Manage(_)
                 | Commands::Value(_)
+                | Commands::Format(_)
         )
     );
 
@@ -146,6 +148,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Build(cmd) => commands::build::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Localization(cmd) => commands::localization::execute(cmd),
+        Commands::Format(cmd) => commands::format::execute(cmd),
         Commands::Script(cmd) => commands::script::execute(cmd),
         Commands::Utils(cmd) => commands::utils::execute(cmd),
         Commands::Value(cmd) => commands::value::execute(cmd),

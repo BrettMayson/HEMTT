@@ -1,0 +1,10 @@
+add = 1 + 2;
+sub = 1 - 2;
+mul = 2 * 3;
+div = 6 / 3;
+mod = 5 % 2;
+negAdd = -1 + -2;
+negSub = -1 - -2;
+negMul = -2 * -3;
+negDiv = -6 / -3;
+negMod = -5 % -2;
