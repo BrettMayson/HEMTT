@@ -1,0 +1,6 @@
+private _fnc = {
+    params["_a","_b"];_a+_b
+};
+{
+    systemChat format["Result: %1",[_x,1]call _fnc];
+}forEach[1,2,3];
