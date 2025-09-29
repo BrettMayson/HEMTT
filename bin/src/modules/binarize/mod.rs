@@ -690,6 +690,7 @@ impl Artifact {
 }
 
 #[derive(Default)]
+#[allow(dead_code)]
 pub enum CompatibiltyTool {
     #[default]
     Wine64,
@@ -698,6 +699,7 @@ pub enum CompatibiltyTool {
 }
 
 impl CompatibiltyTool {
+    #[allow(dead_code)]
     pub fn determine() -> Option<Self> {
         use dirs::home_dir;
         if cfg!(windows) {

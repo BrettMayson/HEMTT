@@ -48,9 +48,9 @@ fn message() {
         )
     };
 
-    if response == IDYES {
-        if let Err(e) = webbrowser::open("https://hemtt.dev/") {
-            eprintln!("Failed to open the HEMTT book: {e}");
-        }
+    if response == IDYES
+        && let Err(e) = webbrowser::open("https://hemtt.dev/")
+    {
+        eprintln!("Failed to open the HEMTT book: {e}");
     }
 }
