@@ -21,5 +21,5 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
-strum = { version = "0.27.1", features = ["derive"] }
+strum = { version = "0.27.2", features = ["derive"] }
 tracing-test = { workspace = true }

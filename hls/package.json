@@ -16,7 +16,7 @@
     "url": "https://github.com/brettmayson/hemtt"
   },
   "engines": {
-    "vscode": "^1.96.0"
+    "vscode": "^1.104.0"
   },
   "enabledApiProposals": [],
   "activationEvents": [],
@@ -309,26 +309,26 @@
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",
-    "@types/node": "22.10.6",
-    "@types/vscode": "1.96.0",
-    "@types/ws": "8.5.13",
-    "@typescript-eslint/eslint-plugin": "8.20.0",
-    "@typescript-eslint/parser": "8.20.0",
-    "@vscode/test-electron": "2.4.1",
-    "esbuild": "0.25.0",
-    "eslint": "9.18.0",
-    "glob": "11.0.1",
-    "mocha": "11.1.0",
+    "@types/node": "24.5.2",
+    "@types/vscode": "1.104.0",
+    "@types/ws": "8.18.1",
+    "@typescript-eslint/eslint-plugin": "8.44.1",
+    "@typescript-eslint/parser": "8.44.1",
+    "@vscode/test-electron": "2.5.2",
+    "esbuild": "0.25.10",
+    "eslint": "9.36.0",
+    "glob": "11.0.3",
+    "mocha": "11.7.2",
     "run-script-os": "^1.1.6",
-    "ts-loader": "9.5.2",
-    "typescript": "5.7.3",
-    "vscode-uri": "3.0.8"
+    "ts-loader": "9.5.4",
+    "typescript": "5.9.2",
+    "vscode-uri": "3.1.0"
   },
   "dependencies": {
     "hemtt": "file:",
-    "image-js": "^0.36.0",
-    "portfinder": "^1.0.32",
-    "three": "^0.174.0",
+    "image-js": "^0.37.0",
+    "portfinder": "^1.0.38",
+    "three": "^0.180.0",
     "three-viewport-gizmo": "^2.2.0",
     "vscode-languageclient": "^9.0.1"
   }

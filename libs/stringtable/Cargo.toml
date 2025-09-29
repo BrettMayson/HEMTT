@@ -18,7 +18,7 @@ casey = "0.4.2"
 indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.38.0", features = ["serialize"] }
+quick-xml = { version = "0.38.3", features = ["serialize"] }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
@@ -26,7 +26,7 @@ tracing = { workspace = true }
 vfs = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.6.0"
+criterion = "0.7.0"
 insta = { workspace = true }
 
 [[bench]]
