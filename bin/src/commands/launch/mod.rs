@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use hemtt_common::config::{LaunchOptions, ProjectConfig};
+use hemtt_common::config::{GlobalConfig, LaunchOptions, ProjectConfig};
 use launcher::Launcher;
 
 use crate::{
@@ -9,6 +7,7 @@ use crate::{
         bcle6_launch_config_not_found::LaunchConfigNotFound,
         bcle7_can_not_quicklaunch::CanNotQuickLaunch,
     },
+    context::Context,
     error::Error,
     report::Report,
 };
@@ -170,6 +169,63 @@ pub mod preset;
 /// ### rapify
 ///
 /// Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
+///
+/// ## Global Configuration
+///
+/// Launch configuration can be stored in the [global configuration file](/configuration/global.md).
+///
+/// ### Global Profiles
+///
+/// Global profiles can be created to easily be used on any project on your system. The supported options are:
+///
+/// - `workshop`
+/// - `dlc`
+/// - `parameters`
+/// - `executable`
+///
+/// These profiles can be used by prefixing the name with `@`, for example:
+///
+/// **{config}/hemtt/config.toml**
+/// ```toml
+/// [launch.profiles.adt]
+/// workshop = [ "3499977893" ]
+/// ```
+///
+/// ```bash
+/// hemtt launch @adt
+/// ```
+///
+/// ### Pointers
+///
+/// Global pointers can be used to
+/// 1. Define a location for a workshop mod
+/// 2. Define a location for non-workshop mods
+///
+/// **{config}/hemtt/config.toml**
+/// ```toml
+/// [launch.pointers]
+/// my_unit = "D:\\Swifty\\MyUnit"
+/// 463939057 = "D:\\Projects\\ACE3"
+/// ```
+///
+/// Workshop pointers will automatically be used globally when the workshop ID is specified in a launch configuration.
+///
+/// Non-workshop pointers can be used by prefixing the id of the mod in the `workshop` list with the name of the pointer.
+///
+/// **.hemtt/project.toml**
+/// ```toml
+/// [hemtt.launch.ace]
+/// workshop = [
+///     "450814997", # CBA_A3's Workshop ID, will load from the workshop folder
+///     "463939057", # ACE3's Workshop ID, will load from the defined pointer
+/// ]
+///
+/// [hemtt.launch.myunit]
+/// workshop = [
+///     "450814997", # CBA_A3
+///     "my_unit:@my_unit_gear",  # These two mods will load from the defined pointer
+///     "my_unit:@my_unit_units",
+/// ]
 pub struct Command {
     #[clap(flatten)]
     launch: LaunchArgs,
@@ -244,13 +300,15 @@ pub struct LaunchArgs {
 /// Will panic if the regex can not be compiled, which should never be the case in a released version
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let mut report = Report::new();
-    let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
+    let global = Context::read_global()?;
+    let config = Context::read_project()?;
     let Some(mainprefix) = config.mainprefix() else {
         report.push(MissingMainPrefix::code());
         return Ok(report);
     };
 
     let launch = read_config(
+        &global,
         &config,
         cmd.launch.config.as_deref().unwrap_or_default(),
         &mut report,
@@ -261,7 +319,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
     trace!("launch config: {:?}", launch);
 
-    let (mut report, launcher) = Launcher::new(&cmd.launch, &launch)?;
+    let (mut report, launcher) = Launcher::new(&global, &cmd.launch, &launch)?;
 
     let Some(mut launcher) = launcher else {
         return Ok(report);
@@ -310,6 +368,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
 /// Read a launch configuration
 pub fn read_config(
+    global: &GlobalConfig,
     config: &ProjectConfig,
     configs: &[String],
     report: &mut Report,
@@ -324,16 +383,36 @@ pub fn read_config(
     } else if let Some(launch) = configs
         .iter()
         .map(|c| {
-            config.hemtt().launch().get(c).cloned().map_or_else(
-                || {
-                    report.push(LaunchConfigNotFound::code(
-                        c.clone(),
-                        &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
-                    ));
-                    None
-                },
-                Some,
-            )
+            if let Some(gc) = c.strip_prefix("@") {
+                global.launch().profiles().get(gc).cloned().map_or_else(
+                    || {
+                        report.push(LaunchConfigNotFound::code(
+                            true,
+                            gc.to_string(),
+                            &global
+                                .launch()
+                                .profiles()
+                                .keys()
+                                .cloned()
+                                .collect::<Vec<_>>(),
+                        ));
+                        None
+                    },
+                    Some,
+                )
+            } else {
+                config.hemtt().launch().get(c).cloned().map_or_else(
+                    || {
+                        report.push(LaunchConfigNotFound::code(
+                            false,
+                            c.clone(),
+                            &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
+                        ));
+                        None
+                    },
+                    Some,
+                )
+            }
         })
         .collect::<Option<Vec<_>>>()
     {

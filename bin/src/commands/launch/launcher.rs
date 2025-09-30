@@ -3,13 +3,21 @@ use std::{
     process::Child,
 };
 
-use hemtt_common::{arma::dlc::DLC, config::LaunchOptions, steam};
+use hemtt_common::{
+    arma::dlc::DLC,
+    config::{GlobalConfig, LaunchOptions},
+    steam,
+};
 use regex::Regex;
 
 use crate::{
     Error,
     commands::launch::{
-        error::{bcle1_preset_not_found::PresetNotFound, bcle4_arma_not_found::ArmaNotFound},
+        error::{
+            bcle1_preset_not_found::PresetNotFound, bcle4_arma_not_found::ArmaNotFound,
+            bcle10_pointer_mod_not_found::PointerModNotFound,
+            bcle11_pointer_not_found::PointerNotFound,
+        },
         preset,
     },
     report::Report,
@@ -24,7 +32,8 @@ use super::{
     },
 };
 
-pub struct Launcher {
+pub struct Launcher<'a> {
+    global: &'a GlobalConfig,
     executable: String,
     dlc: Vec<DLC>,
     workshop: Vec<String>,
@@ -35,12 +44,13 @@ pub struct Launcher {
     file_patching: bool,
 }
 
-impl Launcher {
+impl<'a> Launcher<'a> {
     /// Creates a new launcher
     ///
     /// # Errors
     /// [`Error::Io`] if the current directory could not be determined
     pub fn new(
+        global: &'a GlobalConfig,
         launch: &LaunchArgs,
         options: &LaunchOptions,
     ) -> Result<(Report, Option<Self>), Error> {
@@ -51,6 +61,7 @@ impl Launcher {
         };
         debug!("Arma 3 found at: {}", arma3.display());
         let mut launcher = Self {
+            global,
             instances: launch.instances.unwrap_or_else(|| options.instances()),
             file_patching: options.file_patching() && !launch.no_filepatching,
             executable: options.executable(),
@@ -165,6 +176,49 @@ impl Launcher {
                     );
                     continue;
                 }
+
+                // Check if the mod has a pointer
+                if let Some(path) = self.global.launch().pointers().get(load_mod) {
+                    if path.exists() {
+                        if cfg!(windows) {
+                            mods.push(path.display().to_string());
+                        } else {
+                            mods.push(format!("Z:{}", path.display()));
+                        }
+                        continue;
+                    }
+                    report.push(PointerModNotFound::code(
+                        load_mod.clone(),
+                        path.display().to_string(),
+                    ));
+                    continue;
+                }
+
+                // Check if the mod starts with a pointer
+                if let Some((pointer, mod_path)) = load_mod.split_once(':') {
+                    if let Some(path) = self.global.launch().pointers().get(pointer) {
+                        let mod_path = path.join(mod_path);
+                        if mod_path.exists() {
+                            if cfg!(windows) {
+                                mods.push(mod_path.display().to_string());
+                            } else {
+                                mods.push(format!("Z:{}", mod_path.display()));
+                            }
+                            continue;
+                        }
+                        report.push(PointerModNotFound::code(
+                            load_mod.clone(),
+                            mod_path.display().to_string(),
+                        ));
+                    } else {
+                        report.push(PointerNotFound::code(
+                            pointer.to_string(),
+                            mod_path.to_string(),
+                        ));
+                    }
+                    continue;
+                }
+
                 let mod_path = workshop_folder.join(load_mod);
                 if !mod_path.exists() {
                     report.push(WorkshopModNotFound::code(load_mod.clone()));

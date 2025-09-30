@@ -57,14 +57,14 @@ impl AddonConfig {
     /// [`crate::error::Error::Io`] if the file cannot be read
     /// [`crate::error::Error::Toml`] if the file is not valid toml
     pub fn from_file(path: &std::path::Path) -> Result<Self, crate::error::Error> {
-        AddonFile::from_file(path).map(Into::into)
+        AddonConfigFile::from_file(path).map(Into::into)
     }
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration file for an addon
-pub struct AddonFile {
+pub struct AddonConfigFile {
     #[serde(default)]
     #[serde(alias = "preprocess")]
     rapify: rapify::RapifySectionFile,
@@ -87,7 +87,7 @@ pub struct AddonFile {
 
 static DEPRECATION: Once = Once::new();
 
-impl AddonFile {
+impl AddonConfigFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
         Self::from_str(&std::fs::read_to_string(path)?, &path.display().to_string())
     }
@@ -121,8 +121,8 @@ impl AddonFile {
     }
 }
 
-impl From<AddonFile> for AddonConfig {
-    fn from(file: AddonFile) -> Self {
+impl From<AddonConfigFile> for AddonConfig {
+    fn from(file: AddonConfigFile) -> Self {
         Self {
             rapify: file.rapify.into(),
             binarize: {
@@ -160,7 +160,7 @@ test = "test"
 exclude = ["test"]
 
 "#;
-        let file: AddonFile = toml::from_str(toml).expect("failed to deserialize");
+        let file: AddonConfigFile = toml::from_str(toml).expect("failed to deserialize");
         let config = AddonConfig::from(file);
         assert!(config.rapify().enabled());
         assert!(config.binarize().enabled());
@@ -171,7 +171,7 @@ exclude = ["test"]
     #[test]
     fn default() {
         let toml = "";
-        let file: AddonFile = toml::from_str(toml).expect("failed to deserialize");
+        let file: AddonConfigFile = toml::from_str(toml).expect("failed to deserialize");
         let config = AddonConfig::from(file);
         assert!(config.rapify().enabled());
         assert!(config.binarize().enabled());
@@ -195,7 +195,7 @@ test = "test"
 [preprocess]
 enabled = true
 "#;
-        let file = AddonFile::from_str(toml, "test").expect("failed to deserialize");
+        let file = AddonConfigFile::from_str(toml, "test").expect("failed to deserialize");
         let config = AddonConfig::from(file);
         assert!(config.rapify().enabled());
         assert!(config.binarize().enabled());
@@ -212,6 +212,6 @@ enabled = true
         let toml = "
 preprocess = true
 ";
-        assert!(AddonFile::from_str(toml, "test").is_err());
+        assert!(AddonConfigFile::from_str(toml, "test").is_err());
     }
 }

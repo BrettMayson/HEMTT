@@ -152,7 +152,7 @@ fn launch(
     launch_args: &LaunchArgs,
     launch_options: &LaunchOptions,
 ) -> Result<(Report, Option<Child>), Error> {
-    let (mut report, launcher) = Launcher::new(launch_args, launch_options)?;
+    let (mut report, launcher) = Launcher::new(ctx.global(), launch_args, launch_options)?;
 
     let Some(mut launcher) = launcher else {
         return Ok((report, None));

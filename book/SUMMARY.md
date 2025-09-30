@@ -12,6 +12,7 @@
   - [Version](configuration/version.md)
   - [Lints](configuration/lints.md)
   - [Addon](configuration/addon.md)
+  - [Global](configuration/global.md)
   - [P Drive](configuration/p-drive.md)
   - [Custom Commands](configuration/custom-commands.md)
 - [Commands](commands/index.md)

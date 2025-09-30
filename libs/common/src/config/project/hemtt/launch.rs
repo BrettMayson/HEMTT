@@ -7,40 +7,40 @@ use crate::arma::dlc::DLC;
 /// Configuration for `hemtt launch`
 pub struct LaunchOptions {
     /// Workshop mods that should be launched with the mod
-    workshop: Vec<String>,
+    pub(crate) workshop: Vec<String>,
 
     /// DLCs that should be launched with the mod
-    dlc: Vec<DLC>,
+    pub(crate) dlc: Vec<DLC>,
 
     /// HTML presets that should be launched with the mod
-    presets: Vec<String>,
+    pub(crate) presets: Vec<String>,
 
     /// Optional addons that should be built into the mod
-    optionals: Vec<String>,
+    pub(crate) optionals: Vec<String>,
 
     /// Mission to launch directly into the editor with
-    mission: Option<String>,
+    pub(crate) mission: Option<String>,
 
     /// Mission to launch with `hemtt launch`, used for development purposes only
-    dev_mission: Option<String>,
+    pub(crate) dev_mission: Option<String>,
 
     /// Extra launch parameters
-    parameters: Vec<String>,
+    pub(crate) parameters: Vec<String>,
 
     /// Binary to launch
-    executable: Option<String>,
+    pub(crate) executable: Option<String>,
 
     // Should HEMTT run binarize
-    binarize: Option<bool>,
+    pub(crate) binarize: Option<bool>,
 
     // Should HEMTT use file-patching
-    file_patching: Option<bool>,
+    pub(crate) file_patching: Option<bool>,
 
     // Should HEMTT use multiple instances
-    instances: Option<u8>,
+    pub(crate) instances: Option<u8>,
 
     // Should HEMTT rapify
-    rapify: Option<bool>,
+    pub(crate) rapify: Option<bool>,
 }
 
 impl LaunchOptions {

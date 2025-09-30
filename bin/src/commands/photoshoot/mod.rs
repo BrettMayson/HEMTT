@@ -88,7 +88,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         return Ok(report);
     }
 
-    let config = ProjectConfig::from_file(&Path::new(".hemtt").join("project.toml"))?;
+    let config = Context::read_project()?;
     let mut configs = cmd.config.clone().unwrap_or_default();
     if config.hemtt().launch().contains_key("photoshoot") {
         configs.push("photoshoot".to_string());

@@ -1,3 +1,5 @@
+pub mod bcle10_pointer_mod_not_found;
+pub mod bcle11_pointer_not_found;
 pub mod bcle1_preset_not_found;
 pub mod bcle2_workshop_not_found;
 pub mod bcle3_workshop_mod_not_found;

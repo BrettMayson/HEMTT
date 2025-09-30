@@ -137,6 +137,7 @@ impl ProjectConfig {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
         ProjectFile::from_file(path)?.try_into()
     }
+
     #[must_use]
     pub fn with_runtime(self, runtime: RuntimeArguments) -> Self {
         Self { runtime, ..self }
