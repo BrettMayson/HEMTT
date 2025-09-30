@@ -34,7 +34,7 @@ private _z = 5; // and never used
 
 ### Explanation
 
-Checks for vars that are never used."
+Checks for variables that are never used."
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::help().with_enabled(LintEnabled::Pedantic)

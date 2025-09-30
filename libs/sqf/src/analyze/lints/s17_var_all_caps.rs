@@ -26,7 +26,7 @@ impl Lint<LintData> for LintS17VarAllCaps {
     fn documentation(&self) -> &'static str {
         r#"### Configuration
 
-- **ignore**: An array of vars to ignore
+- **ignore**: An array of variables to ignore
 
 ```toml
 [lints.sqf.var_all_caps]

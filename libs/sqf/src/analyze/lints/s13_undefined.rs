@@ -22,7 +22,7 @@ impl Lint<LintData> for LintS13Undefined {
         "Undefined Variable"
     }
     fn documentation(&self) -> &'static str {
-        r"### Example
+        r#"### Example
 
 **Incorrect**
 ```sqf
@@ -31,7 +31,16 @@ systemChat _neverDefined;
 
 ### Explanation
 
-Checks correct syntax usage."
+Checks that variables are defined.
+
+### Ignoring False Positives
+
+If a variable is coming from a higher scope, you can add a #pragma to ignore the warning for specific variables.
+
+```sqf
+#pragma hemtt ignore_variables ["_fromUpper"]
+_fromUpper pushBack ["newItem"];
+```"#
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::help()

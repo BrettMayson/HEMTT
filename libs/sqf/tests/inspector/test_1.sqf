@@ -28,12 +28,12 @@ for [{private _varF = 0}, {_varF < 5}, {_varF = _varF + 1}] do {
     systemChat str _varF;
 };
 
-#pragma hemtt ignore_not_private ["_fromUpper"]
+#pragma hemtt ignore_variables ["_fromUpper"]
 X = _fromUpper;
 
 [] call {
     private "_weird";
-    #pragma hemtt ignore_not_private ["_weird"]
+    #pragma hemtt ignore_variables ["_weird"]
     for "_varG" from 1 to 5 do {
         if (_varG%2 == 0) then {
             truck lock _weird;
@@ -44,7 +44,7 @@ X = _fromUpper;
     };
 };
 
-#pragma hemtt ignore_not_private ["somePFEH"]
+#pragma hemtt ignore_variables ["somePFEH"]
 if (z) then {
     somePFEH = nil; // otherwise will assume it's always nil
 };
