@@ -1,15 +1,8 @@
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-    sync::Mutex,
-};
+use std::{collections::HashMap, path::PathBuf, sync::Mutex};
 
-use hemtt_common::{
-    arma::control::{
-        fromarma::{self, Message},
-        toarma,
-    },
-    config::ProjectConfig,
+use hemtt_common::arma::control::{
+    fromarma::{self, Message},
+    toarma,
 };
 use hemtt_config::{Class, Config, Property, Value};
 use image::codecs::jpeg::JpegEncoder;
@@ -88,12 +81,13 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         return Ok(report);
     }
 
+    let global = Context::read_global()?;
     let config = Context::read_project()?;
     let mut configs = cmd.config.clone().unwrap_or_default();
     if config.hemtt().launch().contains_key("photoshoot") {
         configs.push("photoshoot".to_string());
     }
-    let launch = read_config(&config, &configs, &mut report);
+    let launch = read_config(&global, &config, &configs, &mut report);
     let Some(mut launch) = launch else {
         return Ok(report);
     };
