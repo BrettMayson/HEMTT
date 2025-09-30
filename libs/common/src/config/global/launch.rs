@@ -29,7 +29,7 @@ impl LaunchConfig {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
-/// Global launch configuration file]
+/// Global launch configuration file
 pub struct LaunchConfigFile {
     #[serde(default)]
     profiles: HashMap<String, LaunchOptionsFile>,

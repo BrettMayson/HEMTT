@@ -174,7 +174,7 @@ pub mod preset;
 ///
 /// Launch configuration can be stored in the [global configuration file](/configuration/global.md).
 ///
-/// ### Profiles
+/// ### Global Profiles
 ///
 /// Global profiles can be created to easily be used on any project on your system. The supported options are:
 ///
@@ -387,6 +387,7 @@ pub fn read_config(
                 global.launch().profiles().get(gc).cloned().map_or_else(
                     || {
                         report.push(LaunchConfigNotFound::code(
+                            true,
                             gc.to_string(),
                             &global
                                 .launch()
@@ -403,6 +404,7 @@ pub fn read_config(
                 config.hemtt().launch().get(c).cloned().map_or_else(
                     || {
                         report.push(LaunchConfigNotFound::code(
+                            false,
                             c.clone(),
                             &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                         ));

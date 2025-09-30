@@ -13,7 +13,7 @@ impl Code for PointerModNotFound {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/commands/launch.html#pointer")
+        Some("/commands/launch.html#pointers")
     }
 
     fn message(&self) -> String {

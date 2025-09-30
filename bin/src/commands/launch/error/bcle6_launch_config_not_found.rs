@@ -4,6 +4,7 @@ use hemtt_common::similar_values;
 use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct LaunchConfigNotFound {
+    global: bool,
     config: String,
     similar: Vec<String>,
 }
@@ -14,11 +15,19 @@ impl Code for LaunchConfigNotFound {
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/commands/launch.html#configuration")
+        if self.global {
+            Some("/commands/launch.html#global-configuration")
+        } else {
+            Some("/commands/launch.html#configuration")
+        }
     }
 
     fn message(&self) -> String {
-        format!("Launch config `{}` not found.", self.config)
+        if self.global {
+            format!("Global launch config `{}` not found.", self.config)
+        } else {
+            format!("Launch config `{}` not found.", self.config)
+        }
     }
 
     fn help(&self) -> Option<String> {
@@ -35,8 +44,9 @@ impl Code for LaunchConfigNotFound {
 }
 
 impl LaunchConfigNotFound {
-    pub fn code(config: String, available: &[String]) -> Arc<dyn Code> {
+    pub fn code(global: bool, config: String, available: &[String]) -> Arc<dyn Code> {
         Arc::new(Self {
+            global,
             similar: similar_values(
                 &config,
                 &available
