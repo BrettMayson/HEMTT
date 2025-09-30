@@ -15,8 +15,6 @@ jobs:
   build:
     name: ${{ matrix.os.name }}
     runs-on: ${{ matrix.os.runner }}
-    # Skip macOS x64 builds unless it's a release (tag push)
-    if: ${{ !contains(matrix.os.name, 'macos-x64') || startsWith(github.ref, 'refs/tags/') }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,12 +27,7 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
-            # Intel Mac - only for releases
-          - runner: macos-13
-            name: macos-x64
-            artifact: macos-x64
-            exe: hemtt
-            # ARM Mac
+            # ARM Mac - always build (more available runners)
           - runner: macos-latest
             name: macos-arm
             artifact: macos-arm64
@@ -59,6 +52,28 @@ jobs:
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
+
+  build-macos-x64:
+    name: macos-x64
+    runs-on: macos-13
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - run: echo "RELEASE=true" >> $GITHUB_ENV
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: build-macos-x64
+      - name: Compile
+        run: cargo build --release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64
+          path: target/release/hemtt
 
   mods:
     name: ${{ matrix.os.name }} / ${{ matrix.mod.repo }}
@@ -125,6 +140,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - build
+      - build-macos-x64
     steps:
       - name: Checkout
         uses: actions/checkout@v5
