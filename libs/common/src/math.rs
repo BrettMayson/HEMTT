@@ -179,12 +179,15 @@ mod tests {
         assert_eq!(super::eval("1+1"), Some(2.0));
         assert_eq!(super::eval("1 + 1"), Some(2.0));
         assert_eq!(super::eval("-1 + 1"), Some(0.0));
+        assert_eq!(super::eval("1 + 2 + 3"), Some(6.0));
     }
 
     #[test]
     pub fn eval_subtraction() {
         assert_eq!(super::eval("1-1"), Some(0.0));
         assert_eq!(super::eval("1 - 1"), Some(0.0));
+        assert_eq!(super::eval("1 - -1"), Some(2.0));
+        assert_eq!(super::eval("1 - 2 - 3"), Some(-4.0));
     }
 
     #[test]

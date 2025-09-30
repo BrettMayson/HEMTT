@@ -31,7 +31,6 @@ impl std::fmt::Display for Token {
 
 pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     choice((
-        super::number::number().map(|n| Token::Number(n.to_string())),
         just("-").to(Token::Op('-')),
         just("+").to(Token::Op('+')),
         just("*").to(Token::Op('*')),
@@ -40,6 +39,7 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
         just("^").to(Token::Op('^')),
         just("(").to(Token::Op('(')),
         just(")").to(Token::Op(')')),
+        super::number::number().map(|n| Token::Number(n.to_string())),
     ))
     .padded()
     .repeated()
@@ -342,6 +342,20 @@ mod tests {
             Ok(Value::Number(Number::Float32 {
                 value: -0.01,
                 span: 0..7
+            }))
+        );
+        assert_eq!(
+            value().parse("1-2-3"),
+            Ok(Value::Number(Number::Int32 {
+                value: -4,
+                span: 0..5
+            }))
+        );
+        assert_eq!(
+            value().parse("1 - 2 - 3"),
+            Ok(Value::Number(Number::Int32 {
+                value: -4,
+                span: 0..9
             }))
         );
     }
