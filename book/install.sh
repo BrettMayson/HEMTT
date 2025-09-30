@@ -19,9 +19,7 @@ case "$(uname -s)" in
         ;;
     Darwin*)
         ARCH="$(uname -m)"
-        if [ "$ARCH" = "x86_64" ]; then
-            DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'darwin-x64' | head -n 1)
-        elif [ "$ARCH" = "arm64" ]; then
+        if [ "$ARCH" = "arm64" ]; then
             DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'darwin-arm64' | head -n 1)
         else
             echo "Unsupported architecture: $ARCH"
