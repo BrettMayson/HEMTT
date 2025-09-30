@@ -118,7 +118,7 @@ impl Code for CodeS26ShortCircuitBoolVar {
     }
 
     fn label_message(&self) -> String {
-        String::new()
+        "unnecessary { }".to_string()
     }
 
     fn note(&self) -> Option<String> {

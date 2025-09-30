@@ -36,7 +36,7 @@ fn optimize(file: &str) -> Statements {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .unwrap();
-    hemtt_sqf::parser::run(&Database::a3(false), &processed)
-        .unwrap()
-        .optimize()
+    let mut sqf = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+    sqf.testing_clear_issues();
+    sqf.optimize()
 }

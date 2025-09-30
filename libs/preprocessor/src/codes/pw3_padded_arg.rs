@@ -26,6 +26,10 @@ impl Code for PaddedArg {
         "padding a macro argument".to_string()
     }
 
+    fn label_message(&self) -> String {
+        self.message()
+    }
+
     fn note(&self) -> Option<String> {
         Some("padding a macro argument is likely unintended".to_string())
     }

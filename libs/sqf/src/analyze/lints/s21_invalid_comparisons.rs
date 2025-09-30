@@ -74,8 +74,8 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         }
 
-        let comparisions = extract_comparisons(arg);
-        let flat = flatten_comparisons(comparisions);
+        let comparisons = extract_comparisons(arg);
+        let flat = flatten_comparisons(comparisons);
         let issues = find_issues(flat);
         issues
             .into_iter()
@@ -389,10 +389,6 @@ impl Code for CodeS21InvalidComparisons {
             ComparisonIssueType::Impossible => "Impossible comparison".to_string(),
             ComparisonIssueType::Overlapping => "Overlapping comparison".to_string(),
         }
-    }
-
-    fn label_message(&self) -> String {
-        String::new()
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {

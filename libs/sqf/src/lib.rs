@@ -10,6 +10,7 @@ use std::{ops::Range, sync::Arc};
 
 pub use self::error::Error;
 
+use analyze::inspector::Issue;
 use arma3_wiki::model::Version;
 #[doc(no_inline)]
 pub use float_ord::FloatOrd as Scalar;
@@ -22,6 +23,7 @@ pub struct Statements {
     /// This isn't required to actually be anything significant, but will be displayed in-game if a script error occurs.
     source: Arc<str>,
     span: Range<usize>,
+    issues: Vec<Issue>,
 }
 
 impl Statements {
@@ -40,6 +42,10 @@ impl Statements {
         self.span.clone()
     }
 
+    #[must_use]
+    pub const fn issues(&self) -> &Vec<Issue> {
+        &self.issues
+    }
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
@@ -101,6 +107,9 @@ impl Statements {
             }
         }
         (command, version, span)
+    }
+    pub fn testing_clear_issues(&mut self) {
+        self.issues.clear();
     }
 }
 
@@ -281,7 +290,14 @@ impl Expression {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
-            Self::ConsumeableArray(_, span) | Self::Array(_, span) => span.start - 1..span.end,
+            #[allow(clippy::range_plus_one)]
+            Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
+                if items.is_empty() {
+                    span.start - 1..span.end
+                } else {
+                    span.start - 1..span.end + 1
+                }
+            }
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)

@@ -165,6 +165,10 @@ impl Code for CodeS07SelectParseNumber {
         String::from("using `select` where `parseNumber` is more appropriate")
     }
 
+    fn label_message(&self) -> String {
+        String::from("use `parseNumber`")
+    }
+
     fn suggestion(&self) -> Option<String> {
         Some(format!(
             "parseNumber {}",

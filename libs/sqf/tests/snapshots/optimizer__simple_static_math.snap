@@ -46,4 +46,5 @@ Statements {
     ],
     source: "1 + (2 * 2) + (36 % 31) + (36 / 6) + (sqrt 100) - 3;\n\nsqrt -100;\n\n\nz + z;\n",
     span: 0..73,
+    issues: [],
 }

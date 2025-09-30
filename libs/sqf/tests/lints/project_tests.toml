@@ -9,6 +9,21 @@ options.ignore = [
 [lints.sqf]
 if_not_else = true
 
+
+[lints.sqf.shadowed]
+enabled = true
+
+[lints.sqf.not_private]
+enabled = true
+
+[lints.sqf.unused]
+enabled = true
+options.check_params = false
+
+[lints.sqf.undefined]
+enabled = true
+options.check_orphan_code = true
+
 [lints.sqf.var_all_caps]
 enabled = true
 options.ignore = [
@@ -19,6 +34,9 @@ options.ignore = [
 enabled = true
 
 [lints.sqf.short_circuit_bool_var]
+enabled = true
+
+[lints.sqf.count_array_comp]
 enabled = true
 
 [lints.sqf.banned_macros]

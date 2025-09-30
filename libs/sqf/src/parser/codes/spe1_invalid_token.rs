@@ -13,6 +13,10 @@ impl Code for InvalidToken {
     }
 
     fn message(&self) -> String {
+        "Use of an invalid token".to_string()
+    }
+
+    fn label_message(&self) -> String {
         "invalid token".to_string()
     }
 

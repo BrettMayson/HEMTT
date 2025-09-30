@@ -110,7 +110,7 @@ impl Code for CodeS30ConfigOf {
     }
 
     fn label_message(&self) -> String {
-        String::new()
+        "use configOf".to_string()
     }
 
     fn suggestion(&self) -> Option<String> {
