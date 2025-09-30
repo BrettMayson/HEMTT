@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{GlobalConfig, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath, addons::Addon};
 
 use crate::error::Error;
@@ -23,6 +23,7 @@ pub type State = state::TypeMap![Send + Sync];
 
 #[derive(Debug, Clone)]
 pub struct Context {
+    global: GlobalConfig,
     config: ProjectConfig,
     folder: Option<String>,
     addons: Vec<Addon>,
@@ -38,6 +39,41 @@ pub struct Context {
 }
 
 impl Context {
+    /// Read the global config from the standard location
+    ///
+    /// # Errors
+    /// [`hemtt_common::Error::Io`] if the file cannot be read
+    /// [`hemtt_common::Error::Toml`] if the file is not valid tom
+    ///
+    /// # Panics
+    /// If the platform does not support a config directory
+    pub fn read_global() -> Result<GlobalConfig, hemtt_common::Error> {
+        let config_dir = dirs::config_dir()
+            .expect("Running on an unspported platform? No config directory found.")
+            .join("hemtt");
+        debug!("using global config directory: {:?}", config_dir.display());
+        let config_file = config_dir.join("config.toml");
+        if config_file.exists() {
+            GlobalConfig::from_file(&config_file)
+        } else {
+            Ok(GlobalConfig::default())
+        }
+    }
+
+    /// Read the project config from .hemtt/project.toml
+    ///
+    /// # Errors
+    /// [`Error::ConfigNotFound`] if the project.toml is not found
+    /// [`Error::Io`] if the file cannot be read
+    pub fn read_project() -> Result<ProjectConfig, Error> {
+        let root = std::env::current_dir()?;
+        let path = root.join(".hemtt").join("project.toml");
+        if !path.exists() {
+            return Err(Error::ConfigNotFound);
+        }
+        Ok(ProjectConfig::from_file(&path)?)
+    }
+
     /// Create a new context
     ///
     /// # Errors
@@ -54,13 +90,7 @@ impl Context {
         print_info: bool,
     ) -> Result<Self, Error> {
         let root = std::env::current_dir()?;
-        let config = {
-            let path = root.join(".hemtt").join("project.toml");
-            if !path.exists() {
-                return Err(Error::ConfigNotFound);
-            }
-            ProjectConfig::from_file(&path)?
-        };
+        let config = Self::read_project()?;
         let tmp = {
             let mut tmp = temp_dir().join("hemtt");
             // on linux add the user to the path for multiple users
@@ -120,6 +150,7 @@ impl Context {
         version_check(&config, &workspace, print_info)?;
         let addons = Addon::scan(&root)?;
         Ok(Self {
+            global: Self::read_global()?,
             config,
             folder: folder.map(std::borrow::ToOwned::to_owned),
             workspace,
@@ -149,6 +180,11 @@ impl Context {
                 .collect(),
             ..self
         }
+    }
+
+    #[must_use]
+    pub const fn global(&self) -> &GlobalConfig {
+        &self.global
     }
 
     #[must_use]

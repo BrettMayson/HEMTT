@@ -5,10 +5,12 @@
 use tracing::warn;
 
 mod addon;
+mod global;
 mod pdrive;
 mod project;
 
 pub use addon::AddonConfig;
+pub use global::GlobalConfig;
 pub use pdrive::PDriveOption;
 pub use project::{
     ProjectConfig,
