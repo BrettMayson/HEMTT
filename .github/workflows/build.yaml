@@ -15,6 +15,8 @@ jobs:
   build:
     name: ${{ matrix.os.name }}
     runs-on: ${{ matrix.os.runner }}
+    # Skip macOS x64 builds unless it's a release (tag push)
+    if: ${{ !contains(matrix.os.name, 'macos-x64') || startsWith(github.ref, 'refs/tags/') }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +29,7 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
-            # Intel Mac
+            # Intel Mac - only for releases
           - runner: macos-13
             name: macos-x64
             artifact: macos-x64
