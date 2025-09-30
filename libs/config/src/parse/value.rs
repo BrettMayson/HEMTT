@@ -351,5 +351,12 @@ mod tests {
                 span: 0..5
             }))
         );
+        assert_eq!(
+            value().parse("1 - 2 - 3"),
+            Ok(Value::Number(Number::Int32 {
+                value: -4,
+                span: 0..9
+            }))
+        );
     }
 }
