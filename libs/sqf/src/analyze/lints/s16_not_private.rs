@@ -22,7 +22,7 @@ impl Lint<LintData> for LintS16NotPrivate {
         "Not Private Var"
     }
     fn documentation(&self) -> &'static str {
-        r"### Example
+        r#"### Example
 
 **Incorrect**
 ```sqf
@@ -31,7 +31,17 @@ _z = 6;
 
 ### Explanation
 
-Checks local variables that are not private."
+Checks local variables that are not private.
+
+### Ignoring False Positives
+
+If a variable is coming from a higher scope and cannot be private, you can add a #pragma to ignore the warning for specific variables.
+
+```sqf
+#pragma hemtt ignore_not_private ["_fromUpper"]
+_fromUpper pushBack ["newItem"];
+```
+"#
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::help().with_enabled(LintEnabled::Pedantic)

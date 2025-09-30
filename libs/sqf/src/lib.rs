@@ -290,6 +290,7 @@ impl Expression {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span(),
+            #[allow(clippy::range_plus_one)]
             Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
                 if items.is_empty() {
                     span.start - 1..span.end

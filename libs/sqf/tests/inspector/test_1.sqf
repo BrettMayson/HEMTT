@@ -28,12 +28,12 @@ for [{private _varF = 0}, {_varF < 5}, {_varF = _varF + 1}] do {
     systemChat str _varF;
 };
 
-//IGNORE_PRIVATE_WARNING["_fromUpper"];
+#pragma hemtt ignore_not_private ["_fromUpper"]
 X = _fromUpper;
 
 [] call {
     private "_weird";
-    //IGNORE_PRIVATE_WARNING["_weird"] - // No way to know the order is different
+    #pragma hemtt ignore_not_private ["_weird"]
     for "_varG" from 1 to 5 do {
         if (_varG%2 == 0) then {
             truck lock _weird;
@@ -44,7 +44,7 @@ X = _fromUpper;
     };
 };
 
-// IGNORE_PRIVATE_WARNING["somePFEH"]
+#pragma hemtt ignore_not_private ["somePFEH"]
 if (z) then {
     somePFEH = nil; // otherwise will assume it's always nil
 };

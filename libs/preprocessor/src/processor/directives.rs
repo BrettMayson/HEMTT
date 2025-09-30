@@ -116,6 +116,9 @@ impl Processor {
                         let (code, scope) = self.read_pragma(&command, pragma, stream)?;
                         pragma.flag(&code, scope)?;
                     }
+                    "ignore_not_private" => {
+                        self.skip_to_after_newline(stream, None);
+                    }
                     _ => return Err(PragmaUnknown::code(command.as_ref().clone())),
                 }
                 Ok(())
