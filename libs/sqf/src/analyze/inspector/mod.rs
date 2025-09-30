@@ -504,7 +504,7 @@ pub fn run_processed(
 ) -> Vec<Issue> {
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_string());
-    let Ok(re1) = Regex::new(r"\#pragma hemtt ignore_not_private ?\[(.*)\]") else {
+    let Ok(re1) = Regex::new(r"\#pragma hemtt ignore_variables ?\[(.*)\]") else {
         return Vec::new();
     };
     let Ok(re2) = Regex::new(r#""(.*?)""#) else {

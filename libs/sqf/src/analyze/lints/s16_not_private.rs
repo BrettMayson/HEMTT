@@ -38,8 +38,8 @@ Checks local variables that are not private.
 If a variable is coming from a higher scope and cannot be private, you can add a #pragma to ignore the warning for specific variables.
 
 ```sqf
-#pragma hemtt ignore_not_private ["_fromUpper"]
-_fromUpper pushBack ["newItem"];
+#pragma hemtt ignore_variables ["_fromUpper"]
+_fromUpper = 5;
 ```
 "#
     }
