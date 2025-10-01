@@ -22,7 +22,17 @@ impl Lint<LintData> for LintS13Undefined {
         "Undefined Variable"
     }
     fn documentation(&self) -> &'static str {
-        r#"### Example
+        r#"### Configuration
+
+- **check_orphan_code**: Checks for undefined variables in orphan code blocks (code that does not seem to be directly called). This may lead to false positives. Default: false
+
+```toml
+[lints.sqf.undefined]
+enabled = true
+options.check_orphan_code = true
+```
+
+### Example
 
 **Incorrect**
 ```sqf

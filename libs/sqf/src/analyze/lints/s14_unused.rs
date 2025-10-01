@@ -25,7 +25,17 @@ impl Lint<LintData> for LintS14Unused {
         "Unused Var"
     }
     fn documentation(&self) -> &'static str {
-        r"### Example
+        r"### Configuration
+
+- **check_params**: Checks for unused variables in `params` arrays. Default: false
+
+```toml
+[lints.sqf.unused]
+enabled = true
+options.check_params = true
+```
+
+### Example
 
 **Incorrect**
 ```sqf
