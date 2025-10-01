@@ -147,3 +147,8 @@ player addEventHandler ["InventoryClosed", {
 }];
 
 addMissionEventHandler ["EachFrame", { systemChat str [_thisArgs, time] }, [time]];
+
+#pragma hemtt ignore_variables ["_varR"]
+{
+    private _varR = _x;
+} forEach [1,2,3];

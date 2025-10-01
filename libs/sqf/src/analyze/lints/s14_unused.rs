@@ -25,7 +25,7 @@ impl Lint<LintData> for LintS14Unused {
         "Unused Var"
     }
     fn documentation(&self) -> &'static str {
-        r"### Configuration
+        r#"### Configuration
 
 - **check_params**: Checks for unused variables in `params` arrays. Default: false
 
@@ -44,7 +44,16 @@ private _z = 5; // and never used
 
 ### Explanation
 
-Checks for variables that are never used."
+Checks for variables that are never used.
+
+### Ignoring False Positives
+
+You can add a #pragma to ignore the warning for specific variables.
+
+```sqf
+#pragma hemtt ignore_variables ["_z"]
+private _z = 5; // and never used
+```"#
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::help().with_enabled(LintEnabled::Pedantic)
