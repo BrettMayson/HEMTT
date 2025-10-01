@@ -212,6 +212,8 @@ pub mod preset;
 ///
 /// Non-workshop pointers can be used by prefixing the id of the mod in the `workshop` list with the name of the pointer.
 ///
+/// Pointers must be at least 2 characters long to avoid conflicts with drive letters.
+///
 /// **.hemtt/project.toml**
 /// ```toml
 /// [hemtt.launch.ace]
