@@ -194,12 +194,10 @@ impl<'a> Launcher<'a> {
                     continue;
                 }
 
-                // Check if the mod starts with a pointer
-                if let Some((pointer, mod_path)) = load_mod.split_once(':') {
-                    if pointer.len() == 1 {
-                        // Skip drive letters
-                        continue;
-                    }
+                // Check if the mod starts with a pointer (that is not a windows drive letter)
+                if let Some((pointer, mod_path)) = load_mod.split_once(':')
+                    && pointer.len() > 1
+                {
                     if let Some(path) = self.global.launch().pointers().get(pointer) {
                         let mod_path = path.join(mod_path);
                         if mod_path.exists() {
