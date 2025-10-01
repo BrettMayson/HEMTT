@@ -9,7 +9,7 @@ pub struct PointerNotFound {
 
 impl Code for PointerNotFound {
     fn ident(&self) -> &'static str {
-        "BCLE10"
+        "BCLE11"
     }
 
     fn link(&self) -> Option<&str> {

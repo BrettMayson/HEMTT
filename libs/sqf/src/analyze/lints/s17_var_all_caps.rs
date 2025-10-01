@@ -44,8 +44,7 @@ private _z = _y + DO_NOT_EXIST;
 
 ### Explanation
 
-Variables that are all caps are usually reserved for macros. This should should help prevent any accidental typos or uses before definitions when using macros.
-."#
+Variables that are all caps are usually reserved for macros. This should help prevent any accidental typos or uses before definitions when using macros."#
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::warning()
