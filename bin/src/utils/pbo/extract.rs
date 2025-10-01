@@ -32,6 +32,11 @@ pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
             error!("Output file already exists");
             return Ok(());
         }
+        let _ = std::fs::create_dir_all(
+            output
+                .parent()
+                .expect("Output file has no parent directory"),
+        );
         std::io::copy(&mut file, &mut File::create(output)?)?;
     } else {
         std::io::copy(&mut file, &mut std::io::stdout())?;
