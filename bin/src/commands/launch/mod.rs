@@ -226,7 +226,7 @@ pub mod preset;
 ///     "my_unit:@my_unit_gear",  # These two mods will load from the defined pointer
 ///     "my_unit:@my_unit_units",
 /// ]
-/// ``````
+/// ```
 pub struct Command {
     #[clap(flatten)]
     launch: LaunchArgs,
