@@ -61,6 +61,11 @@ pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<
             return Ok(());
         }
     };
+    let _ = std::fs::create_dir_all(
+        output
+            .parent()
+            .expect("Output file has no parent directory"),
+    );
     std::io::Write::write_all(&mut std::fs::File::create(&output)?, &data)?;
     println!("Converted to: {}", output.display());
     Ok(())

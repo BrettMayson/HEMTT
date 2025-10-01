@@ -45,6 +45,11 @@ pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> R
         },
         PathBuf::from,
     );
+    let _ = std::fs::create_dir_all(
+        output
+            .parent()
+            .expect("Output file has no parent directory"),
+    );
     let mut output = std::fs::File::create(output)?;
     match format {
         OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,

@@ -22,6 +22,11 @@ pub fn execute(args: &JsonArgs) -> Result<(), Error> {
         return Ok(());
     }
     let p3d = hemtt_p3d::P3D::read(&mut std::fs::File::open(p3d)?).expect("Failed to read P3D");
+    let _ = std::fs::create_dir_all(
+        output
+            .parent()
+            .expect("Output file has no parent directory"),
+    );
     serde_json::to_writer(std::fs::File::create(output)?, &p3d)?;
     Ok(())
 }
