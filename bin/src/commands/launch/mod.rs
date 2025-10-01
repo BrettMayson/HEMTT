@@ -211,7 +211,7 @@ pub mod preset;
 /// Workshop pointers will automatically be used globally when the workshop ID is specified in a launch configuration.
 ///
 /// Non-workshop pointers can be used by prefixing the id of the mod in the `workshop` list with the name of the pointer.
-/// 
+///
 /// Pointers must be at least 2 characters long to avoid conflicts with drive letters.
 ///
 /// **.hemtt/project.toml**
