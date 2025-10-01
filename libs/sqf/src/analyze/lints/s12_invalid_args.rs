@@ -22,7 +22,7 @@ impl Lint<LintData> for LintS12InvalidArgs {
         "Invalid Args"
     }
     fn documentation(&self) -> &'static str {
-        r"### Example
+        r#"### Example
 
 **Incorrect**
 ```sqf
@@ -31,7 +31,19 @@ impl Lint<LintData> for LintS12InvalidArgs {
 
 ### Explanation
 
-Checks correct syntax usage."
+Checks correct syntax usage.
+
+### Ignoring False Positives
+
+If a variable usage is complicated and causing a false positive, you can add a #pragma to ignore the warning.
+
+```sqf
+if (something) then { CouldBeNumberOrString = 5;};        // Lint will assume the variable is a number
+if (otherthing) then { y = CouldBeNumberOrString + "c";}; // Throws: Invalid arguments to command `[B:+]`
+
+// But the var could actually be set to a string from a different scope, so ignore this specific warning with:
+#pragma hemtt ignore_variables ["CouldBeNumberOrString"]  // Lint will now assume the variable could be anything
+```"#
     }
     fn default_config(&self) -> LintConfig {
         LintConfig::help()
