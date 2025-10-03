@@ -127,7 +127,10 @@ impl SciptScope {
     pub fn pop(&mut self) {
         for (var, holder) in self.local.pop().unwrap_or_default() {
             // trace!("-- Stack Pop {}:{} ", var, holder.usage);
-            if holder.usage == 0 && !holder.source.skip_errors() {
+            if holder.usage == 0
+                && !holder.source.skip_errors()
+                && !self.ignored_vars.contains(&var)
+            {
                 self.errors.insert(Issue::Unused(var, holder.source));
             }
         }
