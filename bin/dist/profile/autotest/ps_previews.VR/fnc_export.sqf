@@ -233,6 +233,8 @@ _screenRight = safezoneX + safezoneW;
     _cam camPrepareFocus [-1,-1];
     _cam camPrepareFOV 0.7;
     _cam camCommitPrepared 0;
+    _cam camPreload 0;
+    waitUntil { camPreloaded _cam };
     sleep 0.01;
 
     if (_class isKindOf "man" && !(_class isKindOf "animal")) then {
