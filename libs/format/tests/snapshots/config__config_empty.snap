@@ -1,0 +1,8 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (empty))
+---
+class Parent {
+    class FirstEmpty {};
+    class SecondEmpty {};
+};

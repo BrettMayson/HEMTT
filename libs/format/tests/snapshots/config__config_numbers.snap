@@ -1,0 +1,9 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (numbers))
+---
+class numbers {
+    hex = 0x1A;
+    dec = 42;
+    float = 3.14;
+};
