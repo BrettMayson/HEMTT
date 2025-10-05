@@ -6,8 +6,7 @@ use tracing::error;
 mod windows_message;
 
 fn main() {
-    #[cfg(windows)]
-    if !hemtt::is_ci() && std::env::args().count() == 1 {
+    if cfg(windows) && !hemtt::is_ci() && std::env::args().count() == 1 {
         windows_message::check_no_terminal();
     }
 
@@ -31,8 +30,7 @@ It is always best to the include the log and a link to your project when reporti
         std::process::exit(1);
     }));
 
-    #[cfg(windows)]
-    if enable_ansi_support::enable_ansi_support().is_err() {
+    if cfg!(windows) && enable_ansi_support::enable_ansi_support().is_err() {
         tracing::warn!("Failed to enable ANSI support, colored output will not work");
     }
 

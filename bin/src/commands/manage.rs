@@ -27,7 +27,6 @@ enum Subcommands {
         #[arg(value_enum)]
         shell: Shell,
     },
-    #[cfg(windows)]
     Powershell,
 }
 
@@ -45,7 +44,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
                 &mut std::io::stdout(),
             );
         }
-        #[cfg(windows)]
         Subcommands::Powershell => {
             install_powershell_completions_sourced()?;
         }
@@ -55,6 +53,11 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
 #[allow(dead_code)]
 fn install_powershell_completions_sourced() -> std::io::Result<()> {
+    if !cfg!(windows) {
+        eprintln!("PowerShell completions can only be installed on Windows");
+        std::process::exit(1);
+    }
+
     let script_path = dirs::config_dir()
         .expect("Could not locate config directory (APPDATA)")
         .join("hemtt")
