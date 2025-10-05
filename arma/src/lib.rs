@@ -1,72 +1,106 @@
-use std::io::{Read, Write};
+use std::io::{ErrorKind, Read, Write};
+use std::net::TcpStream;
 
 use arma_rs::{Context, ContextState, Extension, arma};
 use hemtt_common::arma::control::{
     fromarma::{self, Control, Message},
     toarma,
 };
-use interprocess::local_socket::{GenericNamespaced, Stream, prelude::*};
 
 mod photoshoot;
+pub mod screenshot;
+
+/// TCP port for communication between HEMTT and Arma 3
+/// Using port 21337 (HEMTT backwards in leet speak)
+const HEMTT_TCP_PORT: u16 = 21337;
 
 #[arma]
 fn init() -> Extension {
     let ext = Extension::build()
         .command("mission", mission)
         .command("log", log)
+        .command("screenshot", screenshot::screenshot)
         .group("photoshoot", photoshoot::group())
         .finish();
     let ctx = ext.context();
     let (send, recv) = std::sync::mpsc::channel::<Message>();
     ctx.global().set(send);
     std::thread::spawn(move || {
-        let mut socket =
-            Stream::connect("hemtt_arma".to_ns_name::<GenericNamespaced>().unwrap()).unwrap();
-        socket.set_nonblocking(true).unwrap();
-        loop {
-            let mut len_buf = [0u8; 4];
-            if socket.read_exact(&mut len_buf).is_ok()
-                && !len_buf.is_empty()
-                && len_buf != [255u8; 4]
-            {
-                let len = u32::from_le_bytes(len_buf);
-                let mut buf = vec![0u8; len as usize];
-                socket.read_exact(&mut buf).unwrap();
-                let buf = String::from_utf8(buf).unwrap();
-                let message: toarma::Message = serde_json::from_str(&buf).unwrap();
-                match message {
-                    toarma::Message::Control(control) => match control {
-                        toarma::Control::Exit => {
-                            std::process::exit(0);
-                        }
-                    },
-                    toarma::Message::Photoshoot(photoshoot) => match photoshoot {
-                        toarma::Photoshoot::Weapon(weapon) => {
-                            println!("Weapon: {weapon}");
-                            ctx.callback_data("hemtt_ps_items", "weapon_add", weapon.clone())
-                                .unwrap();
-                        }
-                        toarma::Photoshoot::Vehicle(vehicle) => {
-                            println!("Vehicle: {vehicle}");
-                            ctx.callback_data("hemtt_ps_items", "vehicle_add", vehicle.clone())
-                                .unwrap();
-                        }
-                        toarma::Photoshoot::Preview(class) => {
-                            println!("Preview: {class}");
-                            ctx.callback_data("hemtt_ps_previews", "add", class.clone())
-                                .unwrap();
-                        }
-                        toarma::Photoshoot::PreviewRun => {
-                            println!("PreviewRun");
-                            ctx.callback_null("hemtt_ps_previews", "run").unwrap();
-                        }
-                        toarma::Photoshoot::Done => {
-                            println!("Done");
-                            ctx.callback_null("hemtt_ps", "done").unwrap();
-                        }
-                    },
+        let mut socket = loop {
+            match TcpStream::connect(format!("127.0.0.1:{HEMTT_TCP_PORT}")) {
+                Ok(stream) => {
+                    stream.set_nonblocking(true).unwrap();
+                    break stream;
+                }
+                Err(_) => {
+                    std::thread::sleep(std::time::Duration::from_millis(1000));
                 }
             }
+        };
+        loop {
+            let mut len_buf = [0u8; 4];
+            match socket.read_exact(&mut len_buf) {
+                Ok(()) if !len_buf.is_empty() && len_buf != [255u8; 4] => {
+                    let len = u32::from_le_bytes(len_buf);
+                    let mut buf = vec![0u8; len as usize];
+                    if socket.read_exact(&mut buf).is_ok()
+                        && let Ok(buf) = String::from_utf8(buf)
+                        && let Ok(message) = serde_json::from_str::<toarma::Message>(&buf)
+                    {
+                        match message {
+                            toarma::Message::Control(control) => match control {
+                                toarma::Control::Exit => {
+                                    std::process::exit(0);
+                                }
+                            },
+                            toarma::Message::Photoshoot(photoshoot) => match photoshoot {
+                                toarma::Photoshoot::Weapon(weapon) => {
+                                    println!("Weapon: {weapon}");
+                                    ctx.callback_data(
+                                        "hemtt_ps_items",
+                                        "weapon_add",
+                                        weapon.clone(),
+                                    )
+                                    .unwrap();
+                                }
+                                toarma::Photoshoot::Vehicle(vehicle) => {
+                                    println!("Vehicle: {vehicle}");
+                                    ctx.callback_data(
+                                        "hemtt_ps_items",
+                                        "vehicle_add",
+                                        vehicle.clone(),
+                                    )
+                                    .unwrap();
+                                }
+                                toarma::Photoshoot::Preview(class) => {
+                                    println!("Preview: {class}");
+                                    ctx.callback_data("hemtt_ps_previews", "add", class.clone())
+                                        .unwrap();
+                                }
+                                toarma::Photoshoot::PreviewRun => {
+                                    println!("PreviewRun");
+                                    ctx.callback_null("hemtt_ps_previews", "run").unwrap();
+                                }
+                                toarma::Photoshoot::Done => {
+                                    println!("Done");
+                                    ctx.callback_null("hemtt_ps", "done").unwrap();
+                                }
+                            },
+                        }
+                    }
+                }
+                Err(e) if e.kind() == ErrorKind::WouldBlock => {
+                    // Normal for nonblocking sockets, continue
+                }
+                Err(_) => {
+                    // Connection error, sleep a bit and continue
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+                _ => {
+                    // Empty read or other case
+                }
+            }
+
             if let Ok(message) = recv.recv_timeout(std::time::Duration::from_millis(100)) {
                 crate::send(message, &mut socket);
             }
@@ -104,7 +138,7 @@ fn log(ctx: Context, level: String, message: String) {
     sender.send(Message::Log(level, message)).unwrap();
 }
 
-fn send(message: fromarma::Message, socket: &mut Stream) {
+fn send(message: fromarma::Message, socket: &mut TcpStream) {
     let message = serde_json::to_string(&message).unwrap();
     let len = u32::try_from(message.len()).unwrap();
     socket.write_all(&u32::to_le_bytes(len)).unwrap();
