@@ -61,7 +61,6 @@ enum Commands {
     Value(commands::value::Command),
     Wiki(commands::wiki::Command),
     Manage(commands::manage::Command),
-    #[cfg(windows)]
     Photoshoot(commands::photoshoot::Command),
 }
 
@@ -151,7 +150,6 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Value(cmd) => commands::value::execute(cmd),
         Commands::Wiki(cmd) => commands::wiki::execute(cmd),
         Commands::Manage(cmd) => commands::manage::execute(cmd),
-        #[cfg(windows)]
         Commands::Photoshoot(cmd) => commands::photoshoot::execute(cmd),
     };
 

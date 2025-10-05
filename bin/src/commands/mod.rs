@@ -7,14 +7,12 @@ pub mod license;
 pub mod localization;
 pub mod manage;
 pub mod new;
+pub mod photoshoot;
 pub mod release;
 pub mod script;
 pub mod utils;
 pub mod value;
 pub mod wiki;
-
-#[cfg(windows)]
-pub mod photoshoot;
 
 /// Adds modules that should apply to:
 /// - hemtt check
