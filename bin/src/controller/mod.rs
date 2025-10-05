@@ -2,15 +2,13 @@
 
 use std::{
     io::{Read, Write},
+    net::{TcpListener, TcpStream},
     process::Child,
 };
 
 use hemtt_common::{
     arma::control::{fromarma, toarma},
     config::LaunchOptions,
-};
-use interprocess::local_socket::{
-    GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName, traits::Listener,
 };
 
 use crate::{
@@ -22,6 +20,10 @@ use crate::{
 
 mod action;
 mod profile;
+
+/// TCP port for communication between HEMTT and Arma 3
+/// Using port 21337 (HEMTT backwards in leet speak)
+const HEMTT_TCP_PORT: u16 = 21337;
 
 pub use action::Action;
 pub use profile::AutotestMission;
@@ -69,20 +71,20 @@ impl Controller {
         let Some(mut child) = child else {
             return Ok(report);
         };
-        let opts = ListenerOptions::new().name("hemtt_arma".to_ns_name::<GenericNamespaced>()?);
-        let socket = opts.create_sync()?;
-        socket.set_nonblocking(ListenerNonblockingMode::Both)?;
+        let listener = TcpListener::bind(format!("127.0.0.1:{HEMTT_TCP_PORT}"))?;
+        listener.set_nonblocking(true)?;
         info!("Waiting for Arma...");
         let start = std::time::Instant::now();
         let mut did_warn = false;
         let mut socket = loop {
-            if let Ok(s) = socket.accept() {
+            if let Ok((s, _)) = listener.accept() {
                 break s;
             }
             if !did_warn && start.elapsed().as_secs() > 120 {
                 warn!("Still waiting after 120 seconds");
                 did_warn = true;
             }
+            std::thread::sleep(std::time::Duration::from_millis(100));
         };
 
         info!("Connected!");
@@ -90,14 +92,16 @@ impl Controller {
         let mut current = None;
 
         loop {
-            let status = child.try_wait();
-            if status.is_err() {
-                warn!("No longer able to determine Arma's status");
-                break;
-            }
-            if let Ok(Some(_)) = status {
-                info!("Arma has exited");
-                break;
+            if cfg!(windows) {
+                let status = child.try_wait();
+                if status.is_err() {
+                    warn!("No longer able to determine Arma's status");
+                    break;
+                }
+                if let Ok(Some(_)) = status {
+                    info!("Arma has exited");
+                    break;
+                }
             }
 
             let mut len_buf = [0u8; 4];
@@ -163,27 +167,30 @@ fn launch(
         .iter()
         .map(std::string::ToString::to_string)
         .collect();
-    args.push(format!(
-        "-autotest={}",
-        ctx.profile()
-            .join("Users/hemtt/autotest.cfg")
-            .display()
-            .to_string()
-            .replace('/', "\\")
-    ));
+    let mut autotest = ctx
+        .profile()
+        .join("Users/hemtt/autotest.cfg")
+        .display()
+        .to_string()
+        .replace('/', "\\");
+    if !cfg!(windows) {
+        autotest = format!("Z:{}", autotest.replace('/', "\\"));
+    }
+    // args.push(format!("-autotest=\"{autotest}\""));
     args.insert(0, format!("-profiles={}", ctx.profile().display()));
-    args.push(format!("-cfg=\"{}\\arma3.cfg\"", ctx.profile().display()));
-    args.push(format!("-mod=\"{}\\@hemtt\"", ctx.profile().display()));
+    let mut profile = ctx.profile().display().to_string();
+    if !cfg!(windows) {
+        profile = format!("Z:{}", profile.replace('/', "\\"));
+    }
+    args.push(format!("-cfg=\"{profile}\\arma3.cfg\""));
+    args.push(format!("-mod=\"{profile}\\@hemtt\""));
 
     let child = launcher.launch(args, false, &mut report)?;
     Ok((report, child))
 }
 
 #[allow(clippy::cast_possible_truncation)]
-fn send(
-    message: &toarma::Message,
-    socket: &mut interprocess::local_socket::prelude::LocalSocketStream,
-) {
+fn send(message: &toarma::Message, socket: &mut TcpStream) {
     let message = serde_json::to_string(message).unwrap();
     trace!("sending: {}", message);
     socket

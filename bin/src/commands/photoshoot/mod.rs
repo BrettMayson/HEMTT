@@ -8,6 +8,7 @@ use hemtt_config::{Class, Config, Property, Value};
 use image::codecs::jpeg::JpegEncoder;
 
 use crate::{
+    bi_tool::BiTool,
     context::{Context, PreservePrevious},
     controller::{Action, AutotestMission, Controller},
     error::Error,
@@ -59,17 +60,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
 
     let mut report = Report::new();
-    let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-    let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\ImageToPAA") else {
-        report.push(ToolsNotFound::code());
-        return Ok(report);
-    };
-    let Ok(path) = key.get_value::<String, _>("tool") else {
-        report.push(ToolsNotFound::code());
-        return Ok(report);
-    };
-    let command = PathBuf::from(path);
-    if !command.exists() {
+    if !BiTool::Binarize.is_installed() {
         report.push(ToolsNotFound::code());
         return Ok(report);
     }
@@ -133,7 +124,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let ctx = Context::new(Some("photoshoot"), PreservePrevious::Remove, false)?;
 
     let mut ps = Photoshoot::new(
-        command,
         ctx.profile().join("Users/hemtt/Screenshots"),
         launch.dev_mission().map(std::string::ToString::to_string),
     );
@@ -174,15 +164,13 @@ pub struct Photoshoot {
     previews: HashMap<String, String>,
     pending: Mutex<Vec<toarma::Photoshoot>>,
     from: PathBuf,
-    command: PathBuf,
 }
 
 impl Photoshoot {
     #[must_use]
-    pub fn new(command: PathBuf, from: PathBuf, dev_mission: Option<String>) -> Self {
+    pub fn new(from: PathBuf, dev_mission: Option<String>) -> Self {
         Self {
             dev_mission,
-            command,
             from,
             weapons: HashMap::new(),
             vehicles: HashMap::new(),
@@ -275,7 +263,9 @@ impl Action for Photoshoot {
                     .expect("photoshoot has a folder")
                     .join(format!("{class}_ca.png"));
                 image.save(&dst_png).expect("save");
-                std::process::Command::new(&self.command)
+                BiTool::ImageToPAA
+                    .command()
+                    .expect("iamgetopaa should be located if we got this far")
                     .arg(dst_png)
                     .output()
                     .expect("failed to execute process");

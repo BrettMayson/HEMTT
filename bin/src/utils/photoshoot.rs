@@ -16,6 +16,7 @@ impl Photoshoot {
         uniform: bool,
     ) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
         let path = from.join(format!("{name}.png"));
+        trace!("Processing weapon screenshot: {}", path.display());
         let mut new = image::open(&path)?.into_rgba8();
         for pixel in new.pixels_mut() {
             if is_background(*pixel) {
