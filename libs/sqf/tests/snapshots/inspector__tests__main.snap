@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(16, [InvalidArgs("[B:setFuel]", 31..38), Undefined("_test2", 46..52, false), NotPrivate("_test3", 113..119), Shadowed("_test5", 267..273), InvalidArgs("[B:addPublicVariableEventHandler]", 319..348), Undefined("_test8", 887..893, false), InvalidArgs("[B:ctrlSetText]", 1098..1109), Undefined("_test9", 1498..1504, false), Unused("_test10", ForLoop(1752..1761)), InvalidArgs("[B:drawIcon]", 1992..2000), InvalidArgs("[B:setGusts]", 2434..2442), Undefined("_test12", 2537..2544, false), CountArrayComparison(true, 2724..2742, "_test14"), Unused("_test4", Assignment(223..229, 232..237)), Unused("_test11", Params(1802..1811)), Undefined("_test13", 2610..2617, true)])

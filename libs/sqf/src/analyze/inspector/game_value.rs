@@ -344,4 +344,28 @@ impl GameValue {
             _ => "Other(todo)".to_string(),
         }
     }
+    #[must_use]
+    /// Returns the common generic type of all array elements, or Anything if they differ
+    pub fn get_array_value_type(set: &IndexSet<Self>) -> Self {
+        let mut result: Option<Self> = None;
+        for gv in set {
+            match gv {
+                Self::Array(Some(array_outer), _) => {
+                    for outer in array_outer {
+                        for inner in outer {
+                            if result.is_none() {
+                                result = Some(inner.make_generic());
+                            } else if let Some(existing) = &result
+                                && !Self::match_values(existing, inner)
+                            {
+                                return Self::Anything;
+                            }
+                        }
+                    }
+                }
+                _ => return Self::Anything,
+            }
+        }
+        result.unwrap_or(Self::Anything)
+    }
 }

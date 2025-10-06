@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(8, [Undefined("_y", 123..125, false), Undefined("_y", 200..202, false), Undefined("_forEachIndex", 237..250, false), InvalidArgs("[B:+]", 268..269), InvalidArgs("[B:+]", 306..307), Undefined("_forEachIndex", 532..545, false), Undefined("_y", 570..572, false), InvalidArgs("[B:forEachReversed]", 759..774)])
