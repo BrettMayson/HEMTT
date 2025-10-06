@@ -16,7 +16,6 @@ formatText ["%1", "test"];
 getGraphValues [
 	[0, 10, 0, 100, 11, 0]
 ];
-
 getGraphValues [
 	[0, 10, 0, 100, 11, 0],
 	0, 5,  1, 10,  2, 100
@@ -29,7 +28,7 @@ createHashMap insert [];
 createHashMap insert [["key", [1,2,3]], ["key", [4]]];
 createHashMap insert [["key", [1,2,3]]];
 
-// createHashMapFromArray player; // will correctly error
+createHashMapFromArray player; // will correctly error
 createHashMapFromArray [];
 createHashMapFromArray [["a", 1], ["b", 2], ["c", 3]];
 

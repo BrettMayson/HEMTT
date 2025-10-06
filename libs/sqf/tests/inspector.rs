@@ -166,7 +166,7 @@ mod tests {
     #[test]
     pub fn test_variadic() {
         let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
-        let result = sqf.issues();
-        assert_eq!(result.len(), 0);
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
 }
