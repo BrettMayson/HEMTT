@@ -132,7 +132,7 @@ impl GameValue {
         match arg {
             Arg::Item(name) => {
                 let Some(param) = params.iter().find(|p| p.name() == name) else {
-                    /// Varadic cmds which will be missing wiki param matches (only affects debug logging)
+                    /// Varidic cmds which will be missing wiki param matches (only affects debug logging)
                     const WIKI_CMDS_IGNORE_MISSING_PARAM: &[&str] = &[
                         "addResources",
                         "createTask",
@@ -180,7 +180,7 @@ impl GameValue {
                             true
                         }
                         Self::Array(Some(gv_array), _) => {
-                            /// Varadic cmds which need special handling for arg arrays
+                            /// Varidic cmds which need special handling for arg arrays
                             const WIKI_CMDS_IGNORE_ARGS: &[&str] = &[
                                 "createHashMapFromArray",
                                 "insert",
