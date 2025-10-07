@@ -353,7 +353,7 @@ impl SciptScope {
                         None
                     }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
-                        "set" | "pushback" | "pushbackunique" | "append" => {
+                        "set" | "pushback" | "pushbackunique" | "append" | "resize" => {
                             // these commands modify the LHS by lvalue, assume it is now a generic array
                             self.cmd_generic_modify_lvalue(lhs);
                             None
@@ -374,32 +374,32 @@ impl SciptScope {
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
                         "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set, database)),
-                        "foreach" | "foreachreversed" => Some(self.cmd_generic_call_magic(
-                            &lhs_set,
-                            &vec![
-                                ("_x", GameValue::Anything),
-                                ("_y", GameValue::Anything),
+                        "foreach" | "foreachreversed" => {
+                            let mut magic = vec![
+                                ("_x", GameValue::get_array_value_type(&rhs_set)),
                                 ("_forEachIndex", GameValue::Number(None)),
-                            ],
-                            source,
-                            database,
-                        )),
+                            ];
+                            if !rhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
+                                magic.push(("_y", GameValue::Anything));
+                            }
+                            Some(self.cmd_generic_call_magic(&lhs_set, &magic, source, database))
+                        }
                         "count" => {
-                            let _ = self.cmd_generic_call_magic(
-                                &lhs_set,
-                                &vec![("_x", GameValue::Anything)],
-                                source,
-                                database,
-                            );
+                            let magic = vec![("_x", GameValue::get_array_value_type(&rhs_set))];
+                            let _ = self.cmd_generic_call_magic(&lhs_set, &magic, source, database);
                             None
                         }
-                        "findif" | "apply" => {
-                            let _ = self.cmd_generic_call_magic(
-                                &rhs_set,
-                                &vec![("_x", GameValue::Anything)],
-                                source,
-                                database,
-                            );
+                        "apply" => {
+                            let mut magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
+                            if !lhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
+                                magic.push(("_y", GameValue::Anything));
+                            }
+                            let _ = self.cmd_generic_call_magic(&rhs_set, &magic, source, database);
+                            None
+                        }
+                        "findif" => {
+                            let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
+                            let _ = self.cmd_generic_call_magic(&rhs_set, &magic, source, database);
                             None
                         }
                         "getordefaultcall" => {
@@ -506,7 +506,9 @@ pub fn run_processed(
     database: &Database,
 ) -> Vec<Issue> {
     let mut ignored_vars = IndexSet::new();
-    ignored_vars.insert("_this".to_string());
+    ignored_vars.insert("_this".to_ascii_lowercase());
+    ignored_vars.insert("_fnc_scriptName".to_ascii_lowercase()); // may be set via cfgFunctions
+    ignored_vars.insert("_fnc_scriptNameParent".to_ascii_lowercase());
     let Ok(re1) =
         Regex::new(r"(?:\#pragma hemtt ignore_variables|\/\/ ?IGNORE_PRIVATE_WARNING) ?\[(.*)\]")
     else {

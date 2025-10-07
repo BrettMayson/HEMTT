@@ -152,3 +152,10 @@ addMissionEventHandler ["EachFrame", { systemChat str [_thisArgs, time] }, [time
 {
     private _varR = _x;
 } forEach [1,2,3];
+
+if !(isNil "_fnc_scriptNameParent") then {
+    diag_log format["[x] Function called with a nil value from script: %1",_fnc_scriptNameParent];
+};
+if !(isNil "_fnc_scriptName") then {
+    diag_log format["[x] Function called with a nil value from script: %1",_fnc_scriptName];
+};

@@ -27,7 +27,6 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
 #[cfg(test)]
 mod tests {
     use crate::get_statements;
-    use hemtt_sqf::analyze::inspector::{Issue, VarSource};
 
     #[test]
     pub fn test_0() {
@@ -36,130 +35,22 @@ mod tests {
         let result = sqf.issues();
         println!("done: {}, {result:?}", result.len());
     }
-
-    #[allow(clippy::too_many_lines)]
     #[test]
-    pub fn test_1() {
-        let (_pro, sqf, _database) = get_statements("test_1.sqf");
-        let result = sqf.issues();
-        assert_eq!(result.len(), 16);
-        // Order not guarenteed
-        assert!(result.iter().any(|i| {
-            if let Issue::InvalidArgs(cmd, _) = i {
-                cmd == "[B:setFuel]"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, orphan) = i {
-                var == "_test2" && !orphan
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::NotPrivate(var, _) = i {
-                var == "_test3"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Unused(var, source) = i {
-                var == "_test4" && matches!(source, VarSource::Assignment(_, _))
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Shadowed(var, _) = i {
-                var == "_test5"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::InvalidArgs(var, _) = i {
-                var == "[B:addPublicVariableEventHandler]"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::InvalidArgs(var, _) = i {
-                var == "[B:ctrlSetText]"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, orphan) = i {
-                var == "_test8" && !orphan
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, orphan) = i {
-                var == "_test9" && !orphan
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Unused(var, source) = i {
-                var == "_test10" && matches!(source, VarSource::ForLoop(_))
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Unused(var, source) = i {
-                var == "_test11" && matches!(source, VarSource::Params(_))
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::InvalidArgs(cmd, _) = i {
-                cmd == "[B:drawIcon]"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::InvalidArgs(cmd, _) = i {
-                cmd == "[B:setGusts]"
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, orphan) = i {
-                var == "_test12" && !orphan
-            } else {
-                false
-            }
-        }));
-        assert!(result.iter().any(|i| {
-            if let Issue::Undefined(var, _, orphan) = i {
-                var == "_test13" && *orphan
-            } else {
-                false
-            }
-        }));
-        assert!(
-            result
-                .iter()
-                .any(|i| { matches!(i, Issue::CountArrayComparison(true, _, _)) })
-        );
+    pub fn test_main() {
+        let (_pro, sqf, _database) = get_statements("test_main.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
-
     #[test]
-    pub fn test_2() {
-        let (_pro, sqf, _database) = get_statements("test_2.sqf");
-        let result = sqf.issues();
-        assert_eq!(result.len(), 0);
+    pub fn test_optional_args() {
+        let (_pro, sqf, _database) = get_statements("test_optional_args.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
+    }
+    #[test]
+    pub fn test_iteration() {
+        let (_pro, sqf, _database) = get_statements("test_iteration.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
 }

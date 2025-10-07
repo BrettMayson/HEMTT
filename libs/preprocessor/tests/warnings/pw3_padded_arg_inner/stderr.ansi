@@ -5,7 +5,7 @@
   [0m[36m│[0m                                      [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
-  [0m[36m=[0m [36mnote[0m: occured in: `INNER`
+  [0m[36m=[0m [36mnote[0m: occurred in: `INNER`
 
 [0m[1m[38;5;11mwarning[PW3][0m[1m: padding a macro argument[0m
   [0m[36m┌─[0m source.hpp:6:12
@@ -14,7 +14,7 @@
   [0m[36m│[0m            [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
-  [0m[36m=[0m [36mnote[0m: occured in: `TEST2`
+  [0m[36m=[0m [36mnote[0m: occurred in: `TEST2`
 
 [0m[1m[38;5;11mwarning[PW3][0m[1m: padding a macro argument[0m
   [0m[36m┌─[0m source.hpp:2:38
@@ -23,5 +23,5 @@
   [0m[36m│[0m                                      [0m[33m^[0m [0m[33mpadding a macro argument[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: padding a macro argument is likely unintended
-  [0m[36m=[0m [36mnote[0m: occured in: `INNER`
+  [0m[36m=[0m [36mnote[0m: occurred in: `INNER`
 
