@@ -35,7 +35,7 @@ impl Code for PaddedArg {
     }
 
     fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {
-        diag.with_note(format!("occured in: `{}`", self.ident))
+        diag.with_note(format!("occurred in: `{}`", self.ident))
     }
 }
 
