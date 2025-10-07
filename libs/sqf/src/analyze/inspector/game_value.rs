@@ -345,7 +345,10 @@ impl GameValue {
         }
     }
     #[must_use]
-    /// Returns the common generic type of all array elements, or Anything if they differ
+    /// Returns the common generic type of all array elements.
+    /// 
+    /// If the set is empty or contains any non-array types, returns `Anything`.
+    /// If array element types differ, returns `Anything`.
     pub fn get_array_value_type(set: &IndexSet<Self>) -> Self {
         let mut result: Option<Self> = None;
         for gv in set {
