@@ -74,29 +74,7 @@ mod tests {
             if [
                 "menuenable",                   // Syntax 3 "do not use"
                 "execeditorscript",             // "some old editor command"
-                "hcsetgroup",                   // fixed on wiki
-                "setconvoyseparation",          // fixed on wiki
-                "actionkeysnamesarray",         // fixed on wiki
-                "speed",                        // fixed on wiki
-                "commitoverlay",                // fixed on wiki
-                "flagside",                     // fixed on wiki
-                "unregistertask",               // fixed on wiki
-                "forceatpositionrtd",           // fixed on wiki
-                "clearoverlay",                 // fixed on wiki
-                "steamgamerecordingevent",      // fixed on wiki
-                "collapseobjecttree",           // fixed on wiki
-                "menuaction",                   // fixed on wiki
-                "taskchildren",                 // fixed on wiki
-                "lognetwork",                   // fixed on wiki
-                "surfacetype",                  // fixed on wiki
-                "removecuratoreditableobjects", // fixed on wiki
-                "taskparent",                   // fixed on wiki
-                "enabledirectionstabilization", // fixed on wiki
-                "setturretlimits",              // fixed on wiki
-                "taskcustomdata",               // fixed on wiki
-                "lookatpos",                    // fixed on wiki
-                "lockcamerato",                 // fixed on wiki
-                "enablevehiclecargo",           // fixed on wiki
+                "removeCuratorEditableObjects", // Fixed again on wiki
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {
