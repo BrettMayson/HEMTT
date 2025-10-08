@@ -74,7 +74,7 @@ mod tests {
             if [
                 "menuenable",                   // Syntax 3 "do not use"
                 "execeditorscript",             // "some old editor command"
-                "removeCuratorEditableObjects", // Fixed again on wiki
+                "removecuratoreditableobjects", // Fixed again on wiki
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {
