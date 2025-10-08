@@ -180,16 +180,6 @@ impl GameValue {
                             true
                         }
                         Self::Array(Some(gv_array), _) => {
-                            /// Varidic cmds which need special handling for arg arrays
-                            const WIKI_CMDS_IGNORE_ARGS: &[&str] = &[
-                                "createHashMapFromArray",
-                                "insert",
-                                "set3DENAttributes",
-                                "set3DENMissionAttributes",
-                            ];
-                            if WIKI_CMDS_IGNORE_ARGS.contains(&cmd_name) {
-                                return true;
-                            }
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
@@ -198,6 +188,19 @@ impl GameValue {
                                     IndexSet::new()
                                 };
                                 if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
+                                    if let Arg::Array(args) = arg {
+                                        // handle edge case on varidic cmds that take arrays (e.g. `createHashMapFromArray`)
+                                        if args.iter().any(|a| match a {
+                                            Arg::Array(_) => false,
+                                            Arg::Item(name) => {
+                                                !params.iter().any(|p| p.name() == name) // test if has missing args inside the array
+                                            }
+                                        }) {
+                                            // println!("using special exception for varidic array from {cmd_name}"); // only ~4 cmds need this
+                                            continue;
+                                        }
+                                    }
+                                    // println!("array arg {index} no match {arg:?} in {s:?}");
                                     return false;
                                 }
                             }
