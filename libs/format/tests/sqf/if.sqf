@@ -1,0 +1,10 @@
+if(true)then{_x=5;for "_i" from 0 to 10 do {_sum=_sum+_i;};}; // test
+
+if!(call _test) then{
+    systemChat "true branch";
+};
+
+if ((abs (_actualOffset - _configOffset)) > 0.1) then {};
+if ((abs(_actualOffset-_configOffset))>0.1) then {};
+
+if (_xPosOptic isEqualTo [0,0,0]) exitWith { -999 }; // e.g. akm has no proxy
