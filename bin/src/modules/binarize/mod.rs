@@ -389,8 +389,9 @@ impl Module for Binarize {
                 let output = cmd.output().expect("should be able to run binarize");
                 assert!(
                     output.status.success(),
-                    "binarize failed with code {:?}",
-                    output.status.code().unwrap_or(-1)
+                    "binarize failed with code {:?} while on target {:?}",
+                    output.status.code().unwrap_or(-1),
+                    target.entry
                 );
                 progress.inc(1);
                 if PathBuf::from(&target.output).join(&target.entry).exists() {
