@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(1, [InvalidArgs("[U:createHashMapFromArray]", 684..706)])

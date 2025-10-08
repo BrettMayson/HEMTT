@@ -55,6 +55,12 @@ mod tests {
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
     #[test]
+    pub fn test_variadic() {
+        let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
+    }
+    #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
         let file = "test_wiki_examples.sqf";

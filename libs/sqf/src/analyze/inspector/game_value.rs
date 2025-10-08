@@ -132,18 +132,33 @@ impl GameValue {
         match arg {
             Arg::Item(name) => {
                 let Some(param) = params.iter().find(|p| p.name() == name) else {
-                    /// Varadic cmds which will be missing wiki param matches
+                    /// Varidic cmds which will be missing wiki param matches (only affects debug logging)
                     const WIKI_CMDS_IGNORE_MISSING_PARAM: &[&str] = &[
+                        "addResources",
+                        "createTask",
+                        "ctRemoveRows",
                         "format",
                         "formatText",
+                        "getGraphValues",
+                        "inAreaArray",
+                        "inAreaArrayIndexes",
+                        "insert",
+                        "kbReact",
+                        "kbTell",
+                        "lineIntersects",
+                        "lineIntersectsObjs",
+                        "lineIntersectsSurfaces",
+                        "lineIntersectsWith",
                         "param",
                         "params",
+                        "ppEffectCreate",
+                        "set3DENAttributes",
+                        "set3DENMissionAttributes",
+                        "setAttributes",
                         "setGroupId",
                         "setGroupIdGlobal",
-                        "set3DENMissionAttributes",
                         "setPiPEffect",
-                        "ppEffectCreate",
-                        "inAreaArray",
+                        "textLogFormat",
                     ];
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
                         // warn!("cmd {cmd_name} - param {name} not found");
@@ -158,11 +173,6 @@ impl GameValue {
                 Self::match_set_to_value(set, param.typ(), param.optional())
             }
             Arg::Array(arg_array) => {
-                const WIKI_CMDS_IGNORE_ARGS: &[&str] = &["createHashMapFromArray"];
-                if WIKI_CMDS_IGNORE_ARGS.contains(&cmd_name) {
-                    return true;
-                }
-
                 set.iter().any(|s| {
                     match s {
                         Self::Anything | Self::Array(None, _) => {
@@ -170,7 +180,6 @@ impl GameValue {
                             true
                         }
                         Self::Array(Some(gv_array), _) => {
-                            // println!("array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
@@ -179,6 +188,19 @@ impl GameValue {
                                     IndexSet::new()
                                 };
                                 if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
+                                    if let Arg::Array(args) = arg {
+                                        // handle edge case on varidic cmds that take arrays (e.g. `createHashMapFromArray`)
+                                        if args.iter().any(|a| match a {
+                                            Arg::Array(_) => false,
+                                            Arg::Item(name) => {
+                                                !params.iter().any(|p| p.name() == name) // test if has missing args inside the array
+                                            }
+                                        }) {
+                                            // println!("using special exception for varidic array from {cmd_name}"); // only ~4 cmds need this
+                                            continue;
+                                        }
+                                    }
+                                    // println!("array arg {index} no match {arg:?} in {s:?}");
                                     return false;
                                 }
                             }
@@ -193,7 +215,7 @@ impl GameValue {
 
     #[must_use]
     pub fn match_set_to_value(set: &IndexSet<Self>, right_wiki: &Value, optional: bool) -> bool {
-        // println!("Checking {:?} against {:?} [O:{optional}]", set, right_wiki);
+        // println!("Checking {set:?} against {right_wiki:?} [O:{optional}]");
         if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
             return true;
         }
