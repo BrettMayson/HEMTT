@@ -42,6 +42,14 @@ pub mod path_functions {
         path.file_name().unwrap().to_str().unwrap().to_string()
     }
 
+    #[rhai_fn(global, pure)]
+    pub fn file_ext(path: &mut PathBuf) -> String {
+        path.extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("")
+            .to_string()
+    }
+
     #[rhai_fn(global, name = "to_string", name = "to_debug", pure)]
     pub fn to_string(path: &mut PathBuf) -> String {
         path.display().to_string().replace('\\', "/")
