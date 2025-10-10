@@ -65,9 +65,10 @@ mod tests {
     pub fn test_wiki_examples() {
         let file = "test_wiki_examples.sqf";
         let mut all_examples = String::new();
-        let re = regex::Regex::new(r"<sqf>(.*?)<\/sqf>").expect("regex");
+        let re = regex::Regex::new(r"(?is)<sqf>(.*?)<\/sqf>").expect("regex");
         let database = hemtt_sqf::parser::database::Database::a3(false);
         for (_name, cmd) in database.wiki().commands().iter() {
+            all_examples.push_str(format!("\n// Command: {} with {} syntax and {} examples\n", cmd.name(), cmd.syntax().len(), cmd.examples().len()).as_str());
             if cmd.groups().contains(&String::from("Broken Commands")) {
                 continue;
             }
