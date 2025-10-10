@@ -40,6 +40,11 @@ pub mod path_functions {
         path.filename()
     }
 
+    #[rhai_fn(global, pure)]
+    pub fn file_ext(path: &mut VfsPath) -> String {
+        path.extension().unwrap_or_default()
+    }
+
     #[rhai_fn(global, name = "to_string", name = "to_debug", pure)]
     pub fn to_string(path: &mut VfsPath) -> String {
         path.as_str().to_string().replace('\\', "/")

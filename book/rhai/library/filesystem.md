@@ -129,6 +129,15 @@ HEMTT_VFS.join("addons").file_name(); // addons
 HEMTT_VFS.join(".hemtt").join("project.toml").file_name(); // project.toml
 ```
 
+### `file_ext()`
+
+Returns the file extension of the path, or an empty string if there is none.
+
+```js
+HEMTT_VFS.join("addons").file_ext(); // ""
+HEMTT_VFS.join(".hemtt").join("project.toml").file_ext(); // "toml"
+```
+
 ### `copy(path)`
 
 Copies the file or directory to the given path.
@@ -145,7 +154,7 @@ Moves the file or directory to the given path.
 HEMTT_VFS.join("docs").move(HEMTT_OUT.join("docs")); // Moves the docs folder to the build output
 ```
 
-### `list(path)`
+### `list()`
 
 Lists the contents of the directory. If the path is a file, returns an empty array.
 
