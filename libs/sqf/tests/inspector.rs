@@ -65,17 +65,36 @@ mod tests {
     pub fn test_wiki_examples() {
         let file = "test_wiki_examples.sqf";
         let mut all_examples = String::new();
+        all_examples.push_str("a=1; b=2;"); // gvars get defined in some examples
         let re = regex::Regex::new(r"(?is)<sqf>(.*?)<\/sqf>").expect("regex");
         let database = hemtt_sqf::parser::database::Database::a3(false);
         for (_name, cmd) in database.wiki().commands().iter() {
-            all_examples.push_str(format!("\n// Command: {} with {} syntax and {} examples\n", cmd.name(), cmd.syntax().len(), cmd.examples().len()).as_str());
             if cmd.groups().contains(&String::from("Broken Commands")) {
                 continue;
             }
             if [
-                "menuenable",                   // Syntax 3 "do not use"
-                "execeditorscript",             // "some old editor command"
-                "removecuratoreditableobjects", // Fixed again on wiki
+                "menuenable",       // example 3 "do not use"
+                "execeditorscript", // syntax - "some old editor command"
+                "privateall",       // example
+                "local",            // example "do not use"
+                "sleep",            // example "do not use"
+                "isnull",           // example - weird creatediaryrecord example
+                //
+                "uavcontrol",         // example - fixed
+                "selectionnames",     // example - fixed
+                "select",             // example - fixed
+                "brakesdisabled",     // example - fixed
+                "taskcompleted",      // example - fixed
+                "createvehicle",      // example - fixed
+                "buttonaction",       // example - fixed
+                "find",               // example - fixed
+                "istouchingground",   // example - fixed
+                "getobjectargument",  // example - fixed
+                "evalobjectargument", // example - fixed
+                "setparticlecircle",  // syntax - fixed
+                "setaperturenew",     // syntax - fixed
+                "landat",             // syntax - fixed
+                "collect3denhistory", // syntax - fixed
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {
