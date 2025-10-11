@@ -73,28 +73,15 @@ mod tests {
                 continue;
             }
             if [
-                "menuenable",       // example 3 "do not use"
-                "execeditorscript", // syntax - "some old editor command"
-                "privateall",       // example
-                "local",            // example "do not use"
-                "sleep",            // example "do not use"
-                "isnull",           // example - weird creatediaryrecord example
-                //
-                "uavcontrol",         // example - fixed
-                "selectionnames",     // example - fixed
-                "select",             // example - fixed
-                "brakesdisabled",     // example - fixed
-                "taskcompleted",      // example - fixed
-                "createvehicle",      // example - fixed
-                "buttonaction",       // example - fixed
-                "find",               // example - fixed
-                "istouchingground",   // example - fixed
-                "getobjectargument",  // example - fixed
-                "evalobjectargument", // example - fixed
-                "setparticlecircle",  // syntax - fixed
-                "setaperturenew",     // syntax - fixed
-                "landat",             // syntax - fixed
-                "collect3denhistory", // syntax - fixed
+                "menuenable",         // example 3 "do not use"
+                "local",              // example "do not use"
+                "sleep",              // example "do not use"
+                "execeditorscript",   // "some old editor command"
+                "getobjectargument",  // "some old editor command"
+                "evalobjectargument", // "some old editor command"
+                "isnull",             // example - creatediaryrecord null
+                "buttonaction",       // example
+                "privateall",         // example
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {
