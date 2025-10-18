@@ -3,8 +3,10 @@ import { readdir } from "fs/promises";
 import path = require("path");
 import * as vscode from "vscode";
 import { LogFileViewer } from "./viewer";
+import { LanguageClient } from "vscode-languageclient/node";
+import { channel } from "diagnostics_channel";
 
-export function init(channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
+export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
   LogFileViewer.setupRptStatusBarVisibility();
   context.subscriptions.push(vscode.commands.registerCommand("hemtt.openLastRPT", async () => {
     let rptPath = "";
@@ -17,7 +19,8 @@ export function init(channel: vscode.OutputChannel, context: vscode.ExtensionCon
         }
         break;
       case "linux":
-        rptPath = linuxRptPath();
+        rptPath = await linuxRptPath(client, channel);
+        channel.appendLine(`Located rpt path via for Linux: ${rptPath}`);
         break;
       case "darwin":
         rptPath = path.join(process.env.HOME || "", "Library", "Application Support", "Steam", "steamapps", "common", "Arma 3");
@@ -50,16 +53,22 @@ export function init(channel: vscode.OutputChannel, context: vscode.ExtensionCon
   }));
 }
 
-function linuxRptPath(): string {
+async function linuxRptPath(client: LanguageClient, channel: vscode.OutputChannel): Promise<string> {
+  let compat_path = "compatdata/107410/pfx/drive_c/users/steamuser/AppData/Local/Arma 3/";
   if (process.env.HOME) {
-    let rptPath = path.join(process.env.HOME, ".var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/107410/pfx/drive_c/users/steamuser/AppData/Local/Arma 3/");
+    let rptPath = path.join(process.env.HOME, ".var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/" + compat_path);
     if (existsSync(rptPath)) {
       return rptPath;
     }
-    rptPath = path.join(process.env.HOME, "/.steam/steam/steamapps/compatdata/107410/pfx/drive_c/users/steamuser/AppData/Local/Arma 3/");
+    rptPath = path.join(process.env.HOME, "/.steam/steam/steamapps/" + compat_path);
     if (existsSync(rptPath)) {
       return rptPath;
     }
+  }
+  const located: string = await client.sendRequest("hemtt/rpt/locate", {}) + '/../../' + compat_path;
+  channel.appendLine(`Located rpt path via backend: ${located}`);
+  if (existsSync(located)) {
+    return located;
   }
   return "";
 }

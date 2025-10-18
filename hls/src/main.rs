@@ -25,6 +25,7 @@ mod positions;
 mod preprocessor;
 mod sqf;
 mod workspace;
+mod rpt;
 
 #[derive(Clone, clap::Args)]
 pub struct Command {
@@ -285,6 +286,7 @@ async fn server() {
         .custom_method("hemtt/paa/p3d", Backend::paa_p3d)
         .custom_method("hemtt/processed", Backend::processed)
         .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
+        .custom_method("hemtt/rpt/locate", Backend::locate_rpt)
         .finish();
     Server::new(read, write, socket).serve(service).await;
 }
