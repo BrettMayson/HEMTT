@@ -85,6 +85,7 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                             .padded()
                             .ignore_then(
                                 value()
+                                    .padded()
                                     .then_ignore(just(';').rewind())
                                     .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
                                     .padded()
@@ -344,6 +345,7 @@ mod tests {
             })
         );
         assert!(property().parse("MyProperty = 1.0.2;").is_err());
+        assert!(property().parse("MyProperty = 1 ;").is_ok());
     }
 
     #[test]
