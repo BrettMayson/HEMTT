@@ -176,10 +176,11 @@ impl GameValue {
                 set.iter().any(|s| {
                     match s {
                         Self::Anything | Self::Array(None, _) => {
-                            // println!("array (any/generic) pass");
+                            // println!("{cmd_name}: array (any/generic) pass");
                             true
                         }
                         Self::Array(Some(gv_array), _) => {
+                            // println!("{cmd_name}: array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
