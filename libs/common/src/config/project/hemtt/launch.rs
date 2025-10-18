@@ -193,7 +193,7 @@ pub struct LaunchOptionsFile {
     workshop: Vec<String>,
 
     #[serde(default)]
-    dlc: Vec<DLC>,
+    pub(crate) dlc: Vec<DLC>,
 
     #[serde(default)]
     presets: Vec<String>,
@@ -269,6 +269,22 @@ impl LaunchOptionsFile {
         self.optionals.dedup();
         self.parameters.sort();
         self.parameters.dedup();
+    }
+
+    pub fn only_extends_dlc(&self) -> bool {
+        self.extends.is_some()
+            && self.dlc.len() == 1
+            && self.workshop.is_empty()
+            && self.presets.is_empty()
+            && self.optionals.is_empty()
+            && self.mission.is_none()
+            && self.dev_mission.is_none()
+            && self.parameters.is_empty()
+            && self.executable.is_none()
+            && self.binarize.is_none()
+            && self.file_patching.is_none()
+            && self.instances.is_none()
+            && self.rapify.is_none()
     }
 }
 
