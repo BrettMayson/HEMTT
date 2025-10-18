@@ -140,6 +140,7 @@ impl<'a> Launcher<'a> {
     pub fn launch(
         &self,
         mut args: Vec<String>,
+        dry_run: bool,
         report: &mut Report,
     ) -> Result<Option<Child>, Error> {
         let mut mods = Vec::new();
@@ -301,19 +302,29 @@ impl<'a> Launcher<'a> {
         }
 
         if instances.len() == 1 {
-            Ok(Some(if cfg!(target_os = "windows") {
-                super::platforms::windows(&self.arma3, &self.executable, &instances[0])?
+            let mut cmd = if cfg!(target_os = "windows") {
+                super::platforms::windows(&self.arma3, &self.executable, &instances[0])
             } else {
-                super::platforms::linux(&instances[0])?
-            }))
+                super::platforms::linux(&instances[0])
+            }?;
+            if dry_run {
+                println!("Dry run, not launching: {cmd:?}");
+                Ok(None)
+            } else {
+                let child = cmd.spawn()?;
+                Ok(Some(child))
+            }
         } else {
             let mut children = Vec::new();
             for instance in instances {
-                children.push(if cfg!(target_os = "windows") {
-                    super::platforms::windows(&self.arma3, &self.executable, &instance)?
-                } else {
-                    super::platforms::linux(&instance)?
-                });
+                children.push(
+                    if cfg!(target_os = "windows") {
+                        super::platforms::windows(&self.arma3, &self.executable, &instance)?
+                    } else {
+                        super::platforms::linux(&instance)?
+                    }
+                    .spawn()?,
+                );
             }
             Ok(Some(
                 children.into_iter().next().expect("At least one child"),

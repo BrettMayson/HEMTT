@@ -96,6 +96,13 @@ impl Display for DLC {
 impl TryFrom<String> for DLC {
     type Error = String;
     fn try_from(dlc: String) -> Result<Self, Self::Error> {
+        Self::try_from(dlc.as_str())
+    }
+}
+
+impl TryFrom<&str> for DLC {
+    type Error = String;
+    fn try_from(dlc: &str) -> Result<Self, Self::Error> {
         Ok(
             match dlc.to_lowercase().trim_start_matches("creator dlc: ") {
                 "1021790" | "contact" => Self::Contact,

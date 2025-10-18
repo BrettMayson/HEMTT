@@ -44,6 +44,17 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
+    /// Create new launch options with a single `CDLC`
+    ///
+    /// # Errors
+    /// If the CDLC is invalid
+    pub fn new_cdlc(cdlc: &str) -> Result<Self, String> {
+        Ok(Self {
+            dlc: vec![DLC::try_from(cdlc)?],
+            ..Default::default()
+        })
+    }
+
     #[must_use]
     /// Workshop mods that should be launched with the mod
     pub fn workshop(&self) -> &[String] {
@@ -182,7 +193,7 @@ pub struct LaunchOptionsFile {
     workshop: Vec<String>,
 
     #[serde(default)]
-    dlc: Vec<DLC>,
+    pub(crate) dlc: Vec<DLC>,
 
     #[serde(default)]
     presets: Vec<String>,
@@ -258,6 +269,21 @@ impl LaunchOptionsFile {
         self.optionals.dedup();
         self.parameters.sort();
         self.parameters.dedup();
+    }
+
+    pub fn only_single_dlc(&self) -> bool {
+        self.dlc.len() == 1
+            && self.workshop.is_empty()
+            && self.presets.is_empty()
+            && self.optionals.is_empty()
+            && self.mission.is_none()
+            && self.dev_mission.is_none()
+            && self.parameters.is_empty()
+            && self.executable.is_none()
+            && self.binarize.is_none()
+            && self.file_patching.is_none()
+            && self.instances.is_none()
+            && self.rapify.is_none()
     }
 }
 

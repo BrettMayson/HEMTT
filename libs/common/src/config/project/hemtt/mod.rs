@@ -4,7 +4,11 @@ pub mod dev;
 pub mod launch;
 pub mod release;
 
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{Arc, Once},
+};
 
 use launch::LaunchOptions;
 use serde::{Deserialize, Serialize};
@@ -130,6 +134,8 @@ pub struct HemttSectionFile {
     release: release::ReleaseOptionsFile,
 }
 
+static DLC_CHECK: Once = Once::new();
+
 impl HemttSectionFile {
     pub fn into_config(self, path: &Path, prefix: &str) -> Result<HemttConfig, Error> {
         let mut launch_path = path.to_path_buf();
@@ -166,6 +172,9 @@ impl HemttSectionFile {
                 "mission is not allowed in the photoshoot preset.".to_string(),
             ));
         }
+        DLC_CHECK.call_once(|| {
+            check_dlc_presets(&launch_source);
+        });
         Ok(HemttConfig {
             check: self.check.into(),
             dev: self.dev.into(),
@@ -193,6 +202,23 @@ impl HemttSectionFile {
             build: self.build.into(),
             release: self.release.into_config(prefix),
         })
+    }
+}
+
+/// Check for redundant DLC presets
+fn check_dlc_presets(config: &HashMap<String, launch::LaunchOptionsFile>) {
+    for (name, preset) in config {
+        if (preset.extends.is_none() || preset.extends.as_deref() == Some("default"))
+            && let Ok(dlc) = crate::arma::dlc::DLC::try_from(name.as_str())
+            && preset.dlc == vec![dlc]
+            && preset.only_single_dlc()
+        {
+            tracing::warn!(
+                "launch preset `{}` is redundant, you can launch with `+{}` instead",
+                name,
+                name
+            );
+        }
     }
 }
 
