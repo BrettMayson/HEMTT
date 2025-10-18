@@ -388,7 +388,7 @@ pub fn read_config(
     configs: &[String],
     report: &mut Report,
 ) -> Option<LaunchOptions> {
-    let launch = if configs.is_empty() {
+    let launch = if configs.is_empty() || configs.iter().all(|c| c.starts_with('+')) {
         config
             .hemtt()
             .launch()
