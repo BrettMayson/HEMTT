@@ -4,7 +4,7 @@ use launcher::Launcher;
 use crate::{
     commands::launch::error::{
         bcle5_missing_main_prefix::MissingMainPrefix,
-        bcle6_launch_config_not_found::LaunchConfigNotFound,
+        bcle6_launch_config_not_found::{LaunchConfigNotFound, LaunchSource},
         bcle7_can_not_quicklaunch::CanNotQuickLaunch,
     },
     context::Context,
@@ -170,6 +170,14 @@ pub mod preset;
 ///
 /// Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
 ///
+/// ## CDLC Launch
+///
+/// To launch with a CDLC, you can avoid creating a launch configuration for each CDLC and instead use `+<cdlc name>`
+///
+/// ```bash
+/// hemtt launch my_profile +ws
+/// ```
+///
 /// ## Global Configuration
 ///
 /// Launch configuration can be stored in the [global configuration file](/configuration/global.md).
@@ -291,6 +299,10 @@ pub struct LaunchArgs {
     #[arg(long = "no-filepatching", short = 'F')]
     /// Disables file patching
     no_filepatching: bool,
+
+    #[arg(long = "dry-run", hide = true)]
+    /// Performs a dry run of the launch command
+    dry_run: bool,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -364,7 +376,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
     }
 
-    launcher.launch(Vec::new(), &mut report)?;
+    launcher.launch(Vec::new(), cmd.launch.dry_run, &mut report)?;
 
     Ok(report)
 }
@@ -390,7 +402,7 @@ pub fn read_config(
                 global.launch().profiles().get(gc).cloned().map_or_else(
                     || {
                         report.push(LaunchConfigNotFound::code(
-                            true,
+                            LaunchSource::Global,
                             gc.to_string(),
                             &global
                                 .launch()
@@ -403,11 +415,23 @@ pub fn read_config(
                     },
                     Some,
                 )
+            } else if let Some(cdlc) = c.strip_prefix("+") {
+                LaunchOptions::new_cdlc(cdlc).map_or_else(
+                    |_| {
+                        report.push(LaunchConfigNotFound::code(
+                            LaunchSource::CDLC,
+                            cdlc.to_string(),
+                            &[],
+                        ));
+                        None
+                    },
+                    Some,
+                )
             } else {
                 config.hemtt().launch().get(c).cloned().map_or_else(
                     || {
                         report.push(LaunchConfigNotFound::code(
-                            false,
+                            LaunchSource::Project,
                             c.clone(),
                             &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                         ));

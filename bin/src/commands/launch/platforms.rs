@@ -1,11 +1,12 @@
 use std::{
     path::{Path, PathBuf},
-    process::Child,
+    process::Command,
 };
 
 use crate::Error;
 
-pub fn windows(arma3: &Path, executable: &str, args: &[String]) -> Result<Child, Error> {
+#[allow(clippy::unnecessary_wraps)] // To match the linux function signature
+pub fn windows(arma3: &Path, executable: &str, args: &[String]) -> Result<Command, Error> {
     let mut path = arma3.to_path_buf();
     let exe = PathBuf::from(executable);
     if exe.is_absolute() {
@@ -19,10 +20,12 @@ pub fn windows(arma3: &Path, executable: &str, args: &[String]) -> Result<Child,
         arma3.display(),
         args.join("\n  ")
     );
-    Ok(std::process::Command::new(path).args(args).spawn()?)
+    let mut cmd = std::process::Command::new(path);
+    cmd.args(args);
+    Ok(cmd)
 }
 
-pub fn linux(args: &[String]) -> Result<Child, Error> {
+pub fn linux(args: &[String]) -> Result<Command, Error> {
     // check if flatpak steam is installed
     let flatpak = std::process::Command::new("flatpak")
         .arg("list")
@@ -32,7 +35,7 @@ pub fn linux(args: &[String]) -> Result<Child, Error> {
             |_| false,
             |o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"),
         );
-    let child = if flatpak {
+    let cmd = if flatpak {
         warn!(
             "A flatpak override will be created to grant Steam access to the .hemttout directory"
         );
@@ -48,16 +51,16 @@ pub fn linux(args: &[String]) -> Result<Child, Error> {
             }))
             .spawn()?
             .wait()?;
-        std::process::Command::new("flatpak")
-            .arg("run")
+        let mut cmd = std::process::Command::new("flatpak");
+        cmd.arg("run")
             .arg("com.valvesoftware.Steam")
             .arg("-applaunch")
             .arg("107410")
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()?
+            .stderr(std::process::Stdio::null());
+        cmd
     } else if std::path::Path::new("/bin/distrobox-host-exec").exists()
         || std::path::Path::new("/usr/bin/distrobox-host-exec").exists()
     {
@@ -65,25 +68,25 @@ pub fn linux(args: &[String]) -> Result<Child, Error> {
             "Using distrobox-host-exec steam with:\n  {}",
             args.join("\n  ")
         );
-        std::process::Command::new("distrobox-host-exec")
-            .arg("steam")
+        let mut cmd = std::process::Command::new("distrobox-host-exec");
+        cmd.arg("steam")
             .arg("-applaunch")
             .arg("107410")
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()?
+            .stderr(std::process::Stdio::null());
+        cmd
     } else {
         info!("Using native steam with:\n  {}", args.join("\n  "));
-        std::process::Command::new("steam")
-            .arg("-applaunch")
+        let mut cmd = std::process::Command::new("steam");
+        cmd.arg("-applaunch")
             .arg("107410")
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()?
+            .stderr(std::process::Stdio::null());
+        cmd
     };
-    Ok(child)
+    Ok(cmd)
 }

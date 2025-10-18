@@ -175,7 +175,7 @@ fn launch(
     args.push(format!("-cfg=\"{}\\arma3.cfg\"", ctx.profile().display()));
     args.push(format!("-mod=\"{}\\@hemtt\"", ctx.profile().display()));
 
-    let child = launcher.launch(args, &mut report)?;
+    let child = launcher.launch(args, false, &mut report)?;
     Ok((report, child))
 }
 

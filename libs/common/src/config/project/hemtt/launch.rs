@@ -44,6 +44,17 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
+    /// Create new launch options with a single `CDLC`
+    ///
+    /// # Errors
+    /// If the CDLC is invalid
+    pub fn new_cdlc(cdlc: &str) -> Result<Self, String> {
+        Ok(Self {
+            dlc: vec![DLC::try_from(cdlc)?],
+            ..Default::default()
+        })
+    }
+
     #[must_use]
     /// Workshop mods that should be launched with the mod
     pub fn workshop(&self) -> &[String] {
