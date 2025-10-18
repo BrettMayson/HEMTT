@@ -63,9 +63,7 @@ mod tests {
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
-        let file = "test_wiki_examples.sqf";
-        let mut all_examples = String::new();
-        all_examples.push_str("a=1; b=2;"); // gvars get defined in some examples
+        let mut all_examples = String::from("a=1; b=2;"); // gvars get defined in some examples
         let re = regex::Regex::new(r"(?is)<sqf>(.*?)<\/sqf>").expect("regex");
         let database = hemtt_sqf::parser::database::Database::a3(false);
         for (_name, cmd) in database.wiki().commands().iter() {
@@ -97,14 +95,15 @@ mod tests {
             }
         }
 
-        let folder = std::path::PathBuf::from(crate::ROOT);
         let workspace = hemtt_workspace::Workspace::builder()
-            .physical(&folder, hemtt_workspace::LayerType::Source)
+            .memory()
             .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .expect("for test");
-        let source = workspace.join(file).expect("for test");
-        let mut output = source.create_file().expect("for test");
-        output.write_all(all_examples.as_bytes()).expect("for test");
+        let source = workspace.join("test_wiki_examples.sqf").expect("for test");
+        {
+            let mut output = source.create_file().expect("for test");
+            output.write_all(all_examples.as_bytes()).expect("for test");
+        }
 
         let processed = hemtt_preprocessor::Processor::run(
             &source,
@@ -121,7 +120,6 @@ mod tests {
             .iter()
             .filter(|i| matches!(i, Issue::InvalidArgs(..))) // ignore unused/undefined...
             .collect::<Vec<_>>();
-        source.vfs().remove_file().expect("vfs error");
         assert!(invalid_args.is_empty(), "{invalid_args:#?}");
     }
 }
