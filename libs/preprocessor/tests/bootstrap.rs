@@ -55,6 +55,7 @@ bootstrap!(cba_multiline);
 bootstrap!(comment_edgecase);
 bootstrap!(comment_in_quote);
 bootstrap!(define_builtin);
+bootstrap!(define_comment);
 bootstrap!(define_function_empty);
 bootstrap!(define_function_multiline);
 bootstrap!(define_function);
