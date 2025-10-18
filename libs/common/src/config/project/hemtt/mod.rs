@@ -211,7 +211,7 @@ fn check_dlc_presets(config: &HashMap<String, launch::LaunchOptionsFile>) {
         if (preset.extends.is_none() || preset.extends.as_deref() == Some("default"))
             && let Ok(dlc) = crate::arma::dlc::DLC::try_from(name.as_str())
             && preset.dlc == vec![dlc]
-            && preset.only_extends_dlc()
+            && preset.only_single_dlc()
         {
             tracing::warn!(
                 "launch preset `{}` is redundant, you can launch with `+{}` instead",
