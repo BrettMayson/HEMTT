@@ -11,3 +11,6 @@ options.forced = ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive"
 
 [lints.config.config_this_call]
 enabled = true
+
+[lints.config.cfgpatches_scope]
+options.ignore_prefixes = ["test"]
