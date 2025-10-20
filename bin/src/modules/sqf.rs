@@ -117,7 +117,7 @@ impl Module for SQFCompiler {
                         if processed.as_str().starts_with("force ")
                             || processed.as_str().contains("\nforce ")
                         {
-                            warn!("skipping apparent CBA settings file: {}", entry);
+                            debug!("skipping apparent CBA settings file: {}", entry);
                         } else {
                             for error in e {
                                 report.push(error);

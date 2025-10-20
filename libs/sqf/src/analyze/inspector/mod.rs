@@ -444,6 +444,7 @@ impl SciptScope {
             }
             Expression::ConsumeableArray(_, _) => unreachable!(""),
         };
+        #[cfg(debug_assertions)]
         trace!(
             "eval expression{}->{:?}",
             debug_type,
