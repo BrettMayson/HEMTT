@@ -43,7 +43,7 @@ nonstandard_style = "warn"
 arma3-wiki = "0.4.1"
 automod =  "1.0.15"
 byteorder = "1.5.0"
-chumsky = "0.9.3"
+chumsky = "0.11.1"
 clap = "4.5.48"
 codespan-reporting = { version = "0.12.0", features = ["serialization"] }
 dashmap = "6.1.0"
