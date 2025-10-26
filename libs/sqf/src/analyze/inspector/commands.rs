@@ -1,6 +1,6 @@
 //! Emulates engine commands
 
-use std::ops::Range;
+use std::{ops::Range, vec};
 
 use indexmap::IndexSet;
 
@@ -57,72 +57,117 @@ impl SciptScope {
         IndexSet::new()
     }
     #[must_use]
-    pub fn cmd_generic_params(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
+    pub fn cmd_generic_params(
+        &mut self,
+        rhs: &IndexSet<GameValue>,
+        debug_type: &str,
+        source: &Range<usize>,
+    ) -> IndexSet<GameValue> {
+        let mut error_type = String::new();
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
             };
 
-            for gv_index in gv_array {
+            for (gv_index_num, gv_index) in gv_array.iter().enumerate() {
                 for element in gv_index {
                     match element {
-                        GameValue::String(Some(Expression::String(var, source, _))) => {
-                            if var.is_empty() {
-                                continue;
-                            }
-                            self.var_assign(
-                                var.as_ref(),
-                                true,
-                                IndexSet::from([GameValue::Anything]),
-                                VarSource::Params(source.clone()),
+                        GameValue::Anything | GameValue::Array(None, _) => {}
+                        GameValue::String(_) => {
+                            self.cmd_generic_params_element(
+                                &[vec![element.clone()]], // put it in a dummy array
+                                gv_index_num,
+                                &mut error_type,
                             );
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            if arg_array.is_empty() || arg_array[0].is_empty() {
-                                continue;
-                            }
-                            let GameValue::String(Some(Expression::String(var_name, source, _))) =
-                                &arg_array[0][0]
-                            else {
-                                continue;
-                            };
-                            if var_name.is_empty() {
-                                continue;
-                            }
-                            let mut var_types = IndexSet::new();
-                            if arg_array.len() > 2 {
-                                for type_p in &arg_array[2] {
-                                    if let GameValue::Array(Some(type_array), _) = type_p {
-                                        for type_i in type_array {
-                                            var_types
-                                                .extend(type_i.iter().map(GameValue::make_generic));
-                                        }
-                                    }
-                                }
-                            }
-                            if var_types.is_empty() {
-                                var_types.insert(GameValue::Anything);
-                            }
-                            // Add the default value to types
-                            // It would be nice to move this above the is_empty check but not always safe
-                            // ie: assume `params ["_z", ""]` is type string, but this is not guarentted
-                            if arg_array.len() > 1 && !arg_array[1].is_empty() {
-                                var_types.insert(arg_array[1][0].clone());
-                            }
-                            self.var_assign(
-                                var_name.as_ref(),
-                                true,
-                                var_types,
-                                VarSource::Params(source.clone()),
+                            self.cmd_generic_params_element(
+                                arg_array,
+                                gv_index_num,
+                                &mut error_type,
                             );
                         }
-                        _ => {}
+
+                        _ => {
+                            error_type = format!("{gv_index_num}: Element Type");
+                        }
                     }
                 }
             }
         }
+        if !error_type.is_empty() {
+            self.errors.insert(Issue::InvalidArgs(
+                format!("{debug_type} - {error_type}"),
+                source.clone(),
+            ));
+        }
         IndexSet::from([GameValue::Boolean(None)])
     }
+
+    pub fn cmd_generic_params_element(
+        &mut self,
+        element: &[Vec<GameValue>],
+        gv_index_num: usize,
+        error_type: &mut String,
+    ) {
+        if element.is_empty() || element[0].is_empty() {
+            return;
+        }
+        match &element[0][0] {
+            GameValue::String(None) | GameValue::Anything => {}
+            GameValue::String(Some(Expression::String(var_name, source, _))) => {
+                if var_name.is_empty() {
+                    return;
+                }
+                let mut var_types = IndexSet::new();
+                if element.len() > 2 {
+                    for type_p in &element[2] {
+                        match type_p {
+                            GameValue::Array(Some(type_array), _) => {
+                                for type_i in type_array {
+                                    var_types.extend(type_i.iter().map(GameValue::make_generic));
+                                }
+                            }
+                            GameValue::Array(None, _) | GameValue::Anything => {}
+                            _ => {
+                                *error_type = format!("{gv_index_num}: Expected Data Types");
+                            }
+                        }
+                    }
+                }
+                if var_types.is_empty() {
+                    var_types.insert(GameValue::Anything);
+                }
+                // Add the default value to types
+                // It would be nice to move this above the is_empty check but not always safe
+                // ie: assume `params ["_z", ""]` is type string, but this is not guaranteed
+                if element.len() > 1 && !element[1].is_empty() {
+                    let default_value = element[1][0].clone();
+                    // Verify that the default value matches one of the types
+                    if !(matches!(default_value, GameValue::Anything)
+                        || matches!(default_value, GameValue::Nothing)
+                        || var_types.iter().any(|t| {
+                            matches!(t, GameValue::Anything) || t == &default_value.make_generic()
+                        }))
+                    {
+                        *error_type =
+                            format!("{gv_index_num}: Default Value does not match declared types");
+                    }
+                    var_types.insert(default_value);
+                }
+                self.var_assign(
+                    var_name.as_ref(),
+                    true,
+                    var_types,
+                    VarSource::Params(source.clone()),
+                );
+            }
+            _ => {
+                *error_type = format!("{gv_index_num}: Element Type");
+            }
+        }
+    }
+
     #[must_use]
     pub fn cmd_generic_call(
         &mut self,
