@@ -26,7 +26,7 @@ jobs:
         mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
         mv libs/paa/pkg/hemtt_paa.js hemtt_paa.js
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: wasm
         path: |
@@ -57,7 +57,7 @@ jobs:
         zip -r firefox.zip *
         mv firefox.zip ../firefox.zip
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: firefox
         path: firefox.zip
@@ -86,7 +86,7 @@ jobs:
         zip -r chrome.zip *
         mv chrome.zip ../chrome.zip
     - name: Upload
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: chrome
         path: chrome.zip

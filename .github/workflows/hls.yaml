@@ -42,13 +42,13 @@ jobs:
           cd hls
           cargo build --release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
       - name: Upload Language (Linux)
         if: startsWith(matrix.os.runner, 'ubuntu')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: languages
           path: hls/languages
@@ -92,7 +92,7 @@ jobs:
           npm install -g @vscode/vsce
           vsce package
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: hls
           path: hls/*.vsix
