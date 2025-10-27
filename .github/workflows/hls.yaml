@@ -62,11 +62,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: linux-x64
           path: linux
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: windows-x64
           path: windows
@@ -81,7 +81,7 @@ jobs:
         run: |
           rm -rf hls/languages
       - name: Download Languages
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: languages
           path: hls/languages
