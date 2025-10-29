@@ -128,8 +128,8 @@ fn check_item(
                 check_item(element, processed, config, check_if_equation, codes);
             }
         }
-        Item::Str(taget_str) => {
-            check_str(taget_str, processed, config, check_if_equation, codes);
+        Item::Str(target_str) => {
+            check_str(target_str, processed, config, check_if_equation, codes);
         }
         _ => {}
     }

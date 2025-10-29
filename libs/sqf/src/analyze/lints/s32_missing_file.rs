@@ -1,39 +1,34 @@
 use std::{ops::Range, sync::Arc};
 
-use hemtt_common::config::{LintConfig, ProjectConfig};
+use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, Value};
+use crate::{analyze::LintData, Expression};
 
-crate::analyze::lint!(LintC15FileMissing);
+crate::analyze::lint!(LintS30ConfigOf);
 
-impl Lint<LintData> for LintC15FileMissing {
+impl Lint<LintData> for LintS30ConfigOf {
     fn ident(&self) -> &'static str {
-        "file_missing"
+        "missing_file"
     }
-
     fn sort(&self) -> u32 {
-        150
+        320
     }
-
     fn description(&self) -> &'static str {
-        "Checks for missing files referenced in config"
+        "Checks for missing files referenced in sqf"
     }
-
     fn documentation(&self) -> &'static str {
         "### Explanation
 
 Files should exists
 "
     }
-
     fn default_config(&self) -> LintConfig {
         LintConfig::warning()
     }
-
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
@@ -41,26 +36,27 @@ Files should exists
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Value;
+    type Target = crate::Expression;
+
     fn run(
         &self,
-        project: Option<&ProjectConfig>,
+        project: Option<&hemtt_common::config::ProjectConfig>,
         config: &LintConfig,
-        processed: Option<&Processed>,
+        processed: Option<&hemtt_workspace::reporting::Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Value,
+        target: &Self::Target,
         _data: &LintData,
-    ) -> Vec<std::sync::Arc<dyn Code>> {
+    ) -> Codes {
         let Some(project) = project else {
             return Vec::new();
         };
         let Some(processed) = processed else {
-            return vec![];
+            return Vec::new();
         };
-        let Value::Str(target_str) = target else {
-            return vec![];
+        let Expression::String(target_str, span, _) = target else {
+            return Vec::new();
         };
-        let input_lower = target_str.value().to_ascii_lowercase();
+        let input_lower = target_str.to_ascii_lowercase();
         // ref c11:allow_no_extension
         if !input_lower.contains('.') || input_lower.contains("%1") {
             return vec![];
@@ -95,11 +91,10 @@ impl LintRunner<LintData> for Runner {
         if path.exists().unwrap_or(false) {
             return vec![];
         }
-
-        let span = target_str.span();
-        vec![Arc::new(Code15FileMissing::new(
+        let span = span.start + 1..span.end - 1;
+        vec![Arc::new(CodeS32MissingFile::new(
+            target_str.to_string(),
             span,
-            target_str.value().to_owned(),
             processed,
             config.severity(),
         ))]
@@ -107,19 +102,19 @@ impl LintRunner<LintData> for Runner {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct Code15FileMissing {
+pub struct CodeS32MissingFile {
     span: Range<usize>,
     path: String,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for Code15FileMissing {
+impl Code for CodeS32MissingFile {
     fn ident(&self) -> &'static str {
-        "L-C15"
+        "L-C32"
     }
     fn link(&self) -> Option<&str> {
-        Some("/lints/config.html#file_missing")
+        Some("/lints/sqf.html#file_missing")
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -138,17 +133,17 @@ impl Code for Code15FileMissing {
     }
 }
 
-impl Code15FileMissing {
+impl CodeS32MissingFile {
     #[must_use]
     pub fn new(
-        span: Range<usize>,
         path: String,
+        span: Range<usize>,
         processed: &Processed,
         severity: Severity,
     ) -> Self {
         Self {
-            span,
             path,
+            span,
             severity,
             diagnostic: None,
         }
