@@ -1,0 +1,11 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c15_file_missing)).0
+---
+[0m[1m[38;5;11mwarning[L-C15][0m[1m: File Missing[0m
+  [0m[36m┌─[0m c15_file_missing.hpp:5:9
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m test5 = [0m[33m"\abe\actuallymissing.paa"[0m;
+  [0m[36m│[0m         [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33mmissing[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: file '\abe\actuallymissing.paa' was not found in project
