@@ -127,6 +127,19 @@ fn check_str(
     if path.exists().unwrap_or(false) {
         return;
     }
+    #[allow(clippy::case_sensitive_file_extension_comparisons)]
+    // check for alternative extensions for textures
+    for (x, y) in [(".paa", ".tga"), (".tga", ".paa"), (".png", ".paa")] {
+        if relative_path.ends_with(x)
+            && root
+                .join(relative_path.replace(x, y))
+                .expect("Failed to join path")
+                .exists()
+                .unwrap_or(false)
+        {
+            return;
+        }
+    }
     let span = target_str.span().start + 1..target_str.span().end - 1;
     codes.push(Arc::new(Code16FileMissing::new(
         span,

@@ -91,6 +91,19 @@ impl LintRunner<LintData> for Runner {
         if path.exists().unwrap_or(false) {
             return vec![];
         }
+        #[allow(clippy::case_sensitive_file_extension_comparisons)]
+        // check for alternative extensions for textures
+        for (x, y) in [(".paa", ".tga"), (".tga", ".paa"), (".png", ".paa")] {
+            if relative_path.ends_with(x)
+                && root
+                    .join(relative_path.replace(x, y))
+                    .expect("Failed to join path")
+                    .exists()
+                    .unwrap_or(false)
+            {
+                return vec![];
+            }
+        }
         let span = span.start + 1..span.end - 1;
         vec![Arc::new(CodeS32MissingFile::new(
             target_str.to_string(),
