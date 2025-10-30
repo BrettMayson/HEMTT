@@ -15,17 +15,17 @@ use super::{SciptScope, game_value::GameValue};
 impl SciptScope {
     #[must_use]
     pub fn cmd_u_private(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
-        fn push_var(s: &mut SciptScope, var: &String, source: &Range<usize>) {
+        fn push_var(s: &mut SciptScope, var: &str, source: &Range<usize>) {
             if s.ignored_vars.contains(&var.to_ascii_lowercase()) {
                 s.var_assign(
-                    &var.to_string(),
+                    var,
                     true,
                     IndexSet::from([GameValue::Anything]),
                     VarSource::Ignore,
                 );
             } else {
                 s.var_assign(
-                    &var.to_string(),
+                    var,
                     true,
                     IndexSet::from([GameValue::Nothing]),
                     VarSource::Private(source.clone()),
@@ -43,7 +43,7 @@ impl SciptScope {
                         if var.is_empty() {
                             continue;
                         }
-                        push_var(self, &var.to_string(), source);
+                        push_var(self, var, source);
                     }
                 }
             }
@@ -51,7 +51,7 @@ impl SciptScope {
                 if var.is_empty() {
                     continue;
                 }
-                push_var(self, &var.to_string(), source);
+                push_var(self, var, source);
             }
         }
         IndexSet::new()
