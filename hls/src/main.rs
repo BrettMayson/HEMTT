@@ -23,9 +23,9 @@ mod p3d;
 mod paa;
 mod positions;
 mod preprocessor;
+mod rpt;
 mod sqf;
 mod workspace;
-mod rpt;
 
 #[derive(Clone, clap::Args)]
 pub struct Command {
