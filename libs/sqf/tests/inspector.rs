@@ -27,6 +27,7 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
 #[cfg(test)]
 mod tests {
     use crate::get_statements;
+    use hemtt_sqf::analyze::inspector::Issue;
 
     #[test]
     pub fn test_0() {
@@ -58,5 +59,67 @@ mod tests {
         let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
         let issues = sqf.issues();
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
+    }
+    #[test]
+    #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
+    pub fn test_wiki_examples() {
+        let mut all_examples = String::from("a=1; b=2;"); // gvars get defined in some examples
+        let re = regex::Regex::new(r"(?is)<sqf>(.*?)<\/sqf>").expect("regex");
+        let database = hemtt_sqf::parser::database::Database::a3(false);
+        for (_name, cmd) in database.wiki().commands().iter() {
+            if cmd.groups().contains(&String::from("Broken Commands")) {
+                continue;
+            }
+            if [
+                "menuenable",         // example 3 "do not use"
+                "local",              // example "do not use"
+                "sleep",              // example "do not use"
+                "execeditorscript",   // "some old editor command"
+                "getobjectargument",  // "some old editor command"
+                "evalobjectargument", // "some old editor command"
+                "isnull",             // example - creatediaryrecord null
+                "buttonaction",       // example
+                "privateall",         // example
+            ]
+            .contains(&cmd.name().to_ascii_lowercase().as_str())
+            {
+                continue;
+            }
+            for example in cmd.examples() {
+                for cap in re.captures_iter(example) {
+                    // run each in it's own scope to avoid cross-example issues
+                    all_examples.push_str("\n[] spawn {\n");
+                    all_examples.push_str(&cap[1]);
+                    all_examples.push_str("\n};");
+                }
+            }
+        }
+
+        let workspace = hemtt_workspace::Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("for test");
+        let source = workspace.join("test_wiki_examples.sqf").expect("for test");
+        {
+            let mut output = source.create_file().expect("for test");
+            output.write_all(all_examples.as_bytes()).expect("for test");
+        }
+
+        let processed = hemtt_preprocessor::Processor::run(
+            &source,
+            &hemtt_common::config::PreprocessorOptions::default(),
+        )
+        .expect("for test");
+        let statements = hemtt_sqf::parser::run(
+            &hemtt_sqf::parser::database::Database::a3(false),
+            &processed,
+        )
+        .expect("for test");
+        let invalid_args = statements
+            .issues()
+            .iter()
+            .filter(|i| matches!(i, Issue::InvalidArgs(..))) // ignore unused/undefined...
+            .collect::<Vec<_>>();
+        assert!(invalid_args.is_empty(), "{invalid_args:#?}");
     }
 }
