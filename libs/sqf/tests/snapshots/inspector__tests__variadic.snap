@@ -2,4 +2,4 @@
 source: libs/sqf/tests/inspector.rs
 expression: "(issues.len(), issues)"
 ---
-(1, [InvalidArgs("[U:createHashMapFromArray]", 684..706)])
+(7, [InvalidArgs("[U:createHashMapFromArray]", 684..706), InvalidArgs("[U:params] - 1: Element Type", 1050..1056), InvalidArgs("[U:params] - 0: Expected Data Types", 1077..1083), InvalidArgs("[U:params] - 0: Default Value does not match declared types", 1105..1111), Unused("_var1", Params(1058..1065)), Unused("_var2", Params(1086..1093)), Unused("_var3", Params(1114..1121))])

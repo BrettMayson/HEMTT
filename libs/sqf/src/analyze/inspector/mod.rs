@@ -284,7 +284,7 @@ impl SciptScope {
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
-                        "params" => Some(self.cmd_generic_params(&rhs_set)),
+                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "private" => Some(self.cmd_u_private(&rhs_set)),
                         "call" => Some(self.cmd_generic_call(&rhs_set, database)),
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
@@ -358,7 +358,7 @@ impl SciptScope {
                             self.cmd_generic_modify_lvalue(lhs);
                             None
                         }
-                        "params" => Some(self.cmd_generic_params(&rhs_set)),
+                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "call" => {
                             self.external_function(&lhs_set, rhs, database);
                             Some(self.cmd_generic_call(&rhs_set, database))
@@ -531,7 +531,7 @@ pub fn run_processed(
     scope.eval_statements(statements, database);
     let rv: Vec<Issue> = scope.finish(true, database).into_iter().collect();
     // for ig in ignored_vars.clone() {
-    //     if ig == "_this" {
+    //     if ig == "_this" || ig == "_fnc_scriptname" || ig == "_fnc_scriptnameparent" {
     //         continue;
     //     }
     //     let mut igtest = ignored_vars.clone();
