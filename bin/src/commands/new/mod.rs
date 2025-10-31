@@ -120,8 +120,7 @@ pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
 
     // Create LICENSE
     if let Some(license) = license {
-        let mut file = std::fs::File::create(path.join("LICENSE"))?;
-        file.write_all(license.as_bytes())?;
+        crate::commands::license::write_license_file(&license, &path.join("LICENSE"))?;
     }
 
     Ok(report)
