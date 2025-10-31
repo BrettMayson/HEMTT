@@ -48,7 +48,7 @@ jobs:
       - name: Compile
         run: cargo build --release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
