@@ -1,8 +1,9 @@
 use std::path::Path;
 
-use dialoguer::Input;
+use dialoguer::{Confirm, Input};
 
 use crate::{
+    context::Context,
     error::Error,
     modules::Licenses,
     report::Report,
@@ -45,6 +46,20 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     // Get author from project.toml if it exists, otherwise prompt
     let author = get_author_from_project_or_prompt()?;
 
+    // Check if LICENSE file already exists and prompt for confirmation
+    let license_path = Path::new("LICENSE");
+    if license_path.exists() {
+        let confirm = Confirm::new()
+            .with_prompt("LICENSE file already exists. Do you want to overwrite it?")
+            .default(false)
+            .interact()?;
+        
+        if !confirm {
+            println!("License update cancelled.");
+            return Ok(report);
+        }
+    }
+
     let license_text = if let Some(name) = &cmd.name {
         // Use the provided license name
         match Licenses::get_by_name(name, &author) {
@@ -74,8 +89,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     };
 
     // Write the license file
-    let license_path = Path::new("LICENSE");
-    Licenses::write_license_file(&license_text, license_path)?;
+    write_license_file(&license_text, license_path)?;
 
     println!("License file created successfully at: LICENSE");
 
@@ -83,22 +97,19 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 }
 
 fn get_author_from_project_or_prompt() -> Result<String, Error> {
-    let project_path = std::env::current_dir()?.join(".hemtt").join("project.toml");
-    
-    if project_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(&project_path) {
-            // Simple TOML parsing to extract author field
-            for line in content.lines() {
-                let line = line.trim();
-                if line.starts_with("author") {
-                    if let Some(value) = line.split('=').nth(1) {
-                        let author = value.trim().trim_matches('"').trim_matches('\'');
-                        if !author.is_empty() {
-                            return Ok(author.to_string());
-                        }
-                    }
-                }
+    // Try to read the project config properly
+    match Context::read_project() {
+        Ok(config) => {
+            if let Some(author) = config.author() {
+                return Ok(author.clone());
             }
+        }
+        Err(Error::ConfigNotFound) => {
+            // No project config, will prompt for author
+        }
+        Err(e) => {
+            // Other error, log but continue to prompt
+            warn!("Failed to read project config: {}", e);
         }
     }
     
@@ -109,4 +120,18 @@ fn get_author_from_project_or_prompt() -> Result<String, Error> {
 fn prompt_for_author() -> Result<String, Error> {
     println!("Example: John Doe");
     Ok(Input::new().with_prompt("Author").interact_text()?)
+}
+
+/// Write a license file to the given path
+///
+/// # Errors
+/// Returns an error if the file cannot be created or written to
+pub fn write_license_file(
+    license_text: &str,
+    path: &std::path::Path,
+) -> Result<(), std::io::Error> {
+    use std::io::Write;
+    let mut file = std::fs::File::create(path)?;
+    file.write_all(license_text.as_bytes())?;
+    Ok(())
 }

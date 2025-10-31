@@ -75,18 +75,4 @@ impl Licenses {
             ))
         }
     }
-
-    /// Write a license file to the given path
-    ///
-    /// # Errors
-    /// Returns an error if the file cannot be created or written to
-    pub fn write_license_file(
-        license_text: &str,
-        path: &std::path::Path,
-    ) -> Result<(), std::io::Error> {
-        use std::io::Write;
-        let mut file = std::fs::File::create(path)?;
-        file.write_all(license_text.as_bytes())?;
-        Ok(())
-    }
 }
