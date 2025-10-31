@@ -40,8 +40,8 @@ impl Licenses {
         };
         #[allow(clippy::literal_string_with_formatting_args)]
         {
-            Some(license.replace("{author}", author).replace(
-                "{year}",
+            Some(license.replace("{AUTHOR}", author).replace(
+                "{YEAR}",
                 time::OffsetDateTime::now_utc().year().to_string().as_str(),
             ))
         }
@@ -69,8 +69,8 @@ impl Licenses {
         };
         #[allow(clippy::literal_string_with_formatting_args)]
         {
-            Some(license.replace("{author}", author).replace(
-                "{year}",
+            Some(license.replace("{AUTHOR}", author).replace(
+                "{YEAR}",
                 time::OffsetDateTime::now_utc().year().to_string().as_str(),
             ))
         }
