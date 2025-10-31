@@ -70,7 +70,7 @@ whoami = "1.6.1"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-enable-ansi-support = "0.2.1"
+enable-ansi-support = "0.3.1"
 winapi = { version = "0.3.9", features = ["winuser"] }
 winreg = "0.55.0"
 
