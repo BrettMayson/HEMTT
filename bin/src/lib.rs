@@ -55,6 +55,7 @@ enum Commands {
     Check(commands::check::Command),
     Dev(commands::dev::Command),
     Launch(commands::launch::Command),
+    License(commands::license::Command),
     Build(commands::build::Command),
     Release(commands::release::Command),
     #[clap(alias = "ln")]
@@ -107,6 +108,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                         | Commands::Wiki(_)
                         | Commands::New(_)
                         | Commands::Book(_)
+                        | Commands::License(_)
                         | Commands::Manage(_)
                 )
             ),
@@ -138,6 +140,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Check(cmd) => commands::check::execute(cmd),
         Commands::Dev(cmd) => commands::dev::execute(cmd, &[], false).map(|(r, _)| r),
         Commands::Launch(cmd) => commands::launch::execute(cmd),
+        Commands::License(cmd) => commands::license::execute(cmd),
         Commands::Build(cmd) => commands::build::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Localization(cmd) => commands::localization::execute(cmd),
@@ -155,7 +158,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             report.write_to_stdout();
             if !matches!(
                 cli.command,
-                Some(Commands::New(_) | Commands::Utils(_) | Commands::Wiki(_))
+                Some(Commands::New(_) | Commands::License(_) | Commands::Utils(_) | Commands::Wiki(_))
             ) {
                 report.write_ci_annotations()?;
             }
