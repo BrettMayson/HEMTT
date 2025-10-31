@@ -43,6 +43,23 @@ pub struct Command {
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let report = Report::new();
 
+    // If a license name is provided, validate it early
+    if let Some(name) = &cmd.name {
+        // Quick validation before prompting for anything
+        if Licenses::get_by_name(name, "dummy").is_none() {
+            eprintln!("Error: Unknown license name: {}", name);
+            eprintln!("\nAvailable licenses:");
+            eprintln!("  - apl-sa (Arma Public License Share Alike)");
+            eprintln!("  - apl (Arma Public License)");
+            eprintln!("  - apl-nd (Arma Public License No Derivatives)");
+            eprintln!("  - apache (Apache 2.0)");
+            eprintln!("  - gpl (GNU GPL v3)");
+            eprintln!("  - mit (MIT)");
+            eprintln!("  - unlicense (Unlicense)");
+            return Ok(report);
+        }
+    }
+
     // Get author from project.toml if it exists, otherwise prompt
     let author = get_author_from_project_or_prompt()?;
 
@@ -61,22 +78,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
 
     let license_text = if let Some(name) = &cmd.name {
-        // Use the provided license name
-        match Licenses::get_by_name(name, &author) {
-            Some(text) => text,
-            None => {
-                eprintln!("Error: Unknown license name: {}", name);
-                eprintln!("\nAvailable licenses:");
-                eprintln!("  - apl-sa (Arma Public License Share Alike)");
-                eprintln!("  - apl (Arma Public License)");
-                eprintln!("  - apl-nd (Arma Public License No Derivatives)");
-                eprintln!("  - apache (Apache 2.0)");
-                eprintln!("  - gpl (GNU GPL v3)");
-                eprintln!("  - mit (MIT)");
-                eprintln!("  - unlicense (Unlicense)");
-                return Ok(report);
-            }
-        }
+        // Use the provided license name (already validated above)
+        Licenses::get_by_name(name, &author).expect("License name already validated")
     } else {
         // Interactive selection
         match Licenses::select(&author) {
