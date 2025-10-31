@@ -84,8 +84,9 @@ impl Licenses {
         license_text: &str,
         path: &std::path::Path,
     ) -> Result<(), std::io::Error> {
+        use std::io::Write;
         let mut file = std::fs::File::create(path)?;
-        std::io::Write::write_all(&mut file, license_text.as_bytes())?;
+        file.write_all(license_text.as_bytes())?;
         Ok(())
     }
 }
