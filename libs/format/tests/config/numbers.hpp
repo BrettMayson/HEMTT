@@ -1,0 +1,17 @@
+class numbers {
+    hex=0xDEADBEEF;
+    number = 0x123;
+    exponent = 123e10;
+    exponent = 123e-10;
+    int = 123;
+    float = 123.456;
+    negative = -123;
+    negativeFloat = -123.456;
+    complex = -123.456e-10;
+
+    addition = 1 + 2;
+    subtraction = 1 - 2;
+    negativeSubtraction = -1 - -2;
+
+    brackets = (1 + 2) * (-1 - -2);
+};

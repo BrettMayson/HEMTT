@@ -59,6 +59,8 @@ enum Commands {
     Release(commands::release::Command),
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
+    #[clap(alias = "fmt")]
+    Format(commands::format::Command),
     Script(commands::script::Command),
     Utils(commands::utils::Command),
     Value(commands::value::Command),
@@ -104,10 +106,11 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 cli.command,
                 Some(
                     Commands::Utils(_)
-                        | Commands::Wiki(_)
-                        | Commands::New(_)
                         | Commands::Book(_)
+                        | Commands::Format(_)
                         | Commands::Manage(_)
+                        | Commands::New(_)
+                        | Commands::Wiki(_)
                 )
             ),
         )?;
@@ -141,6 +144,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Build(cmd) => commands::build::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Localization(cmd) => commands::localization::execute(cmd),
+        Commands::Format(cmd) => commands::format::execute(cmd),
         Commands::Script(cmd) => commands::script::execute(cmd),
         Commands::Utils(cmd) => commands::utils::execute(cmd),
         Commands::Value(cmd) => commands::value::execute(cmd),
@@ -155,7 +159,9 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             report.write_to_stdout();
             if !matches!(
                 cli.command,
-                Some(Commands::New(_) | Commands::Utils(_) | Commands::Wiki(_))
+                Some(
+                    Commands::New(_) | Commands::Utils(_) | Commands::Wiki(_) | Commands::Format(_)
+                )
             ) {
                 report.write_ci_annotations()?;
             }

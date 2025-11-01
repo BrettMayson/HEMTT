@@ -1,0 +1,16 @@
+if (isServer) then {
+    [QGVAR(zeusUnitAssigned), LINKFUNC(handleZeusUnitAssigned)] call CBA_fnc_addEventHandler;
+
+    // Only add an InitPost EH if setting is enabled (and apply retroactively)
+    ["CBA_settingsInitialized", {
+        if (GVAR(autoAddObjects)) then {
+            ["AllVehicles", "InitPost", LINKFUNC(addObjectToCurator), true, [], true] call CBA_fnc_addClassEventHandler;
+        };
+    }] call CBA_fnc_addEventHandler;
+};
+
+[{
+    [{
+        systemChat "done waiting";
+    }, _unit, 25] call CBA_fnc_waitAndExecute;
+}, _unit, 25] call CBA_fnc_waitAndExecute;

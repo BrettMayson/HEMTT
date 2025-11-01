@@ -1,0 +1,5 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (if_not))
+---
+if (!hasInterface) exitWith {};

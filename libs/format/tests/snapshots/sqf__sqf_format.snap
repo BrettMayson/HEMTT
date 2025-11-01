@@ -1,0 +1,13 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (format))
+---
+diag_log text format ["This is here as an example!!!"];
+if (true) then {
+    systemChat format [
+        "This is a string with %1 %2 %3 %4 %5 %6 %7 %8", "one", "two", "three",
+        "four", "five", "six", "seven", "eight"
+    ];
+};
+
+profileNamespace setVariable [format [QGVAR(PersistentZero_%1_%2), _weaponClass, _opticsClass], nil];

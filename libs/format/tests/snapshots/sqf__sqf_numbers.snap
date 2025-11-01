@@ -1,0 +1,19 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (numbers))
+---
+private _number = 0xDEADBEEF;
+private _number = 0x123;
+private _exponent = 123e10;
+private _exponent = 123e-10;
+private _int = 123;
+private _float = 123.456;
+private _negative = -123;
+private _negativeFloat = -123.456;
+private _complex = -123.456e-10;
+
+private _addition = 1 + 2;
+private _subtraction = 1 - 2;
+private _negativeSubtraction = -1 - -2;
+
+private _brackets = (1 + 2) * (-1 - -2);

@@ -23,9 +23,7 @@ addMissionEventHandler ["ExtensionCallback", {
                     "hemtt_comm" callExtension ["photoshoot:previews:done", []];
                 };
             };
-            case "done": {
-                endMission "END1";
-            };
+            case "done": { endMission "END1"; };
             default {
                 diag_log format ["Unknown: %1", _function];
                 "hemtt_comm" callExtension ["log", ["error", format ["Unknown: %1", _function]]];
