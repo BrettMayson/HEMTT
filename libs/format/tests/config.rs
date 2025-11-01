@@ -21,12 +21,17 @@ config!(eject);
 config!(empty);
 config!(include);
 config!(invalid);
-config!(macro);
+config!(macro_arr2);
+config!(macro_dogtag);
+config!(macro_hash);
 config!(macro_path);
+config!(macro_sqf);
+config!(macro);
 config!(math);
 config!(nested);
 config!(numbers);
 config!(parent);
+config!(quotes);
 
 fn config(file: &str) -> String {
     format_config(

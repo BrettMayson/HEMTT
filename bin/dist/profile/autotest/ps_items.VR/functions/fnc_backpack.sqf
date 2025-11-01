@@ -1,12 +1,8 @@
-params [
-    ["_class", "", [""]]
-];
+params [["_class", "", [""]]];
 
 if (_class == "") exitWith {};
 
-if (isNil "ps_cam") then {
-    ps_cam = "camera" camCreate [0,0,0];
-};
+if (isNil "ps_cam") then { ps_cam = "camera" camCreate [0, 0, 0]; };
 
 ps_cam cameraEffect ["INTERNAL", "BACK"];
 ps_cam camSetTarget objNull;

@@ -6,6 +6,6 @@ y = "A" + toUpper "b";
 
 _a = -5;
 _b = sqrt 2;
-_c = sqrt -1;
+_c = sqrt - 1;
 
 toUpper "🌭";
