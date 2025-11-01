@@ -163,7 +163,9 @@ enum Token {
 
     // Strings
     #[regex(r#""([^"\\]|\\.)*""#)]
-    String,
+    DoubleString,
+    #[regex(r"'([^'\\\\]|\\\\.)*'")]
+    SingleString,
 
     // Operators and punctuation
     #[token("=")]
@@ -198,6 +200,12 @@ enum Token {
     Divide,
     #[token("%")]
     Modulo,
+    #[token(">>")]
+    Config,
+    #[token("\\")]
+    Backslash,
+    #[token(".")]
+    Dot,
 
     // Preprocessor lines
     #[regex(r"#.*?", priority = 2)]
@@ -472,8 +480,34 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     after_paren = false;
                 }
             }
+            // Backslash - used in file paths, no spaces around it
+            Token::Backslash => {
+                consecutive_newlines = 0;
+                if in_array {
+                    array_content.push('\\');
+                } else {
+                    if need_indent {
+                        output.push_str(&cfg.indent(indent_level));
+                        need_indent = false;
+                    }
+                    output.push('\\');
+                }
+            }
+            // Dot - used in file extensions and member access, no spaces around it
+            Token::Dot => {
+                consecutive_newlines = 0;
+                if in_array {
+                    array_content.push('.');
+                } else {
+                    if need_indent {
+                        output.push_str(&cfg.indent(indent_level));
+                        need_indent = false;
+                    }
+                    output.push('.');
+                }
+            }
             // Arithmetic operators - add spaces around them, except for negative numbers
-            Token::Plus | Token::Multiply | Token::Divide | Token::Modulo => {
+            Token::Plus | Token::Multiply | Token::Divide | Token::Modulo | Token::Config => {
                 consecutive_newlines = 0;
                 if in_array {
                     array_content.push_str(lexer.slice());
@@ -509,7 +543,8 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
 
                     // Check if this should have space after (arithmetic) or not (negative number)
                     let remaining = lexer.remainder().trim_start();
-                    if remaining.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+                    let next_char = remaining.chars().next();
+                    if next_char.is_some_and(|c| c.is_ascii_digit()) {
                         // Next token is a digit - likely negative number, no space after
                     } else {
                         // Arithmetic operation - add space after

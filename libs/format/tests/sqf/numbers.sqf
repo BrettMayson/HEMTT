@@ -11,3 +11,5 @@ private _complex = -123.456e-10;
 private _addition = 1 + 2;
 private _subtraction = 1 - 2;
 private _negativeSubtraction = -1 - -2;
+
+private _brackets = (1 + 2) * (-1 - -2);

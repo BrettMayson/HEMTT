@@ -1,0 +1,7 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (if_and))
+---
+if (alive player && {
+    player distance target < 10
+}) then { _near = true; };
