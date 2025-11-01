@@ -1,12 +1,8 @@
-params [
-    ["_uniform", "", [""]]
-];
+params [["_uniform", "", [""]]];
 
 if (_uniform == "") exitWith {};
 
-if (isNil "ps_cam") then {
-    ps_cam = "camera" camCreate [0,0,0];
-};
+if (isNil "ps_cam") then { ps_cam = "camera" camCreate [0, 0, 0]; };
 
 ps_cam cameraEffect ["INTERNAL", "BACK"];
 ps_cam camSetTarget objNull;

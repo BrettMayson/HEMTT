@@ -29,6 +29,7 @@ sqf!(numbers);
 sqf!(preserve_lines);
 sqf!(private);
 sqf!(sameline);
+sqf!(switch);
 
 fn sqf(file: &str) -> String {
     format_sqf(

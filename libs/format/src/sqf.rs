@@ -297,7 +297,12 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                     // Negative number - no space before minus
                 } else if !output.ends_with(' ') {
                     // Arithmetic operation - add space before
-                    output.push(' ');
+                    // Check if this is immediately after a LParen or LBracket
+                    if output.ends_with('(') || output.ends_with('[') {
+                        // Don't add space after minus in this context
+                    } else {
+                        output.push(' ');
+                    }
                 }
                 output.push_str(lexer.slice());
 
@@ -325,11 +330,37 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                 }
                 need_indent = false;
             }
+            // Modulo operator - special handling for format specifiers
+            SqfToken::Modulo => {
+                consecutive_newlines = 0;
+
+                // Check if this is part of a format specifier (% followed by a number)
+                let remaining = lexer.remainder();
+                let is_format_specifier =
+                    remaining.chars().next().is_some_and(|c| c.is_ascii_digit());
+
+                if is_format_specifier {
+                    // Format specifier like %1, %2 - no spaces around %
+                    if need_indent {
+                        output.push_str(&cfg.indent(indent_level));
+                    }
+                    output.push_str(lexer.slice());
+                } else {
+                    // Regular modulo operator - add spaces around it
+                    if need_indent {
+                        output.push_str(&cfg.indent(indent_level));
+                    } else if !output.ends_with(' ') {
+                        output.push(' ');
+                    }
+                    output.push_str(lexer.slice());
+                    output.push(' ');
+                }
+                need_indent = false;
+            }
             // Arithmetic and comparison operators - add spaces around them
             SqfToken::Plus
             | SqfToken::Multiply
             | SqfToken::Divide
-            | SqfToken::Modulo
             | SqfToken::Power
             | SqfToken::Equal
             | SqfToken::NotEqual
@@ -427,6 +458,15 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                 output.push_str(lexer.slice());
                 need_indent = false;
             }
+            // No preceding space for colon
+            SqfToken::Colon => {
+                consecutive_newlines = 0;
+                if need_indent {
+                    output.push_str(&cfg.indent(indent_level));
+                }
+                output.push_str(lexer.slice());
+                need_indent = false;
+            }
             // Everything else - add space before if needed
             _ => {
                 consecutive_newlines = 0;
@@ -459,6 +499,8 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                         || output.ends_with('\\')  // Don't add space after backslash
                         || output.ends_with('.')   // Don't add space after dot
                         || output.ends_with('!')   // Don't add space after bang
+                        || output.ends_with('%')   // Don't add space after % (for format specifiers like %1)
+                        || (output.len() >= 2 && output.ends_with(|c: char| c.is_ascii_digit()) && output.chars().rev().nth(1) == Some('%')) // Don't add space after format specifiers like %1
                         // Special case: don't add space after minus when followed by a number (negative number)
                         || is_negative_number_context);
 

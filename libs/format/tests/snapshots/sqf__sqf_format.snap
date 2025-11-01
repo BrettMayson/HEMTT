@@ -9,3 +9,5 @@ if (true) then {
         "four", "five", "six", "seven", "eight"
     ];
 };
+
+profileNamespace setVariable [format [QGVAR(PersistentZero_%1_%2), _weaponClass, _opticsClass], nil];

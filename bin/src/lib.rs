@@ -56,6 +56,7 @@ enum Commands {
     Release(commands::release::Command),
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
+    #[clap(alias = "fmt")]
     Format(commands::format::Command),
     Script(commands::script::Command),
     Utils(commands::utils::Command),

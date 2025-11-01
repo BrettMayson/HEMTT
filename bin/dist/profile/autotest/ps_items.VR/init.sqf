@@ -9,7 +9,7 @@ addMissionEventHandler ["ExtensionCallback", {
     diag_log format ["%1: %2", _name, _function];
     if (_name isEqualTo "hemtt_ps_items" || _name isEqualTo "hemtt_ps") then {
         switch (_function) do {
-            case "weapon_add": {
+            case "weapon_add" : {
                 diag_log format ["Weapon: %1", _data];
                 if !(isClass (configFile >> "CfgWeapons" >> _data)) exitWith {
                     "hemtt_comm" callExtension ["photoshoot:items:weapon_unsupported", [_data]];
@@ -53,17 +53,17 @@ addMissionEventHandler ["ExtensionCallback", {
                     //     "hemtt_comm" callExtension ["log", ["debug", format ["NVG: %1", _data]]];
                     //     [_data] spawn ps_fnc_nvg;
                     // };
-                    case 605: {
+                    case 605 : {
                         // Headgear
                         "hemtt_comm" callExtension ["log", ["debug", format ["Headgear: %1", _data]]];
                         [_data] spawn ps_fnc_headgear;
                     };
-                    case 701: {
+                    case 701 : {
                         // Vest
                         "hemtt_comm" callExtension ["log", ["debug", format ["Vest: %1", _data]]];
                         [_data] spawn ps_fnc_vest;
                     };
-                    case 801: {
+                    case 801 : {
                         // Uniform
                         "hemtt_comm" callExtension ["log", ["debug", format ["Uniform: %1", _data]]];
                         [_data] spawn ps_fnc_uniform;
@@ -74,11 +74,11 @@ addMissionEventHandler ["ExtensionCallback", {
                     };
                 };
             };
-            case "vehicle_add": {
+            case "vehicle_add" : {
                 private _type = getText (configFile >> "CfgVehicles" >> _data >> "vehicleClass");
                 "hemtt_comm" callExtension ["log", ["debug", format ["Type: %1", _type]]];
                 switch (_type) do {
-                    case "Backpacks": {
+                    case "Backpacks" : {
                         "hemtt_comm" callExtension ["log", ["debug", format ["Backpack: %1", _data]]];
                         [_data] spawn ps_fnc_backpack;
                     };
@@ -87,9 +87,7 @@ addMissionEventHandler ["ExtensionCallback", {
                     };
                 };
             };
-            case "done": {
-                endMission "END1";
-            };
+            case "done" : { endMission "END1"; };
             default {
                 diag_log format ["Unknown: %1", _function];
                 "hemtt_comm" callExtension ["log", ["error", format ["Unknown: %1", _function]]];
@@ -107,7 +105,7 @@ showCinemaBorder false;
     diag_log format ["response: %1", "hemtt_comm" callExtension ["photoshoot:items:ready", []]];
 
     if (isNil "ps_cam") then {
-        ps_cam = "camera" camCreate [0,0,0];
+        ps_cam = "camera" camCreate [0, 0, 0];
         showCinemaBorder false;
     };
 };

@@ -3,10 +3,10 @@ use logos::Logos;
 use crate::FormatterConfig;
 
 /// Check if we're in a context where minus should be treated as a negative number in config files
-fn is_negative_number_context_config(output: &str) -> bool {
+fn is_negative_number_context(output: &str) -> bool {
     output.ends_with('{')
         || output.ends_with('[')
-        || output.ends_with('(')
+        || output.ends_with('(') || output.ends_with("(-")
         || output.ends_with("= ") || output.ends_with('=') || output.ends_with("= -")
         || output.ends_with(", ") || output.ends_with(", -")
         // Arithmetic operators - negative numbers can appear after them
@@ -157,19 +157,21 @@ enum Token {
     #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
     Ident,
 
-    // Numbers (integers, decimals, and hexadecimal)
-    #[regex(r"0[xX][0-9a-fA-F]+|[0-9]+(\.[0-9]+)?")]
+    // Numbers (integers, decimals, hexadecimal, and scientific notation)
+    #[regex(r"0[xX][0-9a-fA-F]+|[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?")]
     Number,
 
     // Strings
-    #[regex(r#""([^"\\]|\\.)*""#)]
+    #[regex(r#""([^"]|"")*""#)]
     DoubleString,
-    #[regex(r"'([^'\\\\]|\\\\.)*'")]
+    #[regex(r"'([^']|\\.)*'")]
     SingleString,
 
     // Operators and punctuation
     #[token("=")]
     Eq,
+    #[token("+=")]
+    PlusEq,
     #[token(";")]
     Semi,
     #[token(",")]
@@ -202,10 +204,30 @@ enum Token {
     Modulo,
     #[token(">>")]
     Config,
+    #[token("&&")]
+    And,
+    #[token("||")]
+    Or,
+    #[token("&")]
+    Ampersand,
+    #[token("|")]
+    Pipe,
     #[token("\\")]
     Backslash,
     #[token(".")]
     Dot,
+    #[token(">")]
+    GreaterThan,
+    #[token("<")]
+    LessThan,
+    #[token("!")]
+    Not,
+    #[token("==")]
+    EqEq,
+    #[token("!=")]
+    NotEq,
+    #[token("^")]
+    Caret,
 
     // Preprocessor lines
     #[regex(r"#.*?", priority = 2)]
@@ -222,6 +244,56 @@ enum Token {
     Space,
     #[regex(r"\n")]
     Newline,
+}
+
+/// Copy a multiline define verbatim from the source, preserving all formatting
+fn copy_multiline_define_verbatim(lexer: &mut logos::Lexer<Token>, first_line: &str) -> String {
+    let mut result = String::new();
+    result.push_str(first_line.trim());
+
+    // Get the source text and current position
+    let source = lexer.source();
+    let mut pos = lexer.span().end;
+
+    // Continue copying lines until we find one that doesn't end with backslash
+    while pos < source.len() {
+        // Skip any immediate newline after the current token
+        if pos < source.len() && source.as_bytes()[pos] == b'\n' {
+            pos += 1;
+        }
+
+        // Find the start and end of the next line
+        let line_start = pos;
+        while pos < source.len() && source.as_bytes()[pos] != b'\n' {
+            pos += 1;
+        }
+
+        // Extract the line content (without the newline)
+        if let Some(line_content) = source.get(line_start..pos) {
+            result.push('\n');
+            result.push_str(line_content);
+
+            // Check if this line ends the multiline define
+            let trimmed = line_content.trim();
+            if !trimmed.ends_with('\\') {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    // Update lexer position to continue after the multiline define
+    // Skip the newline if we're at one
+    if pos < source.len() && source.as_bytes()[pos] == b'\n' {
+        pos += 1;
+    }
+
+    // Create new lexer from the remaining source
+    let remaining_source = &source[pos..];
+    *lexer = Token::lexer(remaining_source);
+
+    result
 }
 
 #[allow(clippy::too_many_lines)]
@@ -241,6 +313,7 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
     let mut consecutive_newlines = 0;
     let mut after_paren = false;
     let mut newline_since_last_token = false;
+    let mut paren_depth: usize = 0; // Track parentheses depth to detect macro calls
 
     while let Some(token) = lexer.next() {
         let Ok(token) = token else {
@@ -273,11 +346,28 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
             }
             Token::Preprocessor => {
                 consecutive_newlines = 0;
+                let preprocessor_line = lexer.slice();
+
+                // Add newline and indentation for all preprocessor directives
                 if !output.is_empty() && !output.ends_with('\n') {
                     output.push('\n');
                 }
                 output.push_str(&cfg.indent(indent_level));
-                output.push_str(lexer.slice().trim());
+
+                // Check if this is the start of a multiline define
+                if preprocessor_line.trim_start().starts_with("#define")
+                    && preprocessor_line.trim().ends_with('\\')
+                {
+                    // This is a multiline define - copy verbatim until it ends
+                    let multiline_content =
+                        copy_multiline_define_verbatim(&mut lexer, preprocessor_line);
+                    output.push_str(&multiline_content);
+                    output.push('\n');
+                } else {
+                    // Regular preprocessor directive
+                    output.push_str(preprocessor_line.trim());
+                }
+
                 output.push('\n');
                 need_indent = true;
             }
@@ -327,7 +417,14 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
             }
             Token::LBracket => {
                 consecutive_newlines = 0;
-                // Don't add space before [ in array declarations
+                // Add space before [ when inside macros, but only for function-like calls
+                if paren_depth > 0
+                    && !output.ends_with(' ')
+                    && !output.ends_with('(')
+                    && should_add_space_before_bracket(&output)
+                {
+                    output.push(' ');
+                }
                 output.push('[');
                 need_indent = false;
             }
@@ -344,11 +441,12 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                 } else {
                     // Check if this is starting an array by looking ahead
                     let remaining = lexer.remainder();
-                    if cfg.space_before_brace && !output.ends_with(' ') {
+                    // Don't add space before brace when inside macro calls (paren_depth > 0)
+                    if cfg.space_before_brace && !output.ends_with(' ') && paren_depth == 0 {
                         output.push(' ');
                     }
                     output.push('{');
-                    if is_array_content(remaining) {
+                    if paren_depth == 0 && is_array_content(remaining) {
                         in_array = true;
                         array_content.clear();
                         brace_count = 0;
@@ -362,11 +460,14 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                             // Don't add newline, let comment handler manage the line ending
                             indent_level += 1;
                             need_indent = false;
-                        } else {
-                            // No immediate comment, proceed normally
+                        } else if paren_depth == 0 {
+                            // No immediate comment, proceed normally (but only when not in macro)
                             output.push('\n');
                             indent_level += 1;
                             need_indent = true;
+                        } else {
+                            // Inside macro parentheses, don't add newline or change indent
+                            need_indent = false;
                         }
                     }
                 }
@@ -393,13 +494,17 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                         // This is an empty class like "class Name {}"
                         output.push('}');
                         need_indent = false;
-                    } else {
-                        // Normal class ending
+                    } else if paren_depth == 0 {
+                        // Normal class ending (but only when not in macro)
                         indent_level = indent_level.saturating_sub(1);
                         output.push_str(&cfg.indent(indent_level));
                         output.push('}');
                         output.push('\n');
                         need_indent = true;
+                    } else {
+                        // Inside macro parentheses, just add the brace without formatting
+                        output.push('}');
+                        need_indent = false;
                     }
                 }
             }
@@ -407,7 +512,30 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                 consecutive_newlines = 0;
                 newline_since_last_token = false;
                 if in_array {
-                    // Don't add semicolons to array content, they are handled in formatting
+                    // Check if this semicolon ends the array assignment
+                    if brace_count == 0 {
+                        // We're at the top level of the array, this semicolon ends the assignment
+                        let formatted =
+                            format_config_array_content(&array_content, cfg, indent_level);
+                        output.push_str(&formatted);
+                        output.push(';');
+                        in_array = false;
+
+                        // Look ahead to see if there's a comment on the same line
+                        let remaining = lexer.remainder();
+                        let next_line_comment = remaining.trim_start().starts_with("//");
+
+                        if next_line_comment {
+                            // Don't add newline, let the comment handler decide
+                            need_indent = false;
+                        } else {
+                            output.push('\n');
+                            need_indent = true;
+                        }
+                    } else {
+                        // Semicolon inside nested braces, add to array content
+                        array_content.push(';');
+                    }
                 } else {
                     // If the last character is '}', put semicolon on same line
                     if output.trim_end().ends_with('}') {
@@ -424,9 +552,14 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     if next_line_comment {
                         // Don't add newline, let the comment handler decide
                         need_indent = false;
-                    } else {
+                    } else if paren_depth == 0 {
+                        // Only add newlines when we're not inside macro parentheses
                         output.push('\n');
                         need_indent = true;
+                    } else {
+                        // Inside macro parentheses, add space instead of newline
+                        output.push(' ');
+                        need_indent = false;
                     }
                     after_paren = false;
                 }
@@ -442,8 +575,11 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     let span = lexer.span();
                     let source_after = &source[span.end..];
 
-                    // Only add space if there's already one in the source (preserve original spacing)
-                    if source_after.starts_with(' ') || source_after.starts_with('\t') {
+                    // Don't add spaces after commas inside macro calls (paren_depth > 0)
+                    // For regular context, preserve original spacing
+                    if paren_depth == 0
+                        && (source_after.starts_with(' ') || source_after.starts_with('\t'))
+                    {
                         output.push(' ');
                     }
 
@@ -465,9 +601,18 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                 if in_array {
                     array_content.push('(');
                 } else {
+                    // Add space before ( when inside macros, but only for function-like calls
+                    if paren_depth > 0
+                        && !output.ends_with(' ')
+                        && !output.ends_with('(')
+                        && should_add_space_before_paren(&output)
+                    {
+                        output.push(' ');
+                    }
                     output.push('(');
                     need_indent = false;
                     after_paren = true;
+                    paren_depth += 1;
                 }
             }
             Token::RParen => {
@@ -478,36 +623,35 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     output.push(')');
                     need_indent = false;
                     after_paren = false;
+                    paren_depth = paren_depth.saturating_sub(1);
                 }
             }
-            // Backslash - used in file paths, no spaces around it
-            Token::Backslash => {
+            // Tokens that should not have spaces around them
+            Token::Backslash | Token::Dot | Token::Not => {
                 consecutive_newlines = 0;
                 if in_array {
-                    array_content.push('\\');
+                    array_content.push_str(lexer.slice());
                 } else {
                     if need_indent {
                         output.push_str(&cfg.indent(indent_level));
                         need_indent = false;
                     }
-                    output.push('\\');
+                    output.push_str(lexer.slice());
                 }
             }
-            // Dot - used in file extensions and member access, no spaces around it
-            Token::Dot => {
-                consecutive_newlines = 0;
-                if in_array {
-                    array_content.push('.');
-                } else {
-                    if need_indent {
-                        output.push_str(&cfg.indent(indent_level));
-                        need_indent = false;
-                    }
-                    output.push('.');
-                }
-            }
-            // Arithmetic operators - add spaces around them, except for negative numbers
-            Token::Plus | Token::Multiply | Token::Divide | Token::Modulo | Token::Config => {
+            // Arithmetic and logical operators - add spaces around them, except for negative numbers
+            Token::Plus
+            | Token::Multiply
+            | Token::Divide
+            | Token::Modulo
+            | Token::Config
+            | Token::And
+            | Token::Or
+            | Token::Ampersand
+            | Token::Caret
+            | Token::Pipe
+            | Token::EqEq
+            | Token::NotEq => {
                 consecutive_newlines = 0;
                 if in_array {
                     array_content.push_str(lexer.slice());
@@ -533,7 +677,7 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     if need_indent {
                         output.push_str(&cfg.indent(indent_level));
                         need_indent = false;
-                    } else if is_negative_number_context_config(&output) {
+                    } else if is_negative_number_context(&output) {
                         // Negative number - no space before minus
                     } else if !output.ends_with(' ') {
                         // Arithmetic operation - add space before
@@ -562,7 +706,7 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     if need_indent {
                         output.push_str(&cfg.indent(indent_level));
                         need_indent = false;
-                    } else if !output.ends_with(' ') {
+                    } else if !(output.ends_with(' ') || output.ends_with('+')) {
                         // Add space before equals
                         output.push(' ');
                     }
@@ -580,13 +724,12 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                     if need_indent {
                         output.push_str(&cfg.indent(indent_level));
                         need_indent = false;
-                    } else if !after_paren && !matches!(token, Token::LBracket | Token::RBracket) {
+                    } else if !matches!(token, Token::LBracket | Token::RBracket) {
                         // Check if we should add space before this token
                         let ends_with_minus = output.ends_with('-');
                         let is_number = matches!(token, Token::Number);
-                        let is_negative_number_context = ends_with_minus
-                            && is_number
-                            && is_negative_number_context_config(&output);
+                        let is_negative_number_context =
+                            ends_with_minus && is_number && is_negative_number_context(&output);
 
                         let should_add_space = !(output.ends_with(' ')
                             || output.ends_with('(')
@@ -594,14 +737,23 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                             || output.ends_with('=')
                             || output.ends_with('{')
                             || output.ends_with(',')
+                            || output.ends_with('\\')  // Don't add space after backslash
+                            || output.ends_with('.')   // Don't add space after dot
+                            || output.ends_with('!')   // Don't add space after exclamation mark
                             // Special case: don't add space after minus when followed by a number (negative number)
                             || is_negative_number_context
                             // Don't add space before braces - let LBrace handler manage spacing
-                            || matches!(token, Token::LBrace));
+                            || matches!(token, Token::LBrace)
+                            // Don't add space immediately after opening parenthesis (but preserve spacing inside macros)
+                            || (after_paren && paren_depth == 0));
 
                         if should_add_space {
                             output.push(' ');
                         }
+                    }
+                    // Reset after_paren flag after processing one token
+                    if after_paren {
+                        after_paren = false;
                     }
                     output.push_str(lexer.slice());
                     newline_since_last_token = false;
@@ -652,6 +804,22 @@ fn is_array_content(content: &str) -> bool {
         return false;
     }
 
+    // First check if this looks like SQF code rather than a config array
+    // SQF patterns that indicate this is not a config array:
+    if array_content.contains("&&")
+        || array_content.contains("||")
+        || array_content.contains(';')
+        || array_content.contains("isNotEqualTo")
+        || array_content.contains("select")
+        || array_content.contains("getArray")
+        || array_content.contains("getNumber")
+        || array_content.contains("params")
+        || array_content.contains("private")
+        || array_content.contains("format")
+    {
+        return false; // This looks like SQF code, not a config array
+    }
+
     // Check if the content looks like an array (numbers, letters for macros, commas, braces, quotes, parentheses, decimal points)
     let chars = array_content.chars();
     let mut has_content = false;
@@ -669,6 +837,32 @@ fn is_array_content(content: &str) -> bool {
     }
 
     has_content
+}
+
+fn should_add_space_before_bracket(output: &str) -> bool {
+    let trimmed = output.trim_end();
+    trimmed
+        .rfind(|c: char| !c.is_alphanumeric() && c != '_')
+        .map_or_else(
+            || trimmed.chars().any(char::is_lowercase),
+            |last_word_start| {
+                let last_word = &trimmed[last_word_start + 1..];
+                last_word.chars().any(char::is_lowercase)
+            },
+        )
+}
+
+fn should_add_space_before_paren(output: &str) -> bool {
+    let trimmed = output.trim_end();
+    trimmed
+        .rfind(|c: char| !c.is_alphanumeric() && c != '_')
+        .map_or_else(
+            || trimmed.chars().any(char::is_lowercase),
+            |last_word_start| {
+                let last_word = &trimmed[last_word_start + 1..];
+                last_word.chars().any(char::is_lowercase)
+            },
+        )
 }
 
 fn is_empty_class(content: &str) -> bool {

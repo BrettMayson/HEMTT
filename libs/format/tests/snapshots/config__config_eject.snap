@@ -5,7 +5,7 @@ expression: config(stringify! (eject))
 class CfgActions {
     class None;
     class Eject: None {
-        show = QUOTE(callcompilegetText(configFile >> 'CfgActions' >> 'Eject' >> 'GVAR(setting)'));
-        GVAR(setting) = QUOTE(profileNamespacegetVariable[ARR_2('GVAR(showEjectAction)',0)]);
+        show = QUOTE(call compile getText (configFile >> 'CfgActions' >> 'Eject' >> 'GVAR(setting)'));
+        GVAR(setting) = QUOTE(profileNamespace getVariable [ARR_2('GVAR(showEjectAction)',0)]);
     };
 };
