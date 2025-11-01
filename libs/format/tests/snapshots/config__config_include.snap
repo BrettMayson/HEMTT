@@ -1,0 +1,9 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (include))
+---
+#include "..\something.hpp"
+
+class Test {
+    value = 1;
+};

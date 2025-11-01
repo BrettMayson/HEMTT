@@ -1,0 +1,11 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (eject))
+---
+class CfgActions {
+    class None;
+    class Eject: None {
+        show = QUOTE(callcompilegetText(configFile >> 'CfgActions' >> 'Eject' >> 'GVAR(setting)'));
+        GVAR(setting) = QUOTE(profileNamespacegetVariable[ARR_2('GVAR(showEjectAction)',0)]);
+    };
+};

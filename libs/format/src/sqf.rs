@@ -97,6 +97,8 @@ pub enum SqfToken {
     Backtick,
     #[token("#")]
     Hash,
+    #[token("\\")]
+    Backslash,
 
     // Preprocessor lines (only at start of line with specific keywords)
     #[regex(
@@ -397,8 +399,8 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                 output.push_str(lexer.slice());
                 need_indent = false;
             }
-            // Dot operator - no spaces around it
-            SqfToken::Dot => {
+            // Dot and backslash - no spaces around them
+            SqfToken::Dot | SqfToken::Backslash => {
                 consecutive_newlines = 0;
                 if need_indent {
                     output.push_str(&cfg.indent(indent_level));
@@ -454,6 +456,9 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                         || output.ends_with('=')
                         || output.ends_with('{')
                         || output.ends_with(',') && paren_depth > 0
+                        || output.ends_with('\\')  // Don't add space after backslash
+                        || output.ends_with('.')   // Don't add space after dot
+                        || output.ends_with('!')   // Don't add space after bang
                         // Special case: don't add space after minus when followed by a number (negative number)
                         || is_negative_number_context);
 
