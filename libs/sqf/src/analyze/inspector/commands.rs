@@ -63,7 +63,7 @@ impl SciptScope {
         debug_type: &str,
         source: &Range<usize>,
     ) -> IndexSet<GameValue> {
-        let mut error_type = String::new();
+        let mut error_type = None;
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
@@ -74,30 +74,31 @@ impl SciptScope {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}
                         GameValue::String(_) => {
-                            self.cmd_generic_params_element(
+                            if let Some(error) = self.cmd_generic_params_element(
                                 &[vec![element.clone()]], // put it in a dummy array
                                 gv_index_num,
-                                &mut error_type,
-                            );
+                            ) {
+                                error_type = Some(error);
+                            }
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            self.cmd_generic_params_element(
-                                arg_array,
-                                gv_index_num,
-                                &mut error_type,
-                            );
+                            if let Some(error) =
+                                self.cmd_generic_params_element(arg_array, gv_index_num)
+                            {
+                                error_type = Some(error);
+                            }
                         }
 
                         _ => {
-                            error_type = format!("{gv_index_num}: Element Type");
+                            error_type = Some(format!("{gv_index_num}: Element Type"));
                         }
                     }
                 }
             }
         }
-        if !error_type.is_empty() {
+        if let Some(error) = error_type {
             self.errors.insert(Issue::InvalidArgs(
-                format!("{debug_type} - {error_type}"),
+                format!("{debug_type} - {error}"),
                 source.clone(),
             ));
         }
@@ -108,16 +109,16 @@ impl SciptScope {
         &mut self,
         element: &[Vec<GameValue>],
         gv_index_num: usize,
-        error_type: &mut String,
-    ) {
+    ) -> Option<String> {
         if element.is_empty() || element[0].is_empty() {
-            return;
+            return None;
         }
+        let mut error_type = None;
         match &element[0][0] {
             GameValue::String(None) | GameValue::Anything => {}
             GameValue::String(Some(Expression::String(var_name, source, _))) => {
                 if var_name.is_empty() {
-                    return;
+                    return None;
                 }
                 let mut var_types = IndexSet::new();
                 if element.len() > 2 {
@@ -130,7 +131,7 @@ impl SciptScope {
                             }
                             GameValue::Array(None, _) | GameValue::Anything => {}
                             _ => {
-                                *error_type = format!("{gv_index_num}: Expected Data Types");
+                                error_type = Some(format!("{gv_index_num}: Expected Data Types"));
                             }
                         }
                     }
@@ -150,8 +151,9 @@ impl SciptScope {
                             matches!(t, GameValue::Anything) || t == &default_value.make_generic()
                         }))
                     {
-                        *error_type =
-                            format!("{gv_index_num}: Default Value does not match declared types");
+                        error_type = Some(format!(
+                            "{gv_index_num}: Default Value does not match declared types"
+                        ));
                     }
                     var_types.insert(default_value);
                 }
@@ -163,9 +165,10 @@ impl SciptScope {
                 );
             }
             _ => {
-                *error_type = format!("{gv_index_num}: Element Type");
+                error_type = Some(format!("{gv_index_num}: Element Type"));
             }
         }
+        error_type
     }
 
     #[must_use]
