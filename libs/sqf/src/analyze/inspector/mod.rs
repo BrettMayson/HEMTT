@@ -53,12 +53,7 @@ impl InvalidArgs {
     pub fn message(&self, command: &str) -> String {
         match self {
             Self::TypeNotExpected { .. } => format!(
-                "Invalid argument type{} for `{command}`",
-                if self.expected_types().len() > 1 {
-                    "s"
-                } else {
-                    ""
-                }
+                "Invalid argument type for `{command}`"
             ),
             Self::DefaultDifferentType { .. } => {
                 String::from("Default value is not an expected type for the parameter")
