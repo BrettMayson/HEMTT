@@ -6,7 +6,7 @@ use indexmap::IndexSet;
 
 use crate::{
     Expression,
-    analyze::inspector::{Issue, VarSource},
+    analyze::inspector::{InvalidArgs, Issue, VarSource},
     parser::database::Database,
 };
 
@@ -36,7 +36,8 @@ impl SciptScope {
             if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
                     for element in gv_index {
-                        let GameValue::String(Some(Expression::String(var, source, _))) = element
+                        let (GameValue::String(Some(Expression::String(var, source, _))), _) =
+                            element
                         else {
                             continue;
                         };
@@ -69,69 +70,79 @@ impl SciptScope {
                 continue;
             };
 
-            for (gv_index_num, gv_index) in gv_array.iter().enumerate() {
-                for element in gv_index {
+            for gv_index in gv_array {
+                for (element, element_span) in gv_index {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}
                         GameValue::String(_) => {
                             if let Some(error) = self.cmd_generic_params_element(
-                                &[vec![element.clone()]], // put it in a dummy array
-                                gv_index_num,
+                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy array
                             ) {
                                 error_type = Some(error);
                             }
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            if let Some(error) =
-                                self.cmd_generic_params_element(arg_array, gv_index_num)
-                            {
+                            if let Some(error) = self.cmd_generic_params_element(arg_array) {
                                 error_type = Some(error);
                             }
                         }
 
                         _ => {
-                            error_type = Some(format!("{gv_index_num}: Element Type"));
+                            // error_type = Some(format!("{gv_index_num}: Element Type"));
+                            error_type = Some(InvalidArgs::TypeNotExpected {
+                                expected: vec![
+                                    GameValue::String(None),
+                                    GameValue::Array(None, None),
+                                ],
+                                found: vec![element.clone()],
+                                span: element_span.clone(),
+                            });
                         }
                     }
                 }
             }
         }
         if let Some(error) = error_type {
-            self.errors.insert(Issue::InvalidArgs(
-                format!("{debug_type} - {error}"),
-                source.clone(),
-            ));
+            self.errors.insert(Issue::InvalidArgs {
+                command: debug_type.to_string(),
+                variant: error,
+                span: source.clone(),
+            });
         }
         IndexSet::from([GameValue::Boolean(None)])
     }
 
     pub fn cmd_generic_params_element(
         &mut self,
-        element: &[Vec<GameValue>],
-        gv_index_num: usize,
-    ) -> Option<String> {
+        element: &[Vec<(GameValue, Range<usize>)>],
+    ) -> Option<InvalidArgs> {
         if element.is_empty() || element[0].is_empty() {
             return None;
         }
         let mut error_type = None;
-        match &element[0][0] {
+        let (value, _) = &element[0][0];
+        match value {
             GameValue::String(None) | GameValue::Anything => {}
-            GameValue::String(Some(Expression::String(var_name, source, _))) => {
+            GameValue::String(Some(Expression::String(var_name, span, _))) => {
                 if var_name.is_empty() {
                     return None;
                 }
                 let mut var_types = IndexSet::new();
                 if element.len() > 2 {
-                    for type_p in &element[2] {
+                    for (type_p, type_p_span) in &element[2] {
                         match type_p {
                             GameValue::Array(Some(type_array), _) => {
                                 for type_i in type_array {
-                                    var_types.extend(type_i.iter().map(GameValue::make_generic));
+                                    var_types.extend(type_i.iter().map(|(v, _)| v.make_generic()));
                                 }
                             }
                             GameValue::Array(None, _) | GameValue::Anything => {}
                             _ => {
-                                error_type = Some(format!("{gv_index_num}: Expected Data Types"));
+                                error_type = Some(InvalidArgs::TypeNotExpected {
+                                    expected: vec![GameValue::Array(None, None)],
+                                    found: vec![type_p.clone()],
+                                    span: type_p_span.clone(),
+                                });
                             }
                         }
                     }
@@ -143,7 +154,7 @@ impl SciptScope {
                 // It would be nice to move this above the is_empty check but not always safe
                 // ie: assume `params ["_z", ""]` is type string, but this is not guaranteed
                 if element.len() > 1 && !element[1].is_empty() {
-                    let default_value = element[1][0].clone();
+                    let default_value = element[1][0].0.clone();
                     // Verify that the default value matches one of the types
                     if !(matches!(default_value, GameValue::Anything)
                         || matches!(default_value, GameValue::Nothing)
@@ -151,9 +162,21 @@ impl SciptScope {
                             matches!(t, GameValue::Anything) || t == &default_value.make_generic()
                         }))
                     {
-                        error_type = Some(format!(
-                            "{gv_index_num}: Default Value does not match declared types"
-                        ));
+                        error_type = Some(InvalidArgs::DefaultDifferentType {
+                            expected: var_types.iter().cloned().collect(),
+                            found: vec![default_value.clone()],
+                            span: element[1][0].1.clone(),
+                            default: (element[2]
+                                .first()
+                                .map(|(_, s)| s.clone())
+                                .unwrap_or_default()
+                                .start)
+                                ..(element[2]
+                                    .last()
+                                    .map(|(_, s)| s.clone())
+                                    .unwrap_or_default()
+                                    .end),
+                        });
                     }
                     var_types.insert(default_value);
                 }
@@ -161,11 +184,15 @@ impl SciptScope {
                     var_name.as_ref(),
                     true,
                     var_types,
-                    VarSource::Params(source.clone()),
+                    VarSource::Params(span.clone()),
                 );
             }
             _ => {
-                error_type = Some(format!("{gv_index_num}: Element Type"));
+                error_type = Some(InvalidArgs::TypeNotExpected {
+                    expected: vec![GameValue::String(None)],
+                    found: vec![element[0][0].0.clone()],
+                    span: element[0][0].1.clone(),
+                });
             }
         }
         error_type
@@ -300,7 +327,7 @@ impl SciptScope {
                         continue;
                     };
                     for stage in for_stages {
-                        for gv in stage {
+                        for (gv, _) in stage {
                             let GameValue::Code(Some(expression)) = gv else {
                                 continue;
                             };
@@ -366,7 +393,7 @@ impl SciptScope {
             }
             if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
-                    for element in gv_index {
+                    for (element, _) in gv_index {
                         if let GameValue::Code(Some(expression)) = element {
                             return_value.extend(self.cmd_generic_call(
                                 &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
@@ -408,7 +435,7 @@ impl SciptScope {
             if gv_array.len() < 2 {
                 continue;
             }
-            possible_code.extend(gv_array[1].clone());
+            possible_code.extend(gv_array[1].iter().map(|(gv, _)| gv.clone()));
         }
         let _ = self.cmd_generic_call(&possible_code, database);
         IndexSet::from([GameValue::Anything])
@@ -449,7 +476,7 @@ impl SciptScope {
         {
             // return_value.clear(); // todo: could clear if we handle pushBack
             for gv_index in gv_array {
-                for element in gv_index {
+                for (element, _) in gv_index {
                     return_value.insert(element.clone());
                 }
             }
@@ -479,7 +506,7 @@ impl SciptScope {
         if count_input_set.is_empty()
             || !count_input_set
                 .iter()
-                .all(|arr| matches!(arr, GameValue::Array(..)))
+                .all(|(arr, _)| matches!(arr, GameValue::Array(..)))
         {
             return;
         }
@@ -498,7 +525,7 @@ impl SciptScope {
         if !self
             .var_retrieve(var_name, &lhs.full_span(), true)
             .iter()
-            .any(|v| matches!(v, GameValue::Array(Some(_), _)))
+            .any(|(v, _)| matches!(v, GameValue::Array(Some(_), _)))
         {
             return;
         }

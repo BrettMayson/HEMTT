@@ -1,5 +1,7 @@
 //! Game Values and mapping them from commands
 
+use std::ops::Range;
+
 use arma3_wiki::model::{Arg, Call, Param, Value};
 use indexmap::IndexSet;
 use tracing::{trace, warn};
@@ -10,7 +12,11 @@ use crate::{Expression, parser::database::Database};
 pub enum GameValue {
     Anything,
     // Assignment, // as in z = call {x=1}???
-    Array(Option<Vec<Vec<GameValue>>>, Option<ArrayType>),
+    #[allow(clippy::type_complexity)]
+    Array(
+        Option<Vec<Vec<(GameValue, Range<usize>)>>>,
+        Option<ArrayType>,
+    ),
     Boolean(Option<Expression>),
     Code(Option<Expression>),
     Config,
@@ -54,18 +60,27 @@ pub enum ArrayType {
 impl GameValue {
     #[must_use]
     /// Gets cmd return types based on input types
+    ///
+    /// The return is (return type, expected lhs, expected rhs)
     pub fn from_cmd(
         expression: &Expression,
         lhs_set: Option<&IndexSet<Self>>,
         rhs_set: Option<&IndexSet<Self>>,
         database: &Database,
-    ) -> IndexSet<Self> {
+    ) -> (IndexSet<Self>, IndexSet<Self>, IndexSet<Self>) {
         let mut return_types = IndexSet::new();
         let cmd_name = expression.command_name().expect("has a name");
         let Some(command) = database.wiki().commands().get(cmd_name) else {
             println!("cmd {cmd_name} not in db?");
-            return IndexSet::from([Self::Anything]);
+            return (
+                IndexSet::from([Self::Anything]),
+                IndexSet::new(),
+                IndexSet::new(),
+            );
         };
+
+        let mut expected_lhs = IndexSet::new();
+        let mut expected_rhs = IndexSet::new();
 
         for syntax in command.syntax() {
             // println!("syntax {:?}", syntax.call());
@@ -77,30 +92,42 @@ impl GameValue {
                 }
                 Call::Unary(rhs_arg) => {
                     if !matches!(expression, Expression::UnaryCommand(..))
-                        || !Self::match_set_to_arg(
-                            cmd_name,
-                            rhs_set.expect("unary rhs"),
-                            rhs_arg,
-                            syntax.params(),
-                        )
+                        || !{
+                            let (is_match, expected) = Self::match_set_to_arg(
+                                cmd_name,
+                                rhs_set.expect("unary rhs"),
+                                rhs_arg,
+                                syntax.params(),
+                            );
+                            expected_rhs.extend(expected);
+                            is_match
+                        }
                     {
                         continue;
                     }
                 }
                 Call::Binary(lhs_arg, rhs_arg) => {
                     if !matches!(expression, Expression::BinaryCommand(..))
-                        || !Self::match_set_to_arg(
-                            cmd_name,
-                            lhs_set.expect("binary lhs"),
-                            lhs_arg,
-                            syntax.params(),
-                        )
-                        || !Self::match_set_to_arg(
-                            cmd_name,
-                            rhs_set.expect("binary rhs"),
-                            rhs_arg,
-                            syntax.params(),
-                        )
+                        || !{
+                            let (is_match, expected) = Self::match_set_to_arg(
+                                cmd_name,
+                                lhs_set.expect("binary lhs"),
+                                lhs_arg,
+                                syntax.params(),
+                            );
+                            expected_lhs.extend(expected);
+                            is_match
+                        }
+                        || !{
+                            let (is_match, expected) = Self::match_set_to_arg(
+                                cmd_name,
+                                rhs_set.expect("binary rhs"),
+                                rhs_arg,
+                                syntax.params(),
+                            );
+                            expected_rhs.extend(expected);
+                            is_match
+                        }
                     {
                         continue;
                     }
@@ -119,7 +146,7 @@ impl GameValue {
         //     return_types.len(),
         //     return_types
         // );
-        return_types
+        (return_types, expected_lhs, expected_rhs)
     }
 
     #[must_use]
@@ -128,7 +155,7 @@ impl GameValue {
         set: &IndexSet<Self>,
         arg: &Arg,
         params: &[Param],
-    ) -> bool {
+    ) -> (bool, IndexSet<Self>) {
         match arg {
             Arg::Item(name) => {
                 let Some(param) = params.iter().find(|p| p.name() == name) else {
@@ -163,17 +190,22 @@ impl GameValue {
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
                         // warn!("cmd {cmd_name} - param {name} not found");
                     }
-                    return true;
+                    return (true, IndexSet::new());
                 };
                 // println!(
                 //     "[arg {name}] typ: {:?}, opt: {:?}",
                 //     param.typ(),
                 //     param.optional()
                 // );
-                Self::match_set_to_value(set, param.typ(), param.optional())
+                let (is_match, expected_gv) =
+                    Self::match_set_to_value(set, param.typ(), param.optional());
+                let mut expected = IndexSet::new();
+                expected.insert(expected_gv);
+                (is_match, expected)
             }
             Arg::Array(arg_array) => {
-                set.iter().any(|s| {
+                let mut expected = IndexSet::new();
+                let is_match = set.iter().any(|s| {
                     match s {
                         Self::Anything | Self::Array(None, _) => {
                             // println!("{cmd_name}: array (any/generic) pass");
@@ -184,11 +216,14 @@ impl GameValue {
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
                                 let possible = if index < gv_array.len() {
-                                    gv_array[index].iter().cloned().collect()
+                                    gv_array[index].iter().map(|(gv, _)| gv.clone()).collect()
                                 } else {
                                     IndexSet::new()
                                 };
-                                if !Self::match_set_to_arg(cmd_name, &possible, arg, params) {
+                                let (is_match, expected_gv) =
+                                    Self::match_set_to_arg(cmd_name, &possible, arg, params);
+                                expected.extend(expected_gv);
+                                if !is_match {
                                     if let Arg::Array(args) = arg {
                                         // handle edge case on varidic cmds that take arrays (e.g. `createHashMapFromArray`)
                                         if args.iter().any(|a| match a {
@@ -209,19 +244,26 @@ impl GameValue {
                         }
                         _ => false,
                     }
-                })
+                });
+                (is_match, expected)
             }
         }
     }
 
     #[must_use]
-    pub fn match_set_to_value(set: &IndexSet<Self>, right_wiki: &Value, optional: bool) -> bool {
+    /// checks if a set of `GameValues` matches a wiki Value (with optional flag)
+    /// returns the expected `GameValue` type
+    pub fn match_set_to_value(
+        set: &IndexSet<Self>,
+        right_wiki: &Value,
+        optional: bool,
+    ) -> (bool, Self) {
         // println!("Checking {set:?} against {right_wiki:?} [O:{optional}]");
-        if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
-            return true;
-        }
         let right = Self::from_wiki_value(right_wiki);
-        set.iter().any(|gv| Self::match_values(gv, &right))
+        if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
+            return (true, right);
+        }
+        (set.iter().any(|gv| Self::match_values(gv, &right)), right)
     }
 
     #[must_use]
@@ -312,61 +354,7 @@ impl GameValue {
             _ => self.clone(),
         }
     }
-    #[must_use]
-    /// Get as a string for debugging
-    pub fn as_debug(&self) -> String {
-        match self {
-            // Self::Assignment() => {
-            //     format!("Assignment")
-            // }
-            Self::Anything => "Anything".to_string(),
-            Self::ForType(for_args_array) => {
-                if for_args_array.is_some() {
-                    format!("ForType(var {for_args_array:?})")
-                } else {
-                    "ForType(GENERIC)".to_string()
-                }
-            }
-            Self::Number(expression) => {
-                if let Some(Expression::Number(num, _)) = expression {
-                    format!("Number({num:?})",)
-                } else {
-                    "Number(GENERIC)".to_string()
-                }
-            }
-            Self::String(expression) => {
-                if let Some(Expression::String(str, _, _)) = expression {
-                    format!("String({str})")
-                } else {
-                    "String(GENERIC)".to_string()
-                }
-            }
-            Self::Boolean(expression) => {
-                if let Some(Expression::Boolean(bool, _)) = expression {
-                    format!("Boolean({bool})")
-                } else {
-                    "Boolean(GENERIC)".to_string()
-                }
-            }
-            Self::Array(gv_array_option, position_option) => {
-                let str_len = gv_array_option
-                    .clone()
-                    .map_or_else(|| "GENERIC".to_string(), |l| format!("len {}", l.len()));
-                let str_pos = position_option
-                    .clone()
-                    .map_or_else(String::new, |p| format!(":{p:?}"));
-                format!("ArrayExp({str_len}{str_pos})")
-            }
-            Self::Code(expression) => {
-                if let Some(Expression::Code(statements)) = expression {
-                    format!("Code(len {})", statements.content().len())
-                } else {
-                    "Code(GENERIC)".to_string()
-                }
-            }
-            _ => "Other(todo)".to_string(),
-        }
-    }
+
     #[must_use]
     /// Returns the common generic type of all array elements.
     ///
@@ -378,7 +366,7 @@ impl GameValue {
             match gv {
                 Self::Array(Some(array_outer), _) => {
                     for outer in array_outer {
-                        for inner in outer {
+                        for (inner, _) in outer {
                             if result.is_none() {
                                 result = Some(inner.make_generic());
                             } else if let Some(existing) = &result
@@ -393,5 +381,45 @@ impl GameValue {
             }
         }
         result.unwrap_or(Self::Anything)
+    }
+}
+
+impl std::fmt::Display for GameValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Self::Array(_, Some(array_type)) = self {
+            return write!(f, "Array<{array_type:?}>");
+        }
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Anything => "Anything",
+                Self::Array(_, _) => "Array",
+                Self::Boolean(_) => "Boolean",
+                Self::Code(_) => "Code",
+                Self::Config => "Config",
+                Self::Control => "Control",
+                Self::DiaryRecord => "DiaryRecord",
+                Self::Display => "Display",
+                Self::ForType(_) => "ForType",
+                Self::Group => "Group",
+                Self::HashMap => "HashMap",
+                Self::IfType => "IfType",
+                Self::Location => "Location",
+                Self::Namespace => "Namespace",
+                Self::Number(_) => "Number",
+                Self::Nothing => "Nothing",
+                Self::Object => "Object",
+                Self::ScriptHandle => "ScriptHandle",
+                Self::Side => "Side",
+                Self::String(_) => "String",
+                Self::StructuredText => "StructuredText",
+                Self::SwitchType => "SwitchType",
+                Self::Task => "Task",
+                Self::TeamMember => "TeamMember",
+                Self::WhileType => "WhileType",
+                Self::WithType => "WithType",
+            }
+        )
     }
 }

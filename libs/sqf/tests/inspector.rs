@@ -118,7 +118,7 @@ mod tests {
         let invalid_args = statements
             .issues()
             .iter()
-            .filter(|i| matches!(i, Issue::InvalidArgs(..))) // ignore unused/undefined...
+            .filter(|i| matches!(i, Issue::InvalidArgs { .. })) // ignore unused/undefined...
             .collect::<Vec<_>>();
         assert!(invalid_args.is_empty(), "{invalid_args:#?}");
     }
