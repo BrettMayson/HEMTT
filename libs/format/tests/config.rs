@@ -19,6 +19,7 @@ config!(classes);
 config!(comments);
 config!(eject);
 config!(empty);
+config!(if);
 config!(include);
 config!(invalid);
 config!(macro_arr2);

@@ -305,7 +305,7 @@ fn copy_multiline_define_verbatim(lexer: &mut logos::Lexer<Token>, first_line: &
 pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, String> {
     let mut lexer = Token::lexer(source);
     let mut output = String::new();
-    let mut indent_level = 0;
+    let mut indent_level: usize = 0;
     let mut need_indent = true;
     let mut in_array = false;
     let mut array_content = String::new();
@@ -347,6 +347,13 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
             Token::Preprocessor => {
                 consecutive_newlines = 0;
                 let preprocessor_line = lexer.slice();
+                let (command, _) = preprocessor_line
+                    .trim()
+                    .split_once(' ')
+                    .unwrap_or_else(|| (preprocessor_line.trim(), ""));
+                if ["#endif", "#else"].contains(&command) {
+                    indent_level = indent_level.saturating_sub(1);
+                }
 
                 // Add newline and indentation for all preprocessor directives
                 if !output.is_empty() && !output.ends_with('\n') {
@@ -366,6 +373,10 @@ pub fn format_config(source: &str, cfg: &FormatterConfig) -> Result<String, Stri
                 } else {
                     // Regular preprocessor directive
                     output.push_str(preprocessor_line.trim());
+                }
+
+                if ["#ifdef", "#ifndef", "#if", "#else"].contains(&command) {
+                    indent_level += 1;
                 }
 
                 output.push('\n');

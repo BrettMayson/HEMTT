@@ -1,0 +1,12 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (cba_settings))
+---
+[    
+    QGVAR(keepEngineRunning),
+    "CHECKBOX",
+    [LSTRING(SettingKeepEngineRunningName), LSTRING(SettingKeepEngineRunningDesc)],
+    ELSTRING(common,ACEKeybindCategoryVehicles),
+    false, // default value
+    true // isGlobal
+] call CBA_fnc_addSetting;
