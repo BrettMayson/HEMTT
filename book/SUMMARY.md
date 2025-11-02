@@ -21,6 +21,7 @@
     - [coverage](commands/localization/coverage.md)
     - [sort](commands/localization/sort.md)
   - [new](commands/new.md)
+  - [license](commands/license.md)
   - [dev](commands/dev.md)
   - [launch](commands/launch.md)
   - [build](commands/build.md)

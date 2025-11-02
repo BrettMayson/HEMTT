@@ -15,4 +15,4 @@ arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
-mdbook = "0.4.45"
+mdbook = "0.4.52"

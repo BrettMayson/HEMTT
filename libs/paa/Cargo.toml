@@ -19,8 +19,8 @@ texpresso = "2.0.2"
 image = "0.25.8"
 
 # WASM
-js-sys = { version = "0.3.81", optional = true }
-wasm-bindgen = { version = "0.2.104", optional = true }
+js-sys = { version = "0.3.82", optional = true }
+wasm-bindgen = { version = "0.2.105", optional = true }
 
 # JSON
 serde = { workspace = true, features = ["derive"], optional = true }
