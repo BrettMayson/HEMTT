@@ -188,7 +188,7 @@ pub fn format_sqf(source: &str, cfg: &FormatterConfig) -> Result<String, String>
                     output.push(' ');
                 } else if need_indent {
                     output.push_str(&cfg.indent(indent_level));
-                } else {
+                } else if !output.ends_with(' ') {
                     output.push(' ');
                 }
                 output.push_str(lexer.slice().trim_end());
@@ -713,6 +713,24 @@ fn format_array_content_with_context(
     if content.trim().is_empty() {
         return String::new();
     }
+
+    // if the array contains comments, don't format it
+    // if content.contains("//") || content.contains("/*") {
+    //     let mut ret = String::new();
+    //     let mut first = true;
+    //     for line in content.lines() {
+    //         if !line.starts_with(' ') {
+    //             ret.push_str(&cfg.indent(base_indent_level + 1));
+    //         } else if first {
+    //             ret.push(' ');
+    //         }
+    //         ret.push_str(line.trim());
+    //         ret.push('\n');
+    //         first = false;
+    //     }
+    //     ret.push_str(&cfg.indent(base_indent_level));
+    //     return ret;
+    // }
 
     let items = parse_array_items_simple(content);
 

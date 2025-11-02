@@ -15,6 +15,7 @@ macro_rules! sqf {
 
 sqf!(arrays);
 sqf!(blocks);
+sqf!(cba_settings);
 sqf!(cba);
 sqf!(comments);
 sqf!(format);
