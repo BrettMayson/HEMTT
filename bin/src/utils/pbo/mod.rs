@@ -20,9 +20,20 @@ pub struct Command {
 enum Subcommands {
     /// Extract a file from a PBO
     Extract(extract::PboExtractArgs),
+    #[command(verbatim_doc_comment)]
     /// Inspect a PBO file
+    ///
+    /// ## Example
+    /// Check `abe_main.pbo` located in the build folder
+    ///
+    /// ```bash
+    /// hemtt.exe utils pbo inspect .hemttout\build\addons\abe_main.pbo
+    /// ```
     Inspect(inspect::PboInspectArgs),
     /// Unpack a PBO file
+    ///
+    /// A `$PBOPREFIX$` file will be created in the output directory containing the prefix of the PBO.
+    /// All other properties from the PBO will be saved into `properties.txt`
     Unpack(unpack::PboUnpackArgs),
 }
 

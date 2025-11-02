@@ -15,7 +15,6 @@ use mdbook::book::Chapter;
 pub fn run(chapter: &mut Chapter) {
     for item in &mut chapter.sub_items {
         if let mdbook::BookItem::Chapter(chapter) = item {
-            eprintln!("Processing chapter: {}", chapter.name);
             if chapter.name == "Config" {
                 config(chapter);
             }

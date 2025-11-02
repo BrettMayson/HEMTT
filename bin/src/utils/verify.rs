@@ -8,10 +8,15 @@ use crate::{
 };
 
 #[derive(clap::Parser)]
-#[command(arg_required_else_help = true)]
-/// Verify a signed PBO
+#[command(arg_required_else_help = true, verbatim_doc_comment)]
+/// Verify a signed PBO against a public key
 ///
-/// Checks a .bisign file against a public key and PBO
+/// It will check:
+///
+/// - The authority matches
+/// - The PBO is correctly sorted
+/// - The hashes match
+/// - A prefix property is present
 pub struct Command {
     /// PBO to verify
     pbo: String,
