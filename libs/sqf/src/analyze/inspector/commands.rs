@@ -88,7 +88,6 @@ impl SciptScope {
                         }
 
                         _ => {
-                            // error_type = Some(format!("{gv_index_num}: Element Type"));
                             error_type = Some(InvalidArgs::TypeNotExpected {
                                 expected: vec![
                                     GameValue::String(None),
