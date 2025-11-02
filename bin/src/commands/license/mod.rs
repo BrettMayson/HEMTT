@@ -2,12 +2,7 @@ use std::path::Path;
 
 use dialoguer::{Confirm, Input};
 
-use crate::{
-    context::Context,
-    error::Error,
-    modules::Licenses,
-    report::Report,
-};
+use crate::{context::Context, error::Error, modules::Licenses, report::Report};
 
 #[derive(clap::Parser)]
 #[command(verbatim_doc_comment)]
@@ -40,6 +35,9 @@ pub struct Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
+/// 
+/// # Panics
+/// If there is a problem with dialoguer
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let report = Report::new();
 
@@ -47,7 +45,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if let Some(name) = &cmd.name {
         // Quick validation before prompting for anything
         if Licenses::get_by_name(name, "dummy").is_none() {
-            eprintln!("Error: Unknown license name: {}", name);
+            eprintln!("Error: Unknown license name: {name}");
             eprintln!("\nAvailable licenses:");
             eprintln!("  - apl-sa (Arma Public License Share Alike)");
             eprintln!("  - apl (Arma Public License)");
@@ -70,7 +68,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             .with_prompt("LICENSE file already exists. Do you want to overwrite it?")
             .default(false)
             .interact()?;
-        
+
         if !confirm {
             println!("License update cancelled.");
             return Ok(report);
@@ -82,12 +80,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         Licenses::get_by_name(name, &author).expect("License name already validated")
     } else {
         // Interactive selection
-        match Licenses::select(&author) {
-            Some(text) => text,
-            None => {
-                println!("No license selected.");
-                return Ok(report);
-            }
+        if let Some(text) = Licenses::select(&author) { text } else {
+            println!("No license selected.");
+            return Ok(report);
         }
     };
 
@@ -115,7 +110,7 @@ fn get_author_from_project_or_prompt() -> Result<String, Error> {
             warn!("Failed to read project config: {}", e);
         }
     }
-    
+
     // Prompt for author if not found in project.toml
     prompt_for_author()
 }

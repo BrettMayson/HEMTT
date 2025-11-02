@@ -158,7 +158,12 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             report.write_to_stdout();
             if !matches!(
                 cli.command,
-                Some(Commands::New(_) | Commands::License(_) | Commands::Utils(_) | Commands::Wiki(_))
+                Some(
+                    Commands::New(_)
+                        | Commands::License(_)
+                        | Commands::Utils(_)
+                        | Commands::Wiki(_)
+                )
             ) {
                 report.write_ci_annotations()?;
             }
