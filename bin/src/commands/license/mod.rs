@@ -35,7 +35,7 @@ pub struct Command {
 ///
 /// # Errors
 /// [`Error`] depending on the modules
-/// 
+///
 /// # Panics
 /// If there is a problem with dialoguer
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
@@ -80,7 +80,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         Licenses::get_by_name(name, &author).expect("License name already validated")
     } else {
         // Interactive selection
-        if let Some(text) = Licenses::select(&author) { text } else {
+        if let Some(text) = Licenses::select(&author) {
+            text
+        } else {
             println!("No license selected.");
             return Ok(report);
         }

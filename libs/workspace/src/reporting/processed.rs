@@ -191,14 +191,11 @@ fn append_output(
                     .sources
                     .iter()
                     .position(|(s, _)| s.as_str() == path.as_str())
-                    .map_or_else(
-                        || {
-                            let content = path.read_to_string().expect("file should exist if used");
-                            processing.sources.push((path, content));
-                            processing.sources.len() - 1
-                        },
-                        |i| i,
-                    );
+                    .unwrap_or_else(|| {
+                        let content = path.read_to_string().expect("file should exist if used");
+                        processing.sources.push((path, content));
+                        processing.sources.len() - 1
+                    });
                 processing.mappings.push(Mapping {
                     processed: (
                         LineCol(start, (line, col)),
