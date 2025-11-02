@@ -1,0 +1,7 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (macro_path))
+---
+class Data {
+    texture = QPATHTOF(textures\target_ca.paa);
+};

@@ -1,0 +1,6 @@
+---
+source: libs/format/tests/sqf.rs
+expression: sqf(stringify! (hash))
+---
+private _lod = (allLODs _weaponObj) # 0 # 2;
+private _xMemMuzzle = getText (_config >> "muzzlePos");
