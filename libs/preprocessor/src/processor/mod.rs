@@ -104,6 +104,7 @@ impl Processor {
         Processed::new(
             buffer,
             processor.macros,
+            processor.included_files.clone(),
             #[cfg(feature = "lsp")]
             processor.usage,
             processor.warnings,

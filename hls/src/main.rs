@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use config::ConfigAnalyzer;
 use files::FileCache;
 use preprocessor::PreprocessorAnalyzer;
@@ -40,6 +42,16 @@ struct Backend {
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
+        let did_filter = FileOperationRegistrationOptions {
+            filters: vec![FileOperationFilter {
+                scheme: Some(String::from("file")),
+                pattern: FileOperationPattern {
+                    glob: "**/*.*".to_string(),
+                    matches: Some(FileOperationPatternKind::File),
+                    options: None,
+                },
+            }],
+        };
         Ok(InitializeResult {
             server_info: None,
             capabilities: ServerCapabilities {
@@ -52,7 +64,12 @@ impl LanguageServer for Backend {
                         supported: Some(true),
                         change_notifications: Some(OneOf::Left(true)),
                     }),
-                    file_operations: None,
+                    file_operations: Some(WorkspaceFileOperationsServerCapabilities {
+                        did_create: Some(did_filter.clone()),
+                        did_rename: Some(did_filter.clone()),
+                        did_delete: Some(did_filter.clone()),
+                        ..Default::default()
+                    }),
                 }),
                 signature_help_provider: Some(SignatureHelpOptions {
                     trigger_characters: Some(vec!["(".to_string()]),
@@ -124,16 +141,42 @@ impl LanguageServer for Backend {
         debug!("did_change_configuration");
     }
 
-    async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
-        for x in params.changes {
-            if x.uri.path().contains(".toml") {
-                ConfigAnalyzer::get()
-                    .on_save(x.uri.clone(), self.client.clone())
-                    .await;
-                SqfAnalyzer::get()
-                    .on_save(x.uri.clone(), self.client.clone())
-                    .await;
-            }
+    async fn did_create_files(&self, params: CreateFilesParams) {
+        for file in params.files {
+            ConfigAnalyzer::get()
+                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .await;
+            SqfAnalyzer::get()
+                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .await;
+        }
+    }
+
+    async fn did_delete_files(&self, params: DeleteFilesParams) {
+        for file in params.files {
+            ConfigAnalyzer::get()
+                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .await;
+            SqfAnalyzer::get()
+                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .await;
+        }
+    }
+
+    async fn did_rename_files(&self, params: RenameFilesParams) {
+        for file in params.files {
+            ConfigAnalyzer::get()
+                .on_save(Url::from_str(&file.old_uri).unwrap(), self.client.clone())
+                .await;
+            SqfAnalyzer::get()
+                .on_save(Url::from_str(&file.old_uri).unwrap(), self.client.clone())
+                .await;
+            ConfigAnalyzer::get()
+                .on_save(Url::from_str(&file.new_uri).unwrap(), self.client.clone())
+                .await;
+            SqfAnalyzer::get()
+                .on_save(Url::from_str(&file.new_uri).unwrap(), self.client.clone())
+                .await;
         }
     }
 

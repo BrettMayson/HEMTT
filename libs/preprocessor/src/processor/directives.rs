@@ -230,6 +230,14 @@ impl Processor {
                     .collect::<String>(),
             )
             else {
+                if let Ok(possible) = current.parent().join(
+                    path_tokens
+                        .iter()
+                        .map(std::string::ToString::to_string)
+                        .collect::<String>(),
+                ) {
+                    self.add_include(possible, path_tokens.clone())?;
+                }
                 return Err(IncludeNotFound::code(path_tokens));
             };
             if let Some(case_mismatch) = case_mismatch {

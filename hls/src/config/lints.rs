@@ -128,7 +128,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                     }
                 }
             }
-            let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
+            let sources = processed.included_files().to_owned();
             PreprocessorAnalyzer::get().save_processed(source.parent(), processed);
             PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             sources
@@ -184,23 +184,19 @@ pub async fn process(url: Url, client: Client) {
     let recheck_addons = {
         let cache = Cache::get();
         let files = cache.files.read().await;
-        if !files.contains_key(&saved) && !project_change {
-            vec![saved]
-        } else {
-            files
-                .iter()
-                .filter_map(|(path, bundle)| {
-                    if project_change {
-                        return Some(path.clone());
-                    }
-                    if &saved == path || bundle.sources.contains(&saved) {
-                        Some(path.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()
-        }
+        files
+            .iter()
+            .filter_map(|(path, bundle)| {
+                if project_change {
+                    return Some(path.clone());
+                }
+                if &saved == path || bundle.sources.contains(&saved) {
+                    Some(path.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
     };
     let mut futures = JoinSet::new();
     for path in recheck_addons {

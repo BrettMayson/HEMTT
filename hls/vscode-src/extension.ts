@@ -60,9 +60,6 @@ export async function activate(context: vscode.ExtensionContext) {
       { scheme: "file", language: "sqf" },
       { scheme: "file", language: "arma-config" },
     ],
-    synchronize: {
-      fileEvents: vscode.workspace.createFileSystemWatcher("**/.hemtt/**"),
-    },
   };
 
   // Create the language client and start the client.

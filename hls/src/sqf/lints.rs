@@ -168,7 +168,7 @@ async fn check_sqf(
                     }
                 }
             }
-            let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
+            let sources = processed.included_files().to_owned();
             if FileCache::get().is_open(&workspace.to_url(&source)) {
                 PreprocessorAnalyzer::get().save_processed(source.clone(), processed);
                 PreprocessorAnalyzer::get().mark_done(source.clone()).await;
@@ -220,7 +220,7 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", url);
             return;
         };
-        let Ok(url_workspacepath) = workspace.join_url(&url) else {
+        let Ok(saved) = workspace.join_url(&url) else {
             warn!(
                 "Failed to join URL {:?} in workspace {:?}",
                 url,
@@ -232,30 +232,30 @@ impl SqfAnalyzer {
         let recheck_files = {
             let cache = Cache::get();
             let files = cache.files.read().await;
-            if !files.contains_key(&url_workspacepath) && !project_change {
-                vec![url_workspacepath]
-            } else {
-                files
-                    .iter()
-                    .filter_map(|(path, bundle)| {
-                        if project_change {
-                            return Some(path.clone());
-                        }
-                        if path == &url_workspacepath
-                            || bundle.sources.iter().any(|source| {
-                                workspace
-                                    .join_url(&url)
-                                    .map(|joined| joined == *source)
-                                    .unwrap_or(false)
-                            })
-                        {
-                            Some(path.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
+            let mut recheck = files
+                .iter()
+                .filter_map(|(path, bundle)| {
+                    if project_change {
+                        return Some(path.clone());
+                    }
+                    if path == &saved
+                        || bundle.sources.iter().any(|source| {
+                            workspace
+                                .join_url(&url)
+                                .map(|joined| joined == *source)
+                                .unwrap_or(false)
+                        })
+                    {
+                        Some(path.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
+            if !saved.exists().unwrap_or(false) && saved.to_string().ends_with(".sqf") {
+                recheck.push(saved);
             }
+            recheck
         };
         let database = self.get_database(&workspace).await;
         let mut futures = JoinSet::new();

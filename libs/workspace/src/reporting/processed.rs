@@ -15,6 +15,7 @@ pub type Sources = Vec<(WorkspacePath, String)>;
 /// A processed file
 pub struct Processed {
     sources: Sources,
+    included_files: Vec<WorkspacePath>,
 
     output: String,
     clean_output: String,
@@ -280,6 +281,7 @@ impl Processed {
     pub fn new(
         output: Vec<Output>,
         macros: HashMap<String, Vec<(Position, Definition)>>,
+        included_files: Vec<WorkspacePath>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         warnings: Codes,
         no_rapify: bool,
@@ -296,6 +298,7 @@ impl Processed {
 
         let mut processed = Self {
             sources: processing.sources,
+            included_files,
             output: processing.output,
             clean_output: String::new(),
             clean_output_line_indexes: Vec::new(),
@@ -329,6 +332,12 @@ impl Processed {
     /// Ignores certain tokens
     pub fn as_str(&self) -> &str {
         &self.output
+    }
+
+    #[must_use]
+    /// Get the included files
+    pub const fn included_files(&self) -> &Vec<WorkspacePath> {
+        &self.included_files
     }
 
     #[must_use]
