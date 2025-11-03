@@ -232,26 +232,30 @@ impl SqfAnalyzer {
         let recheck_files = {
             let cache = Cache::get();
             let files = cache.files.read().await;
-            files
-                .iter()
-                .filter_map(|(path, bundle)| {
-                    if project_change {
-                        return Some(path.clone());
-                    }
-                    if path == &url_workspacepath
-                        || bundle.sources.iter().any(|source| {
-                            workspace
-                                .join_url(&url)
-                                .map(|joined| joined == *source)
-                                .unwrap_or(false)
-                        })
-                    {
-                        Some(path.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()
+            if !files.contains_key(&url_workspacepath) && !project_change {
+                vec![url_workspacepath]
+            } else {
+                files
+                    .iter()
+                    .filter_map(|(path, bundle)| {
+                        if project_change {
+                            return Some(path.clone());
+                        }
+                        if path == &url_workspacepath
+                            || bundle.sources.iter().any(|source| {
+                                workspace
+                                    .join_url(&url)
+                                    .map(|joined| joined == *source)
+                                    .unwrap_or(false)
+                            })
+                        {
+                            Some(path.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }
         };
         let database = self.get_database(&workspace).await;
         let mut futures = JoinSet::new();

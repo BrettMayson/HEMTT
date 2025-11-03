@@ -184,19 +184,23 @@ pub async fn process(url: Url, client: Client) {
     let recheck_addons = {
         let cache = Cache::get();
         let files = cache.files.read().await;
-        files
-            .iter()
-            .filter_map(|(path, bundle)| {
-                if project_change {
-                    return Some(path.clone());
-                }
-                if &saved == path || bundle.sources.contains(&saved) {
-                    Some(path.clone())
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>()
+        if !files.contains_key(&saved) && !project_change {
+            vec![saved]
+        } else {
+            files
+                .iter()
+                .filter_map(|(path, bundle)| {
+                    if project_change {
+                        return Some(path.clone());
+                    }
+                    if &saved == path || bundle.sources.contains(&saved) {
+                        Some(path.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+        }
     };
     let mut futures = JoinSet::new();
     for path in recheck_addons {
