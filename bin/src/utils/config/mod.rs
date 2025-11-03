@@ -20,6 +20,8 @@ enum Subcommands {
     /// Derapify a config file
     Derapify(derapify::DerapifyArgs),
     /// Inspect a config file
+    ///
+    /// In some cases the output might be cut off in the terminal. Adjust the `terminal.integrated.scrollback` setting in VS Code if necessary.
     Inspect(inspect::InspectArgs),
 }
 

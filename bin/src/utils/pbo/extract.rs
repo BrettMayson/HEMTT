@@ -11,7 +11,7 @@ pub struct PboExtractArgs {
     pbo: String,
     /// File to extract
     file: String,
-    /// Where to save the extracted file
+    /// Where to save the extracted file, if not provided outputs to stdout
     output: Option<String>,
 }
 

@@ -3,10 +3,13 @@ use mdbook::preprocess::CmdPreprocessor;
 mod commands;
 mod highlight;
 mod lints;
+mod utilities;
 
 fn main() {
     if std::env::args().nth(1) == Some("supports".to_string()) {
         highlight::run();
+        commands::summary_commands();
+        commands::summary_utilities();
         return;
     }
 
@@ -18,6 +21,8 @@ fn main() {
                 lints::run(chapter);
             } else if chapter.name == "Commands" {
                 commands::run(chapter);
+            } else if chapter.name == "Utilities" {
+                utilities::run(chapter);
             }
         }
     }
