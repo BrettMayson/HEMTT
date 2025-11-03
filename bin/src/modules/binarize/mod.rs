@@ -652,7 +652,7 @@ impl BuildCache {
 struct Artifact {
     modified: u64,
     size: u64,
-    dependencies: HashMap<String, Artifact>,
+    dependencies: HashMap<String, Self>,
 }
 
 impl Artifact {

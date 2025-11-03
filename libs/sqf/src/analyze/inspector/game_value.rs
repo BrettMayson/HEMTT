@@ -13,10 +13,7 @@ pub enum GameValue {
     Anything,
     // Assignment, // as in z = call {x=1}???
     #[allow(clippy::type_complexity)]
-    Array(
-        Option<Vec<Vec<(GameValue, Range<usize>)>>>,
-        Option<ArrayType>,
-    ),
+    Array(Option<Vec<Vec<(Self, Range<usize>)>>>, Option<ArrayType>),
     Boolean(Option<Expression>),
     Code(Option<Expression>),
     Config,

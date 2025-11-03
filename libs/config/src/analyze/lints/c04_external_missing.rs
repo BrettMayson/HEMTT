@@ -86,8 +86,8 @@ impl LintRunner<LintData> for Runner {
 
 struct ClassNode {
     class: Class,
-    upper: Option<Rc<RefCell<ClassNode>>>,
-    subclasses: IndexMap<String, Rc<RefCell<ClassNode>>>, // keep insertion order constant
+    upper: Option<Rc<RefCell<Self>>>,
+    subclasses: IndexMap<String, Rc<RefCell<Self>>>, // keep insertion order constant
 }
 impl fmt::Debug for ClassNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

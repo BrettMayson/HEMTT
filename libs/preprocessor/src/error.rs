@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::error;
-
 use hemtt_workspace::reporting::Code;
 
 #[derive(thiserror::Error, Debug)]

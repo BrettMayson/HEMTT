@@ -194,8 +194,7 @@ pub fn expand_unknown_input_length(
     let mut rpos: usize;
     let mut rlen: u8;
     let mut fl: usize = 0;
-    #[expect(unused_variables, reason = "not used right now")]
-    let mut calculated_checksum: u32 = 0;
+    // let mut calculated_checksum: u32 = 0;
     let mut pi: usize = 0;
     let mut data: u8;
 
@@ -218,7 +217,7 @@ pub fn expand_unknown_input_length(
 
                 data = input[pi];
                 pi += 1;
-                calculated_checksum += u32::from(data);
+                // calculated_checksum += u32::from(data);
                 out_buf[fl] = data;
                 fl += 1;
 
@@ -242,7 +241,7 @@ pub fn expand_unknown_input_length(
                 // Special case: space fill
                 let mut skip_backref = false;
                 while rpos > fl {
-                    calculated_checksum += 0x20;
+                    // calculated_checksum += 0x20;
                     out_buf[fl] = 0x20;
                     fl += 1;
 
@@ -265,7 +264,7 @@ pub fn expand_unknown_input_length(
                     // Need to copy byte-by-byte because source and destination might overlap
                     for _ in 0..rlen {
                         data = out_buf[rpos];
-                        calculated_checksum += u32::from(data);
+                        // calculated_checksum += u32::from(data);
                         out_buf[fl] = data;
                         fl += 1;
                         rpos += 1;

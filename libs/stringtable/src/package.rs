@@ -11,7 +11,7 @@ pub struct Package {
     keys: Vec<Key>,
     #[serde(rename = "Container")]
     #[serde(default)]
-    containers: Vec<Package>,
+    containers: Vec<Self>,
 }
 
 impl Package {

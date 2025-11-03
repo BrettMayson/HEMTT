@@ -96,8 +96,8 @@ impl LintRunner<LintData> for Runner {
 struct ClassNode {
     class: Class,
     used: bool,
-    upper: Option<Rc<RefCell<ClassNode>>>,
-    subclasses: IndexMap<String, Rc<RefCell<ClassNode>>>, // keep insertion order constant
+    upper: Option<Rc<RefCell<Self>>>,
+    subclasses: IndexMap<String, Rc<RefCell<Self>>>, // keep insertion order constant
 }
 
 impl ClassNode {

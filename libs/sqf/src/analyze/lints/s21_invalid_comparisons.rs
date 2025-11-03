@@ -98,8 +98,8 @@ enum Comparison {
     NotEqual(String, FloatOrd<f32>, Range<usize>),
     GreaterThanOrEqual(String, FloatOrd<f32>, Range<usize>),
     GreaterThan(String, FloatOrd<f32>, Range<usize>),
-    CompareGroup(Vec<Comparison>),
-    NonCompareGroup(Vec<Comparison>),
+    CompareGroup(Vec<Self>),
+    NonCompareGroup(Vec<Self>),
     Ignored,
 }
 
