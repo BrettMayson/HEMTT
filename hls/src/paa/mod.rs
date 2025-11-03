@@ -44,12 +44,13 @@ impl Backend {
             return Ok(None);
         };
         tracing::debug!("Locating {:?}", &params.texture);
-        let source = if let Ok(Some(source)) = workspace.root().locate(&params.texture) {
+        let source = if let Ok(Some(source)) = workspace.root().locate_with_pdrive(&params.texture)
+        {
             source
         } else {
             let texture = format!("\\{}", &params.texture);
             tracing::debug!("Locating {:?}", &texture);
-            if let Ok(Some(source)) = workspace.root().locate(&texture) {
+            if let Ok(Some(source)) = workspace.root().locate_with_pdrive(&texture) {
                 source
             } else {
                 tracing::warn!("Failed to locate {:?}", &params.texture);

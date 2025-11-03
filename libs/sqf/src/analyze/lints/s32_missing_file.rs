@@ -2,8 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    lint::{AnyLintRunner, Lint, LintRunner}, missing::check_is_missing_file, reporting::{Code, Codes, Diagnostic, Processed, Severity}
 };
 
 use crate::{analyze::LintData, Expression};
@@ -56,53 +55,8 @@ impl LintRunner<LintData> for Runner {
         let Expression::String(target_str, span, _) = target else {
             return Vec::new();
         };
-        let input_lower = target_str.to_ascii_lowercase();
-        // ref c11:allow_no_extension
-        if !input_lower.contains('.') || input_lower.contains("%1") {
-            return vec![];
-        }
-        let project_prefix_lower = project
-            .mainprefix()
-            .map_or_else(
-                || format!(r"{}\", project.prefix()),
-                |mainprefix| format!(r"{}\{}\", mainprefix, project.prefix()),
-            )
-            .to_ascii_lowercase();
-        // try matching with and without leading slash
-        let relative_path = if let Some(r) = input_lower.strip_prefix(&project_prefix_lower) {
-            r
-        } else if let Some(r) = input_lower.strip_prefix(&format!(r"\{project_prefix_lower}")) {
-            r
-        } else {
-            return vec![];
-        };
-        let sources = processed.sources();
-        if sources.is_empty()
-            || sources
-                .iter()
-                // optionals don't get added to VFS
-                .any(|f| f.0.as_str().to_ascii_lowercase().starts_with(r"/optionals"))
-        {
-            return vec![];
-        }
-        // weird stuff to get a VFS root
-        let root = sources[0].0.vfs().root();
-        let path = root.join(relative_path).expect("Failed to join path");
-        if path.exists().unwrap_or(false) {
-            return vec![];
-        }
-        #[allow(clippy::case_sensitive_file_extension_comparisons)]
-        // check for alternative extensions for textures
-        for (x, y) in [(".paa", ".tga"), (".tga", ".paa"), (".png", ".paa")] {
-            if relative_path.ends_with(x)
-                && root
-                    .join(relative_path.replace(x, y))
-                    .expect("Failed to join path")
-                    .exists()
-                    .unwrap_or(false)
-            {
-                return vec![];
-            }
+        if !check_is_missing_file(target_str, project, processed) {
+            return Vec::new();
         }
         let span = span.start + 1..span.end - 1;
         vec![Arc::new(CodeS32MissingFile::new(
