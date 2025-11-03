@@ -23,19 +23,31 @@ mod error;
 ///
 /// `hemtt new` is used to create a new mod. It will create a new folder with the name you provide, and create some starting files.
 ///
-/// It will ask for:
+/// ## Interactive Setup
+///
+/// The command will interactively prompt for:
 ///
 /// - The full name of your mod  
 /// - The author of your mod  
-/// - The prefix of your mod  
-/// - The main prefix of your mod  
-/// - A license for your mod  
+/// - The prefix of your mod (used for addon naming)
+/// - The main prefix of your mod (folder prefix like 'z')
+/// - A license for your mod
+///
+/// ## Generated Structure
+///
+/// Creates a complete project structure with:
+/// - `.hemtt/project.toml` - Project configuration
+/// - `addons/main/` - Example addon structure
+/// - `LICENSE` - Selected license file
+/// - `.gitignore` - Standard git ignore patterns
+/// - README template  
 pub struct Command {
     #[clap(name = "name", verbatim_doc_comment)]
     /// The name of the new project
     ///
     /// This will create a new folder with the name you provide in the current directory.
     /// It should be a valid folder name, using only letters, numbers, and underscores.
+    /// This name is typically lowercase and used for the directory, not the display name.
     ///
     /// Example: `hemtt new my_mod`
     name: String,

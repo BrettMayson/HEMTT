@@ -28,7 +28,7 @@ use super::{
 #[derive(clap::Parser)]
 pub struct Command {
     #[arg(action = clap::ArgAction::Append, verbatim_doc_comment)]
-    /// Launches with the specified configurations
+    /// Launches with the specified profiles
     ///
     /// Configured in either:
     /// - `.hemtt/project.toml` under `hemtt.launch`

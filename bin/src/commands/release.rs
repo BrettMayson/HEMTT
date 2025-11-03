@@ -11,7 +11,11 @@ use super::build;
 ///
 /// It is intended to be used for releasing your mod.
 ///
-/// It will create two zip archives in the `releases` folder: - `{name}-latest.zip` - `{name}-{version}.zip`
+/// ## Output
+///
+/// Creates two identical zip archives in the `releases` folder:
+/// - `{name}-latest.zip` - Always contains the most recent version
+/// - `{name}-{version}.zip` - Version-specific archive for distribution
 ///
 /// ## Configuration
 ///
@@ -63,6 +67,7 @@ pub struct ReleaseArgs {
     /// Do not create a zip archive of the release.
     ///
     /// The output will be in `.hemttout/release`.
+    /// Useful in CI when you want to manually package or upload files to Steam Workshop.
     no_archive: bool,
 }
 

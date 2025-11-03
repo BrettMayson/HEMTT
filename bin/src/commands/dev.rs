@@ -54,6 +54,8 @@ pub struct DevArgs {
     /// Include an optional addon folder
     ///
     /// This can be used multiple times to include multiple optional addons.
+    /// Optional addons are stored in the `optionals/` directory and can be used
+    /// to separate compatibility patches or features that not all users need.
     ///
     /// ```bash
     /// hemtt dev -o caramel -o chocolate
@@ -61,6 +63,8 @@ pub struct DevArgs {
     pub(crate) optional: Vec<String>,
     #[arg(long, short = 'O', action = clap::ArgAction::SetTrue, conflicts_with = "optional", verbatim_doc_comment)]
     /// Include all optional addon folders
+    ///
+    /// Builds all addons from the `optionals/` directory in addition to main addons.
     pub(crate) all_optionals: bool,
     #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)

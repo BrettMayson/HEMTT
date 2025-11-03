@@ -11,16 +11,26 @@ use crate::{
 #[command(arg_required_else_help = true, verbatim_doc_comment)]
 /// Verify a signed PBO against a public key
 ///
-/// It will check:
+/// Validates that a PBO file has been properly signed and can be trusted.
 ///
-/// - The authority matches
-/// - The PBO is correctly sorted
-/// - The hashes match
-/// - A prefix property is present
+/// ## Verification Checks
+///
+/// - **Authority matches**: Signature authority matches the public key
+/// - **PBO correctly sorted**: Files are in the correct order
+/// - **Hashes match**: PBO content hasn't been tampered with
+/// - **Prefix present**: PBO has required prefix property
+///
+/// Returns a success message if all checks pass, or specific error details if verification fails.
+///
+/// ## Usage
+///
+/// ```bash
+/// hemtt utils verify my_addon.pbo my_key.bikey
+/// ```
 pub struct Command {
-    /// PBO to verify
+    /// Path to the PBO to check. The corresponding .bisign file must be present.
     pbo: String,
-    /// `BIKey` to verify against
+    /// Path to the public key (.bikey) used to verify the signature.
     bikey: String,
 }
 

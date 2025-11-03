@@ -13,6 +13,8 @@ use crate::{
 /// `hemtt check` is the quickest way to check your project for errors.
 /// All the same checks are run as [`hemtt dev`](./dev.md), but it will not
 /// write files to disk, saving time and resources.
+///
+/// This is ideal for CI/CD pipelines and quick validation during development.
 pub struct Command {
     #[clap(flatten)]
     pub(crate) check: CheckArgs,
@@ -26,9 +28,14 @@ pub struct Command {
 pub struct CheckArgs {
     #[arg(long, short = 'p', action = clap::ArgAction::SetTrue)]
     /// Run all lints that are disabled by default (but not explicitly disabled via project config)
+    ///
+    /// Enables stricter checking for code quality and best practices.
     pedantic: bool,
     #[arg(long, short = 'L', action = clap::ArgAction::Append)]
     /// Explicit Lints
+    ///
+    /// Enable specific lints by name. Can be used multiple times.
+    /// Example: `hemtt check -L s01-invalid-command -L s02-unknown-command`
     lints: Vec<String>,
 }
 

@@ -23,13 +23,16 @@ impl OutputFormat {
 
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
+/// Convert binary config files to readable text
 pub struct DerapifyArgs {
-    /// file to derapify
+    /// File to derapify (typically config.bin)
     pub(crate) file: String,
-    /// output format
+    /// Output format: debin (cpp), json, or json-pretty
     #[arg(short = 'f', long = "format", default_value = "debin")]
     pub(crate) output_format: OutputFormat,
-    /// output file
+    /// Output file path
+    ///
+    /// If not specified, uses the input filename with appropriate extension.
     pub(crate) output: Option<String>,
 }
 

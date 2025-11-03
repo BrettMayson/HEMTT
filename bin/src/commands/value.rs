@@ -6,9 +6,15 @@ use crate::{context::Context, error::Error, report::Report};
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Print a value from the project
+/// Print a value from the project configuration for use in scripts or CI/CD pipelines.
+/// Use `hemtt value list` to see all available values.
 ///
-/// Print a value from the project, use `list` to see all available values
+/// ## Common Uses
+///
+/// - Automated versioning in CI/CD: `VERSION=$(hemtt value project.version)`
+/// - Dynamic file naming: `hemtt value project.name`
+/// - Build scripts requiring project metadata
+/// - Integration with external tools and workflows
 pub struct Command {
     #[clap(name = "name")]
     name: String,

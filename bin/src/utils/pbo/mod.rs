@@ -10,7 +10,7 @@ pub use inspect::inspect;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for PBO files
+/// Tools for working with PBO (Packed Bank Of files) - Arma's archive format.
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
@@ -19,6 +19,8 @@ pub struct Command {
 #[derive(clap::Subcommand)]
 enum Subcommands {
     /// Extract a file from a PBO
+    ///
+    /// Useful for quickly retrieving a specific file without unpacking the entire PBO.
     Extract(extract::PboExtractArgs),
     #[command(verbatim_doc_comment)]
     /// Inspect a PBO file

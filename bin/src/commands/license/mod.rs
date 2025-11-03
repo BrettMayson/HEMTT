@@ -26,6 +26,7 @@ pub struct Command {
     /// The name of the license to add
     ///
     /// If not provided, you will be prompted to select a license interactively.
+    /// The license text will be automatically populated with the author name from your project.
     ///
     /// Examples: `apl-sa`, `mit`, `apache`
     name: Option<String>,

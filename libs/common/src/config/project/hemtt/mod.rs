@@ -151,7 +151,7 @@ impl HemttSectionFile {
                 }
                 toml::from_str::<HashMap<String, launch::LaunchOptionsFile>>(&launch_source)?
             } else {
-                return Err(Error::LaunchConfigConflict);
+                return Err(Error::LaunchProfileConflict);
             }
         } else {
             self.launch
@@ -186,12 +186,12 @@ impl HemttSectionFile {
                         let mut base = v;
                         while let Some(extends) = &base.extends {
                             if extends == &k {
-                                return Err(Error::LaunchConfigExtendsSelf(k));
+                                return Err(Error::LaunchProfileExtendsSelf(k));
                             }
                             if let Some(extends) = launch_source.get(extends) {
                                 base = base.extend(extends.clone());
                             } else {
-                                return Err(Error::LaunchConfigExtendsMissing(k, extends.clone()));
+                                return Err(Error::LaunchProfileExtendsMissing(k, extends.clone()));
                             }
                         }
                         base.dedup();

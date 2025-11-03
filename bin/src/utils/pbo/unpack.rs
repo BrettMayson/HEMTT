@@ -14,9 +14,15 @@ pub struct PboUnpackArgs {
     /// PBO file to unpack
     pbo: String,
     /// Directory to unpack to
+    ///
+    /// If not specified, creates a directory named after the PBO file.
     output: Option<String>,
     #[arg(long = "derap", short = 'r')]
-    /// Unrapifies any rapified files
+    /// Derapify any rapified files (config.bin, etc.)
+    ///
+    /// Automatically converts binary config files back to a readable format.
+    ///
+    /// Derapified files that do not have different file names for the derapified versions will have `.derap` added to their filenames.
     derap: bool,
 }
 

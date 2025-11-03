@@ -4,7 +4,7 @@ mod json;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for p3d files
+/// Tools for working with P3D - Arma's 3D model format.
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
@@ -12,6 +12,7 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Export P3D model to JSON
     Json(json::JsonArgs),
 }
 

@@ -8,12 +8,23 @@ use crate::{context::Context, error::Error, modules::Hooks, report::Report};
 /// This is useful for automating tasks in a platform agnostic way,
 /// or requiring external dependencies.
 ///
+/// ## Use Cases
+///
+/// - Automated file generation or manipulation
+/// - Custom build steps and preprocessing
+/// - Integration with external tools or APIs
+/// - Project-specific workflows and validation
+///
+/// Scripts have access to project configuration and can interact with
+/// the file system, making them powerful for custom automation needs.
+///
 /// Learn more about [Scripts](../rhai/scripts).
 pub struct Command {
     #[clap(name = "name")]
     /// The name of the script to run, without .rhai
     ///
     /// Scripts are kept in `.hemtt/scripts/`
+    /// Example: `hemtt script generate_docs` will run `.hemtt/scripts/generate_docs.rhai`
     name: String,
 
     #[clap(flatten)]

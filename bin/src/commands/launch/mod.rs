@@ -4,7 +4,7 @@ use launcher::Launcher;
 use crate::{
     commands::launch::error::{
         bcle5_missing_main_prefix::MissingMainPrefix,
-        bcle6_launch_config_not_found::{LaunchConfigNotFound, LaunchSource},
+        bcle6_launch_profile_not_found::{LaunchProfileNotFound, LaunchSource},
         bcle7_can_not_quicklaunch::CanNotQuickLaunch,
     },
     context::Context,
@@ -26,18 +26,18 @@ pub mod preset;
 /// It will run the [`hemtt dev`](dev.md) command internally after a
 /// few checks, options are passed to the `dev` command.
 ///
-/// You can chain multiple configurations together, and they will be
-/// overlayed from left to right. Any arrays will be concatenated,
-/// and any duplicate keys will be overridden. With the below configuration,
-/// `hemtt launch default vn ace` would launch with all three configurations.
-/// Note that `default` must be specified when specifying additional
-/// configurations, `default` is only implied when no configurations are specified.
+/// ## Workflow
+///
+/// 1. Builds your mod using `hemtt dev`
+/// 2. Loads configured Workshop mods and DLCs
+/// 3. Applies HTML presets if specified
+/// 4. Launches Arma 3 with all configured parameters
 ///
 /// ## Configuration
 ///
 /// `hemtt launch` requires the [`mainprefix`](../configuration/index.md#main-prefix) option to be set.
 ///
-/// Launch configurations can be stored in either `.hemtt/project.toml` under `hemtt.launch`,
+/// Launch profiles can be stored in either `.hemtt/project.toml` under `hemtt.launch`,
 /// or in a separate file under `.hemtt/launch.toml`. The latter is useful for keeping
 /// your main configuration file clean. When using `launch.toml`,
 /// the `hemtt.launch` key is not required.
@@ -106,8 +106,8 @@ pub mod preset;
 ///
 /// ### extends
 ///
-/// The name of another configuration to extend. This will merge all
-/// arrays with the base configuration, and override any duplicate keys.
+/// The name of another profile to extend. This will merge all
+/// arrays with the base profile, and override any duplicate keys.
 ///
 /// ### workshop
 ///
@@ -170,9 +170,18 @@ pub mod preset;
 ///
 /// Provides the ability to disable rapify for the launch command. Equivalent to `--no-rap`.
 ///
+/// ## Profile Chaining
+///
+/// You can chain multiple profiles together, and they will be
+/// overlayed from left to right. Any arrays will be concatenated,
+/// and any duplicate keys will be overridden. With the above configuration,
+/// `hemtt launch default vn ace` would launch with all three profiles.
+/// Note that `default` must be specified when specifying additional
+/// profiles, `default` is only implied when no profiles are specified.
+///
 /// ## CDLC Launch
 ///
-/// To launch with a CDLC, you can avoid creating a launch configuration for each CDLC and instead use `+<cdlc name>`
+/// To launch with a CDLC, you can avoid creating a launch profile for each CDLC and instead use `+<cdlc name>`
 ///
 /// ```bash
 /// hemtt launch my_profile +ws
@@ -216,7 +225,7 @@ pub mod preset;
 /// 463939057 = "D:\\Projects\\ACE3"
 /// ```
 ///
-/// Workshop pointers will automatically be used globally when the workshop ID is specified in a launch configuration.
+/// Workshop pointers will automatically be used globally when the workshop ID is specified in a launch profile.
 ///
 /// Non-workshop pointers can be used by prefixing the id of the mod in the `workshop` list with the name of the pointer.
 ///
@@ -322,7 +331,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         return Ok(report);
     };
 
-    let launch = read_config(
+    let launch = read_profile(
         &global,
         &config,
         cmd.launch.config.as_deref().unwrap_or_default(),
@@ -381,27 +390,27 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     Ok(report)
 }
 
-/// Read a launch configuration
-pub fn read_config(
+/// Read a launch profile
+pub fn read_profile(
     global: &GlobalConfig,
     config: &ProjectConfig,
-    configs: &[String],
+    profiles: &[String],
     report: &mut Report,
 ) -> Option<LaunchOptions> {
-    let launch = if configs.is_empty() || configs.iter().all(|c| c.starts_with('+')) {
+    let launch = if profiles.is_empty() || profiles.iter().all(|c| c.starts_with('+')) {
         config
             .hemtt()
             .launch()
             .get("default")
             .cloned()
             .unwrap_or_default()
-    } else if let Some(launch) = configs
+    } else if let Some(launch) = profiles
         .iter()
         .map(|c| {
             if let Some(gc) = c.strip_prefix("@") {
                 global.launch().profiles().get(gc).cloned().map_or_else(
                     || {
-                        report.push(LaunchConfigNotFound::code(
+                        report.push(LaunchProfileNotFound::code(
                             LaunchSource::Global,
                             gc.to_string(),
                             &global
@@ -418,7 +427,7 @@ pub fn read_config(
             } else if let Some(cdlc) = c.strip_prefix("+") {
                 LaunchOptions::new_cdlc(cdlc).map_or_else(
                     |_| {
-                        report.push(LaunchConfigNotFound::code(
+                        report.push(LaunchProfileNotFound::code(
                             LaunchSource::CDLC,
                             cdlc.to_string(),
                             &[],
@@ -430,7 +439,7 @@ pub fn read_config(
             } else {
                 config.hemtt().launch().get(c).cloned().map_or_else(
                     || {
-                        report.push(LaunchConfigNotFound::code(
+                        report.push(LaunchProfileNotFound::code(
                             LaunchSource::Project,
                             c.clone(),
                             &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),

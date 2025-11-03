@@ -10,7 +10,7 @@ pub struct JsonArgs {
     output: String,
 }
 
-/// Execute the convert command
+/// Execute the json command
 ///
 /// # Errors
 /// [`Error`] depending on the modules

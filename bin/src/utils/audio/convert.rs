@@ -8,12 +8,13 @@ use super::{SupportedFile, guess_file_type};
 
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
+/// Convert between audio formats
 pub struct ConvertArgs {
-    /// file to convert
+    /// File to convert (wss, wav, ogg, or mp3)
     pub(crate) file: String,
-    /// output file or extension
+    /// Output file path or new extension (e.g., "wss" or "output.wss")
     pub(crate) output: String,
-    /// compression (wss only)
+    /// Compression level for WSS output (0, 4, 8), 8 is recommended
     #[arg(long, short)]
     pub(crate) compression: Option<u8>,
 }

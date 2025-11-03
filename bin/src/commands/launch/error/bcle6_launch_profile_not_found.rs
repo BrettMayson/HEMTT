@@ -10,13 +10,13 @@ pub enum LaunchSource {
     CDLC,
 }
 
-pub struct LaunchConfigNotFound {
+pub struct LaunchProfileNotFound {
     source: LaunchSource,
-    config: String,
+    profile: String,
     similar: Vec<String>,
 }
 
-impl Code for LaunchConfigNotFound {
+impl Code for LaunchProfileNotFound {
     fn ident(&self) -> &'static str {
         "BCLE6"
     }
@@ -33,11 +33,11 @@ impl Code for LaunchConfigNotFound {
 
     fn message(&self) -> String {
         if self.source == LaunchSource::Global {
-            format!("Global launch config `{}` not found.", self.config)
+            format!("Global launch profile `{}` not found.", self.profile)
         } else if self.source == LaunchSource::CDLC {
-            format!("CDLC `{}` not found.", self.config)
+            format!("CDLC `{}` not found.", self.profile)
         } else {
-            format!("Launch config `{}` not found.", self.config)
+            format!("Launch profile `{}` not found.", self.profile)
         }
     }
 
@@ -54,7 +54,7 @@ impl Code for LaunchConfigNotFound {
     }
 }
 
-impl LaunchConfigNotFound {
+impl LaunchProfileNotFound {
     pub fn code(source: LaunchSource, config: String, available: &[String]) -> Arc<dyn Code> {
         Arc::new(Self {
             source,
@@ -68,7 +68,7 @@ impl LaunchConfigNotFound {
             .iter()
             .map(std::string::ToString::to_string)
             .collect(),
-            config,
+            profile: config,
         })
     }
 }

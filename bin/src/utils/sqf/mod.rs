@@ -4,7 +4,7 @@ use crate::Error;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for SQF files
+/// Tools for working with SQF (Status Quo Function) script files.
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,

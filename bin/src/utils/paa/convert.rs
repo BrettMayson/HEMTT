@@ -3,10 +3,11 @@ use std::path::PathBuf;
 use crate::Error;
 
 #[derive(clap::Args)]
+/// Convert PAA texture to PNG
 pub struct PaaConvertArgs {
-    /// PAA to convert
+    /// PAA file to convert
     paa: String,
-    /// Where to save the file
+    /// Where to save the PNG file
     output: String,
 }
 
@@ -23,7 +24,7 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
     }
     let paa = hemtt_paa::Paa::read(std::fs::File::open(paa)?)?;
     if let Err(e) = paa.maps()[0].get_image().save(output) {
-        error!("Failed to save PNG: {}", e);
+        error!("Failed to save image: {}", e);
     } else {
         info!("PAA converted");
     }

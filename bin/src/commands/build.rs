@@ -18,6 +18,12 @@ use super::global_modules;
 ///
 /// It is intended to be used for testing your mod locally before release.
 ///
+/// ## Binarization
+///
+/// By default, supported file types are converted to
+/// their binary formats for optimal game performance. This process is slower but
+/// produces smaller, faster-loading files similar to BI's official addons.
+///
 /// ## Configuration
 ///
 /// **.hemtt/project.toml**
@@ -47,9 +53,11 @@ pub struct BuildArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not binarize the project
     ///
-    /// They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext`, `*.sqm`,
+    /// Files will be copied directly into the PBO without binarization. `config.cpp`, `*.rvmat`, `*.ext`, `*.sqm`,
     /// `*.bikb`, `*.bisurf` will still be rapified.
     /// This can be configured per addon in [`addon.toml`](../configuration/addon#binarize).
+    ///
+    /// Useful for faster builds during testing when you don't need optimized file formats.
     no_bin: bool,
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)

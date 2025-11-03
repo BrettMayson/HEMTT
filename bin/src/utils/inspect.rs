@@ -11,8 +11,29 @@ use crate::Error;
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 /// Inspect an Arma file
+///
+/// Displays detailed information about various Arma 3 file formats.
+///
+/// ## Supported File Types
+///
+/// - **PBO** (.pbo) - Shows properties, file list, checksums
+/// - **PAA** (.paa) - Displays texture format, dimensions, mipmaps
+/// - **Config** (.cpp, .hpp) - Parses and displays config structure
+/// - **Audio** (.wss, .ogg, .wav, .mp3) - Shows audio format and properties
+/// - **Public Key** (.bikey) - Displays public key information
+/// - **Signature** (.bisign) - Shows signature details
+///
+/// The utility will attempt to auto-detect file types even if the extension is incorrect.
+///
+/// ## Usage
+///
+/// ```bash
+/// hemtt utils inspect mymod_main.pbo
+/// hemtt utils inspect config.cpp
+/// hemtt utils inspect texture.paa
+/// ```
 pub struct Command {
-    /// File to inspect
+    /// Path to the Arma 3 file you want to examine.
     pub(crate) file: String,
 }
 
