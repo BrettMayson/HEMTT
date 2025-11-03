@@ -468,7 +468,9 @@ impl SciptScope {
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
-                    if expected_lhs.difference(&lhs_set).count() != 0 {
+                    if expected_lhs.difference(&lhs_set).count() != 0
+                        && !expected_lhs.contains(&GameValue::Anything)
+                    {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -479,7 +481,9 @@ impl SciptScope {
                             },
                         });
                     }
-                    if expected_rhs.difference(&rhs_set).count() != 0 {
+                    if expected_rhs.difference(&rhs_set).count() != 0
+                        && !expected_rhs.contains(&GameValue::Anything)
+                    {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),

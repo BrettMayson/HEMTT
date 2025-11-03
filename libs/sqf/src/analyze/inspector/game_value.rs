@@ -107,28 +107,31 @@ impl GameValue {
                     }
                 }
                 Call::Binary(lhs_arg, rhs_arg) => {
-                    if !matches!(expression, Expression::BinaryCommand(..))
-                        || !{
-                            let (is_match, expected) = Self::match_set_to_arg(
-                                cmd_name,
-                                lhs_set.expect("binary lhs"),
-                                lhs_arg,
-                                syntax.params(),
-                            );
-                            expected_lhs.extend(expected);
-                            is_match
-                        }
-                        || !{
-                            let (is_match, expected) = Self::match_set_to_arg(
-                                cmd_name,
-                                rhs_set.expect("binary rhs"),
-                                rhs_arg,
-                                syntax.params(),
-                            );
-                            expected_rhs.extend(expected);
-                            is_match
-                        }
-                    {
+                    let is_binary_commend = matches!(expression, Expression::BinaryCommand(..));
+                    if !is_binary_commend {
+                        continue;
+                    }
+                    let left_is_match = {
+                        let (is_match, expected) = Self::match_set_to_arg(
+                            cmd_name,
+                            lhs_set.expect("binary lhs"),
+                            lhs_arg,
+                            syntax.params(),
+                        );
+                        expected_lhs.extend(expected);
+                        is_match
+                    };
+                    let right_is_match = {
+                        let (is_match, expected) = Self::match_set_to_arg(
+                            cmd_name,
+                            rhs_set.expect("binary rhs"),
+                            rhs_arg,
+                            syntax.params(),
+                        );
+                        expected_rhs.extend(expected);
+                        is_match
+                    };
+                    if !left_is_match || !right_is_match {
                         continue;
                     }
                 }
@@ -192,11 +195,6 @@ impl GameValue {
                     }
                     return (true, IndexSet::new());
                 };
-                // println!(
-                //     "[arg {name}] typ: {:?}, opt: {:?}",
-                //     param.typ(),
-                //     param.optional()
-                // );
                 let (is_match, expected_gv) =
                     Self::match_set_to_value(set, param.typ(), param.optional());
                 let mut expected = IndexSet::new();
@@ -207,10 +205,7 @@ impl GameValue {
                 let mut expected = IndexSet::new();
                 let is_match = set.iter().any(|s| {
                     match s {
-                        Self::Anything | Self::Array(None, _) => {
-                            // println!("{cmd_name}: array (any/generic) pass");
-                            true
-                        }
+                        Self::Anything | Self::Array(None, _) => true,
                         Self::Array(Some(gv_array), _) => {
                             // println!("{cmd_name}: array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
@@ -242,7 +237,10 @@ impl GameValue {
                             }
                             true
                         }
-                        _ => false,
+                        _ => {
+                            expected.insert(Self::Array(None, None));
+                            false
+                        }
                     }
                 });
                 (is_match, expected)

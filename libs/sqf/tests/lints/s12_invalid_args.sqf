@@ -5,3 +5,5 @@ alive player;
 params ["_var1", objNull];
 params [["_var2", "", ""]];
 params [["_var3", objNull, [false, 0]]];
+
+player setVariable 0;
