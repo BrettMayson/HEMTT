@@ -16,8 +16,107 @@ mod external_functions;
 mod game_value;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum InvalidArgs {
+    TypeNotExpected {
+        expected: Vec<GameValue>,
+        found: Vec<GameValue>,
+        span: Range<usize>,
+    },
+    DefaultDifferentType {
+        expected: Vec<GameValue>,
+        found: Vec<GameValue>,
+        span: Range<usize>,
+        default: Range<usize>,
+    },
+}
+
+impl InvalidArgs {
+    #[must_use]
+    pub fn note(&self) -> String {
+        let found = self
+            .found_types()
+            .iter()
+            .map(GameValue::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "found type{} was {found}",
+            if self.found_types().len() > 1 {
+                "s"
+            } else {
+                ""
+            }
+        )
+    }
+
+    #[must_use]
+    pub fn message(&self, command: &str) -> String {
+        match self {
+            Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
+            Self::DefaultDifferentType { .. } => {
+                String::from("Default value is not an expected type for the parameter")
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn label_message(&self) -> String {
+        match self {
+            Self::TypeNotExpected { .. } => format!(
+                "expected {}",
+                self.expected_types()
+                    .iter()
+                    .map(GameValue::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            Self::DefaultDifferentType { .. } => {
+                format!(
+                    "expected {}",
+                    self.expected_types()
+                        .iter()
+                        .map(GameValue::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn found_types(&self) -> Vec<GameValue> {
+        match self {
+            Self::TypeNotExpected { found, .. } | Self::DefaultDifferentType { found, .. } => {
+                found.clone()
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn expected_types(&self) -> Vec<GameValue> {
+        match self {
+            Self::TypeNotExpected { expected, .. }
+            | Self::DefaultDifferentType { expected, .. } => expected.clone(),
+        }
+    }
+
+    #[must_use]
+    pub fn span(&self) -> Range<usize> {
+        match self {
+            Self::TypeNotExpected { span, .. } | Self::DefaultDifferentType { span, .. } => {
+                span.clone()
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Issue {
-    InvalidArgs(String, Range<usize>),
+    InvalidArgs {
+        command: String,
+        span: Range<usize>,
+        variant: InvalidArgs,
+    },
     Undefined(String, Range<usize>, bool),
     Unused(String, VarSource),
     Shadowed(String, Range<usize>),
@@ -197,7 +296,7 @@ impl SciptScope {
         var: &str,
         source: &Range<usize>,
         peek: bool,
-    ) -> IndexSet<GameValue> {
+    ) -> IndexSet<(GameValue, Range<usize>)> {
         let var_lower = var.to_ascii_lowercase();
         let mut global_m = self.global.borrow_mut();
         let holder_option = if var_lower.starts_with('_') {
@@ -220,7 +319,7 @@ impl SciptScope {
         } else if global_m.contains_key(&var_lower) {
             global_m.get_mut(&var_lower)
         } else {
-            return IndexSet::from([GameValue::Anything]);
+            return IndexSet::from([(GameValue::Anything, source.clone())]);
         };
         if let Some(holder) = holder_option {
             holder.usage += 1;
@@ -232,10 +331,10 @@ impl SciptScope {
                 set.insert(GameValue::Anything);
             }
             // println!("var_retrieve: `{var}` {set:?}");
-            set
+            set.into_iter().map(|gv| (gv, source.clone())).collect()
         } else {
             // we've reported the error above, just return Any so it doesn't fail everything after
-            IndexSet::from([GameValue::Anything])
+            IndexSet::from([(GameValue::Anything, source.clone())])
         }
     }
 
@@ -246,40 +345,68 @@ impl SciptScope {
         &mut self,
         expression: &Expression,
         database: &Database,
-    ) -> IndexSet<GameValue> {
+    ) -> IndexSet<(GameValue, Range<usize>)> {
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
-            Expression::Number(..) => IndexSet::from([GameValue::Number(Some(expression.clone()))]),
-            Expression::Boolean(..) => {
-                IndexSet::from([GameValue::Boolean(Some(expression.clone()))])
+            Expression::Number(_, source) => {
+                IndexSet::from([(GameValue::Number(Some(expression.clone())), source.clone())])
             }
-            Expression::String(..) => IndexSet::from([GameValue::String(Some(expression.clone()))]),
-            Expression::Array(array, _) => {
-                let gv_array: Vec<Vec<GameValue>> = array
+            Expression::Boolean(_, source) => {
+                IndexSet::from([(GameValue::Boolean(Some(expression.clone())), source.clone())])
+            }
+            Expression::String(_, source, _) => {
+                IndexSet::from([(GameValue::String(Some(expression.clone())), source.clone())])
+            }
+            Expression::Array(array, source) => {
+                let gv_array: Vec<Vec<(GameValue, Range<usize>)>> = array
                     .iter()
                     .map(|e| self.eval_expression(e, database).into_iter().collect())
                     .collect();
-                IndexSet::from([GameValue::Array(Some(gv_array), None)])
+                IndexSet::from([(GameValue::Array(Some(gv_array), None), source.clone())])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let mut cmd_set = GameValue::from_cmd(expression, None, None, database);
+                let mut cmd_set: IndexSet<(GameValue, Range<usize>)> =
+                    GameValue::from_cmd(expression, None, None, database)
+                        .0
+                        .into_iter()
+                        .map(|gv| (gv, source.clone()))
+                        .collect();
                 if cmd_set.is_empty() {
                     // is this possible?
-                    self.errors
-                        .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
-                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
+                    self.errors.insert(Issue::InvalidArgs {
+                        command: debug_type.clone(),
+                        span: source.clone(),
+                        variant: InvalidArgs::TypeNotExpected {
+                            expected: vec![],
+                            found: vec![GameValue::Anything],
+                            span: source.clone(),
+                        },
+                    });
+                    cmd_set.insert((GameValue::Anything, source.clone())); // don't cause confusing errors for code downstream
                 }
                 cmd_set
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
-                let rhs_set = self.eval_expression(rhs, database);
-                let mut cmd_set = GameValue::from_cmd(expression, None, Some(&rhs_set), database);
+                let rhs_set = self
+                    .eval_expression(rhs, database)
+                    .into_iter()
+                    .map(|(gv, _)| gv)
+                    .collect();
+                let (mut cmd_set, _, expected_rhs) =
+                    GameValue::from_cmd(expression, None, Some(&rhs_set), database);
                 if cmd_set.is_empty() {
-                    self.errors
-                        .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
+                    self.errors.insert(Issue::InvalidArgs {
+                        command: debug_type.clone(),
+                        span: source.clone(),
+                        variant: InvalidArgs::TypeNotExpected {
+                            expected: expected_rhs.into_iter().collect(),
+                            found: rhs_set.iter().cloned().collect(),
+                            span: source.clone(),
+                        },
+                    });
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
                 let return_set = match cmd {
@@ -319,18 +446,54 @@ impl SciptScope {
                     _ => None,
                 };
                 // Use custom return from cmd or just use wiki set
-                return_set.unwrap_or(cmd_set)
+                return_set
+                    .unwrap_or(cmd_set)
+                    .into_iter()
+                    .map(|gv| (gv, source.clone()))
+                    .collect()
             }
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
-                let lhs_set = self.eval_expression(lhs, database);
-                let rhs_set = self.eval_expression(rhs, database);
-                let mut cmd_set =
+                let lhs_set = self
+                    .eval_expression(lhs, database)
+                    .into_iter()
+                    .map(|(gv, _)| gv)
+                    .collect();
+                let rhs_set = self
+                    .eval_expression(rhs, database)
+                    .into_iter()
+                    .map(|(gv, _)| gv)
+                    .collect();
+                let (mut cmd_set, expected_lhs, expected_rhs) =
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
-                    self.errors
-                        .insert(Issue::InvalidArgs(debug_type.clone(), source.clone()));
+                    if expected_lhs.difference(&lhs_set).count() != 0
+                        && !expected_lhs.contains(&GameValue::Anything)
+                    {
+                        self.errors.insert(Issue::InvalidArgs {
+                            command: debug_type.clone(),
+                            span: source.clone(),
+                            variant: InvalidArgs::TypeNotExpected {
+                                expected: expected_lhs.into_iter().collect(),
+                                found: lhs_set.iter().cloned().collect(),
+                                span: lhs.span(),
+                            },
+                        });
+                    }
+                    if expected_rhs.difference(&rhs_set).count() != 0
+                        && !expected_rhs.contains(&GameValue::Anything)
+                    {
+                        self.errors.insert(Issue::InvalidArgs {
+                            command: debug_type.clone(),
+                            span: source.clone(),
+                            variant: InvalidArgs::TypeNotExpected {
+                                expected: expected_rhs.into_iter().collect(),
+                                found: rhs_set.iter().cloned().collect(),
+                                span: rhs.span(),
+                            },
+                        });
+                    }
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
                 let return_set = match cmd {
@@ -435,12 +598,16 @@ impl SciptScope {
                     _ => None,
                 };
                 // Use custom return from cmd or just use wiki set
-                return_set.unwrap_or(cmd_set)
+                return_set
+                    .unwrap_or(cmd_set)
+                    .into_iter()
+                    .map(|gv| (gv, source.clone()))
+                    .collect()
             }
             Expression::Code(statements) => {
                 self.code_seen.insert(expression.clone());
                 debug_type = format!("CODE:{}", statements.content().len());
-                IndexSet::from([GameValue::Code(Some(expression.clone()))])
+                IndexSet::from([(GameValue::Code(Some(expression.clone())), statements.span())])
             }
             Expression::ConsumeableArray(_, _) => unreachable!(""),
         };
@@ -450,7 +617,7 @@ impl SciptScope {
             debug_type,
             possible_values
                 .iter()
-                .map(GameValue::as_debug)
+                .map(|(gv, _)| format!("{gv:?}"))
                 .collect::<Vec<_>>()
         );
         possible_values
@@ -463,7 +630,11 @@ impl SciptScope {
             match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
-                    let possible_values = self.eval_expression(expression, database);
+                    let possible_values = self
+                        .eval_expression(expression, database)
+                        .into_iter()
+                        .map(|(gv, _)| gv)
+                        .collect();
                     self.var_assign(
                         var,
                         false,
@@ -477,7 +648,11 @@ impl SciptScope {
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
-                    let possible_values = self.eval_expression(expression, database);
+                    let possible_values = self
+                        .eval_expression(expression, database)
+                        .into_iter()
+                        .map(|(gv, _)| gv)
+                        .collect();
                     self.var_assign(
                         var,
                         true,

@@ -1,13 +1,12 @@
 use crate::{
-    analyze::{inspector::Issue, LintData},
-    Statements,
+    Statements, analyze::{LintData, inspector::{InvalidArgs, Issue}}
 };
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
-use std::{ops::Range, sync::Arc};
+use std::sync::Arc;
 
 crate::analyze::lint!(LintS12InvalidArgs);
 
@@ -46,7 +45,7 @@ if (otherthing) then { y = CouldBeNumberOrString + "c";}; // Throws: Invalid arg
 ```"#
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::warning()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
@@ -73,11 +72,10 @@ impl LintRunner<LintData> for Runner {
         };
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
-            if let Issue::InvalidArgs(cmd, range) = issue {
+            if let Issue::InvalidArgs { command, variant, .. } = issue {
                 errors.push(Arc::new(CodeS12InvalidArgs::new(
-                    range.to_owned(),
-                    cmd.to_owned(),
-                    None,
+                    command.to_owned(),
+                    variant.clone(),
                     config.severity(),
                     processed,
                 )));
@@ -89,9 +87,8 @@ impl LintRunner<LintData> for Runner {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeS12InvalidArgs {
-    span: Range<usize>,
     command: String,
-    error_hint: Option<String>,
+    variant: InvalidArgs,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -104,13 +101,13 @@ impl Code for CodeS12InvalidArgs {
         Some("/analysis/sqf.html#invalid_args")
     }
     fn message(&self) -> String {
-        format!("Invalid arguments to command `{}`", self.command)
+        self.variant.message(&self.command)
     }
     fn label_message(&self) -> String {
-        String::from("invalid arguments")
+        self.variant.label_message()
     }
     fn note(&self) -> Option<String> {
-        self.error_hint.clone()
+        Some(self.variant.note())
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -123,23 +120,37 @@ impl Code for CodeS12InvalidArgs {
 impl CodeS12InvalidArgs {
     #[must_use]
     pub fn new(
-        span: Range<usize>,
         command: String,
-        error_hint: Option<String>,
+        variant: InvalidArgs,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
-            span,
             command,
-            error_hint,
+            variant,
             severity,
             diagnostic: None,
         }
         .generate_processed(processed)
     }
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
+        let diag = Diagnostic::from_code_processed(&self, self.variant.span(), processed);
+        if let Some(mut diag) = diag {
+            if let InvalidArgs::DefaultDifferentType { default, .. } = &self.variant {
+                let map = processed
+                        .mapping(default.start)
+                        .expect("mapping should exist");
+                    let file = processed.source(map.source()).expect("source should exist");
+                    diag.labels.push(
+                        hemtt_workspace::reporting::Label::secondary(
+                            file.0.clone(),
+                            map.original_start()..map.original_start() + default.len(),
+                        )
+                        .with_message("expected types"),
+                    );
+            }
+            self.diagnostic = Some(diag);
+        }
         self
     }
 }

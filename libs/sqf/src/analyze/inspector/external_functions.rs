@@ -1,5 +1,7 @@
 //! Emulate how common external functions will handle code
 
+use std::ops::Range;
+
 use indexmap::IndexSet;
 
 use crate::{Expression, analyze::inspector::VarSource, parser::database::Database};
@@ -23,7 +25,7 @@ impl SciptScope {
                     // handle `{} call cba_fnc_directcall`
                     if ext_func.to_ascii_lowercase().as_str() == "cba_fnc_directcall" {
                         self.external_current_scope(
-                            &vec![GameValue::Code(Some(statements.clone()))],
+                            &vec![(GameValue::Code(Some(statements.clone())), statements.span())],
                             &vec![],
                             database,
                         );
@@ -139,11 +141,11 @@ impl SciptScope {
     }
     pub fn external_new_scope(
         &mut self,
-        code_arg: &Vec<GameValue>,
+        code_arg: &Vec<(GameValue, Range<usize>)>,
         vars: &Vec<(&str, GameValue)>,
         database: &Database,
     ) {
-        for element in code_arg {
+        for (element, _) in code_arg {
             let GameValue::Code(Some(expression)) = element else {
                 continue;
             };
@@ -171,11 +173,11 @@ impl SciptScope {
     }
     fn external_current_scope(
         &mut self,
-        code_arg: &Vec<GameValue>,
+        code_arg: &Vec<(GameValue, Range<usize>)>,
         vars: &Vec<(&str, GameValue)>,
         database: &Database,
     ) {
-        for element in code_arg {
+        for (element, _) in code_arg {
             let GameValue::Code(Some(expression)) = element else {
                 continue;
             };
