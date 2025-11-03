@@ -22,7 +22,7 @@ use self::error::bcpe1_tools_not_found::ToolsNotFound;
 
 use super::{
     JustArgs, dev,
-    launch::{LaunchArgs, read_config},
+    launch::{LaunchArgs, read_profile},
 };
 
 #[derive(clap::Parser)]
@@ -87,7 +87,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if config.hemtt().launch().contains_key("photoshoot") {
         configs.push("photoshoot".to_string());
     }
-    let launch = read_config(&global, &config, &configs, &mut report);
+    let launch = read_profile(&global, &config, &configs, &mut report);
     let Some(mut launch) = launch else {
         return Ok(report);
     };
