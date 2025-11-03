@@ -24,7 +24,6 @@ pest_derive = { workspace = true }
 strsim = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-vfs = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.7.0"

@@ -18,11 +18,9 @@ dirs = { workspace = true }
 intervaltree = "0.2.7"
 linkme = { workspace = true }
 paste = { workspace = true }
-serde = { workspace = true }
 supports-hyperlinks = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-toml = { workspace = true }
 tracing = { workspace = true }
 vfs = { workspace = true }
 

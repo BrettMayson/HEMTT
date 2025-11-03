@@ -9,8 +9,6 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-hemtt-common = { path = "../common" }
-
 byteorder = { workspace = true }
 thiserror = { workspace = true }
 

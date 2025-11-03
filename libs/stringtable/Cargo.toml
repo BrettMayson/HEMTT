@@ -14,7 +14,6 @@ hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
 byteorder = { workspace = true }
-casey = "0.4.2"
 indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
@@ -23,7 +22,6 @@ regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }
-vfs = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.7.0"

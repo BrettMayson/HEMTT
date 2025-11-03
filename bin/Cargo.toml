@@ -44,7 +44,6 @@ glob = "0.3.3"
 image = "0.25.8"
 indicatif = "0.18.2"
 interprocess = { workspace = true }
-num_cpus = "1.17.0"
 paste = { workspace = true }
 rayon = "1.11.0"
 regex = { workspace = true }
