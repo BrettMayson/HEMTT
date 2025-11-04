@@ -5,17 +5,20 @@ use clap::Parser;
 use hemtt::Cli;
 
 #[test]
-#[serial_test::serial]
-fn build_alpha() {
-    std::env::set_current_dir(format!("{}/tests/alpha", env!("CARGO_MANIFEST_DIR"))).unwrap();
-    hemtt::execute(&Cli::parse_from(vec!["hemtt", "dev", "--in-test"])).unwrap();
-    hemtt::execute(&Cli::parse_from(vec!["hemtt", "build", "--in-test"])).unwrap();
+fn build_simple() {
+    let _directory = hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(
+        format!("{}/tests/workspace_simple/", env!("CARGO_MANIFEST_DIR")),
+    ));
+    hemtt::execute(&Cli::parse_from(vec!["hemtt", "dev"])).unwrap();
+    hemtt::execute(&Cli::parse_from(vec!["hemtt", "build"])).unwrap();
 }
 
 #[test]
-#[serial_test::serial]
-fn build_bravo() {
-    std::env::set_current_dir(format!("{}/tests/bravo", env!("CARGO_MANIFEST_DIR"))).unwrap();
-    hemtt::execute(&Cli::parse_from(vec!["hemtt", "script", "test"])).unwrap();
-    hemtt::execute(&Cli::parse_from(vec!["hemtt", "release", "--in-test"])).unwrap();
+fn build_post_release() {
+    let _directory =
+        hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+            "{}/tests/workspace_post_release/",
+            env!("CARGO_MANIFEST_DIR")
+        )));
+    hemtt::execute(&Cli::parse_from(vec!["hemtt", "release"])).unwrap();
 }

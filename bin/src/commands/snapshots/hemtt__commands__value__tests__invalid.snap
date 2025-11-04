@@ -1,0 +1,6 @@
+---
+source: bin/src/commands/value.rs
+expression: output
+---
+[31mERROR[0m Failed to execute command:
+Invalid value: invalid

@@ -1,0 +1,10 @@
+---
+source: bin/src/commands/script.rs
+expression: output
+---
+[32m INFO[0m Config loaded for My Mod 3.15.2.69
+[0m[1m[38;5;9merror[BHE3][0m[1m: Script /.hemtt/scripts/vfs.rhai failed at runtime[0m
+  [0m[36m┌─[0m .hemtt/scripts/vfs.rhai:1:12
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m let text = [0m[31mH[0mEMTT_VFS.join("addons/ignore.txt").open_file().read();
+  [0m[36m│[0m            [0m[31m^[0m [0m[31mvariable not found: HEMTT_VFS (line 1, position 12)[0m

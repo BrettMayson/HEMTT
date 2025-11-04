@@ -21,7 +21,7 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 
-hemtt-config = { path = "../libs/config", features=["serde"] }
+hemtt-config = { path = "../libs/config", features = ["serde"] }
 hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa" }
 hemtt-pbo = { path = "../libs/pbo" }
@@ -38,7 +38,7 @@ clap = { workspace = true, features = ["derive"] }
 clap_complete = "4.5.60"
 dialoguer = "0.12.0"
 dirs = { workspace = true }
-fs_extra = "1.3.0"
+fs_extra = { workspace = true }
 git2 = { workspace = true }
 glob = "0.3.3"
 image = "0.25.8"
@@ -74,4 +74,5 @@ winapi = { version = "0.3.9", features = ["winuser"] }
 winreg = "0.55.0"
 
 [dev-dependencies]
-serial_test = "3.2.0"
+hemtt-test = { path = "../libs/testing" }
+insta = { workspace = true }

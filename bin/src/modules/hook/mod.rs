@@ -1,15 +1,14 @@
-use std::sync::{Arc, Mutex};
-
 use ::rhai::{Engine, Scope, packages::Package};
 use hemtt_workspace::WorkspacePath;
-use rhai::Dynamic;
+use rhai::{Dynamic, EvalAltResult};
+use whoami::Result;
 
 use crate::{context::Context, error::Error, report::Report};
 
 use self::{
     error::{
-        bhe1_script_not_found::ScriptNotFound, bhe2_script_fatal::ScriptFatal,
-        bhe3_parse_error::RhaiParseError, bhe4_runtime_error::RuntimeError,
+        bhe1_script_not_found::ScriptNotFound, bhe3_parse_error::RhaiParseError,
+        bhe4_runtime_error::RuntimeError,
     },
     libraries::hemtt::RhaiHemtt,
 };
@@ -137,7 +136,6 @@ impl Hooks {
         let mut report = Report::new();
         let mut engine = engine(vfs);
         let mut scope = scope(ctx, vfs)?;
-        let told_to_fail = Arc::new(Mutex::new(false));
         let parts = path.as_str().split('/');
         let name = parts
             .clone()
@@ -164,25 +162,20 @@ impl Hooks {
         engine.register_fn("error", move |s: &str| {
             error!("[{inner_name}] {s}");
         });
-        let inner_name = name.clone();
-        let inner_told_to_fail = told_to_fail.clone();
-        engine.register_fn("fatal", move |s: &str| {
+        let inner_name = name;
+        engine.register_fn("fatal", move |s: &str| -> Result<(), Box<EvalAltResult>> {
             error!("[{inner_name}] {s}");
-            *inner_told_to_fail
-                .lock()
-                .expect("told_to_fail mutex poisoned") = true;
+            Err(Box::new(EvalAltResult::ErrorRuntime(
+                "Script called fatal".into(),
+                rhai::Position::NONE,
+            )))
         });
         match engine.eval_with_scope(&mut scope, &path.read_to_string()?) {
             Err(e) => {
                 report.push(RuntimeError::code(path, &e));
                 Ok((report, Dynamic::UNIT))
             }
-            Ok(ret) => {
-                if *told_to_fail.lock().expect("told_to_fail mutex poisoned") {
-                    report.push(ScriptFatal::code(name));
-                }
-                Ok((report, ret))
-            }
+            Ok(ret) => Ok((report, ret)),
         }
     }
 }

@@ -46,3 +46,48 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     )?;
     Hooks::run_file(&ctx, &cmd.name).map(|(report, _)| report)
 }
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser as _;
+
+    #[test]
+    fn workspace_post_release_math() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_post_release",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = hemtt_test::capture::OutputCapture::new();
+        crate::execute(&crate::Cli::parse_from(vec!["hemtt", "script", "math"]))
+            .expect("Failed to run script");
+        let output = capture.finish();
+        insta::assert_snapshot!(output);
+    }
+
+    #[test]
+    fn workspace_post_release_vfs() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_post_release",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = hemtt_test::capture::OutputCapture::new();
+        let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "script", "vfs"]));
+        let output = capture.finish();
+        insta::assert_snapshot!(output);
+    }
+
+    #[test]
+    fn workspace_bad_script() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_bad_script",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = hemtt_test::capture::OutputCapture::new();
+        let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "dev"]));
+        let output = capture.finish();
+        insta::assert_snapshot!(output);
+    }
+}

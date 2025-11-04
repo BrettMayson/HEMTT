@@ -40,10 +40,6 @@ pub struct GlobalArgs {
     #[arg(global = true, hide = true, long)]
     /// Directory to run in
     dir: Option<String>,
-    #[cfg(debug_assertions)]
-    #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
-    /// we are in a test
-    in_test: bool,
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     exp_bin_cache: bool,
 }
@@ -69,13 +65,14 @@ enum Commands {
     Photoshoot(commands::photoshoot::Command),
 }
 
+#[allow(clippy::too_many_lines)]
 /// Run the HEMTT CLI
 ///
 /// # Errors
 /// If the command fails
 ///
 /// # Panics
-/// If the number passed to `--threads` is not a valid number
+/// If the help text could not be printed
 pub fn execute(cli: &Cli) -> Result<(), Error> {
     // check for -v with no command and show version
     if cli.command.is_none() {
@@ -93,29 +90,35 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         std::env::set_current_dir(dir).expect("Failed to set current directory");
     }
 
-    #[cfg(debug_assertions)]
-    let in_test = cli.global.in_test;
-    #[cfg(not(debug_assertions))]
-    let in_test = false;
+    let debug = cfg!(debug_assertions);
 
-    if !in_test && !matches!(cli.command, Some(Commands::Value(_))) {
-        logging::init(
-            cli.global.verbosity,
-            !matches!(
-                cli.command,
-                Some(
-                    Commands::Utils(_)
-                        | Commands::Wiki(_)
-                        | Commands::New(_)
-                        | Commands::Book(_)
-                        | Commands::License(_)
-                        | Commands::Manage(_)
-                )
-            ),
-        )?;
+    let is_simple_command = matches!(
+        cli.command,
+        Some(
+            Commands::Utils(_)
+                | Commands::Wiki(_)
+                | Commands::New(_)
+                | Commands::Book(_)
+                | Commands::License(_)
+                | Commands::Manage(_)
+                | Commands::Value(_)
+        )
+    );
+
+    if debug {
+        static INIT: std::sync::Once = std::sync::Once::new();
+        INIT.call_once(|| {
+            logging::init(cli.global.verbosity, false).expect("Failed to initialize logging");
+        });
+    } else if !matches!(cli.command, Some(Commands::Value(_))) {
+        logging::init(cli.global.verbosity, !is_simple_command)?;
     }
 
-    let update_thread = std::thread::spawn(check_for_update);
+    let update_thread = if debug {
+        std::thread::spawn(|| None)
+    } else {
+        std::thread::spawn(check_for_update)
+    };
 
     trace!("version: {}", env!("HEMTT_VERSION"));
     trace!("platform: {}", std::env::consts::OS);
@@ -136,7 +139,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
 
     let report = match cli.command.as_ref().expect("Handled above") {
         Commands::Book(cmd) => commands::book::execute(cmd),
-        Commands::New(cmd) => commands::new::execute(cmd, in_test),
+        Commands::New(cmd) => commands::new::execute(cmd, debug),
         Commands::Check(cmd) => commands::check::execute(cmd),
         Commands::Dev(cmd) => commands::dev::execute(cmd, &[], false).map(|(r, _)| r),
         Commands::Launch(cmd) => commands::launch::execute(cmd),
@@ -156,24 +159,18 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
     match report {
         Ok(report) => {
             report.write_to_stdout();
-            if !matches!(
-                cli.command,
-                Some(
-                    Commands::New(_)
-                        | Commands::License(_)
-                        | Commands::Utils(_)
-                        | Commands::Wiki(_)
-                )
-            ) {
+            if !is_simple_command {
                 report.write_ci_annotations()?;
             }
-            if report.failed() {
+            if report.failed() && !debug {
                 std::process::exit(1);
             }
         }
         Err(e) => {
             error!("Failed to execute command:\n{e}");
-            std::process::exit(1);
+            if !debug {
+                std::process::exit(1);
+            }
         }
     }
 

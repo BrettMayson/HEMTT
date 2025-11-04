@@ -94,8 +94,25 @@ pub mod project_functions {
             }
             Hooks::run(&hemtt.ctx, path, false)
         }
-        inner_script(hemtt, name)
-            .map_err(|e| e.to_string().into())
-            .map(|(_, d)| d)
+        match inner_script(hemtt, name) {
+            Ok((report, ret)) => {
+                if report.failed() {
+                    report.write_to_stdout();
+                    Err(Box::new(EvalAltResult::ErrorRuntime(
+                        format!("Script '{name}' reported errors").into(),
+                        rhai::Position::NONE,
+                    )))
+                } else {
+                    Ok(ret)
+                }
+            }
+            Err(e) => {
+                error!("Error running script '{}': {}", name, e);
+                Err(Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Error running script '{name}': {e}").into(),
+                    rhai::Position::NONE,
+                )))
+            }
+        }
     }
 }

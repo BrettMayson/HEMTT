@@ -31,6 +31,9 @@ pub enum Error {
     #[error("Update error: {0}")]
     Update(String),
 
+    #[error("Invalid value: {0}")]
+    InvalidValueName(String),
+
     #[error("Dialoguer Error: {0}")]
     Dialoguer(#[from] dialoguer::Error),
     #[error("Git Error: {0}")]

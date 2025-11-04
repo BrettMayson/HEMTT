@@ -1,0 +1,15 @@
+[package]
+name = "hemtt-test"
+version = "1.0.0"
+edition = "2024"
+description = "A testing library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+fs_extra = { workspace = true }
+gag = "1.0.0"
+rand = { workspace = true }
+
