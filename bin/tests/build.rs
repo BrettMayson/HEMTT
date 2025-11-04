@@ -20,5 +20,6 @@ fn build_post_release() {
             "{}/tests/workspace_post_release/",
             env!("CARGO_MANIFEST_DIR")
         )));
+    hemtt::execute(&Cli::parse_from(vec!["hemtt", "script", "test"])).unwrap();
     hemtt::execute(&Cli::parse_from(vec!["hemtt", "release"])).unwrap();
 }

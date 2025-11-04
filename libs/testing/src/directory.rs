@@ -163,7 +163,15 @@ mod tests {
         {
             let temp_dir = TemporaryDirectory::new();
             let current = std::env::current_dir().expect("Failed to get current directory");
-            assert_eq!(current, temp_dir.as_ref());
+            // Canonicalize paths to handle symlinks (e.g., /var -> /private/var on macOS)
+            let current_canonical = current
+                .canonicalize()
+                .expect("Failed to canonicalize current directory");
+            let temp_canonical = temp_dir
+                .as_ref()
+                .canonicalize()
+                .expect("Failed to canonicalize temp directory");
+            assert_eq!(current_canonical, temp_canonical);
             assert_ne!(current, original);
         }
         let current = std::env::current_dir().expect("Failed to get current directory");
