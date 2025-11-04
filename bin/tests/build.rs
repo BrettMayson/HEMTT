@@ -1,10 +1,11 @@
 #![allow(clippy::unwrap_used)]
 
 use clap::Parser;
+use sealed_test::prelude::*;
 
 use hemtt::Cli;
 
-#[test]
+#[sealed_test]
 fn build_simple() {
     let _directory = hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(
         format!("{}/tests/workspace_simple/", env!("CARGO_MANIFEST_DIR")),
@@ -13,7 +14,7 @@ fn build_simple() {
     hemtt::execute(&Cli::parse_from(vec!["hemtt", "build"])).unwrap();
 }
 
-#[test]
+#[sealed_test]
 fn build_post_release() {
     let _directory =
         hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
