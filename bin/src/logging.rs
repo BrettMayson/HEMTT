@@ -25,7 +25,7 @@ pub fn init(verbosity: u8, hemttout: bool) -> Result<(), Error> {
 
     let stdout = tracing_subscriber::fmt::layer().event_format(format);
 
-    let filter = if crate::is_ci() {
+    let filter = if crate::is_ci() && !cfg!(debug_assertions) {
         LevelFilter::TRACE
     } else {
         match verbosity {
