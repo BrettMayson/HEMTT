@@ -223,7 +223,7 @@ impl Processor {
             let Ok(Some(LocateResult {
                 path: found_path,
                 case_mismatch,
-            })) = current.locate(
+            })) = current.locate_with_pdrive(
                 &path_tokens
                     .iter()
                     .map(std::string::ToString::to_string)

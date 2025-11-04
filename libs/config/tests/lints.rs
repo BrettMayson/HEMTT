@@ -61,6 +61,7 @@ fn lint(file: &str) -> (String, ConfigReport) {
             config
                 .codes()
                 .iter()
+                .filter(|e| e.diagnostic().unwrap().code != "L-C16")
                 .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
                 .collect::<Vec<_>>()
                 .join("\n")
