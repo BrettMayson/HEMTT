@@ -22,8 +22,8 @@ pub fn check_is_missing_file(target: &str, project: &ProjectConfig, processed: &
         .expect("no sources");
     let expected_path = project.expected_path();
     let target_lower = target.to_ascii_lowercase();
-    if !target_lower.starts_with(expected_path)
-        || !target_lower.starts_with(&format!(r"\{expected_path}"))
+    if !(target_lower.starts_with(expected_path)
+        || target_lower.starts_with(&format!(r"\{expected_path}")))
     {
         return false;
     }
