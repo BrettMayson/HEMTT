@@ -11,7 +11,7 @@ use crate::{Expression, parser::database::Database};
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum GameValue {
     Anything,
-    // Assignment, // as in z = call {x=1}???
+    Assignment, // as in z = call {x=1}???
     #[allow(clippy::type_complexity)]
     Array(Option<Vec<Vec<(Self, Range<usize>)>>>, Option<ArrayType>),
     Boolean(Option<Expression>),
@@ -27,7 +27,7 @@ pub enum GameValue {
     Location,
     Namespace,
     Number(Option<Expression>),
-    Nothing,
+    Nothing(bool), // true = explicit (from `nil`)
     Object,
     ScriptHandle,
     Side,
@@ -255,7 +255,11 @@ impl GameValue {
     ) -> (bool, Self) {
         // println!("Checking {set:?} against {right_wiki:?} [O:{optional}]");
         let right = Self::from_wiki_value(right_wiki);
-        if optional && (set.is_empty() || set.contains(&Self::Nothing)) {
+        if optional
+            && (set.is_empty()
+                || set.contains(&Self::Nothing(false))
+                || set.contains(&Self::Nothing(true)))
+        {
             return (true, right);
         }
         (set.iter().any(|gv| Self::match_values(gv, &right)), right)
@@ -314,7 +318,7 @@ impl GameValue {
             Value::IfType => Self::IfType,
             Value::Location => Self::Location,
             Value::Namespace => Self::Namespace,
-            Value::Nothing => Self::Nothing,
+            Value::Nothing => Self::Nothing(false),
             Value::Number => Self::Number(None),
             Value::Object => Self::Object,
             Value::ScriptHandle => Self::ScriptHandle,
@@ -390,6 +394,7 @@ impl std::fmt::Display for GameValue {
             match self {
                 Self::Anything => "Anything",
                 Self::Array(_, _) => "Array",
+                Self::Assignment => "Assignment",
                 Self::Boolean(_) => "Boolean",
                 Self::Code(_) => "Code",
                 Self::Config => "Config",
@@ -403,7 +408,7 @@ impl std::fmt::Display for GameValue {
                 Self::Location => "Location",
                 Self::Namespace => "Namespace",
                 Self::Number(_) => "Number",
-                Self::Nothing => "Nothing",
+                Self::Nothing(_) => "Nothing",
                 Self::Object => "Object",
                 Self::ScriptHandle => "ScriptHandle",
                 Self::Side => "Side",

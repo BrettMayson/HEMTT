@@ -6,9 +6,9 @@ use indexmap::IndexSet;
 
 use crate::{Expression, analyze::inspector::VarSource, parser::database::Database};
 
-use super::{SciptScope, game_value::GameValue};
+use super::{Inspector, game_value::GameValue};
 
-impl SciptScope {
+impl Inspector {
     #[allow(clippy::too_many_lines)]
     pub fn external_function(
         &mut self,
@@ -152,23 +152,22 @@ impl SciptScope {
             let Expression::Code(statements) = expression else {
                 continue;
             };
-            if self.code_used.contains(expression) {
-                continue;
+            self.scope_push(false);
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_some() {
+                // prevent infinite recursion
+                for (var, value) in vars {
+                    self.var_assign(
+                        var,
+                        true,
+                        IndexSet::from([value.clone()]),
+                        VarSource::Ignore,
+                    );
+                }
+                self.eval_statements(statements, false, database);
+                let _ = self.stack_pop(stack_index);
             }
-            let mut ext_scope = Self::create(self.global.clone(), &self.ignored_vars, false);
-            ext_scope.code_used.insert(expression.clone()); // prevent infinite recursion
-
-            for (var, value) in vars {
-                ext_scope.var_assign(
-                    var,
-                    true,
-                    IndexSet::from([value.clone()]),
-                    VarSource::Ignore,
-                );
-            }
-            self.code_used.insert(expression.clone());
-            ext_scope.eval_statements(statements, database);
-            self.errors.extend(ext_scope.finish(false, database));
+            self.scope_pop();
         }
     }
     fn external_current_scope(
@@ -184,10 +183,10 @@ impl SciptScope {
             let Expression::Code(statements) = expression else {
                 continue;
             };
-            if self.code_used.contains(expression) {
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_none() {
                 continue;
             }
-            self.push();
             for (var, value) in vars {
                 self.var_assign(
                     var,
@@ -196,9 +195,8 @@ impl SciptScope {
                     VarSource::Ignore,
                 );
             }
-            self.code_used.insert(expression.clone());
-            self.eval_statements(statements, database);
-            self.pop();
+            self.eval_statements(statements, true, database);
+            self.stack_pop(stack_index);
         }
     }
 }

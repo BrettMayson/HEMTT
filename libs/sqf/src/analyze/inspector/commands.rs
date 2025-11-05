@@ -10,12 +10,14 @@ use crate::{
     parser::database::Database,
 };
 
-use super::{SciptScope, game_value::GameValue};
+use super::{Inspector, game_value::GameValue};
 
-impl SciptScope {
+type MagicVars<'a> = (&'a [(&'a str, GameValue)], &'a Range<usize>);
+
+impl Inspector {
     #[must_use]
     pub fn cmd_u_private(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
-        fn push_var(s: &mut SciptScope, var: &str, source: &Range<usize>) {
+        fn push_var(s: &mut Inspector, var: &str, source: &Range<usize>) {
             if s.ignored_vars.contains(&var.to_ascii_lowercase()) {
                 s.var_assign(
                     var,
@@ -27,7 +29,7 @@ impl SciptScope {
                 s.var_assign(
                     var,
                     true,
-                    IndexSet::from([GameValue::Nothing]),
+                    IndexSet::from([GameValue::Nothing(false)]),
                     VarSource::Private(source.clone()),
                 );
             }
@@ -156,7 +158,7 @@ impl SciptScope {
                     let default_value = element[1][0].0.clone();
                     // Verify that the default value matches one of the types
                     if !(matches!(default_value, GameValue::Anything)
-                        || matches!(default_value, GameValue::Nothing)
+                        || matches!(default_value, GameValue::Nothing(true))
                         || var_types.iter().any(|t| {
                             matches!(t, GameValue::Anything) || t == &default_value.make_generic()
                         }))
@@ -196,29 +198,41 @@ impl SciptScope {
         }
         error_type
     }
-
-    #[must_use]
     pub fn cmd_generic_call(
         &mut self,
-        rhs: &IndexSet<GameValue>,
+        code_possibilities: &IndexSet<GameValue>,
+        magic_opt: Option<MagicVars>,
         database: &Database,
     ) -> IndexSet<GameValue> {
-        for possible in rhs {
+        let mut return_value = IndexSet::new();
+        for possible in code_possibilities {
             let GameValue::Code(Some(expression)) = possible else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
             let Expression::Code(statements) = expression else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
-            if self.code_used.contains(expression) {
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_none() {
+                return_value.insert(GameValue::Anything);
                 continue;
             }
-            self.push();
-            self.code_used.insert(expression.clone());
-            self.eval_statements(statements, database);
-            self.pop();
+            if let Some((vars, source)) = magic_opt {
+                for (var, value) in vars {
+                    self.var_assign(
+                        var,
+                        true,
+                        IndexSet::from([value.clone()]),
+                        VarSource::Magic(source.clone()),
+                    );
+                }
+            }
+            self.eval_statements(statements, true, database);
+            return_value.extend(self.stack_pop(stack_index));
         }
-        IndexSet::from([GameValue::Anything])
+        return_value
     }
     #[must_use]
     pub fn cmd_b_do(
@@ -234,10 +248,10 @@ impl SciptScope {
             let Expression::Code(statements) = expression else {
                 continue;
             };
-            if self.code_used.contains(expression) {
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_none() {
                 continue;
             }
-            self.push();
             let mut do_run = false;
             for possible in lhs {
                 if let GameValue::ForType(option) = possible {
@@ -256,8 +270,9 @@ impl SciptScope {
                                 );
                             }
                             Expression::Code(stage_statement) => {
-                                self.code_used.insert(stage.clone());
-                                self.eval_statements(stage_statement, database);
+                                self.code_used(stage);
+                                // ToDo returns for do/case
+                                self.eval_statements(stage_statement, false, database);
                             }
                             _ => {}
                         }
@@ -266,44 +281,11 @@ impl SciptScope {
                     do_run = true;
                 }
             }
-            self.code_used.insert(expression.clone());
             if do_run {
-                self.eval_statements(statements, database);
+                // ToDo returns for do/case
+                self.eval_statements(statements, false, database);
             }
-            self.pop();
-        }
-        IndexSet::from([GameValue::Anything])
-    }
-    #[must_use]
-    pub fn cmd_generic_call_magic(
-        &mut self,
-        code_possibilities: &IndexSet<GameValue>,
-        magic: &Vec<(&str, GameValue)>,
-        source: &Range<usize>,
-        database: &Database,
-    ) -> IndexSet<GameValue> {
-        for possible in code_possibilities {
-            let GameValue::Code(Some(expression)) = possible else {
-                continue;
-            };
-            let Expression::Code(statements) = expression else {
-                continue;
-            };
-            if self.code_used.contains(expression) {
-                continue;
-            }
-            self.push();
-            for (var, value) in magic {
-                self.var_assign(
-                    var,
-                    true,
-                    IndexSet::from([value.clone()]),
-                    VarSource::Magic(source.clone()),
-                );
-            }
-            self.code_used.insert(expression.clone());
-            self.eval_statements(statements, database);
-            self.pop();
+            self.stack_pop(stack_index);
         }
         IndexSet::from([GameValue::Anything])
     }
@@ -374,7 +356,7 @@ impl SciptScope {
             let _ = self.var_retrieve(var, &expression.span(), true);
         }
         if non_string {
-            let _ = self.cmd_generic_call(rhs, database);
+            let _ = self.cmd_generic_call(rhs, None, database);
         }
         IndexSet::from([GameValue::Boolean(None)])
     }
@@ -388,7 +370,11 @@ impl SciptScope {
         let mut return_value = IndexSet::new();
         for possible in rhs {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
-                return_value.extend(self.cmd_generic_call(rhs, database));
+                return_value.extend(self.cmd_generic_call(
+                    &IndexSet::from([possible.clone()]),
+                    None,
+                    database,
+                ));
             }
             if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
@@ -396,6 +382,7 @@ impl SciptScope {
                         if let GameValue::Code(Some(expression)) = element {
                             return_value.extend(self.cmd_generic_call(
                                 &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
+                                None,
                                 database,
                             ));
                         }
@@ -436,7 +423,7 @@ impl SciptScope {
             }
             possible_code.extend(gv_array[1].iter().map(|(gv, _)| gv.clone()));
         }
-        let _ = self.cmd_generic_call(&possible_code, database);
+        let _ = self.cmd_generic_call(&possible_code, None, database);
         IndexSet::from([GameValue::Anything])
     }
     #[must_use]
@@ -449,7 +436,7 @@ impl SciptScope {
                 continue;
             };
             // just skip because it will often use a _x
-            self.code_used.insert(expression.clone());
+            self.code_used(expression);
         }
         IndexSet::from([GameValue::String(None)])
     }
@@ -464,8 +451,11 @@ impl SciptScope {
     ) -> IndexSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
-        let _ =
-            self.cmd_generic_call_magic(rhs, &vec![("_x", GameValue::Anything)], source, database);
+        let _ = self.cmd_generic_call(
+            rhs,
+            Some((&[("_x", GameValue::Anything)], source)),
+            database,
+        );
         // if lhs is array, and rhs is bool/number then put array into return
         if lhs.len() == 1
             && rhs

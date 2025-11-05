@@ -159,3 +159,22 @@ if !(isNil "_fnc_scriptNameParent") then {
 if !(isNil "_fnc_scriptName") then {
     diag_log format["[x] Function called with a nil value from script: %1",_fnc_scriptName];
 };
+
+switch (getNumber (someConfig >> "ItemInfo" >> "type")) do {
+    case 1: { false; };
+    case 2: { false; };
+    case default { true }; // error, using nil from default
+};
+
+private _test15 = [] call { 5 };
+{} forEach _test15; // error, _test15 is number
+
+private _varS = call {
+    if (true) exitWith { 6 };
+};
+_varS + 1;
+
+private _test16 = [] call { xxx = 1};
+hashValue _test16; // error, _test16 is assignment
+
+hashValue nil; // explicit nil is allowed
