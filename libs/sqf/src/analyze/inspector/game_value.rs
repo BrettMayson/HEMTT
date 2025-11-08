@@ -11,7 +11,8 @@ use crate::{Expression, parser::database::Database};
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum GameValue {
     Anything,
-    Assignment, // as in z = call {x=1}???
+    /// as in z = call {x=1}
+    Assignment,
     #[allow(clippy::type_complexity)]
     Array(Option<Vec<Vec<(Self, Range<usize>)>>>, Option<ArrayType>),
     Boolean(Option<Expression>),
@@ -27,7 +28,8 @@ pub enum GameValue {
     Location,
     Namespace,
     Number(Option<Expression>),
-    Nothing(bool), // true = explicit (from `nil`)
+    /// true = explicit (from `nil`)
+    Nothing(bool),
     Object,
     ScriptHandle,
     Side,

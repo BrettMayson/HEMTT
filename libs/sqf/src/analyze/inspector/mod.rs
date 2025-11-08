@@ -420,6 +420,8 @@ impl Inspector {
         }
     }
 
+    /// Checks for bad argument values if the syntax was otherwise valid
+    /// like non-explicit-nil or assignment
     fn check_bad_args(
         &mut self,
         debug_type: &str,
@@ -427,9 +429,8 @@ impl Inspector {
         expression: &Expression,
         result_set: &IndexSet<GameValue>,
     ) {
-        if result_set.len() == 1
-            && (result_set.contains(&GameValue::Nothing(false))
-                || result_set.contains(&GameValue::Assignment))
+        if (result_set.len() == 1 && result_set.contains(&GameValue::Nothing(false)))
+            || result_set.contains(&GameValue::Assignment)
         {
             self.errors.insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
@@ -524,8 +525,13 @@ impl Inspector {
                         "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "private" => Some(self.cmd_u_private(&rhs_set)),
                         "call" => Some(self.cmd_generic_call(&rhs_set, None, database)),
+                        "default" => {
+                            let returns = self.cmd_generic_call(&rhs_set, None, database);
+                            self.active_scope().add_returns(returns);
+                            None
+                        }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" | "default" => {
+                        "while" | "waituntil" => {
                             let _ = self.cmd_generic_call(&rhs_set, None, database);
                             None
                         }
@@ -612,7 +618,8 @@ impl Inspector {
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
                         // the : from case ToDo: these run outside of the do scope
-                        let _ = self.cmd_generic_call(&rhs_set, None, database);
+                        let returns = self.cmd_generic_call(&rhs_set, None, database);
+                        self.active_scope().add_returns(returns);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
@@ -736,15 +743,15 @@ impl Inspector {
             }
             Expression::ConsumeableArray(_, _) => unreachable!(""),
         };
-        // #[cfg(debug_assertions)]
-        // println!(
-        //     "eval expression{}->{:?}",
-        //     debug_type,
-        //     possible_values
-        //         .iter()
-        //         .map(|(gv, _)| format!("{gv:?}"))
-        //         .collect::<Vec<_>>()
-        // );
+        #[cfg(debug_assertions)]
+        trace!(
+            "eval expression{}->{:?}",
+            debug_type,
+            possible_values
+                .iter()
+                .map(|(gv, _)| format!("{gv:?}"))
+                .collect::<Vec<_>>()
+        );
         #[allow(clippy::let_and_return)]
         possible_values
     }
@@ -758,7 +765,7 @@ impl Inspector {
     ) {
         let mut last_statement = IndexSet::new();
         for statement in statements.content() {
-            match statement {
+            last_statement = match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self
@@ -775,7 +782,7 @@ impl Inspector {
                             expression.span().clone(),
                         ),
                     );
-                    last_statement = IndexSet::from([GameValue::Assignment]);
+                    IndexSet::from([GameValue::Assignment])
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
@@ -793,15 +800,13 @@ impl Inspector {
                             expression.span().clone(),
                         ),
                     );
-                    last_statement = IndexSet::from([GameValue::Assignment]);
+                    IndexSet::from([GameValue::Assignment])
                 }
-                Statement::Expression(expression, _) => {
-                    last_statement = self
-                        .eval_expression(expression, database)
-                        .into_iter()
-                        .map(|(gv, _)| gv)
-                        .collect();
-                }
+                Statement::Expression(expression, _) => self
+                    .eval_expression(expression, database)
+                    .into_iter()
+                    .map(|(gv, _)| gv)
+                    .collect(),
             }
         }
         if add_to_stack {
@@ -837,35 +842,30 @@ pub fn run_processed(
         }
     }
 
-    // let global = Rc::new(RefCell::new(Stack::new()));
-    // let code_blocks = Rc::new(RefCell::new(IndexMap::new()));
     let mut inspector = Inspector::new(&ignored_vars);
     inspector.eval_statements(statements, true, database);
-    // let mut scope = ScriptScope::create(global, code_blocks, &ignored_vars, false);
-    // scope.eval_statements(statements, database);
-    let rv: Vec<Issue> = inspector.finish(database).into_iter().collect();
+    let issues = inspector.finish(database);
     // for ig in ignored_vars.clone() {
     //     if ig == "_this" || ig == "_fnc_scriptname" || ig == "_fnc_scriptnameparent" {
     //         continue;
     //     }
     //     let mut igtest = ignored_vars.clone();
     //     igtest.shift_remove(&ig);
-
-    //     let global = Rc::new(RefCell::new(Stack::new()));
-    //     let mut scope = ScriptScope::create(global, &igtest, false);
-    //     scope.eval_statements(statements, database);
+    //     let mut inspector = Inspector::new(&igtest);
+    //     inspector.eval_statements(statements, true, database);
+    //     let test_issues = inspector.finish(database);
     //     let path = processed.sources();
-    //     let new = scope.finish(true, database).len();
-    //     if new <= rv.len() {
+    //     if test_issues.len() < issues.len() {
     //         println!(
     //             "in {:?}-{:?} and {} is undeeded [{}->{}]",
     //             path[0].0,
     //             path[path.len() - 1].0,
     //             ig,
-    //             rv.len(),
-    //             new
+    //             issues.len(),
+    //             test_issues.len()
     //         );
     //     }
     // }
-    rv
+    #[allow(clippy::let_and_return)]
+    issues
 }

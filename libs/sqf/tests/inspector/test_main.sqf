@@ -176,5 +176,10 @@ _varS + 1;
 
 private _test16 = [] call { xxx = 1};
 hashValue _test16; // error, _test16 is assignment
-
 hashValue nil; // explicit nil is allowed
+
+private _varT = switch (test_var) do {
+    case 1: { {objNull} };
+    default { {displayNull} };
+};
+sin (call _varT); // error rhs is object/display

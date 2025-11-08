@@ -5,7 +5,7 @@ use std::{ops::Range, vec};
 use indexmap::IndexSet;
 
 use crate::{
-    Expression,
+    Expression, Statement,
     analyze::inspector::{InvalidArgs, Issue, VarSource},
     parser::database::Database,
 };
@@ -198,6 +198,7 @@ impl Inspector {
         }
         error_type
     }
+    #[must_use]
     pub fn cmd_generic_call(
         &mut self,
         code_possibilities: &IndexSet<GameValue>,
@@ -241,15 +242,19 @@ impl Inspector {
         rhs: &IndexSet<GameValue>,
         database: &Database,
     ) -> IndexSet<GameValue> {
+        let mut return_value = IndexSet::new();
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
             let Expression::Code(statements) = expression else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
             let stack_index = self.stack_push(Some(expression));
             if stack_index.is_none() {
+                return_value.insert(GameValue::Anything);
                 continue;
             }
             let mut do_run = false;
@@ -271,7 +276,6 @@ impl Inspector {
                             }
                             Expression::Code(stage_statement) => {
                                 self.code_used(stage);
-                                // ToDo returns for do/case
                                 self.eval_statements(stage_statement, false, database);
                             }
                             _ => {}
@@ -282,12 +286,20 @@ impl Inspector {
                 }
             }
             if do_run {
-                // ToDo returns for do/case
-                self.eval_statements(statements, false, database);
+                let add_final =
+                    if let Some(Statement::Expression(Expression::UnaryCommand(named, _, _), _)) =
+                        statements.content().last()
+                    {
+                        // if we know we end on a default, then we don't need to add it's nil return
+                        !named.as_str().eq_ignore_ascii_case("default")
+                    } else {
+                        true
+                    };
+                self.eval_statements(statements, add_final, database);
             }
-            self.stack_pop(stack_index);
+            return_value.extend(self.stack_pop(stack_index));
         }
-        IndexSet::from([GameValue::Anything])
+        return_value
     }
     #[must_use]
     pub fn cmd_for(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
