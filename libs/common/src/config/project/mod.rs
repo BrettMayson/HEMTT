@@ -53,6 +53,9 @@ pub struct ProjectConfig {
 
     /// Runtime specific arguments
     runtime: hemtt::RuntimeArguments,
+
+    /// Expected combined-path prefix for the project
+    expected_path: String,
 }
 
 impl ProjectConfig {
@@ -128,6 +131,12 @@ impl ProjectConfig {
         &self.runtime
     }
 
+    #[must_use]
+    /// Expected combined-path prefix for the project (in lowercase, without leading backslash)
+    pub fn expected_path(&self) -> &str {
+        &self.expected_path
+    }
+
     /// Read a project file from disk
     ///
     /// # Errors
@@ -141,6 +150,16 @@ impl ProjectConfig {
     #[must_use]
     pub fn with_runtime(self, runtime: RuntimeArguments) -> Self {
         Self { runtime, ..self }
+    }
+
+    #[must_use]
+    fn gen_expected_path(prefix: &String, mainprefix: Option<&String>) -> String {
+        mainprefix
+            .map_or_else(
+                || format!("{prefix}\\"),
+                |mainprefix| format!("{mainprefix}\\{prefix}\\"),
+            )
+            .to_ascii_lowercase()
     }
 }
 
@@ -226,6 +245,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             return Err(Error::Prefix(crate::prefix::Error::Empty));
         }
 
+        let expected_path = Self::gen_expected_path(&file.prefix, file.mainprefix.as_ref());
         let ret = Self {
             hemtt: file.hemtt.into_config(&file.meta_path, &file.prefix)?,
             name: file.name,
@@ -239,6 +259,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             preprocessor: file.preprocessor.into(),
             signing: file.signing.into(),
             runtime: RuntimeArguments::default(),
+            expected_path,
         };
 
         let mut lints_path = file.meta_path;

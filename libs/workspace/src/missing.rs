@@ -20,18 +20,10 @@ pub fn check_is_missing_file(target: &str, project: &ProjectConfig, processed: &
         .first()
         .map(|s| s.0.clone())
         .expect("no sources");
-    let mut prefix = String::new();
-    for char in target.chars() {
-        if char == '/' || char == '\\' {
-            if prefix.is_empty() {
-                continue;
-            }
-            break;
-        }
-        prefix.push(char);
-    }
-    if let Some(mainprefix) = &project.mainprefix()
-        && prefix != mainprefix.to_lowercase()
+    let expected_path = project.expected_path();
+    let target_lower = target.to_ascii_lowercase();
+    if !(target_lower.starts_with(expected_path)
+        || target_lower.starts_with(&format!(r"\{expected_path}")))
     {
         return false;
     }
