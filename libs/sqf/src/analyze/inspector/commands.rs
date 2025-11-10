@@ -6,7 +6,7 @@ use indexmap::IndexSet;
 
 use crate::{
     Expression, Statement,
-    analyze::inspector::{InvalidArgs, Issue, VarSource},
+    analyze::inspector::{InvalidArgs, Issue, VarSource, game_value::NilSource},
     parser::database::Database,
 };
 
@@ -29,7 +29,7 @@ impl Inspector {
                 s.var_assign(
                     var,
                     true,
-                    IndexSet::from([GameValue::Nothing(false)]),
+                    IndexSet::from([GameValue::Nothing(NilSource::PrivateArray)]),
                     VarSource::Private(source.clone()),
                 );
             }
@@ -158,7 +158,7 @@ impl Inspector {
                     let default_value = element[1][0].0.clone();
                     // Verify that the default value matches one of the types
                     if !(matches!(default_value, GameValue::Anything)
-                        || matches!(default_value, GameValue::Nothing(true))
+                        || matches!(default_value, GameValue::Nothing(NilSource::ExplicitNil))
                         || var_types.iter().any(|t| {
                             matches!(t, GameValue::Anything) || t == &default_value.make_generic()
                         }))
@@ -405,19 +405,13 @@ impl Inspector {
         return_value
     }
     #[must_use]
+    /// just merge both sides (this is equilivalent to generating an else array)
     pub fn cmd_b_else(
         &self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
     ) -> IndexSet<GameValue> {
-        let mut return_value = IndexSet::new(); // just merge, not really the same but should be fine
-        for possible in rhs {
-            return_value.insert(possible.clone());
-        }
-        for possible in lhs {
-            return_value.insert(possible.clone());
-        }
-        return_value
+        lhs.iter().chain(rhs.iter()).cloned().collect()
     }
     #[must_use]
     pub fn cmd_b_get_or_default_call(

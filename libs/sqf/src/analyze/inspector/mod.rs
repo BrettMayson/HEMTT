@@ -1,9 +1,10 @@
 //! Inspects code, checking code args and variable usage
 //!
-use std::{hash::Hash, ops::Range, vec};
+use std::{hash::Hash, ops::Range, sync::OnceLock, vec};
 
 use crate::{
-    BinaryCommand, Expression, Statement, Statements, UnaryCommand, parser::database::Database,
+    BinaryCommand, Expression, Statement, Statements, UnaryCommand,
+    analyze::inspector::game_value::NilSource, parser::database::Database,
 };
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
@@ -11,6 +12,7 @@ use indexmap::{IndexMap, IndexSet};
 use regex::Regex;
 #[allow(unused_imports)]
 use tracing::trace;
+use tracing::warn;
 
 mod commands;
 mod external_functions;
@@ -302,16 +304,15 @@ impl Inspector {
                 self.errors.insert(Issue::Unused(var, holder.source));
             }
         }
-        let returns_set = self
+        let mut returns_set = self
             .active_scope()
             .returns_set
             .pop()
             .expect("stack to exist");
         if returns_set.is_empty() {
-            IndexSet::from([GameValue::Nothing(false)])
-        } else {
-            returns_set
+            returns_set.insert(GameValue::Nothing(NilSource::EmptyStack));
         }
+        returns_set
     }
 
     pub fn var_assign(
@@ -324,11 +325,14 @@ impl Inspector {
         // println!("var_assign: `{var}` local:{local} lvl: {}", self.local.len());
         let var_lower = var.to_ascii_lowercase();
         if !var_lower.starts_with('_') {
-            let holder = self.vars_global.entry(var_lower).or_insert(VarHolder {
-                possible: IndexSet::new(),
-                usage: 0,
-                source,
-            });
+            let holder = self
+                .vars_global
+                .entry(var_lower)
+                .or_insert_with(|| VarHolder {
+                    possible: IndexSet::new(),
+                    usage: 0,
+                    source,
+                });
             holder.possible.extend(possible_values);
             return;
         }
@@ -365,7 +369,7 @@ impl Inspector {
         let vars_local = &mut self.active_scope().vars_local;
         let holder = vars_local[stack_level]
             .entry(var_lower)
-            .or_insert(VarHolder {
+            .or_insert_with(|| VarHolder {
                 possible: IndexSet::new(),
                 usage: 0,
                 source,
@@ -407,8 +411,7 @@ impl Inspector {
             holder.usage += 1;
             let mut set = holder.possible.clone();
 
-            if !var_lower.starts_with('_') && self.ignored_vars.contains(&var.to_ascii_lowercase())
-            {
+            if !var_lower.starts_with('_') && self.ignored_vars.contains(&var_lower) {
                 // Assume that a ignored global var could be anything
                 set.insert(GameValue::Anything);
             }
@@ -420,16 +423,16 @@ impl Inspector {
         }
     }
 
-    /// Checks for bad argument values if the syntax was otherwise valid
-    /// like non-explicit-nil or assignment
-    fn check_bad_args(
+    /// Checks for bad argument values if the syntax was otherwise valid (e.g. cmd that takes anything)
+    fn eval_check_bad_args(
         &mut self,
         debug_type: &str,
         source: &Range<usize>,
         expression: &Expression,
         result_set: &IndexSet<GameValue>,
     ) {
-        if (result_set.len() == 1 && result_set.contains(&GameValue::Nothing(false)))
+        // there should never be any valid reason to have these as inputs
+        if result_set.contains(&GameValue::Nothing(NilSource::CommandReturn)) // EmptyStack has false positives on {} default
             || result_set.contains(&GameValue::Assignment)
         {
             self.errors.insert(Issue::InvalidArgs {
@@ -451,6 +454,19 @@ impl Inspector {
         expression: &Expression,
         database: &Database,
     ) -> IndexSet<(GameValue, Range<usize>)> {
+        fn command_return(
+            cmd_set: IndexSet<GameValue>,
+            return_set: Option<IndexSet<GameValue>>,
+            source: &Range<usize>,
+        ) -> IndexSet<(GameValue, Range<usize>)> {
+            // Use custom return if it exists or just use wiki set
+            let mut set = return_set.unwrap_or(cmd_set);
+            // If a command could return multiple values, make the nil results generic
+            if set.len() > 1 && set.swap_remove(&GameValue::Nothing(NilSource::CommandReturn)) {
+                set.insert(GameValue::Nothing(NilSource::Generic));
+            }
+            set.into_iter().map(|gv| (gv, source.clone())).collect()
+        }
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
@@ -472,30 +488,18 @@ impl Inspector {
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let mut cmd_set: IndexSet<(GameValue, Range<usize>)> =
-                    GameValue::from_cmd(expression, None, None, database)
-                        .0
-                        .into_iter()
-                        .map(|gv| (gv, source.clone()))
-                        .collect();
+                let mut cmd_set = GameValue::from_cmd(expression, None, None, database).0;
                 if cmd_set.is_empty() {
-                    // is this possible?
-                    self.errors.insert(Issue::InvalidArgs {
-                        command: debug_type.clone(),
-                        span: source.clone(),
-                        variant: InvalidArgs::TypeNotExpected {
-                            expected: vec![],
-                            found: vec![GameValue::Anything],
-                            span: source.clone(),
-                        },
-                    });
-                    cmd_set.insert((GameValue::Anything, source.clone())); // don't cause confusing errors for code downstream
+                    warn!("cmd_set is empty on nular command `{}`", cmd.as_str()); // should not be possible
+                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
-                if cmd.as_str().eq_ignore_ascii_case("nil") {
+                let return_set = if cmd.as_str().eq_ignore_ascii_case("nil") {
                     // nil returns a explicit Nothing
-                    cmd_set = IndexSet::from([(GameValue::Nothing(true), source.clone())]);
-                }
-                cmd_set
+                    Some(IndexSet::from([GameValue::Nothing(NilSource::ExplicitNil)]))
+                } else {
+                    None
+                };
+                command_return(cmd_set, return_set, source)
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
@@ -518,7 +522,7 @@ impl Inspector {
                     });
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 } else {
-                    self.check_bad_args(&debug_type, source, rhs, &rhs_set);
+                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -561,12 +565,7 @@ impl Inspector {
                     },
                     _ => None,
                 };
-                // Use custom return from cmd or just use wiki set
-                return_set
-                    .unwrap_or(cmd_set)
-                    .into_iter()
-                    .map(|gv| (gv, source.clone()))
-                    .collect()
+                command_return(cmd_set, return_set, source)
             }
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
@@ -612,8 +611,8 @@ impl Inspector {
                     }
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 } else {
-                    self.check_bad_args(&debug_type, source, lhs, &lhs_set);
-                    self.check_bad_args(&debug_type, source, rhs, &rhs_set);
+                    self.eval_check_bad_args(&debug_type, source, lhs, &lhs_set);
+                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
                 }
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
@@ -729,12 +728,7 @@ impl Inspector {
                     },
                     _ => None,
                 };
-                // Use custom return from cmd or just use wiki set
-                return_set
-                    .unwrap_or(cmd_set)
-                    .into_iter()
-                    .map(|gv| (gv, source.clone()))
-                    .collect()
+                command_return(cmd_set, return_set, source)
             }
             Expression::Code(statements) => {
                 self.code_seen(expression);
@@ -817,23 +811,25 @@ impl Inspector {
 
 #[must_use]
 /// Run statements and return issues
+/// # Panics
 pub fn run_processed(
     statements: &Statements,
     processed: &Processed,
     database: &Database,
 ) -> Vec<Issue> {
+    static RE_IGNORE_VARIABLES: OnceLock<Regex> = OnceLock::new();
+    static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
+
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_ascii_lowercase());
     ignored_vars.insert("_fnc_scriptName".to_ascii_lowercase()); // may be set via cfgFunctions
     ignored_vars.insert("_fnc_scriptNameParent".to_ascii_lowercase());
-    let Ok(re1) =
+    let re1 = RE_IGNORE_VARIABLES.get_or_init(|| {
         Regex::new(r"(?:\#pragma hemtt ignore_variables|\/\/ ?IGNORE_PRIVATE_WARNING) ?\[(.*)\]")
-    else {
-        return Vec::new();
-    };
-    let Ok(re2) = Regex::new(r#""(.*?)""#) else {
-        return Vec::new();
-    };
+            .expect("regex ok")
+    });
+    let re2 =
+        RE_IGNORE_VARIABLE_ENTRIES.get_or_init(|| Regex::new(r#""(.*?)""#).expect("regex ok"));
     for (_path, raw_source) in processed.sources() {
         for (_, [ignores]) in re1.captures_iter(&raw_source).map(|c| c.extract()) {
             for (_, [var]) in re2.captures_iter(ignores).map(|c| c.extract()) {

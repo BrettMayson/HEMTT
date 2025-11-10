@@ -28,8 +28,7 @@ pub enum GameValue {
     Location,
     Namespace,
     Number(Option<Expression>),
-    /// true = explicit (from `nil`)
-    Nothing(bool),
+    Nothing(NilSource),
     Object,
     ScriptHandle,
     Side,
@@ -54,6 +53,15 @@ pub enum ArrayType {
     /// from object's center `getPosWorld`
     PosWorld,
     PosRelative,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum NilSource {
+    Generic,
+    ExplicitNil,
+    CommandReturn,
+    PrivateArray,
+    EmptyStack,
 }
 
 impl GameValue {
@@ -257,11 +265,7 @@ impl GameValue {
     ) -> (bool, Self) {
         // println!("Checking {set:?} against {right_wiki:?} [O:{optional}]");
         let right = Self::from_wiki_value(right_wiki);
-        if optional
-            && (set.is_empty()
-                || set.contains(&Self::Nothing(false))
-                || set.contains(&Self::Nothing(true)))
-        {
+        if optional && (set.is_empty() || set.iter().any(|gv| matches!(gv, Self::Nothing(_)))) {
             return (true, right);
         }
         (set.iter().any(|gv| Self::match_values(gv, &right)), right)
@@ -320,7 +324,7 @@ impl GameValue {
             Value::IfType => Self::IfType,
             Value::Location => Self::Location,
             Value::Namespace => Self::Namespace,
-            Value::Nothing => Self::Nothing(false),
+            Value::Nothing => Self::Nothing(NilSource::CommandReturn),
             Value::Number => Self::Number(None),
             Value::Object => Self::Object,
             Value::ScriptHandle => Self::ScriptHandle,

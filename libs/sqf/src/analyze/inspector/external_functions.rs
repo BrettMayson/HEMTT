@@ -19,11 +19,12 @@ impl Inspector {
         let Expression::Variable(ext_func, _) = rhs else {
             return;
         };
+        let ext_func_lower = ext_func.to_ascii_lowercase();
         for possible in lhs {
             match possible {
                 GameValue::Code(Some(statements)) => {
                     // handle `{} call cba_fnc_directcall`
-                    if ext_func.to_ascii_lowercase().as_str() == "cba_fnc_directcall" {
+                    if ext_func_lower.as_str() == "cba_fnc_directcall" {
                         self.external_current_scope(
                             &vec![(GameValue::Code(Some(statements.clone())), statements.span())],
                             &vec![],
@@ -31,8 +32,7 @@ impl Inspector {
                         );
                     }
                 }
-                GameValue::Array(Some(gv_array), _) => match ext_func.to_ascii_lowercase().as_str()
-                {
+                GameValue::Array(Some(gv_array), _) => match ext_func_lower.as_str() {
                     // Functions that will run in existing scope
                     "cba_fnc_hasheachpair" | "cba_fnc_hashfilter" => {
                         if gv_array.len() > 1 {
