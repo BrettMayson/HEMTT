@@ -46,7 +46,7 @@ jobs:
         with:
           key: build-${{ matrix.os.name }}
       - name: Compile
-        run: cargo build --release
+        run: cargo build --release --bin hemtt
       - name: Upload
         uses: actions/upload-artifact@v5
         with:
