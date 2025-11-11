@@ -20,6 +20,8 @@ pub enum Property {
     Delete(Ident),
     /// A property that is missing a semicolon
     MissingSemicolon(Ident, Range<usize>),
+    /// An extra semicolon
+    ExtraSemicolon(Ident, Range<usize>),
 }
 
 impl Property {
@@ -32,6 +34,7 @@ impl Property {
         match self {
             Self::Class(c) => c.name().expect("root should not be a property"),
             Self::MissingSemicolon(name, _) | Self::Delete(name) | Self::Entry { name, .. } => name,
+            Self::ExtraSemicolon(fake_ident, _) => fake_ident,
         }
     }
 
@@ -51,7 +54,9 @@ impl serde::Serialize for Property {
         match self {
             Self::Entry { value, .. } => value.serialize(serializer),
             Self::Class(class) => class.serialize(serializer),
-            Self::MissingSemicolon(..) | Self::Delete(..) => serializer.serialize_unit(),
+            Self::MissingSemicolon(..) | Self::Delete(..) | Self::ExtraSemicolon(..) => {
+                serializer.serialize_unit()
+            }
         }
     }
 }

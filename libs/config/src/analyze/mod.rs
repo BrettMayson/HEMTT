@@ -125,7 +125,7 @@ impl Analyze for Property {
                 value.analyze(&data, project, processed, manager)
             }
             Self::Class(c) => c.analyze(data, project, processed, manager),
-            Self::Delete(_) | Self::MissingSemicolon(_, _) => vec![],
+            Self::Delete(_) | Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => vec![],
         });
         codes
     }
