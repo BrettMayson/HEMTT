@@ -1,15 +1,18 @@
 //! Inspects code, checking code args and variable usage
 //!
-use std::{cell::RefCell, hash::Hash, ops::Range, rc::Rc, vec};
+use std::{hash::Hash, ops::Range, sync::OnceLock, vec};
 
 use crate::{
-    BinaryCommand, Expression, Statement, Statements, UnaryCommand, parser::database::Database,
+    BinaryCommand, Expression, Statement, Statements, UnaryCommand,
+    analyze::inspector::game_value::NilSource, parser::database::Database,
 };
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
 use indexmap::{IndexMap, IndexSet};
 use regex::Regex;
+#[allow(unused_imports)]
 use tracing::trace;
+use tracing::warn;
 
 mod commands;
 mod external_functions;
@@ -27,6 +30,10 @@ pub enum InvalidArgs {
         found: Vec<GameValue>,
         span: Range<usize>,
         default: Range<usize>,
+    },
+    NilResultUsed {
+        found: Vec<GameValue>,
+        span: Range<usize>,
     },
 }
 
@@ -53,6 +60,7 @@ impl InvalidArgs {
     pub fn message(&self, command: &str) -> String {
         match self {
             Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
+            Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
             Self::DefaultDifferentType { .. } => {
                 String::from("Default value is not an expected type for the parameter")
             }
@@ -70,6 +78,7 @@ impl InvalidArgs {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
+            Self::NilResultUsed { .. } => String::from("expected non-nil value"),
             Self::DefaultDifferentType { .. } => {
                 format!(
                     "expected {}",
@@ -86,15 +95,16 @@ impl InvalidArgs {
     #[must_use]
     pub fn found_types(&self) -> Vec<GameValue> {
         match self {
-            Self::TypeNotExpected { found, .. } | Self::DefaultDifferentType { found, .. } => {
-                found.clone()
-            }
+            Self::TypeNotExpected { found, .. }
+            | Self::DefaultDifferentType { found, .. }
+            | Self::NilResultUsed { found, .. } => found.clone(),
         }
     }
 
     #[must_use]
     pub fn expected_types(&self) -> Vec<GameValue> {
         match self {
+            Self::NilResultUsed { .. } => vec![],
             Self::TypeNotExpected { expected, .. }
             | Self::DefaultDifferentType { expected, .. } => expected.clone(),
         }
@@ -103,9 +113,9 @@ impl InvalidArgs {
     #[must_use]
     pub fn span(&self) -> Range<usize> {
         match self {
-            Self::TypeNotExpected { span, .. } | Self::DefaultDifferentType { span, .. } => {
-                span.clone()
-            }
+            Self::TypeNotExpected { span, .. }
+            | Self::DefaultDifferentType { span, .. }
+            | Self::NilResultUsed { span, .. } => span.clone(),
         }
     }
 }
@@ -160,72 +170,133 @@ pub struct VarHolder {
 
 pub type Stack = IndexMap<String, VarHolder>;
 
-pub struct SciptScope {
-    errors: IndexSet<Issue>,
-    global: Rc<RefCell<Stack>>,
-    local: Vec<Stack>,
-    code_seen: IndexSet<Expression>,
-    code_used: IndexSet<Expression>,
+/// Scope where variables and possible returns types are tracked
+pub struct ScriptScope {
+    vars_local: Vec<Stack>,
+    /// Set of possible return values from this scope
+    returns_set: Vec<IndexSet<GameValue>>,
     /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
-    ignored_vars: IndexSet<String>,
 }
 
-impl SciptScope {
+impl ScriptScope {
+    /// # Panics
+    pub fn add_returns(&mut self, values: IndexSet<GameValue>) {
+        self.returns_set
+            .last_mut()
+            .expect("stack not empty")
+            .extend(values);
+    }
+}
+
+pub struct Inspector {
+    errors: IndexSet<Issue>,
+    vars_global: Stack,
+    ignored_vars: IndexSet<String>,
+    code_seen: IndexSet<Expression>,
+    code_used: IndexSet<Expression>,
+    code_active: IndexSet<Expression>,
+    scopes: Vec<ScriptScope>,
+}
+
+impl Inspector {
     #[must_use]
-    pub fn create(
-        global: Rc<RefCell<Stack>>,
-        ignored_vars: &IndexSet<String>,
-        is_orphan_scope: bool,
-    ) -> Self {
-        // trace!("Creating ScriptScope");
-        let mut scope = Self {
+    pub fn new(ignored_vars: &IndexSet<String>) -> Self {
+        let mut inspector = Self {
             errors: IndexSet::new(),
-            global,
-            local: Vec::new(),
+            vars_global: Stack::new(),
+            ignored_vars: ignored_vars.clone(),
             code_seen: IndexSet::new(),
             code_used: IndexSet::new(),
-            is_orphan_scope,
-            ignored_vars: ignored_vars.clone(),
+            code_active: IndexSet::new(),
+            scopes: Vec::new(),
         };
-        scope.push();
-        for var in ignored_vars {
-            scope.var_assign(
+        inspector.scope_push(false);
+        inspector
+    }
+    /// # Panics
+    #[must_use]
+    pub fn active_scope(&mut self) -> &mut ScriptScope {
+        self.scopes.last_mut().expect("there is always a scope")
+    }
+    pub fn scope_push(&mut self, is_orphan_scope: bool) {
+        // println!("Creating ScriptScope, orphan: {is_orphan_scope}");
+        let scope = ScriptScope {
+            vars_local: Vec::new(),
+            returns_set: Vec::new(),
+            is_orphan_scope,
+        };
+        self.scopes.push(scope);
+        self.stack_push(None);
+        for var in &self.ignored_vars.clone() {
+            self.var_assign(
                 var,
                 true,
                 IndexSet::from([GameValue::Anything]),
                 VarSource::Ignore,
             );
         }
-        scope
+    }
+    pub fn scope_pop(&mut self) {
+        let _ = self.stack_pop(None);
+        debug_assert!(self.scopes.last().is_some_and(|s| s.vars_local.is_empty()));
+        self.scopes.pop();
     }
     #[must_use]
-    pub fn finish(mut self, check_child_scripts: bool, database: &Database) -> IndexSet<Issue> {
-        self.pop();
-        if check_child_scripts {
-            let unused = &self.code_seen - &self.code_used;
-            for expression in unused {
-                let Expression::Code(statements) = expression else {
-                    continue;
-                };
-                // trace!("-- Checking external scope");
-                let mut external_scope =
-                    Self::create(self.global.clone(), &self.ignored_vars, true);
-                external_scope.eval_statements(&statements, database);
-                self.errors
-                    .extend(external_scope.finish(check_child_scripts, database));
-            }
+    pub fn finish(mut self, database: &Database) -> Vec<Issue> {
+        self.scope_pop();
+        debug_assert!(self.scopes.is_empty());
+        let unused = &self.code_seen - &self.code_used;
+        for code in &unused {
+            let Expression::Code(statements) = code else {
+                unreachable!("only code");
+            };
+            self.code_used(code);
+            // println!("-- Checking external scope");
+            self.scope_push(true); // create orphan scope
+            self.eval_statements(statements, false, database);
+            self.scope_pop();
         }
-        self.errors
+        self.errors.into_iter().collect()
     }
 
-    pub fn push(&mut self) {
-        // trace!("-- Stack Push {}", self.local.len());
-        self.local.push(Stack::new());
+    pub fn code_seen(&mut self, expression: &Expression) {
+        self.code_seen.insert(expression.clone());
     }
-    pub fn pop(&mut self) {
-        for (var, holder) in self.local.pop().unwrap_or_default() {
-            // trace!("-- Stack Pop {}:{} ", var, holder.usage);
+    pub fn code_used(&mut self, expression: &Expression) {
+        debug_assert!(self.code_seen.contains(expression));
+        self.code_used.insert(expression.clone());
+    }
+
+    pub fn stack_push(&mut self, expression_opt: Option<&Expression>) -> Option<usize> {
+        // println!("-- Stack Push {}", self.active_scope().vars_local.len());
+        let return_index = match expression_opt {
+            Some(expression) => {
+                self.code_used(expression);
+                let (index, inserted) = self.code_active.insert_full(expression.clone());
+                if !inserted {
+                    return None; // already active, prevent infinite recursion
+                }
+                Some(index)
+            }
+            None => None,
+        };
+        self.active_scope().vars_local.push(Stack::new());
+        self.active_scope().returns_set.push(IndexSet::new());
+        return_index
+    }
+    /// # Panics
+    pub fn stack_pop(&mut self, index: Option<usize>) -> IndexSet<GameValue> {
+        if let Some(index) = index {
+            let _ = self.code_active.swap_remove_index(index);
+        }
+        // Check for unused vars in this stack level
+        for (var, holder) in self
+            .active_scope()
+            .vars_local
+            .pop()
+            .expect("there is always a stack")
+        {
             if holder.usage == 0
                 && !holder.source.skip_errors()
                 && !self.ignored_vars.contains(&var)
@@ -233,6 +304,15 @@ impl SciptScope {
                 self.errors.insert(Issue::Unused(var, holder.source));
             }
         }
+        let mut returns_set = self
+            .active_scope()
+            .returns_set
+            .pop()
+            .expect("stack to exist");
+        if returns_set.is_empty() {
+            returns_set.insert(GameValue::Nothing(NilSource::EmptyStack));
+        }
+        returns_set
     }
 
     pub fn var_assign(
@@ -245,22 +325,29 @@ impl SciptScope {
         // println!("var_assign: `{var}` local:{local} lvl: {}", self.local.len());
         let var_lower = var.to_ascii_lowercase();
         if !var_lower.starts_with('_') {
-            let mut global_m = self.global.borrow_mut();
-            let holder = global_m.entry(var_lower).or_insert(VarHolder {
-                possible: IndexSet::new(),
-                usage: 0,
-                source,
-            });
+            let holder = self
+                .vars_global
+                .entry(var_lower)
+                .or_insert_with(|| VarHolder {
+                    possible: IndexSet::new(),
+                    usage: 0,
+                    source,
+                });
             holder.possible.extend(possible_values);
             return;
         }
-
-        let stack_level_search = self
-            .local
-            .iter()
-            .rev()
-            .position(|s| s.contains_key(&var_lower));
-        let mut stack_level = self.local.len() - 1;
+        // read-only borrow to compute stack position with a minimal lifetime so we can
+        // insert errors (which needs &mut self) before taking a mutable borrow again.
+        let stack_level_search: Option<usize>;
+        let mut stack_level;
+        {
+            let current_vars = &self.active_scope().vars_local;
+            stack_level_search = current_vars
+                .iter()
+                .rev()
+                .position(|s| s.contains_key(&var_lower));
+            stack_level = current_vars.len().saturating_sub(1);
+        }
         if stack_level_search.is_none() {
             if !local {
                 self.errors.insert(Issue::NotPrivate(
@@ -279,9 +366,10 @@ impl SciptScope {
         } else {
             stack_level -= stack_level_search.unwrap_or_default();
         }
-        let holder = self.local[stack_level]
+        let vars_local = &mut self.active_scope().vars_local;
+        let holder = vars_local[stack_level]
             .entry(var_lower)
-            .or_insert(VarHolder {
+            .or_insert_with(|| VarHolder {
                 possible: IndexSet::new(),
                 usage: 0,
                 source,
@@ -298,26 +386,24 @@ impl SciptScope {
         peek: bool,
     ) -> IndexSet<(GameValue, Range<usize>)> {
         let var_lower = var.to_ascii_lowercase();
-        let mut global_m = self.global.borrow_mut();
         let holder_option = if var_lower.starts_with('_') {
             let stack_level_search = self
-                .local
+                .active_scope()
+                .vars_local
                 .iter()
                 .rev()
                 .position(|s| s.contains_key(&var_lower));
-            let mut stack_level = self.local.len() - 1;
+            let mut stack_level = self.active_scope().vars_local.len() - 1;
             if let Some(stack_level_search) = stack_level_search {
                 stack_level -= stack_level_search;
             } else if !peek {
-                self.errors.insert(Issue::Undefined(
-                    var.to_owned(),
-                    source.clone(),
-                    self.is_orphan_scope,
-                ));
+                let is_oprhan = self.active_scope().is_orphan_scope;
+                self.errors
+                    .insert(Issue::Undefined(var.to_owned(), source.clone(), is_oprhan));
             }
-            self.local[stack_level].get_mut(&var_lower)
-        } else if global_m.contains_key(&var_lower) {
-            global_m.get_mut(&var_lower)
+            self.active_scope().vars_local[stack_level].get_mut(&var_lower)
+        } else if self.vars_global.contains_key(&var_lower) {
+            self.vars_global.get_mut(&var_lower)
         } else {
             return IndexSet::from([(GameValue::Anything, source.clone())]);
         };
@@ -325,8 +411,7 @@ impl SciptScope {
             holder.usage += 1;
             let mut set = holder.possible.clone();
 
-            if !var_lower.starts_with('_') && self.ignored_vars.contains(&var.to_ascii_lowercase())
-            {
+            if !var_lower.starts_with('_') && self.ignored_vars.contains(&var_lower) {
                 // Assume that a ignored global var could be anything
                 set.insert(GameValue::Anything);
             }
@@ -338,14 +423,50 @@ impl SciptScope {
         }
     }
 
+    /// Checks for bad argument values if the syntax was otherwise valid (e.g. cmd that takes anything)
+    fn eval_check_bad_args(
+        &mut self,
+        debug_type: &str,
+        source: &Range<usize>,
+        expression: &Expression,
+        result_set: &IndexSet<GameValue>,
+    ) {
+        // there should never be any valid reason to have these as inputs
+        if result_set.contains(&GameValue::Nothing(NilSource::CommandReturn)) // EmptyStack has false positives on {} default
+            || result_set.contains(&GameValue::Assignment)
+        {
+            self.errors.insert(Issue::InvalidArgs {
+                command: debug_type.to_string(),
+                span: source.clone(),
+                variant: InvalidArgs::NilResultUsed {
+                    found: result_set.iter().cloned().collect(),
+                    span: expression.span(),
+                },
+            });
+        }
+    }
+
     #[must_use]
-    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_lines, unused_assignments)]
     /// Evaluate expression in current scope
     pub fn eval_expression(
         &mut self,
         expression: &Expression,
         database: &Database,
     ) -> IndexSet<(GameValue, Range<usize>)> {
+        fn command_return(
+            cmd_set: IndexSet<GameValue>,
+            return_set: Option<IndexSet<GameValue>>,
+            source: &Range<usize>,
+        ) -> IndexSet<(GameValue, Range<usize>)> {
+            // Use custom return if it exists or just use wiki set
+            let mut set = return_set.unwrap_or(cmd_set);
+            // If a command could return multiple values, make the nil results generic
+            if set.len() > 1 && set.swap_remove(&GameValue::Nothing(NilSource::CommandReturn)) {
+                set.insert(GameValue::Nothing(NilSource::Generic));
+            }
+            set.into_iter().map(|gv| (gv, source.clone())).collect()
+        }
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
@@ -367,26 +488,18 @@ impl SciptScope {
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let mut cmd_set: IndexSet<(GameValue, Range<usize>)> =
-                    GameValue::from_cmd(expression, None, None, database)
-                        .0
-                        .into_iter()
-                        .map(|gv| (gv, source.clone()))
-                        .collect();
+                let mut cmd_set = GameValue::from_cmd(expression, None, None, database).0;
                 if cmd_set.is_empty() {
-                    // is this possible?
-                    self.errors.insert(Issue::InvalidArgs {
-                        command: debug_type.clone(),
-                        span: source.clone(),
-                        variant: InvalidArgs::TypeNotExpected {
-                            expected: vec![],
-                            found: vec![GameValue::Anything],
-                            span: source.clone(),
-                        },
-                    });
-                    cmd_set.insert((GameValue::Anything, source.clone())); // don't cause confusing errors for code downstream
+                    warn!("cmd_set is empty on nular command `{}`", cmd.as_str()); // should not be possible
+                    cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 }
-                cmd_set
+                let return_set = if cmd.as_str().eq_ignore_ascii_case("nil") {
+                    // nil returns a explicit Nothing
+                    Some(IndexSet::from([GameValue::Nothing(NilSource::ExplicitNil)]))
+                } else {
+                    None
+                };
+                command_return(cmd_set, return_set, source)
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
@@ -408,15 +521,22 @@ impl SciptScope {
                         },
                     });
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
+                } else {
+                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
                         "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "private" => Some(self.cmd_u_private(&rhs_set)),
-                        "call" => Some(self.cmd_generic_call(&rhs_set, database)),
+                        "call" => Some(self.cmd_generic_call(&rhs_set, None, database)),
+                        "default" => {
+                            let returns = self.cmd_generic_call(&rhs_set, None, database);
+                            self.active_scope().add_returns(returns);
+                            None
+                        }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" | "default" => {
-                            let _ = self.cmd_generic_call(&rhs_set, database);
+                        "while" | "waituntil" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, database);
                             None
                         }
                         "for" => Some(self.cmd_for(&rhs_set)),
@@ -445,12 +565,7 @@ impl SciptScope {
                     },
                     _ => None,
                 };
-                // Use custom return from cmd or just use wiki set
-                return_set
-                    .unwrap_or(cmd_set)
-                    .into_iter()
-                    .map(|gv| (gv, source.clone()))
-                    .collect()
+                command_return(cmd_set, return_set, source)
             }
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
@@ -495,15 +610,19 @@ impl SciptScope {
                         });
                     }
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
+                } else {
+                    self.eval_check_bad_args(&debug_type, source, lhs, &lhs_set);
+                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
                 }
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
                         // the : from case ToDo: these run outside of the do scope
-                        let _ = self.cmd_generic_call(&rhs_set, database);
+                        let returns = self.cmd_generic_call(&rhs_set, None, database);
+                        self.active_scope().add_returns(returns);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
-                        let _ = self.cmd_generic_call(&rhs_set, database);
+                        let _ = self.cmd_generic_call(&rhs_set, None, database);
                         None
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
@@ -524,11 +643,20 @@ impl SciptScope {
                         "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "call" => {
                             self.external_function(&lhs_set, rhs, database);
-                            Some(self.cmd_generic_call(&rhs_set, database))
+                            Some(self.cmd_generic_call(&rhs_set, None, database))
+                        }
+                        "spawn" => {
+                            self.external_new_scope(
+                                &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
+                                &vec![],
+                                database,
+                            );
+                            None
                         }
                         "exitwith" => {
-                            // todo: handle scope exits
-                            Some(self.cmd_generic_call(&rhs_set, database))
+                            let returns = self.cmd_generic_call(&rhs_set, None, database);
+                            self.active_scope().add_returns(returns);
+                            None
                         }
                         "do" => {
                             // from While, With, For, and Switch
@@ -545,11 +673,12 @@ impl SciptScope {
                             if !rhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
                                 magic.push(("_y", GameValue::Anything));
                             }
-                            Some(self.cmd_generic_call_magic(&lhs_set, &magic, source, database))
+                            Some(self.cmd_generic_call(&lhs_set, Some((&magic, source)), database))
                         }
                         "count" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&rhs_set))];
-                            let _ = self.cmd_generic_call_magic(&lhs_set, &magic, source, database);
+                            let _ =
+                                self.cmd_generic_call(&lhs_set, Some((&magic, source)), database);
                             None
                         }
                         "apply" => {
@@ -557,12 +686,14 @@ impl SciptScope {
                             if !lhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
                                 magic.push(("_y", GameValue::Anything));
                             }
-                            let _ = self.cmd_generic_call_magic(&rhs_set, &magic, source, database);
+                            let _ =
+                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
                             None
                         }
                         "findif" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
-                            let _ = self.cmd_generic_call_magic(&rhs_set, &magic, source, database);
+                            let _ =
+                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
                             None
                         }
                         "getordefaultcall" => {
@@ -597,15 +728,10 @@ impl SciptScope {
                     },
                     _ => None,
                 };
-                // Use custom return from cmd or just use wiki set
-                return_set
-                    .unwrap_or(cmd_set)
-                    .into_iter()
-                    .map(|gv| (gv, source.clone()))
-                    .collect()
+                command_return(cmd_set, return_set, source)
             }
             Expression::Code(statements) => {
-                self.code_seen.insert(expression.clone());
+                self.code_seen(expression);
                 debug_type = format!("CODE:{}", statements.content().len());
                 IndexSet::from([(GameValue::Code(Some(expression.clone())), statements.span())])
             }
@@ -620,14 +746,20 @@ impl SciptScope {
                 .map(|(gv, _)| format!("{gv:?}"))
                 .collect::<Vec<_>>()
         );
+        #[allow(clippy::let_and_return)]
         possible_values
     }
 
-    /// Evaluate statements in the current scope
-    fn eval_statements(&mut self, statements: &Statements, database: &Database) {
-        // let mut return_value = IndexSet::new();
+    /// Evaluate statements in the current scope and return possible return values of last command
+    fn eval_statements(
+        &mut self,
+        statements: &Statements,
+        add_to_stack: bool,
+        database: &Database,
+    ) {
+        let mut last_statement = IndexSet::new();
         for statement in statements.content() {
-            match statement {
+            last_statement = match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self
@@ -644,7 +776,7 @@ impl SciptScope {
                             expression.span().clone(),
                         ),
                     );
-                    // return_value = vec![GameValue::Assignment()];
+                    IndexSet::from([GameValue::Assignment])
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
@@ -662,37 +794,42 @@ impl SciptScope {
                             expression.span().clone(),
                         ),
                     );
-                    // return_value = vec![GameValue::Assignment()];
+                    IndexSet::from([GameValue::Assignment])
                 }
-                Statement::Expression(expression, _) => {
-                    let _possible_values = self.eval_expression(expression, database);
-                    // return_value = possible_values;
-                }
+                Statement::Expression(expression, _) => self
+                    .eval_expression(expression, database)
+                    .into_iter()
+                    .map(|(gv, _)| gv)
+                    .collect(),
             }
         }
-        // return_value
+        if add_to_stack {
+            self.active_scope().add_returns(last_statement);
+        }
     }
 }
 
 #[must_use]
 /// Run statements and return issues
+/// # Panics
 pub fn run_processed(
     statements: &Statements,
     processed: &Processed,
     database: &Database,
 ) -> Vec<Issue> {
+    static RE_IGNORE_VARIABLES: OnceLock<Regex> = OnceLock::new();
+    static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
+
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_ascii_lowercase());
     ignored_vars.insert("_fnc_scriptName".to_ascii_lowercase()); // may be set via cfgFunctions
     ignored_vars.insert("_fnc_scriptNameParent".to_ascii_lowercase());
-    let Ok(re1) =
+    let re1 = RE_IGNORE_VARIABLES.get_or_init(|| {
         Regex::new(r"(?:\#pragma hemtt ignore_variables|\/\/ ?IGNORE_PRIVATE_WARNING) ?\[(.*)\]")
-    else {
-        return Vec::new();
-    };
-    let Ok(re2) = Regex::new(r#""(.*?)""#) else {
-        return Vec::new();
-    };
+            .expect("regex ok")
+    });
+    let re2 =
+        RE_IGNORE_VARIABLE_ENTRIES.get_or_init(|| Regex::new(r#""(.*?)""#).expect("regex ok"));
     for (_path, raw_source) in processed.sources() {
         for (_, [ignores]) in re1.captures_iter(&raw_source).map(|c| c.extract()) {
             for (_, [var]) in re2.captures_iter(ignores).map(|c| c.extract()) {
@@ -701,32 +838,30 @@ pub fn run_processed(
         }
     }
 
-    let global = Rc::new(RefCell::new(Stack::new()));
-    let mut scope = SciptScope::create(global, &ignored_vars, false);
-    scope.eval_statements(statements, database);
-    let rv: Vec<Issue> = scope.finish(true, database).into_iter().collect();
+    let mut inspector = Inspector::new(&ignored_vars);
+    inspector.eval_statements(statements, true, database);
+    let issues = inspector.finish(database);
     // for ig in ignored_vars.clone() {
     //     if ig == "_this" || ig == "_fnc_scriptname" || ig == "_fnc_scriptnameparent" {
     //         continue;
     //     }
     //     let mut igtest = ignored_vars.clone();
     //     igtest.shift_remove(&ig);
-
-    //     let global = Rc::new(RefCell::new(Stack::new()));
-    //     let mut scope = SciptScope::create(global, &igtest, false);
-    //     scope.eval_statements(statements, database);
+    //     let mut inspector = Inspector::new(&igtest);
+    //     inspector.eval_statements(statements, true, database);
+    //     let test_issues = inspector.finish(database);
     //     let path = processed.sources();
-    //     let new = scope.finish(true, database).len();
-    //     if new <= rv.len() {
+    //     if test_issues.len() < issues.len() {
     //         println!(
     //             "in {:?}-{:?} and {} is undeeded [{}->{}]",
     //             path[0].0,
     //             path[path.len() - 1].0,
     //             ig,
-    //             rv.len(),
-    //             new
+    //             issues.len(),
+    //             test_issues.len()
     //         );
     //     }
     // }
-    rv
+    #[allow(clippy::let_and_return)]
+    issues
 }
