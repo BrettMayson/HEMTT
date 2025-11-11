@@ -30,7 +30,7 @@ impl Rapify for Property {
                     Class::External { .. } => 0,
                 },
                 Self::Delete(_) => 0,
-                Self::MissingSemicolon(_, _) => unreachable!(),
+                Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => unreachable!(),
             }
     }
 }
@@ -60,7 +60,7 @@ impl Property {
             Self::Delete(_) => {
                 vec![4]
             }
-            Self::MissingSemicolon(_, _) => unreachable!(),
+            Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => unreachable!(),
         }
     }
 
