@@ -1,4 +1,4 @@
-use crate::{context::Context, error::Error, modules::Sign, report::Report};
+use crate::{context::Context, error::Error, modules::{Sign, meta::Meta}, report::Report};
 
 use super::build;
 
@@ -97,6 +97,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     } else {
         executor.ctx().config().hemtt().release().archive()
     };
+
+    executor.add_module(Box::new(Meta));
 
     executor.release(archive);
 
