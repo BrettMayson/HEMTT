@@ -317,7 +317,7 @@
     "@vscode/test-electron": "2.5.2",
     "esbuild": "0.25.12",
     "eslint": "9.39.0",
-    "glob": "11.0.3",
+    "glob": "11.1.0",
     "mocha": "11.7.4",
     "run-script-os": "^1.1.6",
     "ts-loader": "9.5.4",
