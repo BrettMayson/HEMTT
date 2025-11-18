@@ -13,7 +13,7 @@ use tower_lsp::{
 use tracing::debug;
 use url::Url;
 
-use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer};
+use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer, workspace};
 
 #[derive(Clone)]
 pub struct EditorWorkspaces {
@@ -152,7 +152,8 @@ impl EditorWorkspace {
 
     pub fn join_url(&self, url: &Url) -> Result<WorkspacePath, String> {
         let decoded_path = urlencoding::decode(url.path()).map_err(|e| format!("{e}"))?;
-        let Some(path) = decoded_path.strip_prefix(self.url.path()) else {
+        let workspace_path = urlencoding::decode(self.url.path()).map_err(|e| format!("{e}"))?;
+        let Some(path) = decoded_path.strip_prefix(workspace_path.as_ref()) else {
             return Err("URL is not in workspace".to_string());
         };
         self.workspace.join(path).map_err(|e| format!("{e}"))
