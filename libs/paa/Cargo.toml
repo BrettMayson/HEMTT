@@ -12,7 +12,6 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hemtt-common = { path = "../common" }
 hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = false }
 
 byteorder = { workspace = true }

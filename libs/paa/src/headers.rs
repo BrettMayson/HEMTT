@@ -4,7 +4,6 @@ use std::{
 };
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use hemtt_common::io::{ReadExt, WriteExt};
 
 use crate::{PaXType, Paa};
 
@@ -153,7 +152,7 @@ impl TextureHeader {
         })?;
         let _little_endian = input.read_u8()? != 0;
         let is_paa = input.read_u8()? != 0;
-        let paa_file = input.read_cstring()?;
+        let paa_file = read_cstring(&mut input)?;
         let pax_suffix_type = input.read_u32::<LittleEndian>()?;
         let n_mipmaps_copy = input.read_u32::<LittleEndian>()?;
         if n_mipmaps != n_mipmaps_copy {
@@ -214,7 +213,7 @@ impl TextureHeader {
         output.write_u32::<LittleEndian>(self.pax_format.as_u32())?; // pax_format
         output.write_u8(1)?; // littleEndian
         output.write_u8(u8::from(self.is_paa))?; // isPaa
-        output.write_cstring(&self.paa_file)?; // PaaFile
+        write_cstring(output, &self.paa_file)?; // PaaFile
         output.write_u32::<LittleEndian>(self.pax_suffix_type)?; // pax_suffix_type
         output.write_u32::<LittleEndian>(u32::try_from(self.mipmaps.len()).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::InvalidData, "too many mipmaps to write")
@@ -398,6 +397,30 @@ impl MipMap {
         output.write_u32::<LittleEndian>(mipmap.data_offset)?;
         Ok(())
     }
+}
+
+fn read_cstring(input: &mut impl Read) -> Result<String, Error> {
+    let mut buf = Vec::new();
+    loop {
+        let mut byte = [0; 1];
+        input.read_exact(&mut byte)?;
+        if byte[0] == 0 {
+            break;
+        }
+        buf.push(byte[0]);
+    }
+    String::from_utf8(buf).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("invalid UTF-8 string: {e}"),
+        )
+    })
+}
+
+fn write_cstring(output: &mut impl Write, s: &str) -> Result<(), Error> {
+    output.write_all(s.as_bytes())?;
+    output.write_all(&[0])?;
+    Ok(())
 }
 
 #[cfg(test)]
