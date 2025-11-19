@@ -12,7 +12,7 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = false }
+hemtt-lzo = { path = "../lzo", features = ["decompress", "compress"], default-features = false }
 
 byteorder = { workspace = true }
 texpresso = "2.0.2"

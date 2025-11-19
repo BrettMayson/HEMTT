@@ -43,7 +43,7 @@ pub fn inspect(mut file: File, format: &TableFormat) -> Result<(), Error> {
     println!("Maps: {}", maps.len());
     let data = maps
         .iter()
-        .map(|map| MipMapInfo {
+        .map(|(map, _)| MipMapInfo {
             width: map.width(),
             height: map.height(),
             size: map.data().len(),

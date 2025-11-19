@@ -66,7 +66,7 @@ impl Backend {
             return Ok(None);
         };
         Ok(Some(
-            serde_json::to_value(paa.maps().first().unwrap().json()).unwrap(),
+            serde_json::to_value(paa.maps().first().unwrap().0.json()).unwrap(),
         ))
     }
 }

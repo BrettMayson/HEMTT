@@ -11,12 +11,12 @@ fn read_dxt1() {
     assert!(paa.taggs().contains_key(&"SFFO".to_string()));
     assert!(paa.taggs().contains_key(&"CGVA".to_string()));
     assert!(paa.taggs().contains_key(&"CXAM".to_string()));
-    let mipmap = &paa.maps()[0];
+    let mipmap = &paa.maps()[0].0;
     assert_eq!(mipmap.width(), 512);
     assert!(mipmap.is_compressed());
     assert_eq!(mipmap.format(), &PaXType::DXT1);
     assert_eq!(mipmap.data().len(), 4716);
-    let _ = paa.maps()[0].get_image();
+    let _ = paa.maps()[0].0.get_image();
 }
 
 #[test]
@@ -29,10 +29,10 @@ fn read_dxt5() {
     assert!(paa.taggs().contains_key(&"CGVA".to_string()));
     assert!(paa.taggs().contains_key(&"CXAM".to_string()));
     assert!(paa.taggs().contains_key(&"GALF".to_string()));
-    let mipmap = &paa.maps()[0];
+    let mipmap = &paa.maps()[0].0;
     assert_eq!(mipmap.width(), 64);
     assert!(!mipmap.is_compressed());
     assert_eq!(mipmap.format(), &PaXType::DXT5);
     assert_eq!(mipmap.data().len(), 4096);
-    let _ = paa.maps()[0].get_image();
+    let _ = paa.maps()[0].0.get_image();
 }

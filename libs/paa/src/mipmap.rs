@@ -1,6 +1,8 @@
 use std::io::{Read, Seek};
 
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use image::EncodableLayout;
+use texpresso::Format;
 
 use crate::PaXType;
 
@@ -10,7 +12,6 @@ pub struct MipMap {
     height: u16,
     data: Vec<u8>,
     format: PaXType,
-    offset: u64,
 }
 
 impl MipMap {
@@ -22,7 +23,6 @@ impl MipMap {
         format: PaXType,
         stream: &mut I,
     ) -> Result<Self, std::io::Error> {
-        let offset = stream.stream_position()?;
         let width = stream.read_u16::<LittleEndian>()?;
         let height = stream.read_u16::<LittleEndian>()?;
         let length = stream.read_u24::<LittleEndian>()?;
@@ -33,7 +33,55 @@ impl MipMap {
             width,
             height,
             data: buffer.to_vec(),
-            offset,
+        })
+    }
+
+    /// Write the `MipMap` to the given output
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the output is not writable
+    pub fn write(&self, output: &mut impl std::io::Write) -> Result<(), std::io::Error> {
+        output.write_u16::<LittleEndian>(self.width)?;
+        output.write_u16::<LittleEndian>(self.height)?;
+        output.write_u24::<LittleEndian>(u32::try_from(self.data.len()).map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "data length exceeds 24-bit limit",
+            )
+        })?)?;
+        output.write_all(&self.data)?;
+        Ok(())
+    }
+
+    /// Create a `MipMap` from an RGBA image
+    ///
+    /// # Errors
+    /// [`std::io::Error`] if the image cannot be converted to the specified format
+    pub fn from_rgba_image(
+        image: &image::RgbaImage,
+        format: PaXType,
+    ) -> Result<Self, std::io::Error> {
+        let (width, height) = image.dimensions();
+        let mut data = {
+            let format: Format = format.into();
+            vec![0u8; format.compressed_size(width as usize, height as usize)]
+        };
+        format.compress(image.as_bytes(), width as usize, height as usize, &mut data);
+        let stored_width = u16::try_from(width).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, "Width exceeds u16 limit")
+        })? + if format.is_dxt() { 32768 } else { 0 };
+        Ok(Self {
+            width: stored_width,
+            height: u16::try_from(height).map_err(|_| {
+                std::io::Error::new(std::io::ErrorKind::InvalidInput, "Height exceeds u16 limit")
+            })?,
+            data: {
+                let mut output = Vec::with_capacity(hemtt_lzo::worst_compress(data.len()));
+                hemtt_lzo::compress(&data, &mut output)
+                    .map_err(|_| std::io::Error::other("Failed to compress MipMap data"))?;
+                output
+            },
+            format,
         })
     }
 
@@ -77,12 +125,6 @@ impl MipMap {
         format!("{:?}", self.format)
     }
 
-    /// Get the offset of the `MipMap`
-    #[must_use]
-    pub const fn offset(&self) -> u64 {
-        self.offset
-    }
-
     #[must_use]
     /// Get the image from the `MipMap`
     ///
@@ -97,14 +139,8 @@ impl MipMap {
         }
         let data = &*self.data;
 
-        // Determine if this is a DXT format
-        let is_dxt = matches!(
-            self.format,
-            PaXType::DXT1 | PaXType::DXT2 | PaXType::DXT3 | PaXType::DXT4 | PaXType::DXT5
-        );
-
         // Get actual width - for DXT formats, check compression flag in width
-        let actual_width = if is_dxt && self.width % 32768 != self.width {
+        let actual_width = if self.format.is_dxt() && self.width % 32768 != self.width {
             self.width - 32768
         } else {
             self.width
@@ -124,7 +160,7 @@ impl MipMap {
         let mut out_buffer = vec![0u8; 4 * (actual_width as usize) * (self.height as usize)];
 
         // Determine if we need to decompress
-        let decompression = if !is_dxt {
+        let decompression = if !self.format.is_dxt() {
             Compression::Lz77
         } else if self.width % 32768 != self.width {
             Compression::Lzss
