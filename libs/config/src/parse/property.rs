@@ -26,7 +26,6 @@ fn class_missing_braces() -> impl Parser<char, Class, Error = Simple<char>> {
         })
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
     recursive(|rec| {
         let properties = just('{')
@@ -58,49 +57,7 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                     .padded()
                     .ignore_then(ident().labelled("delete class name"))
                     .map(Property::Delete),
-                ident()
-                    .labelled("property name")
-                    .padded()
-                    .then(
-                        just("[]")
-                            .padded()
-                            .ignore_then(
-                                just('=')
-                                    .padded()
-                                    .ignore_then(
-                                        super::array::array(false)
-                                            .map(Value::Array)
-                                            .or(value())
-                                            .padded()
-                                            .labelled("array value")
-                                            .recover_with(skip_until([';'], Value::Invalid)),
-                                    )
-                                    .or(just("+=")
-                                        .padded()
-                                        .ignore_then(super::array::array(true).map(Value::Array))
-                                        .or(value())
-                                        .padded()
-                                        .labelled("array expand value"))
-                                    .recover_with(skip_until([';'], Value::Invalid))
-                                    .map(|value| (value, true)),
-                            )
-                            .or(just('=')
-                                .padded()
-                                .ignore_then(
-                                    value()
-                                        .padded()
-                                        .then_ignore(just(';').rewind())
-                                        .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
-                                        .padded()
-                                        .labelled("property value"),
-                                )
-                                .map(|value| (value, false))),
-                    )
-                    .map(|(name, (value, expected_array))| Property::Entry {
-                        name,
-                        value,
-                        expected_array,
-                    }),
+                property_assignment(),
             ))
             .then(just(';').padded().or_not())
             .map_with_span(|(property, semi), range| {
@@ -120,6 +77,52 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
                 }),
         ))
     })
+}
+
+fn property_assignment() -> impl Parser<char, Property, Error = Simple<char>> {
+    ident()
+        .labelled("property name")
+        .padded()
+        .then(
+            just("[]")
+                .padded()
+                .ignore_then(
+                    just('=')
+                        .padded()
+                        .ignore_then(
+                            super::array::array(false)
+                                .map(Value::Array)
+                                .or(value())
+                                .padded()
+                                .labelled("array value")
+                                .recover_with(skip_until([';'], Value::Invalid)),
+                        )
+                        .or(just("+=")
+                            .padded()
+                            .ignore_then(super::array::array(true).map(Value::Array))
+                            .or(value())
+                            .padded()
+                            .labelled("array expand value"))
+                        .recover_with(skip_until([';'], Value::Invalid))
+                        .map(|value| (value, true)),
+                )
+                .or(just('=')
+                    .padded()
+                    .ignore_then(
+                        value()
+                            .padded()
+                            .then_ignore(just(';').rewind())
+                            .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
+                            .padded()
+                            .labelled("property value"),
+                    )
+                    .map(|value| (value, false))),
+        )
+        .map(|(name, (value, expected_array))| Property::Entry {
+            name,
+            value,
+            expected_array,
+        })
 }
 
 #[cfg(test)]
