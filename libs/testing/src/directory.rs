@@ -136,24 +136,28 @@ mod tests {
 
     #[test]
     fn lock() {
-        let counter = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let counter_clone = counter.clone();
+        let start = std::time::Instant::now();
+        
         let handle1 = std::thread::spawn(move || {
             let _temp_dir = TemporaryDirectory::new();
-            counter_clone.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             std::thread::sleep(std::time::Duration::from_millis(50));
         });
-        let counter_clone = counter.clone();
         let handle2 = std::thread::spawn(move || {
             let _temp_dir = TemporaryDirectory::new();
-            counter_clone.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_millis(50));
         });
-        std::thread::sleep(std::time::Duration::from_millis(10));
-        assert_eq!(counter.load(std::sync::atomic::Ordering::SeqCst), 1);
-        std::thread::sleep(std::time::Duration::from_millis(70));
-        assert_eq!(counter.load(std::sync::atomic::Ordering::SeqCst), 2);
+        
         handle1.join().expect("Thread 1 panicked");
         handle2.join().expect("Thread 2 panicked");
+        
+        let elapsed = start.elapsed();
+        // If threads ran serially (locked), total time should be ~100ms
+        // If they ran in parallel (no lock), total time would be ~50ms
+        assert!(
+            elapsed.as_millis() >= 90,
+            "Threads appear to have run in parallel ({}ms), lock may not be working",
+            elapsed.as_millis()
+        );
     }
 
     #[test]
