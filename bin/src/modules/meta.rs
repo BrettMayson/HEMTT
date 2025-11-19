@@ -8,8 +8,14 @@ impl Module for Meta {
         "Meta"
     }
 
-    fn pre_release(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
-        let path = ctx.build_folder().expect("Failed to get build folder").join("meta.cpp");
+    fn pre_release(
+        &self,
+        ctx: &crate::context::Context,
+    ) -> Result<crate::report::Report, crate::Error> {
+        let path = ctx
+            .build_folder()
+            .expect("Failed to get build folder")
+            .join("meta.cpp");
         if !path.exists() {
             return Ok(crate::report::Report::new());
         }
@@ -18,11 +24,12 @@ impl Module for Meta {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("valid system time")
             .as_secs()
-                * 10_000_000
-                + 621_355_968_000_000_000; // .net ticks
+            * 10_000_000
+            + 621_355_968_000_000_000; // .net ticks
         let new_content = if content.contains("timestamp") {
             let re = regex::Regex::new(r"timestamp\s*=\s*(\d+);").expect("valid regex");
-            re.replace_all(&content, format!("timestamp = {now};")).to_string()
+            re.replace_all(&content, format!("timestamp = {now};"))
+                .to_string()
         } else {
             format!("{content}\ntimestamp = {now};\n")
         };
