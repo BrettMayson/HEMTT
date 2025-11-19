@@ -77,8 +77,8 @@ impl MipMap {
         format!("{:?}", self.format)
     }
 
-    #[must_use]
     /// Get the offset of the `MipMap`
+    #[must_use]
     pub const fn offset(&self) -> u64 {
         self.offset
     }

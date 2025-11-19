@@ -241,19 +241,19 @@ impl TextureHeader {
         let paa = Paa::read(std::fs::File::open(path)?)?;
         let flag = paa.taggs().get("GALF").map_or(0, |flag| {
             let mut bytes: [u8; 4] = [0; 4];
-            bytes.clone_from_slice(&flag[0..4]);
+            bytes.copy_from_slice(&flag[0..4]);
             u32::from_le_bytes(bytes)
         });
         let average_color = paa.taggs().get("CGVA").map_or([0; 4], |avg| {
             let mut bytes: [u8; 4] = [0; 4];
-            bytes.clone_from_slice(&avg[0..4]);
+            bytes.copy_from_slice(&avg[0..4]);
             bytes
         });
         Ok(Self {
             average_color,
             max_color: paa.taggs().get("CXAM").map_or([0; 4], |max| {
                 let mut bytes: [u8; 4] = [0; 4];
-                bytes.clone_from_slice(&max[0..4]);
+                bytes.copy_from_slice(&max[0..4]);
                 bytes
             }),
             has_max_ctagg: paa.taggs().contains_key("CXAM"),
@@ -282,7 +282,7 @@ impl TextureHeader {
                         suffix.rfind('_').map_or(0, |pos| {
                             if path
                                 .file_stem()
-                                .expect("stem must exists")
+                                .expect("stem must exist")
                                 .to_str()
                                 .expect("stem must be valid UTF-8")
                                 .ends_with("_ti_ca")
@@ -321,7 +321,10 @@ impl TextureHeader {
                     .expect("Failed to get PAA file metadata")
                     .len(),
             )
-            .expect("PAA file size too large"),
+            .map_err(|_| std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "PAA file size exceeds u32 range"
+            ))?,
         })
     }
 }
