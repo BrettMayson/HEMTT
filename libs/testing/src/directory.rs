@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn lock() {
         let start = std::time::Instant::now();
-        
+
         let handle1 = std::thread::spawn(move || {
             let _temp_dir = TemporaryDirectory::new();
             std::thread::sleep(std::time::Duration::from_millis(50));
@@ -146,10 +146,10 @@ mod tests {
             let _temp_dir = TemporaryDirectory::new();
             std::thread::sleep(std::time::Duration::from_millis(50));
         });
-        
+
         handle1.join().expect("Thread 1 panicked");
         handle2.join().expect("Thread 2 panicked");
-        
+
         let elapsed = start.elapsed();
         // If threads ran serially (locked), total time should be ~100ms
         // If they ran in parallel (no lock), total time would be ~50ms

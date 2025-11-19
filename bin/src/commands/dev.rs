@@ -5,7 +5,10 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary},
+    modules::{
+        Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary,
+        tex_headers::TexHeaders,
+    },
     report::Report,
 };
 
@@ -180,6 +183,7 @@ pub fn context(
     if rapify && !dev.no_rap {
         executor.add_module(Box::<Rapifier>::default());
     }
+    executor.add_module(Box::<TexHeaders>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if force_binarize || binarize.binarize {

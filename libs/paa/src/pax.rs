@@ -56,6 +56,39 @@ impl PaXType {
         }
     }
 
+    #[must_use]
+    pub fn as_u32(&self) -> u32 {
+        match self {
+            // Self::P8 => 0,
+            Self::GRAYA => 1,
+            // Self::RGB565 => 2,
+            Self::ARGBA5 => 3,
+            Self::ARGB4 => 4,
+            Self::ARGB8 => 5,
+            Self::DXT1 => 6,
+            Self::DXT2 => 7,
+            Self::DXT3 => 8,
+            Self::DXT4 => 9,
+            Self::DXT5 => 10,
+        }
+    }
+
+    #[must_use]
+    pub fn from_u32(value: u32) -> Option<Self> {
+        match value {
+            1 => Some(Self::GRAYA),
+            3 => Some(Self::ARGBA5),
+            4 => Some(Self::ARGB4),
+            5 => Some(Self::ARGB8),
+            6 => Some(Self::DXT1),
+            7 => Some(Self::DXT2),
+            8 => Some(Self::DXT3),
+            9 => Some(Self::DXT4),
+            10 => Some(Self::DXT5),
+            _ => None,
+        }
+    }
+
     pub fn decompress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
         match *self {
             Self::DXT1 | Self::DXT3 | Self::DXT5 => {

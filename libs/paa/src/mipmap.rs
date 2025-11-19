@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -10,6 +10,7 @@ pub struct MipMap {
     height: u16,
     data: Vec<u8>,
     format: PaXType,
+    offset: u64,
 }
 
 impl MipMap {
@@ -17,7 +18,11 @@ impl MipMap {
     ///
     /// # Errors
     /// [`std::io::Error`] if the input is not readable, or the `MipMap` is invalid
-    pub fn from_stream<I: Read>(format: PaXType, stream: &mut I) -> Result<Self, std::io::Error> {
+    pub fn from_stream<I: Seek + Read>(
+        format: PaXType,
+        stream: &mut I,
+    ) -> Result<Self, std::io::Error> {
+        let offset = stream.stream_position()?;
         let width = stream.read_u16::<LittleEndian>()?;
         let height = stream.read_u16::<LittleEndian>()?;
         let length = stream.read_u24::<LittleEndian>()?;
@@ -28,6 +33,7 @@ impl MipMap {
             width,
             height,
             data: buffer.to_vec(),
+            offset,
         })
     }
 
@@ -69,6 +75,12 @@ impl MipMap {
     /// Get the format of the `MipMap` as a string
     pub fn format_display(&self) -> String {
         format!("{:?}", self.format)
+    }
+
+    /// Get the offset of the `MipMap`
+    #[must_use]
+    pub const fn offset(&self) -> u64 {
+        self.offset
     }
 
     #[must_use]
