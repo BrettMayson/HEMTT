@@ -50,7 +50,6 @@ impl Module for SQFCompiler {
         Ok(report)
     }
 
-    #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let sqf_ext = Some(String::from("sqf"));

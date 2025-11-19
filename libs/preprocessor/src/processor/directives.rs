@@ -340,7 +340,6 @@ impl Processor {
         Self::expect_nothing_to_newline(stream)
     }
 
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
         pragma: &Pragma,

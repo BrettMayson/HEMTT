@@ -7,7 +7,10 @@ use super::SqfAnalyzer;
 
 impl SqfAnalyzer {
     pub async fn get_compiled(&self, url: Url) -> Option<String> {
-        if !url.path().ends_with(".sqf") {
+        if !std::path::Path::new(url.path())
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+        {
             return None;
         }
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
@@ -15,7 +18,8 @@ impl SqfAnalyzer {
             return None;
         };
         let source = workspace.join_url(&url).ok()?;
-        let database = self.get_database(&workspace).await;
+        let database = self.get_database(&workspace);
+        #[allow(clippy::or_fun_call)]
         match Processor::run(
             &source,
             workspace
@@ -67,6 +71,8 @@ impl Backend {
         let Some(res) = SqfAnalyzer::get().get_compiled(params.url).await else {
             return Ok(None);
         };
-        Ok(Some(serde_json::to_value(res).unwrap()))
+        Ok(Some(
+            serde_json::to_value(res).expect("Serialization failed"),
+        ))
     }
 }

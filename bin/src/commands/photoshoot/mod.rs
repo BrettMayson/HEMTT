@@ -42,7 +42,6 @@ pub struct Command {
     global: crate::GlobalArgs,
 }
 
-#[allow(clippy::too_many_lines)]
 /// Execute the photoshoot command
 ///
 /// # Errors
@@ -234,7 +233,6 @@ impl Action for Photoshoot {
         missions
     }
 
-    #[allow(clippy::too_many_lines)]
     fn incoming(&self, ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
         let Message::Photoshoot(msg) = msg else {
             return Vec::new();

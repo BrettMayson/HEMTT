@@ -57,7 +57,7 @@ impl PaXType {
     }
 
     #[must_use]
-    pub fn as_u32(&self) -> u32 {
+    pub const fn as_u32(&self) -> u32 {
         match self {
             // Self::P8 => 0,
             Self::GRAYA => 1,
@@ -74,7 +74,7 @@ impl PaXType {
     }
 
     #[must_use]
-    pub fn from_u32(value: u32) -> Option<Self> {
+    pub const fn from_u32(value: u32) -> Option<Self> {
         match value {
             1 => Some(Self::GRAYA),
             3 => Some(Self::ARGBA5),

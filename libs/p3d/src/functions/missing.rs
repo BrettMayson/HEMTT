@@ -58,7 +58,6 @@ impl SearchCache {
 }
 
 impl P3D {
-    #[allow(clippy::too_many_lines)]
     /// Find missing textures and materials in the P3D
     ///
     /// # Errors

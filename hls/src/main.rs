@@ -7,8 +7,10 @@ use serde_json::Value;
 use sqf::SqfAnalyzer;
 use tokio::net::TcpStream;
 use tower_lsp::jsonrpc::Result;
-use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
+
+#[allow(clippy::wildcard_imports)]
+use tower_lsp::lsp_types::*;
 
 use tracing::{Level, debug, info};
 
@@ -67,7 +69,7 @@ impl LanguageServer for Backend {
                     file_operations: Some(WorkspaceFileOperationsServerCapabilities {
                         did_create: Some(did_filter.clone()),
                         did_rename: Some(did_filter.clone()),
-                        did_delete: Some(did_filter.clone()),
+                        did_delete: Some(did_filter),
                         ..Default::default()
                     }),
                 }),
@@ -122,8 +124,13 @@ impl LanguageServer for Backend {
     async fn initialized(&self, _: InitializedParams) {
         info!("initializing");
         DiagManager::init(self.client.clone());
-        if let Some(folders) = self.client.workspace_folders().await.unwrap() {
-            EditorWorkspaces::get().initialize(folders, self.client.clone());
+        if let Some(folders) = self
+            .client
+            .workspace_folders()
+            .await
+            .expect("Failed to get workspace folders")
+        {
+            EditorWorkspaces::get().initialize(folders, &self.client);
         }
         info!("initialized");
     }
@@ -134,7 +141,7 @@ impl LanguageServer for Backend {
 
     async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) {
         debug!("did_change_workspace_folders: {:?}", params);
-        EditorWorkspaces::get().changed(params, self.client.clone());
+        EditorWorkspaces::get().changed(params, &self.client);
     }
 
     async fn did_change_configuration(&self, _: DidChangeConfigurationParams) {
@@ -144,10 +151,16 @@ impl LanguageServer for Backend {
     async fn did_create_files(&self, params: CreateFilesParams) {
         for file in params.files {
             ConfigAnalyzer::get()
-                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
             SqfAnalyzer::get()
-                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
         }
     }
@@ -155,10 +168,16 @@ impl LanguageServer for Backend {
     async fn did_delete_files(&self, params: DeleteFilesParams) {
         for file in params.files {
             ConfigAnalyzer::get()
-                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
             SqfAnalyzer::get()
-                .on_save(Url::from_str(&file.uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
         }
     }
@@ -166,16 +185,28 @@ impl LanguageServer for Backend {
     async fn did_rename_files(&self, params: RenameFilesParams) {
         for file in params.files {
             ConfigAnalyzer::get()
-                .on_save(Url::from_str(&file.old_uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.old_uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
             SqfAnalyzer::get()
-                .on_save(Url::from_str(&file.old_uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.old_uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
             ConfigAnalyzer::get()
-                .on_save(Url::from_str(&file.new_uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.new_uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
             SqfAnalyzer::get()
-                .on_save(Url::from_str(&file.new_uri).unwrap(), self.client.clone())
+                .on_save(
+                    Url::from_str(&file.new_uri).expect("Failed to parse URL"),
+                    self.client.clone(),
+                )
                 .await;
         }
     }
@@ -186,7 +217,7 @@ impl LanguageServer for Backend {
             text: TextInformation::Full(&params.text_document.text),
             version: Some(params.text_document.version),
         };
-        FileCache::get().on_change(&document).await;
+        FileCache::get().on_change(&document);
         ConfigAnalyzer::get()
             .on_open(params.text_document.uri.clone(), self.client.clone())
             .await;
@@ -202,7 +233,7 @@ impl LanguageServer for Backend {
             uri: params.text_document.uri,
             version: Some(params.text_document.version),
         };
-        FileCache::get().on_change(&document).await;
+        FileCache::get().on_change(&document);
         SqfAnalyzer::get().on_change(&document).await;
     }
 
@@ -219,14 +250,14 @@ impl LanguageServer for Backend {
                 text: TextInformation::Full(&text),
                 version: None,
             };
-            FileCache::get().on_change(&document).await;
+            FileCache::get().on_change(&document);
             SqfAnalyzer::get().on_change(&document).await;
         }
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
-        FileCache::get().on_close(&params.text_document.uri).await;
-        SqfAnalyzer::get().on_close(&params.text_document.uri).await;
+        FileCache::get().on_close(&params.text_document.uri);
+        SqfAnalyzer::get().on_close(&params.text_document.uri);
         PreprocessorAnalyzer::get()
             .on_close(&params.text_document.uri)
             .await;
@@ -253,19 +284,22 @@ impl LanguageServer for Backend {
     }
 
     async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {
-        color::info(params.text_document.uri).await
+        Ok(color::info(&params.text_document.uri))
     }
 
     async fn color_presentation(
         &self,
         params: ColorPresentationParams,
     ) -> Result<Vec<ColorPresentation>> {
-        color::presentation(params).await
+        Ok(color::presentation(&params))
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
         let uri = &params.text_document_position.text_document.uri;
-        let (_, ext) = uri.path().rsplit_once('.').unwrap_or((uri.path(), ""));
+        let (_, ext) = uri
+            .path()
+            .rsplit_once('.')
+            .unwrap_or_else(|| (uri.path(), ""));
         let ext = ext.to_lowercase();
         if ["sqf", "ext", "cpp", "hpp", "inc"].contains(&ext.as_str()) {
             return completion::completion(params.text_document_position, params.context).await;
@@ -279,7 +313,9 @@ impl Backend {
         let Some(res) = PreprocessorAnalyzer::get().get_processed(params.url).await else {
             return Ok(None);
         };
-        Ok(Some(serde_json::to_value(res).unwrap()))
+        Ok(Some(
+            serde_json::to_value(res).expect("Failed to serialize processed result"),
+        ))
     }
 }
 
@@ -316,7 +352,7 @@ async fn server() {
 
     let stream = TcpStream::connect(format!("127.0.0.1:{port}"))
         .await
-        .unwrap();
+        .expect("Failed to connect to server");
 
     info!("connected to server");
 

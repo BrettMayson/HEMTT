@@ -20,7 +20,6 @@ pub struct Command {
     name: String,
 }
 
-#[allow(clippy::too_many_lines)]
 /// Execute the script command
 ///
 /// # Errors

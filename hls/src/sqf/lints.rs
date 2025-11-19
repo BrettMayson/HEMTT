@@ -38,7 +38,7 @@ impl Cache {
     }
 }
 
-async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, client: Client) {
+fn check_addons(workspace: &EditorWorkspace, database: &Arc<Database>, client: Client) {
     debug!("sqf: checking addons");
     let mut futures = JoinSet::new();
     for addon in workspace.root().addons() {
@@ -51,7 +51,7 @@ async fn check_addons(workspace: EditorWorkspace, database: Arc<Database>, clien
         } else {
             hemtt_workspace::addons::Location::Optionals
         };
-        let name = source.as_str().split("/").nth(2).unwrap_or_default();
+        let name = source.as_str().split('/').nth(2).unwrap_or_default();
         let addon = Arc::new(
             Addon::new(workspace.root_disk(), name.to_string(), location)
                 .expect("failed to create addon"),
@@ -98,6 +98,7 @@ async fn check_sqf(
     PreprocessorAnalyzer::get()
         .mark_in_progress(source.clone())
         .await;
+    #[allow(clippy::or_fun_call)]
     let sources = match Processor::run(
         &source,
         workspace
@@ -185,7 +186,7 @@ async fn check_sqf(
                     for (file, diag) in lsp_diag {
                         lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
                     }
-                };
+                }
             }
             err_sources
         }
@@ -198,21 +199,20 @@ async fn check_sqf(
         );
     }
     let cache = Cache::get();
-    if !sources.is_empty() {
+    if sources.is_empty() {
+        cache.files.write().await.remove(&source);
+    } else {
         cache
             .files
             .write()
             .await
             .insert(source.clone(), CacheBundle { sources });
-    } else {
-        cache.files.write().await.remove(&source);
     }
 }
 
 impl SqfAnalyzer {
-    pub async fn check_lints(&self, workspace: EditorWorkspace, client: Client) {
-        let database = self.get_database(&workspace).await;
-        check_addons(workspace, database, client).await;
+    pub fn check_lints(&self, workspace: &EditorWorkspace, client: Client) {
+        check_addons(workspace, &self.get_database(workspace), client);
     }
 
     pub async fn partial_recheck_lints(&self, url: Url, client: Client) {
@@ -252,19 +252,24 @@ impl SqfAnalyzer {
                     }
                 })
                 .collect::<Vec<_>>();
-            if !saved.exists().unwrap_or(false) && saved.to_string().ends_with(".sqf") {
+            drop(files);
+            if !saved.exists().unwrap_or(false)
+                && std::path::Path::new(&saved.to_string())
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+            {
                 recheck.push(saved);
             }
             recheck
         };
-        let database = self.get_database(&workspace).await;
+        let database = self.get_database(&workspace);
         let mut futures = JoinSet::new();
         for path in recheck_files {
             let addon = Arc::new(
                 Addon::new(
                     workspace.root_disk(),
                     path.as_str()
-                        .split("/")
+                        .split('/')
                         .nth(2)
                         .unwrap_or_default()
                         .to_string(),

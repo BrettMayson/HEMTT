@@ -43,13 +43,13 @@ impl Ident {
 
     #[must_use]
     /// Get the length of the identifier
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.value.len()
     }
 
     #[must_use]
     /// Check if the identifier is empty
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.value.is_empty()
     }
 

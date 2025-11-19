@@ -447,7 +447,7 @@ impl Inspector {
     }
 
     #[must_use]
-    #[allow(clippy::too_many_lines, unused_assignments)]
+    #[allow(unused_assignments)]
     /// Evaluate expression in current scope
     pub fn eval_expression(
         &mut self,

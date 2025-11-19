@@ -301,7 +301,6 @@ fn find_issues(comparisons: Comparison) -> Vec<ComparisonIssue> {
     issues
 }
 
-#[allow(clippy::too_many_lines)]
 fn check_issue(a: &Comparison, b: &Comparison) -> Option<ComparisonIssue> {
     let a_var = a.var()?;
     let b_var = b.var()?;

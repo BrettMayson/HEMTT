@@ -109,7 +109,6 @@ impl Module for Rapifier {
     }
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
     let mut report = Report::new();
     let processed = match Processor::run(path, ctx.config().preprocessor()) {

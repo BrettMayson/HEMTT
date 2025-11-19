@@ -63,7 +63,6 @@ options.ignore_unused = true
 pub struct Runner;
 impl LintRunner<LintData> for Runner {
     type Target = Vec<Project>;
-    #[allow(clippy::too_many_lines)]
     fn run(
         &self,
         project: Option<&hemtt_common::config::ProjectConfig>,

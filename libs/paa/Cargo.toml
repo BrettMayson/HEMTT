@@ -16,7 +16,7 @@ hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = fal
 
 byteorder = { workspace = true }
 texpresso = "2.0.2"
-image = "0.25.8"
+image = "0.25.9"
 
 # WASM
 js-sys = { version = "0.3.82", optional = true }

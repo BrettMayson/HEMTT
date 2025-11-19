@@ -8,6 +8,9 @@ pub trait ToPosition {
 
 impl ToPosition for LineCol {
     fn to_position(&self) -> Position {
-        Position::new(self.1.0 as u32, self.1.1 as u32)
+        Position::new(
+            u32::try_from(self.1.0).expect("Failed to convert line to u32"),
+            u32::try_from(self.1.1).expect("Failed to convert column to u32"),
+        )
     }
 }
