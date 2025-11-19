@@ -230,7 +230,7 @@ impl TextureHeader {
     ///
     /// # Errors
     /// [`std::io::Error`] if the PAA file cannot be opened or read
-    /// 
+    ///
     /// # Panics
     /// - Panics if the PAA file path is not relative to the root
     #[allow(clippy::too_many_lines)]
@@ -402,8 +402,6 @@ impl MipMap {
 
 #[cfg(test)]
 mod tests {
-    use pretty_assertions::assert_eq;
-
     #[test]
     fn read_and_write() {
         let mikero = include_bytes!("../tests/existing.bin");

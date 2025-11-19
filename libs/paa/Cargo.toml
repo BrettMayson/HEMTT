@@ -31,6 +31,3 @@ base64 = { version = "0.22.1", optional = true }
 [features]
 wasm = ["wasm-bindgen", "js-sys"]
 json = ["serde", "serde_json", "base64"]
-
-[dev-dependencies]
-pretty_assertions = "1.4.1"
