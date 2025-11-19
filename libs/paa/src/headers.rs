@@ -31,10 +31,6 @@ impl Headers {
     ///
     /// # Errors
     /// [`std::io::Error`] if the input is not readable, or the Header is invalid
-    ///
-    /// # Panics
-    /// - Panics if the `TexHeader` version is not 1
-    /// - Panics if the mime type is invalid
     pub fn read<I: Seek + Read>(mut input: I) -> Result<Self, Error> {
         let mut mime_type = [0; 4];
         input.read_exact(&mut mime_type)?;
@@ -46,10 +42,12 @@ impl Headers {
         }
 
         let version = input.read_u32::<LittleEndian>()?;
-        assert!(
-            version == 1,
-            "unsupported TexHeader version: {version}, expected 1"
-        );
+        if version != 1 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("unsupported TexHeader version: {version}, expected 1"),
+            ));
+        }
         let n_textures = input.read_u32::<LittleEndian>()?;
 
         let mut textures = Vec::new();
@@ -63,15 +61,16 @@ impl Headers {
     ///
     /// # Errors
     /// [`std::io::Error`] if the output is not writable
-    ///
-    /// # Panics
-    /// - Panics if there are too many textures to write
+    /// [`std::io::Error`] if there are too many textures to write
     pub fn write(&self, output: &mut impl Write) -> Result<(), Error> {
         output.write_all(b"0DHT")?;
         output.write_u32::<LittleEndian>(1)?;
-        output.write_u32::<LittleEndian>(
-            u32::try_from(self.textures.len()).expect("too many textures"),
-        )?;
+        output.write_u32::<LittleEndian>(u32::try_from(self.textures.len()).map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "too many textures to write",
+            )
+        })?)?;
         for texture in &self.textures {
             texture.write(output)?;
         }
@@ -189,9 +188,6 @@ impl TextureHeader {
     ///
     /// # Errors
     /// [`std::io::Error`] if the output is not writable
-    ///
-    /// # Panics
-    /// - Panics if there are too many textures to write
     pub fn write(&self, output: &mut impl Write) -> Result<(), Error> {
         output.write_u32::<LittleEndian>(1)?; // nColorPallets
         output.write_u32::<LittleEndian>(0)?; // Pallet_ptr
@@ -212,17 +208,17 @@ impl TextureHeader {
         output.write_u8(u8::from(self.is_alpha))?; // isAlpha
         output.write_u8(u8::from(self.is_transparent))?; // isTransparent
         output.write_u8(u8::from(self.is_alpha_non_opaque))?; // isAlphaNonOpaque
-        output.write_u32::<LittleEndian>(
-            u32::try_from(self.mipmaps.len()).expect("too many mipmaps"),
-        )?; // nMipmaps
+        output.write_u32::<LittleEndian>(u32::try_from(self.mipmaps.len()).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "too many mipmaps to write")
+        })?)?; // nMipmaps
         output.write_u32::<LittleEndian>(self.pax_format.as_u32())?; // pax_format
         output.write_u8(1)?; // littleEndian
         output.write_u8(u8::from(self.is_paa))?; // isPaa
         output.write_cstring(&self.paa_file)?; // PaaFile
         output.write_u32::<LittleEndian>(self.pax_suffix_type)?; // pax_suffix_type
-        output.write_u32::<LittleEndian>(
-            u32::try_from(self.mipmaps.len()).expect("too many mipmaps"),
-        )?; // nMipmapsCopy
+        output.write_u32::<LittleEndian>(u32::try_from(self.mipmaps.len()).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "too many mipmaps to write")
+        })?)?; // nMipmapsCopy
         for mipmap in &self.mipmaps {
             MipMap::write(mipmap, output)?;
         }
@@ -234,9 +230,10 @@ impl TextureHeader {
     ///
     /// # Errors
     /// [`std::io::Error`] if the PAA file cannot be opened or read
-    ///
+    /// 
     /// # Panics
-    /// - Panics if the PAA file has an invalid path
+    /// - Panics if the PAA file path is not relative to the root
+    #[allow(clippy::too_many_lines)]
     pub fn from_file(root: &Path, path: &PathBuf) -> Result<Self, Error> {
         let paa = Paa::read(std::fs::File::open(path)?)?;
         let flag = paa.taggs().get("GALF").map_or(0, |flag| {
@@ -270,9 +267,12 @@ impl TextureHeader {
             },
             pax_format: paa.format().to_owned(),
             paa_file: {
-                let relative_path = path
-                    .strip_prefix(root)
-                    .expect("Failed to get relative path");
+                let relative_path = path.strip_prefix(root).map_err(|_| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "PAA file path is not relative to root",
+                    )
+                })?;
                 relative_path.to_string_lossy().to_string()
             },
             pax_suffix_type: {
@@ -309,22 +309,41 @@ impl TextureHeader {
             mipmaps: paa
                 .maps()
                 .iter()
-                .map(|m| MipMap {
-                    width: m.width(),
-                    height: m.height(),
-                    pax_format: u8::try_from(m.format().as_u32()).expect("MipMap format too large"),
-                    data_offset: u32::try_from(m.offset()).expect("MipMap offset too large"),
+                .map(|m| {
+                    Ok(MipMap {
+                        width: m.width(),
+                        height: m.height(),
+                        pax_format: u8::try_from(m.format().as_u32()).map_err(|_| {
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "MipMap format exceeds u8 range",
+                            )
+                        })?,
+                        data_offset: u32::try_from(m.offset()).map_err(|_| {
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "MipMap offset exceeds u32 range",
+                            )
+                        })?,
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<MipMap>, Error>>()?,
             size_of_pax_file: u32::try_from(
                 std::fs::metadata(path)
-                    .expect("Failed to get PAA file metadata")
+                    .map_err(|e| {
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            format!("failed to get PAA file metadata: {e}"),
+                        )
+                    })?
                     .len(),
             )
-            .map_err(|_| std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "PAA file size exceeds u32 range"
-            ))?,
+            .map_err(|_| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "PAA file size exceeds u32 range",
+                )
+            })?,
         })
     }
 }
@@ -387,7 +406,7 @@ mod tests {
 
     #[test]
     fn read_and_write() {
-        let mikero = include_bytes!("../../tests/existing.bin");
+        let mikero = include_bytes!("../tests/existing.bin");
         let mut cursor = std::io::Cursor::new(&mikero[..]);
         let header = super::Headers::read(&mut cursor).expect("Failed to read Headers");
         let mut output = Vec::new();
@@ -402,7 +421,7 @@ mod tests {
     #[test]
     fn create() {
         let mikero = {
-            let mikero = include_bytes!("../../tests/existing.bin");
+            let mikero = include_bytes!("../tests/existing.bin");
             let mut cursor = std::io::Cursor::new(&mikero[..]);
             super::Headers::read(&mut cursor).expect("Failed to read Headers")
         };
