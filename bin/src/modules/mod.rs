@@ -15,6 +15,7 @@ pub mod hook;
 pub mod pbo;
 pub(crate) mod sign;
 pub mod summary;
+pub mod tex_headers;
 
 pub use binarize::Binarize;
 pub use file_patching::FilePatching;
