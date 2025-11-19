@@ -3,7 +3,7 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{
-        Binarize, Files, Rapifier, pbo::Collapse, summary::Summary, tex_headers::TexHeaders,
+        Binarize, Files, Rapifier, meta::Meta, pbo::Collapse, summary::Summary, tex_headers::TexHeaders,
     },
     report::Report,
 };
@@ -123,6 +123,7 @@ pub fn executor(ctx: Context, args: &BuildArgs) -> Executor {
     executor.add_module(Box::<TexHeaders>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<Summary>::default());
+    executor.add_module(Box::<Meta>::default());
 
     executor.init();
     executor.check();
