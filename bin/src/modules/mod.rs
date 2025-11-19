@@ -12,6 +12,7 @@ pub mod archive;
 pub mod bom;
 pub mod fnl;
 pub mod hook;
+pub mod meta;
 pub mod pbo;
 pub(crate) mod sign;
 pub mod summary;
