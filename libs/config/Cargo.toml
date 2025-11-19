@@ -31,3 +31,5 @@ hemtt-preprocessor = { path = "../preprocessor" }
 insta = { workspace = true }
 paste = { workspace = true }
 
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
