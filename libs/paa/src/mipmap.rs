@@ -1,8 +1,6 @@
 use std::io::{Read, Seek};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use image::EncodableLayout;
-use texpresso::Format;
 
 use crate::PaXType;
 
@@ -57,29 +55,37 @@ impl MipMap {
     ///
     /// # Errors
     /// [`std::io::Error`] if the image cannot be converted to the specified format
+    #[cfg(feature = "generate")]
     pub fn from_rgba_image(
         image: &image::RgbaImage,
         format: PaXType,
     ) -> Result<Self, std::io::Error> {
+        use image::EncodableLayout;
+        use texpresso::Format;
         let (width, height) = image.dimensions();
         let mut data = {
             let format: Format = format.into();
             vec![0u8; format.compressed_size(width as usize, height as usize)]
         };
         format.compress(image.as_bytes(), width as usize, height as usize, &mut data);
+        let compress = format.is_dxt() && width >= 256 && height >= 256;
         let stored_width = u16::try_from(width).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::InvalidInput, "Width exceeds u16 limit")
-        })? + if format.is_dxt() { 32768 } else { 0 };
+        })? + if compress { 32768 } else { 0 };
         Ok(Self {
             width: stored_width,
             height: u16::try_from(height).map_err(|_| {
                 std::io::Error::new(std::io::ErrorKind::InvalidInput, "Height exceeds u16 limit")
             })?,
             data: {
-                let mut output = Vec::with_capacity(hemtt_lzo::worst_compress(data.len()));
-                hemtt_lzo::compress(&data, &mut output)
-                    .map_err(|_| std::io::Error::other("Failed to compress MipMap data"))?;
-                output
+                if compress {
+                    let mut output = Vec::with_capacity(hemtt_lzo::worst_compress(data.len()));
+                    hemtt_lzo::compress(&data, &mut output)
+                        .map_err(|_| std::io::Error::other("Failed to compress MipMap data"))?;
+                    output
+                } else {
+                    data
+                }
             },
             format,
         })

@@ -144,6 +144,7 @@ impl Paa {
     ///
     /// # Errors
     /// [`std::io::Error`] if the image cannot be converted to the specified format
+    #[cfg(feature = "generate")]
     pub fn from_dynamic(
         image: &image::DynamicImage,
         format: PaXType,

@@ -1,4 +1,5 @@
 #[test]
+#[cfg(feature = "generate")]
 fn baer_to_paa() {
     let baer_image = image::open("tests/baer.png").expect("Failed to open baer.png");
     let paa_image = hemtt_paa::Paa::from_dynamic(&baer_image, hemtt_paa::PaXType::DXT5)
@@ -7,7 +8,7 @@ fn baer_to_paa() {
     assert_eq!(paa_image.maps().len(), 6);
     let mipmap = &paa_image.maps()[0].0;
     assert_eq!(mipmap.width(), 128);
-    assert!(mipmap.is_compressed());
+    assert!(!mipmap.is_compressed());
     assert_eq!(mipmap.format(), &hemtt_paa::PaXType::DXT5);
     let output_file_path = "tests/baer_converted.paa";
     let mut output_file =
