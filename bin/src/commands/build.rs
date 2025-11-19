@@ -3,7 +3,8 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{
-        Binarize, Files, Rapifier, meta::Meta, pbo::Collapse, summary::Summary, tex_headers::TexHeaders,
+        Binarize, Files, Rapifier, meta::Meta, pbo::Collapse, summary::Summary,
+        tex_headers::TexHeaders,
     },
     report::Report,
 };
