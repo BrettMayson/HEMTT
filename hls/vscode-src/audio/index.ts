@@ -1,16 +1,17 @@
 import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { WssViewerProvider } from "./viewer";
+import { orActive } from "../util";
 
 export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioWav', async (uri: vscode.Uri) => {
-    await conversion(uri.toString(), "wav", client, channel);
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioWav', async (uri: vscode.Uri | undefined) => {
+    orActive(uri, async (uri) => await conversion(uri.toString(), "wav", client, channel));
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioOgg', async (uri: vscode.Uri) => {
-    await conversion(uri.toString(), "ogg", client, channel);
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioOgg', async (uri: vscode.Uri | undefined) => {
+    orActive(uri, async (uri) => await conversion(uri.toString(), "ogg", client, channel));
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioWss', async (uri: vscode.Uri) => {
-    await conversion(uri.toString(), "wss", client, channel);
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioWss', async (uri: vscode.Uri | undefined) => {
+    orActive(uri, async (uri) => await conversion(uri.toString(), "wss", client, channel));
   }));
 
   const wssViewerProvider = new WssViewerProvider(context.extensionUri, client);

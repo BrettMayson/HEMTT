@@ -307,7 +307,7 @@ impl TextureHeader {
             mipmaps: paa
                 .maps()
                 .iter()
-                .map(|m| {
+                .map(|(m, offset)| {
                     Ok(MipMap {
                         width: m.width(),
                         height: m.height(),
@@ -317,7 +317,7 @@ impl TextureHeader {
                                 "MipMap format exceeds u8 range",
                             )
                         })?,
-                        data_offset: u32::try_from(m.offset()).map_err(|_| {
+                        data_offset: u32::try_from(*offset).map_err(|_| {
                             std::io::Error::new(
                                 std::io::ErrorKind::InvalidData,
                                 "MipMap offset exceeds u32 range",
@@ -450,7 +450,7 @@ mod tests {
             std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"),
         )
         .join("tests");
-        for path in ["dxt1.paa", "dxt5.paa"] {
+        for path in ["baer_converted.paa", "dxt1.paa", "dxt5.paa"] {
             let path = root.join(path);
             headers.push(
                 super::TextureHeader::from_file(&root, &path)

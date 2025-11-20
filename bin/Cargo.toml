@@ -23,7 +23,7 @@ hemtt-common = { path = "../libs/common" }
 
 hemtt-config = { path = "../libs/config", features = ["serde"] }
 hemtt-p3d = { path = "../libs/p3d" }
-hemtt-paa = { path = "../libs/paa" }
+hemtt-paa = { path = "../libs/paa", features = ["generate"] }
 hemtt-pbo = { path = "../libs/pbo" }
 hemtt-preprocessor = { path = "../libs/preprocessor" }
 hemtt-signing = { path = "../libs/signing" }

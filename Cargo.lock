@@ -1841,6 +1841,7 @@ dependencies = [
  "hemtt-sqf",
  "hemtt-workspace",
  "hemtt-wss",
+ "image",
  "regex",
  "ropey",
  "serde",

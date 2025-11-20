@@ -18,7 +18,9 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    /// Extracts the first mipmap from a PAA file and saves it as an image.
+    /// Convert an image to/from PAA format
+    ///
+    /// For PAAs, extracts the first mipmap and saves it as an image.
     /// Useful for viewing or editing Arma textures in standard image editors.
     ///
     /// Supports most common image formats (PNG, JPEG, BMP, etc.) based on file extension.
