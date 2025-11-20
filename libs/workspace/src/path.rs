@@ -530,7 +530,7 @@ fn exists_case_insensitive_from(path: &Path, from: PathBuf) -> Option<PathBuf> {
     for component in path.components() {
         if let std::path::Component::Normal(name) = component {
             let mut found = false;
-            if let Ok(entries) = std::fs::read_dir(&current_path) {
+            if let Ok(entries) = fs_err::read_dir(&current_path) {
                 for entry in entries.filter_map(Result::ok) {
                     if entry.file_name().eq_ignore_ascii_case(name) {
                         current_path.push(entry.file_name());

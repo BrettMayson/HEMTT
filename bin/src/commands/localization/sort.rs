@@ -70,7 +70,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                             error!("{:?}", e);
                             return Ok(Report::new());
                         }
-                        if let Err(e) = std::fs::write(&path, writer) {
+                        if let Err(e) = fs_err::write(&path, writer) {
                             error!("Failed to write stringtable for {}", path.display());
                             error!("{:?}", e);
                             return Ok(Report::new());

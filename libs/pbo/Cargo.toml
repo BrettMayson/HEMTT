@@ -20,4 +20,5 @@ sha-1 = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+fs-err = { workspace = true }
 insta = { workspace = true }

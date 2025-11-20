@@ -1436,6 +1436,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-err"
+version = "3.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ad492b2cf1d89d568a43508ab24f98501fe03f2f31c01e1d0fe7366a71745d2"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1695,9 +1704,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.16.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 
 [[package]]
 name = "heck"
@@ -1716,6 +1725,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "enable-ansi-support",
+ "fs-err",
  "fs_extra",
  "git2",
  "glob",
@@ -1769,6 +1779,7 @@ version = "0.1.0"
 dependencies = [
  "arma3-wiki",
  "clap",
+ "fs-err",
  "hemtt",
  "hemtt-common",
  "hemtt-config",
@@ -1794,6 +1805,7 @@ name = "hemtt-common"
 version = "1.0.0"
 dependencies = [
  "codespan-reporting",
+ "fs-err",
  "git2",
  "rustversion",
  "serde",
@@ -1814,6 +1826,7 @@ dependencies = [
  "automod",
  "byteorder",
  "chumsky",
+ "fs-err",
  "hemtt-common",
  "hemtt-preprocessor",
  "hemtt-workspace",
@@ -1833,6 +1846,7 @@ dependencies = [
  "arma3-wiki",
  "clap",
  "dashmap 6.1.0",
+ "fs-err",
  "hemtt-common",
  "hemtt-config",
  "hemtt-p3d",
@@ -1868,6 +1882,7 @@ name = "hemtt-p3d"
 version = "1.0.0"
 dependencies = [
  "byteorder",
+ "fs-err",
  "hemtt-common",
  "hemtt-workspace",
  "rustversion",
@@ -1881,6 +1896,7 @@ version = "1.0.1"
 dependencies = [
  "base64",
  "byteorder",
+ "fs-err",
  "hemtt-lzo",
  "image",
  "js-sys",
@@ -1895,6 +1911,7 @@ name = "hemtt-pbo"
 version = "1.0.1"
 dependencies = [
  "byteorder",
+ "fs-err",
  "hemtt-common",
  "indexmap",
  "insta",
@@ -1909,6 +1926,7 @@ dependencies = [
  "automod",
  "criterion",
  "dashmap 6.1.0",
+ "fs-err",
  "hemtt-common",
  "hemtt-workspace",
  "lsp-types 0.97.0",
@@ -1927,6 +1945,7 @@ version = "1.0.0"
 dependencies = [
  "byteorder",
  "crypto-bigint",
+ "fs-err",
  "hemtt-common",
  "hemtt-pbo",
  "rand 0.10.0-rc.5",
@@ -1944,6 +1963,7 @@ dependencies = [
  "byteorder",
  "chumsky",
  "float-ord",
+ "fs-err",
  "hemtt-common",
  "hemtt-lzo",
  "hemtt-preprocessor",
@@ -1966,6 +1986,7 @@ dependencies = [
  "automod",
  "byteorder",
  "criterion",
+ "fs-err",
  "hemtt-common",
  "hemtt-workspace",
  "indexmap",
@@ -1983,6 +2004,7 @@ dependencies = [
 name = "hemtt-test"
 version = "1.0.0"
 dependencies = [
+ "fs-err",
  "fs_extra",
  "gag",
  "rand 0.9.2",
@@ -1995,6 +2017,7 @@ dependencies = [
  "ansi_term",
  "codespan-reporting",
  "dirs",
+ "fs-err",
  "hemtt-common",
  "hemtt-pbo",
  "intervaltree",
@@ -2013,6 +2036,7 @@ name = "hemtt-wss"
 version = "1.0.0"
 dependencies = [
  "byteorder",
+ "fs-err",
  "hound",
  "puremp3",
  "thiserror 2.0.17",
@@ -2392,12 +2416,12 @@ checksum = "e7c5cedc30da3a610cac6b4ba17597bdf7152cf974e8aab3afb3d54455e371c8"
 
 [[package]]
 name = "indexmap"
-version = "2.12.0"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6717a8d2a5a929a1a2eb43a12812498ed141a0bcfb7e8f7844fbdbe4303bba9f"
+checksum = "0ad4bb2b565bca0645f4d68c5c9af97fba094e9791da685bf83cb5f3ce74acf2"
 dependencies = [
  "equivalent",
- "hashbrown 0.16.0",
+ "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -2444,9 +2468,9 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.43.2"
+version = "1.44.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
+checksum = "e8732d3774162a0851e3f2b150eb98f31a9885dd75985099421d393385a01dfd"
 dependencies = [
  "console 0.15.11",
  "once_cell",
@@ -6163,18 +6187,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.27"
+version = "0.8.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0894878a5fa3edfd6da3f88c4805f4c8558e2b996227a3d864f47fe11e38282c"
+checksum = "43fa6694ed34d6e57407afbccdeecfa268c470a7d2a5b0cf49ce9fcc345afb90"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.27"
+version = "0.8.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88d2b8d9c68ad2b9e4340d7832716a4d21a22a1154777ad56ea55c51a9cf3831"
+checksum = "c640b22cd9817fae95be82f0d2f90b11f7605f6c319d16705c459b27ac2cbc26"
 dependencies = [
  "proc-macro2",
  "quote",

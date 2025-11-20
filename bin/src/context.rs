@@ -1,9 +1,4 @@
-use std::{
-    env::temp_dir,
-    fs::{create_dir_all, remove_dir_all},
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{env::temp_dir, path::PathBuf, sync::Arc};
 
 use hemtt_common::config::{GlobalConfig, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath, addons::Addon};
@@ -109,7 +104,7 @@ impl Context {
                 .replace(['\\', '/'], "_"),
         );
         if tmp.exists() {
-            remove_dir_all(&tmp)?;
+            fs_err::remove_dir_all(&tmp)?;
         }
         trace!("using temporary folder: {:?}", tmp.display());
         let hemtt_folder = root.join(".hemtt");
@@ -119,16 +114,16 @@ impl Context {
         }
         let out_folder = root.join(".hemttout");
         trace!("using out folder: {:?}", out_folder.display());
-        create_dir_all(&out_folder)?;
-        std::fs::File::create(out_folder.join("ci_annotations.txt"))?;
+        fs_err::create_dir_all(&out_folder)?;
+        fs_err::File::create(out_folder.join("ci_annotations.txt"))?;
         let mut builder = Workspace::builder().physical(&root, LayerType::Source);
         let maybe_build_folder = if let Some(folder) = folder {
             let build_folder = out_folder.join(folder);
             trace!("using build folder: {:?}", build_folder.display());
             if preserve_previous == PreservePrevious::Remove && build_folder.exists() {
-                remove_dir_all(&build_folder)?;
+                fs_err::remove_dir_all(&build_folder)?;
             }
-            create_dir_all(&build_folder)?;
+            fs_err::create_dir_all(&build_folder)?;
             builder = builder.physical(&tmp.join("hemtt_binarize_output"), LayerType::Build);
             let include = root.join("include");
             if include.is_dir() {

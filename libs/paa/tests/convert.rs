@@ -12,13 +12,13 @@ fn baer_to_paa() {
     assert_eq!(mipmap.format(), &hemtt_paa::PaXType::DXT5);
     let output_file_path = "tests/baer_converted.paa";
     let mut output_file =
-        std::fs::File::create(output_file_path).expect("Failed to create output PAA file");
+        fs_err::File::create(output_file_path).expect("Failed to create output PAA file");
     paa_image
         .write(&mut output_file)
         .expect("Failed to write PAA file");
     // try reading it back
     let mut input_file =
-        std::fs::File::open(output_file_path).expect("Failed to open output PAA file for reading");
+        fs_err::File::open(output_file_path).expect("Failed to open output PAA file for reading");
     let read_back_paa =
         hemtt_paa::Paa::read(&mut input_file).expect("Failed to read back PAA file");
     assert_eq!(read_back_paa.format(), &hemtt_paa::PaXType::DXT5);

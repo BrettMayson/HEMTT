@@ -233,7 +233,7 @@ impl TextureHeader {
     /// # Panics
     /// - Panics if the PAA file path is not relative to the root
     pub fn from_file(root: &Path, path: &PathBuf) -> Result<Self, Error> {
-        let paa = Paa::read(std::fs::File::open(path)?)?;
+        let paa = Paa::read(fs_err::File::open(path)?)?;
         let flag = paa.taggs().get("GALF").map_or(0, |flag| {
             let mut bytes: [u8; 4] = [0; 4];
             bytes.copy_from_slice(&flag[0..4]);
@@ -327,7 +327,7 @@ impl TextureHeader {
                 })
                 .collect::<Result<Vec<MipMap>, Error>>()?,
             size_of_pax_file: u32::try_from(
-                std::fs::metadata(path)
+                fs_err::metadata(path)
                     .map_err(|e| {
                         std::io::Error::new(
                             std::io::ErrorKind::InvalidData,

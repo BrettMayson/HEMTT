@@ -39,7 +39,7 @@ impl Module for BOMCheck {
             let files = files_to_check(&folder);
             for path in files {
                 let mut buffer = [0; 3];
-                let mut file = std::fs::File::open(&path)?;
+                let mut file = fs_err::File::open(&path)?;
                 if file.read_exact(&mut buffer).is_err() {
                     continue;
                 }

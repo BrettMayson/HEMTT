@@ -19,7 +19,7 @@ impl Module for Meta {
         if !path.exists() {
             return Ok(crate::report::Report::new());
         }
-        let content = std::fs::read_to_string(&path)?;
+        let content = fs_err::read_to_string(&path)?;
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("valid system time")
@@ -33,7 +33,7 @@ impl Module for Meta {
         } else {
             format!("{content}\ntimestamp = {now};\n")
         };
-        std::fs::write(&path, new_content)?;
+        fs_err::write(&path, new_content)?;
         info!("Updated meta.cpp with current timestamp.");
         Ok(crate::report::Report::new())
     }

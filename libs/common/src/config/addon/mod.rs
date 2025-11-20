@@ -89,7 +89,7 @@ static DEPRECATION: Once = Once::new();
 
 impl AddonConfigFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
-        Self::from_str(&std::fs::read_to_string(path)?, &path.display().to_string())
+        Self::from_str(&fs_err::read_to_string(path)?, &path.display().to_string())
     }
 
     pub fn from_str(content: &str, path: &str) -> Result<Self, Error> {

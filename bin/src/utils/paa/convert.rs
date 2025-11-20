@@ -32,7 +32,7 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
             .to_lowercase()
             .as_str(),
     ) {
-        let paa = hemtt_paa::Paa::read(std::fs::File::open(from)?)?;
+        let paa = hemtt_paa::Paa::read(fs_err::File::open(from)?)?;
         if let Err(e) = paa.maps()[0].0.get_image().save(output) {
             error!("Failed to save image: {}", e);
         } else {
@@ -53,7 +53,7 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
                 }
             }
         })?;
-        let mut file = std::fs::File::create(output)?;
+        let mut file = fs_err::File::create(output)?;
         paa.write(&mut file)?;
         info!("Image converted to PAA");
     }

@@ -27,6 +27,7 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.7.0"
+fs-err = { workspace = true }
 paste = { workspace = true }
 
 [features]

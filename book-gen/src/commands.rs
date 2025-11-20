@@ -31,7 +31,7 @@ pub fn summary_commands() {
     }
     // Open SUMMARY.md and replace the commands section (between - [Commands](commands/index.md) and - [Rhai](rhai/index.md))
     let summary_path = std::path::Path::new("book/SUMMARY.md");
-    let summary_content = std::fs::read_to_string(summary_path).unwrap();
+    let summary_content = fs_err::read_to_string(summary_path).unwrap();
     let mut new_summary_content = String::new();
     let mut in_commands_section = false;
     for line in summary_content.lines() {
@@ -49,7 +49,7 @@ pub fn summary_commands() {
             new_summary_content.push('\n');
         }
     }
-    std::fs::write(summary_path, new_summary_content).unwrap();
+    fs_err::write(summary_path, new_summary_content).unwrap();
 }
 
 pub fn summary_utilities() {
@@ -83,7 +83,7 @@ pub fn summary_utilities() {
     }
     // Open SUMMARY.md and replace the utilities section (between # Utilities and # Reference)
     let summary_path = std::path::Path::new("book/SUMMARY.md");
-    let summary_content = std::fs::read_to_string(summary_path).unwrap();
+    let summary_content = fs_err::read_to_string(summary_path).unwrap();
     let mut new_summary_content = String::new();
     let mut in_utilities_section = false;
     for line in summary_content.lines() {
@@ -103,7 +103,7 @@ pub fn summary_utilities() {
             new_summary_content.push('\n');
         }
     }
-    std::fs::write(summary_path, new_summary_content).unwrap();
+    fs_err::write(summary_path, new_summary_content).unwrap();
 }
 
 pub fn run(chapter: &mut Chapter) {

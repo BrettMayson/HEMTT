@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 codespan-reporting = { workspace = true }
+fs-err = { workspace = true }
 git2 = { workspace = true }
 rustversion = { workspace = true }
 serde = { workspace = true }

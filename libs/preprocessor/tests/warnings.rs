@@ -32,7 +32,7 @@ fn check(dir: &str) {
     match processed {
         Ok(config) => {
             let mut expected = Vec::new();
-            std::fs::File::open(folder.join("stderr.ansi"))
+            fs_err::File::open(folder.join("stderr.ansi"))
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
@@ -42,7 +42,7 @@ fn check(dir: &str) {
                 .map(|w| w.diagnostic().unwrap().to_string(&WorkspaceFiles::new()))
                 .collect::<String>();
             if expected.is_empty() {
-                std::fs::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
+                fs_err::write(folder.join("stderr.ansi"), warning.replace('\r', "")).unwrap();
             }
             assert_eq!(
                 warning.replace('\r', ""),

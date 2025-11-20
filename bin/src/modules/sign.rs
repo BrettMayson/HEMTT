@@ -1,8 +1,6 @@
-use std::{
-    fs::{File, create_dir_all},
-    sync::Arc,
-};
+use std::sync::Arc;
 
+use fs_err::File;
 use git2::Repository;
 use hemtt_common::prefix::FILES;
 use hemtt_pbo::ReadablePbo;
@@ -39,7 +37,7 @@ impl Module for Sign {
         let mut report = Report::new();
 
         ctx.addons().to_vec().iter().for_each(|addon| {
-            let entries = std::fs::read_dir(addon.folder())
+            let entries = fs_err::read_dir(addon.folder())
                 .expect("valid read_dir")
                 .collect::<Result<Vec<_>, _>>()
                 .expect("files valid");
@@ -66,7 +64,7 @@ impl Module for Sign {
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
         let authority = get_authority(ctx, None)?;
         let addons_key = BIPrivateKey::generate(1024, &authority)?;
-        create_dir_all(
+        fs_err::create_dir_all(
             ctx.build_folder()
                 .expect("build folder exists")
                 .join("keys"),
@@ -109,7 +107,7 @@ impl Module for Sign {
                                     "@{}",
                                     addon.pbo_name(ctx.config().hemtt().release().folder())
                                 ));
-                            create_dir_all(mod_root.join("keys"))?;
+                            fs_err::create_dir_all(mod_root.join("keys"))?;
                             key.to_public_key().write(&mut File::create(
                                 mod_root.join("keys").join(format!("{authority}.bikey")),
                             )?)?;

@@ -48,7 +48,7 @@ impl TemporaryDirectory {
         }
         let random_id = rand::random::<u64>();
         let path = std::env::temp_dir().join(format!("hemtt_test_{random_id}"));
-        std::fs::create_dir(&path).expect("Failed to create temporary directory");
+        fs_err::create_dir(&path).expect("Failed to create temporary directory");
         let original = std::env::current_dir().expect("Failed to get current directory");
         std::env::set_current_dir(&path).expect("Failed to set current directory");
         Self { path, original }
@@ -95,7 +95,7 @@ impl Drop for TemporaryDirectory {
     fn drop(&mut self) {
         GLOBAL_LOCK.store(false, std::sync::atomic::Ordering::SeqCst);
         std::env::set_current_dir(&self.original).expect("Failed to set current directory");
-        std::fs::remove_dir_all(&self.path).expect("Failed to remove temporary directory");
+        fs_err::remove_dir_all(&self.path).expect("Failed to remove temporary directory");
     }
 }
 
@@ -167,12 +167,9 @@ mod tests {
             let temp_dir = TemporaryDirectory::new();
             let current = std::env::current_dir().expect("Failed to get current directory");
             // Canonicalize paths to handle symlinks (e.g., /var -> /private/var on macOS)
-            let current_canonical = current
-                .canonicalize()
-                .expect("Failed to canonicalize current directory");
-            let temp_canonical = temp_dir
-                .as_ref()
-                .canonicalize()
+            let current_canonical =
+                fs_err::canonicalize(&current).expect("Failed to canonicalize current directory");
+            let temp_canonical = fs_err::canonicalize(temp_dir.as_ref())
                 .expect("Failed to canonicalize temp directory");
             assert_eq!(current_canonical, temp_canonical);
             assert_ne!(current, original);

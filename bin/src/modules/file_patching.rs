@@ -1,4 +1,4 @@
-use std::{fs::create_dir_all, sync::Arc};
+use std::sync::Arc;
 
 use hemtt_workspace::reporting::{Code, Diagnostic};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -25,7 +25,7 @@ impl Module for FilePatching {
     }
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
-        create_dir_all(
+        fs_err::create_dir_all(
             ctx.build_folder()
                 .expect("build folder exists")
                 .join("addons"),
@@ -57,16 +57,16 @@ impl Module for FilePatching {
         };
         let prefix_folder = arma3dir.join(mainprefix);
         if !prefix_folder.exists() {
-            std::fs::create_dir_all(&prefix_folder)?;
+            fs_err::create_dir_all(&prefix_folder)?;
         }
 
         let link = prefix_folder.join(ctx.config().prefix());
         if link.exists() {
             trace!("removing existing symlink at {}", link.display());
             #[cfg(windows)]
-            std::fs::remove_dir(&link)?;
+            fs_err::remove_dir(&link)?;
             #[cfg(not(windows))]
-            std::fs::remove_file(&link)?;
+            fs_err::remove_file(&link)?;
         }
         create_link(&link, ctx.build_folder().expect("build folder exists"))?;
         info!("Symlink created at {}", link.display());

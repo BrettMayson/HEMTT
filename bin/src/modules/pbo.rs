@@ -1,5 +1,4 @@
-use std::fs::{File, create_dir_all};
-
+use fs_err::File;
 use git2::Repository;
 use hemtt_common::{
     prefix::{FILES, Prefix},
@@ -99,7 +98,7 @@ fn internal_build(
         debug!("{:?} already exists", parent);
     } else {
         debug!("creating {:?}", parent);
-        create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     debug!(
         "building {:?} => {:?}",

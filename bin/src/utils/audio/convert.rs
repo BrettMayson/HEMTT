@@ -23,10 +23,10 @@ pub struct ConvertArgs {
 pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<(), Error> {
     let compression = Compression::from_u32(u32::from(compression.unwrap_or(0)))?;
     let mut wss = match guess_file_type(file)? {
-        Some(SupportedFile::Wss) => hemtt_wss::Wss::read(std::fs::File::open(file)?)?,
-        Some(SupportedFile::Wav) => hemtt_wss::Wss::from_wav(std::fs::File::open(file)?)?,
-        Some(SupportedFile::Ogg) => hemtt_wss::Wss::from_ogg(std::fs::File::open(file)?)?,
-        Some(SupportedFile::Mp3) => hemtt_wss::Wss::from_mp3(std::fs::File::open(file)?)?,
+        Some(SupportedFile::Wss) => hemtt_wss::Wss::read(fs_err::File::open(file)?)?,
+        Some(SupportedFile::Wav) => hemtt_wss::Wss::from_wav(fs_err::File::open(file)?)?,
+        Some(SupportedFile::Ogg) => hemtt_wss::Wss::from_ogg(fs_err::File::open(file)?)?,
+        Some(SupportedFile::Mp3) => hemtt_wss::Wss::from_mp3(fs_err::File::open(file)?)?,
         _ => {
             println!("Unsupported file type");
             return Ok(());
@@ -62,12 +62,12 @@ pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<
             return Ok(());
         }
     };
-    let _ = std::fs::create_dir_all(
+    let _ = fs_err::create_dir_all(
         output
             .parent()
             .expect("Output file has no parent directory"),
     );
-    std::io::Write::write_all(&mut std::fs::File::create(&output)?, &data)?;
+    std::io::Write::write_all(&mut fs_err::File::create(&output)?, &data)?;
     println!("Converted to: {}", output.display());
     Ok(())
 }

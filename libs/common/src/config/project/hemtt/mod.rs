@@ -142,7 +142,7 @@ impl HemttSectionFile {
         launch_path.set_file_name("launch.toml");
         let launch_source = if launch_path.exists() {
             if self.launch.is_empty() {
-                let launch_source = std::fs::read_to_string(&launch_path)?;
+                let launch_source = fs_err::read_to_string(&launch_path)?;
                 if launch_source.contains("[hemtt.launch") {
                     return Err(Error::ConfigInvalid(
                         "Configs in `launch.toml` do not need to be under `[hemtt.launch]`."

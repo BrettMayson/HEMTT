@@ -195,7 +195,7 @@ impl Module for Hooks {
                 if !dir.exists() {
                     continue;
                 }
-                for hook in dir.read_dir().expect("hooks folder should be readable") {
+                for hook in fs_err::read_dir(&dir).expect("hooks folder should be readable") {
                     let hook = hook?;
                     let path = ctx
                         .workspace_path()

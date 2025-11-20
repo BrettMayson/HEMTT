@@ -17,7 +17,7 @@ pub struct InspectArgs {
 pub fn inspect(file: &PathBuf) -> Result<(), Error> {
     let wss = match guess_file_type(file)? {
         Some(SupportedFile::Wss) => {
-            let wss = hemtt_wss::Wss::read(std::fs::File::open(file)?)?;
+            let wss = hemtt_wss::Wss::read(fs_err::File::open(file)?)?;
             println!("WSS Details");
             println!("Compression: {:?}", wss.compression());
             println!("Format: {:?}", wss.format());
@@ -26,9 +26,9 @@ pub fn inspect(file: &PathBuf) -> Result<(), Error> {
             println!();
             wss
         }
-        Some(SupportedFile::Wav) => hemtt_wss::Wss::from_wav(std::fs::File::open(file)?)?,
-        Some(SupportedFile::Ogg) => hemtt_wss::Wss::from_ogg(std::fs::File::open(file)?)?,
-        Some(SupportedFile::Mp3) => hemtt_wss::Wss::from_mp3(std::fs::File::open(file)?)?,
+        Some(SupportedFile::Wav) => hemtt_wss::Wss::from_wav(fs_err::File::open(file)?)?,
+        Some(SupportedFile::Ogg) => hemtt_wss::Wss::from_ogg(fs_err::File::open(file)?)?,
+        Some(SupportedFile::Mp3) => hemtt_wss::Wss::from_mp3(fs_err::File::open(file)?)?,
         _ => {
             println!("Unsupported file type");
             return Ok(());

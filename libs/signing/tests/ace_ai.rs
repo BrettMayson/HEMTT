@@ -17,11 +17,11 @@ fn write() {
     private.write_danger(&mut buffer).unwrap();
     assert_eq!(
         buffer,
-        std::fs::read(file.join("test.biprivatekey")).unwrap()
+        fs_err::read(file.join("test.biprivatekey")).unwrap()
     );
 
     // If we write the public key, does it match the original?
-    let public_disk = std::fs::read(file.join("test.bikey")).unwrap();
+    let public_disk = fs_err::read(file.join("test.bikey")).unwrap();
     let public = private.to_public_key();
     let mut buffer = Vec::new();
     public.write(&mut buffer).unwrap();
@@ -31,7 +31,7 @@ fn write() {
     println!("opening file: {:?}", file.join("source.pbo"));
     println!("cwd: {:?}", std::env::current_dir().unwrap());
     // print tree in cwd
-    for entry in std::fs::read_dir("./tests/ace_ai_3.15.2.69").unwrap() {
+    for entry in fs_err::read_dir("./tests/ace_ai_3.15.2.69").unwrap() {
         let entry = entry.unwrap();
         println!("{:?}", entry.path());
     }
@@ -40,7 +40,7 @@ fn write() {
     assert_eq!(&checksum, pbo.checksum());
 
     // If we sign the PBO, does it match the original?
-    let signature_disk = std::fs::read(file.join("source.pbo.test.bisign")).unwrap();
+    let signature_disk = fs_err::read(file.join("source.pbo.test.bisign")).unwrap();
     let signature = private
         .sign(&mut pbo, hemtt_pbo::BISignVersion::V3)
         .unwrap();

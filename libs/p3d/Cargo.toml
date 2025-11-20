@@ -16,3 +16,6 @@ byteorder = { workspace = true }
 rustversion = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+fs-err = { workspace = true }

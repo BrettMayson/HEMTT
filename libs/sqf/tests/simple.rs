@@ -42,7 +42,7 @@ fn simple(file: &str) -> Vec<Statement> {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .unwrap();
-    std::fs::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
+    fs_err::write(format!("tests/simple/{file}.sqfp"), processed.as_str()).unwrap();
     let parsed = match hemtt_sqf::parser::run(&Database::a3(false), &processed) {
         Ok(sqf) => sqf,
         Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
@@ -60,7 +60,7 @@ fn simple(file: &str) -> Vec<Statement> {
         Err(e) => panic!("{e:?}"),
     };
     assert_ne!(parsed.content().len(), 0);
-    std::fs::write(
+    fs_err::write(
         format!("tests/simple/{file}.sqfast"),
         format!("{:#?}", parsed.content()),
     )

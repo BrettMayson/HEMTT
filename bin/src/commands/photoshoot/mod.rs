@@ -283,9 +283,9 @@ impl Action for Photoshoot {
                     .build_folder()
                     .expect("photoshoot has a folder")
                     .join(format!("{class}_ca.paa"));
-                std::fs::create_dir_all(target.parent().expect("has parent")).expect("create dir");
+                fs_err::create_dir_all(target.parent().expect("has parent")).expect("create dir");
                 info!("Created `{}` at `{}`", class, target.display());
-                std::fs::rename(dst_paa, target).expect("rename");
+                fs_err::rename(dst_paa, target).expect("rename");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::WeaponUnsupported(weapon) => {
@@ -331,7 +331,7 @@ impl Action for Photoshoot {
                             .expect("received unknown preview"),
                     );
                     let image = utils::photoshoot::Photoshoot::preview(&src).expect("image");
-                    std::fs::create_dir_all(target.parent().expect("has parent"))
+                    fs_err::create_dir_all(target.parent().expect("has parent"))
                         .expect("create dir");
                     info!(
                         "Created `{}` at `{}`",
@@ -341,7 +341,7 @@ impl Action for Photoshoot {
                             .to_string(),
                         target.display()
                     );
-                    let target = std::fs::File::create(target).expect("create");
+                    let target = fs_err::File::create(target).expect("create");
                     JpegEncoder::new_with_quality(target, 90)
                         .encode(
                             &image,

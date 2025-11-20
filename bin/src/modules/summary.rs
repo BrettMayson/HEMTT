@@ -34,7 +34,7 @@ impl Module for Summary {
         // Load the last build summary if it exists
         let last_build_path = ctx.out_folder().join("last_build.hsb");
         let last_build = if last_build_path.exists() {
-            let mut file = std::fs::File::open(&last_build_path).map_err(|e| {
+            let mut file = fs_err::File::open(&last_build_path).map_err(|e| {
                 crate::Error::Io(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     format!("Failed to open last build summary: {e}"),
@@ -108,7 +108,7 @@ impl Module for Summary {
                 files,
             },
         };
-        summary_info.write(&mut std::fs::File::create(last_build_path)?)?;
+        summary_info.write(&mut fs_err::File::create(last_build_path)?)?;
 
         Ok(report)
     }

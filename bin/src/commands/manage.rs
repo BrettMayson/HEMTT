@@ -63,7 +63,7 @@ fn install_powershell_completions_sourced() -> std::io::Result<()> {
     let script_dir = script_path
         .parent()
         .expect("Could not determine script directory");
-    std::fs::create_dir_all(script_dir)?;
+    fs_err::create_dir_all(script_dir)?;
 
     generate_to(
         Shell::PowerShell,
@@ -76,7 +76,7 @@ fn install_powershell_completions_sourced() -> std::io::Result<()> {
         get_powershell_profile_path().expect("Could not determine PowerShell profile path");
 
     if let Some(parent) = profile_path.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     if !profile_path.exists() {
         File::create(&profile_path)?;

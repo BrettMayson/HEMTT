@@ -15,8 +15,9 @@ crate-type = ["cdylib", "rlib"]
 hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = false }
 
 byteorder = { workspace = true }
-texpresso = "2.0.2"
+fs-err = { workspace = true }
 image = "0.25.9"
+texpresso = "2.0.2"
 
 # WASM
 js-sys = { version = "0.3.82", optional = true }

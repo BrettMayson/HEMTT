@@ -2,26 +2,29 @@
 
 use std::{fs::File, io::Write};
 
-use rust_embed::RustEmbed;
-
 use crate::{context::Context, error::Error};
 
-#[derive(RustEmbed)]
-#[folder = "dist/profile"]
-struct Distributables;
+#[allow(clippy::disallowed_methods)]
+mod embedded {
+    use rust_embed::RustEmbed;
+
+    #[derive(RustEmbed)]
+    #[folder = "dist/profile"]
+    pub struct Distributables;
+}
 
 pub fn setup(ctx: &Context) -> Result<(), Error> {
     if ctx.profile().exists() {
-        std::fs::remove_dir_all(ctx.profile())?;
+        fs_err::remove_dir_all(ctx.profile())?;
     }
-    std::fs::create_dir_all(ctx.profile())?;
-    for file in Distributables::iter() {
+    fs_err::create_dir_all(ctx.profile())?;
+    for file in embedded::Distributables::iter() {
         let file = file.to_string();
         trace!("unpacking {:?}", file);
         let path = ctx.profile().join(&file);
-        std::fs::create_dir_all(path.parent().unwrap())?;
+        fs_err::create_dir_all(path.parent().unwrap())?;
         let mut f = File::create(&path)?;
-        f.write_all(&Distributables::get(&file).unwrap().data)?;
+        f.write_all(&embedded::Distributables::get(&file).unwrap().data)?;
     }
     Ok(())
 }

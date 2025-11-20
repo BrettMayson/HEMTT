@@ -9,7 +9,7 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
+fs-err = { workspace = true }
 fs_extra = { workspace = true }
 gag = "1.0.0"
 rand = { workspace = true }
-

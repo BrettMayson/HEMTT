@@ -39,7 +39,7 @@ fn check(dir: &str) {
         }
         Err(e) => {
             let mut expected = Vec::new();
-            std::fs::File::open(folder.join("stderr.ansi"))
+            fs_err::File::open(folder.join("stderr.ansi"))
                 .unwrap()
                 .read_to_end(&mut expected)
                 .unwrap();
@@ -50,7 +50,7 @@ fn check(dir: &str) {
                     .unwrap()
                     .to_string(&WorkspaceFiles::new());
             if expected.is_empty() {
-                std::fs::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
+                fs_err::write(folder.join("stderr.ansi"), error.replace('\r', "")).unwrap();
             }
             assert_eq!(
                 error.replace('\r', ""),

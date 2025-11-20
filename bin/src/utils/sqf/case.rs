@@ -73,7 +73,7 @@ fn file(file: &Path) -> Result<bool, Error> {
     let wiki = arma3_wiki::Wiki::load(false);
 
     // Read the file
-    let content = std::fs::read_to_string(file)?;
+    let content = fs_err::read_to_string(file)?;
 
     // create a buffer and read each word at a time, ignoring anything inside of quotes
     // break on any non-alphanumeric character
@@ -163,7 +163,7 @@ fn file(file: &Path) -> Result<bool, Error> {
 
     // Write the file
     if content != out {
-        std::fs::write(file, out)?;
+        fs_err::write(file, out)?;
         return Ok(true);
     }
     Ok(false)

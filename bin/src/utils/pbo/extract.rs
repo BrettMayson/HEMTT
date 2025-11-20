@@ -32,7 +32,7 @@ pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
             error!("Output file already exists");
             return Ok(());
         }
-        let _ = std::fs::create_dir_all(
+        let _ = fs_err::create_dir_all(
             output
                 .parent()
                 .expect("Output file has no parent directory"),

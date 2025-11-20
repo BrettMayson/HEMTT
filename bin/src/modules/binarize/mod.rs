@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     ffi::OsStr,
-    fs::create_dir_all,
     path::PathBuf,
     process::Command,
     sync::{RwLock, atomic::AtomicUsize},
@@ -286,12 +285,12 @@ impl Module for Binarize {
         let cache_path = ctx.out_folder().join("binarize.hcb");
         let cache_dir = ctx.out_folder().join("bincache");
         if !cache_dir.exists() {
-            create_dir_all(&cache_dir)?;
+            fs_err::create_dir_all(&cache_dir)?;
         }
         let exp_bin_cache = std::env::args().any(|a| a == "--exp-bin-cache");
         let cache = if exp_bin_cache && !ctx.config().runtime().is_release() && cache_path.exists()
         {
-            let mut cache_file = std::fs::File::open(&cache_path)?;
+            let mut cache_file = fs_err::File::open(&cache_path)?;
             debug!("Using existing build cache");
             BuildCache::read(&mut cache_file).expect("should be able to read build cache")
         } else {
@@ -310,7 +309,7 @@ impl Module for Binarize {
             .expect("can read in pre_build")
             .par_iter()
             .map(|target| {
-                create_dir_all(&target.output)
+                fs_err::create_dir_all(&target.output)
                     .expect("should be able to create output dir for target");
                 let path = PathBuf::from(&target.output).join(&target.entry);
                 let path_hash = hash_filename(path.to_str().expect("path should be valid utf-8"));
@@ -318,7 +317,7 @@ impl Module for Binarize {
                     let artifact = cache.artifacts.get(&path_hash).expect("should be able to get artifact from cache");
                     if up_to_date(artifact, &self.search_cache) {
                         debug!("skipping binarization of {} as it is already up-to-date", target.entry);
-                        std::fs::copy(cache_dir.join(path_hash).with_extension("hb"), &path).expect("should be able to copy from cache to output");
+                        fs_err::copy(cache_dir.join(path_hash).with_extension("hb"), &path).expect("should be able to copy from cache to output");
                         progress.inc(1);
                         cache_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         return None;
@@ -337,7 +336,7 @@ impl Module for Binarize {
                             let mut cmd = Command::new(self.compatibility.to_string());
                             cmd.arg(exe);
                             cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                            std::fs::create_dir_all("/tmp/hemtt-wine")
+                            fs_err::create_dir_all("/tmp/hemtt-wine")
                                 .expect("should be able to create wine prefix");
                             cmd
                         }
@@ -413,8 +412,7 @@ impl Module for Binarize {
         {
             let path = PathBuf::from(&target.output).join(&target.entry);
             if path.exists() {
-                let metadata = path
-                    .metadata()
+                let metadata = fs_err::metadata(&path)
                     .expect("should be able to get metadata for binarized file");
                 let modified = metadata
                     .modified()
@@ -425,7 +423,7 @@ impl Module for Binarize {
                 let size = metadata.len();
                 let hash = hash_filename(path.to_str().expect("path should be valid utf-8"));
                 let cache_path = cache_dir.join(format!("{hash}.hb"));
-                std::fs::copy(&path, &cache_path)?;
+                fs_err::copy(&path, &cache_path)?;
                 new_cache.insert(
                     hash,
                     Artifact {
@@ -457,13 +455,13 @@ impl Module for Binarize {
             }
         }
         if !new_cache.is_empty() {
-            let mut cache_file = std::fs::File::create(cache_path)?;
+            let mut cache_file = fs_err::File::create(cache_path)?;
             BuildCache {
                 artifacts: new_cache,
             }
             .write(&mut cache_file)?;
         } else if cache_path.exists() {
-            std::fs::remove_file(cache_path)?;
+            fs_err::remove_file(cache_path)?;
         }
 
         progress.finish_and_clear();
@@ -533,17 +531,17 @@ fn check_signature(buf: [u8; 4]) -> bool {
 }
 
 fn setup_tmp(ctx: &Context) -> Result<(), Error> {
-    create_dir_all(ctx.tmp())?;
-    create_dir_all(ctx.tmp().join("hemtt_binarize_output"))?;
+    fs_err::create_dir_all(ctx.tmp())?;
+    fs_err::create_dir_all(ctx.tmp().join("hemtt_binarize_output"))?;
     for addon in ctx.all_addons() {
         let tmp_addon = ctx.tmp().join(addon.prefix().as_pathbuf());
-        create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
+        fs_err::create_dir_all(tmp_addon.parent().expect("tmp addon should have a parent"))?;
         let target = ctx.project_folder().join(addon.folder_pathbuf());
         create_link(&tmp_addon, &target)?;
     }
     // maybe replace with config or rhai in the future?
     let addons = ctx.project_folder().join("addons");
-    for file in std::fs::read_dir(addons)? {
+    for file in fs_err::read_dir(addons)? {
         let file = file?.path();
         if file.is_dir() {
             continue;
@@ -551,14 +549,14 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
         let tmp_file = ctx
             .tmp()
             .join(file.file_name().expect("file should have a name"));
-        if file.metadata()?.len() > 1024 * 1024 * 10 {
+        if fs_err::metadata(&file)?.len() > 1024 * 1024 * 10 {
             warn!(
                 "File `{}` is larger than 10MB, this will slow builds.",
                 file.display()
             );
         }
         trace!("copying `{}` to tmp for binarization", file.display());
-        std::fs::copy(&file, &tmp_file)?;
+        fs_err::copy(&file, &tmp_file)?;
     }
 
     // link include folders
@@ -568,7 +566,7 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
     }
     let has_pdrive = ctx.workspace().pdrive().is_some();
     let mut warned_a3_include = false;
-    for outer_prefix in std::fs::read_dir(include)? {
+    for outer_prefix in fs_err::read_dir(include)? {
         let outer_prefix = outer_prefix?.path();
         if has_pdrive && outer_prefix.file_name() == Some(OsStr::new("a3")) {
             if !warned_a3_include {
@@ -583,12 +581,14 @@ fn setup_tmp(ctx: &Context) -> Result<(), Error> {
                     .file_name()
                     .expect("outer prefix should have a name"),
             );
-            for prefix in std::fs::read_dir(outer_prefix)? {
+            for prefix in fs_err::read_dir(outer_prefix)? {
                 let prefix = prefix?.path();
                 if prefix.is_dir() {
                     let tmp_mod = tmp_outer_prefix
                         .join(prefix.file_name().expect("prefix should have a name"));
-                    create_dir_all(tmp_mod.parent().expect("tmp mod should have a parent"))?;
+                    fs_err::create_dir_all(
+                        tmp_mod.parent().expect("tmp mod should have a parent"),
+                    )?;
                     create_link(&tmp_mod, &prefix)?;
                 }
             }

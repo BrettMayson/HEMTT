@@ -132,7 +132,7 @@ pub fn write_license_file(
     path: &std::path::Path,
 ) -> Result<(), std::io::Error> {
     use std::io::Write;
-    let mut file = std::fs::File::create(path)?;
+    let mut file = fs_err::File::create(path)?;
     file.write_all(license_text.as_bytes())?;
     Ok(())
 }

@@ -18,7 +18,7 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, Stri
         .to_file_path()
         .map_err(|()| "Only file URLs are supported".to_string())?;
     let output = out.map_or_else(|| path.with_extension(to), std::path::PathBuf::from);
-    let file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
+    let file = fs_err::File::open(&path).map_err(|_| "File not found".to_string())?;
     let mut wss = match path
         .extension()
         .expect("Must have extension for command")
@@ -52,7 +52,7 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, Stri
     }
     .map_err(|e| format!("Error converting file: {e}"))?;
     let mut out_file =
-        std::fs::File::create(&output).map_err(|_| "Error creating file".to_string())?;
+        fs_err::File::create(&output).map_err(|_| "Error creating file".to_string())?;
     std::io::Write::write_all(&mut out_file, &data)
         .map_err(|_| "Error writing file".to_string())?;
     Ok(WssInfo {

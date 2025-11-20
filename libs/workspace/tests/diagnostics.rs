@@ -30,11 +30,11 @@ fn python() {
         .with_suggestion("print()".to_string())
         .to_string(&WorkspaceFiles::new())
         .replace('\r', "");
-    let expected = std::fs::read_to_string(folder.join("stderr.ansi"))
+    let expected = fs_err::read_to_string(folder.join("stderr.ansi"))
         .unwrap()
         .replace('\r', "");
     if expected.is_empty() {
-        std::fs::write(folder.join("stderr.ansi"), &diagnostic).unwrap();
+        fs_err::write(folder.join("stderr.ansi"), &diagnostic).unwrap();
     }
     assert_eq!(diagnostic, expected);
 }

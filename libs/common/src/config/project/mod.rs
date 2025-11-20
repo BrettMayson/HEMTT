@@ -210,7 +210,7 @@ static DEPRECATION: Once = Once::new();
 
 impl ProjectFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, Error> {
-        Self::from_str(&std::fs::read_to_string(path)?, &path.display().to_string())
+        Self::from_str(&fs_err::read_to_string(path)?, &path.display().to_string())
     }
 
     pub fn from_str(content: &str, path: &str) -> Result<Self, Error> {
@@ -266,7 +266,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
         lints_path.set_file_name("lints.toml");
         let lints_source = if lints_path.exists() {
             if ret.lints.is_empty() {
-                let lints_source = std::fs::read_to_string(&lints_path)?;
+                let lints_source = fs_err::read_to_string(&lints_path)?;
                 if lints_source.contains("[lints.") {
                     return Err(Error::ConfigInvalid(
                         "Configs in `lints.toml` do not need to be under `[lints.*]`.".to_string(),

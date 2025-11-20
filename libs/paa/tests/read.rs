@@ -4,7 +4,7 @@ use hemtt_paa::PaXType;
 
 #[test]
 fn read_dxt1() {
-    let file = std::fs::File::open("tests/dxt1.paa").unwrap();
+    let file = fs_err::File::open("tests/dxt1.paa").unwrap();
     let paa = hemtt_paa::Paa::read(file).unwrap();
     assert_eq!(paa.format(), &PaXType::DXT1);
     assert_eq!(paa.taggs().len(), 3);
@@ -21,7 +21,7 @@ fn read_dxt1() {
 
 #[test]
 fn read_dxt5() {
-    let file = std::fs::File::open("tests/dxt5.paa").unwrap();
+    let file = fs_err::File::open("tests/dxt5.paa").unwrap();
     let paa = hemtt_paa::Paa::read(file).unwrap();
     assert_eq!(paa.format(), &PaXType::DXT5);
     assert_eq!(paa.taggs().len(), 4);

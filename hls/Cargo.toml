@@ -19,6 +19,7 @@ hemtt-wss = { path = "../libs/wss" }
 arma3-wiki = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 dashmap = { workspace = true }
+fs-err = { workspace = true }
 image = "0.25.9"
 regex = { workspace = true }
 ropey = "1.6.1"
@@ -33,3 +34,4 @@ urlencoding = "2.1.3"
 
 [build-dependencies]
 arma3-wiki = { workspace = true }
+fs-err = { workspace = true }

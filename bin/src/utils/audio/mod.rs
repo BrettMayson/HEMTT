@@ -60,7 +60,7 @@ pub enum SupportedFile {
 /// # Errors
 /// [`std::io::Error`] if an IO error occurs
 pub fn guess_file_type(file: &PathBuf) -> Result<Option<SupportedFile>, Error> {
-    let mut file = std::fs::File::open(file)?;
+    let mut file = fs_err::File::open(file)?;
     let buf = &mut [0u8; 12];
     file.read_exact(buf)?;
     file.seek(std::io::SeekFrom::Start(0))?;

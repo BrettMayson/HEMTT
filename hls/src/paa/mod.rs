@@ -10,7 +10,7 @@ pub fn json(url: &Url) -> Result<serde_json::Value, String> {
     let path = url
         .to_file_path()
         .map_err(|()| "Only file URLs are supported".to_string())?;
-    let mut file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
+    let mut file = fs_err::File::open(&path).map_err(|_| "File not found".to_string())?;
     let value: serde_json::Value = serde_json::from_str(
         hemtt_paa::Paa::read(&mut file)
             .map_err(|e| format!("{e:?}"))?
@@ -34,7 +34,7 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
             .to_lowercase()
             .as_str(),
     ) {
-        let paa = hemtt_paa::Paa::read(std::fs::File::open(path).map_err(|e| format!("{e:?}"))?)
+        let paa = hemtt_paa::Paa::read(fs_err::File::open(path).map_err(|e| format!("{e:?}"))?)
             .map_err(|e| format!("{e:?}"))?;
         if let Err(e) = paa.maps()[0].0.get_image().save(&output) {
             error!("Failed to save image: {}", e);
@@ -60,7 +60,7 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
             }
         })
         .map_err(|e| format!("{e:?}"))?;
-        let mut file = std::fs::File::create(&output)
+        let mut file = fs_err::File::create(&output)
             .map_err(|e| format!("Failed to create output file: {e}"))?;
         paa.write(&mut file).map_err(|e| format!("{e:?}"))?;
     }

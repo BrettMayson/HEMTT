@@ -43,7 +43,7 @@ fn main() {
     let commands = commands.into_iter().map(regex_escape).collect::<Vec<_>>();
 
     let content =
-        std::fs::read_to_string("languages-src/sqf.json").expect("Failed to read sqf.json");
+        fs_err::read_to_string("languages-src/sqf.json").expect("Failed to read sqf.json");
     let mut content = content.replace("$flow$", &flow.join("|"));
     let chunked = commands.len() / CHUNKS;
     for i in 0..CHUNKS {
@@ -58,7 +58,7 @@ fn main() {
             &commands[start..end].join("|"),
         );
     }
-    std::fs::write("languages/sqf.json", content).expect("Failed to write sqf.json");
+    fs_err::write("languages/sqf.json", content).expect("Failed to write sqf.json");
 }
 
 fn regex_escape(s: &str) -> String {

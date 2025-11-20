@@ -61,8 +61,8 @@ impl LintRunner<LintData> for Runner {
         static CLEANUP_PATH: Once = Once::new();
         CLEANUP_PATH.call_once(|| {
             if Path::new(".hemttout").exists() {
-                let _ = std::fs::remove_file(PATH);
-                let _ = std::fs::File::create(PATH);
+                let _ = fs_err::remove_file(PATH);
+                let _ = fs_err::File::create(PATH);
             }
         });
         let Some(processed) = processed else {
@@ -76,7 +76,7 @@ impl LintRunner<LintData> for Runner {
         }));
         check(&target.0, &root);
         let mut file = if Path::new(PATH).exists() {
-            Some(match std::fs::OpenOptions::new()
+            Some(match fs_err::OpenOptions::new()
                 .append(true)
                 .create(true)
                 .open(PATH)
@@ -107,7 +107,7 @@ impl ClassNode {
         reported: &mut Vec<Class>,
         processed: &Processed,
         config: &LintConfig,
-        file: &mut Option<std::fs::File>,
+        file: &mut Option<fs_err::File>,
         runtime: &hemtt_common::config::RuntimeArguments,
     ) -> Codes {
         let mut codes: Codes = Vec::new();

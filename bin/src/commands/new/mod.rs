@@ -1,5 +1,4 @@
 use std::{
-    fs::create_dir,
     io::{IsTerminal, Write},
     path::Path,
 };
@@ -112,22 +111,22 @@ pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
         Licenses::select(&author)
     };
 
-    create_dir(path)?;
-    create_dir(path.join("addons"))?;
+    fs_err::create_dir(path)?;
+    fs_err::create_dir(path.join("addons"))?;
 
     git2::Repository::init(path)?;
 
     // Create .hemtt/project.toml
     let hemtt_path = path.join(".hemtt");
-    create_dir(&hemtt_path)?;
-    let mut file = std::fs::File::create(hemtt_path.join("project.toml"))?;
+    fs_err::create_dir(&hemtt_path)?;
+    let mut file = fs_err::File::create(hemtt_path.join("project.toml"))?;
     file.write_all(
         format!("name = \"{full_name}\"\nauthor = \"{author}\"\nprefix = \"{prefix}\"\nmainprefix = \"{mainprefix}\"\n")
             .as_bytes(),
     )?;
 
     // Create .gitignore
-    let mut file = std::fs::File::create(path.join(".gitignore"))?;
+    let mut file = fs_err::File::create(path.join(".gitignore"))?;
     file.write_all(b"*.pbo\n.hemttout\nhemtt\nhemtt.exe\n*.biprivatekey\n")?;
 
     // Create LICENSE

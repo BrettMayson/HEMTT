@@ -34,7 +34,7 @@ pub mod file_functions {
 
     #[rhai_fn(global, return_raw)]
     pub fn remove_file(path: &mut PathBuf) -> Result<(), Box<EvalAltResult>> {
-        std::fs::remove_file(path).map_err(|e| e.to_string().into())
+        fs_err::remove_file(path).map_err(|e| e.to_string().into())
     }
 
     #[allow(clippy::needless_pass_by_ref_mut)]

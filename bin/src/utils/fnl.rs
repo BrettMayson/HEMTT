@@ -43,7 +43,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
                 .to_str()
                 .unwrap_or_default();
             if TEXT_EXTENSIONS.contains(&ext) {
-                let mut file = std::fs::OpenOptions::new()
+                let mut file = fs_err::OpenOptions::new()
                     .read(true)
                     .append(true)
                     .open(path)?;

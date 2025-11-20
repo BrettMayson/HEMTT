@@ -46,7 +46,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     let bikey_path = PathBuf::from(&cmd.bikey);
 
     debug!("Reading PBO: {:?}", &pbo_path);
-    let mut pbo = ReadablePbo::from(std::fs::File::open(&pbo_path)?)?;
+    let mut pbo = ReadablePbo::from(fs_err::File::open(&pbo_path)?)?;
     debug!("Reading BIKey: {:?}", &bikey_path);
     let publickey = bikey(std::fs::File::open(&bikey_path)?, &bikey_path)?;
 
@@ -69,7 +69,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     for ext in pbo.properties() {
         println!("      - {}: {}", ext.0, ext.1);
     }
-    println!("  - Size: {}", pbo_path.metadata()?.len());
+    println!("  - Size: {}", fs_err::metadata(&pbo_path)?.len());
 
     if actual != stored {
         warn!("Verification Warning: PBO has an invalid hash stored");

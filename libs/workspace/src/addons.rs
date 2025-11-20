@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::{Arc, Mutex, RwLock};
-use std::{fs::DirEntry, str::FromStr};
 
+use fs_err::DirEntry;
 use hemtt_common::config::AddonConfig;
 use hemtt_common::prefix::{FILES, Prefix};
 use hemtt_common::version::Version;
@@ -71,7 +72,7 @@ impl Addon {
                 'search: for file in &files {
                     let path = path.join(file);
                     if path.exists() {
-                        let content = std::fs::read_to_string(path)?;
+                        let content = fs_err::read_to_string(path)?;
                         prefix = Some(Prefix::new(&content)?);
                         break 'search;
                     }
@@ -189,10 +190,10 @@ impl Location {
             return Ok(None);
         }
         trace!("Scanning {} for addons", folder.display());
-        std::fs::read_dir(folder)?
+        fs_err::read_dir(folder)?
             .collect::<std::io::Result<Vec<DirEntry>>>()?
             .iter()
-            .map(std::fs::DirEntry::path)
+            .map(fs_err::DirEntry::path)
             .filter(|file_or_dir| file_or_dir.is_dir())
             .map(|file| {
                 let Some(name) = file.file_name() else {
