@@ -109,12 +109,14 @@ fn lint(file: &str, ignore_inspector: bool) -> (String, SqfReport) {
                 database.clone(),
             );
             (
-                codes
-                    .iter()
-                    .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
-                    .collect::<Vec<_>>()
-                    .join("\n")
-                    .replace('\r', ""),
+                {
+                    let mut codes = codes
+                        .iter()
+                        .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
+                        .collect::<Vec<_>>();
+                    codes.sort();
+                    codes.join("\n").replace('\r', "")
+                },
                 report.expect("exist"),
             )
         }

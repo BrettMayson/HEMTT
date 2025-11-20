@@ -2,6 +2,15 @@
 source: libs/sqf/tests/lints.rs
 expression: "lint(stringify! (s30_configof), true).0"
 ---
+[0m[1m[38;5;11mwarning[L-S30][0m[1m: Use configOf instead of typeOf with configFile for variable `_this # 6`[0m
+  [0m[36m┌─[0m s30_configof.sqf:5:9
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m     x = [0m[33mconfigFile >> "CfgAmmo" >> (typeOf (_this # 6[0m));
+  [0m[36m│[0m         [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse configOf[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: configOf (_this # 6)
+
+
 [0m[1m[38;5;11mwarning[L-S30][0m[1m: Use configOf instead of typeOf with configFile for variable `_vehicle`[0m
   [0m[36m┌─[0m s30_configof.sqf:1:25
   [0m[36m│[0m
@@ -18,12 +27,3 @@ expression: "lint(stringify! (s30_configof), true).0"
   [0m[36m│[0m                         [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse configOf[0m
   [0m[36m│[0m
   [0m[36m=[0m [32mtry[0m: configOf _vehicle
-
-
-[0m[1m[38;5;11mwarning[L-S30][0m[1m: Use configOf instead of typeOf with configFile for variable `_this # 6`[0m
-  [0m[36m┌─[0m s30_configof.sqf:5:9
-  [0m[36m│[0m
-[0m[36m5[0m [0m[36m│[0m     x = [0m[33mconfigFile >> "CfgAmmo" >> (typeOf (_this # 6[0m));
-  [0m[36m│[0m         [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse configOf[0m
-  [0m[36m│[0m
-  [0m[36m=[0m [32mtry[0m: configOf (_this # 6)
