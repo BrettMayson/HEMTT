@@ -90,7 +90,7 @@ impl PaXType {
     }
 
     #[must_use]
-    pub fn is_dxt(&self) -> bool {
+    pub const fn is_dxt(&self) -> bool {
         matches!(
             self,
             Self::DXT1 | Self::DXT2 | Self::DXT3 | Self::DXT4 | Self::DXT5

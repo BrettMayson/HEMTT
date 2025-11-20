@@ -210,19 +210,37 @@
         "command": "hemtt.convertAudioWav",
         "title": "Convert to wav",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(ogg|wss|mp3)$/i"
       },
       {
         "command": "hemtt.convertAudioOgg",
         "title": "Convert to ogg",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
       },
       {
         "command": "hemtt.convertAudioWss",
         "title": "Convert to wss",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+      },
+      {
+        "command": "hemtt.convertPaa",
+        "title": "Convert to PAA",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga)$/i"
+      },
+      {
+        "command": "hemtt.convertPng",
+        "title": "Convert to PNG",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertJpg",
+        "title": "Convert to JPG",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
       },
       {
         "command": "hemtt.openLastRPT",
@@ -257,25 +275,46 @@
       ],
       "explorer/context": [
         {
-          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'",
+          "when": "resourceExtname =~ /\\.(ogg|wav|wss|mp3)$/i",
           "submenu": "hemtt.audio"
+        },
+        {
+          "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|paa)$/i",
+          "submenu": "hemtt.images"
         }
       ],
       "hemtt.audio": [
         {
           "command": "hemtt.convertAudioWav",
           "group": "1_convert",
-          "when": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(ogg|wss|mp3)$/i"
         },
         {
           "command": "hemtt.convertAudioOgg",
           "group": "1_convert",
-          "when": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
         },
         {
           "command": "hemtt.convertAudioWss",
           "group": "1_convert",
-          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+        }
+      ],
+      "hemtt.images": [
+        {
+          "command": "hemtt.convertPaa",
+          "group": "1_convert",
+          "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga)$/i"
+        },
+        {
+          "command": "hemtt.convertPng",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertJpg",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
         }
       ]
     },
@@ -283,6 +322,10 @@
       {
         "id": "hemtt.audio",
         "label": "HEMTT Audio"
+      },
+      {
+        "id": "hemtt.images",
+        "label": "HEMTT Images"
       }
     ],
     "keybindings": [

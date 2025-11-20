@@ -30,7 +30,7 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, Stri
         "ogg" => hemtt_wss::Wss::from_ogg(file),
         "mp3" => hemtt_wss::Wss::from_mp3(file),
         _ => {
-            println!("Unsupported file type");
+            error!("Unsupported file type");
             return Err("Unsupported file type".to_string());
         }
     }
@@ -69,7 +69,6 @@ impl Backend {
         &self,
         params: ConvertParams,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
-        println!("Converting audio: {params:?}");
         match convert(&params.url, &params.to, params.out) {
             Ok(res) => Ok(Some(
                 serde_json::to_value(res).expect("Serialization failed"),
