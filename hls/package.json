@@ -228,7 +228,7 @@
         "command": "hemtt.convertPaa",
         "title": "Convert to PAA",
         "category": "HEMTT Images",
-        "enablement": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga)$/i"
+        "enablement": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|webp)$/i"
       },
       {
         "command": "hemtt.convertPng",
@@ -239,6 +239,24 @@
       {
         "command": "hemtt.convertJpg",
         "title": "Convert to JPG",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertTga",
+        "title": "Convert to TGA",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertBmp",
+        "title": "Convert to BMP",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertWebp",
+        "title": "Convert to WEBP",
         "category": "HEMTT Images",
         "enablement": "resourceExtname == '.paa'"
       },
@@ -313,6 +331,21 @@
         },
         {
           "command": "hemtt.convertJpg",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertTga",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertBmp",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertWebp",
           "group": "1_convert",
           "when": "resourceExtname == '.paa'"
         }

@@ -7,12 +7,11 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
   context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertPaa', async (uri: vscode.Uri | undefined) => {
     orActive(uri, async (uri) => await conversion(uri.toString(), "paa", client, channel));
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertPng', async (uri: vscode.Uri | undefined) => {
-    orActive(uri, async (uri) => await conversion(uri.toString(), "png", client, channel));
-  }));
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertJpg', async (uri: vscode.Uri | undefined) => {
-    orActive(uri, async (uri) => await conversion(uri.toString(), "jpg", client, channel));
-  }));
+  ["png", "jpg", "bmp", "tga", "webp"].forEach(ext => {
+    context.subscriptions.push(vscode.commands.registerCommand(`hemtt.convert${ext.charAt(0).toUpperCase() + ext.slice(1)}`, async (uri: vscode.Uri | undefined) => {
+      orActive(uri, async (uri) => await conversion(uri.toString(), ext, client, channel));
+    }));
+  });
 
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(
