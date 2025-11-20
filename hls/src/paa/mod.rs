@@ -38,7 +38,11 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
             .map_err(|e| format!("{e:?}"))?;
         if let Err(e) = paa.maps()[0].0.get_image().save(&output) {
             error!("Failed to save image: {}", e);
-            return Err(format!("Failed to save image to {}: {}", output.display(), e));
+            return Err(format!(
+                "Failed to save image to {}: {}",
+                output.display(),
+                e
+            ));
         }
     } else {
         let image = image::open(path).map_err(|e| format!("{e:?}"))?;
