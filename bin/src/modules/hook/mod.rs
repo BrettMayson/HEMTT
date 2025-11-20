@@ -1,23 +1,22 @@
 use ::rhai::{Engine, Scope, packages::Package};
+use hemtt_rhai::libraries::{RfsPackage, VfsPackage};
 use hemtt_workspace::WorkspacePath;
 use rhai::{Dynamic, EvalAltResult};
 use whoami::Result;
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{
+    context::Context, error::Error, modules::hook::libraries::hemtt::RhaiHemtt, report::Report,
+};
 
-use self::{
-    error::{
-        bhe1_script_not_found::ScriptNotFound, bhe3_parse_error::RhaiParseError,
-        bhe4_runtime_error::RuntimeError,
-    },
-    libraries::hemtt::RhaiHemtt,
+use self::error::{
+    bhe1_script_not_found::ScriptNotFound, bhe3_parse_error::RhaiParseError,
+    bhe4_runtime_error::RuntimeError,
 };
 
 use super::Module;
 
 mod error;
 mod libraries;
-mod time;
 
 /// Creates a sccope for a Rhai script
 ///
@@ -48,14 +47,13 @@ pub fn scope(ctx: &'_ Context, vfs: bool) -> Result<Scope<'_>, Error> {
 }
 
 fn engine(vfs: bool) -> Engine {
-    let mut engine = Engine::new();
+    let mut engine = hemtt_rhai::engine();
     if vfs {
-        let virt = libraries::VfsPackage::new();
+        let virt = VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
     }
-    engine.register_static_module("hemtt_rfs", libraries::RfsPackage::new().as_shared_module());
+    engine.register_static_module("hemtt_rfs", RfsPackage::new().as_shared_module());
     engine.register_static_module("hemtt", libraries::HEMTTPackage::new().as_shared_module());
-    engine.register_fn("date", time::date);
     engine
 }
 
