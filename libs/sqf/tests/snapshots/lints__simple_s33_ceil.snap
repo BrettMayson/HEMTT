@@ -1,0 +1,56 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s33_ceil), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S33-CEIL][0m[1m: code can be replaced with `ceil`[0m
+  [0m[36m┌─[0m s33_ceil.sqf:3:18
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _ceil1 = [0m[36m_x + (1 - (_x % 1[0m));
+  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^^^^[0m [0m[36muse `ceil`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: ceil _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-CEIL][0m[1m: code can be replaced with `ceil`[0m
+  [0m[36m┌─[0m s33_ceil.sqf:6:19
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _ceil2 = ([0m[36m1 - (_x % 1)) + _x[0m;
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^^^^^^^[0m [0m[36muse `ceil`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: ceil _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-CEIL][0m[1m: code can be replaced with `ceil`[0m
+  [0m[36m┌─[0m s33_ceil.sqf:9:19
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _ceil3 = ([0m[36m_x - (_x % 1)) + 1[0m;
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^^^^^^^[0m [0m[36muse `ceil`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: ceil _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-FLOOR][0m[1m: code can be replaced with `floor`[0m
+  [0m[36m┌─[0m s33_ceil.sqf:9:19
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _ceil3 = ([0m[36m_x - (_x % 1[0m)) + 1;
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^[0m [0m[36muse `floor`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: floor _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-CEIL][0m[1m: code can be replaced with `ceil`[0m
+   [0m[36m┌─[0m s33_ceil.sqf:12:18
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m private _ceil4 = [0m[36m1 + (_x - (_x % 1[0m));
+   [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^^^^[0m [0m[36muse `ceil`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: ceil _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-FLOOR][0m[1m: code can be replaced with `floor`[0m
+   [0m[36m┌─[0m s33_ceil.sqf:12:23
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m private _ceil4 = 1 + ([0m[36m_x - (_x % 1[0m));
+   [0m[36m│[0m                       [0m[36m^^^^^^^^^^^^[0m [0m[36muse `floor`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: floor _x

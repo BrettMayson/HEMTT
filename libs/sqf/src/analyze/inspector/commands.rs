@@ -508,7 +508,7 @@ impl Inspector {
         self.errors.insert(Issue::CountArrayComparison(
             equal_zero,
             lhs.span().start..rhs.span().end,
-            count_input.source(),
+            count_input.source(false),
         ));
     }
     /// emulate a possibly modified l-value array by a command

@@ -187,7 +187,7 @@ impl Code for CodeS07SelectParseNumber {
                             b.clone(),
                             c.clone(),
                         )
-                        .source()
+                        .source(false)
                     } else if let Expression::BinaryCommand(BinaryCommand::Eq, a, b, c) = &self.expr
                     {
                         display_negate = false;
@@ -197,12 +197,12 @@ impl Code for CodeS07SelectParseNumber {
                             b.clone(),
                             c.clone(),
                         )
-                        .source()
+                        .source(false)
                     } else {
-                        self.expr.source()
+                        self.expr.source(false)
                     }
                 } else {
-                    self.expr.source()
+                    self.expr.source(false)
                 };
                 format!(
                     "{}({})",
@@ -214,7 +214,7 @@ impl Code for CodeS07SelectParseNumber {
                     expr
                 )
             } else {
-                self.expr.source()
+                self.expr.source(false)
             }
         ))
     }
