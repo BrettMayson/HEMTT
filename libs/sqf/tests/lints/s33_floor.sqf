@@ -3,7 +3,7 @@ private _x = 5.7;
 private _floor1 = _x - (_x % 1);
 
 // Should trigger warning with different variable name
-private _value = 3.14;
+private _value = 1.234;
 private _floor2 = _value - (_value % 1);
 
 // Should NOT trigger: different variables

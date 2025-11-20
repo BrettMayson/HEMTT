@@ -1,0 +1,187 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s33_clamp), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+  [0m[36m┌─[0m s33_clamp.sqf:5:24
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _clamped1min = [0m[36mif (_v < _min) then {_min} else { if (_v > _max) then {_max} else {_v}[0m };
+  [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;14mhelp[L-S33-MIN][0m[1m: code can be replaced with `min`[0m
+  [0m[36m┌─[0m s33_clamp.sqf:5:58
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _clamped1min = if (_v < _min) then {_min} else { [0m[36mif (_v > _max) then {_max} else {_v[0m} };
+  [0m[36m│[0m                                                          [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `min`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _v min _max
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+  [0m[36m┌─[0m s33_clamp.sqf:5:58
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _clamped1min = if (_v < _min) then {_min} else { [0m[33mif (_v > _max) then {_max} else {_v}[0m };
+  [0m[36m│[0m                                                          [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+          select is faster in this case
+  [0m[36m=[0m [32mtry[0m: [_v, _max] select (_v > _max)
+
+
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+  [0m[36m┌─[0m s33_clamp.sqf:6:24
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _clamped1max = [0m[36mif (_v > _max) then {_max} else { if (_v < _min) then {_min} else {_v}[0m };
+  [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;14mhelp[L-S33-MAX][0m[1m: code can be replaced with `max`[0m
+  [0m[36m┌─[0m s33_clamp.sqf:6:58
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _clamped1max = if (_v > _max) then {_max} else { [0m[36mif (_v < _min) then {_min} else {_v[0m} };
+  [0m[36m│[0m                                                          [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `max`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _v max _min
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+  [0m[36m┌─[0m s33_clamp.sqf:6:58
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _clamped1max = if (_v > _max) then {_max} else { [0m[33mif (_v < _min) then {_min} else {_v}[0m };
+  [0m[36m│[0m                                                          [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+          select is faster in this case
+  [0m[36m=[0m [32mtry[0m: [_v, _min] select (_v < _min)
+
+
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+  [0m[36m┌─[0m s33_clamp.sqf:9:24
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _clamped2min = [0m[36mif (_v <= _min) then {_min} else { if (_v >= _max) then {_max} else {_v}[0m };
+  [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;14mhelp[L-S33-MIN][0m[1m: code can be replaced with `min`[0m
+  [0m[36m┌─[0m s33_clamp.sqf:9:59
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _clamped2min = if (_v <= _min) then {_min} else { [0m[36mif (_v >= _max) then {_max} else {_v[0m} };
+  [0m[36m│[0m                                                           [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `min`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _v min _max
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+  [0m[36m┌─[0m s33_clamp.sqf:9:59
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _clamped2min = if (_v <= _min) then {_min} else { [0m[33mif (_v >= _max) then {_max} else {_v}[0m };
+  [0m[36m│[0m                                                           [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+          select is faster in this case
+  [0m[36m=[0m [32mtry[0m: [_v, _max] select (_v >= _max)
+
+
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+   [0m[36m┌─[0m s33_clamp.sqf:10:24
+   [0m[36m│[0m
+[0m[36m10[0m [0m[36m│[0m private _clamped2max = [0m[36mif (_v >= _max) then {_max} else { if (_v <= _min) then {_min} else {_v}[0m };
+   [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;14mhelp[L-S33-MAX][0m[1m: code can be replaced with `max`[0m
+   [0m[36m┌─[0m s33_clamp.sqf:10:59
+   [0m[36m│[0m
+[0m[36m10[0m [0m[36m│[0m private _clamped2max = if (_v >= _max) then {_max} else { [0m[36mif (_v <= _min) then {_min} else {_v[0m} };
+   [0m[36m│[0m                                                           [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `max`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _v max _min
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+   [0m[36m┌─[0m s33_clamp.sqf:10:59
+   [0m[36m│[0m
+[0m[36m10[0m [0m[36m│[0m private _clamped2max = if (_v >= _max) then {_max} else { [0m[33mif (_v <= _min) then {_min} else {_v}[0m };
+   [0m[36m│[0m                                                           [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+           select is faster in this case
+   [0m[36m=[0m [32mtry[0m: [_v, _min] select (_v <= _min)
+
+
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+   [0m[36m┌─[0m s33_clamp.sqf:13:24
+   [0m[36m│[0m
+[0m[36m13[0m [0m[36m│[0m private _clamped3min = [0m[36mif (_v < _min) then {_min} else { _v max _max[0m };
+   [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;14mhelp[L-S33-CLAMP][0m[1m: code can be replaced with clamping pattern[0m
+   [0m[36m┌─[0m s33_clamp.sqf:14:24
+   [0m[36m│[0m
+[0m[36m14[0m [0m[36m│[0m private _clamped3max = [0m[36mif (_v > _max) then {_max} else { _v min _min[0m };
+   [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse clamp pattern[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _min max _v min _max
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+   [0m[36m┌─[0m s33_clamp.sqf:18:58
+   [0m[36m│[0m
+[0m[36m18[0m [0m[36m│[0m private _notClamped1 = if (_v < _min) then {_min} else { [0m[33mif (_w > _max) then {_max} else {_v}[0m };
+   [0m[36m│[0m                                                          [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+           select is faster in this case
+   [0m[36m=[0m [32mtry[0m: [_v, _max] select (_w > _max)
+
+
+[0m[1m[38;5;14mhelp[L-S33-MAX][0m[1m: code can be replaced with `max`[0m
+   [0m[36m┌─[0m s33_clamp.sqf:21:58
+   [0m[36m│[0m
+[0m[36m21[0m [0m[36m│[0m private _notClamped2 = if (_v < _min) then {_min} else { [0m[36mif (_v > _max) then {_v} else {_max[0m} };
+   [0m[36m│[0m                                                          [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `max`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _v max _max
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+   [0m[36m┌─[0m s33_clamp.sqf:21:58
+   [0m[36m│[0m
+[0m[36m21[0m [0m[36m│[0m private _notClamped2 = if (_v < _min) then {_min} else { [0m[33mif (_v > _max) then {_v} else {_max}[0m };
+   [0m[36m│[0m                                                          [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+           select is faster in this case
+   [0m[36m=[0m [32mtry[0m: [_max, _v] select (_v > _max)
+
+
+[0m[1m[38;5;14mhelp[L-S33-MAX][0m[1m: code can be replaced with `max`[0m
+   [0m[36m┌─[0m s33_clamp.sqf:24:24
+   [0m[36m│[0m
+[0m[36m24[0m [0m[36m│[0m private _notClamped3 = [0m[36mif (_v < _min) then {_min} else {_v[0m};
+   [0m[36m│[0m                        [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `max`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _v max _min
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+   [0m[36m┌─[0m s33_clamp.sqf:24:24
+   [0m[36m│[0m
+[0m[36m24[0m [0m[36m│[0m private _notClamped3 = [0m[33mif (_v < _min) then {_min} else {_v}[0m;
+   [0m[36m│[0m                        [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+           select is faster in this case
+   [0m[36m=[0m [32mtry[0m: [_v, _min] select (_v < _min)

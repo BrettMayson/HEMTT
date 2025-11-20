@@ -4,14 +4,16 @@ use hemtt_workspace::lint::{AnyLintRunner, Lint, LintRunner};
 use crate::{analyze::LintData, Expression};
 
 mod abs;
-mod atan2;
+// mod atan2;
 mod ceil;
+mod clamp;
 mod distance;
 mod floor;
 mod linear_conversion;
 mod max;
 mod min;
-mod mod_command;
+mod modulo;
+mod pi;
 crate::analyze::lint!(LintS33ReimplementingCommand);
 
 /// Check if two expressions match, considering variables and optionally unwrapping code blocks
@@ -93,15 +95,22 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         let mut codes = Vec::new();
+        // Check clamp first as it's a more complex pattern that contains min/max
+        codes.extend(clamp::check(target, processed, config));
+        if !codes.is_empty() {
+            return codes;
+        }
         codes.extend(abs::check(target, processed, config));
-        codes.extend(atan2::check(target, processed, config));
+        // https://github.com/acemod/ACE3/pull/6773/files#r250479159
+        // codes.extend(atan2::check(target, processed, config));
         codes.extend(ceil::check(target, processed, config));
         codes.extend(distance::check(target, processed, config));
         codes.extend(floor::check(target, processed, config));
         codes.extend(linear_conversion::check(target, processed, config));
         codes.extend(max::check(target, processed, config));
         codes.extend(min::check(target, processed, config));
-        codes.extend(mod_command::check(target, processed, config));
+        codes.extend(modulo::check(target, processed, config));
+        codes.extend(pi::check(target, processed, config));
         codes
     }
 }

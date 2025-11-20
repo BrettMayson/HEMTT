@@ -190,7 +190,7 @@ impl Code for CodeS33ReimplementingCommandDistance {
         } else if self.dimension == 2 {
             String::from("code can be replaced with `distance2D`")
         } else {
-            String::from("code can be replaced with `distance`")
+            String::from("code can be replaced with `vectorDistance`")
         }
     }
 
@@ -200,7 +200,7 @@ impl Code for CodeS33ReimplementingCommandDistance {
         } else if self.dimension == 2 {
             String::from("use `distance2D`")
         } else {
-            String::from("use `distance`")
+            String::from("use `vectorDistance`")
         }
     }
 
