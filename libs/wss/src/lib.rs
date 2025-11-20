@@ -87,7 +87,7 @@ impl Wss {
         Ok(())
     }
 
-    pub fn set_compression(&mut self, compression: Compression) {
+    pub const fn set_compression(&mut self, compression: Compression) {
         self.compression = compression;
     }
 

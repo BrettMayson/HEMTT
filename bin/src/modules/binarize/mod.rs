@@ -140,7 +140,6 @@ impl Module for Binarize {
         Ok(report)
     }
 
-    #[allow(clippy::too_many_lines)]
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let pdrive_option = if ctx.folder() == Some("check") {
             ctx.config().hemtt().check().pdrive()
@@ -280,7 +279,6 @@ impl Module for Binarize {
         Ok(report)
     }
 
-    #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         if self.command.is_none() || self.check_only {
             return Ok(Report::new());

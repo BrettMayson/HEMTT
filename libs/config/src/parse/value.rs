@@ -229,7 +229,6 @@ mod tests {
         );
     }
 
-    #[allow(clippy::too_many_lines)]
     #[test]
     fn math() {
         assert_eq!(

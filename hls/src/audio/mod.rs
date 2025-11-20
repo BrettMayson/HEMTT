@@ -13,15 +13,11 @@ pub struct WssInfo {
     pub compression: String,
 }
 
-pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, String> {
+pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, String> {
     let path = url
         .to_file_path()
-        .map_err(|_| "Only file URLs are supported".to_string())?;
-    let output = if let Some(out) = out {
-        std::path::PathBuf::from(out)
-    } else {
-        path.with_extension(&to)
-    };
+        .map_err(|()| "Only file URLs are supported".to_string())?;
+    let output = out.map_or_else(|| path.with_extension(to), std::path::PathBuf::from);
     let file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
     let mut wss = match path
         .extension()
@@ -40,7 +36,7 @@ pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, Str
     }
     .map_err(|e| format!("Error reading file: {e}"))?;
 
-    let data = match to.as_str() {
+    let data = match to {
         "wss" => {
             let mut buffer = Vec::new();
             wss.set_compression(hemtt_wss::Compression::Nibble);
@@ -68,13 +64,16 @@ pub fn convert(url: Url, to: String, out: Option<String>) -> Result<WssInfo, Str
 }
 
 impl Backend {
+    #[expect(clippy::unused_async, reason = "required by callsite")]
     pub async fn audio_convert(
         &self,
         params: ConvertParams,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
         println!("Converting audio: {params:?}");
-        match convert(params.url, params.to, params.out) {
-            Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
+        match convert(&params.url, &params.to, params.out) {
+            Ok(res) => Ok(Some(
+                serde_json::to_value(res).expect("Serialization failed"),
+            )),
             Err(e) => {
                 error!("Error converting audio: {e}");
                 Ok(None)

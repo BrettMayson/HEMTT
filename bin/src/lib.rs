@@ -65,7 +65,6 @@ enum Commands {
     Photoshoot(commands::photoshoot::Command),
 }
 
-#[allow(clippy::too_many_lines)]
 /// Run the HEMTT CLI
 ///
 /// # Errors

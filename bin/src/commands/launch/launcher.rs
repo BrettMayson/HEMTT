@@ -129,7 +129,6 @@ impl<'a> Launcher<'a> {
         Ok(())
     }
 
-    #[allow(clippy::too_many_lines)]
     /// Launches the game
     ///
     /// # Errors

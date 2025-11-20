@@ -16,7 +16,7 @@ pub struct Package {
 
 impl Package {
     #[must_use]
-    pub fn new(name: String) -> Self {
+    pub const fn new(name: String) -> Self {
         Self {
             name,
             keys: Vec::new(),
@@ -34,7 +34,7 @@ impl Package {
         &self.keys
     }
 
-    pub fn keys_mut(&mut self) -> &mut Vec<Key> {
+    pub const fn keys_mut(&mut self) -> &mut Vec<Key> {
         &mut self.keys
     }
 

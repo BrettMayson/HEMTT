@@ -423,7 +423,7 @@ impl Compiled {
             .display(self)
     }
 
-    fn assert_has_constant(&self, index: u16) -> SerializeResult<()> {
+    const fn assert_has_constant(&self, index: u16) -> SerializeResult<()> {
         if self.constants_cache.len() <= index as usize {
             Err(SerializeError::InvalidConstantIndex(index))
         } else {
@@ -431,7 +431,7 @@ impl Compiled {
         }
     }
 
-    fn assert_has_name(&self, index: u16) -> SerializeResult<()> {
+    const fn assert_has_name(&self, index: u16) -> SerializeResult<()> {
         if self.names_cache.len() <= index as usize {
             Err(SerializeError::InvalidNameIndex(index))
         } else {

@@ -9,7 +9,6 @@ use crate::{Expression, analyze::inspector::VarSource, parser::database::Databas
 use super::{Inspector, game_value::GameValue};
 
 impl Inspector {
-    #[allow(clippy::too_many_lines)]
     pub fn external_function(
         &mut self,
         lhs: &IndexSet<GameValue>,

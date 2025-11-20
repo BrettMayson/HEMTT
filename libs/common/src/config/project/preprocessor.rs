@@ -15,7 +15,7 @@ impl PreprocessorOptions {
     }
 
     #[must_use]
-    pub fn with_runtime_macros(mut self, value: bool) -> Self {
+    pub const fn with_runtime_macros(mut self, value: bool) -> Self {
         self.runtime_macros = value;
         self
     }

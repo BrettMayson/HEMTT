@@ -13,7 +13,7 @@ pub enum OutputFormat {
 }
 
 impl OutputFormat {
-    fn default_extension(&self) -> &str {
+    const fn default_extension(&self) -> &str {
         match self {
             Self::Debin => "cpp",
             Self::JsonPretty | Self::Json => "json",

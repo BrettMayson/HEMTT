@@ -34,7 +34,7 @@ impl Executor {
         self.ctx
     }
 
-    pub fn collapse(&mut self, collpase: Collapse) {
+    pub const fn collapse(&mut self, collpase: Collapse) {
         self.collapse = collpase;
     }
 

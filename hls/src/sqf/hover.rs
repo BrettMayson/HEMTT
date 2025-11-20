@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use arma3_wiki::model::{Command, Locality, Since, Syntax};
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::reporting::Symbol;
@@ -14,14 +16,17 @@ pub const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 impl SqfAnalyzer {
     pub async fn hover(&self, url: Url, position: Position) -> Option<Hover> {
-        if !url.path().ends_with(".sqf") {
+        if !std::path::Path::new(url.path())
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+        {
             return None;
         }
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
             warn!("Failed to find workspace for {:?}", url);
             return None;
         };
-        let database = self.get_database(&workspace).await;
+        let database = self.get_database(&workspace);
         let Some(tokens) = self.tokens.get(&url) else {
             warn!("No tokens found for {:?}", url);
             return None;
@@ -30,10 +35,14 @@ impl SqfAnalyzer {
         let token = tokens.iter().find(|token| {
             let start = token.position().start();
             let end = token.position().end();
-            (start.line() as u32 == position.line + 1)
-                && (end.line() as u32 == position.line + 1)
-                && (start.column() as u32 <= position.character)
-                && (end.column() as u32 >= position.character)
+            (u32::try_from(start.line()).expect("Failed to convert start line")
+                == position.line + 1)
+                && (u32::try_from(end.line()).expect("Failed to convert end line")
+                    == position.line + 1)
+                && (u32::try_from(start.column()).expect("Failed to convert start column")
+                    <= position.character)
+                && (u32::try_from(end.column()).expect("Failed to convert end column")
+                    >= position.character)
         })?;
         let Symbol::Word(word) = token.symbol() else {
             return None;
@@ -55,14 +64,14 @@ fn hover(command: &str, database: &Database) -> Hover {
                 contents.push(MarkedString::String(format!(
                     "## {}\n{}\n\n{}{}{}",
                     command.name(),
-                    if !database.wiki().is_custom_command(command.name()) {
-                        format!("[BI Wiki]({WIKI}{})", command.name().replace(' ', "_"))
-                    } else {
+                    if database.wiki().is_custom_command(command.name()) {
                         "Custom Command".to_string()
+                    } else {
+                        format!("[BI Wiki]({WIKI}{})", command.name().replace(' ', "_"))
                     },
                     markdown_since(command.since()),
-                    markdown_locality(command.argument_loc(), "Argument"),
-                    markdown_locality(command.effect_loc(), "Effect"),
+                    markdown_locality(*command.argument_loc(), "Argument"),
+                    markdown_locality(*command.effect_loc(), "Effect"),
                 )));
                 contents.push(MarkedString::String(markdown(
                     command.name(),
@@ -89,23 +98,23 @@ fn hover(command: &str, database: &Database) -> Hover {
 
 fn markdown(name: &str, s: &str) -> String {
     let s = markdown_code(s);
-    let s = markdown_feature(s);
-    markdown_links(name, s)
+    let s = markdown_feature(&s);
+    markdown_links(name, &s)
 }
 
-fn markdown_links(name: &str, source: String) -> String {
-    let mut string = source.clone();
+fn markdown_links(name: &str, source: &str) -> String {
+    let mut string = source.to_string();
     // [[link|text]] or [[link]]
-    let regex = Regex::new(r"(?m)\[\[(.+?)\]\]").unwrap();
-    let result = regex.captures_iter(&source);
+    let regex = Regex::new(r"(?m)\[\[(.+?)\]\]").expect("Failed to compile regex");
+    let result = regex.captures_iter(source);
     for mat in result {
-        let link = mat.get(1).unwrap().as_str();
+        let link = mat.get(1).expect("Failed to get capture group 1").as_str();
         if link.contains('|') {
             let mut parts = link.split('|');
-            let link = parts.next().unwrap();
-            let text = parts.next().unwrap();
+            let link = parts.next().expect("Failed to get link part");
+            let text = parts.next().expect("Failed to get text part");
             string = string.replace(
-                mat.get(0).unwrap().as_str(),
+                mat.get(0).expect("Failed to get full match").as_str(),
                 &format!("[{}]({WIKI}{})", text, link.replace(' ', "_")),
             );
             continue;
@@ -117,13 +126,13 @@ fn markdown_links(name: &str, source: String) -> String {
     }
 
     // {{Link|Example 5}}
-    let regex = Regex::new(r"(?m)\{\{Link\|(.+?)\}\}").unwrap();
+    let regex = Regex::new(r"(?m)\{\{Link\|(.+?)\}\}").expect("Failed to compile regex");
     let source = string.clone();
     let result = regex.captures_iter(&source);
     for mat in result {
-        let link = mat.get(1).unwrap().as_str();
+        let link = mat.get(1).expect("Failed to get capture group 1").as_str();
         string = string.replace(
-            mat.get(0).unwrap().as_str(),
+            mat.get(0).expect("Failed to get full match").as_str(),
             &if link.starts_with('#') {
                 format!(
                     "[{}](https://community.bistudio.com/wiki/{}{})",
@@ -139,23 +148,23 @@ fn markdown_links(name: &str, source: String) -> String {
     string
 }
 
-fn markdown_feature(source: String) -> String {
-    let mut string = source.clone();
-    let regex = Regex::new(r"(?mis)\{\{\s?Feature\s?\|\s?(.+?)\s?\|\s?(.+)\}\}").unwrap();
-    let result = regex.captures_iter(&source);
+fn markdown_feature(source: &str) -> String {
+    let mut string = source.to_string();
+    let regex = Regex::new(r"(?mis)\{\{\s?Feature\s?\|\s?(.+?)\s?\|\s?(.+)\}\}")
+        .expect("Failed to compile regex");
+    let result = regex.captures_iter(source);
     for mat in result {
-        let feature = mat.get(1).unwrap().as_str();
-        let text = mat.get(2).unwrap().as_str();
+        let feature = mat.get(1).expect("Failed to get capture group 1").as_str();
+        let text = mat.get(2).expect("Failed to get capture group 2").as_str();
         string = string.replace(
-            mat.get(0).unwrap().as_str(),
+            mat.get(0).expect("Failed to get full match").as_str(),
             &format!(
                 "### {}\n{}",
                 {
                     let mut chars = feature.chars();
-                    match chars.next() {
-                        None => String::new(),
-                        Some(f) => f.to_uppercase().chain(chars).collect(),
-                    }
+                    chars
+                        .next()
+                        .map_or_else(String::new, |f| f.to_uppercase().chain(chars).collect())
                 },
                 text
             ),
@@ -166,85 +175,92 @@ fn markdown_feature(source: String) -> String {
 
 fn markdown_code(source: &str) -> String {
     // <sqf inline>...</sqf>
-    let regex = Regex::new(r"(?ms)<sqf inline>(.+?)</sqf>").unwrap();
+    let regex = Regex::new(r"(?ms)<sqf inline>(.+?)</sqf>").expect("Failed to compile regex");
     let result = regex.captures_iter(source);
     let mut string = source.to_string();
     for mat in result {
-        let text = mat.get(1).unwrap().as_str();
-        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{text}`"));
+        let text = mat.get(1).expect("Failed to get capture group 1").as_str();
+        string = string.replace(
+            mat.get(0).expect("Failed to get full match").as_str(),
+            &format!("`{text}`"),
+        );
     }
 
     // <sqf>...</sqf>
-    let regex = Regex::new(r"(?ms)<sqf>(.+?)</sqf>").unwrap();
+    let regex = Regex::new(r"(?ms)<sqf>(.+?)</sqf>").expect("Failed to compile regex");
     let result = regex.captures_iter(&string);
     let mut string = string.clone();
     for mat in result {
-        let text = mat.get(1).unwrap().as_str();
+        let text = mat.get(1).expect("Failed to get capture group 1").as_str();
         string = string.replace(
-            mat.get(0).unwrap().as_str(),
+            mat.get(0).expect("Failed to get full match").as_str(),
             &format!("```sqf\n{text}\n```"),
         );
     }
 
     // {{hl|text}}
-    let regex = Regex::new(r"(?m)\{\{hl\|(.+?)\}\}").unwrap();
+    let regex = Regex::new(r"(?m)\{\{hl\|(.+?)\}\}").expect("Failed to compile regex");
     let result = regex.captures_iter(&string);
     let mut string = string.clone();
     for mat in result {
-        let text = mat.get(1).unwrap().as_str();
-        string = string.replace(mat.get(0).unwrap().as_str(), &format!("`{text}`"));
+        let text = mat.get(1).expect("Failed to get capture group 1").as_str();
+        string = string.replace(
+            mat.get(0).expect("Failed to get full match").as_str(),
+            &format!("`{text}`"),
+        );
     }
     string
 }
 
-fn markdown_locality(locality: &Locality, context: &str) -> String {
+fn markdown_locality(locality: Locality, context: &str) -> String {
     format!(
         "[{} {}](https://community.bistudio.com/wiki/Multiplayer_Scripting#Locality)\n\n",
         context,
         match locality {
             Locality::Server => "Server".to_string(),
             Locality::Global => "Global".to_string(),
-            Locality::Unspecified => return "".to_string(),
+            Locality::Unspecified => return String::new(),
             Locality::Local => "Local".to_string(),
         }
     )
 }
 
 fn markdown_since(since: &Since) -> String {
-    if let Some(arma3) = since.arma_3() {
-        format!(
+    since.arma_3().map_or_else(String::new, |arma3| format!(
             "Since [Arma 3 {arma3}](https://community.bistudio.com/wiki/Category:Introduced_with_Arma_3_version_{arma3})\n\n"
-        )
-    } else {
-        "".to_string()
-    }
+        ))
 }
 
 fn markdown_syntax(command: &Command, syntax: &Syntax) -> String {
     let mut string = String::new();
     match syntax.call() {
         arma3_wiki::model::Call::Nular => {
-            string.push_str(&format!("```sqf\n{}\n```\n", command.name()));
+            write!(string, "```sqf\n{}\n```\n", command.name()).expect("Failed to write to string");
         }
         arma3_wiki::model::Call::Unary(rhs) => {
-            string.push_str(&format!(
+            write!(
+                string,
                 "```sqf\n{} {}\n```\n",
                 command.name(),
                 markdown_args(&rhs.names())
-            ));
+            )
+            .expect("Failed to write to string");
         }
         arma3_wiki::model::Call::Binary(lhs, rhs) => {
-            string.push_str(&format!(
+            write!(
+                string,
                 "```sqf\n{} {} {}\n```\n",
                 markdown_args(&lhs.names()),
                 command.name(),
                 markdown_args(&rhs.names())
-            ));
+            )
+            .expect("Failed to write to string");
         }
     }
     for arg in syntax.params() {
-        string.push_str(&format!(
-            "- `{}`: {}{}\n",
+        writeln!(
+            string,
+            "- `{}`: {}{}",
             arg.name(),
             {
                 let typ = arg.typ().to_string();
@@ -259,17 +275,15 @@ fn markdown_syntax(command: &Command, syntax: &Syntax) -> String {
                 }
             },
             {
-                let desc = markdown_links(
-                    command.name(),
-                    arg.description().unwrap_or_default().to_string(),
-                );
+                let desc = markdown_links(command.name(), arg.description().unwrap_or_default());
                 if desc.is_empty() {
-                    "".to_string()
+                    String::new()
                 } else {
                     format!(" - {desc}")
                 }
             }
-        ));
+        )
+        .expect("Failed to write to string");
     }
     string
 }
@@ -293,27 +307,24 @@ mod tests {
 
     #[test]
     fn markdown_feature() {
-        println!("{:?}", super::markdown_feature(SOURCE.to_string()));
+        println!("{:?}", super::markdown_feature(SOURCE));
     }
 
     #[test]
     fn markdown_links() {
         assert_eq!(
-            super::markdown_links("setVariable", "[[west]]".to_string()),
+            super::markdown_links("setVariable", "[[west]]"),
             "[west](https://community.bistudio.com/wiki/west)"
         );
         assert_eq!(
-            super::markdown_links("setVariable", "[[createLocation|scripted]]".to_string()),
+            super::markdown_links("setVariable", "[[createLocation|scripted]]"),
             "[scripted](https://community.bistudio.com/wiki/createLocation)"
         );
         assert_eq!(
-            super::markdown_links("setVariable", "See {{Link|#Example 5}}".to_string()),
+            super::markdown_links("setVariable", "See {{Link|#Example 5}}"),
             "See [Example 5](https://community.bistudio.com/wiki/setVariable#Example_5)"
         );
-        println!(
-            "{:?}",
-            super::markdown_links("setVariable", SOURCE.to_string())
-        );
+        println!("{:?}", super::markdown_links("setVariable", SOURCE));
     }
 
     #[test]

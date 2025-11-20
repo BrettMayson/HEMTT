@@ -4,6 +4,7 @@ use tracing::info;
 use crate::Backend;
 
 impl Backend {
+    #[expect(clippy::unused_async, reason = "required by callsite")]
     pub async fn locate_rpt(
         &self,
         _: serde_json::Value,

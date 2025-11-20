@@ -9,7 +9,6 @@ use hemtt_pbo::{
 
 use sha1::{Digest, Sha1};
 
-#[allow(clippy::too_many_lines)]
 #[test]
 fn ace_weather_cba6f72c() {
     let checksum = Checksum::from_bytes([

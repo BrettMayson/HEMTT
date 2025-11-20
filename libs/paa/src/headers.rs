@@ -22,7 +22,7 @@ pub struct Headers {
 impl Headers {
     #[must_use]
     /// Create a new Headers instance
-    pub fn new(textures: Vec<TextureHeader>) -> Self {
+    pub const fn new(textures: Vec<TextureHeader>) -> Self {
         Self { textures }
     }
 
@@ -232,7 +232,6 @@ impl TextureHeader {
     ///
     /// # Panics
     /// - Panics if the PAA file path is not relative to the root
-    #[allow(clippy::too_many_lines)]
     pub fn from_file(root: &Path, path: &PathBuf) -> Result<Self, Error> {
         let paa = Paa::read(std::fs::File::open(path)?)?;
         let flag = paa.taggs().get("GALF").map_or(0, |flag| {

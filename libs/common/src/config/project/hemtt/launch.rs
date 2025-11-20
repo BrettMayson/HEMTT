@@ -271,7 +271,7 @@ impl LaunchOptionsFile {
         self.parameters.dedup();
     }
 
-    pub fn only_single_dlc(&self) -> bool {
+    pub const fn only_single_dlc(&self) -> bool {
         self.dlc.len() == 1
             && self.workshop.is_empty()
             && self.presets.is_empty()

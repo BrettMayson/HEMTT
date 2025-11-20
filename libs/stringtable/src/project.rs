@@ -139,7 +139,7 @@ pub struct InnerProject {
 
 impl InnerProject {
     #[must_use]
-    pub fn new(name: String, packages: Vec<Package>) -> Self {
+    pub const fn new(name: String, packages: Vec<Package>) -> Self {
         Self { name, packages }
     }
 
@@ -202,7 +202,7 @@ pub struct WriteableProject {
 
 impl WriteableProject {
     #[must_use]
-    pub fn new(inner: InnerProject, comments: Vec<(String, String, Option<String>)>) -> Self {
+    pub const fn new(inner: InnerProject, comments: Vec<(String, String, Option<String>)>) -> Self {
         Self { inner, comments }
     }
 

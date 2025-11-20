@@ -34,7 +34,6 @@ impl Statement {
 impl Expression {
     /// optimize Expression
     #[must_use]
-    #[allow(clippy::too_many_lines)]
     fn optimize(self) -> Self {
         match &self {
             Self::Code(code) => Self::Code(code.clone().optimize()),

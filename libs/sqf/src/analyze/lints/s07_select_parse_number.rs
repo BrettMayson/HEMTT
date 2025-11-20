@@ -253,7 +253,6 @@ impl CodeS07SelectParseNumber {
         .generate_processed(processed)
     }
 
-    #[allow(clippy::too_many_lines)]
     #[allow(clippy::range_plus_one)]
     fn generate_processed(mut self, processed: &Processed) -> Self {
         self.diagnostic =

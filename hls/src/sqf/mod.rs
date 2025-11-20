@@ -38,7 +38,10 @@ impl SqfAnalyzer {
     }
 
     pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
-        if !document.uri.path().ends_with(".sqf") {
+        if !std::path::Path::new(document.uri.path())
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+        {
             return;
         }
         let Some(workspace) = EditorWorkspaces::get()
@@ -48,24 +51,22 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", document.uri);
             return;
         };
-        let source = if let Ok(source) = workspace.join_url(&document.uri) {
-            source
-        } else {
+        let source = workspace.join_url(&document.uri).unwrap_or_else(|_| {
             hemtt_workspace::Workspace::builder()
                 .memory()
                 .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-                .unwrap()
-        };
-        let text = FileCache::get().text(&document.uri).unwrap();
+                .expect("Failed to create in-memory workspace")
+        });
+        let text = FileCache::get().text(&document.uri).unwrap_or_default();
         let Ok(tokens) = hemtt_preprocessor::parse::str(&text, &source) else {
             warn!("Failed to parse file");
             return;
         };
-        self.tokens.insert(document.uri.clone(), tokens.clone());
+        self.tokens.insert(document.uri.clone(), tokens);
     }
 
-    pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
-        self.check_lints(workspace, client).await;
+    pub fn workspace_added(&self, workspace: &EditorWorkspace, client: Client) {
+        self.check_lints(workspace, client);
     }
 
     pub async fn on_open(&self, url: Url, client: Client) {
@@ -76,11 +77,11 @@ impl SqfAnalyzer {
         self.partial_recheck_lints(url, client).await;
     }
 
-    pub async fn on_close(&self, url: &Url) {
+    pub fn on_close(&self, url: &Url) {
         self.tokens.remove(url);
     }
 
-    async fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
+    fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
         if !self.databases.contains_key(workspace) {
             let database = match Database::a3_with_workspace(workspace.root(), false) {
                 Ok(database) => database,
@@ -91,6 +92,9 @@ impl SqfAnalyzer {
             };
             self.databases.insert(workspace.clone(), Arc::new(database));
         }
-        self.databases.get(workspace).unwrap().clone()
+        self.databases
+            .get(workspace)
+            .expect("Database not found")
+            .clone()
     }
 }

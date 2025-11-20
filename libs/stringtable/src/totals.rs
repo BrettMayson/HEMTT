@@ -30,7 +30,7 @@ pub struct Totals {
 macro_rules! field {
     ($field:ident) => {
         paste::paste! {
-            pub fn [<inc_ $field>](&mut self) {
+            pub const fn [<inc_ $field>](&mut self) {
                 self.$field += 1;
             }
 
@@ -43,7 +43,7 @@ macro_rules! field {
 }
 
 impl Totals {
-    pub fn inc(&mut self) {
+    pub const fn inc(&mut self) {
         self.total += 1;
     }
 
@@ -52,7 +52,7 @@ impl Totals {
         self.total
     }
 
-    pub fn merge(&mut self, other: &Self) {
+    pub const fn merge(&mut self, other: &Self) {
         self.total += other.total;
         self.original += other.original;
         self.english += other.english;

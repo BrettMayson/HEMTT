@@ -8,15 +8,17 @@ use crate::{files::FileCache, workspace::EditorWorkspaces};
 
 use super::PreprocessorAnalyzer;
 
+#[derive(Debug, PartialEq, Eq)]
+enum Kind {
+    Config,
+    Sqf,
+}
+
 impl PreprocessorAnalyzer {
+    #[allow(clippy::significant_drop_tightening)]
     pub async fn signature_help(&self, params: &SignatureHelpParams) -> Option<SignatureHelp> {
         let url = &params.text_document_position_params.text_document.uri;
         let path = url.to_file_path().ok()?;
-        #[derive(Debug, PartialEq, Eq)]
-        enum Kind {
-            Config,
-            Sqf,
-        }
         let kind = match path.extension().and_then(|ext| ext.to_str()) {
             Some("hpp" | "cpp" | "ext") => Kind::Config,
             Some("sqf") => Kind::Sqf,
@@ -30,7 +32,7 @@ impl PreprocessorAnalyzer {
         let processed = self.processed.get(&if kind == Kind::Config {
             source.parent()
         } else {
-            source.clone()
+            source
         })?;
         let text =
             FileCache::get().text(&params.text_document_position_params.text_document.uri)?;
@@ -53,13 +55,19 @@ impl PreprocessorAnalyzer {
         let mut arg = line[name_end..].chars().filter(|c| *c == ',').count();
 
         // special handle ARR_*
-        let re = regex::Regex::new(r"ARR_(\d+)").unwrap();
+        let re = regex::Regex::new(r"ARR_(\d+)").expect("Failed to compile regex");
         let mut matches: Vec<_> = re.captures_iter(&line).collect();
         if name.starts_with("ARR_") {
             matches.pop();
         }
         for m in matches {
-            arg -= m.get(1).unwrap().as_str().parse::<usize>().unwrap() - 1;
+            arg -= m
+                .get(1)
+                .expect("Failed to get capture group")
+                .as_str()
+                .parse::<usize>()
+                .expect("Failed to parse number")
+                - 1;
         }
 
         let (_, def) = processed.macros.get(name)?.first()?;
@@ -73,7 +81,7 @@ impl PreprocessorAnalyzer {
                     name,
                     def.args()
                         .iter()
-                        .map(|t| t.to_string())
+                        .map(std::string::ToString::to_string)
                         .collect::<Vec<_>>()
                         .join(", ")
                 ),
@@ -87,7 +95,7 @@ impl PreprocessorAnalyzer {
                         })
                         .collect(),
                 ),
-                active_parameter: Some(arg as u32),
+                active_parameter: Some(u32::try_from(arg).expect("Failed to convert usize to u32")),
             }],
             active_signature: Some(0),
             active_parameter: None,
@@ -95,6 +103,7 @@ impl PreprocessorAnalyzer {
     }
 }
 
+#[allow(clippy::doc_markdown)]
 /// Find the name of the function in the text
 /// picture[] = {ARR_2 // ""
 /// picture[] = {ARR_2(1, // ARR_2
@@ -125,8 +134,7 @@ pub fn find_name(text: &str) -> (&str, usize) {
         .unwrap_or(0);
     let start = text[..end]
         .rfind(|c: char| !c.is_alphabetic() && !c.is_ascii_digit() && c != '_')
-        .map(|i| i + 1)
-        .unwrap_or(0);
+        .map_or(0, |i| i + 1);
     (&text[start..end], end)
 }
 

@@ -366,7 +366,7 @@ impl NularCommand {
     }
 
     #[must_use]
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         self.name.as_str()
     }
 }

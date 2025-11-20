@@ -25,14 +25,14 @@ pub async fn completion(
         );
         return Ok(None);
     };
-    let source = if let Ok(source) = workspace.join_url(&position.text_document.uri) {
-        source
-    } else {
-        hemtt_workspace::Workspace::builder()
-            .memory()
-            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-            .unwrap()
-    };
+    let source = workspace
+        .join_url(&position.text_document.uri)
+        .unwrap_or_else(|_| {
+            hemtt_workspace::Workspace::builder()
+                .memory()
+                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+                .expect("Failed to create in-memory workspace")
+        });
     let text = crate::files::FileCache::get()
         .text(&position.text_document.uri)
         .unwrap_or_default();
@@ -49,7 +49,7 @@ pub async fn completion(
         })
         .unwrap_or_default();
     let split: Vec<&str> = text_at_cursor.rsplit(' ').collect();
-    let mut prefix = split.first().unwrap_or(&"").to_string();
+    let mut prefix = (*split.first().unwrap_or(&"")).to_string();
     let mut params = Vec::new();
     if prefix.contains(',') || prefix.contains('\\') {
         let tmp_prefix = {
@@ -80,45 +80,46 @@ pub async fn completion(
                 items
                     .into_iter()
                     .map(|item| CompletionItem {
-                        label: item.clone(),
+                        label: item,
                         kind: Some(CompletionItemKind::FUNCTION),
                         ..Default::default()
                     })
                     .collect(),
             )))
         }
-        "EFUNC(" | "QEFUNC(" => {
-            if let Some(addon) = params.first() {
-                let items = get_functions_defined(addon);
-                Ok(Some(CompletionResponse::Array(
-                    items
-                        .into_iter()
-                        .map(|item| CompletionItem {
-                            label: item.clone(),
-                            kind: Some(CompletionItemKind::FUNCTION),
-                            ..Default::default()
-                        })
-                        .collect(),
-                )))
-            } else {
+        "EFUNC(" | "QEFUNC(" => params.first().map_or_else(
+            || {
                 let items = get_addons();
                 Ok(Some(CompletionResponse::Array(
                     items
                         .into_iter()
                         .map(|item| CompletionItem {
-                            label: item.clone(),
+                            label: item,
                             kind: Some(CompletionItemKind::MODULE),
                             ..Default::default()
                         })
                         .collect(),
                 )))
-            }
-        }
+            },
+            |addon| {
+                let items = get_functions_defined(addon);
+                Ok(Some(CompletionResponse::Array(
+                    items
+                        .into_iter()
+                        .map(|item| CompletionItem {
+                            label: item,
+                            kind: Some(CompletionItemKind::FUNCTION),
+                            ..Default::default()
+                        })
+                        .collect(),
+                )))
+            },
+        ),
         "PATHTOF(" | "QPATHTOF(" => {
             tracing::debug!("PATHTOF completion for {folder}/{addon}");
             let path = params
                 .first()
-                .map_or_else(String::new, |p| p.to_string())
+                .map_or_else(String::new, std::string::ToString::to_string)
                 .replace('\\', "/");
             let items = crate::completion::path(&workspace, folder, addon, &path);
             if items.is_empty() {
@@ -132,7 +133,7 @@ pub async fn completion(
                 tracing::debug!("PATHTOEF completion for {folder}/{addon}");
                 let path = params
                     .get(1)
-                    .map_or_else(String::new, |p| p.to_string())
+                    .map_or_else(String::new, std::string::ToString::to_string)
                     .replace('\\', "/");
                 let items = crate::completion::path(&workspace, folder, addon, &path);
                 if items.is_empty() {
@@ -146,7 +147,7 @@ pub async fn completion(
                     items
                         .into_iter()
                         .map(|item| CompletionItem {
-                            label: item.clone(),
+                            label: item,
                             kind: Some(CompletionItemKind::MODULE),
                             ..Default::default()
                         })
@@ -182,7 +183,7 @@ fn get_functions_defined(addon: &str) -> Vec<String> {
         .iter()
         .map(|(_, func)| func.to_string())
         .collect::<HashSet<_>>();
-    for (_, funcs) in sqf_functions.value().iter() {
+    for funcs in sqf_functions.value().values() {
         for (_, func) in funcs {
             items.insert(func.to_string());
         }
@@ -193,7 +194,7 @@ fn get_functions_defined(addon: &str) -> Vec<String> {
             if item.contains("_fnc_") {
                 item.rsplit("_fnc_").next().unwrap_or(&item).to_string()
             } else {
-                item.clone()
+                item
             }
         })
         .collect::<Vec<_>>();
@@ -206,10 +207,10 @@ fn get_addons() -> Vec<String> {
     let sqf_analyzer = SqfAnalyzer::get();
     let mut addons: HashSet<String> = HashSet::new();
     for item in config_analyzer.functions_defined.iter() {
-        addons.insert(item.key().to_string());
+        addons.insert(item.key().clone());
     }
     for item in sqf_analyzer.functions_defined.iter() {
-        addons.insert(item.key().to_string());
+        addons.insert(item.key().clone());
     }
     addons.into_iter().collect()
 }

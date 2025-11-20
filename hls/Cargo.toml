@@ -3,6 +3,9 @@ name = "hemtt-language-server"
 version = "0.6.7"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }

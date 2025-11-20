@@ -314,7 +314,6 @@ pub struct LaunchArgs {
     dry_run: bool,
 }
 
-#[allow(clippy::too_many_lines)]
 /// Execute the launch command
 ///
 /// # Errors

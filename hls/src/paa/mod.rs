@@ -3,10 +3,10 @@ use url::Url;
 
 use crate::{Backend, workspace::EditorWorkspaces};
 
-pub fn json(url: Url) -> Result<serde_json::Value, String> {
+pub fn json(url: &Url) -> Result<serde_json::Value, String> {
     let path = url
         .to_file_path()
-        .map_err(|_| "Only file URLs are supported".to_string())?;
+        .map_err(|()| "Only file URLs are supported".to_string())?;
     let mut file = std::fs::File::open(&path).map_err(|_| "File not found".to_string())?;
     let value: serde_json::Value = serde_json::from_str(
         hemtt_paa::Paa::read(&mut file)
@@ -19,12 +19,15 @@ pub fn json(url: Url) -> Result<serde_json::Value, String> {
 }
 
 impl Backend {
+    #[expect(clippy::unused_async, reason = "required by callsite")]
     pub async fn paa_json(
         &self,
         params: JsonParams,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
-        match json(params.url) {
-            Ok(res) => Ok(Some(serde_json::to_value(res).unwrap())),
+        match json(&params.url) {
+            Ok(res) => Ok(Some(
+                serde_json::to_value(res).expect("Serialization failed"),
+            )),
             Err(e) => {
                 error!("Error converting paa to json: {}", e);
                 Ok(None)
@@ -66,7 +69,8 @@ impl Backend {
             return Ok(None);
         };
         Ok(Some(
-            serde_json::to_value(paa.maps().first().unwrap().0.json()).unwrap(),
+            serde_json::to_value(paa.maps().first().expect("No maps found").0.json())
+                .expect("Serialization failed"),
         ))
     }
 }

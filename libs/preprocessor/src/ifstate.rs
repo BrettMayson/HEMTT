@@ -39,9 +39,10 @@ pub struct IfStates {
 }
 
 impl IfStates {
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
+
     pub fn reading(&self) -> bool {
         self.stack.is_empty() || self.stack.iter().all(IfState::reading)
     }

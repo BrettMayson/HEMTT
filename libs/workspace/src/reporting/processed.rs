@@ -61,7 +61,6 @@ struct Processing {
     total_chars: usize,
 }
 
-#[allow(clippy::too_many_lines)]
 fn append_token(
     processing: &mut Processing,
     string_stack: &mut Vec<char>,
