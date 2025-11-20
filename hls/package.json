@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
