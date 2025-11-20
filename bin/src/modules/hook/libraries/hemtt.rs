@@ -1,12 +1,11 @@
 use hemtt_common::version::Version;
+use hemtt_rhai::libraries::project::RhaiProject;
 use rhai::plugin::{
     Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
     RhaiResult, TypeId, export_module, mem,
 };
 
 use crate::context::Context;
-
-use super::project::RhaiProject;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
@@ -23,7 +22,7 @@ impl RhaiHemtt {
             ctx: ctx.clone(),
             version: Version::try_from(env!("HEMTT_VERSION"))
                 .expect("hemtt version should be valid"),
-            project: RhaiProject::new(ctx),
+            project: ctx.as_rhai_project(),
             folder: ctx.folder().expect("folder exists").to_string(),
         }
     }
