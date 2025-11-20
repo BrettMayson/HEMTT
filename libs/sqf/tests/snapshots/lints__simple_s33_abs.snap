@@ -1,0 +1,38 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s33_abs), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S33-ABS][0m[1m: code can be replaced with `abs`[0m
+  [0m[36m┌─[0m s33_abs.sqf:3:17
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _abs1 = [0m[36mif (_x >= 0) then {_x} else {-_x[0m};
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `abs`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: abs _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-ABS][0m[1m: code can be replaced with `abs`[0m
+  [0m[36m┌─[0m s33_abs.sqf:6:17
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _abs2 = [0m[36mif (_x < 0) then {-_x} else {_x[0m};
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `abs`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: abs _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-ABS][0m[1m: code can be replaced with `abs`[0m
+  [0m[36m┌─[0m s33_abs.sqf:9:17
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _abs3 = [0m[36mif (_x > 0) then {_x} else {-_x[0m};
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `abs`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: abs _x
+
+
+[0m[1m[38;5;14mhelp[L-S33-ABS][0m[1m: code can be replaced with `abs`[0m
+   [0m[36m┌─[0m s33_abs.sqf:12:17
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m private _abs4 = [0m[36mif (_x <= 0) then {-_x} else {_x[0m};
+   [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `abs`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: abs _x

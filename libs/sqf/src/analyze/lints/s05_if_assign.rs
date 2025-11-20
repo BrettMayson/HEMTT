@@ -83,11 +83,11 @@ impl LintRunner<LintData> for Runner {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
                         if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
                             && name.eq_ignore_ascii_case("isnil") {
-                                 return Vec::new();
+                                return Vec::new();
                             }
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),
-                            (condition.source(), condition.full_span()),
+                            (condition.source(false), condition.full_span()),
                             (lhs, lhs_expr.span()),
                             (rhs, rhs_expr.span()),
                             processed,

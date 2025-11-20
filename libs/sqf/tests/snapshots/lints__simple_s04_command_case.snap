@@ -1,16 +1,7 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s04_command_case))
+expression: "lint(stringify! (s04_command_case), true).0"
 ---
-[0m[1m[38;5;14mhelp[L-S04][0m[1m: `surfaceiswater` does not match the wiki's case[0m
-  [0m[36m┌─[0m s04_command_case.sqf:1:18
-  [0m[36m│[0m
-[0m[36m1[0m [0m[36m│[0m private _water = [0m[36msurfaceiswater[0m getPos Player;
-  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^[0m [0m[36mnon-standard command case[0m
-  [0m[36m│[0m
-  [0m[36m=[0m [32mtry[0m: "surfaceIsWater"
-
-
 [0m[1m[38;5;14mhelp[L-S04][0m[1m: `Player` does not match the wiki's case[0m
   [0m[36m┌─[0m s04_command_case.sqf:1:40
   [0m[36m│[0m
@@ -18,3 +9,12 @@ expression: lint(stringify! (s04_command_case))
   [0m[36m│[0m                                        [0m[36m^^^^^^[0m [0m[36mnon-standard command case[0m
   [0m[36m│[0m
   [0m[36m=[0m [32mtry[0m: "player"
+
+
+[0m[1m[38;5;14mhelp[L-S04][0m[1m: `surfaceiswater` does not match the wiki's case[0m
+  [0m[36m┌─[0m s04_command_case.sqf:1:18
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m private _water = [0m[36msurfaceiswater[0m getPos Player;
+  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^[0m [0m[36mnon-standard command case[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: "surfaceIsWater"

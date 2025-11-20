@@ -78,7 +78,7 @@ impl LintRunner<LintData> for Runner {
         && let Expression::String(str, _, _) = lhs_rhs.as_ref()
         && (str.eq_ignore_ascii_case("cfgvehicles") || str.eq_ignore_ascii_case("cfgammo"))
     {
-        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(), lhs_lhs.full_span().start .. rhs_rhs.full_span().end, processed, config.severity()))];
+        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(false), lhs_lhs.full_span().start .. rhs_rhs.full_span().end, processed, config.severity()))];
     }
         Vec::new()
     }

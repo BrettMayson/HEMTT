@@ -1,0 +1,20 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s33_mod), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S33-MOD][0m[1m: code can be replaced with `mod`[0m
+  [0m[36m┌─[0m s33_mod.sqf:4:17
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m private _mod1 = [0m[36m_x - _y * floor(_x / _y[0m);
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `mod`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _x mod _y
+
+
+[0m[1m[38;5;14mhelp[L-S33-MOD][0m[1m: code can be replaced with `mod`[0m
+  [0m[36m┌─[0m s33_mod.sqf:9:17
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _mod2 = [0m[36m_a - _b * floor(_a / _b[0m);
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `mod`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _a mod _b
