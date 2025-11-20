@@ -37,6 +37,9 @@ pub enum Error {
     #[error("Invalid value: {0}")]
     InvalidValueName(String),
 
+    #[error("Preprocessor not found: {0}")]
+    PreprocessorNotFound(String),
+
     #[error("Dialoguer Error: {0}")]
     Dialoguer(#[from] dialoguer::Error),
     #[error("Git Error: {0}")]

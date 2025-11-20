@@ -1,0 +1,17 @@
+[package]
+name = "hemtt-rhai"
+version = "1.0.0"
+edition = "2024"
+description = "Rhai scripting library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+hemtt-common = { path = "../common" }
+
+fs_extra = { workspace = true }
+rhai = { workspace = true }
+time = { workspace = true }
+vfs = { workspace = true }

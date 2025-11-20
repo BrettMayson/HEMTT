@@ -13,6 +13,7 @@ use super::deprecated;
 pub mod files;
 pub mod hemtt;
 pub mod lint;
+pub mod preprocess;
 pub mod preprocessor;
 pub mod signing;
 pub mod version;
@@ -47,6 +48,9 @@ pub struct ProjectConfig {
 
     // Preprocessor options
     preprocessor: preprocessor::PreprocessorOptions,
+
+    // Preprocess options
+    preprocess: preprocess::PreprocessOptions,
 
     /// Signing specific configuration
     signing: signing::SigningConfig,
@@ -117,6 +121,12 @@ impl ProjectConfig {
     /// Preprocessor specific configuration
     pub const fn preprocessor(&self) -> &preprocessor::PreprocessorOptions {
         &self.preprocessor
+    }
+
+    #[must_use]
+    /// Preprocess specific configuration
+    pub const fn preprocess(&self) -> &preprocess::PreprocessOptions {
+        &self.preprocess
     }
 
     #[must_use]
@@ -200,6 +210,9 @@ pub struct ProjectFile {
     preprocessor: preprocessor::PreprocessorOptionsFile,
 
     #[serde(default)]
+    preprocess: preprocess::PreprocessOptionsFile,
+
+    #[serde(default)]
     signing: signing::SigningSectionFile,
 
     #[serde(skip)]
@@ -257,6 +270,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             files: file.files.into(),
             lints: file.lints.into(),
             preprocessor: file.preprocessor.into(),
+            preprocess: file.preprocess.into(),
             signing: file.signing.into(),
             runtime: RuntimeArguments::default(),
             expected_path,
@@ -290,7 +304,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
 mod test_helper {
     use std::collections::HashMap;
 
-    use super::{files, hemtt, lint, preprocessor, signing, version};
+    use super::{files, hemtt, lint, preprocess, preprocessor, signing, version};
 
     impl super::ProjectConfig {
         #[must_use]
@@ -310,6 +324,7 @@ mod test_helper {
                 lints: lint::LintSectionFile::default(),
                 hemtt: hemtt::HemttSectionFile::default(),
                 preprocessor: preprocessor::PreprocessorOptionsFile::default(),
+                preprocess: preprocess::PreprocessOptionsFile::default(),
                 signing: signing::SigningSectionFile::default(),
                 meta_path: std::path::PathBuf::default(),
             }

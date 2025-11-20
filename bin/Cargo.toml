@@ -26,6 +26,7 @@ hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa", features = ["generate"] }
 hemtt-pbo = { path = "../libs/pbo" }
 hemtt-preprocessor = { path = "../libs/preprocessor" }
+hemtt-rhai = { path = "../libs/rhai" }
 hemtt-signing = { path = "../libs/signing" }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-stringtable = { path = "../libs/stringtable" }
@@ -49,7 +50,7 @@ paste = { workspace = true }
 rayon = "1.11.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.24", features = ["blocking", "json"] }
-rhai = "1.23.6"
+rhai = { workspace = true }
 rust-embed = "8.9.0"
 semver = "1.0.27"
 serde = { workspace = true, features = ["derive"] }
@@ -60,7 +61,7 @@ supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3.44", features = ["formatting"] }
+time = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.20", features = ["json"] }
 vfs = { workspace = true }

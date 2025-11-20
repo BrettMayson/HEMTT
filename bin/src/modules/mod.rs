@@ -14,6 +14,7 @@ pub mod fnl;
 pub mod hook;
 pub mod meta;
 pub mod pbo;
+pub mod preprocess;
 pub(crate) mod sign;
 pub mod summary;
 pub mod tex_headers;
@@ -32,7 +33,7 @@ pub trait Module {
     fn name(&self) -> &'static str;
     /// priority (lower goes first)
     fn priority(&self) -> i32 {
-        0
+        100
     }
     /// Executes the module's `init` phase
     ///
