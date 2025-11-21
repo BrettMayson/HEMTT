@@ -24,7 +24,7 @@ jobs:
           - runner: windows-latest
             name: windows
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Install stable
