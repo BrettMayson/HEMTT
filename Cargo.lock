@@ -178,9 +178,8 @@ dependencies = [
 
 [[package]]
 name = "arma-rs"
-version = "1.11.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a187c0f0594c3cef75b79cba42022e841da290092777486318d6d5d164f74d2"
+version = "1.11.14"
+source = "git+https://github.com/BrettMayson/arma-rs.git#55d66462b3c0700e44c4b192c6c42db0ebfde72b"
 dependencies = [
  "arma-rs-proc",
  "crossbeam-channel",
@@ -196,8 +195,7 @@ dependencies = [
 [[package]]
 name = "arma-rs-proc"
 version = "1.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf67c0d0c7a59275e5ac4f3fce0cbdbcf3ba12e47bc30be6a3327d6a1bc151f8"
+source = "git+https://github.com/BrettMayson/arma-rs.git#55d66462b3c0700e44c4b192c6c42db0ebfde72b"
 dependencies = [
  "proc-macro2",
  "quote",
