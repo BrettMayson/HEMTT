@@ -318,7 +318,7 @@ impl Action for Photoshoot {
                     .join("EditorPreviews")
                     .join(".hemttout")
                     .join("dev");
-                for image in source.read_dir().expect("read dir") {
+                for image in fs_err::read_dir(source).expect("read dir") {
                     let src = image.expect("image exists").path();
                     let target = PathBuf::from(
                         self.previews
