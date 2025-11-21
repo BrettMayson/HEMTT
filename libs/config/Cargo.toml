@@ -32,3 +32,8 @@ hemtt-preprocessor = { path = "../preprocessor" }
 insta = { workspace = true }
 paste = { workspace = true }
 
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+    "-C", "link-arg=/DEBUG:FASTLINK",
+    "-C", "link-arg=/INCREMENTAL:NO",
+]
