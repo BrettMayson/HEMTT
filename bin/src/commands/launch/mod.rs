@@ -42,9 +42,7 @@ pub mod preset;
 /// your main configuration file clean. When using `launch.toml`,
 /// the `hemtt.launch` key is not required.
 ///
-/// **.hemtt/project.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// mainprefix = "z"
 ///
 /// # Launched with `hemtt launch`
@@ -89,9 +87,7 @@ pub mod preset;
 /// ]
 /// ```
 ///
-/// **.hemtt/launch.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/launch.toml
 /// [default]
 /// workshop = [
 ///     "450814997", # CBA_A3's Workshop ID
@@ -202,8 +198,7 @@ pub mod preset;
 ///
 /// These profiles can be used by prefixing the name with `@`, for example:
 ///
-/// **{config}/hemtt/config.toml**
-/// ```toml
+/// ```toml,fp={config}/hemtt/config.toml
 /// [launch.profiles.adt]
 /// workshop = [ "3499977893" ]
 /// ```
@@ -218,8 +213,7 @@ pub mod preset;
 /// 1. Define a location for a workshop mod
 /// 2. Define a location for non-workshop mods
 ///
-/// **{config}/hemtt/config.toml**
-/// ```toml
+/// ```toml,fp={config}/hemtt/config.toml
 /// [launch.pointers]
 /// my_unit = "D:\\Swifty\\MyUnit"
 /// 463939057 = "D:\\Projects\\ACE3"
@@ -231,8 +225,7 @@ pub mod preset;
 ///
 /// Pointers must be at least 2 characters long to avoid conflicts with drive letters.
 ///
-/// **.hemtt/project.toml**
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// [hemtt.launch.ace]
 /// workshop = [
 ///     "450814997", # CBA_A3's Workshop ID, will load from the workshop folder

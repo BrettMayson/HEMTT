@@ -2,9 +2,7 @@
 
 The minimum configuration only requires a `name` and `prefix` to be set.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 name = "Advanced Banana Environment"
 prefix = "abe"
 ```
@@ -19,12 +17,10 @@ The prefix of your mod.
 
 It should be used in the `$PBOPREFIX$` file in each addon folder in the following format.
 
-```text
+```text,fp=addons/main/$PBOPREFIX$
 z\{prefix}\addons\main
 ```
 
-**addons/main/$PBOPREFIX$**
-
-```text
+```text,fp=addons/main/$PBOPREFIX$
 z\abe\addons\main
 ```

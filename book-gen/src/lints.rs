@@ -10,11 +10,11 @@ use hemtt_sqf::analyze::{
 };
 use hemtt_stringtable::analyze::STRINGTABLE_LINTS;
 use hemtt_workspace::lint::{Lint, Lints};
-use mdbook::book::Chapter;
+use mdbook_preprocessor::book::{BookItem, Chapter};
 
 pub fn run(chapter: &mut Chapter) {
     for item in &mut chapter.sub_items {
-        if let mdbook::BookItem::Chapter(chapter) = item {
+        if let BookItem::Chapter(chapter) = item {
             if chapter.name == "Config" {
                 config(chapter);
             }

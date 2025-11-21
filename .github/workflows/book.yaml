@@ -31,7 +31,7 @@ jobs:
           key: book
 
       - name: Setup mdBook
-        run: cargo install mdbook mdbook-admonish
+        run: cargo install mdbook
 
       - run: mdbook build
 

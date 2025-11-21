@@ -25,9 +25,7 @@ use super::JustArgs;
 ///
 /// ## Configuration
 ///
-/// **.hemtt/project.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// [hemtt.dev]
 /// exclude = ["addons/unused"]
 /// ```

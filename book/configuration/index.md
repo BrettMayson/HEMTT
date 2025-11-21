@@ -8,9 +8,7 @@ Previous versions of HEMTT supported a `hemtt.json` or `hemtt.toml` file, but th
 
 The minimum configuration only requires a `name` and `prefix` to be set.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 name = "Advanced Banana Environment"
 prefix = "abe"
 ```
@@ -29,17 +27,13 @@ You can additionally configure optional settings for your project.
 
 The `mainprefix` option allows you to set the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](../commands/launch.md).
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 mainprefix = "z"
 ```
 
 It should match the `$PBOPREFIX$` file in each addon folder.
 
-**addons/main/$PBOPREFIX$**
-
-```txt
+```txt,fp=addons/main/$PBOPREFIX$
 z\abe\addons\main
 ```
 
@@ -47,9 +41,7 @@ z\abe\addons\main
 
 You can add a list of files to be copied to the build directory. This is useful for including files that are not part of addons, such as a `README.md`, `LICENSE`, logos, or extensions. To include a folder, you must use a glob pattern that matches all files in that folder.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [files]
 include = [
     "mod.cpp",        # These files are copied to the build directory by default
@@ -69,9 +61,7 @@ exclude = [
 
 By default, those 5 files are included in the build directory if they exist in the root of your project. You do not need to add them to your list. Additional files or [glob paths](<https://en.wikipedia.org/wiki/Glob_(programming)>) can be added to the list.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [files]
 include = [
     "mod.cpp",      # These files are copied to the build directory by default
@@ -86,9 +76,7 @@ include = [
 
 By default, no files are excluded from PBOs. You can add files or [glob paths](<https://en.wikipedia.org/wiki/Glob_(programming)>) to the list.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [files]
 exclude = [
     "*.psd",        # By default this list is empty
@@ -100,9 +88,7 @@ exclude = [
 
 You can add a list of properties to be added to every PBO.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [properties]
 author = "ABE Team"
 url = "https://github.com/ABE-Mod/ABE"
@@ -123,9 +109,7 @@ A table of the currently supported runtime macros is:
 | `__A3_EXPERIMENTAL__` | `0` | Indicates if the game is running an experimental build (dev or profiling branch). |
 | `__A3_PROFILING__` | `0` | Indicates if the game is running in profiling mode. (dev branch diag binary or profiling branch profiling binary)  |
 
-**hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [preprocessor]
 runtime_macros = true
 ```
@@ -136,9 +120,7 @@ runtime_macros = true
 
 You can specify the authority to use for BI Signing. By default, this will be `{prefix}_{version}`, e.g. `abe_3.1.0`.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [signing]
 authority = "my_authority"
 ```
@@ -147,9 +129,7 @@ authority = "my_authority"
 
 You can specify the version of BI Signing to use. The default is `3`. This should not be changed unless you know what you are doing.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [signing]
 version = 3
 ```

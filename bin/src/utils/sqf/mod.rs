@@ -15,9 +15,8 @@ enum Subcommands {
     #[command(verbatim_doc_comment)]
     /// This will recursively correct all capitalization mistakes in SQF commands.
     ///
-    /// ```admonish danger
-    /// This command requires **manual review**. It can have lots of false positives so you are **strongly encouraged** to check each modified file to ensure it is correct.
-    /// ```
+    /// > [!CAUTION]
+    /// > This command requires **manual review**. It can have lots of false positives so you are **strongly encouraged** to check each modified file to ensure it is correct.
     ///
     /// ## Example
     ///

@@ -31,11 +31,10 @@ use super::build;
 ///
 /// If `sign` is set to `false`, a `bikey` will not be created, and the PBOs will not be signed.
 ///
-/// ```admonish danger
-/// All public releases of your mods should be signed. This will be a requirement of
-/// many communities, and is an important security feature. Do not use this
-/// unless you know what you are doing.
-/// ```
+/// > [!CAUTION]
+/// > All public releases of your mods should be signed. This will be a requirement of
+/// > many communities, and is an important security feature. Do not use this
+/// > unless you know what you are doing.
 ///
 /// ### archive
 ///
@@ -57,11 +56,10 @@ pub struct ReleaseArgs {
     #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Do not sign the PBOs or create a `bikey`.
     ///
-    /// ```admonish danger
-    /// All public releases of your mods should be signed. This will be a requirement of
-    /// many communities, and is an important security feature. Do not use this
-    /// unless you know what you are doing.
-    /// ```
+    /// > [!CAUTION]
+    /// > All public releases of your mods should be signed. This will be a requirement of
+    /// > many communities, and is an important security feature. Do not use this
+    /// > unless you know what you are doing.
     no_sign: bool,
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not create a zip archive of the release.

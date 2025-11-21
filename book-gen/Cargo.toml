@@ -16,4 +16,4 @@ clap = { workspace = true, features = ["derive"] }
 fs-err = { workspace = true }
 serde_json = { workspace = true }
 
-mdbook = "0.4.52"
+mdbook-preprocessor = "0.5.1"

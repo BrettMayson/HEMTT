@@ -1,5 +1,5 @@
 use clap::CommandFactory;
-use mdbook::book::Chapter;
+use mdbook_preprocessor::book::{BookItem, Chapter};
 
 use crate::commands::process_command;
 
@@ -12,7 +12,7 @@ pub fn run(chapter: &mut Chapter) {
         .get_subcommands()
         .collect::<Vec<_>>();
     for chapter in &mut chapter.sub_items {
-        let mdbook::BookItem::Chapter(chapter) = chapter else {
+        let BookItem::Chapter(chapter) = chapter else {
             continue;
         };
         if chapter.sub_items.is_empty() {
@@ -33,7 +33,7 @@ pub fn run(chapter: &mut Chapter) {
                 .expect("utility exists")
                 .to_owned()
                 .to_owned();
-            if let mdbook::BookItem::Chapter(chapter) = item {
+            if let BookItem::Chapter(chapter) = item {
                 let utility = command
                     .get_subcommands()
                     .find(|c| *c.get_name() == chapter.name)

@@ -1,5 +1,5 @@
 use clap::{Command, CommandFactory};
-use mdbook::{BookItem, book::Chapter};
+use mdbook_preprocessor::book::{BookItem, Chapter};
 
 pub fn summary_commands() {
     let mut command_text = String::new();
@@ -110,7 +110,7 @@ pub fn run(chapter: &mut Chapter) {
     let command_cli = hemtt::Cli::command();
     let commands = command_cli.get_subcommands().collect::<Vec<_>>();
     for item in &mut chapter.sub_items {
-        if let mdbook::BookItem::Chapter(chapter) = item {
+        if let BookItem::Chapter(chapter) = item {
             let command = commands
                 .iter()
                 .find(|c| *c.get_name() == chapter.name)

@@ -29,9 +29,7 @@ use super::global_modules;
 ///
 /// ## Configuration
 ///
-/// **.hemtt/project.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// [hemtt.build]
 /// optional_mod_folders = false # Default: true
 /// ```
