@@ -11,6 +11,6 @@ crate-type = ["cdylib"]
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 
-arma-rs = "1.10.5"
+arma-rs = { git = "https://github.com/BrettMayson/arma-rs.git" }
 interprocess =  { workspace = true }
 serde_json = { workspace = true }
