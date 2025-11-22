@@ -151,7 +151,7 @@ impl Inspector {
             let Expression::Code(statements) = expression else {
                 continue;
             };
-            self.scope_push(false);
+            self.scope_push(false, None);
             let stack_index = self.stack_push(Some(expression));
             if stack_index.is_some() {
                 // prevent infinite recursion

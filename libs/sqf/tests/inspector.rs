@@ -30,9 +30,8 @@ mod tests {
     use hemtt_sqf::analyze::inspector::Issue;
 
     #[test]
-    pub fn test_0() {
-        let (_pro, sqf, _database) = get_statements("test_0.sqf");
-        // let result = inspector::run_processed(&sqf, &pro, &database);
+    pub fn test_fnc_aaa() {
+        let (_pro, sqf, _database) = get_statements("fnc_aaa.sqf");
         let result = sqf.issues();
         println!("done: {}, {result:?}", result.len());
     }
@@ -57,6 +56,12 @@ mod tests {
     #[test]
     pub fn test_variadic() {
         let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
+    }
+    #[test]
+    pub fn test_fnc_header1() {
+        let (_pro, sqf, _database) = get_statements("fnc_header1.sqf");
         let issues = sqf.issues();
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }

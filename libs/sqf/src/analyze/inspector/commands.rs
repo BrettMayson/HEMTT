@@ -60,31 +60,49 @@ impl Inspector {
         IndexSet::new()
     }
     #[must_use]
+    /// # Panics
     pub fn cmd_generic_params(
         &mut self,
         rhs: &IndexSet<GameValue>,
         debug_type: &str,
         source: &Range<usize>,
+        unary: bool,
     ) -> IndexSet<GameValue> {
         let mut error_type = None;
+        // get header for type defaults
+        let header = if unary
+            && self.in_primary_scope()
+            && let Some(self_header) = &self.function_info
+        {
+            Some(self_header.clone())
+        } else {
+            None
+        };
+
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
             };
 
-            for gv_index in gv_array {
+            for (i, gv_index) in gv_array.iter().enumerate() {
+                let arg_from_header = header.as_ref().and_then(|h| h.arg_get(i));
+                let set_from_header =
+                    arg_from_header.map(|a| GameValue::from_wiki_value_into_set(a.typ()));
                 for (element, element_span) in gv_index {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}
                         GameValue::String(_) => {
                             if let Some(error) = self.cmd_generic_params_element(
-                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy array
+                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy
+                                set_from_header.as_ref(),
                             ) {
                                 error_type = Some(error);
                             }
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            if let Some(error) = self.cmd_generic_params_element(arg_array) {
+                            if let Some(error) =
+                                self.cmd_generic_params_element(arg_array, set_from_header.as_ref())
+                            {
                                 error_type = Some(error);
                             }
                         }
@@ -116,7 +134,31 @@ impl Inspector {
     pub fn cmd_generic_params_element(
         &mut self,
         element: &[Vec<(GameValue, Range<usize>)>],
+        header_defaults: Option<&IndexSet<GameValue>>,
     ) -> Option<InvalidArgs> {
+        /// get generic params and optionally check that they match header
+        fn match_defaults_to_header(
+            var_types: &mut IndexSet<GameValue>,
+            input: &[(GameValue, Range<usize>)],
+            header_defaults: Option<&IndexSet<GameValue>>,
+        ) -> Option<InvalidArgs> {
+            let mut error_type = None;
+            for (v, v_span) in input {
+                let vg = v.make_generic();
+                if let Some(header_defaults) = header_defaults
+                    && !(header_defaults.contains(&GameValue::Anything)
+                        || header_defaults.contains(&vg))
+                {
+                    error_type = Some(InvalidArgs::ExpectedDifferentTypeHeader {
+                        expected: header_defaults.iter().cloned().collect(),
+                        found: vec![vg.clone()],
+                        span: v_span.clone(),
+                    });
+                }
+                var_types.insert(vg);
+            }
+            error_type
+        }
         if element.is_empty() || element[0].is_empty() {
             return None;
         }
@@ -134,7 +176,13 @@ impl Inspector {
                         match type_p {
                             GameValue::Array(Some(type_array), _) => {
                                 for type_i in type_array {
-                                    var_types.extend(type_i.iter().map(|(v, _)| v.make_generic()));
+                                    if let Some(type_error) = match_defaults_to_header(
+                                        &mut var_types,
+                                        type_i,
+                                        header_defaults,
+                                    ) {
+                                        error_type = Some(type_error);
+                                    }
                                 }
                             }
                             GameValue::Array(None, _) | GameValue::Anything => {}
@@ -147,6 +195,9 @@ impl Inspector {
                             }
                         }
                     }
+                }
+                if let Some(header_defaults) = header_defaults {
+                    var_types.extend(header_defaults.iter().cloned());
                 }
                 if var_types.is_empty() {
                     var_types.insert(GameValue::Anything);
@@ -167,16 +218,23 @@ impl Inspector {
                             expected: var_types.iter().cloned().collect(),
                             found: vec![default_value.clone()],
                             span: element[1][0].1.clone(),
-                            default: (element[2]
-                                .first()
-                                .map(|(_, s)| s.clone())
-                                .unwrap_or_default()
-                                .start)
-                                ..(element[2]
-                                    .last()
-                                    .map(|(_, s)| s.clone())
-                                    .unwrap_or_default()
-                                    .end),
+                            // element[2] could be missing if expected are from header
+                            default: if element.len() > 2 && !element[2].is_empty() {
+                                Some(
+                                    (element[2]
+                                        .first()
+                                        .map(|(_, s)| s.clone())
+                                        .unwrap_or_default()
+                                        .start)
+                                        ..(element[2]
+                                            .last()
+                                            .map(|(_, s)| s.clone())
+                                            .unwrap_or_default()
+                                            .end),
+                                )
+                            } else {
+                                None
+                            },
                         });
                     }
                     var_types.insert(default_value);
