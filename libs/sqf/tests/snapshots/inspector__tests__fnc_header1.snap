@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(2, [InvalidArgs { command: "[U:alive]", span: 22..27, variant: TypeNotExpected { expected: [Object], found: [Array(None, None)], span: 22..27 } }, InvalidReturnType { variant: InvalidReturnType { expected: [Boolean(None)], found: [String(Some(String("", 37..39, DoubleQuote)))], span: 37..39 } }])

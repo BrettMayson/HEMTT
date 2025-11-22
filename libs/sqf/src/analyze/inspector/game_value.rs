@@ -292,9 +292,22 @@ impl GameValue {
         }
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
-
     #[must_use]
-    /// Maps from Wiki:Value to Inspector:GameValue
+    /// Maps from Wiki:Value to Set (Nil is `Generic`) (Handles `OneOf`, allowing multiple types)
+    pub fn from_wiki_value_into_set(value: &Value) -> IndexSet<Self> {
+        match value {
+            Value::OneOf(vec) => {
+                let mut set = IndexSet::new();
+                for (v, _) in vec {
+                    set.extend(Self::from_wiki_value_into_set(v));
+                }
+                set
+            }
+            _ => IndexSet::from([Self::from_wiki_value(value).make_generic()]),
+        }
+    }
+    #[must_use]
+    /// Maps from Wiki:Value to Inspector:GameValue (Nil is `CommandReturn`)
     pub fn from_wiki_value(value: &Value) -> Self {
         match value {
             Value::Anything | Value::EdenEntity => Self::Anything,
@@ -356,6 +369,7 @@ impl GameValue {
             Self::ForType(_) => Self::ForType(None),
             Self::Number(_) => Self::Number(None),
             Self::String(_) => Self::String(None),
+            Self::Nothing(_) => Self::Nothing(NilSource::Generic),
             _ => self.clone(),
         }
     }

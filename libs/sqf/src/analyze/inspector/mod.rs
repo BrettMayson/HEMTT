@@ -1,10 +1,16 @@
 //! Inspects code, checking code args and variable usage
 //!
-use std::{hash::Hash, ops::Range, sync::OnceLock, vec};
+use std::{
+    hash::Hash,
+    ops::Range,
+    sync::{Arc, OnceLock},
+    vec,
+};
 
 use crate::{
     BinaryCommand, Expression, Statement, Statements, UnaryCommand,
-    analyze::inspector::game_value::NilSource, parser::database::Database,
+    analyze::inspector::{game_value::NilSource, headers::FunctionInfo},
+    parser::database::Database,
 };
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
@@ -17,122 +23,9 @@ use tracing::warn;
 mod commands;
 mod external_functions;
 mod game_value;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum InvalidArgs {
-    TypeNotExpected {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-    DefaultDifferentType {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-        default: Range<usize>,
-    },
-    NilResultUsed {
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-}
-
-impl InvalidArgs {
-    #[must_use]
-    pub fn note(&self) -> String {
-        let found = self
-            .found_types()
-            .iter()
-            .map(GameValue::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            "found type{} was {found}",
-            if self.found_types().len() > 1 {
-                "s"
-            } else {
-                ""
-            }
-        )
-    }
-
-    #[must_use]
-    pub fn message(&self, command: &str) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
-            Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
-            Self::DefaultDifferentType { .. } => {
-                String::from("Default value is not an expected type for the parameter")
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn label_message(&self) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!(
-                "expected {}",
-                self.expected_types()
-                    .iter()
-                    .map(GameValue::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-            Self::NilResultUsed { .. } => String::from("expected non-nil value"),
-            Self::DefaultDifferentType { .. } => {
-                format!(
-                    "expected {}",
-                    self.expected_types()
-                        .iter()
-                        .map(GameValue::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn found_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::TypeNotExpected { found, .. }
-            | Self::DefaultDifferentType { found, .. }
-            | Self::NilResultUsed { found, .. } => found.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn expected_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::NilResultUsed { .. } => vec![],
-            Self::TypeNotExpected { expected, .. }
-            | Self::DefaultDifferentType { expected, .. } => expected.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        match self {
-            Self::TypeNotExpected { span, .. }
-            | Self::DefaultDifferentType { span, .. }
-            | Self::NilResultUsed { span, .. } => span.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Issue {
-    InvalidArgs {
-        command: String,
-        span: Range<usize>,
-        variant: InvalidArgs,
-    },
-    Undefined(String, Range<usize>, bool),
-    Unused(String, VarSource),
-    Shadowed(String, Range<usize>),
-    NotPrivate(String, Range<usize>),
-    CountArrayComparison(bool, Range<usize>, String),
-}
+mod headers;
+mod issue;
+pub use issue::{InvalidArgs, Issue};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum VarSource {
@@ -175,18 +68,9 @@ pub struct ScriptScope {
     vars_local: Vec<Stack>,
     /// Set of possible return values from this scope
     returns_set: Vec<IndexSet<GameValue>>,
+    expected_returns: Option<IndexSet<GameValue>>,
     /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
-}
-
-impl ScriptScope {
-    /// # Panics
-    pub fn add_returns(&mut self, values: IndexSet<GameValue>) {
-        self.returns_set
-            .last_mut()
-            .expect("stack not empty")
-            .extend(values);
-    }
 }
 
 pub struct Inspector {
@@ -197,11 +81,16 @@ pub struct Inspector {
     code_used: IndexSet<Expression>,
     code_active: IndexSet<Expression>,
     scopes: Vec<ScriptScope>,
+    function_info: Option<Arc<FunctionInfo>>,
+    in_primary: bool,
 }
 
 impl Inspector {
     #[must_use]
-    pub fn new(ignored_vars: &IndexSet<String>) -> Self {
+    pub fn new(ignored_vars: &IndexSet<String>, function_info: Option<Arc<FunctionInfo>>) -> Self {
+        let expected_returns = function_info
+            .as_ref()
+            .and_then(|fi| fi.ret().map(GameValue::from_wiki_value_into_set));
         let mut inspector = Self {
             errors: IndexSet::new(),
             vars_global: Stack::new(),
@@ -210,8 +99,10 @@ impl Inspector {
             code_used: IndexSet::new(),
             code_active: IndexSet::new(),
             scopes: Vec::new(),
+            function_info,
+            in_primary: true,
         };
-        inspector.scope_push(false);
+        inspector.scope_push(false, expected_returns);
         inspector
     }
     /// # Panics
@@ -219,11 +110,16 @@ impl Inspector {
     pub fn active_scope(&mut self) -> &mut ScriptScope {
         self.scopes.last_mut().expect("there is always a scope")
     }
-    pub fn scope_push(&mut self, is_orphan_scope: bool) {
+    pub fn scope_push(
+        &mut self,
+        is_orphan_scope: bool,
+        expected_returns: Option<IndexSet<GameValue>>,
+    ) {
         // println!("Creating ScriptScope, orphan: {is_orphan_scope}");
         let scope = ScriptScope {
             vars_local: Vec::new(),
             returns_set: Vec::new(),
+            expected_returns,
             is_orphan_scope,
         };
         self.scopes.push(scope);
@@ -243,9 +139,47 @@ impl Inspector {
         self.scopes.pop();
     }
     #[must_use]
+    pub fn in_primary_scope(&mut self) -> bool {
+        self.in_primary && self.scopes.len() == 1 && self.active_scope().vars_local.len() == 1
+    }
+    /// # Panics
+    pub fn add_returns(&mut self, values: IndexSet<GameValue>, source: &Range<usize>) {
+        let scope = self.active_scope();
+
+        let err_opt = if scope.returns_set.len() == 1
+            && let Some(expected_returns) = &scope.expected_returns
+            && !values.iter().any(|ret| match ret {
+                GameValue::Anything => true,
+                _ => {
+                    expected_returns.contains(&GameValue::Anything)
+                        || expected_returns.contains(&ret.make_generic())
+                }
+            }) {
+            println!(
+                " - Missing expected return type in scope: {expected_returns:?} vs {values:?}"
+            );
+            Some(Issue::InvalidReturnType {
+                variant: InvalidArgs::InvalidReturnType {
+                    expected: expected_returns.iter().cloned().collect(),
+                    found: values.iter().cloned().collect(),
+                    span: source.clone(),
+                },
+            })
+        } else {
+            None
+        };
+        scope
+            .returns_set
+            .last_mut()
+            .expect("stack not empty")
+            .extend(values);
+        self.errors.extend(err_opt);
+    }
+    #[must_use]
     pub fn finish(mut self, database: &Database) -> Vec<Issue> {
         self.scope_pop();
-        debug_assert!(self.scopes.is_empty());
+        debug_assert!(self.in_primary && self.scopes.is_empty());
+        self.in_primary = false;
         let unused = &self.code_seen - &self.code_used;
         for code in &unused {
             let Expression::Code(statements) = code else {
@@ -253,7 +187,7 @@ impl Inspector {
             };
             self.code_used(code);
             // println!("-- Checking external scope");
-            self.scope_push(true); // create orphan scope
+            self.scope_push(true, None); // create orphan scope
             self.eval_statements(statements, false, database);
             self.scope_pop();
         }
@@ -526,12 +460,14 @@ impl Inspector {
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
-                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
+                        "params" => {
+                            Some(self.cmd_generic_params(&rhs_set, &debug_type, source, true))
+                        }
                         "private" => Some(self.cmd_u_private(&rhs_set)),
                         "call" => Some(self.cmd_generic_call(&rhs_set, None, database)),
                         "default" => {
                             let returns = self.cmd_generic_call(&rhs_set, None, database);
-                            self.active_scope().add_returns(returns);
+                            self.add_returns(returns, source);
                             None
                         }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
@@ -618,7 +554,7 @@ impl Inspector {
                     BinaryCommand::Associate => {
                         // the : from case ToDo: these run outside of the do scope
                         let returns = self.cmd_generic_call(&rhs_set, None, database);
-                        self.active_scope().add_returns(returns);
+                        self.add_returns(returns, source);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
@@ -640,7 +576,9 @@ impl Inspector {
                             self.cmd_generic_modify_lvalue(lhs);
                             None
                         }
-                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
+                        "params" => {
+                            Some(self.cmd_generic_params(&rhs_set, &debug_type, source, false))
+                        }
                         "call" => {
                             self.external_function(&lhs_set, rhs, database);
                             Some(self.cmd_generic_call(&rhs_set, None, database))
@@ -655,7 +593,7 @@ impl Inspector {
                         }
                         "exitwith" => {
                             let returns = self.cmd_generic_call(&rhs_set, None, database);
-                            self.active_scope().add_returns(returns);
+                            self.add_returns(returns, source);
                             None
                         }
                         "do" => {
@@ -757,9 +695,9 @@ impl Inspector {
         add_to_stack: bool,
         database: &Database,
     ) {
-        let mut last_statement = IndexSet::new();
         for statement in statements.content() {
-            last_statement = match statement {
+            let add_returns = add_to_stack && statements.content().last() == Some(statement);
+            match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self
@@ -776,7 +714,9 @@ impl Inspector {
                             expression.span().clone(),
                         ),
                     );
-                    IndexSet::from([GameValue::Assignment])
+                    if add_returns {
+                        self.add_returns(IndexSet::from([GameValue::Assignment]), source);
+                    }
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
@@ -794,17 +734,17 @@ impl Inspector {
                             expression.span().clone(),
                         ),
                     );
-                    IndexSet::from([GameValue::Assignment])
+                    if add_returns {
+                        self.add_returns(IndexSet::from([GameValue::Assignment]), source);
+                    }
                 }
-                Statement::Expression(expression, _) => self
-                    .eval_expression(expression, database)
-                    .into_iter()
-                    .map(|(gv, _)| gv)
-                    .collect(),
+                Statement::Expression(expression, source) => {
+                    let returns = self.eval_expression(expression, database);
+                    if add_returns {
+                        self.add_returns(returns.into_iter().map(|(gv, _)| gv).collect(), source);
+                    }
+                }
             }
-        }
-        if add_to_stack {
-            self.active_scope().add_returns(last_statement);
         }
     }
 }
@@ -819,6 +759,8 @@ pub fn run_processed(
 ) -> Vec<Issue> {
     static RE_IGNORE_VARIABLES: OnceLock<Regex> = OnceLock::new();
     static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
+
+    let function_info = FunctionInfo::extract_from_header(processed);
 
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_ascii_lowercase());
@@ -838,7 +780,7 @@ pub fn run_processed(
         }
     }
 
-    let mut inspector = Inspector::new(&ignored_vars);
+    let mut inspector = Inspector::new(&ignored_vars, function_info);
     inspector.eval_statements(statements, true, database);
     let issues = inspector.finish(database);
     // for ig in ignored_vars.clone() {
