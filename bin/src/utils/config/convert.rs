@@ -1,4 +1,3 @@
-use serde_json;
 use std::{io::Write as _, path::PathBuf};
 
 use hemtt_workspace::reporting::WorkspaceFiles;
