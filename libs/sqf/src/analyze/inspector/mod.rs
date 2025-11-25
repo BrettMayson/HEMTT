@@ -23,7 +23,7 @@ use tracing::warn;
 mod commands;
 mod external_functions;
 mod game_value;
-mod headers;
+pub mod headers;
 mod issue;
 pub use issue::{InvalidArgs, Issue};
 
@@ -88,9 +88,10 @@ pub struct Inspector {
 impl Inspector {
     #[must_use]
     pub fn new(ignored_vars: &IndexSet<String>, function_info: Option<Arc<FunctionInfo>>) -> Self {
-        let expected_returns = function_info
-            .as_ref()
-            .and_then(|fi| fi.ret().map(GameValue::from_wiki_value_into_set));
+        let expected_returns = function_info.as_ref().and_then(|fi| {
+            fi.ret()
+                .map(|m| GameValue::from_wiki_value(m, NilSource::Generic))
+        });
         let mut inspector = Self {
             errors: IndexSet::new(),
             vars_global: Stack::new(),
@@ -580,7 +581,7 @@ impl Inspector {
                             Some(self.cmd_generic_params(&rhs_set, &debug_type, source, false))
                         }
                         "call" => {
-                            self.external_function(&lhs_set, rhs, database);
+                            self.external_function_call(Some(&lhs_set), rhs, database);
                             Some(self.cmd_generic_call(&rhs_set, None, database))
                         }
                         "spawn" => {
@@ -761,6 +762,9 @@ pub fn run_processed(
     static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
 
     let function_info = FunctionInfo::extract_from_header(processed);
+    if let Some(function_info) = &function_info {
+        database.project_functions_push(function_info.clone());
+    }
 
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_ascii_lowercase());

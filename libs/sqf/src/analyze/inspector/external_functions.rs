@@ -2,28 +2,115 @@
 
 use std::ops::Range;
 
+use arma3_wiki::model::Arg;
 use indexmap::IndexSet;
+#[allow(unused_imports)]
+use tracing::{info, trace, warn};
 
-use crate::{Expression, analyze::inspector::VarSource, parser::database::Database};
+use crate::{
+    Expression,
+    analyze::inspector::{InvalidArgs, Issue, VarSource},
+    parser::database::Database,
+};
 
 use super::{Inspector, game_value::GameValue};
 
 impl Inspector {
-    pub fn external_function(
+    /// Analyze external function calls in database
+    pub fn external_function_call(
         &mut self,
-        lhs: &IndexSet<GameValue>,
+        lhs: Option<&IndexSet<GameValue>>,
         rhs: &Expression,
         database: &Database,
-    ) {
-        let Expression::Variable(ext_func, _) = rhs else {
-            return;
+    ) -> Option<IndexSet<GameValue>> {
+        let Expression::Variable(ext_func, span) = rhs else {
+            return None;
         };
         let ext_func_lower = ext_func.to_ascii_lowercase();
+
+        if let Some(lhs) = lhs {
+            self.external_check_code_usage(lhs, &ext_func_lower, database);
+        }
+
+        let Some(func) = database.external_functions_get(&ext_func_lower) else {
+            // trace!("Unknown external function: {}", ext_func_lower);
+            return None;
+        };
+        let cmd_name = ext_func.as_str();
+        let params = func.params();
+        let ret = func.ret().map(|r| {
+            GameValue::from_wiki_value(
+                r,
+                crate::analyze::inspector::game_value::NilSource::CommandReturn,
+            )
+        });
+        let min_required_param = params
+            .iter()
+            .position(arma3_wiki::model::Param::optional)
+            .unwrap_or(params.len());
+        let Some(lhs) = lhs else {
+            if min_required_param > 0 {
+                self.errors.insert(Issue::InvalidArgs {
+                    command: ext_func_lower,
+                    span: span.clone(),
+                    variant: InvalidArgs::FuncNoArgs { min_required_param },
+                });
+            }
+            return ret;
+        };
+        let expected_singular = if min_required_param <= 1 {
+            if params.is_empty() {
+                return ret;
+            }
+            // try matching raw first argument without array (`_unit call ace_common_fnc_isPlayer`)
+            let arg_dummy = Arg::Item(String::from("a0"));
+            let (is_match, expected) =
+                GameValue::match_set_to_arg(cmd_name, lhs, &arg_dummy, params);
+            if is_match {
+                return ret;
+            }
+            Some(expected)
+        } else {
+            None
+        };
+        let arg_dummy_vec = params
+            .iter()
+            .enumerate()
+            .map(|(i, _p)| Arg::Item(format!("{i}")))
+            .collect::<Vec<_>>();
+        let arg_dummy = Arg::Array(arg_dummy_vec);
+        let (is_match, mut expected) =
+            GameValue::match_set_to_arg(cmd_name, lhs, &arg_dummy, params);
+
+        if !is_match {
+            if let Some(expected_singular) = expected_singular {
+                expected.extend(expected_singular);
+            }
+            self.errors.insert(Issue::InvalidArgs {
+                command: ext_func_lower.clone(),
+                span: span.clone(),
+                variant: InvalidArgs::TypeNotExpected {
+                    expected: expected.into_iter().collect(),
+                    found: lhs.iter().cloned().collect(),
+                    span: span.clone(),
+                },
+            });
+        }
+        ret
+    }
+
+    /// Check usage of code blocks in external functions (e.g. `cba_fnc_execNextFrame`)
+    pub fn external_check_code_usage(
+        &mut self,
+        lhs: &IndexSet<GameValue>,
+        ext_func_lower: &str,
+        database: &Database,
+    ) {
         for possible in lhs {
             match possible {
                 GameValue::Code(Some(statements)) => {
                     // handle `{} call cba_fnc_directcall`
-                    if ext_func_lower.as_str() == "cba_fnc_directcall" {
+                    if ext_func_lower == "cba_fnc_directcall" {
                         self.external_current_scope(
                             &vec![(GameValue::Code(Some(statements.clone())), statements.span())],
                             &vec![],
@@ -31,7 +118,7 @@ impl Inspector {
                         );
                     }
                 }
-                GameValue::Array(Some(gv_array), _) => match ext_func_lower.as_str() {
+                GameValue::Array(Some(gv_array), _) => match ext_func_lower {
                     // Functions that will run in existing scope
                     "cba_fnc_hasheachpair" | "cba_fnc_hashfilter" => {
                         if gv_array.len() > 1 {

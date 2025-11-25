@@ -1681,6 +1681,8 @@ dependencies = [
  "paste",
  "regex",
  "rustversion",
+ "serde",
+ "serde_json",
  "thiserror 2.0.17",
  "toml",
  "tracing",

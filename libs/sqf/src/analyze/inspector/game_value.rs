@@ -144,9 +144,9 @@ impl GameValue {
                 }
             }
             let value = &syntax.ret().0;
-            let game_value = Self::from_wiki_value(value);
+            let game_value = Self::from_wiki_value(value, NilSource::CommandReturn);
             // println!("match syntax {syntax:?}");
-            return_types.insert(game_value);
+            return_types.extend(game_value);
         }
         // println!("lhs_set {lhs_set:?}");
         // println!("rhs_set {rhs_set:?}");
@@ -202,10 +202,10 @@ impl GameValue {
                     }
                     return (true, IndexSet::new());
                 };
-                let (is_match, expected_gv) =
+                let (is_match, expected_gvs) =
                     Self::match_set_to_value(set, param.typ(), param.optional());
                 let mut expected = IndexSet::new();
-                expected.insert(expected_gv);
+                expected.extend(expected_gvs);
                 (is_match, expected)
             }
             Arg::Array(arg_array) => {
@@ -257,18 +257,22 @@ impl GameValue {
 
     #[must_use]
     /// checks if a set of `GameValues` matches a wiki Value (with optional flag)
-    /// returns the expected `GameValue` type
+    /// returns the expected `GameValue` types
     pub fn match_set_to_value(
         set: &IndexSet<Self>,
         right_wiki: &Value,
         optional: bool,
-    ) -> (bool, Self) {
+    ) -> (bool, IndexSet<Self>) {
         // println!("Checking {set:?} against {right_wiki:?} [O:{optional}]");
-        let right = Self::from_wiki_value(right_wiki);
+        let right = Self::from_wiki_value(right_wiki, NilSource::CommandReturn);
         if optional && (set.is_empty() || set.iter().any(|gv| matches!(gv, Self::Nothing(_)))) {
             return (true, right);
         }
-        (set.iter().any(|gv| Self::match_values(gv, &right)), right)
+        (
+            set.iter()
+                .any(|gv| right.iter().any(|r| Self::match_values(gv, r))),
+            right,
+        )
     }
 
     #[must_use]
@@ -293,24 +297,10 @@ impl GameValue {
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
     #[must_use]
-    /// Maps from Wiki:Value to Set (Nil is `Generic`) (Handles `OneOf`, allowing multiple types)
-    pub fn from_wiki_value_into_set(value: &Value) -> IndexSet<Self> {
+    /// Maps from `Wiki:Value` to Set of `GameValues`
+    pub fn from_wiki_value(value: &Value, nil_type: NilSource) -> IndexSet<Self> {
         match value {
-            Value::OneOf(vec) => {
-                let mut set = IndexSet::new();
-                for (v, _) in vec {
-                    set.extend(Self::from_wiki_value_into_set(v));
-                }
-                set
-            }
-            _ => IndexSet::from([Self::from_wiki_value(value).make_generic()]),
-        }
-    }
-    #[must_use]
-    /// Maps from Wiki:Value to Inspector:GameValue (Nil is `CommandReturn`)
-    pub fn from_wiki_value(value: &Value) -> Self {
-        match value {
-            Value::Anything | Value::EdenEntity => Self::Anything,
+            Value::Anything | Value::EdenEntity => IndexSet::from([Self::Anything]),
             Value::ArrayColor
             | Value::ArrayColorRgb
             | Value::ArrayColorRgba
@@ -319,43 +309,50 @@ impl GameValue {
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
             | Value::Position // position is often too generic to match?
-            | Value::Waypoint => Self::Array(None, None),
+            | Value::Waypoint => IndexSet::from([Self::Array(None, None)]),
             // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
-            Value::Position3dAGLS | Value::Position3dAGL => Self::Array(None, Some(ArrayType::PosAGL)), // merge
-            Value::Position3dASL => Self::Array(None, Some(ArrayType::PosASL)),
-            Value::Position3DASLW => Self::Array(None, Some(ArrayType::PosASLW)),
-            Value::Position3dATL => Self::Array(None, Some(ArrayType::PosATL)),
-            Value::Boolean => Self::Boolean(None),
-            Value::Code => Self::Code(None),
-            Value::Config => Self::Config,
-            Value::Control => Self::Control,
-            Value::DiaryRecord => Self::DiaryRecord,
-            Value::Display => Self::Display,
-            Value::ForType => Self::ForType(None),
-            Value::Group => Self::Group,
-            Value::HashMapUnknown => Self::HashMap,
-            Value::IfType => Self::IfType,
-            Value::Location => Self::Location,
-            Value::Namespace => Self::Namespace,
-            Value::Nothing => Self::Nothing(NilSource::CommandReturn),
-            Value::Number => Self::Number(None),
-            Value::Object => Self::Object,
-            Value::ScriptHandle => Self::ScriptHandle,
-            Value::Side => Self::Side,
-            Value::String => Self::String(None),
-            Value::SwitchType => Self::SwitchType,
-            Value::StructuredText => Self::StructuredText,
-            Value::Task => Self::Task,
-            Value::TeamMember => Self::TeamMember,
-            Value::WhileType => Self::WhileType,
-            Value::WithType => Self::WithType,
+            Value::Position3dAGLS | Value::Position3dAGL => IndexSet::from([Self::Array(None, Some(ArrayType::PosAGL))]), // merge
+            Value::Position3dASL => IndexSet::from([Self::Array(None, Some(ArrayType::PosASL))]),
+            Value::Position3DASLW => IndexSet::from([Self::Array(None, Some(ArrayType::PosASLW))]),
+            Value::Position3dATL => IndexSet::from([Self::Array(None, Some(ArrayType::PosATL))]),
+            Value::Boolean => IndexSet::from([Self::Boolean(None)]),
+            Value::Code => IndexSet::from([Self::Code(None)]),
+            Value::Config => IndexSet::from([Self::Config]),
+            Value::Control => IndexSet::from([Self::Control]),
+            Value::DiaryRecord => IndexSet::from([Self::DiaryRecord]),
+            Value::Display => IndexSet::from([Self::Display]),
+            Value::ForType => IndexSet::from([Self::ForType(None)]),
+            Value::Group => IndexSet::from([Self::Group]),
+            Value::HashMapUnknown => IndexSet::from([Self::HashMap]),
+            Value::IfType => IndexSet::from([Self::IfType]),
+            Value::Location => IndexSet::from([Self::Location]),
+            Value::Namespace => IndexSet::from([Self::Namespace]),
+            Value::Nothing => IndexSet::from([Self::Nothing(nil_type)]),
+            Value::Number => IndexSet::from([Self::Number(None)]),
+            Value::Object => IndexSet::from([Self::Object]),
+            Value::ScriptHandle => IndexSet::from([Self::ScriptHandle]),
+            Value::Side => IndexSet::from([Self::Side]),
+            Value::String => IndexSet::from([Self::String(None)]),
+            Value::SwitchType => IndexSet::from([Self::SwitchType]),
+            Value::StructuredText => IndexSet::from([Self::StructuredText]),
+            Value::Task => IndexSet::from([Self::Task]),
+            Value::TeamMember => IndexSet::from([Self::TeamMember]),
+            Value::WhileType => IndexSet::from([Self::WhileType]),
+            Value::WithType => IndexSet::from([Self::WithType]),
+            Value::OneOf(vec) => {
+                let mut set = IndexSet::new();
+                for (v, _) in vec {
+                    set.extend(Self::from_wiki_value(v, nil_type.clone()));
+                }
+                set
+            }
             Value::Unknown => {
                 trace!("wiki has syntax with [unknown] type");
-                Self::Anything
+                IndexSet::from([Self::Anything])
             }
             _ => {
                 warn!("wiki type [{value:?}] not matched");
-                Self::Anything
+                IndexSet::from([Self::Anything])
             }
         }
     }

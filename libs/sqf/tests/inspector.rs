@@ -31,9 +31,12 @@ mod tests {
 
     #[test]
     pub fn test_fnc_aaa() {
-        let (_pro, sqf, _database) = get_statements("fnc_aaa.sqf");
-        let result = sqf.issues();
-        println!("done: {}, {result:?}", result.len());
+        let (_pro, sqf, database) = get_statements("fnc_aaa.sqf");
+        let issues = sqf.issues();
+        println!("issues: {}, {issues:?}", issues.len());
+        println!();
+        let header = database.project_functions_testing();
+        println!("header: {header:?}");
     }
     #[test]
     pub fn test_main() {

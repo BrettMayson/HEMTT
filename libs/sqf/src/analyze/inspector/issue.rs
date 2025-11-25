@@ -45,6 +45,14 @@ pub enum InvalidArgs {
         found: Vec<GameValue>,
         span: Range<usize>,
     },
+    FuncNoArgs {
+        min_required_param: usize,
+    },
+    FuncTypeNotExpected {
+        expected: Vec<GameValue>,
+        found: Vec<GameValue>,
+        span: Range<usize>,
+    },
 }
 
 impl InvalidArgs {
@@ -69,7 +77,9 @@ impl InvalidArgs {
     #[must_use]
     pub fn message(&self, command: &str) -> String {
         match self {
-            Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
+            Self::TypeNotExpected { .. }
+            | Self::FuncTypeNotExpected { .. }
+            | Self::FuncNoArgs { .. } => format!("Invalid argument type for `{command}`"),
             Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
             Self::DefaultDifferentType { default, .. } => {
                 if default.is_none() {
@@ -96,7 +106,8 @@ impl InvalidArgs {
             Self::TypeNotExpected { .. }
             | Self::DefaultDifferentType { .. }
             | Self::ExpectedDifferentTypeHeader { .. }
-            | Self::InvalidReturnType { .. } => {
+            | Self::InvalidReturnType { .. }
+            | Self::FuncTypeNotExpected { .. } => {
                 format!(
                     "expected {}",
                     self.expected_types()
@@ -105,6 +116,9 @@ impl InvalidArgs {
                         .collect::<Vec<_>>()
                         .join(", ")
                 )
+            }
+            Self::FuncNoArgs { min_required_param } => {
+                format!("Called Unary but expects at least {min_required_param} argument(s)")
             }
         }
     }
@@ -116,18 +130,21 @@ impl InvalidArgs {
             | Self::DefaultDifferentType { found, .. }
             | Self::ExpectedDifferentTypeHeader { found, .. }
             | Self::NilResultUsed { found, .. }
-            | Self::InvalidReturnType { found, .. } => found.clone(),
+            | Self::InvalidReturnType { found, .. }
+            | Self::FuncTypeNotExpected { found, .. } => found.clone(),
+            Self::FuncNoArgs { .. } => vec![],
         }
     }
 
     #[must_use]
     pub fn expected_types(&self) -> Vec<GameValue> {
         match self {
-            Self::NilResultUsed { .. } => vec![],
+            Self::NilResultUsed { .. } | Self::FuncNoArgs { .. } => vec![],
             Self::TypeNotExpected { expected, .. }
             | Self::DefaultDifferentType { expected, .. }
             | Self::ExpectedDifferentTypeHeader { expected, .. }
-            | Self::InvalidReturnType { expected, .. } => expected.clone(),
+            | Self::InvalidReturnType { expected, .. }
+            | Self::FuncTypeNotExpected { expected, .. } => expected.clone(),
         }
     }
 
@@ -138,7 +155,9 @@ impl InvalidArgs {
             | Self::DefaultDifferentType { span, .. }
             | Self::ExpectedDifferentTypeHeader { span, .. }
             | Self::InvalidReturnType { span, .. }
-            | Self::NilResultUsed { span, .. } => span.clone(),
+            | Self::NilResultUsed { span, .. }
+            | Self::FuncTypeNotExpected { span, .. } => span.clone(),
+            Self::FuncNoArgs { .. } => self.span(),
         }
     }
 }

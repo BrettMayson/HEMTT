@@ -47,8 +47,63 @@ impl SqfAnalyzer {
         let Symbol::Word(word) = token.symbol() else {
             return None;
         };
+        println!("Hover word: {word}");
+        if let Some(func) = database.external_functions_get(&word.to_lowercase()) {
+            return Some(hover_func(func));
+        }
         database.wiki().commands().get(word)?;
         Some(hover(word, &database))
+    }
+}
+
+// WIP
+fn hover_func(func: &hemtt_sqf::analyze::inspector::headers::FunctionInfo) -> Hover {
+    Hover {
+        contents: HoverContents::Array({
+            let mut contents = Vec::new();
+            contents.push(MarkedString::String(format!(
+                "## {}",
+                func.func_name().unwrap_or(&String::new())
+            )));
+            {
+                let mut string = String::new();
+                for arg in func.params() {
+                    writeln!(
+                        string,
+                        "- `{}`: {}{}",
+                        arg.name(),
+                        {
+                            let typ = arg.typ().to_string();
+                            if typ == "Unknown" {
+                                typ
+                            } else {
+                                format!(
+                                    "[{}](https://community.bistudio.com/wiki/{})",
+                                    typ,
+                                    typ.replace(' ', "_")
+                                )
+                            }
+                        },
+                        { arg.description().unwrap_or("?") }
+                    )
+                    .expect("Failed to write to string");
+                }
+                contents.push(MarkedString::String(format!("### Syntax\n{string}")));
+            }
+            if let Some(ret) = func.ret() {
+                contents.push(MarkedString::String(format!(
+                    "### Return Type\n- [{}](https://community.bistudio.com/wiki/{})",
+                    ret,
+                    ret.to_string().replace(' ', "_")
+                )));
+            }
+            let example = func.example();
+            if !example.is_empty() {
+                contents.push(MarkedString::String(format!("### Example\n{example}")));
+            }
+            contents
+        }),
+        range: None,
     }
 }
 

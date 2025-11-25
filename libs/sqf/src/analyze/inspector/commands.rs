@@ -85,9 +85,10 @@ impl Inspector {
             };
 
             for (i, gv_index) in gv_array.iter().enumerate() {
-                let arg_from_header = header.as_ref().and_then(|h| h.arg_get(i));
-                let set_from_header =
-                    arg_from_header.map(|a| GameValue::from_wiki_value_into_set(a.typ()));
+                let set_from_header = header
+                    .as_ref()
+                    .and_then(|h| h.params().get(i))
+                    .map(|a| GameValue::from_wiki_value(a.typ(), NilSource::CommandReturn));
                 for (element, element_span) in gv_index {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}

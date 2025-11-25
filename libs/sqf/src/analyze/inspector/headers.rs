@@ -5,18 +5,23 @@ use std::sync::{Arc, OnceLock};
 
 const MAX_ARG_INDEX: usize = 100;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct FunctionInfo {
-    pub args: Vec<Param>,
+    pub params: Vec<Param>,
     pub ret: Option<Value>,
     pub func_name: Option<String>,
-    // pub example: String,
+    pub example: String,
     // pub public: bool,
 }
 impl FunctionInfo {
     #[must_use]
-    pub fn arg_get(&self, index: usize) -> Option<&Param> {
-        self.args.get(index)
+    pub fn params(&self) -> &[Param] {
+        &self.params
+    }
+    #[must_use]
+    pub fn param_get(&self, index: usize) -> Option<&Param> {
+        self.params.get(index)
     }
     #[must_use]
     pub const fn ret(&self) -> Option<&Value> {
@@ -27,7 +32,11 @@ impl FunctionInfo {
         self.func_name.as_ref()
     }
     #[must_use]
-    pub fn extract_from_header(processed: &Processed) -> Option<Arc<Self>> {
+    pub fn example(&self) -> &str {
+        &self.example
+    }
+    #[must_use]
+    pub(crate) fn extract_from_header(processed: &Processed) -> Option<Arc<Self>> {
         for (path, source) in &processed.sources() {
             let filename = path.filename().to_lowercase();
             if filename.starts_with("fnc_")
@@ -94,6 +103,7 @@ fn match_value(input_low: &str) -> Option<Value> {
             "object" | "logic" => Value::Object,
             "side" => Value::Side,
             "string" | "text" => Value::String,
+            "structuredtext" => Value::StructuredText,
             "nil" | "nothing" => Value::Nothing,
             _ => {
                 println!("WARN: unknown type '{input}', defaulting to Anything");
@@ -139,7 +149,7 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
             }
             while out.len() < arg_index {
                 out.push(Param::new(
-                    format!("a{}", out.len()),
+                    format!("{}", out.len()),
                     Some("padding for skipped args".to_string()),
                     Value::Anything,
                     true,
@@ -157,7 +167,7 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
             || arg_info_low.contains("(default");
         let arg_type = arg_type.unwrap_or(Value::Anything);
         out.push(Param::new(
-            format!("a{}", out.len()),
+            format!("{}", out.len()),
             Some(arg_info.to_string()),
             arg_type,
             arg_optional,
@@ -232,13 +242,13 @@ fn match_style(
     let args = parse_args(capture.name("arg"), re_arg_line)?;
     let ret = parse_return(capture.name("ret"));
     let func_name = parse_function_name(source, filename);
-    // let example = parse_example(capture.name("ex"));
+    let example = parse_example(capture.name("ex"));
     // let public = parse_public(capture.name("pub"));
     Ok(Arc::new(FunctionInfo {
-        args,
+        params: args,
         ret,
         func_name,
-        // example,
+        example,
         // public,
     }))
 }
@@ -281,7 +291,8 @@ mod tests {
         assert!(h.is_ok_and(|h| {
             h.ret()
                 .is_some_and(|r| r == &arma3_wiki::model::Value::Boolean)
-                && h.arg_get(0)
+                && h.params()
+                    .first()
                     .is_some_and(|a| a.typ() == &arma3_wiki::model::Value::ArrayUnknown)
         }));
     }
