@@ -25,7 +25,7 @@ toml = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = "0.8.0"
 insta = { workspace = true }
 
 [[bench]]
