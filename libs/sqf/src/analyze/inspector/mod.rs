@@ -535,7 +535,7 @@ impl Inspector {
                             None
                         }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" => {
+                        "while" | "waituntil" | "try" => {
                             let _ = self.cmd_generic_call(&rhs_set, None, database);
                             None
                         }
@@ -692,6 +692,16 @@ impl Inspector {
                         }
                         "findif" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
+                            let _ =
+                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            None
+                        }
+                        "try" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, database);
+                            None
+                        }
+                        "catch" => {
+                            let magic = vec![("_exception", GameValue::Anything)];
                             let _ =
                                 self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
                             None

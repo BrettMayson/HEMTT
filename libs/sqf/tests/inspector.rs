@@ -61,6 +61,12 @@ mod tests {
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
     #[test]
+    pub fn test_code_usage() {
+        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
+        let issues = sqf.issues();
+        insta::assert_compact_debug_snapshot!((issues.len(), issues));
+    }
+    #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
         let mut all_examples = String::from("a=1; b=2;"); // gvars get defined in some examples
