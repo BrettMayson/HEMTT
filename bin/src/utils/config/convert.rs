@@ -11,7 +11,7 @@ use crate::Error;
 pub struct ConvertArgs {
     /// Config file to convert (.cpp, .hpp, .rvmat)
     pub(crate) file: String,
-    /// Output format: debin (cpp), json, or json-pretty
+    /// Output format: cpp, json, or json-pretty
     #[arg(short = 'f', long = "format", default_value = "json-pretty")]
     pub(crate) output_format: OutputFormat,
     /// Output file path
@@ -47,7 +47,7 @@ pub fn convert(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> Re
             );
             let mut output = fs_err::File::create(output)?;
             match format {
-                OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,
+                OutputFormat::Cpp => output.write_all(config.to_string().as_bytes())?,
                 OutputFormat::Json => {
                     output.write_all(serde_json::to_string(&config)?.as_bytes())?;
                 }
