@@ -1,7 +1,27 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s05_if_assign))
+expression: "lint(stringify! (s05_if_assign), true).0"
 ---
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced the condition directly[0m
+   [0m[36m┌─[0m s05_if_assign.sqf:11:20
+   [0m[36m│[0m
+[0m[36m11[0m [0m[36m│[0m private _isAlive = [0m[33mif (alive player) then { true } else { false }[0m;
+   [0m[36m│[0m                    [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse condition directly[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if statement returns boolean values directly
+   [0m[36m=[0m [32mtry[0m: alive player
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced the inverted condition[0m
+   [0m[36m┌─[0m s05_if_assign.sqf:12:18
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m private _isDry = [0m[33mif (surfaceIsWater position player) then { false } else { true }[0m;
+   [0m[36m│[0m                  [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse inverted condition directly[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if statement returns inverted boolean value directly
+   [0m[36m=[0m [32mtry[0m: !(surfaceIsWater position player)
+
+
 [0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
   [0m[36m┌─[0m s05_if_assign.sqf:1:24
   [0m[36m│[0m
@@ -44,3 +64,14 @@ expression: lint(stringify! (s05_if_assign))
   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
           select is faster in this case
   [0m[36m=[0m [32mtry[0m: ["legs", "torso"] select (alive player)
+
+
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with select[0m
+   [0m[36m┌─[0m s05_if_assign.sqf:13:22
+   [0m[36m│[0m
+[0m[36m13[0m [0m[36m│[0m private _isWarmStr = [0m[33mif (temperature > 20) then { "true" } else { "false" }[0m;
+   [0m[36m│[0m                      [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse select[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: the if and else blocks only return constant values
+           select is faster in this case
+   [0m[36m=[0m [32mtry[0m: ["false", "true"] select (temperature > 20)
