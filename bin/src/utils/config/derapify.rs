@@ -7,15 +7,15 @@ use crate::Error;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum OutputFormat {
-    Debin,
+    Cpp,
     Json,
     JsonPretty,
 }
 
 impl OutputFormat {
-    const fn default_extension(&self) -> &str {
+    pub const fn default_extension(&self) -> &str {
         match self {
-            Self::Debin => "cpp",
+            Self::Cpp => "cpp",
             Self::JsonPretty | Self::Json => "json",
         }
     }
@@ -27,8 +27,8 @@ impl OutputFormat {
 pub struct DerapifyArgs {
     /// File to derapify (typically config.bin)
     pub(crate) file: String,
-    /// Output format: debin (cpp), json, or json-pretty
-    #[arg(short = 'f', long = "format", default_value = "debin")]
+    /// Output format: cpp, json, or json-pretty
+    #[arg(short = 'f', long = "format", default_value = "cpp")]
     pub(crate) output_format: OutputFormat,
     /// Output file path
     ///
@@ -55,7 +55,7 @@ pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> R
     );
     let mut output = fs_err::File::create(output)?;
     match format {
-        OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,
+        OutputFormat::Cpp => output.write_all(config.to_string().as_bytes())?,
         OutputFormat::Json => {
             output.write_all(serde_json::to_string(&config)?.as_bytes())?;
         }

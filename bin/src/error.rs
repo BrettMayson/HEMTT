@@ -1,5 +1,8 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Config error: {0}")]
+    Config(String),
+
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
 
