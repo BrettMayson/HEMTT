@@ -17,122 +17,8 @@ use tracing::warn;
 mod commands;
 mod external_functions;
 mod game_value;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum InvalidArgs {
-    TypeNotExpected {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-    DefaultDifferentType {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-        default: Range<usize>,
-    },
-    NilResultUsed {
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-}
-
-impl InvalidArgs {
-    #[must_use]
-    pub fn note(&self) -> String {
-        let found = self
-            .found_types()
-            .iter()
-            .map(GameValue::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            "found type{} was {found}",
-            if self.found_types().len() > 1 {
-                "s"
-            } else {
-                ""
-            }
-        )
-    }
-
-    #[must_use]
-    pub fn message(&self, command: &str) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
-            Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
-            Self::DefaultDifferentType { .. } => {
-                String::from("Default value is not an expected type for the parameter")
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn label_message(&self) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!(
-                "expected {}",
-                self.expected_types()
-                    .iter()
-                    .map(GameValue::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-            Self::NilResultUsed { .. } => String::from("expected non-nil value"),
-            Self::DefaultDifferentType { .. } => {
-                format!(
-                    "expected {}",
-                    self.expected_types()
-                        .iter()
-                        .map(GameValue::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn found_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::TypeNotExpected { found, .. }
-            | Self::DefaultDifferentType { found, .. }
-            | Self::NilResultUsed { found, .. } => found.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn expected_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::NilResultUsed { .. } => vec![],
-            Self::TypeNotExpected { expected, .. }
-            | Self::DefaultDifferentType { expected, .. } => expected.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        match self {
-            Self::TypeNotExpected { span, .. }
-            | Self::DefaultDifferentType { span, .. }
-            | Self::NilResultUsed { span, .. } => span.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Issue {
-    InvalidArgs {
-        command: String,
-        span: Range<usize>,
-        variant: InvalidArgs,
-    },
-    Undefined(String, Range<usize>, bool),
-    Unused(String, VarSource),
-    Shadowed(String, Range<usize>),
-    NotPrivate(String, Range<usize>),
-    CountArrayComparison(bool, Range<usize>, String),
-}
+mod issue;
+pub use issue::{InvalidArgs, Issue};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum VarSource {
@@ -583,9 +469,7 @@ impl Inspector {
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
-                    if expected_lhs.difference(&lhs_set).count() != 0
-                        && !expected_lhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_lhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -596,9 +480,7 @@ impl Inspector {
                             },
                         });
                     }
-                    if expected_rhs.difference(&rhs_set).count() != 0
-                        && !expected_rhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_rhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
