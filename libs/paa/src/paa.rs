@@ -6,15 +6,15 @@ use std::{
 };
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use indexmap::IndexMap;
 
 use crate::{MipMap, PaXType};
 
-use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Paa {
     format: PaXType,
-    taggs: HashMap<String, Vec<u8>>,
+    taggs: IndexMap<String, Vec<u8>>,
     maps: Vec<(MipMap, u64)>,
 }
 
@@ -23,7 +23,7 @@ impl Paa {
     pub fn new(format: PaXType) -> Self {
         Self {
             format,
-            taggs: HashMap::new(),
+            taggs: IndexMap::new(),
             maps: Vec::new(),
         }
     }
@@ -36,7 +36,7 @@ impl Paa {
 
     #[must_use]
     /// Get the taggs of the Paa
-    pub const fn taggs(&self) -> &HashMap<String, Vec<u8>> {
+    pub const fn taggs(&self) -> &IndexMap<String, Vec<u8>> {
         &self.taggs
     }
 
