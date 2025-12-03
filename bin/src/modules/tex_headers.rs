@@ -8,9 +8,7 @@ use walkdir::WalkDir;
 use crate::{modules::Module, progress::progress_bar};
 
 #[derive(Debug, Default)]
-pub struct TexHeaders {
-    enabled: bool,
-}
+pub struct TexHeaders;
 
 impl Module for TexHeaders {
     fn name(&self) -> &'static str {
