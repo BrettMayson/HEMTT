@@ -3,7 +3,7 @@
 use std::{
     io::{BufReader, BufWriter},
     path::Path,
-    sync::{Arc},
+    sync::Arc,
 };
 
 const FUNCTION_DIR: &str = ".hemttout/functions";
@@ -11,8 +11,8 @@ const FUNCTION_DIR: &str = ".hemttout/functions";
 use indexmap::IndexMap;
 use tracing::{error, info, trace};
 
-use crate::{analyze::inspector::headers::FunctionInfo};
 use super::Database;
+use crate::analyze::inspector::headers::FunctionInfo;
 
 impl Database {
     pub(crate) fn project_functions_push(&self, func: Arc<FunctionInfo>) {
@@ -57,10 +57,15 @@ impl Database {
                     continue;
                 }
             };
-            trace!("Loaded {} functions from {:?}", serde_vec.len(), entry.path());
+            trace!(
+                "Loaded {} functions from {:?}",
+                serde_vec.len(),
+                entry.path()
+            );
             functions.extend(serde_vec);
         }
-        let result: IndexMap<String, FunctionInfo> = functions.into_iter()
+        let result: IndexMap<String, FunctionInfo> = functions
+            .into_iter()
             .filter(|f| f.func_name().is_some())
             .map(|f| {
                 (
@@ -78,11 +83,10 @@ impl Database {
             trace!("Failed even look at {FUNCTION_DIR}?");
             return;
         };
-        if !exists
-            && fs_err::create_dir_all(path).is_err() {
-                error!("Failed to create directory {FUNCTION_DIR} for exporting functions");
-                return;
-            }
+        if !exists && fs_err::create_dir_all(path).is_err() {
+            error!("Failed to create directory {FUNCTION_DIR} for exporting functions");
+            return;
+        }
         let path = path.join("project.json");
         let _ = fs_err::remove_file(&path);
         let Ok(file) = fs_err::File::create(&path) else {

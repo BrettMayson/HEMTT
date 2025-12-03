@@ -89,8 +89,15 @@ impl Inspector {
     #[must_use]
     pub fn new(ignored_vars: &IndexSet<String>, function_info: Option<Arc<FunctionInfo>>) -> Self {
         let expected_returns = function_info.as_ref().and_then(|fi| {
-            fi.ret()
-                .map(|m| GameValue::from_wiki_value(m, NilSource::Generic))
+            let ret = fi
+                .ret()
+                .map(|m| GameValue::from_wiki_value(m, NilSource::Generic));
+            if ret == Some(IndexSet::from([GameValue::Nothing(NilSource::Generic)])) {
+                // ret of just `Nothing` is just assumed to not be anything useful, so no need to check
+                None
+            } else {
+                ret
+            }
         });
         let mut inspector = Self {
             errors: IndexSet::new(),
@@ -151,10 +158,9 @@ impl Inspector {
             && let Some(expected_returns) = &scope.expected_returns
             && !values.iter().any(|ret| match ret {
                 GameValue::Anything => true,
-                _ => {
-                    expected_returns.contains(&GameValue::Anything)
-                        || expected_returns.contains(&ret.make_generic())
-                }
+                _ => expected_returns
+                    .iter()
+                    .any(|ev| GameValue::match_values(ev, ret)),
             }) {
             println!(
                 " - Missing expected return type in scope: {expected_returns:?} vs {values:?}"
@@ -465,7 +471,10 @@ impl Inspector {
                             Some(self.cmd_generic_params(&rhs_set, &debug_type, source, true))
                         }
                         "private" => Some(self.cmd_u_private(&rhs_set)),
-                        "call" => Some(self.cmd_generic_call(&rhs_set, None, database)),
+                        "call" => Some(
+                            self.external_function_call(None, rhs, database)
+                                .unwrap_or_else(|| self.cmd_generic_call(&rhs_set, None, database)),
+                        ),
                         "default" => {
                             let returns = self.cmd_generic_call(&rhs_set, None, database);
                             self.add_returns(returns, source);
@@ -576,11 +585,12 @@ impl Inspector {
                         "params" => {
                             Some(self.cmd_generic_params(&rhs_set, &debug_type, source, false))
                         }
-                        "call" => {
-                            self.external_function_call(Some(&lhs_set), rhs, database);
-                            Some(self.cmd_generic_call(&rhs_set, None, database))
-                        }
+                        "call" => Some(
+                            self.external_function_call(Some(&lhs_set), rhs, database)
+                                .unwrap_or_else(|| self.cmd_generic_call(&rhs_set, None, database)),
+                        ),
                         "spawn" => {
+                            let _ = self.external_function_call(Some(&lhs_set), rhs, database);
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],

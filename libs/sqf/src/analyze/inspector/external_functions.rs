@@ -9,14 +9,15 @@ use tracing::{info, trace, warn};
 
 use crate::{
     Expression,
-    analyze::inspector::{InvalidArgs, Issue, VarSource},
+    analyze::inspector::{InvalidArgs, Issue, VarSource, game_value::NilSource},
     parser::database::Database,
 };
 
 use super::{Inspector, game_value::GameValue};
 
 impl Inspector {
-    /// Analyze external function calls in database
+    /// Analyze external function calls in database, checking parameters and getting return type
+    #[must_use]
     pub fn external_function_call(
         &mut self,
         lhs: Option<&IndexSet<GameValue>>,
@@ -26,6 +27,9 @@ impl Inspector {
         let Expression::Variable(ext_func, span) = rhs else {
             return None;
         };
+        if ext_func.starts_with('_') {
+            return None;
+        }
         let ext_func_lower = ext_func.to_ascii_lowercase();
 
         if let Some(lhs) = lhs {
@@ -38,24 +42,15 @@ impl Inspector {
         };
         let cmd_name = ext_func.as_str();
         let params = func.params();
-        let ret = func.ret().map(|r| {
-            GameValue::from_wiki_value(
-                r,
-                crate::analyze::inspector::game_value::NilSource::CommandReturn,
-            )
-        });
+        let ret = func
+            .ret()
+            .map(|r| GameValue::from_wiki_value(r, NilSource::CommandReturn));
         let min_required_param = params
             .iter()
             .position(arma3_wiki::model::Param::optional)
             .unwrap_or(params.len());
         let Some(lhs) = lhs else {
-            if min_required_param > 0 {
-                self.errors.insert(Issue::InvalidArgs {
-                    command: ext_func_lower,
-                    span: span.clone(),
-                    variant: InvalidArgs::FuncNoArgs { min_required_param },
-                });
-            }
+            // Unary call, could retrive `_this` and check it as LHS, but for now it will just be `Anything`
             return ret;
         };
         let expected_singular = if min_required_param <= 1 {
@@ -89,7 +84,7 @@ impl Inspector {
             self.errors.insert(Issue::InvalidArgs {
                 command: ext_func_lower.clone(),
                 span: span.clone(),
-                variant: InvalidArgs::TypeNotExpected {
+                variant: InvalidArgs::FuncTypeNotExpected {
                     expected: expected.into_iter().collect(),
                     found: lhs.iter().cloned().collect(),
                     span: span.clone(),
@@ -100,7 +95,7 @@ impl Inspector {
     }
 
     /// Check usage of code blocks in external functions (e.g. `cba_fnc_execNextFrame`)
-    pub fn external_check_code_usage(
+    fn external_check_code_usage(
         &mut self,
         lhs: &IndexSet<GameValue>,
         ext_func_lower: &str,

@@ -8,9 +8,11 @@ const MAX_ARG_INDEX: usize = 100;
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct FunctionInfo {
-    pub params: Vec<Param>,
-    pub ret: Option<Value>,
+    /// Function name, if known
     pub func_name: Option<String>,
+    /// Return type, if known
+    pub ret: Option<Value>,
+    pub params: Vec<Param>,
     pub example: String,
     // pub public: bool,
 }
@@ -61,31 +63,27 @@ fn try_match_styles(source: &str, filename: &str) -> Result<Arc<FunctionInfo>, H
     match match_style(source, filename, get_regex_ace()) {
         Ok(header) => return Ok(header),
         Err(HeaderError::NoMatch) => {}
-        Err(e) => println!("WARN: error {e:?} matching ACE header in source: {filename}"),
+        Err(e) => println!("DEBUG: error {e:?} matching ACE header in source: {filename}"),
     }
     match match_style(source, filename, get_regex_cba()) {
         Ok(header) => return Ok(header),
         Err(HeaderError::NoMatch) => {}
-        Err(e) => println!("WARN: error {e:?} matching CBA header in source: {filename}"),
+        Err(e) => println!("DEBUG: error {e:?} matching CBA header in source: {filename}"),
     }
-    println!("WARN: no valid header found in source: {filename}");
+    println!("DEBUG: no valid header found in source: {filename}");
     Err(HeaderError::NoMatch)
 }
 
 #[must_use]
 fn match_value(input_low: &str) -> Option<Value> {
+    const IGNORE_TAGS: &[&str] = &["br/", "&amp;", "&lt;", "&gt;"];
     fn str_to_type(input: &str) -> Value {
         if input.starts_with("array of ") {
             return Value::ArrayUnknown;
         }
         if input.contains(',') {
+            // ToDo: could split on comma, but this tends to be used for array sub elements
             return Value::Anything;
-            // return Value::OneOf(
-            //     input
-            //         .split(',')
-            //         .map(|s| (str_to_type(s.trim()), None))
-            //         .collect::<Vec<_>>(),
-            // );
         }
         match input {
             "any" | "anything" | "unknown" => Value::Anything,
@@ -106,24 +104,25 @@ fn match_value(input_low: &str) -> Option<Value> {
             "structuredtext" => Value::StructuredText,
             "nil" | "nothing" => Value::Nothing,
             _ => {
-                println!("WARN: unknown type '{input}', defaulting to Anything");
+                println!("DEBUG: unknown type '{input}', defaulting to Anything");
                 Value::Anything
             }
         }
     }
     let re_arg_types = Regex::new(r"(?s)<(?<type>[^>]*)>").expect("valid regex");
     let captures = re_arg_types.captures_iter(input_low).collect::<Vec<_>>();
-    if captures.is_empty() {
-        return None;
-    }
     let mut types = captures
         .iter()
         .flat_map(|c| {
             let type_str = c.name("type").expect("re").as_str();
-            type_str.split(" or ").map(str_to_type).collect::<Vec<_>>()
+            type_str.split(" or ").collect::<Vec<_>>()
         })
+        .filter(|i| !IGNORE_TAGS.contains(i))
+        .map(str_to_type)
         .collect::<Vec<_>>();
-
+    if types.is_empty() {
+        return None;
+    }
     if types.len() == 1 {
         return types.pop();
     }
@@ -137,6 +136,9 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
     let input = input.ok_or(HeaderError::ArgsNoMatch)?.as_str();
     for line in input.lines() {
         let Some(caps) = re_arg_line.captures(line) else {
+            if !out.is_empty() && (line.trim().is_empty() || line == " *") {
+                break;
+            }
             continue;
         };
         if let Some(m) = caps.name("index") {
@@ -164,6 +166,7 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
         let arg_type = match_value(arg_info_low.as_str());
         let arg_optional = arg_type.is_none()
             || arg_info_low.contains("(optional")
+            || arg_info_low.contains("(unused")
             || arg_info_low.contains("(default");
         let arg_type = arg_type.unwrap_or(Value::Anything);
         out.push(Param::new(
@@ -192,7 +195,13 @@ fn parse_return(input: Option<Match<'_>>) -> Option<Value> {
         }
     }
     let input = input?.as_str().to_lowercase();
-    let value = match_value(input.as_str())?;
+    let Some(value) = match_value(input.as_str()) else {
+        if input.contains("none") || input.contains("nothing") {
+            // "None" often used to indicate no useable return value (may not be explicitly nil)
+            return Some(Value::Nothing);
+        }
+        return None;
+    };
     // multiple return types are often for an array, so allow arrays to reduce false positives
     if let Value::OneOf(_) = &value {
         return Some(allow_array(value));
@@ -259,7 +268,7 @@ fn get_regex_cba() -> (&'static Regex, &'static Regex) {
     (RE_HEADER.get_or_init(|| {
         Regex::new(r"(?s)\/\*.*?Parameters[s]?:(?<arg>.+?)(?:Return[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Examples:[\s\*]*(?<ex>.+?))?[\s\*]*(?:Public:(?<pub>.+?))?\*\/").expect("regex ok")
     }), RE_ARG_LINE.get_or_init(|| {
-        Regex::new(r"(?s)    _(?<info>.*)").expect("regex ok")
+        Regex::new(r"^    _(?<info>.*)").expect("regex ok") // 4 spaces before _
     }))
 }
 #[must_use]
@@ -269,7 +278,7 @@ fn get_regex_ace() -> (&'static Regex, &'static Regex) {
     (RE_HEADER.get_or_init(|| {
         Regex::new(r"(?s)\/\*.*?Argument[s]?:(?<arg>.+?)(?:Return Value[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Example:[\s\*]*(?<ex>.+?))?[\s\*]*(?:Public:(?<pub>.+?))?\*\/").expect("regex ok")
     }), RE_ARG_LINE.get_or_init(|| {
-        Regex::new(r"(?s)\* (?<index>\d*):(?<info>.*)").expect("regex ok")
+        Regex::new(r"\* (?<index>\d*):(?<info>.*)").expect("regex ok") // `* 0: description``
     }))
 }
 

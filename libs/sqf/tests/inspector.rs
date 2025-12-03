@@ -8,6 +8,7 @@ use hemtt_workspace::LayerType;
 const ROOT: &str = "tests/inspector/";
 
 fn get_statements(file: &str) -> (Processed, Statements, Database) {
+    let database = Database::a3(false);
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -19,8 +20,7 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .expect("for test");
-    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
-    let database = Database::a3(false);
+    let statements = hemtt_sqf::parser::run(&database, &processed).expect("for test");
     (processed, statements, database)
 }
 
@@ -34,9 +34,8 @@ mod tests {
         let (_pro, sqf, database) = get_statements("fnc_aaa.sqf");
         let issues = sqf.issues();
         println!("issues: {}, {issues:?}", issues.len());
-        println!();
-        let header = database.project_functions_testing();
-        println!("header: {header:?}");
+        let headers = database.project_functions_testing();
+        println!("headers: {headers:?}");
     }
     #[test]
     pub fn test_main() {
@@ -63,13 +62,14 @@ mod tests {
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
     #[test]
-    pub fn test_fnc_header1() {
-        let (_pro, sqf, _database) = get_statements("fnc_header1.sqf");
+    pub fn test_code_usage() {
+        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
         let issues = sqf.issues();
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }
-    pub fn test_code_usage() {
-        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
+    #[test]
+    pub fn test_fnc_header1() {
+        let (_pro, sqf, _database) = get_statements("fnc_header1.sqf");
         let issues = sqf.issues();
         insta::assert_compact_debug_snapshot!((issues.len(), issues));
     }

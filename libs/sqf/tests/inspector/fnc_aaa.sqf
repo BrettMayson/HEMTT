@@ -1,4 +1,4 @@
-/*
+/* abe_fnc_aaa
  * Arguments:
  * 0: Gun Position ASL <ARRAY>
  *
@@ -6,6 +6,6 @@
  * X <BOOLEAN>
  */
 
-params [["_gunPos", [], [displayNull]]];
-alive _gunPos;
+[5] call abe_fnc_aaa;
+
 ""

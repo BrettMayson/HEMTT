@@ -147,8 +147,9 @@ impl Inspector {
             for (v, v_span) in input {
                 let vg = v.make_generic();
                 if let Some(header_defaults) = header_defaults
-                    && !(header_defaults.contains(&GameValue::Anything)
-                        || header_defaults.contains(&vg))
+                    && !(header_defaults
+                        .iter()
+                        .any(|hd| GameValue::match_values(&vg, hd)))
                 {
                     error_type = Some(InvalidArgs::ExpectedDifferentTypeHeader {
                         expected: header_defaults.iter().cloned().collect(),
