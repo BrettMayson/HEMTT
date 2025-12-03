@@ -8,7 +8,9 @@ use walkdir::WalkDir;
 use crate::{modules::Module, progress::progress_bar};
 
 #[derive(Debug, Default)]
-pub struct TexHeaders;
+pub struct TexHeaders {
+    enabled: bool,
+}
 
 impl Module for TexHeaders {
     fn name(&self) -> &'static str {
@@ -23,23 +25,36 @@ impl Module for TexHeaders {
         let progress = progress_bar(addons as u64).with_message("Generating Texture Headers");
         let created = AtomicU16::new(0);
         let failed = AtomicU16::new(0);
-        ctx.addons().par_iter().for_each(|addon| {
-            let res = generate_texture_headers(ctx, addon);
-            if let Err(e) = res {
-                error!(
-                    "Failed to generate texture headers for addon '{}': {}",
-                    addon.folder(),
-                    e
-                );
-                failed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        ctx.addons()
+            .iter()
+            .filter(|addon| {
+                !ctx.workspace_path()
+                    .join(addon.folder())
+                    .expect("addon folder")
+                    .read_dir()
+                    .expect("read addon folder")
+                    .iter()
+                    .any(|entry| entry.filename().eq_ignore_ascii_case("texheaders.bin"))
+            })
+            .collect::<Vec<_>>()
+            .par_iter()
+            .for_each(|addon| {
+                let res = generate_texture_headers(ctx, addon);
+                if let Err(e) = res {
+                    error!(
+                        "Failed to generate texture headers for addon '{}': {}",
+                        addon.folder(),
+                        e
+                    );
+                    failed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    progress.inc(1);
+                    return;
+                }
+                if res.unwrap_or(false) {
+                    created.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
                 progress.inc(1);
-                return;
-            }
-            if res.unwrap_or(false) {
-                created.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            }
-            progress.inc(1);
-        });
+            });
         progress.finish_and_clear();
         info!(
             "Generated {} texture headers",
