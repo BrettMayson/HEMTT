@@ -32,6 +32,9 @@ impl Module for TexHeaders {
                     .any(|entry| entry.filename().eq_ignore_ascii_case("texheaders.bin"))
             })
             .collect::<Vec<_>>();
+        if addons.is_empty() {
+            return Ok(crate::report::Report::new());
+        }
         let progress = progress_bar(addons.len() as u64).with_message("Generating Texture Headers");
         let created = AtomicU16::new(0);
         let failed = AtomicU16::new(0);
