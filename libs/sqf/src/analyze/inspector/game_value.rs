@@ -4,6 +4,7 @@ use std::ops::Range;
 
 use arma3_wiki::model::{Arg, Call, Param, Value};
 use indexmap::IndexSet;
+#[allow(unused_imports)]
 use tracing::{trace, warn};
 
 use crate::{Expression, parser::database::Database};
@@ -88,6 +89,8 @@ impl GameValue {
 
         let mut expected_lhs = IndexSet::new();
         let mut expected_rhs = IndexSet::new();
+        let mut lhs_matched_all = true;
+        let mut rhs_matched_all = true;
 
         for syntax in command.syntax() {
             // println!("syntax {:?}", syntax.call());
@@ -106,6 +109,7 @@ impl GameValue {
                                 rhs_arg,
                                 syntax.params(),
                             );
+                            rhs_matched_all = rhs_matched_all && is_match;
                             expected_rhs.extend(expected);
                             is_match
                         }
@@ -125,6 +129,7 @@ impl GameValue {
                             lhs_arg,
                             syntax.params(),
                         );
+                        lhs_matched_all = lhs_matched_all && is_match;
                         expected_lhs.extend(expected);
                         is_match
                     };
@@ -135,6 +140,7 @@ impl GameValue {
                             rhs_arg,
                             syntax.params(),
                         );
+                        rhs_matched_all = rhs_matched_all && is_match;
                         expected_rhs.extend(expected);
                         is_match
                     };
@@ -147,6 +153,12 @@ impl GameValue {
             let game_value = Self::from_wiki_value(value, NilSource::CommandReturn);
             // println!("match syntax {syntax:?}");
             return_types.extend(game_value);
+        }
+        if rhs_matched_all {
+            expected_rhs.clear();
+        }
+        if lhs_matched_all {
+            expected_lhs.clear();
         }
         // println!("lhs_set {lhs_set:?}");
         // println!("rhs_set {rhs_set:?}");
@@ -169,34 +181,6 @@ impl GameValue {
         match arg {
             Arg::Item(name) => {
                 let Some(param) = params.iter().find(|p| p.name() == name) else {
-                    /// Varidic cmds which will be missing wiki param matches (only affects debug logging)
-                    const WIKI_CMDS_IGNORE_MISSING_PARAM: &[&str] = &[
-                        "addResources",
-                        "createTask",
-                        "ctRemoveRows",
-                        "format",
-                        "formatText",
-                        "getGraphValues",
-                        "inAreaArray",
-                        "inAreaArrayIndexes",
-                        "insert",
-                        "kbReact",
-                        "kbTell",
-                        "lineIntersects",
-                        "lineIntersectsObjs",
-                        "lineIntersectsSurfaces",
-                        "lineIntersectsWith",
-                        "param",
-                        "params",
-                        "ppEffectCreate",
-                        "set3DENAttributes",
-                        "set3DENMissionAttributes",
-                        "setAttributes",
-                        "setGroupId",
-                        "setGroupIdGlobal",
-                        "setPiPEffect",
-                        "textLogFormat",
-                    ];
                     if !WIKI_CMDS_IGNORE_MISSING_PARAM.contains(&cmd_name) {
                         // warn!("cmd {cmd_name} - param {name} not found");
                     }
@@ -214,6 +198,7 @@ impl GameValue {
                     match s {
                         Self::Anything | Self::Array(None, _) => true,
                         Self::Array(Some(gv_array), _) => {
+                            let mut expected_array_args = Vec::new();
                             // println!("{cmd_name}: array (gv: {}) expected (arg: {})", gv_array.len(), arg_array.len());
                             // note: some syntaxes take more than others
                             for (index, arg) in arg_array.iter().enumerate() {
@@ -224,7 +209,9 @@ impl GameValue {
                                 };
                                 let (is_match, expected_gv) =
                                     Self::match_set_to_arg(cmd_name, &possible, arg, params);
-                                expected.extend(expected_gv);
+                                // Convert IndexSet<GameValue> to Vec<(GameValue, Range<usize>)> with dummy ranges.
+                                expected_array_args
+                                    .push(expected_gv.into_iter().map(|gv| (gv, 0..0)).collect());
                                 if !is_match {
                                     if let Arg::Array(args) = arg {
                                         // handle edge case on varidic cmds that take arrays (e.g. `createHashMapFromArray`)
@@ -239,6 +226,7 @@ impl GameValue {
                                         }
                                     }
                                     // println!("array arg {index} no match {arg:?} in {s:?}");
+                                    expected.insert(Self::Array(Some(expected_array_args), None));
                                     return false;
                                 }
                             }
@@ -347,6 +335,7 @@ impl GameValue {
                 set
             }
             Value::Unknown => {
+                #[cfg(debug_assertions)]
                 trace!("wiki has syntax with [unknown] type");
                 IndexSet::from([Self::Anything])
             }
@@ -398,6 +387,38 @@ impl GameValue {
         }
         result.unwrap_or(Self::Anything)
     }
+    /// Converts a vector of `GameValues` to a string representation
+    /// if it only contains a single element which is an array, it will format the array contents
+    pub fn vec_to_string(vec: &[Self], depth: usize) -> String {
+        fn to_string_array(value: &GameValue, depth: usize) -> String {
+            if depth == 0 {
+                return format!("{value}");
+            }
+            match value {
+                GameValue::Array(Some(vec), _) => {
+                    let inner_types = vec.iter().map(|outer| {
+                        let types = outer
+                            .iter()
+                            .map(|(gv, _)| to_string_array(gv, depth - 1))
+                            .collect::<Vec<_>>();
+                        format!("({})", types.join(", "))
+                    });
+                    format!("{value}[{}]", inner_types.collect::<Vec<_>>().join(", "))
+                }
+                _ => format!("{value}"),
+            }
+        }
+        if vec.len() == 1
+            && let Some(gv) = vec.first()
+        {
+            to_string_array(gv, depth)
+        } else {
+            vec.iter()
+                .map(Self::to_string)
+                .collect::<Vec<_>>()
+                .join(", ")
+        }
+    }
 }
 
 impl std::fmt::Display for GameValue {
@@ -440,3 +461,32 @@ impl std::fmt::Display for GameValue {
         )
     }
 }
+
+/// Varidic cmds which will be missing wiki param matches (only affects debug logging)
+const WIKI_CMDS_IGNORE_MISSING_PARAM: &[&str] = &[
+    "addResources",
+    "createTask",
+    "ctRemoveRows",
+    "format",
+    "formatText",
+    "getGraphValues",
+    "inAreaArray",
+    "inAreaArrayIndexes",
+    "insert",
+    "kbReact",
+    "kbTell",
+    "lineIntersects",
+    "lineIntersectsObjs",
+    "lineIntersectsSurfaces",
+    "lineIntersectsWith",
+    "param",
+    "params",
+    "ppEffectCreate",
+    "set3DENAttributes",
+    "set3DENMissionAttributes",
+    "setAttributes",
+    "setGroupId",
+    "setGroupIdGlobal",
+    "setPiPEffect",
+    "textLogFormat",
+];

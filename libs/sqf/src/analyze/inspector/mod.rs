@@ -472,7 +472,7 @@ impl Inspector {
                             None
                         }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" => {
+                        "while" | "waituntil" | "try" => {
                             let _ = self.cmd_generic_call(&rhs_set, None, database);
                             None
                         }
@@ -520,9 +520,7 @@ impl Inspector {
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
-                    if expected_lhs.difference(&lhs_set).count() != 0
-                        && !expected_lhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_lhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -533,9 +531,7 @@ impl Inspector {
                             },
                         });
                     }
-                    if expected_rhs.difference(&rhs_set).count() != 0
-                        && !expected_rhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_rhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -631,6 +627,16 @@ impl Inspector {
                         }
                         "findif" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
+                            let _ =
+                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            None
+                        }
+                        "try" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, database);
+                            None
+                        }
+                        "catch" => {
+                            let magic = vec![("_exception", GameValue::Anything)];
                             let _ =
                                 self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
                             None

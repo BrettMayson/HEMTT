@@ -58,19 +58,15 @@ pub enum InvalidArgs {
 impl InvalidArgs {
     #[must_use]
     pub fn note(&self) -> String {
-        let found = self
-            .found_types()
-            .iter()
-            .map(GameValue::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
+        let found = self.found_types();
         format!(
-            "found type{} was {found}",
+            "found type{} was {}",
             if self.found_types().len() > 1 {
                 "s"
             } else {
                 ""
-            }
+            },
+            GameValue::vec_to_string(&found, 2)
         )
     }
 
@@ -80,6 +76,9 @@ impl InvalidArgs {
             Self::TypeNotExpected { .. }
             | Self::FuncTypeNotExpected { .. }
             | Self::FuncNoArgs { .. } => format!("Invalid argument type for `{command}`"),
+            Self::TypeNotExpected { .. } | Self::FuncTypeNotExpected { .. } => {
+                format!("Invalid argument type for `{command}`")
+            }
             Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
             Self::DefaultDifferentType { default, .. } => {
                 if default.is_none() {
@@ -110,15 +109,8 @@ impl InvalidArgs {
             | Self::FuncTypeNotExpected { .. } => {
                 format!(
                     "expected {}",
-                    self.expected_types()
-                        .iter()
-                        .map(GameValue::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
+                    GameValue::vec_to_string(&self.expected_types(), 2)
                 )
-            }
-            Self::FuncNoArgs { min_required_param } => {
-                format!("Called Unary but expects at least {min_required_param} argument(s)")
             }
         }
     }

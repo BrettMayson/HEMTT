@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::Error;
 
+mod convert;
 mod derapify;
 mod inspect;
 
@@ -17,6 +18,12 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Convert a config file to another format
+    ///
+    /// Parses and converts Arma 3 config files (.cpp, .hpp, .rvmat) to
+    /// JSON or back to formatted CPP. Useful for programmatic access to
+    /// config data or reformatting configs.
+    Convert(convert::ConvertArgs),
     /// Derapify a config file
     ///
     /// Derapification converts Arma's binary config format (config.bin) back to
@@ -38,6 +45,11 @@ enum Subcommands {
 /// If the args are not present from clap
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     match &cmd.commands {
+        Subcommands::Convert(args) => convert::convert(
+            &PathBuf::from(&args.file),
+            args.output.as_deref(),
+            args.output_format,
+        ),
         Subcommands::Derapify(args) => derapify::derapify(
             &PathBuf::from(&args.file),
             args.output.as_deref(),
