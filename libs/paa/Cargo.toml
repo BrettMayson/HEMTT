@@ -17,6 +17,7 @@ hemtt-lzo = { path = "../lzo", features = ["decompress"], default-features = fal
 byteorder = { workspace = true }
 fs-err = { workspace = true }
 image = "0.25.9"
+indexmap = { workspace = true }
 texpresso = "2.0.2"
 
 # WASM
