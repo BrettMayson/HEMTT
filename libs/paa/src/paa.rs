@@ -10,7 +10,6 @@ use indexmap::IndexMap;
 
 use crate::{MipMap, PaXType};
 
-
 #[derive(Debug)]
 pub struct Paa {
     format: PaXType,
