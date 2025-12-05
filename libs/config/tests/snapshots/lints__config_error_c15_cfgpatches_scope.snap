@@ -17,16 +17,16 @@ expression: lint(stringify! (c15_cfgpatches_scope)).0
 
 
 [0m[1m[38;5;11mwarning[L-C15b][0m[1m: Public CfgWeapons class `abe_gun3` not listed in CfgPatches[0m
-   [0m[36m┌─[0m c15_cfgpatches_scope.hpp:30:11
+   [0m[36m┌─[0m c15_cfgpatches_scope.hpp:35:11
    [0m[36m│[0m
-[0m[36m30[0m [0m[36m│[0m     class [0m[33mabe_gun3[0m: abe_gun2 {}; // Missing
+[0m[36m35[0m [0m[36m│[0m     class [0m[33mabe_gun3[0m: abe_gun2 {}; // Missing
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mhas scope=2 but not in weapons[][0m
 
 
 [0m[1m[38;5;11mwarning[L-C15b][0m[1m: Public CfgWeapons class `abx_gun1` not listed in CfgPatches[0m
-   [0m[36m┌─[0m c15_cfgpatches_scope.hpp:31:11
+   [0m[36m┌─[0m c15_cfgpatches_scope.hpp:36:11
    [0m[36m│[0m
-[0m[36m31[0m [0m[36m│[0m     class [0m[33mabx_gun1[0m: Rifle {
+[0m[36m36[0m [0m[36m│[0m     class [0m[33mabx_gun1[0m: Rifle {
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mhas scope=2 but not in weapons[][0m
 
 

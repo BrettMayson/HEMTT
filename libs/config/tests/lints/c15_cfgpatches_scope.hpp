@@ -20,6 +20,11 @@ class cfgvehicles {
         scope = 1;
     };
     class abe_car5: abe_car2 { }; // Missing
+    class Module_F;
+    class abe_coverMap: Module_F {
+        scope = 2;
+        scopeCurator = 0; // not shown in zeus, not a problem if not in units[]
+    };
 };
 class CfgWeapons {
     class Rifle;

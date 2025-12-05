@@ -160,11 +160,12 @@ fn get_defined(base_path: &str, target: &Config) -> (IndexSet<String>, IndexMap<
             let lower_name = name.as_str().to_ascii_lowercase();
             set_exist.insert(lower_name.clone());
             let scope = get_number(properties, "scope", -1);
+            let scope_curator = get_number(properties, "scopeCurator", -1);
             let inherited = parent.as_ref().is_some_and(|parent| {
                 let key = parent.as_str().to_ascii_lowercase();
                 map_public.contains_key(&key)
             });
-            if scope == 2 || (inherited && scope != 1) {
+            if (scope == 2 || (inherited && scope != 1)) && scope_curator != 0 {
                 map_public.insert(lower_name, name.span());
             }
         }
