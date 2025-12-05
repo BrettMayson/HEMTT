@@ -1,7 +1,4 @@
-use std::{
-    fs::{File, create_dir_all},
-    sync::Arc,
-};
+use std::{fs::File, sync::Arc};
 
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{
@@ -25,7 +22,7 @@ pub fn init(verbosity: u8, hemttout: bool) -> Result<(), Error> {
 
     let stdout = tracing_subscriber::fmt::layer().event_format(format);
 
-    let filter = if crate::is_ci() {
+    let filter = if crate::is_ci() && !cfg!(debug_assertions) {
         LevelFilter::TRACE
     } else {
         match verbosity {
@@ -42,7 +39,7 @@ pub fn init(verbosity: u8, hemttout: bool) -> Result<(), Error> {
                 .init();
             return Err(Error::ConfigNotFound);
         }
-        create_dir_all(".hemttout").expect("Unable to create `.hemttout`");
+        fs_err::create_dir_all(".hemttout").expect("Unable to create `.hemttout`");
         let out_file =
             File::create(".hemttout/latest.log").expect("Unable to create `.hemttout/latest.log`");
         let debug_log = tracing_subscriber::fmt::layer()

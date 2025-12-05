@@ -1,4 +1,4 @@
-use std::fs::create_dir_all;
+use fs_err::create_dir_all;
 
 use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
@@ -55,7 +55,7 @@ impl Module for Files {
         for (source, dest) in to_copy {
             debug!("copying {:?} => {:?}", source.as_str(), dest.display());
             progress.set_message(format!("Copying {}", source.as_str()));
-            std::io::copy(&mut source.open_file()?, &mut std::fs::File::create(&dest)?)?;
+            std::io::copy(&mut source.open_file()?, &mut fs_err::File::create(&dest)?)?;
             copied += 1;
             progress.inc(1);
         }

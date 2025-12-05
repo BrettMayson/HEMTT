@@ -1,0 +1,26 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s33_linear_conversion), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S33-LINEAR-CONVERSION][0m[1m: code can be replaced with `linearConversion`[0m
+  [0m[36m┌─[0m s33_linear_conversion.sqf:1:21
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m private _newValue = [0m[36m10 + ((25 - 0) * (100 - 10) / (0 - 0[0m));
+  [0m[36m│[0m                     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `linearConversion`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: linearConversion [0, 0, 25, 10, 100]
+
+
+[0m[1m[38;5;14mhelp[L-S33-LINEAR-CONVERSION][0m[1m: code can be replaced with `linearConversion`[0m
+  [0m[36m┌─[0m s33_linear_conversion.sqf:4:19
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m private _result = [0m[36m_minimumOutputValue + ((_currentValue - _minimumInputValue) * (_maximumOutputValue - _minimumOutputValue) / (_maximumInputValue - _minimumInputValue[0m));
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `linearConversion`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: linearConversion [
+             _minimumInputValue,
+             _maximumInputValue,
+             _currentValue,
+             _minimumOutputValue,
+             _maximumOutputValue
+         ]

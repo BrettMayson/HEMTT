@@ -13,7 +13,7 @@ pub struct File<'a, I: Read> {
 
 impl<'a, I: Read> File<'a, I> {
     /// Create a new file from a header and a reader
-    pub fn new(header: &Header, input: &'a mut I) -> Self {
+    pub const fn new(header: &Header, input: &'a mut I) -> Self {
         Self {
             size: header.size(),
             read: 0,

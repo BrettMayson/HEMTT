@@ -3,7 +3,6 @@
 use rhai::Position;
 
 pub mod bhe1_script_not_found;
-pub mod bhe2_script_fatal;
 pub mod bhe3_parse_error;
 pub mod bhe4_runtime_error;
 

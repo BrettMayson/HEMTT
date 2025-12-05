@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::error;
-
 use hemtt_workspace::reporting::Code;
 
 #[derive(thiserror::Error, Debug)]
@@ -25,7 +23,6 @@ impl From<std::io::Error> for Error {
 }
 
 impl Error {
-    #[allow(clippy::too_many_lines)]
     #[must_use]
     /// Generate a user friendly report
     pub fn get_code(&self) -> Option<Box<&dyn Code>> {

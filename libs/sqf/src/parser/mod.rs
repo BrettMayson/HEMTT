@@ -77,7 +77,6 @@ fn parser<'a>(
     since(1.87),
     expect(clippy::let_and_return, reason = "chumsky requires for type inference")
 )]
-#[allow(clippy::too_many_lines)]
 fn statements<'a>(
     database: &'a Database,
     processed: &'a Processed,

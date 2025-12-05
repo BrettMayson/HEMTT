@@ -2,8 +2,48 @@
 source: libs/sqf/tests/lints.rs
 expression: "lint(stringify! (s12_invalid_args), false).0"
 ---
-[0m[1m[38;5;14mhelp[L-S12][0m[1m: Invalid arguments to command `[B:setFuel]`[0m
-  [0m[36m┌─[0m s12_invalid_args.sqf:3:18
+[0m[1m[38;5;11mwarning[L-S12][0m[1m: Default value is not an expected type for the parameter[0m
+  [0m[36m┌─[0m s12_invalid_args.sqf:7:19
   [0m[36m│[0m
-[0m[36m3[0m [0m[36m│[0m (vehicle player) [0m[36msetFuel[0m true; // bad args: takes number 0-1
-  [0m[36m│[0m                  [0m[36m^^^^^^^[0m [0m[36minvalid arguments[0m
+[0m[36m7[0m [0m[36m│[0m params [["_var3", [0m[33mobjNull[0m, [false, 0]]];
+  [0m[36m│[0m                   [0m[33m^^^^^^^[0m   [0m[36m--------[0m [0m[36mexpected types[0m
+  [0m[36m│[0m                   [0m[33m│[0m          
+  [0m[36m│[0m                   [0m[33mexpected Boolean, Number[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was Object
+
+
+[0m[1m[38;5;11mwarning[L-S12][0m[1m: Invalid argument type for `[B:setFuel]`[0m
+  [0m[36m┌─[0m s12_invalid_args.sqf:3:26
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m (vehicle player) setFuel [0m[33mtrue[0m; // bad args: takes number 0-1
+  [0m[36m│[0m                          [0m[33m^^^^[0m [0m[33mexpected Number[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was Boolean
+
+
+[0m[1m[38;5;11mwarning[L-S12][0m[1m: Invalid argument type for `[B:setVariable]`[0m
+  [0m[36m┌─[0m s12_invalid_args.sqf:9:20
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m player setVariable [0m[33m0[0m;
+  [0m[36m│[0m                    [0m[33m^[0m [0m[33mexpected Array[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was Number
+
+
+[0m[1m[38;5;11mwarning[L-S12][0m[1m: Invalid argument type for `[U:params]`[0m
+  [0m[36m┌─[0m s12_invalid_args.sqf:5:18
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m params ["_var1", [0m[33mobjNull[0m];
+  [0m[36m│[0m                  [0m[33m^^^^^^^[0m [0m[33mexpected String, Array[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was Object
+
+
+[0m[1m[38;5;11mwarning[L-S12][0m[1m: Invalid argument type for `[U:params]`[0m
+  [0m[36m┌─[0m s12_invalid_args.sqf:6:23
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m params [["_var2", "", [0m[33m""[0m]];
+  [0m[36m│[0m                       [0m[33m^^[0m [0m[33mexpected Array[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was String

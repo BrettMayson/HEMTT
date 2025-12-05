@@ -58,7 +58,7 @@ pub mod path_functions {
     #[rhai_fn(global, name = "copy", return_raw, pure)]
     pub fn copy(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir() {
-            std::fs::create_dir_all(&other)
+            fs_err::create_dir_all(&other)
                 .map_err(|e| e.to_string().into())
                 .and_then(|()| {
                     fs_extra::dir::copy(
@@ -70,7 +70,7 @@ pub mod path_functions {
                 })
                 .err()
         } else {
-            std::fs::copy(path, other)
+            fs_err::copy(path, other)
                 .map_err(|e| e.to_string().into())
                 .err()
         };
@@ -79,7 +79,7 @@ pub mod path_functions {
 
     #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
-        std::fs::rename(path, other)
+        fs_err::rename(path, other)
             .map_err(|e| e.to_string().into())
             .err()
             .map_or_else(|| Ok(true), Err)
@@ -89,7 +89,7 @@ pub mod path_functions {
     pub fn list(path: &mut PathBuf) -> rhai::Array {
         let mut list = Vec::new();
         if path.is_dir() {
-            for entry in std::fs::read_dir(path).expect("can't read dir") {
+            for entry in fs_err::read_dir(&path).expect("can't read dir") {
                 let entry = entry.expect("entry failed");
                 list.push(Dynamic::from(entry.path()));
             }
@@ -99,21 +99,21 @@ pub mod path_functions {
 
     #[rhai_fn(global, pure)]
     pub fn create_dir(path: &mut PathBuf) -> bool {
-        std::fs::create_dir(path).is_ok()
+        fs_err::create_dir(path).is_ok()
     }
 
     #[rhai_fn(global, pure)]
     pub fn create_dir_all(path: &mut PathBuf) -> bool {
-        std::fs::create_dir_all(path).is_ok()
+        fs_err::create_dir_all(path).is_ok()
     }
 
     #[rhai_fn(global, pure)]
     pub fn remove_dir(path: &mut PathBuf) -> bool {
-        std::fs::remove_dir(path).is_ok()
+        fs_err::remove_dir(path).is_ok()
     }
 
     #[rhai_fn(global, pure)]
     pub fn remove_dir_all(path: &mut PathBuf) -> bool {
-        std::fs::remove_dir_all(path).is_ok()
+        fs_err::remove_dir_all(path).is_ok()
     }
 }

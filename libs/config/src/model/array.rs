@@ -31,7 +31,7 @@ pub enum Item {
     /// A number value
     Number(Number),
     /// An array value
-    Array(Vec<Item>),
+    Array(Vec<Self>),
     /// An invalid value
     Invalid(Range<usize>),
 }

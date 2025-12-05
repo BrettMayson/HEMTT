@@ -26,7 +26,7 @@ impl std::fmt::Display for Property {
             Self::Class(class) => {
                 write!(f, "{class}")
             }
-            Self::MissingSemicolon(_, _) => {
+            Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => {
                 unreachable!()
             }
         }

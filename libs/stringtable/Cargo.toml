@@ -14,19 +14,18 @@ hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
 byteorder = { workspace = true }
-casey = "0.4.2"
+fs-err = { workspace = true }
 indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.38.3", features = ["serialize"] }
+quick-xml = { version = "0.38.4", features = ["serialize"] }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }
-vfs = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = "0.8.0"
 insta = { workspace = true }
 
 [[bench]]

@@ -1,6 +1,6 @@
 use std::{fmt::Display, io::Read};
 
-use texpresso::Format;
+use texpresso::{COLOUR_WEIGHTS_PERCEPTUAL, Format, Params};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PaXType {
@@ -53,6 +53,72 @@ impl PaXType {
             Self::ARGBA5 => [85, 21],
             Self::ARGB8 => [136, 136],
             Self::GRAYA => [128, 128],
+        }
+    }
+
+    #[must_use]
+    pub const fn as_u32(&self) -> u32 {
+        match self {
+            // Self::P8 => 0,
+            Self::GRAYA => 1,
+            // Self::RGB565 => 2,
+            Self::ARGBA5 => 3,
+            Self::ARGB4 => 4,
+            Self::ARGB8 => 5,
+            Self::DXT1 => 6,
+            Self::DXT2 => 7,
+            Self::DXT3 => 8,
+            Self::DXT4 => 9,
+            Self::DXT5 => 10,
+        }
+    }
+
+    #[must_use]
+    pub const fn from_u32(value: u32) -> Option<Self> {
+        match value {
+            1 => Some(Self::GRAYA),
+            3 => Some(Self::ARGBA5),
+            4 => Some(Self::ARGB4),
+            5 => Some(Self::ARGB8),
+            6 => Some(Self::DXT1),
+            7 => Some(Self::DXT2),
+            8 => Some(Self::DXT3),
+            9 => Some(Self::DXT4),
+            10 => Some(Self::DXT5),
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn is_dxt(&self) -> bool {
+        matches!(
+            self,
+            Self::DXT1 | Self::DXT2 | Self::DXT3 | Self::DXT4 | Self::DXT5
+        )
+    }
+
+    pub fn compress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
+        match *self {
+            Self::DXT1 | Self::DXT3 | Self::DXT5 => {
+                let format: Format = (*self).into();
+                format.compress(
+                    data,
+                    width,
+                    height,
+                    Params {
+                        algorithm: texpresso::Algorithm::IterativeClusterFit,
+                        weights: COLOUR_WEIGHTS_PERCEPTUAL,
+                        weigh_colour_by_alpha: true,
+                    },
+                    output,
+                );
+            }
+            Self::DXT2 | Self::DXT4 => {
+                unimplemented!()
+            }
+            _ => {
+                unimplemented!()
+            }
         }
     }
 

@@ -31,7 +31,13 @@ impl Code for RuntimeError {
                     self.script.clone(),
                     get_offset(&content, self.location)..get_offset(&content, self.location),
                 )
-                .with_message(self.error.clone()),
+                .with_message({
+                    let mut chars = self.error.chars();
+                    chars.next().map_or_else(
+                        || self.error.clone(),
+                        |first| first.to_lowercase().collect::<String>() + chars.as_str(),
+                    )
+                }),
             ),
         )
     }

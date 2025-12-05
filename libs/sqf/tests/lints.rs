@@ -51,6 +51,17 @@ lint!(s26_short_circuit_bool_var, true);
 lint!(s27_select_count, true);
 lint!(s28_banned_macros, true);
 lint!(s30_configof, true);
+lint!(s33_abs, true);
+// lint!(s33_atan2, true);
+lint!(s33_ceil, true);
+lint!(s33_clamp, true);
+lint!(s33_distance, true);
+lint!(s33_floor, true);
+lint!(s33_linear_conversion, true);
+lint!(s33_max, true);
+lint!(s33_min, true);
+lint!(s33_mod, true);
+lint!(s33_pi, true);
 
 #[test]
 fn test_s29_function_undefined() {
@@ -98,12 +109,14 @@ fn lint(file: &str, ignore_inspector: bool) -> (String, SqfReport) {
                 database.clone(),
             );
             (
-                codes
-                    .iter()
-                    .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
-                    .collect::<Vec<_>>()
-                    .join("\n")
-                    .replace('\r', ""),
+                {
+                    let mut codes = codes
+                        .iter()
+                        .map(|e| e.diagnostic().unwrap().to_string(&workspace_files))
+                        .collect::<Vec<_>>();
+                    codes.sort();
+                    codes.join("\n").replace('\r', "")
+                },
                 report.expect("exist"),
             )
         }

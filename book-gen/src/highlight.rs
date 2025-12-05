@@ -38,10 +38,10 @@ pub fn run() {
         .contains(x)
     });
 
-    let highlight = std::fs::read_to_string("book-gen/highlight.js").unwrap();
+    let highlight = fs_err::read_to_string("book-gen/highlight.js").unwrap();
 
     let highlight = highlight.replace("$FLOW$", &format!("'{}'", flow.join("','")));
     let highlight = highlight.replace("$COMMANDS$", &format!("'{}'", commands.join("','")));
 
-    std::fs::write("book/highlight.js", highlight).unwrap();
+    fs_err::write("book/highlight.js", highlight).unwrap();
 }

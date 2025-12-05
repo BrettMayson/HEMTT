@@ -1,7 +1,7 @@
 [package]
 name = "hemtt"
 description = "HEMTT - Arma 3 Build Tool"
-version = "1.17.2"
+version = "1.18.1"
 edition = "2024"
 license = "GPL-2.0"
 authors = ["Brett Mayson <brett@mayson.io>"]
@@ -21,9 +21,9 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 
-hemtt-config = { path = "../libs/config", features=["serde"] }
+hemtt-config = { path = "../libs/config", features = ["serde"] }
 hemtt-p3d = { path = "../libs/p3d" }
-hemtt-paa = { path = "../libs/paa" }
+hemtt-paa = { path = "../libs/paa", features = ["generate"] }
 hemtt-pbo = { path = "../libs/pbo" }
 hemtt-preprocessor = { path = "../libs/preprocessor" }
 hemtt-signing = { path = "../libs/signing" }
@@ -35,22 +35,22 @@ hemtt-wss = { path = "../libs/wss" }
 arma3-wiki = { workspace = true }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-clap_complete = "4.5.58"
+clap_complete = "4.5.61"
 dialoguer = "0.12.0"
 dirs = { workspace = true }
-fs_extra = "1.3.0"
+fs_extra = { workspace = true }
+fs-err = { workspace = true }
 git2 = { workspace = true }
 glob = "0.3.3"
-image = "0.25.8"
-indicatif = "0.18.0"
+image = "0.25.9"
+indicatif = "0.18.3"
 interprocess = { workspace = true }
-num_cpus = "1.17.0"
 paste = { workspace = true }
-rayon = "1.10.0"
+rayon = "1.11.0"
 regex = { workspace = true }
-reqwest = { version = "0.12.23", features = ["blocking", "json"] }
-rhai = "1.23.4"
-rust-embed = "8.7.2"
+reqwest = { version = "0.12.24", features = ["blocking", "json"] }
+rhai = "1.23.6"
+rust-embed = "8.9.0"
 semver = "1.0.27"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -65,14 +65,16 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.20", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.0.5"
+webbrowser = "1.0.6"
 whoami = "1.6.1"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-enable-ansi-support = "0.2.1"
+enable-ansi-support = "0.3.1"
 winapi = { version = "0.3.9", features = ["winuser"] }
 winreg = "0.55.0"
 
 [dev-dependencies]
 sealed_test = "1.1.0"
+hemtt-test = { path = "../libs/testing" }
+insta = { workspace = true }

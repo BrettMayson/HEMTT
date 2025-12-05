@@ -1,8 +1,6 @@
-use std::{
-    fs::{File, create_dir_all},
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
+use fs_err::File;
 use walkdir::WalkDir;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
@@ -27,7 +25,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
     let output = ctx.project_folder().join("releases");
     trace!("using releases folder: {:?}", output.display());
     if !output.exists() {
-        create_dir_all(&output)?;
+        fs_err::create_dir_all(&output)?;
     }
     let output = output
         .join(format!("{}-latest", ctx.config().prefix()))
@@ -87,7 +85,7 @@ pub fn release(ctx: &Context) -> Result<Report, Error> {
     progress.finish_and_clear();
     zip.finish()?;
     info!("Created release: {}", output.display());
-    std::fs::copy(&output, {
+    fs_err::copy(&output, {
         let mut output = output.clone();
         output.set_file_name(format!(
             "{}-{}.zip",

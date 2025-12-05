@@ -14,12 +14,12 @@ pub fn check() -> Result<Option<String>, Error> {
     }
     let tmp_folder = std::env::temp_dir().join("hemtt");
     if !tmp_folder.exists() {
-        std::fs::create_dir_all(&tmp_folder)?;
+        fs_err::create_dir_all(&tmp_folder)?;
     }
     let tmp_latest = tmp_folder.join("latest");
     let need_check = if tmp_latest.exists() {
         // only check if the file is older than 12 hours
-        let metadata = std::fs::metadata(&tmp_latest)?;
+        let metadata = fs_err::metadata(&tmp_latest)?;
         let modified = metadata.modified()?;
         let now = std::time::SystemTime::now();
         let duration = now.duration_since(modified).unwrap_or_default();
@@ -47,7 +47,7 @@ pub fn check() -> Result<Option<String>, Error> {
                 "Failed to parse latest release from GitHub",
             )));
         };
-        let mut file = std::fs::File::create(&tmp_latest)?;
+        let mut file = fs_err::File::create(&tmp_latest)?;
         file.write_all(release.tag_name.as_bytes())?;
     }
     let current = env!("HEMTT_VERSION");
@@ -56,7 +56,7 @@ pub fn check() -> Result<Option<String>, Error> {
             "Failed to parse current version",
         )));
     };
-    let mut file = std::fs::File::open(&tmp_latest)?;
+    let mut file = fs_err::File::open(&tmp_latest)?;
     let mut latest = String::new();
     file.read_to_string(&mut latest)?;
     let Ok(latest) = semver::Version::parse(&latest[1..]) else {

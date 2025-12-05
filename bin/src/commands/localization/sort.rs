@@ -16,9 +16,19 @@ use crate::{Error, context::Context, report::Report};
 /// 2. Sort the Containers in alphabetical order (if any).
 /// 3. Sort the Keys in alphabetical order.
 /// 4. Sort the Localized Strings in the order of [this table](https://community.bistudio.com/wiki/Stringtable.xml#Supported_Languages)
+///
+/// ## Benefits
+///
+/// - Reduces merge conflicts in version control
+/// - Makes manual review easier with consistent ordering
+/// - Standardizes format across all stringtables
+///
+/// Run this before committing stringtable changes for cleaner diffs.
 pub struct Command {
     #[arg(long)]
     /// Only sort the languages within keys
+    ///
+    /// Preserves the order of packages, containers, and keys, only sorting language entries.
     only_lang: bool,
 }
 
@@ -60,7 +70,7 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                             error!("{:?}", e);
                             return Ok(Report::new());
                         }
-                        if let Err(e) = std::fs::write(&path, writer) {
+                        if let Err(e) = fs_err::write(&path, writer) {
                             error!("Failed to write stringtable for {}", path.display());
                             error!("{:?}", e);
                             return Ok(Report::new());

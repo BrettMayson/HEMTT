@@ -36,8 +36,10 @@ lineIntersects [eyePos player, aimPos chopper, player, chopper];
 lineIntersects [[eyePos player, aimPos chopper, player, chopper]];
 lineIntersects [[eyePos player, aimPos chopper, player, chopper], [eyePos player, aimPos chopper, player, chopper]];
 
-// param
-// params
+// params is handled in commands.rs
+params ["_var1", objNull];
+params [["_var2", "", ""]];
+params [["_var3", objNull, [false]]];
 
 ppEffectCreate ["ColorCorrections", 1];
 ppEffectCreate [["ColorCorrections", 1]];

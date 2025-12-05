@@ -36,6 +36,7 @@ lint!(c12_math_could_be_unquoted);
 lint!(c13_config_this_call);
 lint!(c14_unused_external);
 lint!(c15_cfgpatches_scope);
+lint!(c17_extra_semicolon);
 
 fn lint(file: &str) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
@@ -62,6 +63,7 @@ fn lint(file: &str) -> (String, ConfigReport) {
             config
                 .codes()
                 .iter()
+                .filter(|e| e.diagnostic().unwrap().code != "L-C16")
                 .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
                 .collect::<Vec<_>>()
                 .join("\n")

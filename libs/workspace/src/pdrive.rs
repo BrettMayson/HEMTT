@@ -81,7 +81,7 @@ impl PDriveOnDemand {
     fn new(p: &Path) -> Result<Self, Error> {
         let path = temp_dir().join("hemtt_pdrive");
         if !path.exists() {
-            std::fs::create_dir_all(&path)?;
+            fs_err::create_dir_all(&path)?;
         }
         Ok(Self {
             real_root: path.clone(),
@@ -89,7 +89,7 @@ impl PDriveOnDemand {
             cache: {
                 let mut cache = HashMap::new();
                 for dir in &DIRS {
-                    for addon in std::fs::read_dir(p.join(dir))? {
+                    for addon in fs_err::read_dir(p.join(dir))? {
                         let addon = addon?;
                         let path = addon.path();
                         if path.is_file() {
@@ -174,7 +174,7 @@ pub fn search() -> Option<PDrive> {
     // Loop up the arma 3 tools, check for a custom P drive mapping
     if let Some(tools_path) = steam::find_app(233_800) {
         let settings = tools_path.join("settings.ini");
-        let settings = std::fs::read_to_string(settings).ok()?;
+        let settings = fs_err::read_to_string(settings).ok()?;
         let mut using_user_path = false;
         let mut pdrive_path = { dirs::document_dir()?.join("Arma 3 Projects") };
         for line in settings.lines() {

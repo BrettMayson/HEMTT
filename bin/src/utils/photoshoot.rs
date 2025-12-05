@@ -40,7 +40,7 @@ impl Photoshoot {
             512,
             image::imageops::FilterType::Lanczos3,
         );
-        std::fs::remove_file(path)?;
+        fs_err::remove_file(path)?;
         Ok(new)
     }
 
@@ -54,7 +54,7 @@ impl Photoshoot {
             Self::gamma_rgb(pixel);
         }
         let new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
-        std::fs::remove_file(path)?;
+        fs_err::remove_file(path)?;
         Ok(new)
     }
 

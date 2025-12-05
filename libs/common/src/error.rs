@@ -12,13 +12,13 @@ pub enum Error {
     ConfigInvalid(String),
 
     #[error("Launch configuration extends non-existent configuration: {0} -> {1}")]
-    LaunchConfigExtendsMissing(String, String),
-    #[error("Launch configuration extends itself: {0}")]
-    LaunchConfigExtendsSelf(String),
+    LaunchProfileExtendsMissing(String, String),
+    #[error("Launch profile extends itself: {0}")]
+    LaunchProfileExtendsSelf(String),
     #[error(
-        "Launch configuration source conflict. They can exist in either `project.toml` or `launch.toml`, not both."
+        "Launch profile source conflict. They can exist in either `project.toml` or `launch.toml`, not both."
     )]
-    LaunchConfigConflict,
+    LaunchProfileConflict,
 
     #[error(
         "Lints configuration source conflict. They can exist in either `project.toml` or `lints.toml`, not both."

@@ -40,8 +40,37 @@ impl Licenses {
         };
         #[allow(clippy::literal_string_with_formatting_args)]
         {
-            Some(license.replace("{author}", author).replace(
-                "{year}",
+            Some(license.replace("{AUTHOR}", author).replace(
+                "{YEAR}",
+                time::OffsetDateTime::now_utc().year().to_string().as_str(),
+            ))
+        }
+    }
+
+    /// Get a license by name
+    ///
+    /// # Arguments
+    /// * `name` - The license name (e.g., "apl-sa", "mit", "apache")
+    /// * `author` - The author name to include in the license
+    ///
+    /// # Returns
+    /// The license text with author and year filled in, or None if the license name is invalid
+    #[must_use]
+    pub fn get_by_name(name: &str, author: &str) -> Option<String> {
+        let license = match name.to_lowercase().as_str() {
+            "apl-sa" => include_str!("licenses/apl-sa.txt"),
+            "apl" => include_str!("licenses/apl.txt"),
+            "apl-nd" => include_str!("licenses/apl-nd.txt"),
+            "apache" | "apache-2.0" | "apache2" => include_str!("licenses/apache.txt"),
+            "gpl" | "gpl-3.0" | "gpl3" => include_str!("licenses/gpl-3.0.txt"),
+            "mit" => include_str!("licenses/mit.txt"),
+            "unlicense" => include_str!("licenses/unlicense.txt"),
+            _ => return None,
+        };
+        #[allow(clippy::literal_string_with_formatting_args)]
+        {
+            Some(license.replace("{AUTHOR}", author).replace(
+                "{YEAR}",
                 time::OffsetDateTime::now_utc().year().to_string().as_str(),
             ))
         }

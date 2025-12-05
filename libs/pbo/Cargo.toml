@@ -16,9 +16,9 @@ hemtt-common = { path = "../common" }
 
 byteorder = { workspace = true }
 indexmap = { workspace = true }
-serde = { workspace = true }
 sha-1 = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+fs-err = { workspace = true }
 insta = { workspace = true }

@@ -98,8 +98,8 @@ enum Comparison {
     NotEqual(String, FloatOrd<f32>, Range<usize>),
     GreaterThanOrEqual(String, FloatOrd<f32>, Range<usize>),
     GreaterThan(String, FloatOrd<f32>, Range<usize>),
-    CompareGroup(Vec<Comparison>),
-    NonCompareGroup(Vec<Comparison>),
+    CompareGroup(Vec<Self>),
+    NonCompareGroup(Vec<Self>),
     Ignored,
 }
 
@@ -301,7 +301,6 @@ fn find_issues(comparisons: Comparison) -> Vec<ComparisonIssue> {
     issues
 }
 
-#[allow(clippy::too_many_lines)]
 fn check_issue(a: &Comparison, b: &Comparison) -> Option<ComparisonIssue> {
     let a_var = a.var()?;
     let b_var = b.var()?;

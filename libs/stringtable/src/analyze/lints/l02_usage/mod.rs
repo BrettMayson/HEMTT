@@ -63,7 +63,6 @@ options.ignore_unused = true
 pub struct Runner;
 impl LintRunner<LintData> for Runner {
     type Target = Vec<Project>;
-    #[allow(clippy::too_many_lines)]
     fn run(
         &self,
         project: Option<&hemtt_common::config::ProjectConfig>,
@@ -165,7 +164,7 @@ impl LintRunner<LintData> for Runner {
             .option("ignore_duplicate")
             .is_some_and(|o| o.as_bool().is_some_and(|b| b));
 
-        let _ = std::fs::create_dir_all(".hemttout");
+        let _ = fs_err::create_dir_all(".hemttout");
         codes.extend(unused_codes(unused, &all, ignore_unused));
         codes.extend(missing_codes(&missing, ignore_missing));
         codes.extend(duplicate_codes(&all, ignore_duplicate));
@@ -178,13 +177,13 @@ fn unused_codes(
     all: &HashMap<String, Vec<Position>>,
     ignore: bool,
 ) -> Codes {
-    let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
+    let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     let mut codes: Codes = Vec::new();
-    let _ = std::fs::remove_file(".hemttout/unused_stringtables.txt");
+    let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     if !unused.is_empty() {
         unused.sort();
         unused.dedup();
-        let mut file = std::fs::File::create(".hemttout/unused_stringtables.txt")
+        let mut file = fs_err::File::create(".hemttout/unused_stringtables.txt")
             .expect("Failed to create file");
         for key in &unused {
             let pos = all
@@ -213,10 +212,10 @@ fn unused_codes(
 }
 
 fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
-    let _ = std::fs::remove_file(".hemttout/missing_stringtables.txt");
+    let _ = fs_err::remove_file(".hemttout/missing_stringtables.txt");
     let mut codes: Codes = Vec::new();
     if !missing.is_empty() {
-        let mut file = std::fs::File::create(".hemttout/missing_stringtables.txt")
+        let mut file = fs_err::File::create(".hemttout/missing_stringtables.txt")
             .expect("Failed to create file");
         for (key, pos) in missing {
             writeln!(
@@ -240,7 +239,7 @@ fn missing_codes(missing: &[(String, Position)], ignore: bool) -> Codes {
 }
 
 fn duplicate_codes(all: &HashMap<String, Vec<Position>>, ignore: bool) -> Codes {
-    let _ = std::fs::remove_file(".hemttout/duplicate_stringtables.txt");
+    let _ = fs_err::remove_file(".hemttout/duplicate_stringtables.txt");
     let mut codes: Codes = Vec::new();
     let duplicates = all
         .iter()
@@ -248,7 +247,7 @@ fn duplicate_codes(all: &HashMap<String, Vec<Position>>, ignore: bool) -> Codes 
         .map(|(k, v)| (k, v.clone()))
         .collect::<Vec<_>>();
     if !duplicates.is_empty() {
-        let mut file = std::fs::File::create(".hemttout/duplicate_stringtables.txt")
+        let mut file = fs_err::File::create(".hemttout/duplicate_stringtables.txt")
             .expect("Failed to create file");
         for (key, positions) in &duplicates {
             writeln!(file, "{key}").expect("Failed to write to file");

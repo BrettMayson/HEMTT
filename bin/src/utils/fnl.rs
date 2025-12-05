@@ -4,6 +4,21 @@ use crate::{Error, modules::fnl::TEXT_EXTENSIONS};
 
 #[derive(clap::Parser)]
 /// Insert a final newline into files if missing
+///
+/// ## Why Final Newlines Matter
+///
+/// Many tools and standards (POSIX) expect text files to end with a newline character.
+/// Missing final newlines can cause:
+/// - Git diff warnings
+/// - Issues with some text processing tools
+/// - Inconsistent behavior across different editors
+///
+/// This utility:
+/// - Scans text files (sqf, hpp, cpp, txt, etc.)
+/// - Adds a final newline if missing
+/// - Reports how many files were modified
+///
+/// Recommended to run before committing code to ensure consistency.
 pub struct Command {}
 
 /// Execute the final newline command
@@ -28,7 +43,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
                 .to_str()
                 .unwrap_or_default();
             if TEXT_EXTENSIONS.contains(&ext) {
-                let mut file = std::fs::OpenOptions::new()
+                let mut file = fs_err::OpenOptions::new()
                     .read(true)
                     .append(true)
                     .open(path)?;

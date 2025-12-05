@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::Error;
 
+mod convert;
 mod derapify;
 mod inspect;
 
@@ -9,7 +10,7 @@ pub use inspect::inspect;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for config files
+/// Tools for working with Arma 3 config files (.cpp, .hpp, .rvmat)
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
@@ -17,9 +18,21 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Convert a config file to another format
+    ///
+    /// Parses and converts Arma 3 config files (.cpp, .hpp, .rvmat) to
+    /// JSON or back to formatted CPP. Useful for programmatic access to
+    /// config data or reformatting configs.
+    Convert(convert::ConvertArgs),
     /// Derapify a config file
+    ///
+    /// Derapification converts Arma's binary config format (config.bin) back to
+    /// a readable text format. Useful for inspecting configs from PBOs or
+    /// understanding how configs are structured.
     Derapify(derapify::DerapifyArgs),
     /// Inspect a config file
+    ///
+    /// In some cases the output might be cut off in the terminal. Adjust the `terminal.integrated.scrollback` setting in VS Code if necessary.
     Inspect(inspect::InspectArgs),
 }
 
@@ -32,6 +45,11 @@ enum Subcommands {
 /// If the args are not present from clap
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     match &cmd.commands {
+        Subcommands::Convert(args) => convert::convert(
+            &PathBuf::from(&args.file),
+            args.output.as_deref(),
+            args.output_format,
+        ),
         Subcommands::Derapify(args) => derapify::derapify(
             &PathBuf::from(&args.file),
             args.output.as_deref(),

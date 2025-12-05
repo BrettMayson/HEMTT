@@ -15,6 +15,7 @@ pub type Sources = Vec<(WorkspacePath, String)>;
 /// A processed file
 pub struct Processed {
     sources: Sources,
+    included_files: Vec<WorkspacePath>,
 
     output: String,
     clean_output: String,
@@ -60,7 +61,6 @@ struct Processing {
     total_chars: usize,
 }
 
-#[allow(clippy::too_many_lines)]
 fn append_token(
     processing: &mut Processing,
     string_stack: &mut Vec<char>,
@@ -191,14 +191,11 @@ fn append_output(
                     .sources
                     .iter()
                     .position(|(s, _)| s.as_str() == path.as_str())
-                    .map_or_else(
-                        || {
-                            let content = path.read_to_string().expect("file should exist if used");
-                            processing.sources.push((path, content));
-                            processing.sources.len() - 1
-                        },
-                        |i| i,
-                    );
+                    .unwrap_or_else(|| {
+                        let content = path.read_to_string().expect("file should exist if used");
+                        processing.sources.push((path, content));
+                        processing.sources.len() - 1
+                    });
                 processing.mappings.push(Mapping {
                     processed: (
                         LineCol(start, (line, col)),
@@ -283,6 +280,7 @@ impl Processed {
     pub fn new(
         output: Vec<Output>,
         macros: HashMap<String, Vec<(Position, Definition)>>,
+        included_files: Vec<WorkspacePath>,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         warnings: Codes,
         no_rapify: bool,
@@ -299,6 +297,7 @@ impl Processed {
 
         let mut processed = Self {
             sources: processing.sources,
+            included_files,
             output: processing.output,
             clean_output: String::new(),
             clean_output_line_indexes: Vec::new(),
@@ -332,6 +331,12 @@ impl Processed {
     /// Ignores certain tokens
     pub fn as_str(&self) -> &str {
         &self.output
+    }
+
+    #[must_use]
+    /// Get the included files
+    pub const fn included_files(&self) -> &Vec<WorkspacePath> {
+        &self.included_files
     }
 
     #[must_use]

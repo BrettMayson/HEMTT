@@ -35,13 +35,14 @@ impl FileCache {
         self.ropes.contains_key(url)
     }
 
-    pub async fn on_change(&self, document: &TextDocumentItem<'_>) {
+    #[allow(clippy::unused_self)]
+    pub fn on_change(&self, document: &TextDocumentItem<'_>) {
         match &document.text {
             TextInformation::Full(text) => {
-                FileCache::get().insert(document.uri.clone(), Rope::from_str(text));
+                Self::get().insert(document.uri.clone(), Rope::from_str(text));
             }
             TextInformation::Changes(changes) => {
-                let file_cache = FileCache::get();
+                let file_cache = Self::get();
                 let mut rope = file_cache
                     .entry(document.uri.clone())
                     .or_insert_with(|| Rope::from_str(""));
@@ -59,7 +60,7 @@ impl FileCache {
         }
     }
 
-    pub async fn on_close(&self, url: &Url) {
+    pub fn on_close(&self, url: &Url) {
         self.ropes.remove(url);
     }
 }

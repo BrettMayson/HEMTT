@@ -1,5 +1,8 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Config error: {0}")]
+    Config(String),
+
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
 
@@ -30,6 +33,9 @@ pub enum Error {
 
     #[error("Update error: {0}")]
     Update(String),
+
+    #[error("Invalid value: {0}")]
+    InvalidValueName(String),
 
     #[error("Dialoguer Error: {0}")]
     Dialoguer(#[from] dialoguer::Error),

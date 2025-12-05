@@ -13,7 +13,8 @@ pub use inspect::inspect;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for audio files
+/// Tools for working with Arma 3 audio files, including WSS (Arma's custom format),
+/// WAV, OGG, and MP3 files. Supports inspection, conversion, and compression.
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
@@ -21,11 +22,12 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
-    /// Inspect an audio file
+    /// Inspect a WSS file
     Inspect(inspect::InspectArgs),
-    /// Convert an audio file
+    /// Converts between WSS (Arma's format), WAV, OGG, and MP3.
+    /// Automatically detects the input format.
     Convert(convert::ConvertArgs),
-    /// Compress wss files
+    /// Checks for WSS files that can be compressed
     Compress(compress::CompressArgs),
 }
 
@@ -58,7 +60,7 @@ pub enum SupportedFile {
 /// # Errors
 /// [`std::io::Error`] if an IO error occurs
 pub fn guess_file_type(file: &PathBuf) -> Result<Option<SupportedFile>, Error> {
-    let mut file = std::fs::File::open(file)?;
+    let mut file = fs_err::File::open(file)?;
     let buf = &mut [0u8; 12];
     file.read_exact(buf)?;
     file.seek(std::io::SeekFrom::Start(0))?;

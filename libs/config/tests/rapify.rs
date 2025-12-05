@@ -57,19 +57,19 @@ fn rapify(dir: &str) -> Config {
             .iter()
             .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
             .collect::<Vec<_>>();
-        std::fs::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();
-        std::fs::write(folder.join("processed.txt"), processed.as_str()).unwrap();
+        fs_err::write(folder.join("stderr.ansi"), e.join("\n")).unwrap();
+        fs_err::write(folder.join("processed.txt"), processed.as_str()).unwrap();
         panic!("failed to parse")
     }
     let parsed = parsed.unwrap();
     let mut expected = Vec::new();
     let expected_path = folder.join("expected.bin");
     if !expected_path.exists() {
-        let mut file = std::fs::File::create(&expected_path).unwrap();
+        let mut file = fs_err::File::create(&expected_path).unwrap();
         parsed.config().rapify(&mut file, 0).unwrap();
         panic!("expected file did not exist, created it");
     }
-    std::fs::File::open(&expected_path)
+    fs_err::File::open(&expected_path)
         .unwrap()
         .read_to_end(&mut expected)
         .unwrap();
@@ -80,11 +80,11 @@ fn rapify(dir: &str) -> Config {
     let vanilla_path = folder.join("cfgconvert.bin");
     if vanilla_path.exists() {
         let mut expected = Vec::new();
-        let mut file = std::fs::File::open(&vanilla_path).unwrap();
+        let mut file = fs_err::File::open(&vanilla_path).unwrap();
         file.read_to_end(&mut expected).unwrap();
         assert_eq!(output, expected);
     }
 
-    let mut expected_input = std::fs::File::open(expected_path).unwrap();
+    let mut expected_input = fs_err::File::open(expected_path).unwrap();
     Config::derapify(&mut expected_input).unwrap()
 }

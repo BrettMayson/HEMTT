@@ -34,7 +34,6 @@ impl Statement {
 impl Expression {
     /// optimize Expression
     #[must_use]
-    #[allow(clippy::too_many_lines)]
     fn optimize(self) -> Self {
         match &self {
             Self::Code(code) => Self::Code(code.clone().optimize()),
@@ -304,7 +303,7 @@ impl Expression {
                 trace!(
                     "optimizing [U:{}] ({}) => {}",
                     op_type.as_str(),
-                    self.source(),
+                    self.source(false),
                     new_string
                 );
                 return Some(Self::String(
@@ -316,7 +315,7 @@ impl Expression {
             warn!(
                 "Skipping Optimization because unicode [U:{}] ({}) => {}",
                 op_type.as_str(),
-                self.source(),
+                self.source(false),
                 right_string.to_string()
             );
         }
@@ -339,7 +338,7 @@ impl Expression {
                 trace!(
                     "optimizing [U:{}] ({}) => {}",
                     op_type.as_str(),
-                    self.source(),
+                    self.source(false),
                     new_number
                 );
                 return Some(Self::Number(crate::Scalar(new_number), range.clone()));
@@ -347,7 +346,7 @@ impl Expression {
             warn!(
                 "Skipping Optimization because NaN [U:{}] ({}) => {}",
                 op_type.as_str(),
-                self.source(),
+                self.source(false),
                 new_number
             );
         }
@@ -373,7 +372,7 @@ impl Expression {
                 trace!(
                     "optimizing [B:{}] ({}) => {}",
                     op_type.as_str(),
-                    self.source(),
+                    self.source(false),
                     new_string
                 );
                 return Some(Self::String(
@@ -385,7 +384,7 @@ impl Expression {
             warn!(
                 "Skipping Optimization because unicode [B:{}] ({}) => {}",
                 op_type.as_str(),
-                self.source(),
+                self.source(false),
                 right_string.to_string()
             );
         }
@@ -413,7 +412,7 @@ impl Expression {
                     trace!(
                         "optimizing [B:{}] ({}) => {}",
                         op_type.as_str(),
-                        self.source(),
+                        self.source(false),
                         new_number
                     );
                     return Some(Self::Number(crate::Scalar(new_number), range.clone()));
@@ -421,7 +420,7 @@ impl Expression {
                 warn!(
                     "Skipping Optimization because NaN [B:{}] ({}) => {}",
                     op_type.as_str(),
-                    self.source(),
+                    self.source(false),
                     new_number
                 );
             }
@@ -446,7 +445,7 @@ impl Expression {
                         "optimizing pair ([B:{}], [B:{}]) ({}) => {}",
                         op_type.as_str(),
                         left_op_type.as_str(),
-                        self.source(),
+                        self.source(false),
                         new_number
                     );
                     return Some(Self::BinaryCommand(
@@ -459,7 +458,7 @@ impl Expression {
                 warn!(
                     "Skipping Optimization on float chain [B:{}] ({})",
                     new_op.as_str(),
-                    self.source()
+                    self.source(false)
                 );
             }
             _ => {}

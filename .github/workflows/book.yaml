@@ -23,7 +23,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -31,7 +31,7 @@ jobs:
           key: book
 
       - name: Setup mdBook
-        run: cargo install mdbook mdbook-admonish
+        run: cargo install mdbook
 
       - run: mdbook build
 

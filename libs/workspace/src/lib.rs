@@ -17,6 +17,7 @@ pub use paste;
 pub mod addons;
 pub mod error;
 pub mod lint;
+pub mod missing;
 pub mod path;
 pub mod pdrive;
 pub mod position;

@@ -230,8 +230,7 @@ impl WorkspacePath {
         })
     }
 
-    #[allow(clippy::too_many_lines)]
-    /// Locate a path in the workspace
+    /// Locate a path in the workspace, including the P drive if allowed
     ///
     /// Checks in order:
     /// - A3 P drive, if allowed and path starts with `/a3/`
@@ -244,11 +243,21 @@ impl WorkspacePath {
     ///
     /// # Panics
     /// If the found path is not valid utf-8
-    pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
-        fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
-            let on_disk = on_disk.as_str().replace('\\', "/");
-            on_disk.eq_ignore_ascii_case(requested) && on_disk != requested
+    pub fn locate_with_pdrive(&self, path: &str) -> Result<Option<LocateResult>, Error> {
+        if let Ok(result) = self.locate_internal_with_pdrive(path)
+            && result.is_some()
+        {
+            return Ok(result);
         }
+        if let Some(alternate) = alternate_file(path)
+            && let Some(located) = self.locate_internal_with_pdrive(&alternate)?
+        {
+            return Ok(Some(located));
+        }
+        Ok(None)
+    }
+
+    fn locate_internal_with_pdrive(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
         if path_lower.starts_with("/a3/")
@@ -269,6 +278,38 @@ impl WorkspacePath {
                 },
             }));
         }
+        self.locate(&path)
+    }
+
+    /// Locate a path in the workspace
+    ///
+    /// Checks in order:
+    /// - Relative to the current path, or absolute if the path starts with `/`
+    /// - In the scanned pointers (prefix files)
+    /// - In the include path
+    ///
+    /// # Errors
+    /// [`Error::Vfs`] if the path could not be located
+    ///
+    /// # Panics
+    /// If the found path is not valid utf-8
+    pub fn locate(&self, path: &str) -> Result<Option<LocateResult>, Error> {
+        if let Ok(result) = self.locate_internal(path)
+            && result.is_some()
+        {
+            return Ok(result);
+        }
+        if let Some(alternate) = alternate_file(path)
+            && let Some(located) = self.locate_internal(&alternate)?
+        {
+            return Ok(Some(located));
+        }
+        Ok(None)
+    }
+
+    fn locate_internal(&self, path: &str) -> Result<Option<LocateResult>, Error> {
+        let path = path.replace('\\', "/");
+        let path_lower = path.to_lowercase();
         if path.starts_with('/') {
             if self.data.workspace.vfs.join(&path)?.exists()? {
                 let ret_path = self.data.workspace.vfs.join(&path)?;
@@ -454,9 +495,28 @@ impl std::fmt::Debug for WorkspacePath {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LocateResult {
     pub path: WorkspacePath,
     pub case_mismatch: Option<String>,
+}
+
+#[allow(clippy::case_sensitive_file_extension_comparisons)]
+fn alternate_file(path: &str) -> Option<String> {
+    if path.ends_with(".paa") {
+        Some(path.replace(".paa", ".tga"))
+    } else if path.ends_with(".tga") {
+        Some(path.replace(".tga", ".paa"))
+    } else if path.ends_with(".png") {
+        Some(path.replace(".png", ".paa"))
+    } else {
+        None
+    }
+}
+
+fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
+    let on_disk = on_disk.as_str().replace('\\', "/");
+    on_disk.eq_ignore_ascii_case(requested) && on_disk != requested
 }
 
 /// Check if a path exists in a case-insensitive manner.
@@ -470,7 +530,7 @@ fn exists_case_insensitive_from(path: &Path, from: PathBuf) -> Option<PathBuf> {
     for component in path.components() {
         if let std::path::Component::Normal(name) = component {
             let mut found = false;
-            if let Ok(entries) = std::fs::read_dir(&current_path) {
+            if let Ok(entries) = fs_err::read_dir(&current_path) {
                 for entry in entries.filter_map(Result::ok) {
                     if entry.file_name().eq_ignore_ascii_case(name) {
                         current_path.push(entry.file_name());

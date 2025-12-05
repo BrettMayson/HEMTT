@@ -24,10 +24,10 @@ pest_derive = { workspace = true }
 strsim = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-vfs = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = "0.8.0"
+fs-err = { workspace = true }
 paste = { workspace = true }
 
 [features]

@@ -1,33 +1,37 @@
 [package]
 name = "hemtt-language-server"
-version = "0.6.7"
+version = "1.18.1"
 edition = "2024"
+
+[lints]
+workspace = true
 
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
 hemtt-p3d = { path = "../libs/p3d" }
-hemtt-paa = { path = "../libs/paa", features = ["json"] }
+hemtt-paa = { path = "../libs/paa", features = ["json", "generate"] }
 hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }
 hemtt-sqf = { path = "../libs/sqf" }
 hemtt-workspace = { path = "../libs/workspace" }
 hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
-chumsky = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 dashmap = { workspace = true }
+fs-err = { workspace = true }
+image = "0.25.9"
 regex = { workspace = true }
 ropey = "1.6.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { version = "1.46.1", features = ["full"] }
+tokio = { version = "1.48.0", features = ["full"] }
 tower-lsp = { workspace = true, features = ["proposed"]}
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["json"] }
-url = "2.5.4"
+tracing-subscriber = { version = "0.3.20", features = ["json"] }
+url = "2.5.7"
 urlencoding = "2.1.3"
-vfs = { workspace = true }
 
 [build-dependencies]
 arma3-wiki = { workspace = true }
+fs-err = { workspace = true }

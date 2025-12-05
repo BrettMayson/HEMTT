@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "0.6.7",
+  "version": "1.18.1",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -210,19 +210,55 @@
         "command": "hemtt.convertAudioWav",
         "title": "Convert to wav",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(ogg|wss|mp3)$/i"
       },
       {
         "command": "hemtt.convertAudioOgg",
         "title": "Convert to ogg",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
       },
       {
         "command": "hemtt.convertAudioWss",
         "title": "Convert to wss",
         "category": "HEMTT Audio",
-        "enablement": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+        "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+      },
+      {
+        "command": "hemtt.convertPaa",
+        "title": "Convert to PAA",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|webp)$/i"
+      },
+      {
+        "command": "hemtt.convertPng",
+        "title": "Convert to PNG",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertJpg",
+        "title": "Convert to JPG",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertTga",
+        "title": "Convert to TGA",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertBmp",
+        "title": "Convert to BMP",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
+      },
+      {
+        "command": "hemtt.convertWebp",
+        "title": "Convert to WEBP",
+        "category": "HEMTT Images",
+        "enablement": "resourceExtname == '.paa'"
       },
       {
         "command": "hemtt.openLastRPT",
@@ -257,25 +293,61 @@
       ],
       "explorer/context": [
         {
-          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'",
+          "when": "resourceExtname =~ /\\.(ogg|wav|wss|mp3)$/i",
           "submenu": "hemtt.audio"
+        },
+        {
+          "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|paa)$/i",
+          "submenu": "hemtt.images"
         }
       ],
       "hemtt.audio": [
         {
           "command": "hemtt.convertAudioWav",
           "group": "1_convert",
-          "when": "resourceExtname == '.ogg' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(ogg|wss|mp3)$/i"
         },
         {
           "command": "hemtt.convertAudioOgg",
           "group": "1_convert",
-          "when": "resourceExtname == '.wav' || resourceExtname == '.wss' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
         },
         {
           "command": "hemtt.convertAudioWss",
           "group": "1_convert",
-          "when": "resourceExtname == '.wav' || resourceExtname == '.ogg' || resourceExtname == '.mp3'"
+          "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+        }
+      ],
+      "hemtt.images": [
+        {
+          "command": "hemtt.convertPaa",
+          "group": "1_convert",
+          "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga)$/i"
+        },
+        {
+          "command": "hemtt.convertPng",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertJpg",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertTga",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertBmp",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
+        },
+        {
+          "command": "hemtt.convertWebp",
+          "group": "1_convert",
+          "when": "resourceExtname == '.paa'"
         }
       ]
     },
@@ -283,6 +355,10 @@
       {
         "id": "hemtt.audio",
         "label": "HEMTT Audio"
+      },
+      {
+        "id": "hemtt.images",
+        "label": "HEMTT Images"
       }
     ],
     "keybindings": [
@@ -309,26 +385,26 @@
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",
-    "@types/node": "24.5.2",
+    "@types/node": "24.10.0",
     "@types/vscode": "1.104.0",
     "@types/ws": "8.18.1",
-    "@typescript-eslint/eslint-plugin": "8.44.1",
-    "@typescript-eslint/parser": "8.44.1",
+    "@typescript-eslint/eslint-plugin": "8.46.2",
+    "@typescript-eslint/parser": "8.46.2",
     "@vscode/test-electron": "2.5.2",
-    "esbuild": "0.25.10",
-    "eslint": "9.36.0",
-    "glob": "11.0.3",
-    "mocha": "11.7.2",
+    "esbuild": "0.25.12",
+    "eslint": "9.39.0",
+    "glob": "11.1.0",
+    "mocha": "11.7.4",
     "run-script-os": "^1.1.6",
     "ts-loader": "9.5.4",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "vscode-uri": "3.1.0"
   },
   "dependencies": {
     "hemtt": "file:",
-    "image-js": "^0.37.0",
+    "image-js": "1.1.0",
     "portfinder": "^1.0.38",
-    "three": "^0.180.0",
+    "three": "0.181.0",
     "three-viewport-gizmo": "^2.2.0",
     "vscode-languageclient": "^9.0.1"
   }

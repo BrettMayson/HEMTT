@@ -18,9 +18,7 @@ By default, HEMTT will allow references to a P Drive, but will not fail the buil
 
 If a P Drive is explicitly disallowed by the project, it can specify as such.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [hemtt.build]
 pdrive = "disallow"
 
@@ -34,9 +32,7 @@ When disallowed by the project, HEMTT will fail to build the project if any refe
 
 If a P Drive is required by the project, it **must** specify as such. If the flag is not set, HEMTT will not allow the P Drive to be used.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [hemtt.build]
 pdrive = "require"
 

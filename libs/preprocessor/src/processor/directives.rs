@@ -223,13 +223,21 @@ impl Processor {
             let Ok(Some(LocateResult {
                 path: found_path,
                 case_mismatch,
-            })) = current.locate(
+            })) = current.locate_with_pdrive(
                 &path_tokens
                     .iter()
                     .map(std::string::ToString::to_string)
                     .collect::<String>(),
             )
             else {
+                if let Ok(possible) = current.parent().join(
+                    path_tokens
+                        .iter()
+                        .map(std::string::ToString::to_string)
+                        .collect::<String>(),
+                ) {
+                    self.add_include(possible, path_tokens.clone())?;
+                }
                 return Err(IncludeNotFound::code(path_tokens));
             };
             if let Some(case_mismatch) = case_mismatch {
@@ -332,7 +340,6 @@ impl Processor {
         Self::expect_nothing_to_newline(stream)
     }
 
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn directive_if(
         &mut self,
         pragma: &Pragma,

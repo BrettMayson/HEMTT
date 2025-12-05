@@ -1,5 +1,4 @@
 use std::{
-    fs::create_dir,
     io::{IsTerminal, Write},
     path::Path,
 };
@@ -23,19 +22,31 @@ mod error;
 ///
 /// `hemtt new` is used to create a new mod. It will create a new folder with the name you provide, and create some starting files.
 ///
-/// It will ask for:
+/// ## Interactive Setup
+///
+/// The command will interactively prompt for:
 ///
 /// - The full name of your mod  
 /// - The author of your mod  
-/// - The prefix of your mod  
-/// - The main prefix of your mod  
-/// - A license for your mod  
+/// - The prefix of your mod (used for addon naming)
+/// - The main prefix of your mod (folder prefix like 'z')
+/// - A license for your mod
+///
+/// ## Generated Structure
+///
+/// Creates a complete project structure with:
+/// - `.hemtt/project.toml` - Project configuration
+/// - `addons/main/` - Example addon structure
+/// - `LICENSE` - Selected license file
+/// - `.gitignore` - Standard git ignore patterns
+/// - README template  
 pub struct Command {
     #[clap(name = "name", verbatim_doc_comment)]
     /// The name of the new project
     ///
     /// This will create a new folder with the name you provide in the current directory.
     /// It should be a valid folder name, using only letters, numbers, and underscores.
+    /// This name is typically lowercase and used for the directory, not the display name.
     ///
     /// Example: `hemtt new my_mod`
     name: String,
@@ -100,28 +111,27 @@ pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
         Licenses::select(&author)
     };
 
-    create_dir(path)?;
-    create_dir(path.join("addons"))?;
+    fs_err::create_dir(path)?;
+    fs_err::create_dir(path.join("addons"))?;
 
     git2::Repository::init(path)?;
 
     // Create .hemtt/project.toml
     let hemtt_path = path.join(".hemtt");
-    create_dir(&hemtt_path)?;
-    let mut file = std::fs::File::create(hemtt_path.join("project.toml"))?;
+    fs_err::create_dir(&hemtt_path)?;
+    let mut file = fs_err::File::create(hemtt_path.join("project.toml"))?;
     file.write_all(
         format!("name = \"{full_name}\"\nauthor = \"{author}\"\nprefix = \"{prefix}\"\nmainprefix = \"{mainprefix}\"\n")
             .as_bytes(),
     )?;
 
     // Create .gitignore
-    let mut file = std::fs::File::create(path.join(".gitignore"))?;
+    let mut file = fs_err::File::create(path.join(".gitignore"))?;
     file.write_all(b"*.pbo\n.hemttout\nhemtt\nhemtt.exe\n*.biprivatekey\n")?;
 
     // Create LICENSE
     if let Some(license) = license {
-        let mut file = std::fs::File::create(path.join("LICENSE"))?;
-        file.write_all(license.as_bytes())?;
+        crate::commands::license::write_license_file(&license, &path.join("LICENSE"))?;
     }
 
     Ok(report)

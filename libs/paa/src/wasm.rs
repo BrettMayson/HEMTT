@@ -34,6 +34,7 @@ impl ImageResult {
         let paa = crate::Paa::read(Cursor::new(bytes)).expect("Failed to read PAA");
         let mut buffer = Cursor::new(Vec::new());
         paa.maps()[0]
+            .0
             .get_image()
             .write_to(&mut buffer, image::ImageFormat::Png)
             .expect("Failed to write PNG");

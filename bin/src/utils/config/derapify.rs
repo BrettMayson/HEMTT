@@ -7,15 +7,15 @@ use crate::Error;
 
 #[derive(Debug, Copy, Clone, clap::ValueEnum)]
 pub enum OutputFormat {
-    Debin,
+    Cpp,
     Json,
     JsonPretty,
 }
 
 impl OutputFormat {
-    fn default_extension(&self) -> &str {
+    pub const fn default_extension(&self) -> &str {
         match self {
-            Self::Debin => "cpp",
+            Self::Cpp => "cpp",
             Self::JsonPretty | Self::Json => "json",
         }
     }
@@ -23,19 +23,22 @@ impl OutputFormat {
 
 #[derive(clap::Args)]
 #[allow(clippy::module_name_repetitions)]
+/// Convert binary config files to readable text
 pub struct DerapifyArgs {
-    /// file to derapify
+    /// File to derapify (typically config.bin)
     pub(crate) file: String,
-    /// output format
-    #[arg(short = 'f', long = "format", default_value = "debin")]
+    /// Output format: cpp, json, or json-pretty
+    #[arg(short = 'f', long = "format", default_value = "cpp")]
     pub(crate) output_format: OutputFormat,
-    /// output file
+    /// Output file path
+    ///
+    /// If not specified, uses the input filename with appropriate extension.
     pub(crate) output: Option<String>,
 }
 
 /// Derapify a config file
 pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> Result<(), Error> {
-    let mut file = std::fs::File::open(path)?;
+    let mut file = fs_err::File::open(path)?;
     let config = hemtt_config::Config::derapify(&mut file)?;
     let output = output.map_or_else(
         || {
@@ -45,14 +48,14 @@ pub fn derapify(path: &PathBuf, output: Option<&str>, format: OutputFormat) -> R
         },
         PathBuf::from,
     );
-    let _ = std::fs::create_dir_all(
+    let _ = fs_err::create_dir_all(
         output
             .parent()
             .expect("Output file has no parent directory"),
     );
-    let mut output = std::fs::File::create(output)?;
+    let mut output = fs_err::File::create(output)?;
     match format {
-        OutputFormat::Debin => output.write_all(config.to_string().as_bytes())?,
+        OutputFormat::Cpp => output.write_all(config.to_string().as_bytes())?,
         OutputFormat::Json => {
             output.write_all(serde_json::to_string(&config)?.as_bytes())?;
         }

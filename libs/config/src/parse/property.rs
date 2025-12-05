@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use chumsky::prelude::*;
 
 use crate::{Class, Property, Value};
@@ -24,7 +26,6 @@ fn class_missing_braces() -> impl Parser<char, Class, Error = Simple<char>> {
         })
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
     recursive(|rec| {
         let properties = just('{')
@@ -50,63 +51,73 @@ pub fn property() -> impl Parser<char, Property, Error = Simple<char>> {
             });
         let class = choice((class_local, class_missing_braces(), class_external));
         choice((
-            class.map(Property::Class),
-            just("delete ")
-                .padded()
-                .ignore_then(ident().labelled("delete class name"))
-                .map(Property::Delete),
-            ident()
-                .labelled("property name")
-                .padded()
-                .then(
-                    just("[]")
-                        .padded()
-                        .ignore_then(
-                            just('=')
-                                .padded()
-                                .ignore_then(
-                                    super::array::array(false)
-                                        .map(Value::Array)
-                                        .or(value())
-                                        .padded()
-                                        .labelled("array value")
-                                        .recover_with(skip_until([';'], Value::Invalid)),
-                                )
-                                .or(just("+=")
-                                    .padded()
-                                    .ignore_then(super::array::array(true).map(Value::Array))
-                                    .or(value())
-                                    .padded()
-                                    .labelled("array expand value"))
-                                .recover_with(skip_until([';'], Value::Invalid))
-                                .map(|value| (value, true)),
-                        )
-                        .or(just('=')
+            choice((
+                class.map(Property::Class),
+                just("delete ")
+                    .padded()
+                    .ignore_then(ident().labelled("delete class name"))
+                    .map(Property::Delete),
+                ident()
+                    .labelled("property name")
+                    .padded()
+                    .then(
+                        just("[]")
                             .padded()
                             .ignore_then(
-                                value()
+                                just('=')
                                     .padded()
-                                    .then_ignore(just(';').rewind())
-                                    .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
-                                    .padded()
-                                    .labelled("property value"),
+                                    .ignore_then(
+                                        super::array::array(false)
+                                            .map(Value::Array)
+                                            .or(value())
+                                            .padded()
+                                            .labelled("array value")
+                                            .recover_with(skip_until([';'], Value::Invalid)),
+                                    )
+                                    .or(just("+=")
+                                        .padded()
+                                        .ignore_then(super::array::array(true).map(Value::Array))
+                                        .or(value())
+                                        .padded()
+                                        .labelled("array expand value"))
+                                    .recover_with(skip_until([';'], Value::Invalid))
+                                    .map(|value| (value, true)),
                             )
-                            .map(|value| (value, false))),
-                )
-                .map(|(name, (value, expected_array))| Property::Entry {
-                    name,
-                    value,
-                    expected_array,
+                            .or(just('=')
+                                .padded()
+                                .ignore_then(
+                                    value()
+                                        .padded()
+                                        .then_ignore(just(';').rewind())
+                                        .recover_with(skip_until([';', '\n', '}'], Value::Invalid))
+                                        .padded()
+                                        .labelled("property value"),
+                                )
+                                .map(|value| (value, false))),
+                    )
+                    .map(|(name, (value, expected_array))| Property::Entry {
+                        name,
+                        value,
+                        expected_array,
+                    }),
+            ))
+            .then(just(';').padded().or_not())
+            .map_with_span(|(property, semi), range| {
+                if semi.is_some() {
+                    property
+                } else {
+                    Property::MissingSemicolon(property.name().clone(), range)
+                }
+            }),
+            just(';')
+                .repeated()
+                .at_least(1)
+                .padded()
+                .map_with_span(|_, span: Range<usize>| {
+                    let span = span.start..span.end - 1;
+                    Property::ExtraSemicolon(crate::Ident::new(String::new(), span.clone()), span)
                 }),
         ))
-        .then(just(';').padded().or_not())
-        .map_with_span(|(property, semi), range| {
-            if semi.is_some() {
-                property
-            } else {
-                Property::MissingSemicolon(property.name().clone(), range)
-            }
-        })
     })
 }
 

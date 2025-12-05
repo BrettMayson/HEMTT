@@ -14,9 +14,15 @@ pub struct PboUnpackArgs {
     /// PBO file to unpack
     pbo: String,
     /// Directory to unpack to
+    ///
+    /// If not specified, creates a directory named after the PBO file.
     output: Option<String>,
     #[arg(long = "derap", short = 'r')]
-    /// Unrapifies any rapified files
+    /// Derapify any rapified files (config.bin, etc.)
+    ///
+    /// Automatically converts binary config files back to a readable format.
+    ///
+    /// Derapified files that do not have different file names for the derapified versions will have `.derap` added to their filenames.
     derap: bool,
 }
 
@@ -39,7 +45,7 @@ pub fn execute(args: &PboUnpackArgs) -> Result<(), Error> {
         error!("Output directory already exists");
         return Ok(());
     }
-    std::fs::create_dir_all(&output)?;
+    fs_err::create_dir_all(&output)?;
     for (key, value) in pbo.properties() {
         if key == "prefix" {
             let mut file = File::create(output.join("$PBOPREFIX$"))?;
@@ -54,7 +60,7 @@ pub fn execute(args: &PboUnpackArgs) -> Result<(), Error> {
     }
     for header in pbo.files() {
         let path = output.join(header.filename().replace('\\', "/"));
-        std::fs::create_dir_all(path.parent().expect("must have parent, just joined"))?;
+        fs_err::create_dir_all(path.parent().expect("must have parent, just joined"))?;
         let mut out = File::create(&path)?;
         let mut file = pbo
             .file(header.filename())?

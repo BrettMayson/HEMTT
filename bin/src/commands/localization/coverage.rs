@@ -14,6 +14,15 @@ use crate::{Error, TableFormat, context::Context, report::Report};
 /// language localization in the project. Showing the
 /// percentage, total strings, and how many
 /// addons have gaps in their localization.
+///
+/// ## Report Details
+///
+/// For each supported language, the report shows:
+/// - Coverage percentage (how many strings are translated)
+/// - List of addons with missing translations
+///
+/// This helps identify which addons need localization work and tracks
+/// translation progress across your project.
 pub struct Command {
     #[arg(long, default_value = "ascii")]
     /// Output format

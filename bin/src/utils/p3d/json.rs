@@ -10,7 +10,7 @@ pub struct JsonArgs {
     output: String,
 }
 
-/// Execute the convert command
+/// Execute the json command
 ///
 /// # Errors
 /// [`Error`] depending on the modules
@@ -21,12 +21,12 @@ pub fn execute(args: &JsonArgs) -> Result<(), Error> {
         error!("Output file already exists");
         return Ok(());
     }
-    let p3d = hemtt_p3d::P3D::read(&mut std::fs::File::open(p3d)?).expect("Failed to read P3D");
-    let _ = std::fs::create_dir_all(
+    let p3d = hemtt_p3d::P3D::read(&mut fs_err::File::open(p3d)?).expect("Failed to read P3D");
+    let _ = fs_err::create_dir_all(
         output
             .parent()
             .expect("Output file has no parent directory"),
     );
-    serde_json::to_writer(std::fs::File::create(output)?, &p3d)?;
+    serde_json::to_writer(fs_err::File::create(output)?, &p3d)?;
     Ok(())
 }

@@ -5,7 +5,10 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary},
+    modules::{
+        Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary,
+        tex_headers::TexHeaders,
+    },
     report::Report,
 };
 
@@ -22,9 +25,7 @@ use super::JustArgs;
 ///
 /// ## Configuration
 ///
-/// **.hemtt/project.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// [hemtt.dev]
 /// exclude = ["addons/unused"]
 /// ```
@@ -54,6 +55,8 @@ pub struct DevArgs {
     /// Include an optional addon folder
     ///
     /// This can be used multiple times to include multiple optional addons.
+    /// Optional addons are stored in the `optionals/` directory and can be used
+    /// to separate compatibility patches or features that not all users need.
     ///
     /// ```bash
     /// hemtt dev -o caramel -o chocolate
@@ -61,6 +64,8 @@ pub struct DevArgs {
     pub(crate) optional: Vec<String>,
     #[arg(long, short = 'O', action = clap::ArgAction::SetTrue, conflicts_with = "optional", verbatim_doc_comment)]
     /// Include all optional addon folders
+    ///
+    /// Builds all addons from the `optionals/` directory in addition to main addons.
     pub(crate) all_optionals: bool,
     #[arg(long, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)
@@ -176,6 +181,7 @@ pub fn context(
     if rapify && !dev.no_rap {
         executor.add_module(Box::<Rapifier>::default());
     }
+    executor.add_module(Box::<TexHeaders>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<FilePatching>::default());
     if force_binarize || binarize.binarize {

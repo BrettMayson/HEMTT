@@ -9,7 +9,8 @@ pub use inspect::inspect;
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Commands for PAA files
+/// Tools for working with PAA (PAX Archive) - Arma's texture format.
+/// Convert between common image formats and PAA, or inspect PAA files.
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
@@ -17,7 +18,14 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Convert an image to/from PAA format
+    ///
+    /// For PAAs, extracts the first mipmap and saves it as an image.
+    /// Useful for viewing or editing Arma textures in standard image editors.
+    ///
+    /// Supports most common image formats (PNG, JPEG, BMP, etc.) based on file extension.
     Convert(convert::PaaConvertArgs),
+    /// Inspect a PAA file
     Inspect(inspect::PaaInspectArgs),
 }
 

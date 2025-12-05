@@ -4,6 +4,19 @@ use crate::Error;
 
 #[derive(clap::Parser)]
 /// Convert UTF-8 with BOM to UTF-8 without BOM
+///
+/// ## About BOM
+///
+/// A Byte Order Mark (BOM) is an invisible character at the start of text files
+/// that can cause issues with Arma 3's config and script parsers.
+///
+/// This utility:
+/// - Scans your project for files with BOM markers
+/// - Removes them from supported file types (sqf, hpp, cpp, etc.)
+/// - Reports how many files were modified
+///
+/// BOM markers are often added by Windows text editors. Run this utility if you
+/// encounter unexpected parsing errors or as part of project maintenance.
 pub struct Command {}
 
 const ALLOWED_EXTENSIONS: [&str; 10] = [
@@ -29,7 +42,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
                 .to_str()
                 .unwrap_or_default();
             if ALLOWED_EXTENSIONS.contains(&ext) {
-                let mut file = std::fs::OpenOptions::new()
+                let mut file = fs_err::OpenOptions::new()
                     .read(true)
                     .write(true)
                     .open(path)?;

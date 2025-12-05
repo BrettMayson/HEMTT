@@ -6,15 +6,20 @@ use crate::{context::Context, error::Error, report::Report};
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
-/// Print a value from the project
+/// Print a value from the project configuration for use in scripts or CI/CD pipelines.
+/// Use `hemtt value list` to see all available values.
 ///
-/// Print a value from the project, use `list` to see all available values
+/// ## Common Uses
+///
+/// - Automated versioning in CI/CD: `VERSION=$(hemtt value project.version)`
+/// - Dynamic file naming: `hemtt value project.name`
+/// - Build scripts requiring project metadata
+/// - Integration with external tools and workflows
 pub struct Command {
     #[clap(name = "name")]
     name: String,
 }
 
-#[allow(clippy::too_many_lines)]
 /// Execute the script command
 ///
 /// # Errors
@@ -111,7 +116,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             println!("project.files.exclude");
         }
         _ => {
-            std::process::exit(1);
+            return Err(Error::InvalidValueName(cmd.name.clone()));
         }
     }
 
@@ -126,4 +131,49 @@ fn version(ctx: &Context) -> Version {
             println!("Unable to find version");
             std::process::exit(1);
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser as _;
+    use hemtt_test::capture::OutputCapture;
+
+    #[test]
+    fn enumerate() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_simple",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = OutputCapture::new();
+        crate::execute(&crate::Cli::parse_from(vec!["hemtt", "value", "list"]))
+            .expect("Failed to enumerate values");
+        let output = capture.finish();
+        let mut snapshot = String::new();
+        for property in output.lines() {
+            snapshot.push_str(property);
+            snapshot.push_str(" = ");
+            let capture = OutputCapture::new();
+            crate::execute(&crate::Cli::parse_from(vec!["hemtt", "value", property]))
+                .expect("Failed to get value detail");
+            let detail_output = capture.finish();
+            snapshot.push_str(&detail_output);
+            snapshot.push('\n');
+        }
+        insta::assert_snapshot!(snapshot);
+    }
+
+    #[test]
+    fn invalid() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_simple",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = OutputCapture::new();
+        crate::execute(&crate::Cli::parse_from(vec!["hemtt", "value", "invalid"]))
+            .expect("Failed to get invalid value detail");
+        let output = capture.finish();
+        insta::assert_snapshot!(output);
+    }
 }

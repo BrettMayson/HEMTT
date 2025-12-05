@@ -9,18 +9,18 @@ expression: "lint(stringify! (s08_format_args), true).0"
   [0m[36m│[0m        [0m[31m^^[0m
 
 
-[0m[1m[38;5;9merror[L-S08][0m[1m: format string: unused args [used "%1", passed 3][0m
-  [0m[36m┌─[0m s08_format_args.sqf:6:1
-  [0m[36m│[0m
-[0m[36m6[0m [0m[36m│[0m [0m[31mformat ["%1", 1, 2, 3][0m; // unused args
-  [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: non-escaped "%" [at index 16][0m
+   [0m[36m┌─[0m s08_format_args.sqf:14:1
+   [0m[36m│[0m
+[0m[36m14[0m [0m[36m│[0m [0m[31mformat ["this code is 99% bug free"][0m; // non-escaped
+   [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
 
 
-[0m[1m[38;5;9merror[L-S08][0m[1m: format string: undefined tokens [used "%2", passed 1][0m
-  [0m[36m┌─[0m s08_format_args.sqf:7:1
-  [0m[36m│[0m
-[0m[36m7[0m [0m[36m│[0m [0m[31mformat ["%1%2", 1][0m; // undefined tokens
-  [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: non-escaped "%" [at index 3][0m
+   [0m[36m┌─[0m s08_format_args.sqf:15:1
+   [0m[36m│[0m
+[0m[36m15[0m [0m[36m│[0m [0m[31mformat ["%1%"][0m; // non-escaped (prioity over unused)
+   [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^[0m
 
 
 [0m[1m[38;5;9merror[L-S08][0m[1m: format string: skipped tokens [used "%5", but only 1 tokens][0m
@@ -37,18 +37,11 @@ expression: "lint(stringify! (s08_format_args), true).0"
   [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^^^^^^^[0m
 
 
-[0m[1m[38;5;9merror[L-S08][0m[1m: format string: non-escaped "%" [at index 16][0m
-   [0m[36m┌─[0m s08_format_args.sqf:14:1
-   [0m[36m│[0m
-[0m[36m14[0m [0m[36m│[0m [0m[31mformat ["this code is 99% bug free"][0m; // non-escaped
-   [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
-
-
-[0m[1m[38;5;9merror[L-S08][0m[1m: format string: non-escaped "%" [at index 3][0m
-   [0m[36m┌─[0m s08_format_args.sqf:15:1
-   [0m[36m│[0m
-[0m[36m15[0m [0m[36m│[0m [0m[31mformat ["%1%"][0m; // non-escaped (prioity over unused)
-   [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^[0m
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: undefined tokens [used "%2", passed 1][0m
+  [0m[36m┌─[0m s08_format_args.sqf:7:1
+  [0m[36m│[0m
+[0m[36m7[0m [0m[36m│[0m [0m[31mformat ["%1%2", 1][0m; // undefined tokens
+  [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^[0m
 
 
 [0m[1m[38;5;9merror[L-S08][0m[1m: format string: unused args [used "%0", passed 1][0m
@@ -56,3 +49,10 @@ expression: "lint(stringify! (s08_format_args), true).0"
    [0m[36m│[0m
 [0m[36m16[0m [0m[36m│[0m [0m[31mformat ["%%1", 1][0m; // unused args
    [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^[0m
+
+
+[0m[1m[38;5;9merror[L-S08][0m[1m: format string: unused args [used "%1", passed 3][0m
+  [0m[36m┌─[0m s08_format_args.sqf:6:1
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m [0m[31mformat ["%1", 1, 2, 3][0m; // unused args
+  [0m[36m│[0m [0m[31m^^^^^^^^^^^^^^^^^^^^^^[0m

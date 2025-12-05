@@ -184,15 +184,7 @@ pub enum Expression {
 
 impl Expression {
     #[must_use]
-    pub fn source(&self) -> String {
-        fn maybe_enclose(arg: &Expression) -> String {
-            let src = arg.source();
-            if arg.is_binary() {
-                format!("({src})")
-            } else {
-                src
-            }
-        }
+    pub fn source(&self, enclose: bool) -> String {
         match self {
             Self::Code(code) => {
                 let mut out = String::new();
@@ -213,21 +205,23 @@ impl Expression {
                     if i != 0 {
                         out.push(',');
                     }
-                    out.push_str(element.source().as_str());
+                    out.push_str(element.source(false).as_str());
                 }
                 out.push(']');
                 out
             }
             Self::NularCommand(command, _) => command.as_str().to_string(),
             Self::UnaryCommand(command, child, _) => {
-                format!("{} {}", command.as_str(), maybe_enclose(child))
+                format!("{} {}", command.as_str(), child.source(true))
             }
             Self::BinaryCommand(command, left, right, _) => {
                 format!(
-                    "{} {} {}",
-                    maybe_enclose(left),
+                    "{}{} {} {}{}",
+                    if enclose { "(" } else { "" },
+                    left.source(true),
                     command.as_str(),
-                    maybe_enclose(right)
+                    right.source(true),
+                    if enclose { ")" } else { "" },
                 )
             }
             Self::Variable(variable, _) => variable.clone(),
@@ -366,7 +360,7 @@ impl NularCommand {
     }
 
     #[must_use]
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         self.name.as_str()
     }
 }

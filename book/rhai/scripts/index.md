@@ -14,15 +14,11 @@ Scripts can be called from other scripts or from hooks using `HEMTT.script(<scri
 
 The script can return a value that will be passed back to the hook.
 
-**.hemtt/scripts/value.rhai**
-
-```js
+```js,fp=.hemtt/scripts/value.rhai
 1 + 1 * 2
 ```
 
-**.hemtt/hooks/post_release/print_value.rhai**
-
-```js
+```js,fp=.hemtt/hooks/post_release/print_value.rhai
 let value = HEMTT.script("value");
 if value != 3 {
     fatal("Value is not 3");

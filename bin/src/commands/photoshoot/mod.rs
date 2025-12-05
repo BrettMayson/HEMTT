@@ -22,13 +22,13 @@ use self::error::bcpe1_tools_not_found::ToolsNotFound;
 
 use super::{
     JustArgs, dev,
-    launch::{LaunchArgs, read_config},
+    launch::{LaunchArgs, read_profile},
 };
 
 #[derive(clap::Parser)]
 pub struct Command {
     #[arg(action = clap::ArgAction::Append, verbatim_doc_comment)]
-    /// Launches with the specified configurations
+    /// Launches with the specified profiles
     ///
     /// Configured in either:
     /// - `.hemtt/project.toml` under `hemtt.launch`
@@ -42,7 +42,6 @@ pub struct Command {
     global: crate::GlobalArgs,
 }
 
-#[allow(clippy::too_many_lines)]
 /// Execute the photoshoot command
 ///
 /// # Errors
@@ -87,7 +86,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if config.hemtt().launch().contains_key("photoshoot") {
         configs.push("photoshoot".to_string());
     }
-    let launch = read_config(&global, &config, &configs, &mut report);
+    let launch = read_profile(&global, &config, &configs, &mut report);
     let Some(mut launch) = launch else {
         return Ok(report);
     };
@@ -234,7 +233,6 @@ impl Action for Photoshoot {
         missions
     }
 
-    #[allow(clippy::too_many_lines)]
     fn incoming(&self, ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
         let Message::Photoshoot(msg) = msg else {
             return Vec::new();
@@ -285,9 +283,9 @@ impl Action for Photoshoot {
                     .build_folder()
                     .expect("photoshoot has a folder")
                     .join(format!("{class}_ca.paa"));
-                std::fs::create_dir_all(target.parent().expect("has parent")).expect("create dir");
+                fs_err::create_dir_all(target.parent().expect("has parent")).expect("create dir");
                 info!("Created `{}` at `{}`", class, target.display());
-                std::fs::rename(dst_paa, target).expect("rename");
+                fs_err::rename(dst_paa, target).expect("rename");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::WeaponUnsupported(weapon) => {
@@ -320,7 +318,7 @@ impl Action for Photoshoot {
                     .join("EditorPreviews")
                     .join(".hemttout")
                     .join("dev");
-                for image in source.read_dir().expect("read dir") {
+                for image in fs_err::read_dir(source).expect("read dir") {
                     let src = image.expect("image exists").path();
                     let target = PathBuf::from(
                         self.previews
@@ -333,7 +331,7 @@ impl Action for Photoshoot {
                             .expect("received unknown preview"),
                     );
                     let image = utils::photoshoot::Photoshoot::preview(&src).expect("image");
-                    std::fs::create_dir_all(target.parent().expect("has parent"))
+                    fs_err::create_dir_all(target.parent().expect("has parent"))
                         .expect("create dir");
                     info!(
                         "Created `{}` at `{}`",
@@ -343,7 +341,7 @@ impl Action for Photoshoot {
                             .to_string(),
                         target.display()
                     );
-                    let target = std::fs::File::create(target).expect("create");
+                    let target = fs_err::File::create(target).expect("create");
                     JpegEncoder::new_with_quality(target, 90)
                         .encode(
                             &image,

@@ -50,7 +50,6 @@ impl Module for SQFCompiler {
         Ok(report)
     }
 
-    #[allow(clippy::too_many_lines)]
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let sqf_ext = Some(String::from("sqf"));
@@ -117,7 +116,7 @@ impl Module for SQFCompiler {
                         if processed.as_str().starts_with("force ")
                             || processed.as_str().contains("\nforce ")
                         {
-                            warn!("skipping apparent CBA settings file: {}", entry);
+                            debug!("skipping apparent CBA settings file: {}", entry);
                         } else {
                             for error in e {
                                 report.push(error);

@@ -14,6 +14,8 @@ const SPECIAL_COMMANDS: [&str; 11] = [
     "false",
 ];
 
+const CHUNKS: usize = 4;
+
 fn main() {
     let wiki = Wiki::load(true);
 
@@ -40,9 +42,9 @@ fn main() {
     commands.sort_unstable();
     let commands = commands.into_iter().map(regex_escape).collect::<Vec<_>>();
 
-    let content = std::fs::read_to_string("languages-src/sqf.json").unwrap();
+    let content =
+        fs_err::read_to_string("languages-src/sqf.json").expect("Failed to read sqf.json");
     let mut content = content.replace("$flow$", &flow.join("|"));
-    const CHUNKS: usize = 4;
     let chunked = commands.len() / CHUNKS;
     for i in 0..CHUNKS {
         let start = i * chunked;
@@ -56,7 +58,7 @@ fn main() {
             &commands[start..end].join("|"),
         );
     }
-    std::fs::write("languages/sqf.json", content).unwrap();
+    fs_err::write("languages/sqf.json", content).expect("Failed to write sqf.json");
 }
 
 fn regex_escape(s: &str) -> String {

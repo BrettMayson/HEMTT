@@ -58,7 +58,9 @@ impl Rapify for Class {
                             }
                         }
                         Property::Delete(_) => continue,
-                        Property::MissingSemicolon(_, _) => unreachable!(),
+                        Property::MissingSemicolon(_, _) | Property::ExtraSemicolon(_, _) => {
+                            unreachable!()
+                        }
                     }
                     assert_eq!(
                         written - pre_write,

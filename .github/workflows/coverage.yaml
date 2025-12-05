@@ -24,7 +24,7 @@ jobs:
           - runner: windows-latest
             name: windows
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Install stable
@@ -44,7 +44,7 @@ jobs:
       - name: cargo llvm-cov
         run: cargo llvm-cov nextest --locked --all-features --lcov --output-path out.lcov
       - name: Upload Coverage to GitHub Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.os.name }}-coverage
           path: out.lcov

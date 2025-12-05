@@ -1,0 +1,39 @@
+---
+source: bin/src/commands/value.rs
+expression: snapshot
+---
+project.name = My Mod
+
+project.prefix = test
+
+project.mainprefix = y
+
+project.properties = 
+
+project.version = 1.0.4
+
+project.version.short = 1.0.4
+
+project.version.major = 1
+
+project.version.minor = 0
+
+project.version.patch = 4
+
+project.version.build = 
+
+project.version.path = addons/main/script_version.hpp
+
+project.version.git_hash = 0
+
+project.signing.authority = test_1.0.4
+
+project.signing.version = V3
+
+project.files.include = /LICENSE
+/logo_ca.paa
+/logo_co.paa
+/meta.cpp
+/mod.cpp
+
+project.files.exclude =

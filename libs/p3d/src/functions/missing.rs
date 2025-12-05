@@ -58,7 +58,6 @@ impl SearchCache {
 }
 
 impl P3D {
-    #[allow(clippy::too_many_lines)]
     /// Find missing textures and materials in the P3D
     ///
     /// # Errors
@@ -89,12 +88,11 @@ impl P3D {
             } else {
                 format!("\\{texture}")
             };
-            // let texture = texture.to_lowercase();
             if let Some(exists) = cache.exists(&texture) {
                 if !exists {
                     missing_textures.push(texture);
                 }
-            } else if let Some(located) = workspace.locate(&texture)? {
+            } else if let Some(located) = workspace.locate_with_pdrive(&texture)? {
                 let metadata = located.path.metadata()?;
                 cache.insert(
                     texture.clone(),
@@ -115,39 +113,8 @@ impl P3D {
                     )),
                 );
             } else {
-                #[allow(clippy::case_sensitive_file_extension_comparisons)]
-                // working on lowercase paths
-                let (replaced, ext) = if texture.ends_with(".paa") {
-                    (texture.replace(".paa", ".tga"), "tga")
-                } else if texture.ends_with(".tga") {
-                    (texture.replace(".tga", ".paa"), "paa")
-                } else if texture.ends_with(".png") {
-                    (texture.replace(".png", ".paa"), "paa")
-                } else {
-                    (texture.clone(), "")
-                };
-                let located = workspace.locate(&replaced)?;
-                if ext.is_empty() || located.is_none() {
-                    cache.insert(texture.clone(), None);
-                    missing_textures.push(texture);
-                } else if let Some(located) = located {
-                    let metadata = located.path.metadata()?;
-                    cache.insert(
-                        texture.clone(),
-                        Some((
-                            metadata
-                                .modified
-                                .expect("has modified")
-                                .duration_since(std::time::UNIX_EPOCH)
-                                .expect("should be able to get duration since epoch")
-                                .as_secs(),
-                            metadata.len,
-                        )),
-                    );
-                } else {
-                    cache.insert(texture.clone(), None);
-                    missing_textures.push(texture);
-                }
+                cache.insert(texture.clone(), None);
+                missing_textures.push(texture);
             }
         }
         let mut missing_materials = Vec::new();
@@ -164,7 +131,7 @@ impl P3D {
                 if !exists {
                     missing_materials.push(material);
                 }
-            } else if let Some(located) = workspace.locate(&material)? {
+            } else if let Some(located) = workspace.locate_with_pdrive(&material)? {
                 let metadata = located.path.metadata()?;
                 cache.insert(
                     material.clone(),

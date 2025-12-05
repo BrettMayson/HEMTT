@@ -7,7 +7,7 @@ use hemtt_workspace::WorkspacePath;
 
 #[test]
 fn ace_gunbag() {
-    let buffer = std::fs::read("tests/ace_gunbag.p3d").unwrap();
+    let buffer = fs_err::read("tests/ace_gunbag.p3d").unwrap();
     let mut read = std::io::Cursor::new(buffer.clone());
     let p3d = P3D::read(&mut read).unwrap();
     let mut textures = HashSet::new();
@@ -49,5 +49,5 @@ fn ace_gunbag() {
 
 #[test]
 fn kat_iv() {
-    assert!(P3D::read(&mut std::fs::File::open("tests/kat_iv.p3d").unwrap()).is_ok());
+    assert!(P3D::read(&mut fs_err::File::open("tests/kat_iv.p3d").unwrap()).is_ok());
 }

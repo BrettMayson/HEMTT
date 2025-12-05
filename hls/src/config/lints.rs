@@ -35,7 +35,7 @@ impl Cache {
     }
 }
 
-async fn check_addons(workspace: EditorWorkspace, client: Client) {
+fn check_addons(workspace: &EditorWorkspace, client: Client) {
     let mut futures = JoinSet::new();
     for config in workspace.root().addons() {
         let Ok(source) = workspace.root().join(config.as_str()) else {
@@ -67,6 +67,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     PreprocessorAnalyzer::get()
         .mark_in_progress(source.clone())
         .await;
+    #[allow(clippy::or_fun_call)]
     let sources = match Processor::run(
         &source,
         workspace
@@ -128,7 +129,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                     }
                 }
             }
-            let sources = processed.sources().into_iter().map(|(p, _)| p).collect();
+            let sources = processed.included_files().to_owned();
             PreprocessorAnalyzer::get().save_processed(source.parent(), processed);
             PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             sources
@@ -143,7 +144,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
                     for (file, diag) in lsp_diag {
                         lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
                     }
-                };
+                }
             }
             err_sources
         }
@@ -156,19 +157,19 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
         );
     }
     let cache = Cache::get();
-    if !sources.is_empty() {
+    if sources.is_empty() {
+        cache.files.write().await.remove(&source);
+    } else {
         cache
             .files
             .write()
             .await
             .insert(source.clone(), CacheBundle { sources });
-    } else {
-        cache.files.write().await.remove(&source);
     }
 }
 
-pub async fn workspace_added(workspace: EditorWorkspace, client: Client) {
-    tokio::spawn(check_addons(workspace, client));
+pub fn workspace_added(workspace: &EditorWorkspace, client: Client) {
+    check_addons(workspace, client);
 }
 
 pub async fn process(url: Url, client: Client) {

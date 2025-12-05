@@ -44,7 +44,7 @@ fn check(dir: &str) {
         .read_to_string()
         .unwrap();
     let processed = processed.as_str().replace('\r', "");
-    std::fs::write(folder.join("generated.hpp"), &processed).unwrap();
+    fs_err::write(folder.join("generated.hpp"), &processed).unwrap();
     assert_eq!(processed, expected.replace('\r', ""));
 }
 

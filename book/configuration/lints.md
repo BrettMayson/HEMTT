@@ -8,9 +8,8 @@ See the Analysis section for [Config](../lints/config.md) and [SQF](../lints/sqf
 
 ## Configuration
 
-```admonish note
-Some lints are not able to be disabled or reduced in severity. These are usually critical lints that are required for your project to work correctly.
-```
+> [!NOTE]
+> Some lints are not able to be disabled or reduced in severity. These are usually critical lints that are required for your project to work correctly.
 
 There are 3 ways to configure a lint:
 

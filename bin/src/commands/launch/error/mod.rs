@@ -5,7 +5,7 @@ pub mod bcle2_workshop_not_found;
 pub mod bcle3_workshop_mod_not_found;
 pub mod bcle4_arma_not_found;
 pub mod bcle5_missing_main_prefix;
-pub mod bcle6_launch_config_not_found;
+pub mod bcle6_launch_profile_not_found;
 pub mod bcle7_can_not_quicklaunch;
 pub mod bcle8_mission_not_found;
 pub mod bcle9_mission_absolute;

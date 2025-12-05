@@ -1,33 +1,35 @@
 //! Emulates engine commands
 
-use std::ops::Range;
+use std::{ops::Range, vec};
 
 use indexmap::IndexSet;
 
 use crate::{
-    Expression,
-    analyze::inspector::{Issue, VarSource},
+    Expression, Statement,
+    analyze::inspector::{InvalidArgs, Issue, VarSource, game_value::NilSource},
     parser::database::Database,
 };
 
-use super::{SciptScope, game_value::GameValue};
+use super::{Inspector, game_value::GameValue};
 
-impl SciptScope {
+type MagicVars<'a> = (&'a [(&'a str, GameValue)], &'a Range<usize>);
+
+impl Inspector {
     #[must_use]
     pub fn cmd_u_private(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
-        fn push_var(s: &mut SciptScope, var: &String, source: &Range<usize>) {
+        fn push_var(s: &mut Inspector, var: &str, source: &Range<usize>) {
             if s.ignored_vars.contains(&var.to_ascii_lowercase()) {
                 s.var_assign(
-                    &var.to_string(),
+                    var,
                     true,
                     IndexSet::from([GameValue::Anything]),
                     VarSource::Ignore,
                 );
             } else {
                 s.var_assign(
-                    &var.to_string(),
+                    var,
                     true,
-                    IndexSet::from([GameValue::Nothing]),
+                    IndexSet::from([GameValue::Nothing(NilSource::PrivateArray)]),
                     VarSource::Private(source.clone()),
                 );
             }
@@ -36,14 +38,15 @@ impl SciptScope {
             if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
                     for element in gv_index {
-                        let GameValue::String(Some(Expression::String(var, source, _))) = element
+                        let (GameValue::String(Some(Expression::String(var, source, _))), _) =
+                            element
                         else {
                             continue;
                         };
                         if var.is_empty() {
                             continue;
                         }
-                        push_var(self, &var.to_string(), source);
+                        push_var(self, var, source);
                     }
                 }
             }
@@ -51,100 +54,186 @@ impl SciptScope {
                 if var.is_empty() {
                     continue;
                 }
-                push_var(self, &var.to_string(), source);
+                push_var(self, var, source);
             }
         }
         IndexSet::new()
     }
     #[must_use]
-    pub fn cmd_generic_params(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
+    pub fn cmd_generic_params(
+        &mut self,
+        rhs: &IndexSet<GameValue>,
+        debug_type: &str,
+        source: &Range<usize>,
+    ) -> IndexSet<GameValue> {
+        let mut error_type = None;
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
             };
 
             for gv_index in gv_array {
-                for element in gv_index {
+                for (element, element_span) in gv_index {
                     match element {
-                        GameValue::String(Some(Expression::String(var, source, _))) => {
-                            if var.is_empty() {
-                                continue;
+                        GameValue::Anything | GameValue::Array(None, _) => {}
+                        GameValue::String(_) => {
+                            if let Some(error) = self.cmd_generic_params_element(
+                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy array
+                            ) {
+                                error_type = Some(error);
                             }
-                            self.var_assign(
-                                var.as_ref(),
-                                true,
-                                IndexSet::from([GameValue::Anything]),
-                                VarSource::Params(source.clone()),
-                            );
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            if arg_array.is_empty() || arg_array[0].is_empty() {
-                                continue;
+                            if let Some(error) = self.cmd_generic_params_element(arg_array) {
+                                error_type = Some(error);
                             }
-                            let GameValue::String(Some(Expression::String(var_name, source, _))) =
-                                &arg_array[0][0]
-                            else {
-                                continue;
-                            };
-                            if var_name.is_empty() {
-                                continue;
-                            }
-                            let mut var_types = IndexSet::new();
-                            if arg_array.len() > 2 {
-                                for type_p in &arg_array[2] {
-                                    if let GameValue::Array(Some(type_array), _) = type_p {
-                                        for type_i in type_array {
-                                            var_types
-                                                .extend(type_i.iter().map(GameValue::make_generic));
-                                        }
-                                    }
-                                }
-                            }
-                            if var_types.is_empty() {
-                                var_types.insert(GameValue::Anything);
-                            }
-                            // Add the default value to types
-                            // It would be nice to move this above the is_empty check but not always safe
-                            // ie: assume `params ["_z", ""]` is type string, but this is not guarentted
-                            if arg_array.len() > 1 && !arg_array[1].is_empty() {
-                                var_types.insert(arg_array[1][0].clone());
-                            }
-                            self.var_assign(
-                                var_name.as_ref(),
-                                true,
-                                var_types,
-                                VarSource::Params(source.clone()),
-                            );
                         }
-                        _ => {}
+
+                        _ => {
+                            error_type = Some(InvalidArgs::TypeNotExpected {
+                                expected: vec![
+                                    GameValue::String(None),
+                                    GameValue::Array(None, None),
+                                ],
+                                found: vec![element.clone()],
+                                span: element_span.clone(),
+                            });
+                        }
                     }
                 }
             }
         }
+        if let Some(error) = error_type {
+            self.errors.insert(Issue::InvalidArgs {
+                command: debug_type.to_string(),
+                variant: error,
+                span: source.clone(),
+            });
+        }
         IndexSet::from([GameValue::Boolean(None)])
+    }
+
+    pub fn cmd_generic_params_element(
+        &mut self,
+        element: &[Vec<(GameValue, Range<usize>)>],
+    ) -> Option<InvalidArgs> {
+        if element.is_empty() || element[0].is_empty() {
+            return None;
+        }
+        let mut error_type = None;
+        let (value, _) = &element[0][0];
+        match value {
+            GameValue::String(None) | GameValue::Anything => {}
+            GameValue::String(Some(Expression::String(var_name, span, _))) => {
+                if var_name.is_empty() {
+                    return None;
+                }
+                let mut var_types = IndexSet::new();
+                if element.len() > 2 {
+                    for (type_p, type_p_span) in &element[2] {
+                        match type_p {
+                            GameValue::Array(Some(type_array), _) => {
+                                for type_i in type_array {
+                                    var_types.extend(type_i.iter().map(|(v, _)| v.make_generic()));
+                                }
+                            }
+                            GameValue::Array(None, _) | GameValue::Anything => {}
+                            _ => {
+                                error_type = Some(InvalidArgs::TypeNotExpected {
+                                    expected: vec![GameValue::Array(None, None)],
+                                    found: vec![type_p.clone()],
+                                    span: type_p_span.clone(),
+                                });
+                            }
+                        }
+                    }
+                }
+                if var_types.is_empty() {
+                    var_types.insert(GameValue::Anything);
+                }
+                // Add the default value to types
+                // It would be nice to move this above the is_empty check but not always safe
+                // ie: assume `params ["_z", ""]` is type string, but this is not guaranteed
+                if element.len() > 1 && !element[1].is_empty() {
+                    let default_value = element[1][0].0.clone();
+                    // Verify that the default value matches one of the types
+                    if !(matches!(default_value, GameValue::Anything)
+                        || matches!(default_value, GameValue::Nothing(NilSource::ExplicitNil))
+                        || var_types.iter().any(|t| {
+                            matches!(t, GameValue::Anything) || t == &default_value.make_generic()
+                        }))
+                    {
+                        error_type = Some(InvalidArgs::DefaultDifferentType {
+                            expected: var_types.iter().cloned().collect(),
+                            found: vec![default_value.clone()],
+                            span: element[1][0].1.clone(),
+                            default: (element[2]
+                                .first()
+                                .map(|(_, s)| s.clone())
+                                .unwrap_or_default()
+                                .start)
+                                ..(element[2]
+                                    .last()
+                                    .map(|(_, s)| s.clone())
+                                    .unwrap_or_default()
+                                    .end),
+                        });
+                    }
+                    var_types.insert(default_value);
+                }
+                self.var_assign(
+                    var_name.as_ref(),
+                    true,
+                    var_types,
+                    VarSource::Params(span.clone()),
+                );
+            }
+            _ => {
+                error_type = Some(InvalidArgs::TypeNotExpected {
+                    expected: vec![GameValue::String(None)],
+                    found: vec![element[0][0].0.clone()],
+                    span: element[0][0].1.clone(),
+                });
+            }
+        }
+        error_type
     }
     #[must_use]
     pub fn cmd_generic_call(
         &mut self,
-        rhs: &IndexSet<GameValue>,
+        code_possibilities: &IndexSet<GameValue>,
+        magic_opt: Option<MagicVars>,
         database: &Database,
     ) -> IndexSet<GameValue> {
-        for possible in rhs {
+        let mut return_value = IndexSet::new();
+        for possible in code_possibilities {
             let GameValue::Code(Some(expression)) = possible else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
             let Expression::Code(statements) = expression else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
-            if self.code_used.contains(expression) {
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_none() {
+                return_value.insert(GameValue::Anything);
                 continue;
             }
-            self.push();
-            self.code_used.insert(expression.clone());
-            self.eval_statements(statements, database);
-            self.pop();
+            if let Some((vars, source)) = magic_opt {
+                for (var, value) in vars {
+                    self.var_assign(
+                        var,
+                        true,
+                        IndexSet::from([value.clone()]),
+                        VarSource::Magic(source.clone()),
+                    );
+                }
+            }
+            self.eval_statements(statements, true, database);
+            return_value.extend(self.stack_pop(stack_index));
         }
-        IndexSet::from([GameValue::Anything])
+        return_value
     }
     #[must_use]
     pub fn cmd_b_do(
@@ -153,17 +242,21 @@ impl SciptScope {
         rhs: &IndexSet<GameValue>,
         database: &Database,
     ) -> IndexSet<GameValue> {
+        let mut return_value = IndexSet::new();
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
             let Expression::Code(statements) = expression else {
+                return_value.insert(GameValue::Anything);
                 continue;
             };
-            if self.code_used.contains(expression) {
+            let stack_index = self.stack_push(Some(expression));
+            if stack_index.is_none() {
+                return_value.insert(GameValue::Anything);
                 continue;
             }
-            self.push();
             let mut do_run = false;
             for possible in lhs {
                 if let GameValue::ForType(option) = possible {
@@ -182,8 +275,8 @@ impl SciptScope {
                                 );
                             }
                             Expression::Code(stage_statement) => {
-                                self.code_used.insert(stage.clone());
-                                self.eval_statements(stage_statement, database);
+                                self.code_used(stage);
+                                self.eval_statements(stage_statement, false, database);
                             }
                             _ => {}
                         }
@@ -192,46 +285,21 @@ impl SciptScope {
                     do_run = true;
                 }
             }
-            self.code_used.insert(expression.clone());
             if do_run {
-                self.eval_statements(statements, database);
+                let add_final =
+                    if let Some(Statement::Expression(Expression::UnaryCommand(named, _, _), _)) =
+                        statements.content().last()
+                    {
+                        // if we know we end on a default, then we don't need to add it's nil return
+                        !named.as_str().eq_ignore_ascii_case("default")
+                    } else {
+                        true
+                    };
+                self.eval_statements(statements, add_final, database);
             }
-            self.pop();
+            return_value.extend(self.stack_pop(stack_index));
         }
-        IndexSet::from([GameValue::Anything])
-    }
-    #[must_use]
-    pub fn cmd_generic_call_magic(
-        &mut self,
-        code_possibilities: &IndexSet<GameValue>,
-        magic: &Vec<(&str, GameValue)>,
-        source: &Range<usize>,
-        database: &Database,
-    ) -> IndexSet<GameValue> {
-        for possible in code_possibilities {
-            let GameValue::Code(Some(expression)) = possible else {
-                continue;
-            };
-            let Expression::Code(statements) = expression else {
-                continue;
-            };
-            if self.code_used.contains(expression) {
-                continue;
-            }
-            self.push();
-            for (var, value) in magic {
-                self.var_assign(
-                    var,
-                    true,
-                    IndexSet::from([value.clone()]),
-                    VarSource::Magic(source.clone()),
-                );
-            }
-            self.code_used.insert(expression.clone());
-            self.eval_statements(statements, database);
-            self.pop();
-        }
-        IndexSet::from([GameValue::Anything])
+        return_value
     }
     #[must_use]
     pub fn cmd_for(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
@@ -252,7 +320,7 @@ impl SciptScope {
                         continue;
                     };
                     for stage in for_stages {
-                        for gv in stage {
+                        for (gv, _) in stage {
                             let GameValue::Code(Some(expression)) = gv else {
                                 continue;
                             };
@@ -300,7 +368,7 @@ impl SciptScope {
             let _ = self.var_retrieve(var, &expression.span(), true);
         }
         if non_string {
-            let _ = self.cmd_generic_call(rhs, database);
+            let _ = self.cmd_generic_call(rhs, None, database);
         }
         IndexSet::from([GameValue::Boolean(None)])
     }
@@ -314,14 +382,19 @@ impl SciptScope {
         let mut return_value = IndexSet::new();
         for possible in rhs {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
-                return_value.extend(self.cmd_generic_call(rhs, database));
+                return_value.extend(self.cmd_generic_call(
+                    &IndexSet::from([possible.clone()]),
+                    None,
+                    database,
+                ));
             }
             if let GameValue::Array(Some(gv_array), _) = possible {
                 for gv_index in gv_array {
-                    for element in gv_index {
+                    for (element, _) in gv_index {
                         if let GameValue::Code(Some(expression)) = element {
                             return_value.extend(self.cmd_generic_call(
                                 &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
+                                None,
                                 database,
                             ));
                         }
@@ -332,19 +405,13 @@ impl SciptScope {
         return_value
     }
     #[must_use]
+    /// just merge both sides (this is equilivalent to generating an else array)
     pub fn cmd_b_else(
         &self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
     ) -> IndexSet<GameValue> {
-        let mut return_value = IndexSet::new(); // just merge, not really the same but should be fine
-        for possible in rhs {
-            return_value.insert(possible.clone());
-        }
-        for possible in lhs {
-            return_value.insert(possible.clone());
-        }
-        return_value
+        lhs.iter().chain(rhs.iter()).cloned().collect()
     }
     #[must_use]
     pub fn cmd_b_get_or_default_call(
@@ -360,9 +427,9 @@ impl SciptScope {
             if gv_array.len() < 2 {
                 continue;
             }
-            possible_code.extend(gv_array[1].clone());
+            possible_code.extend(gv_array[1].iter().map(|(gv, _)| gv.clone()));
         }
-        let _ = self.cmd_generic_call(&possible_code, database);
+        let _ = self.cmd_generic_call(&possible_code, None, database);
         IndexSet::from([GameValue::Anything])
     }
     #[must_use]
@@ -375,7 +442,7 @@ impl SciptScope {
                 continue;
             };
             // just skip because it will often use a _x
-            self.code_used.insert(expression.clone());
+            self.code_used(expression);
         }
         IndexSet::from([GameValue::String(None)])
     }
@@ -390,8 +457,11 @@ impl SciptScope {
     ) -> IndexSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
-        let _ =
-            self.cmd_generic_call_magic(rhs, &vec![("_x", GameValue::Anything)], source, database);
+        let _ = self.cmd_generic_call(
+            rhs,
+            Some((&[("_x", GameValue::Anything)], source)),
+            database,
+        );
         // if lhs is array, and rhs is bool/number then put array into return
         if lhs.len() == 1
             && rhs
@@ -401,7 +471,7 @@ impl SciptScope {
         {
             // return_value.clear(); // todo: could clear if we handle pushBack
             for gv_index in gv_array {
-                for element in gv_index {
+                for (element, _) in gv_index {
                     return_value.insert(element.clone());
                 }
             }
@@ -431,14 +501,14 @@ impl SciptScope {
         if count_input_set.is_empty()
             || !count_input_set
                 .iter()
-                .all(|arr| matches!(arr, GameValue::Array(..)))
+                .all(|(arr, _)| matches!(arr, GameValue::Array(..)))
         {
             return;
         }
         self.errors.insert(Issue::CountArrayComparison(
             equal_zero,
             lhs.span().start..rhs.span().end,
-            count_input.source(),
+            count_input.source(false),
         ));
     }
     /// emulate a possibly modified l-value array by a command
@@ -450,7 +520,7 @@ impl SciptScope {
         if !self
             .var_retrieve(var_name, &lhs.full_span(), true)
             .iter()
-            .any(|v| matches!(v, GameValue::Array(Some(_), _)))
+            .any(|(v, _)| matches!(v, GameValue::Array(Some(_), _)))
         {
             return;
         }

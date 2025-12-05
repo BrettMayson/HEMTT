@@ -8,14 +8,29 @@ use crate::{
 };
 
 #[derive(clap::Parser)]
-#[command(arg_required_else_help = true)]
-/// Verify a signed PBO
+#[command(arg_required_else_help = true, verbatim_doc_comment)]
+/// Verify a signed PBO against a public key
 ///
-/// Checks a .bisign file against a public key and PBO
+/// Validates that a PBO file has been properly signed and can be trusted.
+///
+/// ## Verification Checks
+///
+/// - **Authority matches**: Signature authority matches the public key
+/// - **PBO correctly sorted**: Files are in the correct order
+/// - **Hashes match**: PBO content hasn't been tampered with
+/// - **Prefix present**: PBO has required prefix property
+///
+/// Returns a success message if all checks pass, or specific error details if verification fails.
+///
+/// ## Usage
+///
+/// ```bash
+/// hemtt utils verify my_addon.pbo my_key.bikey
+/// ```
 pub struct Command {
-    /// PBO to verify
+    /// Path to the PBO to check. The corresponding .bisign file must be present.
     pbo: String,
-    /// `BIKey` to verify against
+    /// Path to the public key (.bikey) used to verify the signature.
     bikey: String,
 }
 
@@ -31,7 +46,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     let bikey_path = PathBuf::from(&cmd.bikey);
 
     debug!("Reading PBO: {:?}", &pbo_path);
-    let mut pbo = ReadablePbo::from(std::fs::File::open(&pbo_path)?)?;
+    let mut pbo = ReadablePbo::from(fs_err::File::open(&pbo_path)?)?;
     debug!("Reading BIKey: {:?}", &bikey_path);
     let publickey = bikey(std::fs::File::open(&bikey_path)?, &bikey_path)?;
 
@@ -54,7 +69,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     for ext in pbo.properties() {
         println!("      - {}: {}", ext.0, ext.1);
     }
-    println!("  - Size: {}", pbo_path.metadata()?.len());
+    println!("  - Size: {}", fs_err::metadata(&pbo_path)?.len());
 
     if actual != stored {
         warn!("Verification Warning: PBO has an invalid hash stored");

@@ -3,12 +3,12 @@ use hemtt_wss::Wss;
 #[test]
 fn ace_metal_detector() {
     let wss = Wss::read(
-        &mut std::fs::File::open("tests/ace_metal_detector.wss").expect("Failed to open WSS file"),
+        &mut fs_err::File::open("tests/ace_metal_detector.wss").expect("Failed to open WSS file"),
     )
     .expect("Failed to read WSS file");
     assert_eq!(wss.compression(), &hemtt_wss::Compression::None);
     let wav = wss.to_wav().expect("Failed to convert WSS to WAV");
-    std::fs::write("tests/ace_metal_detector.wav", &wav).expect("Failed to write WAV file");
+    fs_err::write("tests/ace_metal_detector.wav", &wav).expect("Failed to write WAV file");
     let wss2 = Wss::from_wav(&wav[..]).expect("Failed to convert WAV to WSS");
     assert_eq!(wss2.channels(), 1);
     assert_eq!(wss2.sample_rate(), 44100);

@@ -182,7 +182,6 @@ impl Processor {
         body
     }
 
-    #[allow(clippy::too_many_lines)]
     /// A define was used
     ///
     /// Expects the stream to be at the ident

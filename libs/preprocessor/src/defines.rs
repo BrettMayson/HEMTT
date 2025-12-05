@@ -72,7 +72,7 @@ const BUILTIN_RUNTIME: [(&str, u8); 4] = [
 ];
 
 impl Defines {
-    pub fn option_runtime(&mut self, enable: bool) {
+    pub const fn option_runtime(&mut self, enable: bool) {
         self.runtime = enable;
     }
 
@@ -107,7 +107,6 @@ impl Defines {
         self.global.contains_key(key)
     }
 
-    #[allow(clippy::too_many_lines)]
     pub fn get_with_gen(
         &mut self,
         key: &Arc<Token>,

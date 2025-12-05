@@ -5,13 +5,13 @@ use hemtt_pbo::ReadablePbo;
 use crate::Error;
 
 #[derive(clap::Args)]
-/// Arguments for the extract command
+/// Extract a single file from a PBO
 pub struct PboExtractArgs {
     /// PBO file to extract from
     pbo: String,
-    /// File to extract
+    /// File to extract (use path relative to the PBO prefix)
     file: String,
-    /// Where to save the extracted file
+    /// Where to save the extracted file, if not provided outputs to stdout
     output: Option<String>,
 }
 
@@ -32,7 +32,7 @@ pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
             error!("Output file already exists");
             return Ok(());
         }
-        let _ = std::fs::create_dir_all(
+        let _ = fs_err::create_dir_all(
             output
                 .parent()
                 .expect("Output file has no parent directory"),

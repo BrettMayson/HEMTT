@@ -28,16 +28,23 @@ impl EditorWorkspaces {
         (*SINGLETON).clone()
     }
 
-    pub fn initialize(&self, folders: Vec<WorkspaceFolder>, client: Client) {
-        let mut workspaces = self.workspaces.write().unwrap();
+    pub fn initialize(&self, folders: Vec<WorkspaceFolder>, client: &Client) {
+        let mut workspaces = self
+            .workspaces
+            .write()
+            .expect("Failed to lock workspaces for writing");
         for folder in folders {
             debug!("adding workspace {}", folder.uri);
-            self.add(folder, &mut workspaces, client.clone());
+            self.add(&folder, &mut workspaces, client.clone());
         }
     }
 
-    pub fn changed(&self, changes: DidChangeWorkspaceFoldersParams, client: Client) {
-        let mut workspaces = self.workspaces.write().unwrap();
+    #[allow(clippy::significant_drop_tightening)]
+    pub fn changed(&self, changes: DidChangeWorkspaceFoldersParams, client: &Client) {
+        let mut workspaces = self
+            .workspaces
+            .write()
+            .expect("Failed to lock workspaces for writing");
         for removed in changes.event.removed {
             if workspaces.contains_key(&removed.uri) {
                 workspaces.remove(&removed.uri);
@@ -47,15 +54,19 @@ impl EditorWorkspaces {
             if workspaces.contains_key(&added.uri) {
                 workspaces.remove(&added.uri);
             }
-            self.add(added, &mut workspaces, client.clone());
+            self.add(&added, &mut workspaces, client.clone());
         }
     }
 
     pub fn guess_workspace(&self, uri: &Url) -> Option<EditorWorkspace> {
-        let workspaces = self.workspaces.read().unwrap();
         let mut best = None;
         let mut best_len = 0;
-        for (folder, workspace) in workspaces.iter() {
+        for (folder, workspace) in self
+            .workspaces
+            .read()
+            .expect("Failed to lock workspaces for reading")
+            .iter()
+        {
             let path = folder.path();
             let uri_path = uri.path();
             let len = path
@@ -76,34 +87,32 @@ impl EditorWorkspaces {
         loop {
             if let Some(workspace) = self.guess_workspace(uri) {
                 break Some(workspace);
-            } else {
-                tries -= 1;
-                if tries == 0 {
-                    return None;
-                }
-                tokio::time::sleep(std::time::Duration::from_millis(200)).await;
             }
+            tries -= 1;
+            if tries == 0 {
+                return None;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         }
     }
 
+    #[allow(clippy::unused_self)]
     fn add(
         &self,
-        added: WorkspaceFolder,
+        added: &WorkspaceFolder,
         workspaces: &mut HashMap<Url, EditorWorkspace>,
         client: Client,
     ) {
         debug!("adding workspace {}", added.uri);
-        if let Some(workspace) = EditorWorkspace::new(&added) {
+        if let Some(workspace) = EditorWorkspace::new(added) {
             workspaces.insert(added.uri.clone(), workspace.clone());
             let config_workspace = workspace.clone();
             let config_client = client.clone();
-            tokio::spawn(async {
-                ConfigAnalyzer::get()
-                    .workspace_added(config_workspace, config_client)
-                    .await;
+            tokio::spawn(async move {
+                ConfigAnalyzer::get().workspace_added(&config_workspace, config_client);
             });
-            tokio::spawn(async {
-                SqfAnalyzer::get().workspace_added(workspace, client).await;
+            tokio::spawn(async move {
+                SqfAnalyzer::get().workspace_added(&workspace, client);
             });
         } else {
             debug!("failed to add workspace {}", added.uri);
@@ -151,7 +160,9 @@ impl EditorWorkspace {
     }
 
     pub fn join_url(&self, url: &Url) -> Result<WorkspacePath, String> {
-        let Some(path) = url.path().strip_prefix(self.url.path()) else {
+        let decoded_path = urlencoding::decode(url.path()).map_err(|e| format!("{e}"))?;
+        let workspace_path = urlencoding::decode(self.url.path()).map_err(|e| format!("{e}"))?;
+        let Some(path) = decoded_path.strip_prefix(workspace_path.as_ref()) else {
             return Err("URL is not in workspace".to_string());
         };
         self.workspace.join(path).map_err(|e| format!("{e}"))
@@ -160,7 +171,10 @@ impl EditorWorkspace {
     pub fn to_url(&self, path: &WorkspacePath) -> Url {
         let include = path.is_include();
         // trim the workspace path
-        let path = path.as_str().strip_prefix(self.workspace.as_str()).unwrap();
+        let path = path
+            .as_str()
+            .strip_prefix(self.workspace.as_str())
+            .expect("Failed to strip workspace prefix from path");
         let path = path.replace('\\', "/");
         // url encode the path
         let path = urlencoding::encode(&path);
@@ -178,11 +192,11 @@ impl EditorWorkspace {
         url
     }
 
-    pub fn root(&self) -> &WorkspacePath {
+    pub const fn root(&self) -> &WorkspacePath {
         &self.workspace
     }
 
-    pub fn root_disk(&self) -> &PathBuf {
+    pub const fn root_disk(&self) -> &PathBuf {
         &self.root
     }
 
@@ -203,7 +217,7 @@ impl EditorWorkspace {
     }
 
     #[allow(dead_code)]
-    pub fn url(&self) -> &Url {
+    pub const fn url(&self) -> &Url {
         &self.url
     }
 }

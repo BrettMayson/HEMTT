@@ -51,7 +51,7 @@ impl From<GlobalConfigFile> for GlobalConfig {
 
 impl GlobalConfigFile {
     pub fn from_file(path: &std::path::Path) -> Result<Self, crate::error::Error> {
-        let content = std::fs::read_to_string(path)?;
+        let content = fs_err::read_to_string(path)?;
         let config: Self = toml::from_str(&content)?;
         Ok(config)
     }

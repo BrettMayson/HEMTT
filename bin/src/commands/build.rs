@@ -2,7 +2,10 @@ use crate::{
     context::{self, Context},
     error::Error,
     executor::Executor,
-    modules::{Binarize, Files, Rapifier, pbo::Collapse, summary::Summary},
+    modules::{
+        Binarize, Files, Rapifier, meta::Meta, pbo::Collapse, summary::Summary,
+        tex_headers::TexHeaders,
+    },
     report::Report,
 };
 
@@ -18,11 +21,15 @@ use super::global_modules;
 ///
 /// It is intended to be used for testing your mod locally before release.
 ///
+/// ## Binarization
+///
+/// By default, supported file types are converted to
+/// their binary formats for optimal game performance. This process is slower but
+/// produces smaller, faster-loading files similar to BI's official addons.
+///
 /// ## Configuration
 ///
-/// **.hemtt/project.toml**
-///
-/// ```toml
+/// ```toml,fp=.hemtt/project.toml
 /// [hemtt.build]
 /// optional_mod_folders = false # Default: true
 /// ```
@@ -47,9 +54,11 @@ pub struct BuildArgs {
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not binarize the project
     ///
-    /// They will be copied directly into the PBO. `config.cpp`, `*.rvmat`, `*.ext`, `*.sqm`,
+    /// Files will be copied directly into the PBO without binarization. `config.cpp`, `*.rvmat`, `*.ext`, `*.sqm`,
     /// `*.bikb`, `*.bisurf` will still be rapified.
     /// This can be configured per addon in [`addon.toml`](../configuration/addon#binarize).
+    ///
+    /// Useful for faster builds during testing when you don't need optimized file formats.
     no_bin: bool,
     #[arg(long, action = clap::ArgAction::SetTrue)]
     /// Do not rapify (cpp, rvmat, ext, sqm, bikb, bisurf)
@@ -110,8 +119,10 @@ pub fn executor(ctx: Context, args: &BuildArgs) -> Executor {
     if !args.no_bin {
         executor.add_module(Box::<Binarize>::default());
     }
+    executor.add_module(Box::<TexHeaders>::default());
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<Summary>::default());
+    executor.add_module(Box::<Meta>::default());
 
     executor.init();
     executor.check();

@@ -22,8 +22,9 @@ impl ConfigAnalyzer {
         (*SINGLETON).clone()
     }
 
-    pub async fn workspace_added(&self, workspace: EditorWorkspace, client: Client) {
-        lints::workspace_added(workspace, client).await;
+    #[allow(clippy::unused_self)]
+    pub fn workspace_added(&self, workspace: &EditorWorkspace, client: Client) {
+        lints::workspace_added(workspace, client);
     }
 
     pub async fn on_open(&self, url: Url, client: Client) {

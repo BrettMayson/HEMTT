@@ -36,7 +36,7 @@ impl Code for MissionNotFound {
 
 impl MissionNotFound {
     pub fn code(name: String, path: &Path) -> Arc<dyn Code> {
-        let presets = path.read_dir().map_or_else(
+        let presets = fs_err::read_dir(path).map_or_else(
             |_| vec![],
             |files| {
                 files

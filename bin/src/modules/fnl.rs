@@ -44,7 +44,7 @@ impl Module for FineNewLineCheck {
             let files = files_to_check(&folder);
             for path in files {
                 // Seek to end instead of reading the whole file
-                let mut file = std::fs::File::open(&path)?;
+                let mut file = fs_err::File::open(&path)?;
                 let display_path = path
                     .display()
                     .to_string()

@@ -79,7 +79,7 @@ impl LintRunner<LintData> for Runner {
                 if !cmd.eq_ignore_ascii_case("count") {
                     return Vec::new();
                 }
-                if array.source() != lhs.source() {
+                if array.source(false) != lhs.source(false) {
                     return Vec::new();
                 }
                 if let Expression::Number(index, _) = &**srhs {
@@ -93,7 +93,7 @@ impl LintRunner<LintData> for Runner {
                     #[allow(clippy::cast_sign_loss)]
                     return vec![Arc::new(CodeS27SelectCount::new(
                         index.0 as usize,
-                        array.source(),
+                        array.source(false),
                         target.full_span(),
                         processed,
                         config.severity(),

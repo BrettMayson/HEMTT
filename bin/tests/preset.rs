@@ -21,7 +21,7 @@ fn preset(name: &str, mods: usize, dlc: &[DLC]) {
         .join(name)
         .with_extension("html");
     assert!(html.exists(), "Preset not found: {name}");
-    let html = std::fs::read_to_string(html).unwrap();
+    let html = fs_err::read_to_string(html).unwrap();
     let (preset_mods, preset_dlc) = preset::read(name, &html);
     assert_eq!(preset_mods.len(), mods);
     assert_eq!(preset_dlc, dlc);

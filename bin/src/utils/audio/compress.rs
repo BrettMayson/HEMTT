@@ -31,7 +31,7 @@ pub fn compress() -> Result<(), Error> {
     let mut current = 0;
     let mut possible = 0;
     for entry in entries {
-        let Ok(wss) = hemtt_wss::Wss::read(std::fs::File::open(entry.path())?) else {
+        let Ok(wss) = hemtt_wss::Wss::read(fs_err::File::open(entry.path())?) else {
             println!("Failed to read wss file: {}", entry.path().display());
             continue;
         };
@@ -82,11 +82,11 @@ pub fn compress() -> Result<(), Error> {
 
     for entry in candidates {
         let path = PathBuf::from(entry.path);
-        let mut wss = hemtt_wss::Wss::read(std::fs::File::open(&path)?)?;
+        let mut wss = hemtt_wss::Wss::read(fs_err::File::open(&path)?)?;
         let mut buffer = Vec::new();
         wss.set_compression(Compression::Nibble);
         wss.write(&mut buffer)?;
-        std::fs::write(path, buffer)?;
+        fs_err::write(path, buffer)?;
     }
 
     Ok(())

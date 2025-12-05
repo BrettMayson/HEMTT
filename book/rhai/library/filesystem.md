@@ -14,22 +14,17 @@ This is useful for modifying files with find-and-replace, or adding files to the
 
 When using the virtual file system, the `HEMTT_VFS` constant is available. It is used as the root path.
 
-```admonish warning
-During the `pre_release` phase, only files outside of addons should be changed. PBOs are already built, and changing files inside of addons will have no effect.
-```
+> [!WARNING]
+> During the `pre_release` phase, only files outside of addons should be changed. PBOs are already built, and changing files inside of addons will have no effect.
 
-**.hemtt/project.toml**
-
-```toml
+```toml,fp=.hemtt/project.toml
 [version]
 major = 1
 minor = 0
 patch = 3
 ```
 
-**.hemtt/hooks/pre_build/set_version.rhai**
-
-```js
+```js,fp=.hemtt/hooks/pre_build/set_version.rhai
 // Get the path to the script_version.hpp file
 let version = HEMTT_VFS
         .join("addons")
@@ -50,15 +45,12 @@ print("Set version to " + HEMTT.project().version().to_string());
 
 All phases and scripts have access to the real file system. This means that the files are actually written to disk.
 
-```admonish danger
-Be careful when modifying files while using the real file system, as you can destructively modify the project files. It is recommended to use the virtual file system whenever possible, and commit the changes to the project files prior to testing hooks.
-```
+> [!CAUTION]
+> Be careful when modifying files while using the real file system, as you can destructively modify the project files. It is recommended to use the virtual file system whenever possible, and commit the changes to the project files prior to testing hooks.
 
 When using the real file system, two additional constants are available. `HEMTT_RFS` is the root of the project, and `HEMTT_OUT` is the root of the build output.
 
-**.hemtt/hooks/pre_release/set_version.rhai**
-
-```js
+```js,fp=.hemtt/hooks/pre_release/set_version.rhai
 // Read the current contents of the docs/version.txt
 // file from the project source
 let version = HEMTT_RFS.join("docs").join("version.txt").open_file().read();

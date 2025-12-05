@@ -1,0 +1,12 @@
+name = "My Mod"
+prefix = "test"
+mainprefix = "z"
+
+[version]
+git_hash = 0
+
+[files]
+include = [
+    "*.txt",
+    "docs/*",
+]

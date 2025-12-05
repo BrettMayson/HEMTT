@@ -256,7 +256,7 @@ impl Diagnostic {
         let diag = self.to_codespan();
         let config = codespan_reporting::term::Config::default();
         let mut buffer: Ansi<Vec<u8>> = Ansi::new(Vec::new());
-        codespan_reporting::term::emit(&mut buffer, &config, files, &diag)
+        codespan_reporting::term::emit_to_write_style(&mut buffer, &config, files, &diag)
             .expect("emit should succeed");
         String::from_utf8(buffer.into_inner())
             .expect("utf8")

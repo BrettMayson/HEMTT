@@ -83,11 +83,11 @@ impl LintRunner<LintData> for Runner {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
                         if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
                             && name.eq_ignore_ascii_case("isnil") {
-                                 return Vec::new();
+                                return Vec::new();
                             }
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),
-                            (condition.source(), condition.full_span()),
+                            (condition.source(false), condition.full_span()),
                             (lhs, lhs_expr.span()),
                             (rhs, rhs_expr.span()),
                             processed,
@@ -127,6 +127,10 @@ impl Code for CodeS05IfAssign {
     fn message(&self) -> String {
         if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             String::from("assignment to if can be replaced with parseNumber")
+        } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
+            String::from("assignment to if can be replaced the condition directly")
+        } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {
+            String::from("assignment to if can be replaced the inverted condition")
         } else {
             String::from("assignment to if can be replaced with select")
         }
@@ -135,6 +139,10 @@ impl Code for CodeS05IfAssign {
     fn label_message(&self) -> String {
         if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             String::from("use parseNumber")
+        } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
+            String::from("use condition directly")
+        } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {
+            String::from("use inverted condition directly")
         } else {
             String::from("use select")
         }
@@ -143,6 +151,10 @@ impl Code for CodeS05IfAssign {
     fn suggestion(&self) -> Option<String> {
         if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
             Some(format!("parseNumber {}", self.condition.0.as_str(),))
+        } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
+            Some(self.condition.0.as_str().to_string())
+        } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {
+            Some(format!("!({})", self.condition.0.as_str()))
         } else {
             Some(format!(
                 "[{}, {}] select ({})",
@@ -165,6 +177,10 @@ impl Code for CodeS05IfAssign {
         Some(
             if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
                 "parseNumber returns 1 for true and 0 for false"
+            } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
+                "the if statement returns boolean values directly"
+            } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {
+                "the if statement returns inverted boolean value directly"
             } else {
                 "the if and else blocks only return constant values\nselect is faster in this case"
             }

@@ -1,0 +1,9 @@
+name = "My Mod"
+prefix = "test"
+mainprefix = "y"
+
+[version]
+major = 1
+minor = 0
+patch = 4
+git_hash = 0

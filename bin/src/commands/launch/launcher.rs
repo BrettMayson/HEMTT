@@ -114,7 +114,7 @@ impl<'a> Launcher<'a> {
             report.push(PresetNotFound::code(preset.to_string(), &presets));
             return Ok(());
         }
-        let html = std::fs::read_to_string(html)?;
+        let html = fs_err::read_to_string(html)?;
         let (preset_mods, preset_dlc) = preset::read(preset, &html);
         for load_mod in preset_mods {
             if !self.workshop.contains(&load_mod) {
@@ -129,7 +129,6 @@ impl<'a> Launcher<'a> {
         Ok(())
     }
 
-    #[allow(clippy::too_many_lines)]
     /// Launches the game
     ///
     /// # Errors
@@ -162,7 +161,7 @@ impl<'a> Launcher<'a> {
             let mut meta = None;
             let meta_path = std::env::current_dir()?.join("meta.cpp");
             if meta_path.exists() {
-                let content = std::fs::read_to_string(meta_path)?;
+                let content = fs_err::read_to_string(meta_path)?;
                 let regex = Regex::new(r"publishedid\s*=\s*(\d+);").expect("meta regex compiles");
                 if let Some(id) = regex.captures(&content).map(|c| c[1].to_string()) {
                     meta = Some(id);

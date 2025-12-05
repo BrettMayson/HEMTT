@@ -17,8 +17,11 @@ hemtt-common = { path = "../common" }
 hemtt-pbo = { path = "../pbo" }
 
 byteorder = { workspace = true }
-crypto-bigint = { version = "0.7.0-pre.6", features = ["alloc"] }
-rand = { workspace = true }
-rsa = "0.10.0-rc.3"
+crypto-bigint = { version = "0.7.0-rc.10", features = ["alloc"] }
+rand = "0.10.0-rc.5"
+rsa = "0.10.0-rc.10"
 sha-1 = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+fs-err = { workspace = true }
