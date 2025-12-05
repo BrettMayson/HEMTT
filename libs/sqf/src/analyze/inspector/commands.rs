@@ -167,16 +167,18 @@ impl Inspector {
                             expected: var_types.iter().cloned().collect(),
                             found: vec![default_value.clone()],
                             span: element[1][0].1.clone(),
-                            default: (element[2]
-                                .first()
-                                .map(|(_, s)| s.clone())
-                                .unwrap_or_default()
-                                .start)
-                                ..(element[2]
-                                    .last()
+                            default: Some(
+                                (element[2]
+                                    .first()
                                     .map(|(_, s)| s.clone())
                                     .unwrap_or_default()
-                                    .end),
+                                    .start)
+                                    ..(element[2]
+                                        .last()
+                                        .map(|(_, s)| s.clone())
+                                        .unwrap_or_default()
+                                        .end),
+                            ),
                         });
                     }
                     var_types.insert(default_value);
