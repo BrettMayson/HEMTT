@@ -56,15 +56,26 @@ impl InvalidArgs {
     #[must_use]
     pub fn note(&self) -> String {
         let found = self.found_types();
-        format!(
-            "found type{} was {}",
-            if self.found_types().len() > 1 {
-                "s"
-            } else {
-                ""
-            },
-            GameValue::vec_to_string(&found, 2)
-        )
+        match self {
+            Self::TypeNotExpected { .. } | Self::FuncTypeNotExpected { .. } => {
+                format!(
+                    "found    {}\nexpected {}",
+                    GameValue::vec_to_string(&found, 2),
+                    GameValue::vec_to_string(&self.expected_types(), 2)
+                )
+            }
+            _ => {
+                format!(
+                    "found type{} was {}",
+                    if self.found_types().len() > 1 {
+                        "s"
+                    } else {
+                        ""
+                    },
+                    GameValue::vec_to_string(&found, 2)
+                )
+            }
+        }
     }
 
     #[must_use]
@@ -96,15 +107,16 @@ impl InvalidArgs {
     pub fn label_message(&self) -> String {
         match self {
             Self::NilResultUsed { .. } => String::from("expected non-nil value"),
-            Self::TypeNotExpected { .. }
-            | Self::DefaultDifferentType { .. }
+            Self::DefaultDifferentType { .. }
             | Self::ExpectedDifferentTypeHeader { .. }
-            | Self::InvalidReturnType { .. }
-            | Self::FuncTypeNotExpected { .. } => {
+            | Self::InvalidReturnType { .. } => {
                 format!(
                     "expected {}",
                     GameValue::vec_to_string(&self.expected_types(), 2)
                 )
+            }
+            Self::TypeNotExpected { .. } | Self::FuncTypeNotExpected { .. } => {
+                String::from("type not expected")
             }
         }
     }
