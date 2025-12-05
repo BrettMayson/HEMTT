@@ -35,11 +35,12 @@ class CfgVehicles {
 };
 ### Configuration
 
-- **ignore_prefixes**: ignore classes that start with any of these prefixes
+- **check_prefixes**: only consider classes that start with any of these prefixes
+By default it will only check the project's prefix. Use `*` to check all classes.
 
 ```toml
 [lints.config.cfgpatches_scope]
-options.ignore_prefixes = ["abe_"]
+options.check_prefixes = ["abe", "abx"]
 
 "#
     }
@@ -56,7 +57,7 @@ impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
-        _project: Option<&ProjectConfig>,
+        project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
@@ -68,13 +69,15 @@ impl LintRunner<LintData> for Runner {
         };
         let mut codes: Codes = Vec::new();
 
-        let mut ignore_prefixes = IndexSet::new();
-        if let Some(toml::Value::Array(ignore)) = config.option("ignore_prefixes") {
+        let mut check_prefixes = Vec::new();
+        if let Some(toml::Value::Array(ignore)) = config.option("check_prefixes") {
             for item in ignore {
                 if let toml::Value::String(s) = item {
-                    ignore_prefixes.insert(s.to_lowercase());
+                    check_prefixes.push(s.to_lowercase());
                 }
             }
+        } else if let Some(project) = project {
+            check_prefixes.push(project.prefix().to_lowercase());
         }
 
         let (patch_units, patch_weapons) = get_patch_arrays(target);
@@ -83,9 +86,9 @@ impl LintRunner<LintData> for Runner {
 
         // Check for public items not listed in CfgPatches (that start with our prefix)
         for (unit, span) in &public_vehicles {
-            if !patch_units.contains_key(unit) && !ignore_prefixes.iter().any(|p| unit.starts_with(p)) {
+            if !patch_units.contains_key(unit) && check_prefixes.iter().any(|p| p == "*" || unit.starts_with(p)) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
-                    unit.to_string(),
+                    unit.clone(),
                     PatchType::Vehicle,
                     span.clone(),
                     processed,
@@ -94,9 +97,9 @@ impl LintRunner<LintData> for Runner {
             }
         }
         for (weapon, span) in &public_weapons {
-            if !patch_weapons.contains_key(weapon) && !ignore_prefixes.iter().any(|p| weapon.starts_with(p)) {
+            if !patch_weapons.contains_key(weapon) && check_prefixes.iter().any(|p| p == "*" ||weapon.starts_with(p)) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
-                    weapon.to_string(),
+                    weapon.clone(),
                     PatchType::Weapon,
                     span.clone(),
                     processed,
@@ -106,9 +109,9 @@ impl LintRunner<LintData> for Runner {
         }
         // Check for CfgPatches items not defined
         for (unit, span) in &patch_units {
-            if !all_vehicles.contains(unit) && !ignore_prefixes.iter().any(|p| unit.starts_with(p)) {
+            if !all_vehicles.contains(unit) {
                 codes.push(Arc::new(Code15CfgPatchItemNotFound::new(
-                    unit.to_string(),
+                    unit.clone(),
                     PatchType::Vehicle,
                     span.clone(),
                     processed,
@@ -117,9 +120,9 @@ impl LintRunner<LintData> for Runner {
             }
         }
         for (weapon, span) in &patch_weapons {
-            if !all_weapons.contains(weapon) && !ignore_prefixes.iter().any(|p| weapon.starts_with(p)) {
+            if !all_weapons.contains(weapon) {
                 codes.push(Arc::new(Code15CfgPatchItemNotFound::new(
-                    weapon.to_string(),
+                    weapon.clone(),
                     PatchType::Weapon,
                     span.clone(),
                     processed,
@@ -208,13 +211,13 @@ pub enum PatchType {
     Weapon,
 }
 impl PatchType {
-    fn singular(&self) -> &str {
+    const fn singular(&self) -> &str {
         match self {
             Self::Vehicle => "unit",
             Self::Weapon => "weapon",
         }
     }
-    fn base(&self) -> &str {
+    const fn base(&self) -> &str {
         match self {
             Self::Vehicle => "CfgVehicles",
             Self::Weapon => "CfgWeapons",

@@ -1,6 +1,6 @@
 class CfgPatches {
     class myMod {
-        units[] = {"abe_car3", "abe_car4", "abe_bar22"}; // bar sadly does not exist
+        units[] = {"abe_car3", "abe_car4", "abe_bar22"}; // bar22 does not exist
         weapons[] = {"abe_gun2"};
         requiredVersion = 0.1;
         requiredAddons[] = {};
@@ -28,7 +28,8 @@ class CfgWeapons {
         scope = 2;
     };
     class abe_gun3: abe_gun2 {}; // Missing
-    class test_gun1: Rifle {
-        scope = 2;
+    class abx_gun1: Rifle {
+        scope = 2; // Missing (in check_prefixes)
     };
+    class external_gun: Rifle { scope=2; }; // not ours, just making it public
 };

@@ -366,7 +366,7 @@ async fn server() {
         .custom_method("hemtt/paa/convert", Backend::paa_convert)
         .custom_method("hemtt/processed", Backend::processed)
         .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
-        // .custom_method("hemtt/rpt/locate", Backend::locate_rpt)
+        .custom_method("hemtt/rpt/locate", Backend::locate_rpt)
         .finish();
     Server::new(read, write, socket).serve(service).await;
 }

@@ -13,4 +13,4 @@ options.forced = ["initspeed", "ambient", "diffuse", "forceddiffuse", "emmisive"
 enabled = true
 
 [lints.config.cfgpatches_scope]
-options.ignore_prefixes = ["test"]
+options.check_prefixes = ["abe", "abx"]
