@@ -19,7 +19,7 @@ impl Lint<LintData> for LintC15CfgPatchesScope {
         150
     }
     fn description(&self) -> &'static str {
-        "Reports on CfgPatches entries that do not match public items in CfgVehicles and CfgWeapons"
+        "Reports on CfgPatches entries that do not match public items in CfgVehicles and CfgWeapons. This ensures items are available in zeus."
     }
     fn documentation(&self) -> &'static str {
         r#"### Example
@@ -36,7 +36,7 @@ class CfgVehicles {
 ### Configuration
 
 - **check_prefixes**: only consider classes that start with any of these prefixes
-By default it will only check the project's prefix. Use `*` to check all classes.
+By default it will only check classnames that start with the project's prefix. Use `*` to check all.
 
 ```toml
 [lints.config.cfgpatches_scope]
