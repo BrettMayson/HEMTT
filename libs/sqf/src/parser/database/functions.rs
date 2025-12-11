@@ -40,7 +40,8 @@ impl Database {
     }
     /// Load external functions from the wiki
     fn load_functions_wiki(map: &mut IndexMap<String, Function>, wiki: &Wiki) {
-        for (_source, functions) in wiki.functions().iter() { // could filter by source if needed?
+        for (_source, functions) in wiki.functions().iter() {
+            // could filter by source if needed?
             map.extend(
                 functions
                     .iter()

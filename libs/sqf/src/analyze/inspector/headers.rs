@@ -30,19 +30,19 @@ fn try_match_styles(source: &str, filename: &str) -> Result<Arc<Function>, Heade
     match match_style(source, filename, get_regex_ace()) {
         Ok(header) => return Ok(header),
         Err(HeaderError::NoMatch) => {}
-        Err(e) => println!("DEBUG: error {e:?} matching ACE header in source: {filename}"),
+        Err(e) => println!("TEMP_DEBUG: error {e:?} matching ACE header in source: {filename}"),
     }
     match match_style(source, filename, get_regex_cba()) {
         Ok(header) => return Ok(header),
         Err(HeaderError::NoMatch) => {}
-        Err(e) => println!("DEBUG: error {e:?} matching CBA header in source: {filename}"),
+        Err(e) => println!("TEMP_DEBUG: error {e:?} matching CBA header in source: {filename}"),
     }
     // match match_style(source, filename, get_regex_clib()) {
     //     Ok(header) => return Ok(header),
     //     Err(HeaderError::NoMatch) => {}
-    //     Err(e) => println!("DEBUG: error {e:?} matching CLib header in source: {filename}"),
+    //     Err(e) => println!("TEMP_DEBUG: error {e:?} matching CLib header in source: {filename}"),
     // }
-    println!("DEBUG: no valid header found in source: {filename}");
+    println!("TEMP_DEBUG: no valid header found in source: {filename}");
     Err(HeaderError::NoMatch)
 }
 
@@ -73,10 +73,10 @@ fn match_value(input_low: &str) -> Option<Value> {
             "object" | "logic" => Value::Object,
             "side" => Value::Side,
             "string" | "text" => Value::String,
-            "structuredtext" => Value::StructuredText,
+            "structuredtext" | "structured text" => Value::StructuredText,
             "nil" | "nothing" => Value::Nothing,
             _ => {
-                println!("DEBUG: unknown type '{input}', defaulting to Anything");
+                println!("TEMP_DEBUG: unknown type '{input}', defaulting to Anything");
                 Value::Anything
             }
         }

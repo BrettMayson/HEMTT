@@ -37,7 +37,7 @@ impl Inspector {
         }
 
         let Some(func) = database.external_functions_get(&ext_func_lower) else {
-            trace!("TEMP_DEBUG: Unknown external function: {ext_func_lower}");
+            // trace!("TEMP_DEBUG: Unknown external function: {ext_func_lower}");
             return None;
         };
         let cmd_name = ext_func.as_str();
@@ -45,18 +45,22 @@ impl Inspector {
         let ret = func
             .ret()
             .map(|r| GameValue::from_wiki_value(r, NilSource::CommandReturn));
-        let min_required_param = params
-            .iter()
-            .position(arma3_wiki::model::Param::optional)
-            .unwrap_or(params.len());
+        if params.is_empty() {
+            // no parameters to check
+            return ret;
+        }
         let Some(lhs) = lhs else {
             // Unary call, could retrive `_this` and check it as LHS, but for now it will just be `Anything`
             return ret;
         };
+        // minimum required params (count from the end, first non-optional)
+        let min_required_param = params.len()
+            - params
+                .iter()
+                .rev()
+                .position(|p| !p.optional())
+                .unwrap_or(params.len());
         let expected_singular = if min_required_param <= 1 {
-            if params.is_empty() {
-                return ret;
-            }
             // try matching raw first argument without array (`_unit call ace_common_fnc_isPlayer`)
             let arg_dummy = Arg::Item(String::from("0"));
             let (is_match, expected) =
@@ -76,9 +80,11 @@ impl Inspector {
         let arg_dummy = Arg::Array(arg_dummy_vec);
         let (is_match, mut expected) =
             GameValue::match_set_to_arg(cmd_name, lhs, &arg_dummy, params);
-
         if !is_match {
-            if let Some(expected_singular) = expected_singular {
+            if let Some(expected_singular) = expected_singular
+                && !lhs.iter().all(|gv| matches!(gv, GameValue::Array(..)))
+            {
+                // if it could be singular and LHS may not be an array, report the singular expected type
                 expected.extend(expected_singular);
             }
             self.errors.insert(Issue::InvalidArgs {

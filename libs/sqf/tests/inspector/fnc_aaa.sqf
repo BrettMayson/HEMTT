@@ -6,6 +6,8 @@
  * X <BOOLEAN>
  */
 
-[5] call abe_fnc_aaa;
+// [5] call abe_fnc_aaa;
 
-""
+// ""
+
+"" call CBA_fnc_error;
