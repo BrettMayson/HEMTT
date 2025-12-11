@@ -1,55 +1,22 @@
-use arma3_wiki::model::{Param, Value};
+use arma3_wiki::model::{Function, Param, Value};
 use hemtt_workspace::reporting::Processed;
 use regex::{Match, Regex};
 use std::sync::{Arc, OnceLock};
 
 const MAX_ARG_INDEX: usize = 100;
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
-#[serde(default)]
-pub struct FunctionInfo {
-    /// Function name, if known
-    pub func_name: Option<String>,
-    /// Return type, if known
-    pub ret: Option<Value>,
-    pub params: Vec<Param>,
-    pub example: String,
-    // pub public: bool,
-}
-impl FunctionInfo {
-    #[must_use]
-    pub fn params(&self) -> &[Param] {
-        &self.params
-    }
-    #[must_use]
-    pub fn param_get(&self, index: usize) -> Option<&Param> {
-        self.params.get(index)
-    }
-    #[must_use]
-    pub const fn ret(&self) -> Option<&Value> {
-        self.ret.as_ref()
-    }
-    #[must_use]
-    pub const fn func_name(&self) -> Option<&String> {
-        self.func_name.as_ref()
-    }
-    #[must_use]
-    pub fn example(&self) -> &str {
-        &self.example
-    }
-    #[must_use]
-    pub(crate) fn extract_from_header(processed: &Processed) -> Option<Arc<Self>> {
-        for (path, source) in &processed.sources() {
-            let filename = path.filename().to_lowercase();
-            if filename.starts_with("fnc_")
-                && let Some(funcname) = filename.strip_suffix(".sqf")
-                && let Ok(header) = try_match_styles(source, funcname)
-            {
-                return Some(header);
-            }
+#[must_use]
+pub(crate) fn extract_from_header(processed: &Processed) -> Option<Arc<Function>> {
+    for (path, source) in &processed.sources() {
+        let filename = path.filename().to_lowercase();
+        if (filename.starts_with("fnc_") || filename.starts_with("fn_"))
+            && let Some(funcname) = filename.strip_suffix(".sqf")
+            && let Ok(header) = try_match_styles(source, funcname)
+        {
+            return Some(header);
         }
-        None
     }
+    None
 }
 
 #[derive(Debug)]
@@ -59,7 +26,7 @@ enum HeaderError {
     ArgsBadIndex,
 }
 
-fn try_match_styles(source: &str, filename: &str) -> Result<Arc<FunctionInfo>, HeaderError> {
+fn try_match_styles(source: &str, filename: &str) -> Result<Arc<Function>, HeaderError> {
     match match_style(source, filename, get_regex_ace()) {
         Ok(header) => return Ok(header),
         Err(HeaderError::NoMatch) => {}
@@ -70,6 +37,11 @@ fn try_match_styles(source: &str, filename: &str) -> Result<Arc<FunctionInfo>, H
         Err(HeaderError::NoMatch) => {}
         Err(e) => println!("DEBUG: error {e:?} matching CBA header in source: {filename}"),
     }
+    // match match_style(source, filename, get_regex_clib()) {
+    //     Ok(header) => return Ok(header),
+    //     Err(HeaderError::NoMatch) => {}
+    //     Err(e) => println!("DEBUG: error {e:?} matching CLib header in source: {filename}"),
+    // }
     println!("DEBUG: no valid header found in source: {filename}");
     Err(HeaderError::NoMatch)
 }
@@ -167,6 +139,7 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
         let arg_optional = arg_type.is_none()
             || arg_info_low.contains("(optional")
             || arg_info_low.contains("(unused")
+            || arg_info_low.contains("(not used")
             || arg_info_low.contains("(default");
         let arg_type = arg_type.unwrap_or(Value::Anything);
         out.push(Param::new(
@@ -243,30 +216,24 @@ fn match_style(
     source: &str,
     filename: &str,
     regex: (&Regex, &Regex),
-) -> Result<Arc<FunctionInfo>, HeaderError> {
+) -> Result<Arc<Function>, HeaderError> {
     let (re_header, re_arg_line) = regex;
     let Some(capture) = re_header.captures(source) else {
         return Err(HeaderError::NoMatch);
     };
     let args = parse_args(capture.name("arg"), re_arg_line)?;
     let ret = parse_return(capture.name("ret"));
-    let func_name = parse_function_name(source, filename);
+    let name = parse_function_name(source, filename);
     let example = parse_example(capture.name("ex"));
     // let public = parse_public(capture.name("pub"));
-    Ok(Arc::new(FunctionInfo {
-        params: args,
-        ret,
-        func_name,
-        example,
-        // public,
-    }))
+    Ok(Arc::new(Function::new(name, ret, args, example)))
 }
 #[must_use]
 fn get_regex_cba() -> (&'static Regex, &'static Regex) {
     static RE_HEADER: OnceLock<Regex> = OnceLock::new();
     static RE_ARG_LINE: OnceLock<Regex> = OnceLock::new();
     (RE_HEADER.get_or_init(|| {
-        Regex::new(r"(?s)\/\*.*?Parameters[s]?:(?<arg>.+?)(?:Return[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Examples:[\s\*]*(?<ex>.+?))?[\s\*]*(?:Public:(?<pub>.+?))?\*\/").expect("regex ok")
+        Regex::new(r"(?s)\/\*.*?Parameter[s]?:(?<arg>.+?)(?:Return[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Examples:[\s\*]*(?<ex>.+?))?[\s\*]*(?:Public:(?<pub>.+?))?\*\/").expect("regex ok")
     }), RE_ARG_LINE.get_or_init(|| {
         Regex::new(r"^    _(?<info>.*)").expect("regex ok") // 4 spaces before _
     }))
@@ -278,9 +245,19 @@ fn get_regex_ace() -> (&'static Regex, &'static Regex) {
     (RE_HEADER.get_or_init(|| {
         Regex::new(r"(?s)\/\*.*?Argument[s]?:(?<arg>.+?)(?:Return Value[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Example:[\s\*]*(?<ex>.+?))?[\s\*]*(?:Public:(?<pub>.+?))?\*\/").expect("regex ok")
     }), RE_ARG_LINE.get_or_init(|| {
-        Regex::new(r"\* (?<index>\d*):(?<info>.*)").expect("regex ok") // `* 0: description``
+        Regex::new(r"\* (?<index>\d*):(?<info>.*)").expect("regex ok") // `* 0: description`
     }))
 }
+// #[must_use]
+// fn get_regex_clib() -> (&'static Regex, &'static Regex) {
+//     static RE_HEADER: OnceLock<Regex> = OnceLock::new();
+//     static RE_ARG_LINE: OnceLock<Regex> = OnceLock::new();
+//     (RE_HEADER.get_or_init(|| {
+//         Regex::new(r"(?s)\/\*.*?Parameter\(s\):(?<arg>.+?)(?:Return[s]?:[\s\*]*(?<ret>.+?))?[\s\*]*(?:Example[s]?:[\s\*]*(?<ex>.+?))?\*\/").expect("regex ok")
+//     }), RE_ARG_LINE.get_or_init(|| {
+//         Regex::new(r"    (?<index>\d*):(?<info>.*)").expect("regex ok") // `    0: description`
+//     }))
+// }
 
 mod tests {
     #[test]

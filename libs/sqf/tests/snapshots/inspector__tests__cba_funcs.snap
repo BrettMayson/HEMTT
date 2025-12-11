@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(1, [InvalidArgs { command: "cba_fnc_localevent", span: 9..27, variant: FuncTypeNotExpected { expected: [Array(Some([[(String(None), 0..0)]]), None), String(None)], found: [Array(Some([[(Number(Some(Number(FloatOrd(6.0), 1..2))), 1..2)]]), None)], span: 9..27 } }])

@@ -9,9 +9,9 @@ use std::{
 
 use crate::{
     BinaryCommand, Expression, Statement, Statements, UnaryCommand,
-    analyze::inspector::{game_value::NilSource, headers::FunctionInfo},
-    parser::database::Database,
+    analyze::inspector::game_value::NilSource, parser::database::Database,
 };
+use arma3_wiki::model::Function;
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
 use indexmap::{IndexMap, IndexSet};
@@ -81,13 +81,13 @@ pub struct Inspector {
     code_used: IndexSet<Expression>,
     code_active: IndexSet<Expression>,
     scopes: Vec<ScriptScope>,
-    function_info: Option<Arc<FunctionInfo>>,
+    function_info: Option<Arc<Function>>,
     in_primary: bool,
 }
 
 impl Inspector {
     #[must_use]
-    pub fn new(ignored_vars: &IndexSet<String>, function_info: Option<Arc<FunctionInfo>>) -> Self {
+    pub fn new(ignored_vars: &IndexSet<String>, function_info: Option<Arc<Function>>) -> Self {
         let expected_returns = function_info.as_ref().and_then(|fi| {
             let ret = fi
                 .ret()
@@ -777,8 +777,10 @@ pub fn run_processed(
     static RE_IGNORE_VARIABLES: OnceLock<Regex> = OnceLock::new();
     static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
 
-    let function_info = FunctionInfo::extract_from_header(processed);
-    if let Some(function_info) = &function_info {
+    let function_info = headers::extract_from_header(processed);
+    if let Some(function_info) = &function_info
+        && function_info.name().is_some()
+    {
         database.project_functions_push(function_info.clone());
     }
 

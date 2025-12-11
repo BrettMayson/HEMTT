@@ -37,7 +37,7 @@ impl Inspector {
         }
 
         let Some(func) = database.external_functions_get(&ext_func_lower) else {
-            // trace!("Unknown external function: {}", ext_func_lower);
+            trace!("TEMP_DEBUG: Unknown external function: {ext_func_lower}");
             return None;
         };
         let cmd_name = ext_func.as_str();
@@ -58,7 +58,7 @@ impl Inspector {
                 return ret;
             }
             // try matching raw first argument without array (`_unit call ace_common_fnc_isPlayer`)
-            let arg_dummy = Arg::Item(String::from("a0"));
+            let arg_dummy = Arg::Item(String::from("0"));
             let (is_match, expected) =
                 GameValue::match_set_to_arg(cmd_name, lhs, &arg_dummy, params);
             if is_match {

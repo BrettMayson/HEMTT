@@ -7,13 +7,13 @@ use std::{
 
 use arma3_wiki::{
     Wiki,
-    model::{Call, Version},
+    model::{Call, Function, Version},
 };
 use hemtt_workspace::WorkspacePath;
 use indexmap::IndexMap;
 use tracing::{error, trace, warn};
 
-use crate::{Error, analyze::inspector::headers::FunctionInfo};
+use crate::Error;
 pub mod functions;
 /// The list of commands that are valid nular command constants for the compiler.
 pub const NULAR_COMMANDS_CONSTANTS: &[&str] = &[
@@ -57,9 +57,9 @@ pub struct Database {
     binary_commands: HashSet<String>,
     wiki: Wiki,
     /// All external functions loaded from files.
-    external_functions: IndexMap<String, FunctionInfo>,
+    external_functions: IndexMap<String, Function>,
     /// project functions collected from parsed files during build
-    project_functions: Arc<Mutex<Vec<Arc<FunctionInfo>>>>,
+    project_functions: Arc<Mutex<Vec<Arc<Function>>>>,
 }
 
 impl Database {
@@ -106,7 +106,7 @@ impl Database {
         for &command in BINARY_COMMANDS_SPECIAL {
             binary_commands.remove(command);
         }
-        let external_functions = Self::external_functions_load();
+        let external_functions = Self::load_functions(&wiki);
 
         Self {
             nular_commands,

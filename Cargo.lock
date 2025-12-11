@@ -216,8 +216,6 @@ dependencies = [
 [[package]]
 name = "arma3-wiki"
 version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbd40ee17357540d7a634d633b02fbfb49a50ca490d5d48d679fa623e77de0a4"
 dependencies = [
  "directories",
  "fs_extra",
@@ -1692,8 +1690,6 @@ dependencies = [
  "paste",
  "regex",
  "rustversion",
- "serde",
- "serde_json",
  "thiserror 2.0.17",
  "toml",
  "tracing",

@@ -57,13 +57,13 @@ impl SqfAnalyzer {
 }
 
 // WIP
-fn hover_func(func: &hemtt_sqf::analyze::inspector::headers::FunctionInfo) -> Hover {
+fn hover_func(func: &arma3_wiki::model::Function) -> Hover {
     Hover {
         contents: HoverContents::Array({
             let mut contents = Vec::new();
             contents.push(MarkedString::String(format!(
                 "## {}",
-                func.func_name().unwrap_or(&String::new())
+                func.name().unwrap_or(&String::new())
             )));
             {
                 let mut string = String::new();
