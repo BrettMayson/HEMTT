@@ -55,19 +55,10 @@ mod tests {
     inspect!(test_variadic);
     inspect!(test_code_usage);
     inspect!(test_variable_usage);
+
+    inspect!(fnc_header1);
+    inspect!(cba_funcs);
     
-    #[test]
-    pub fn test_fnc_header1() {
-        let (_pro, sqf, _database) = get_statements("fnc_header1.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_cba_funcs() {
-        let (_pro, sqf, _database) = get_statements("test_cba_funcs.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
