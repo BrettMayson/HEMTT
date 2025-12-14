@@ -1615,6 +1615,7 @@ dependencies = [
  "fs-err",
  "hemtt-lzo",
  "image",
+ "indexmap",
  "js-sys",
  "serde",
  "serde_json",

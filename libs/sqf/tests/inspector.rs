@@ -7,6 +7,18 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::LayerType;
 const ROOT: &str = "tests/inspector/";
 
+macro_rules! inspect {
+    ($file:ident) => {
+        paste::paste! {
+            #[test]
+            fn [<$file>]() {
+                let (_pro, sqf, _database) = get_statements(stringify!($file.sqf));
+                let issues = sqf.issues();
+                insta::assert_compact_debug_snapshot!((issues.len(), issues));
+            }
+        }
+    };
+}
 fn get_statements(file: &str) -> (Processed, Statements, Database) {
     let database = Database::a3(false);
     let folder = std::path::PathBuf::from(ROOT);
@@ -37,36 +49,13 @@ mod tests {
         let headers = database.project_functions_testing();
         println!("headers: {headers:?}");
     }
-    #[test]
-    pub fn test_main() {
-        let (_pro, sqf, _database) = get_statements("test_main.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_optional_args() {
-        let (_pro, sqf, _database) = get_statements("test_optional_args.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_iteration() {
-        let (_pro, sqf, _database) = get_statements("test_iteration.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_variadic() {
-        let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_code_usage() {
-        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
+    inspect!(test_main);
+    inspect!(test_optional_args);
+    inspect!(test_iteration);
+    inspect!(test_variadic);
+    inspect!(test_code_usage);
+    inspect!(test_variable_usage);
+    
     #[test]
     pub fn test_fnc_header1() {
         let (_pro, sqf, _database) = get_statements("fnc_header1.sqf");
