@@ -7,7 +7,20 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::LayerType;
 const ROOT: &str = "tests/inspector/";
 
+macro_rules! inspect {
+    ($file:ident) => {
+        paste::paste! {
+            #[test]
+            fn [<$file>]() {
+                let (_pro, sqf, _database) = get_statements(stringify!($file.sqf));
+                let issues = sqf.issues();
+                insta::assert_compact_debug_snapshot!((issues.len(), issues));
+            }
+        }
+    };
+}
 fn get_statements(file: &str) -> (Processed, Statements, Database) {
+    let database = Database::a3(false);
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -19,8 +32,7 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .expect("for test");
-    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
-    let database = Database::a3(false);
+    let statements = hemtt_sqf::parser::run(&database, &processed).expect("for test");
     (processed, statements, database)
 }
 
@@ -30,42 +42,23 @@ mod tests {
     use hemtt_sqf::analyze::inspector::Issue;
 
     #[test]
-    pub fn test_0() {
-        let (_pro, sqf, _database) = get_statements("test_0.sqf");
-        // let result = inspector::run_processed(&sqf, &pro, &database);
-        let result = sqf.issues();
-        println!("done: {}, {result:?}", result.len());
-    }
-    #[test]
-    pub fn test_main() {
-        let (_pro, sqf, _database) = get_statements("test_main.sqf");
+    pub fn test_fnc_aaa() {
+        let (_pro, sqf, database) = get_statements("fnc_aaa.sqf");
         let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
+        println!("issues: {}, {issues:?}", issues.len());
+        let headers = database.project_functions_testing();
+        println!("headers: {headers:?}");
     }
-    #[test]
-    pub fn test_optional_args() {
-        let (_pro, sqf, _database) = get_statements("test_optional_args.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_iteration() {
-        let (_pro, sqf, _database) = get_statements("test_iteration.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_variadic() {
-        let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_code_usage() {
-        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
+    inspect!(test_main);
+    inspect!(test_optional_args);
+    inspect!(test_iteration);
+    inspect!(test_variadic);
+    inspect!(test_code_usage);
+    inspect!(test_variable_usage);
+
+    inspect!(fnc_header1);
+    inspect!(cba_funcs);
+    
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {

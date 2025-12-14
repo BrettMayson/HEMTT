@@ -136,7 +136,7 @@ impl CodeS12InvalidArgs {
     fn generate_processed(mut self, processed: &Processed) -> Self {
         let diag = Diagnostic::from_code_processed(&self, self.variant.span(), processed);
         if let Some(mut diag) = diag {
-            if let InvalidArgs::DefaultDifferentType { default, .. } = &self.variant {
+            if let InvalidArgs::DefaultDifferentType { default: Some(default), .. } = &self.variant {
                 let map = processed
                         .mapping(default.start)
                         .expect("mapping should exist");
