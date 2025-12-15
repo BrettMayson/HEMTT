@@ -48,7 +48,7 @@ jobs:
       - name: Compile
         run: cargo build --release --bin hemtt -p hemtt
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
