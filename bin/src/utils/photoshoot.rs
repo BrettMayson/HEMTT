@@ -1,4 +1,4 @@
-use image::{ImageBuffer, Rgb, Rgba};
+use image::{ImageBuffer, Rgba};
 use std::path::Path;
 
 use crate::error::Error;
@@ -45,34 +45,12 @@ impl Photoshoot {
         Ok(new)
     }
 
-    /// Processes an editor preview screenshot
-    ///
-    /// # Errors
-    /// [`Error::Image`] if the image could not be loaded
-    pub fn preview(path: &Path) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Error> {
-        let mut new = image::open(path)?.into_rgb8();
-        for pixel in new.pixels_mut() {
-            Self::gamma_rgb(pixel);
-        }
-        let new = image::imageops::resize(&new, 455, 256, image::imageops::FilterType::Lanczos3);
-        fs_err::remove_file(path)?;
-        Ok(new)
-    }
-
     // adjust gamma because Arma blasts the hell out of it
     fn gamma_rgba(pixel: &mut Rgba<u8>) {
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
         for i in 0..3 {
             pixel.0[i] = ((f32::from(pixel.0[i]) / 255.0).powf(1.8) * 255.0_f32) as u8;
-        }
-    }
-
-    fn gamma_rgb(pixel: &mut Rgb<u8>) {
-        #[allow(clippy::cast_possible_truncation)]
-        #[allow(clippy::cast_sign_loss)]
-        for i in 0..3 {
-            pixel.0[i] = ((f32::from(pixel.0[i]) / 255.0).powf(2.2) * 255.0_f32) as u8;
         }
     }
 }

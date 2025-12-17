@@ -163,7 +163,7 @@ fn launch(
     };
     launcher.add_self_mod()?;
 
-    let mut args: Vec<String> = ["-name=hemtt", "-window"]
+    let mut args: Vec<String> = ["-name=hemtt", "-window", "-noWindowBorder"]
         .iter()
         .map(std::string::ToString::to_string)
         .collect();

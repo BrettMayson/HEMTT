@@ -75,6 +75,9 @@ enable-ansi-support = "0.3.1"
 winapi = { version = "0.3.9", features = ["winuser"] }
 winreg = "0.55.0"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+scap = "0.0.8"
+
 [dev-dependencies]
 sealed_test = "1.1.0"
 hemtt-test = { path = "../libs/testing" }

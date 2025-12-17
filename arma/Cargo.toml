@@ -13,4 +13,3 @@ hemtt-common = { path = "../libs/common" }
 
 arma-rs = "1.10.5"
 serde_json = { workspace = true }
-windows = { version = "0.62.1", features = ["Win32_Graphics_Direct3D11", "Win32_Graphics_Direct3D"] }

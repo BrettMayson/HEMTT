@@ -98,10 +98,9 @@ addMissionEventHandler ["ExtensionCallback", {
     };
 }];
 
-showCinemaBorder false;
+setDate [2035,5,28,10,0];
 
 0 spawn {
-    // it fades in
     sleep 1;
     diag_log "Photoshoot:items: Ready";
     diag_log format ["response: %1", "hemtt_comm" callExtension ["photoshoot:items:ready", []]];
@@ -109,5 +108,6 @@ showCinemaBorder false;
     if (isNil "ps_cam") then {
         ps_cam = "camera" camCreate [0,0,0];
         showCinemaBorder false;
+        setAperture 45;
     };
 };
