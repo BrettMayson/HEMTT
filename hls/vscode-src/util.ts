@@ -9,7 +9,13 @@ export function getNonce() {
   return text;
 }
 
-export function orActive(uri: vscode.Uri | undefined, callback: (uri: vscode.Uri) => Promise<void> | void = () => {}) {
+export function orActive(uri: vscode.Uri | undefined, multiselection: Array<vscode.Uri> | undefined, callback: (uri: vscode.Uri) => Promise<void> | void = () => {}) {
+  if (multiselection && multiselection.length > 1) {
+    for (const uri of multiselection) {
+      callback(uri);
+    }
+    return uri;
+  }
   if (!uri) {
     uri = (vscode.window.tabGroups.activeTabGroup?.activeTab?.input as any)?.uri;
     if (!uri) {
