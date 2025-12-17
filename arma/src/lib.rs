@@ -8,10 +8,8 @@ use hemtt_common::arma::control::{
 };
 
 mod photoshoot;
-pub mod screenshot;
 
 /// TCP port for communication between HEMTT and Arma 3
-/// Using port 21337 (HEMTT backwards in leet speak)
 const HEMTT_TCP_PORT: u16 = 21337;
 
 #[arma]
@@ -19,7 +17,6 @@ fn init() -> Extension {
     let ext = Extension::build()
         .command("mission", mission)
         .command("log", log)
-        .command("screenshot", screenshot::screenshot)
         .group("photoshoot", photoshoot::group())
         .finish();
     let ctx = ext.context();

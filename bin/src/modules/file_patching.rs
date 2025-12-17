@@ -64,9 +64,9 @@ impl Module for FilePatching {
         if link.exists() {
             trace!("removing existing symlink at {}", link.display());
             if cfg!(windows) {
-                std::fs::remove_dir(&link)?;
+                fs_err::remove_dir(&link)?;
             } else {
-                std::fs::remove_file(&link)?;
+                fs_err::remove_file(&link)?;
             }
         }
         create_link(&link, ctx.build_folder().expect("build folder exists"))?;

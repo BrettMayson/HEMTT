@@ -176,7 +176,7 @@ fn launch(
     if !cfg!(windows) {
         autotest = format!("Z:{}", autotest.replace('/', "\\"));
     }
-    // args.push(format!("-autotest=\"{autotest}\""));
+    args.push(format!("-autotest=\"{autotest}\""));
     args.insert(0, format!("-profiles={}", ctx.profile().display()));
     let mut profile = ctx.profile().display().to_string();
     if !cfg!(windows) {

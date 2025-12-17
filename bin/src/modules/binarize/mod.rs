@@ -258,7 +258,7 @@ impl Module for Binarize {
                             "skipping binarization of {} as it is already up-to-date",
                             target.entry
                         );
-                        std::fs::copy(cache_dir.join(path_hash).with_extension("hb"), &path)
+                        fs_err::copy(cache_dir.join(path_hash).with_extension("hb"), &path)
                             .expect("should be able to copy from cache to output");
                         progress.inc(1);
                         cache_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -266,44 +266,9 @@ impl Module for Binarize {
                     }
                 }
                 debug!("binarizing {}", target.entry);
-                let exe = self
-                    .command
-                    .as_ref()
-                    .expect("command should be set if we attempted to binarize");
-                let mut cmd = if cfg!(windows) {
-                    Command::new(exe)
-                } else {
-                    match self.compatibility {
-                        CompatibiltyTool::Wine64 | CompatibiltyTool::Wine => {
-                            let mut cmd = Command::new(self.compatibility.to_string());
-                            cmd.arg(exe);
-                            cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                            fs_err::create_dir_all("/tmp/hemtt-wine")
-                                .expect("should be able to create wine prefix");
-                            cmd
-                        }
-                        CompatibiltyTool::Proton => {
-                            let mut home = dirs::home_dir().expect("home directory exists");
-                            if exe.contains("/.var/") {
-                                home = home.join(".var/app/com.valvesoftware.Steam");
-                            }
-                            let mut cmd = Command::new({
-                                home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-                            });
-                            cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
-                                home.join(".local/share/Steam")
-                            ).env(
-                                "STEAM_COMPAT_DATA_PATH",
-                                home.join(".local/share/Steam/steamapps/compatdata/233800")
-                            ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
-                                home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
-                            ).arg("run").arg(
-                                home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
-                            );
-                            cmd
-                        }
-                    }
-                };
+                let mut cmd = BiTool::Binarize
+                    .command()
+                    .expect("binarize should be located if we got this far");
                 cmd.args([
                     "-norecurse",
                     "-always",

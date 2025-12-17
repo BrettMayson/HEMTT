@@ -5,7 +5,7 @@ use hemtt_common::arma::control::{
     toarma,
 };
 use hemtt_config::{Class, Config, Property, Value};
-use image::codecs::jpeg::JpegEncoder;
+use image::{GenericImageView, codecs::jpeg::JpegEncoder};
 
 use crate::{
     bi_tool::BiTool,
@@ -221,7 +221,7 @@ impl Action for Photoshoot {
         missions
     }
 
-    fn incoming(&self, ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
+    fn incoming(&self, _ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
         let Message::Photoshoot(msg) = msg else {
             return Vec::new();
         };
@@ -256,26 +256,26 @@ impl Action for Photoshoot {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image =
-                    utils::photoshoot::Photoshoot::weapon(class, &self.from, false).expect("image");
-                let dst_png = ctx
-                    .build_folder()
-                    .expect("photoshoot has a folder")
-                    .join(format!("{class}_ca.png"));
-                image.save(&dst_png).expect("save");
-                BiTool::ImageToPAA
-                    .command()
-                    .expect("iamgetopaa should be located if we got this far")
-                    .arg(dst_png)
-                    .output()
-                    .expect("failed to execute process");
-                let dst_paa = ctx
-                    .build_folder()
-                    .expect("photoshoot has a folder")
-                    .join(format!("{class}_ca.paa"));
+                let image = utils::photoshoot::Photoshoot::weapon(class, &self.from, false)
+                    .expect("image")
+                    .into();
+                let paa = hemtt_paa::Paa::from_dynamic(&image, {
+                    let (width, height) = image.dimensions();
+                    if !height.is_power_of_two() || !width.is_power_of_two() {
+                        hemtt_paa::PaXType::ARGB8
+                    } else {
+                        let has_transparency = image.pixels().any(|p| p.2[3] < 255);
+                        if has_transparency {
+                            hemtt_paa::PaXType::DXT5
+                        } else {
+                            hemtt_paa::PaXType::DXT1
+                        }
+                    }
+                })
+                .expect("paa");
                 fs_err::create_dir_all(target.parent().expect("has parent")).expect("create dir");
-                info!("Created `{}` at `{}`", class, target.display());
-                fs_err::rename(dst_paa, target).expect("rename");
+                let mut file = fs_err::File::create(target).expect("create paa");
+                paa.write(&mut file).expect("write paa");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::WeaponUnsupported(weapon) => {

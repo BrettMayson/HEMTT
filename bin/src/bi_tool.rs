@@ -5,7 +5,6 @@ use hemtt_common::steam;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BiTool {
     Binarize,
-    ImageToPAA,
     Arma3,
 }
 
@@ -16,7 +15,6 @@ impl BiTool {
     pub fn registry_key(&self) -> &str {
         match self {
             Self::Binarize => "Software\\Bohemia Interactive\\binarize",
-            Self::ImageToPAA => "Software\\Bohemia Interactive\\ImageToPAA",
             Self::Arma3 => unreachable!("Arma3 does not have a registry key"),
         }
     }
@@ -25,7 +23,6 @@ impl BiTool {
     pub fn value_name(&self) -> &str {
         match self {
             Self::Binarize => "path",
-            Self::ImageToPAA => "tool",
             Self::Arma3 => unreachable!("Arma3 does not have a registry value"),
         }
     }
@@ -48,7 +45,6 @@ impl BiTool {
         };
         let path = match self {
             Self::Binarize => path.map(|f| f.join("Binarize").join("binarize_x64.exe")),
-            Self::ImageToPAA => path,
             Self::Arma3 => path.map(|f| f.join("arma3_x64.exe")),
         };
         if path.as_ref().is_some_and(|p| p.exists()) {
@@ -76,7 +72,7 @@ impl BiTool {
                     let mut cmd = Command::new(compatibility.to_string());
                     cmd.arg(exe);
                     cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                    std::fs::create_dir_all("/tmp/hemtt-wine")
+                    fs_err::create_dir_all("/tmp/hemtt-wine")
                         .expect("should be able to create wine prefix");
                     cmd
                 }
@@ -145,7 +141,7 @@ fn locate_registry(tool: &BiTool) -> Option<PathBuf> {
 }
 
 #[cfg(not(windows))]
-fn locate_registry(_: BiTool) -> Option<PathBuf> {
+const fn locate_registry(_: BiTool) -> Option<PathBuf> {
     None
 }
 
