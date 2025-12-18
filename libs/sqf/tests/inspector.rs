@@ -54,7 +54,7 @@ mod tests {
     inspect!(test_variadic);
     inspect!(test_code_usage);
     inspect!(test_variable_usage);
-    
+
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
