@@ -258,9 +258,15 @@ impl Inspector {
             .or_insert_with(|| VarHolder {
                 possible: IndexSet::new(),
                 usage: 0,
-                source,
+                source: source.clone(),
             });
-        holder.possible.extend(possible_values);
+        if stack_level_search.unwrap_or_default() == 0 {
+            // Brand new or at same level as origin, totally replace possible values
+            holder.possible = possible_values;
+        } else {
+            // In a inner scope, just extend possible values
+            holder.possible.extend(possible_values);
+        }
     }
 
     #[must_use]

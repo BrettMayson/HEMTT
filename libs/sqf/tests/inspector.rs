@@ -7,6 +7,18 @@ use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::LayerType;
 const ROOT: &str = "tests/inspector/";
 
+macro_rules! inspect {
+    ($file:ident) => {
+        paste::paste! {
+            #[test]
+            fn [<$file>]() {
+                let (_pro, sqf, _database) = get_statements(stringify!($file.sqf));
+                let issues = sqf.issues();
+                insta::assert_compact_debug_snapshot!((issues.len(), issues));
+            }
+        }
+    };
+}
 fn get_statements(file: &str) -> (Processed, Statements, Database) {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
@@ -36,36 +48,13 @@ mod tests {
         let result = sqf.issues();
         println!("done: {}, {result:?}", result.len());
     }
-    #[test]
-    pub fn test_main() {
-        let (_pro, sqf, _database) = get_statements("test_main.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_optional_args() {
-        let (_pro, sqf, _database) = get_statements("test_optional_args.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_iteration() {
-        let (_pro, sqf, _database) = get_statements("test_iteration.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_variadic() {
-        let (_pro, sqf, _database) = get_statements("test_variadic.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
-    #[test]
-    pub fn test_code_usage() {
-        let (_pro, sqf, _database) = get_statements("test_code_usage.sqf");
-        let issues = sqf.issues();
-        insta::assert_compact_debug_snapshot!((issues.len(), issues));
-    }
+    inspect!(test_main);
+    inspect!(test_optional_args);
+    inspect!(test_iteration);
+    inspect!(test_variadic);
+    inspect!(test_code_usage);
+    inspect!(test_variable_usage);
+
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
     pub fn test_wiki_examples() {
