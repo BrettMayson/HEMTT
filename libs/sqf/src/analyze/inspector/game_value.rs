@@ -63,6 +63,7 @@ pub enum NilSource {
     CommandReturn,
     PrivateArray,
     EmptyStack,
+    IfWithoutElse,
 }
 
 impl GameValue {
@@ -357,6 +358,19 @@ impl GameValue {
             Self::String(_) => Self::String(None),
             Self::Nothing(_) => Self::Nothing(NilSource::Generic),
             _ => self.clone(),
+        }
+    }
+
+    #[must_use]
+    /// Checks if type is a "poisoned" nil type (should not be used as input or assigned)
+    pub fn is_poison_nil(&self) -> bool {
+        match self {
+            Self::Nothing(NilSource::CommandReturn | NilSource::IfWithoutElse)
+            | Self::Assignment => true,
+            Self::Array(Some(outer), _) => outer
+                .iter()
+                .any(|inner| inner.iter().any(|(inner, _)| inner.is_poison_nil())),
+            _ => false,
         }
     }
 

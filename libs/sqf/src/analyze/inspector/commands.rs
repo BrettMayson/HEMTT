@@ -377,12 +377,12 @@ impl Inspector {
     #[must_use]
     pub fn cmd_b_then(
         &mut self,
-        _lhs: &IndexSet<GameValue>,
-        rhs: &IndexSet<GameValue>,
+        rhs: &Expression,
+        rhs_set: &IndexSet<GameValue>,
         database: &Database,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
-        for possible in rhs {
+        for possible in rhs_set {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(
                     &IndexSet::from([possible.clone()]),
@@ -403,6 +403,10 @@ impl Inspector {
                     }
                 }
             }
+        }
+        // if without else branch, assume the results will be nil
+        if let Expression::Code(_) = rhs {
+            return IndexSet::from([GameValue::Nothing(NilSource::IfWithoutElse)]);
         }
         return_value
     }
