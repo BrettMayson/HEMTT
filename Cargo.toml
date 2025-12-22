@@ -79,7 +79,7 @@ tracing = { version = "0.1.43", features = ["attributes"] }
 tracing-test = "0.2.5"
 vfs = "0.12.2"
 walkdir = "2.5.0"
-zip = "6.0.0"
+zip = "7.0.0"
 
 [profile.perf]
 inherits = "release"
