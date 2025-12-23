@@ -1,4 +1,4 @@
-use hemtt_format::{CONFIG_EXTENSIONS, FormatterConfig, SQF_EXTENSIONS};
+use hemtt_format::{CONFIG_EXTENSIONS, FormatterConfig};
 
 #[derive(clap::Parser)]
 /// Format Config and SQF files
@@ -14,6 +14,31 @@ const IGNORED_FOLDERES: &[&str] = &[".hemttout", ".git", "include/"];
 /// # Panics
 /// If a name is not provided, but this is usually handled by clap
 pub fn execute(_cmd: &Command) -> ! {
+    if !dialoguer::Confirm::new()
+        .with_prompt("This feature is experimental, are you sure you want to continue?")
+        .interact()
+        .unwrap_or_default()
+    {
+        println!("Aborting format command");
+        std::process::exit(0);
+    }
+
+    // Using git2, check for dirty files
+    match git2::Repository::discover(".") {
+        Ok(repo) => {
+            let statuses = repo
+                .statuses(Some(git2::StatusOptions::new().include_untracked(true)))
+                .expect("Failed to get git statuses");
+            if !statuses.is_empty() {
+                println!("You have uncommitted changes in your working directory. Please commit or stash them before running the format command.");
+                std::process::exit(1);
+            }
+        }
+        Err(_) => {
+            println!("Not a git repository, proceeding with format command.");
+        }
+    }
+
     let mut count = 0;
     let mut errors = 0;
     for entry in walkdir::WalkDir::new(".") {
@@ -33,12 +58,12 @@ pub fn execute(_cmd: &Command) -> ! {
                 .to_str()
                 .unwrap_or_default();
             if CONFIG_EXTENSIONS.contains(&ext) {
-                let content = std::fs::read_to_string(path)
+                let content = fs_err::read_to_string(path)
                     .unwrap_or_else(|_| panic!("Failed to read file {}", path.display()));
                 match hemtt_format::format_config(&content, &FormatterConfig::default()) {
                     Ok(formatted) => {
                         if formatted != content {
-                            std::fs::write(path, formatted).unwrap_or_else(|_| {
+                            fs_err::write(path, formatted).unwrap_or_else(|_| {
                                 panic!("Failed to write file {}", path.display())
                             });
                             debug!("Formatted {}", path.display());

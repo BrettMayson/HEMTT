@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 logos = "0.16.0"
+fs-err = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

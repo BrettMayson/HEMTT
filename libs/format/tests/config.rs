@@ -36,7 +36,7 @@ config!(quotes);
 
 fn config(file: &str) -> String {
     format_config(
-        &std::fs::read_to_string(format!("{ROOT}{file}.hpp")).expect("Failed to read test file"),
+        &fs_err::read_to_string(format!("{ROOT}{file}.hpp")).expect("Failed to read test file"),
         &FormatterConfig::default(),
     )
     .unwrap_or_else(|err| format!("ERROR: {err}"))

@@ -34,7 +34,7 @@ sqf!(switch);
 
 fn sqf(file: &str) -> String {
     format_sqf(
-        &std::fs::read_to_string(format!("{ROOT}{file}.sqf")).expect("Failed to read test file"),
+        &fs_err::read_to_string(format!("{ROOT}{file}.sqf")).expect("Failed to read test file"),
         &FormatterConfig::default(),
     )
     .unwrap_or_else(|err| format!("ERROR: {err}"))

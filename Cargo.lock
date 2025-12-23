@@ -1589,6 +1589,7 @@ dependencies = [
 name = "hemtt-format"
 version = "1.0.0"
 dependencies = [
+ "fs-err",
  "insta",
  "logos",
  "paste",
