@@ -120,7 +120,10 @@ impl LintRunner<LintData> for Runner {
             }
         }
         let mut missing = Vec::new();
-        let prefix = format!("str_{}", project.map_or("", |p| p.prefix()));
+        let prefix = format!(
+            "str_{}",
+            project.map_or(String::new(), |p| p.prefix().to_lowercase())
+        );
         for (key, position) in usages {
             if all.iter().any(|(k, _)| k == &key) {
                 if let Some(pos) = unused.iter().position(|k| k == &key) {

@@ -55,9 +55,9 @@ options.ignore = [
     }
 }
 
-fn is_project_func(var: &str, project: &ProjectConfig) -> bool {
-    let prefix = project.prefix();
-    var.starts_with(prefix) && var.contains("_fnc_")
+fn is_project_func(var_lower: &str, project: &ProjectConfig) -> bool {
+    let prefix = project.prefix().to_lowercase();
+    var_lower.starts_with(&prefix) && var_lower.contains("_fnc_")
 }
 /// Runner for Expression (Var usage and calls to CBA's compile funcs)
 struct RunnerExpression;
