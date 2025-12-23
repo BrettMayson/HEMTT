@@ -51,25 +51,25 @@ pub fn execute(_cmd: &Command) -> ! {
                     }
                 }
             }
-            if SQF_EXTENSIONS.contains(&ext) {
-                let content = std::fs::read_to_string(path)
-                    .unwrap_or_else(|_| panic!("Failed to read file {}", path.display()));
-                match hemtt_format::format_sqf(&content, &FormatterConfig::default()) {
-                    Ok(formatted) => {
-                        if formatted != content {
-                            std::fs::write(path, formatted).unwrap_or_else(|_| {
-                                panic!("Failed to write file {}", path.display())
-                            });
-                            debug!("Formatted {}", path.display());
-                            count += 1;
-                        }
-                    }
-                    Err(err) => {
-                        error!("Failed to format {}: {}", path.display(), err);
-                        errors += 1;
-                    }
-                }
-            }
+            // if SQF_EXTENSIONS.contains(&ext) {
+            //     let content = std::fs::read_to_string(path)
+            //         .unwrap_or_else(|_| panic!("Failed to read file {}", path.display()));
+            //     match hemtt_format::format_sqf(&content, &FormatterConfig::default()) {
+            //         Ok(formatted) => {
+            //             if formatted != content {
+            //                 std::fs::write(path, formatted).unwrap_or_else(|_| {
+            //                     panic!("Failed to write file {}", path.display())
+            //                 });
+            //                 debug!("Formatted {}", path.display());
+            //                 count += 1;
+            //             }
+            //         }
+            //         Err(err) => {
+            //             error!("Failed to format {}: {}", path.display(), err);
+            //             errors += 1;
+            //         }
+            //     }
+            // }
         }
     }
     info!("Formatted {} files", count);
