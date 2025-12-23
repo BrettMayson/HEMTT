@@ -53,25 +53,6 @@ _blacklist = [
     "Bag_Base"
 ];
 
-_dlcTable = [];
-_fnc_getDlc = {
-    _dlc = "";
-    _addonList = configSourceAddonList _this;
-    private _cfgPatches = _addonList select 0;
-
-    if (count _addonList > 0) then {
-        _dlcList = configSourceModList (configFile >> "cfgpatches" >> _cfgPatches);
-        _dlc = "";
-        if (count _dlcList > 0) then {
-            _dlc = _dlcList select 0;
-            {
-                if (_dlc == (_x select 0)) exitWith {_dlc = _x select 1;};
-            } forEach _dlcTable;
-        };
-    };
-    _dlc
-};
-
 // Original had a check for scope = 2
 _cfgVehicles = "
     getNumber (_x >> 'scope') > 0
@@ -123,6 +104,7 @@ _cam camPrepareFocus [-1,-1];
 _cam camPrepareFOV 0.4;
 _cam camCommitPrepared 0;
 showCinemaBorder false;
+setAperture 45;
 
 _sphereColor = "#(argb,8,8,3)color(0.93,1.0,0.98,0.1)";
 
@@ -136,25 +118,7 @@ _sphereNoGround = createVehicle ["SphereNoGround_3DEN",_pos,[],0,"none"];
     _x hideObject true;
 } forEach [_sphereGround,_sphereNoGround];
 
-setAperture 45;
-setDate [2035,5,28,10,0];
-
 _display = [] call bis_fnc_displayMission;
-if (is3DEN) then {
-    _display = findDisplay 313;
-    ["showinterface",false] call bis_fnc_3DENInterface;
-};
-
-// Original had text showing the path the image would be saved to
-_ctrlProgressH = 0.01;
-_ctrlProgress = _display ctrlCreate ["RscProgress",-1];
-_ctrlProgress ctrlSetPosition [
-    safezoneX,
-    safezoneY + safezoneH - _ctrlProgressH,
-    safezoneW,
-    _ctrlProgressH
-];
-_ctrlProgress ctrlCommit 0;
 
 _screenTop = safezoneY;
 _screenBottom = safezoneY + safezoneH;
@@ -163,12 +127,6 @@ _screenRight = safezoneX + safezoneW;
 
 {
     _class = configName _x;
-
-    _dlc = _x call _fnc_getDlc;
-    if (_dlc != "") then {_dlc = _dlc + "\";};
-    _fileName = format ["EditorPreviews\%2%1.png",_class,_dlc];
-
-    _ctrlProgress progressSetPosition (_foreachindex / _cfgVehiclesCount);
 
     _camDirH = 135;
     _camDirV = 15;
@@ -261,8 +219,8 @@ _screenRight = safezoneX + safezoneW;
     };
 
     waituntil {time > _timeCapture};
-    screenshot _fileName;
-    sleep 0.01;
+    "hemtt_comm" callExtension ["photoshoot:previews:class", [_class]];
+    sleep 2;
 
     _object setPos [10,10,10];
     deleteVehicle _object;
@@ -274,9 +232,3 @@ camDestroy _cam;
 deleteVehicle _sphereGround;
 deleteVehicle _sphereNoGround;
 setAperture -1;
-ctrlDelete _ctrlProgress;
-
-if (is3DEN) then {
-    get3DENCamera cameraEffect ["internal","back"];
-    ["showInterface",true] call bis_fnc_3DENInterface;
-};
