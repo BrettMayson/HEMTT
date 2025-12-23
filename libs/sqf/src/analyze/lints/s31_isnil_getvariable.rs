@@ -6,13 +6,13 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, BinaryCommand, Expression, Statement};
+use crate::{analyze::LintData, BinaryCommand, Expression, Statement, UnaryCommand};
 
-crate::analyze::lint!(LintS26ShortCircuitBoolVar);
+crate::analyze::lint!(LintS31IsNilGetVariable);
 
-impl Lint<LintData> for LintS26ShortCircuitBoolVar {
+impl Lint<LintData> for LintS31IsNilGetVariable {
     fn ident(&self) -> &'static str {
-        "short_circuit_bool_var"
+        "isnil_getvariable"
     }
 
     fn sort(&self) -> u32 {
@@ -20,33 +20,29 @@ impl Lint<LintData> for LintS26ShortCircuitBoolVar {
     }
 
     fn description(&self) -> &'static str {
-        "Checks for inefficent short ciruit evaulation"
+        "Checks for inefficent isNil/getVariable pattern"
     }
 
     fn documentation(&self) -> &'static str {
-        r#"### Example
+        r"### Example
 
 **Incorrect**
 ```sqf
-if (_test1 && {_test2}) then { };
+isNil {x getVariable 'varName'};
 ```
 **Correct**
 ```sqf
-if (_test1 && _test2) then { };
+x isNil 'varName';
 ```
 
 ### Explanation
 
-Short circuit evaluation on a variable that is a boolean is inefficient
-False positives are possible if the var could be undefined, e.g.:
-```sqf
-(!isNil "z") && {z}
-```
-"#
+Using `isNil`'s alterante syntax is slightly faster
+"
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
+        LintConfig::help() // .with_enabled(hemtt_common::config::LintEnabled::Pedantic)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -70,43 +66,47 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(cmd, _left, right, _) = target else {
+        let Expression::UnaryCommand(UnaryCommand::Named(cmd), right, _) = target else {
             return Vec::new();
         };
-        if !(matches!(cmd, BinaryCommand::Or) || matches!(cmd, BinaryCommand::And)) {
+        if !cmd.eq_ignore_ascii_case("isnil") {
             return Vec::new();
         }
-        let Expression::Code(statements)= &**right else {
+        let Expression::Code(statements) = &**right else {
             return Vec::new();
         };
-        if statements.content().len() != 1 { 
-            return Vec::new()
+        let [Statement::Expression(Expression::BinaryCommand(BinaryCommand::Named(getvar_cmd), lhs, rhs, getvar_span), _)] = statements.content() else {
+            return Vec::new();
+        };
+        if !getvar_cmd.eq_ignore_ascii_case("getvariable") {
+            return Vec::new();
         }
-        let Statement::Expression(Expression::Variable(ref _var_name, _), ref range) = statements.content()[0] else {
-            return Vec::new();
-        };
-        vec![Arc::new(CodeS26ShortCircuitBoolVar::new(
-            range.clone(),
+
+        vec![Arc::new(CodeS31IsNilGetVariable::new(
+            lhs.source(),
+            rhs.source(),
+            getvar_span.clone(),
             processed,
             config.severity(),
         ))]
     }
 }
 
-#[allow(clippy::module_name_repetitions)]
-pub struct CodeS26ShortCircuitBoolVar {
+pub struct CodeS31IsNilGetVariable {
+    lhs: String,
+    rhs: String,
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS26ShortCircuitBoolVar {
+impl Code for CodeS31IsNilGetVariable {
     fn ident(&self) -> &'static str {
-        "L-S26"
+        "L-S31"
     }
 
     fn link(&self) -> Option<&str> {
-        Some("/lints/sqf.html#short_circuit_bool_var")
+        Some("/lints/sqf.html#isnil_getvariable")
     }
 
     fn severity(&self) -> Severity {
@@ -114,29 +114,23 @@ impl Code for CodeS26ShortCircuitBoolVar {
     }
 
     fn message(&self) -> String {
-        "Inefficent short circuit evaulation".to_string()
+        "Use isNil directly".to_string()
     }
 
-    fn label_message(&self) -> String {
-        "unnecessary { }".to_string()
-    }
-
-    fn note(&self) -> Option<String> {
-        Some("remove the { } and use the variable directly (if safe to do so)".to_string())
-    }
-
-    fn help(&self) -> Option<String> {
-        None
+    fn suggestion(&self) -> Option<String> {
+        Some(format!("{} isNil {}", self.lhs, self.rhs))
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
 }
-impl CodeS26ShortCircuitBoolVar {
+impl CodeS31IsNilGetVariable {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(lhs: String, rhs: String, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
+            lhs,
+            rhs,
             span,
             severity,
             diagnostic: None,
