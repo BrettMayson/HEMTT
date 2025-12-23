@@ -1,0 +1,43 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (macro_dogtag))
+---
+#define ACE_DOGTAG_ITEM(DOGTAGBASE,DOGTAGID) \
+    class DOGTAGBASE##_##DOGTAGID: DOGTAGBASE { \
+        author = ECSTRING(common,ACETeam); \
+        scope = 1; \
+        scopeArsenal = 0; \
+        scopeCurator = 0; \
+        descriptionShort = CSTRING(itemName); \
+        GVAR(tagID) = DOGTAGID; \
+    }
+
+class CfgWeapons {
+    class ACE_ItemCore;
+    class CBA_MiscItem_ItemInfo;
+
+    class ACE_dogtag: ACE_ItemCore {
+        author = ECSTRING(common,ACETeam);
+        scope = 0;
+        displayName = CSTRING(itemName);
+        model = QPATHTOF(data\ace_dogtag.p3d);
+        picture = QPATHTOF(data\dogtagSingle.paa);
+        class ItemInfo: CBA_MiscItem_ItemInfo {
+            mass = 0; //too small to for 1 ?
+        };
+    };
+    ACE_DOGTAG_ITEM(ACE_dogtag,1);
+    ACE_DOGTAG_ITEM(ACE_dogtag,2);
+    ACE_DOGTAG_ITEM(ACE_dogtag,3);
+    ACE_DOGTAG_ITEM(ACE_dogtag,4);
+    ACE_DOGTAG_ITEM(ACE_dogtag,5);
+    ACE_DOGTAG_ITEM(ACE_dogtag,6);
+    ACE_DOGTAG_ITEM(ACE_dogtag,7);
+    ACE_DOGTAG_ITEM(ACE_dogtag,8);
+    ACE_DOGTAG_ITEM(ACE_dogtag,9);
+    ACE_DOGTAG_ITEM(ACE_dogtag,10);
+    ACE_DOGTAG_ITEM(ACE_dogtag,11);
+    ACE_DOGTAG_ITEM(ACE_dogtag,12);
+    ACE_DOGTAG_ITEM(ACE_dogtag,13);
+    ACE_DOGTAG_ITEM(ACE_dogtag,14);
+};

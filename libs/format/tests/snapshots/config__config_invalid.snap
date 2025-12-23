@@ -1,0 +1,5 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (invalid))
+---
+ERROR: Unexpected token '@' at position 28..29

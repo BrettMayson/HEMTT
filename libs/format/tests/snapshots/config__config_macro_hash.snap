@@ -1,0 +1,8 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (macro_hash))
+---
+#define MACRO_ADDWEAPON(WEAPON,COUNT) class _xx_##WEAPON { \
+    weapon = #WEAPON; \
+    count = COUNT; \
+}

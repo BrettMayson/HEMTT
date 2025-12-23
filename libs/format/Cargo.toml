@@ -1,0 +1,17 @@
+[package]
+name = "hemtt-format"
+version = "1.0.0"
+edition = "2024"
+description = "An formatting library for hemtt"
+license = "GPL-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+logos = "0.16.0"
+fs-err = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+paste = { workspace = true }

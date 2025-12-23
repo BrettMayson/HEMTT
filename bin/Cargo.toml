@@ -22,6 +22,7 @@ bench = false
 hemtt-common = { path = "../libs/common" }
 
 hemtt-config = { path = "../libs/config", features = ["serde"] }
+hemtt-format = { path = "../libs/format" }
 hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa", features = ["generate"] }
 hemtt-pbo = { path = "../libs/pbo" }

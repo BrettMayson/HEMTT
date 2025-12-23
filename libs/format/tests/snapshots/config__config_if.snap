@@ -1,0 +1,10 @@
+---
+source: libs/format/tests/config.rs
+expression: config(stringify! (if))
+---
+#ifdef THING
+    value = "thing was defined";
+#else
+    #define NOTHING
+    value = "thing was not defined";
+#endif
