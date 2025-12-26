@@ -404,9 +404,9 @@ impl Inspector {
                 }
             }
         }
-        // if without else branch, assume the results will be nil
+        // if without else branch, add a possible nil result in addition to then-branch results
         if let Expression::Code(_) = rhs {
-            return IndexSet::from([GameValue::Nothing(NilSource::IfWithoutElse)]);
+            return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
         }
         return_value
     }

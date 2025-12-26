@@ -255,7 +255,7 @@ impl Inspector {
                 Some(Issue::Unused(
                     var.to_owned(),
                     existing_var.source.clone(),
-                    true, // overwriten before use
+                    true, // overwritten before use
                 ))
             } else if local {
                 // shadowed (only at same level and not also unused)
