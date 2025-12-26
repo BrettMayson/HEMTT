@@ -89,7 +89,7 @@ impl LintRunner<LintData> for Runner {
         };
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
-            if let Issue::Unused(var, source) = issue {
+            if let Issue::Unused(var, source, overwritten) = issue {
                 match source {
                     VarSource::Assignment(_, _) => {}
                     VarSource::Params(_) => {
@@ -104,7 +104,7 @@ impl LintRunner<LintData> for Runner {
                 errors.push(Arc::new(CodeS14Unused::new(
                     source.get_range().unwrap_or_default(),
                     var.to_owned(),
-                    None,
+                    *overwritten,
                     config.severity(),
                     processed,
                 )));
@@ -118,7 +118,7 @@ impl LintRunner<LintData> for Runner {
 pub struct CodeS14Unused {
     span: Range<usize>,
     variable: String,
-    error_hint: Option<String>,
+    overwritten: bool,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -137,7 +137,11 @@ impl Code for CodeS14Unused {
         String::from("unused variable")
     }
     fn note(&self) -> Option<String> {
-        self.error_hint.clone()
+        if self.overwritten {
+            Some(String::from("variable overwritten before being used"))
+        } else {
+            None
+        }
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -152,14 +156,14 @@ impl CodeS14Unused {
     pub fn new(
         span: Range<usize>,
         variable: String,
-        error_hint: Option<String>,
+        overwritten: bool,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
         Self {
             span,
             variable,
-            error_hint,
+            overwritten,
             severity,
             diagnostic: None,
         }

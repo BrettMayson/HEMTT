@@ -9,7 +9,7 @@ pub enum Issue {
         variant: InvalidArgs,
     },
     Undefined(String, Range<usize>, bool),
-    Unused(String, VarSource),
+    Unused(String, VarSource, bool),
     Shadowed(String, Range<usize>),
     NotPrivate(String, Range<usize>),
     CountArrayComparison(bool, Range<usize>, String),

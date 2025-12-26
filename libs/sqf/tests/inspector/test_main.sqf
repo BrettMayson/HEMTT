@@ -16,7 +16,7 @@ private ["_varC"];
 _varC = _varB + 1;
 private _test4 = _varC; // unused
 params ["_test5"];
-private _test5 = 10; // shadow (same level)
+private _test5 = 10; // unused (same level)
 diag_log text str _test5;
 gx = [];
 gx addPublicVariableEventHandler {}; // args: takes lhs string
@@ -174,7 +174,7 @@ private _varS = call {
 };
 _varS + 1;
 
-private _test16 = [] call { xxx = 1};
+private _test16 = [] call { xxx = 1}; // error on `=` because rhs is assignment
 hashValue _test16; // error, _test16 is assignment
 hashValue nil; // explicit nil is allowed
 
