@@ -1,0 +1,40 @@
+class CfgPatches {
+    class myMod {
+        units[] = {"abe_car3", "abe_car4", "abe_bar22"}; // bar22 does not exist
+        weapons[] = {"abe_gun2"};
+        requiredVersion = 0.1;
+        requiredAddons[] = {};
+    };
+};
+
+class cfgvehicles {
+    class Car;
+    class abe_car1: Car { };
+    class abe_car2: Car { // Missing
+        scope = 2;
+    };
+    class abe_car3: abe_car1 {
+        scope = 2;
+    };
+    class abe_car4: abe_car2 {
+        scope = 1;
+    };
+    class abe_car5: abe_car2 { }; // Missing
+    class Module_F;
+    class abe_coverMap: Module_F {
+        scope = 2;
+        scopeCurator = 0; // not shown in zeus, not a problem if not in units[]
+    };
+};
+class CfgWeapons {
+    class Rifle;
+    class abe_gun1: Rifle { };
+    class abe_gun2: Rifle {
+        scope = 2;
+    };
+    class abe_gun3: abe_gun2 {}; // Missing
+    class abx_gun1: Rifle {
+        scope = 2; // Missing (in check_prefixes)
+    };
+    class external_gun: Rifle { scope=2; }; // not ours, just making it public
+};
