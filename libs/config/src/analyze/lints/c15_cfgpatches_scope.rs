@@ -1,4 +1,4 @@
-use std::{ops::Range, sync::Arc};
+use std::{cmp, ops::Range, sync::Arc};
 
 use crate::{Class, Config, Item, Number, Property, Value, analyze::LintData};
 
@@ -7,7 +7,7 @@ use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
-use indexmap::{IndexMap, IndexSet};
+use indexmap::IndexMap;
 
 crate::analyze::lint!(LintC15CfgPatchesScope);
 
@@ -45,7 +45,7 @@ options.check_prefixes = ["abe", "abx"]
 "#
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::warning()
+        LintConfig::warning().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
@@ -81,12 +81,15 @@ impl LintRunner<LintData> for Runner {
         }
 
         let (patch_units, patch_weapons) = get_patch_arrays(target);
-        let (all_vehicles, public_vehicles) = get_defined("cfgvehicles", target);
-        let (all_weapons, public_weapons) = get_defined("cfgweapons", target);
+        let all_vehicles = get_defined("cfgvehicles", target);
+        let all_weapons = get_defined("cfgweapons", target);
 
-        // Check for public items not listed in CfgPatches (that start with our prefix)
-        for (unit, span) in &public_vehicles {
-            if !patch_units.contains_key(unit) && check_prefixes.iter().any(|p| p == "*" || unit.starts_with(p)) {
+        let accept_all = check_prefixes.iter().any(|p| p == "*");
+        let fnc_should_check = |name: &str| accept_all || check_prefixes.iter().any(|p| name.starts_with(p));
+
+        // Check for public items not listed in CfgPatches (that start with project's prefix)
+        for (unit, (public, span, _, _)) in &all_vehicles {
+            if *public && !patch_units.contains_key(unit) && fnc_should_check(unit) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
                     unit.clone(),
                     PatchType::Vehicle,
@@ -96,8 +99,8 @@ impl LintRunner<LintData> for Runner {
                 )));
             }
         }
-        for (weapon, span) in &public_weapons {
-            if !patch_weapons.contains_key(weapon) && check_prefixes.iter().any(|p| p == "*" ||weapon.starts_with(p)) {
+        for (weapon, (public, span, _, _)) in &all_weapons {
+            if *public && !patch_weapons.contains_key(weapon) && fnc_should_check(weapon) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
                     weapon.clone(),
                     PatchType::Weapon,
@@ -107,9 +110,9 @@ impl LintRunner<LintData> for Runner {
                 )));
             }
         }
-        // Check for CfgPatches items not defined
+        // Check for items in CfgPatches that are not defined in CfgVehicles/CfgWeapons
         for (unit, span) in &patch_units {
-            if !all_vehicles.contains(unit) {
+            if !all_vehicles.contains_key(unit) {
                 codes.push(Arc::new(Code15CfgPatchItemNotFound::new(
                     unit.clone(),
                     PatchType::Vehicle,
@@ -120,7 +123,7 @@ impl LintRunner<LintData> for Runner {
             }
         }
         for (weapon, span) in &patch_weapons {
-            if !all_weapons.contains(weapon) {
+            if !all_weapons.contains_key(weapon) {
                 codes.push(Arc::new(Code15CfgPatchItemNotFound::new(
                     weapon.clone(),
                     PatchType::Weapon,
@@ -134,19 +137,19 @@ impl LintRunner<LintData> for Runner {
     }
 }
 
-fn get_defined(base_path: &str, target: &Config) -> (IndexSet<String>, IndexMap<String, Range<usize>>) {
-    fn get_number(properties: &[Property], key: &str, default: i32) -> i32 {
+type DefinedMap = IndexMap<String, (bool, Range<usize>, Option<i32>, Option<i32>)>;
+fn get_defined(base_path: &str, target: &Config) -> DefinedMap  {
+    fn get_number(properties: &[Property], key: &str) -> Option<i32> {
         if let Some(property) = properties.iter().find(|p| p.name().value.eq_ignore_ascii_case(key))
             && let Property::Entry { value, .. } = property
             && let Value::Number(number) = value
             && let Number::Int32 { value, .. } = number
         {
-            return *value;
+            return Some(*value);
         }
-        default
+        None
     }
-    let mut set_exist = IndexSet::new();
-    let mut map_public = IndexMap::new();
+    let mut defined: DefinedMap = IndexMap::new();
     if let Some(Property::Class(Class::Local { properties, .. })) =
         target.0.iter().find(|p| p.name().value.eq_ignore_ascii_case(base_path))
     {
@@ -157,20 +160,19 @@ fn get_defined(base_path: &str, target: &Config) -> (IndexSet<String>, IndexMap<
             else {
                 continue;
             };
-            let lower_name = name.as_str().to_ascii_lowercase();
-            set_exist.insert(lower_name.clone());
-            let scope = get_number(properties, "scope", -1);
-            let scope_curator = get_number(properties, "scopeCurator", -1);
-            let inherited = parent.as_ref().is_some_and(|parent| {
-                let key = parent.as_str().to_ascii_lowercase();
-                map_public.contains_key(&key)
+            let name_lower = name.as_str().to_ascii_lowercase();
+            let (parent_scope, parent_scope_curator) = parent.as_ref().map_or((None, None), |parent| {
+                let parent_lower = parent.as_str().to_ascii_lowercase();
+                defined.get(&parent_lower).map_or((None, None), |parent_def| (parent_def.2, parent_def.3))
             });
-            if (scope == 2 || (inherited && scope != 1)) && scope_curator != 0 {
-                map_public.insert(lower_name, name.span());
-            }
+            
+            let cfg_scope = get_number(properties, "scope").or(parent_scope);
+            let cfg_scope_curator = get_number(properties, "scopeCurator").or(parent_scope_curator);
+            let public_known = cmp::max(cfg_scope.unwrap_or(0), cfg_scope_curator.unwrap_or(0)) > 1 && cfg_scope_curator.is_none_or(|c| c > 1);
+            defined.insert(name_lower, (public_known, name.span(), cfg_scope, cfg_scope_curator));
         }
     }
-    (set_exist, map_public)
+    defined
 }
 
 fn get_patch_arrays(target: &Config) -> (IndexMap<String, Range<usize>>, IndexMap<String, Range<usize>>) {
@@ -226,99 +228,82 @@ impl PatchType {
     }
 }
 
-pub struct Code15CfgPatchItemNotFound {
-    classname: String,
-    patch_type: PatchType,
-    span: Range<usize>,
-    severity: Severity,
-    diagnostic: Option<Diagnostic>,
-}
-
-impl Code for Code15CfgPatchItemNotFound {
-    fn ident(&self) -> &'static str {
-        "L-C15a"
-    }
-    fn link(&self) -> Option<&str> {
-        Some("/lints/config.html#cfgpatches_scope")
-    }
-    fn severity(&self) -> Severity {
-        self.severity
-    }
-    fn message(&self) -> String {
-        format!("CfgPatches {}s[] class `{}` not found", self.patch_type.singular(), self.classname)
-    }
-    fn label_message(&self) -> String {
-        format!("not defined in {}", self.patch_type.base())
-    }
-    fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
-    }
-}
-
-impl Code15CfgPatchItemNotFound {
-    #[must_use]
-    pub fn new(classname: String, patch_type: PatchType, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
-        Self {
-            classname,
-            patch_type,
-            span,
-            severity,
-            diagnostic: None,
+macro_rules! define_cfgpatch_code {
+    ($name:ident, $ident:expr, $message_fn:expr, $label_fn:expr) => {
+        pub struct $name {
+            classname: String,
+            patch_type: PatchType,
+            span: Range<usize>,
+            severity: Severity,
+            diagnostic: Option<Diagnostic>,
         }
-        .generate_processed(processed)
-    }
-    fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
-        self
-    }
-}
-pub struct Code15CfgPatchPublicItemNotListed {
-    classname: String,
-    patch_type: PatchType,
-    span: Range<usize>,
-    severity: Severity,
-    diagnostic: Option<Diagnostic>,
-}
 
-impl Code for Code15CfgPatchPublicItemNotListed {
-    fn ident(&self) -> &'static str {
-        "L-C15b"
-    }
-    fn link(&self) -> Option<&str> {
-        Some("/lints/config.html#cfgpatches_scope")
-    }
-    fn severity(&self) -> Severity {
-        self.severity
-    }
-    fn message(&self) -> String {
-        format!(
-            "Public {} class `{}` not listed in CfgPatches",
-            self.patch_type.base(),
-            self.classname
-        )
-    }
-    fn label_message(&self) -> String {
-        format!("has scope=2 but not in {}s[]", self.patch_type.singular())
-    }
-    fn diagnostic(&self) -> Option<Diagnostic> {
-        self.diagnostic.clone()
-    }
-}
-
-impl Code15CfgPatchPublicItemNotListed {
-    #[must_use]
-    pub fn new(classname: String, patch_type: PatchType, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
-        Self {
-            classname,
-            patch_type,
-            span,
-            severity,
-            diagnostic: None,
+        impl Code for $name {
+            fn ident(&self) -> &'static str {
+                $ident
+            }
+            fn link(&self) -> Option<&str> {
+                Some("/lints/config.html#cfgpatches_scope")
+            }
+            fn severity(&self) -> Severity {
+                self.severity
+            }
+            fn message(&self) -> String {
+                $message_fn(&self.classname, &self.patch_type)
+            }
+            fn label_message(&self) -> String {
+                $label_fn(&self.patch_type)
+            }
+            fn diagnostic(&self) -> Option<Diagnostic> {
+                self.diagnostic.clone()
+            }
         }
-        .generate_processed(processed)
-    }
-    fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
-        self
-    }
+
+        impl $name {
+            #[must_use]
+            pub fn new(
+                classname: String,
+                patch_type: PatchType,
+                span: Range<usize>,
+                processed: &Processed,
+                severity: Severity,
+            ) -> Self {
+                Self {
+                    classname,
+                    patch_type,
+                    span,
+                    severity,
+                    diagnostic: None,
+                }
+                .generate_processed(processed)
+            }
+            fn generate_processed(mut self, processed: &Processed) -> Self {
+                self.diagnostic =
+                    Diagnostic::from_code_processed(&self, self.span.clone(), processed);
+                self
+            }
+        }
+    };
 }
+
+define_cfgpatch_code!(
+    Code15CfgPatchItemNotFound,
+    "L-C15a",
+    |classname: &str, patch_type: &PatchType| format!(
+        "CfgPatches {}s[] class `{}` not found",
+        patch_type.singular(),
+        classname
+    ),
+    |patch_type: &PatchType| format!("not defined in {}", patch_type.base())
+);
+
+define_cfgpatch_code!(
+    Code15CfgPatchPublicItemNotListed,
+    "L-C15b",
+    |classname: &str, patch_type: &PatchType| format!(
+        "Public {} class `{}` not listed in CfgPatches",
+        patch_type.base(),
+        classname
+    ),
+    |patch_type: &PatchType| format!("has scope=2 but not in {}s[]", patch_type.singular())
+);
