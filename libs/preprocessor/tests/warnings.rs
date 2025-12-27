@@ -68,3 +68,4 @@ bootstrap!(pw1_redefine_stack);
 bootstrap!(pw3_padded_arg);
 bootstrap!(pw3_padded_arg_duplicates);
 bootstrap!(pw3_padded_arg_inner);
+bootstrap!(pw5_undef_not_defined);

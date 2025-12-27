@@ -21,6 +21,7 @@ use crate::{
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
         pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
+        pw5_undef_not_defined::UndefNotDefined,
     },
     defines::{DefineSource, Defines},
     ifstate::IfState,
@@ -336,7 +337,12 @@ impl Processor {
             return Err(ExpectedIdent::code(ident.as_ref().clone()));
         }
         let ident_string = ident.symbol().to_string();
-        self.defines.remove(&ident_string);
+        let rem = self.defines.remove(&ident_string);
+        if rem.is_none() {
+            self.warnings.push(Arc::new(UndefNotDefined::new(Box::new(
+                ident.as_ref().clone(),
+            ))));
+        }
         Self::expect_nothing_to_newline(stream)
     }
 

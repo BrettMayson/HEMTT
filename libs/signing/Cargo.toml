@@ -19,7 +19,9 @@ hemtt-pbo = { path = "../pbo" }
 byteorder = { workspace = true }
 crypto-bigint = { version = "0.7.0-rc.10", features = ["alloc"] }
 rand = "0.10.0-rc.5"
-rsa = "0.10.0-rc.10"
+rand_core = "=0.10.0-rc-2"
+chacha20 = "0.10.0-rc.5"
+rsa = "0.10.0-rc.8"
 sha-1 = { workspace = true }
 thiserror = { workspace = true }
 
