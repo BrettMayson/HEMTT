@@ -164,47 +164,6 @@ impl BIPrivateKey {
         })
     }
 
-    /// Reads an encrypted private key from the given input.
-    ///
-    /// # Errors
-    /// If the input fails to read or decrypt.
-    pub fn read_encrypted<I: Read>(input: &mut I, password: &str) -> Result<Self, Error> {
-        let mut data = Vec::new();
-        input.read_to_end(&mut data)?;
-        let decrypted = crate::encrypted::decrypt(&data, password)?;
-        let mut cursor = std::io::Cursor::new(decrypted);
-        Self::read(&mut cursor)
-    }
-
-    /// Write encrypted private key to output.
-    ///
-    /// # Errors
-    /// If the output fails to write or encryption fails.
-    pub fn write_encrypted<O: Write>(
-        &self,
-        output: &mut O,
-        password: &str,
-        kdf_params: KDFParams,
-    ) -> Result<(), Error> {
-        let mut buffer = Vec::new();
-        self.write_danger(&mut buffer)?;
-        let encrypted = crate::encrypted::encrypt(&buffer, password, kdf_params)?;
-        output.write_all(&encrypted)?;
-        Ok(())
-    }
-
-    /// Computes the validation hash of the private key.
-    ///
-    /// # Errors
-    /// If computing the hash fails.
-    pub fn validation_hash(&self) -> Result<String, Error> {
-        let public_key = self.to_public_key();
-        let hash_bytes = public_key.hash()?;
-        Ok(BoxedUint::from_be_slice_vartime(&hash_bytes)
-            .to_string_radix_vartime(16)
-            .to_lowercase())
-    }
-
     /// Sign a PBO.
     ///
     /// # Errors
@@ -262,5 +221,79 @@ impl BIPrivateKey {
         super::write_boxeduint(output, &self.d, (self.length / 8) as usize)?;
         // output.write_all(&self.d.to_bytes_le())?;
         Ok(())
+    }
+}
+
+pub struct HEMTTPrivateKey {
+    pub bi: BIPrivateKey,
+    pub prefix: String,
+    pub git_hash: String,
+    pub project: String,
+}
+
+impl HEMTTPrivateKey {
+    /// Reads an encrypted private key from the given input.
+    ///
+    /// # Errors
+    /// If the input fails to read or decrypt.
+    ///
+    /// # Panics
+    /// If the version is not 1.
+    pub fn read_encrypted<I: Read>(input: &mut I, password: &str) -> Result<Self, Error> {
+        let mut data = Vec::new();
+        input.read_to_end(&mut data)?;
+        let decrypted = crate::encrypted::decrypt(&data, password)?;
+        let mut cursor = std::io::Cursor::new(decrypted);
+        let mut magic = [0u8; 5];
+        cursor.read_exact(&mut magic)?;
+        if &magic != b"hmtpk" {
+            return Err(Error::InvalidMagic);
+        }
+        let version = cursor.read_u32::<LittleEndian>()?;
+        assert_eq!(version, 1);
+        let prefix = cursor.read_cstring()?;
+        let git_hash = cursor.read_cstring()?;
+        let project = cursor.read_cstring()?;
+        let bi = BIPrivateKey::read(&mut cursor)?;
+        Ok(Self {
+            bi,
+            prefix,
+            git_hash,
+            project,
+        })
+    }
+
+    /// Write encrypted private key to output.
+    ///
+    /// # Errors
+    /// If the output fails to write or encryption fails.
+    pub fn write_encrypted<O: Write>(
+        &self,
+        output: &mut O,
+        password: &str,
+        kdf_params: KDFParams,
+    ) -> Result<(), Error> {
+        let mut buffer = Vec::new();
+        buffer.write_all(b"hmtpk")?; // magic header
+        buffer.write_u32::<LittleEndian>(1)?; // version
+        buffer.write_cstring(&self.prefix)?;
+        buffer.write_cstring(&self.git_hash)?;
+        buffer.write_cstring(&self.project)?;
+        self.bi.write_danger(&mut buffer)?;
+        let encrypted = crate::encrypted::encrypt(&buffer, password, kdf_params)?;
+        output.write_all(&encrypted)?;
+        Ok(())
+    }
+
+    /// Computes the validation hash of the private key.
+    ///
+    /// # Errors
+    /// If computing the hash fails.
+    pub fn validation_hash(&self) -> Result<String, Error> {
+        let public_key = self.bi.to_public_key();
+        let hash_bytes = public_key.hash()?;
+        Ok(BoxedUint::from_be_slice_vartime(&hash_bytes)
+            .to_string_radix_vartime(16)
+            .to_lowercase())
     }
 }

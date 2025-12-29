@@ -26,7 +26,7 @@ mod signature;
 
 pub use encrypted::KDFParams;
 pub use error::Error;
-pub use private::BIPrivateKey;
+pub use private::{BIPrivateKey, HEMTTPrivateKey};
 pub use public::BIPublicKey;
 pub use signature::BISign;
 

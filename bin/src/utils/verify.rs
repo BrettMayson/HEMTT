@@ -89,6 +89,9 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         Err(hemtt_signing::Error::HashMismatch { .. }) => {
             error!("Verification Failed: Signature does not match");
         }
+        Err(hemtt_signing::Error::InvalidMagic) => {
+            error!("Verification Failed: Invalid private key format");
+        }
         Err(hemtt_signing::Error::UknownBISignVersion(v)) => {
             error!("Verification Failed: Unknown BI Signature Version: {v}");
         }

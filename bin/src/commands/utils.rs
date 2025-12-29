@@ -18,7 +18,6 @@ enum Subcommands {
     Config(utils::config::Command),
     Fnl(utils::fnl::Command),
     Inspect(utils::inspect::Command),
-    Keys(utils::keys::Command),
     P3d(utils::p3d::Command),
     Paa(utils::paa::Command),
     Pbo(utils::pbo::Command),
@@ -46,9 +45,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
         Subcommands::Inspect(cmd) => {
             utils::inspect::execute(cmd)?;
-        }
-        Subcommands::Keys(cmd) => {
-            utils::keys::execute(cmd)?;
         }
         Subcommands::P3d(cmd) => {
             utils::p3d::execute(cmd)?;

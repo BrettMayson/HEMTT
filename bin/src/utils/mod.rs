@@ -3,7 +3,6 @@ pub mod bom;
 pub mod config;
 pub mod fnl;
 pub mod inspect;
-pub mod keys;
 pub mod p3d;
 pub mod paa;
 pub mod pbo;

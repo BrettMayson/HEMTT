@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use fs_err::File;
 use hemtt_common::prefix::FILES;
 use hemtt_pbo::ReadablePbo;
-use hemtt_signing::BIPrivateKey;
+use hemtt_signing::{BIPrivateKey, HEMTTPrivateKey};
 use hemtt_workspace::{
     addons::Location,
     reporting::{Code, Diagnostic},
@@ -37,10 +37,7 @@ impl Module for Sign {
         let mut report = Report::new();
 
         if let Some(hash) = ctx.config().signing().private_key_hash() {
-            let Some(authority) = ctx.config().signing().authority() else {
-                error!("Signing authority must be set when using a private key hash");
-                std::process::exit(1);
-            };
+            let authority = get_authority(ctx, None)?;
             let key_path = ctx
                 .project_folder()
                 .join(format!("{authority}.hemttprivatekey"));
@@ -58,7 +55,20 @@ impl Module for Sign {
             let password = dialoguer::Password::new()
                 .with_prompt("Enter password to decrypt private key")
                 .interact()?;
-            let key = BIPrivateKey::read_encrypted(&mut fs_err::File::open(&key_path)?, &password)?;
+            let key =
+                HEMTTPrivateKey::read_encrypted(&mut fs_err::File::open(&key_path)?, &password)?;
+            if key.prefix != ctx.config().prefix() {
+                error!("Private key prefix does not match the project prefix");
+                std::process::exit(1);
+            }
+            if key.project != ctx.config().name() {
+                error!("Private key project does not match the project name");
+                std::process::exit(1);
+            }
+            if key.git_hash != get_git_first_hash()? {
+                error!("Private key git hash does not match the project's first commit hash");
+                std::process::exit(1);
+            }
             if key.validation_hash()? != hash {
                 error!("Private key validation hash does not match the expected value");
                 std::process::exit(1);
@@ -176,19 +186,38 @@ impl Module for Sign {
 }
 
 pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Error> {
-    let mut authority = format!(
-        "{}_{}",
-        ctx.config().signing().authority().map_or_else(
-            || ctx.config().prefix().to_string(),
-            std::string::ToString::to_string
-        ),
-        ctx.config().version().get(ctx.workspace_path().vfs())?
+    let config_authority = ctx.config().signing().authority().map_or_else(
+        || ctx.config().prefix().to_string(),
+        std::string::ToString::to_string,
     );
+    let mut authority = if ctx.config().signing().private_key_hash().is_some() {
+        config_authority
+    } else {
+        format!(
+            "{}_{}",
+            config_authority,
+            ctx.config().version().get(ctx.workspace_path().vfs())?
+        )
+    };
     if let Some(suffix) = suffix {
         authority.push('_');
         authority.push_str(suffix);
     }
     Ok(authority)
+}
+
+pub fn get_git_first_hash() -> Result<String, Error> {
+    let repo = git2::Repository::discover(".")?;
+    // get the hash of the first commit
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push_head()?;
+    let first_commit = revwalk.last().ok_or_else(|| {
+        Error::Io(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "repository has no commits",
+        ))
+    })??;
+    Ok(first_commit.to_string())
 }
 
 pub struct EmptyAddon {
