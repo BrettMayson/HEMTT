@@ -2,6 +2,7 @@ use git2::Repository;
 
 use crate::{Error, context::Context, modules::Module, report::Report};
 
+#[derive(Default)]
 pub struct Git;
 impl Module for Git {
     fn name(&self) -> &'static str {
