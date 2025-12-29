@@ -56,18 +56,38 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
                 std::string::ToString::to_string,
             );
 
-            let hemtt_private_key = HEMTTPrivateKey {
-                bi: BIPrivateKey::generate(1024, &authority)?,
-                project: ctx.config().name().to_string(),
-                prefix: ctx.config().prefix().to_string(),
-                git_hash: get_git_first_hash()?,
-            };
-
             let output = format!("{authority}.hemttprivatekey");
             if std::path::Path::new(&output).exists() {
                 error!("Output file {output} already exists. Aborting to prevent overwrite.");
                 std::process::exit(1);
             }
+
+            warn!("Generating HEMTT private keys is for specific use cases only.");
+            warn!("In nearly all cases, you should not use this command.");
+            dialoguer::Confirm::new()
+                .with_prompt("I fully understand the risks of using private keys")
+                .default(true)
+                .interact()?;
+
+            let git_hash = get_git_first_hash()?;
+            println!("Project:   {}", ctx.config().name());
+            println!("Prefix:    {}", ctx.config().prefix());
+            println!("Git:       {git_hash}");
+            println!("Authority: {authority}");
+            println!();
+            warn!("The generated key will be usable ONLY with this project");
+            dialoguer::Confirm::new()
+                .with_prompt("Confirm")
+                .default(false)
+                .interact()?;
+
+            let hemtt_private_key = HEMTTPrivateKey {
+                bi: BIPrivateKey::generate(1024, &authority)?,
+                project: ctx.config().name().to_string(),
+                prefix: ctx.config().prefix().to_string(),
+                git_hash,
+            };
+
             let kdf_params = KDFParams {
                 mem_cost_kib: cmd.mem_cost_mib * 1024,
                 iterations: cmd.iterations,
