@@ -305,5 +305,5 @@ define_cfgpatch_code!(
         patch_type.base(),
         classname
     ),
-    |patch_type: &PatchType| format!("has scope=2 but not in {}s[]", patch_type.singular())
+    |patch_type: &PatchType| format!("not in {}s[]", patch_type.singular())
 );
