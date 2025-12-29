@@ -187,7 +187,7 @@ impl Inspector {
                 && !holder.source.skip_errors()
                 && !self.ignored_vars.contains(&var)
             {
-                self.errors.insert(Issue::Unused(var, holder.source));
+                self.errors.insert(Issue::Unused(var, holder.source, false));
             }
         }
         let mut returns_set = self
@@ -241,16 +241,36 @@ impl Inspector {
                     source.get_range().unwrap_or_default(),
                 ));
             }
-        } else if local {
-            // Only check shadowing inside the same scope-level (could make an option)
-            if stack_level_search.unwrap_or_default() == 0 && !source.skip_errors() {
-                self.errors.insert(Issue::Shadowed(
+        } else if !local {
+            stack_level -= stack_level_search.unwrap_or_default();
+        }
+        // If we are writing to a variable at our current level
+        let error_opt: Option<Issue> = if stack_level_search == Some(0)
+            && !source.skip_errors()
+            && let Some(current_vars) = self.active_scope().vars_local.last()
+            && let Some(existing_var) = current_vars.get(&var_lower)
+            && !existing_var.source.skip_errors()
+        {
+            if existing_var.usage == 0 && !matches!(existing_var.source, VarSource::Private(_)) {
+                Some(Issue::Unused(
+                    var.to_owned(),
+                    existing_var.source.clone(),
+                    true, // overwritten before use
+                ))
+            } else if local {
+                // shadowed (only at same level and not also unused)
+                Some(Issue::Shadowed(
                     var.to_owned(),
                     source.get_range().unwrap_or_default(),
-                ));
+                ))
+            } else {
+                None
             }
         } else {
-            stack_level -= stack_level_search.unwrap_or_default();
+            None
+        };
+        if let Some(error) = error_opt {
+            self.errors.insert(error);
         }
         let vars_local = &mut self.active_scope().vars_local;
         let holder = vars_local[stack_level]
@@ -324,9 +344,7 @@ impl Inspector {
         result_set: &IndexSet<GameValue>,
     ) {
         // there should never be any valid reason to have these as inputs
-        if result_set.contains(&GameValue::Nothing(NilSource::CommandReturn)) // EmptyStack has false positives on {} default
-            || result_set.contains(&GameValue::Assignment)
-        {
+        if result_set.iter().any(GameValue::is_poison_nil) {
             self.errors.insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
                 span: source.clone(),
@@ -552,7 +570,7 @@ impl Inspector {
                             Some(self.cmd_b_do(&lhs_set, &rhs_set, database))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
-                        "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set, database)),
+                        "then" => Some(self.cmd_b_then(rhs, &rhs_set, database)),
                         "foreach" | "foreachreversed" => {
                             let mut magic = vec![
                                 ("_x", GameValue::get_array_value_type(&rhs_set)),
@@ -665,6 +683,7 @@ impl Inspector {
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
+                    self.eval_check_bad_args("=", source, expression, &possible_values);
                     self.var_assign(
                         var,
                         false,
@@ -683,6 +702,7 @@ impl Inspector {
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
+                    self.eval_check_bad_args("=", source, expression, &possible_values);
                     self.var_assign(
                         var,
                         true,
