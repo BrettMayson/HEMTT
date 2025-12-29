@@ -19,7 +19,7 @@ impl Lint<LintData> for LintC15CfgPatchesScope {
         150
     }
     fn description(&self) -> &'static str {
-        "Reports on CfgPatches entries that do not match public items in CfgVehicles and CfgWeapons. This ensures items are available in zeus."
+        "Reports on CfgPatches entries that do not match public items in CfgVehicles and CfgWeapons. This ensures items are available in Zeus."
     }
     fn documentation(&self) -> &'static str {
         r#"### Example
