@@ -13,11 +13,24 @@ struct EncryptedBlob {
     salt: Vec<u8>,
     nonce: [u8; 12],
     ciphertext: Vec<u8>,
+    kdf_params: KDFParams,
+}
 
-    // KDF params
-    mem_cost_kib: u32,
-    iterations: u32,
-    parallelism: u32,
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct KDFParams {
+    pub mem_cost_kib: u32,
+    pub iterations: u32,
+    pub parallelism: u32,
+}
+
+impl Default for KDFParams {
+    fn default() -> Self {
+        Self {
+            mem_cost_kib: 64 * 1024,
+            iterations: 4,
+            parallelism: 1,
+        }
+    }
 }
 
 fn derive_key_from_password(
@@ -58,15 +71,17 @@ fn derive_key_from_password(
     Ok(key)
 }
 
-/// Encrypts the private key bytes and writes them to disk.
-pub fn encrypt(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
-    let mem_cost_kib = 64 * 1024;
-    let iterations = 5;
-    let parallelism = 1;
-
+/// Encrypts the data with the given password.
+pub fn encrypt(data: &[u8], password: &str, kdf_params: KDFParams) -> Result<Vec<u8>, Error> {
     let salt: [u8; 16] = rand::random();
 
-    let key = derive_key_from_password(password, &salt, mem_cost_kib, iterations, parallelism)?;
+    let key = derive_key_from_password(
+        password,
+        &salt,
+        kdf_params.mem_cost_kib,
+        kdf_params.iterations,
+        kdf_params.parallelism,
+    )?;
 
     let cipher = ChaCha20Poly1305::new(&key);
     let nonce = rand::random::<[u8; 12]>();
@@ -88,9 +103,7 @@ pub fn encrypt(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
         salt: salt.to_vec(),
         nonce,
         ciphertext,
-        mem_cost_kib,
-        iterations,
-        parallelism,
+        kdf_params,
     };
 
     bincode::serialize(&blob).map_err(|e| {
@@ -101,7 +114,7 @@ pub fn encrypt(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
     })
 }
 
-/// Reads and decrypts the key file from disk.
+/// Decrypts the data with the given password.
 pub fn decrypt(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
     let blob: EncryptedBlob = bincode::deserialize(data).map_err(|e| {
         Error::Io(Box::new(std::io::Error::new(
@@ -113,9 +126,9 @@ pub fn decrypt(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
     let key = derive_key_from_password(
         password,
         &blob.salt,
-        blob.mem_cost_kib,
-        blob.iterations,
-        blob.parallelism,
+        blob.kdf_params.mem_cost_kib,
+        blob.kdf_params.iterations,
+        blob.kdf_params.parallelism,
     )?;
 
     let cipher = ChaCha20Poly1305::new(&key);
@@ -145,12 +158,18 @@ mod tests {
     fn test_encrypt_decrypt() {
         let password = "testpassword";
         let data = b"this is a test private key";
-        let start = std::time::Instant::now();
-        let encrypted = encrypt(data, password).expect("encryption failed");
-        println!("Encryption took {:?}", start.elapsed());
-        let start = std::time::Instant::now();
+        let encrypted = encrypt(data, password, KDFParams::default()).expect("encryption failed");
         let decrypted = decrypt(&encrypted, password).expect("decryption failed");
-        println!("Decryption took {:?}", start.elapsed());
         assert_eq!(data.to_vec(), decrypted);
+    }
+
+    #[test]
+    fn test_decrypt_wrong_password() {
+        let password = "testpassword";
+        let wrong_password = "wrongpassword";
+        let data = b"this is a test private key";
+        let encrypted = encrypt(data, password, KDFParams::default()).expect("encryption failed");
+        let result = decrypt(&encrypted, wrong_password);
+        assert!(result.is_err());
     }
 }

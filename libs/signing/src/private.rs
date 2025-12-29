@@ -8,7 +8,10 @@ use rsa::{
     traits::{PrivateKeyParts, PublicKeyParts},
 };
 
-use crate::{error::Error, generate_hashes, modpow, public::BIPublicKey, signature::BISign};
+use crate::{
+    encrypted::KDFParams, error::Error, generate_hashes, modpow, public::BIPublicKey,
+    signature::BISign,
+};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
@@ -177,10 +180,15 @@ impl BIPrivateKey {
     ///
     /// # Errors
     /// If the output fails to write or encryption fails.
-    pub fn write_encrypted<O: Write>(&self, output: &mut O, password: &str) -> Result<(), Error> {
+    pub fn write_encrypted<O: Write>(
+        &self,
+        output: &mut O,
+        password: &str,
+        kdf_params: KDFParams,
+    ) -> Result<(), Error> {
         let mut buffer = Vec::new();
         self.write_danger(&mut buffer)?;
-        let encrypted = crate::encrypted::encrypt(&buffer, password)?;
+        let encrypted = crate::encrypted::encrypt(&buffer, password, kdf_params)?;
         output.write_all(&encrypted)?;
         Ok(())
     }

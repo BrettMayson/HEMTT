@@ -1,6 +1,6 @@
 use std::io::{Read, Write};
 
-use hemtt_signing::BIPrivateKey;
+use hemtt_signing::{BIPrivateKey, KDFParams};
 use rand::{Rng as _, distr::Alphanumeric};
 
 use crate::Error;
@@ -11,6 +11,15 @@ use crate::Error;
 pub struct Command {
     #[command(subcommand)]
     commands: Subcommands,
+    /// KDF memory cost in MiB
+    #[arg(long, default_value_t = default_mem_cost_mib())]
+    mem_cost_mib: u32,
+    /// KDF iterations
+    #[arg(long, default_value_t = default_iterations())]
+    iterations: u32,
+    /// KDF parallelism
+    #[arg(long, default_value_t = default_parallelism())]
+    parallelism: u32,
 }
 
 #[derive(clap::Subcommand)]
@@ -29,6 +38,18 @@ pub enum Subcommands {
         /// Output file for the converted .hemttprivatekey
         output: Option<String>,
     },
+}
+
+fn default_mem_cost_mib() -> u32 {
+    KDFParams::default().mem_cost_kib / 1024
+}
+
+fn default_iterations() -> u32 {
+    KDFParams::default().iterations
+}
+
+fn default_parallelism() -> u32 {
+    KDFParams::default().parallelism
 }
 
 /// Execute the keys command
@@ -62,10 +83,15 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         error!("Output file {output} already exists. Aborting to prevent overwrite.");
         std::process::exit(1);
     }
+    let kdf_params = KDFParams {
+        mem_cost_kib: cmd.mem_cost_mib * 1024,
+        iterations: cmd.iterations,
+        parallelism: cmd.parallelism,
+    };
     let password = generate_password();
     let mut output = fs_err::File::create(output)?;
     let private_key = private_key?;
-    private_key.write_encrypted(&mut output, &password)?;
+    private_key.write_encrypted(&mut output, &password, kdf_params)?;
 
     // Add to .gitignore if not already present
     let gitignore_path = std::path::Path::new(".gitignore");

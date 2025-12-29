@@ -24,6 +24,7 @@ mod private;
 mod public;
 mod signature;
 
+pub use encrypted::KDFParams;
 pub use error::Error;
 pub use private::BIPrivateKey;
 pub use public::BIPublicKey;
