@@ -18,6 +18,7 @@ use hemtt_pbo::ReadablePbo;
 use rsa::BoxedUint;
 use sha1::{Digest, Sha1};
 
+mod encrypted;
 mod error;
 mod private;
 mod public;

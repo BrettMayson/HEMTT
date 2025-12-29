@@ -1,5 +1,6 @@
 use crate::error::Error;
 
+use crate::modules::git::Git;
 use crate::report::Report;
 use crate::{
     context::Context,
@@ -18,7 +19,7 @@ impl Executor {
     pub fn new(ctx: Context) -> Self {
         Self {
             ctx,
-            modules: Vec::new(),
+            modules: vec![Box::new(Git)],
             collapse: Collapse::Yes,
             stages: Vec::new(),
         }

@@ -27,6 +27,18 @@ pub struct BIPrivateKey {
 }
 
 impl BIPrivateKey {
+    #[must_use]
+    /// Returns the authority name of the private key.
+    pub fn authority(&self) -> &str {
+        &self.authority
+    }
+
+    #[must_use]
+    /// Returns the length of the private key in bits.
+    pub const fn length(&self) -> u32 {
+        self.length
+    }
+
     // It won't panic, but clippy doesn't know that.
     // If the precompute fails it return at that point, and won't reach the unwraps.
     #[allow(clippy::missing_panics_doc)]
@@ -147,6 +159,42 @@ impl BIPrivateKey {
             qinv,
             d,
         })
+    }
+
+    /// Reads an encrypted private key from the given input.
+    ///
+    /// # Errors
+    /// If the input fails to read or decrypt.
+    pub fn read_encrypted<I: Read>(input: &mut I, password: &str) -> Result<Self, Error> {
+        let mut data = Vec::new();
+        input.read_to_end(&mut data)?;
+        let decrypted = crate::encrypted::decrypt(&data, password)?;
+        let mut cursor = std::io::Cursor::new(decrypted);
+        Self::read(&mut cursor)
+    }
+
+    /// Write encrypted private key to output.
+    ///
+    /// # Errors
+    /// If the output fails to write or encryption fails.
+    pub fn write_encrypted<O: Write>(&self, output: &mut O, password: &str) -> Result<(), Error> {
+        let mut buffer = Vec::new();
+        self.write_danger(&mut buffer)?;
+        let encrypted = crate::encrypted::encrypt(&buffer, password)?;
+        output.write_all(&encrypted)?;
+        Ok(())
+    }
+
+    /// Computes the validation hash of the private key.
+    ///
+    /// # Errors
+    /// If computing the hash fails.
+    pub fn validation_hash(&self) -> Result<String, Error> {
+        let public_key = self.to_public_key();
+        let hash_bytes = public_key.hash()?;
+        Ok(BoxedUint::from_be_slice_vartime(&hash_bytes)
+            .to_string_radix_vartime(16)
+            .to_lowercase())
     }
 
     /// Sign a PBO.

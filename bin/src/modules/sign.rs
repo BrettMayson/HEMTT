@@ -1,7 +1,6 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use fs_err::File;
-use git2::Repository;
 use hemtt_common::prefix::FILES;
 use hemtt_pbo::ReadablePbo;
 use hemtt_signing::BIPrivateKey;
@@ -16,11 +15,16 @@ use crate::{context::Context, error::Error, report::Report};
 use super::Module;
 
 #[derive(Debug, Default)]
-pub struct Sign;
+pub struct Sign {
+    reused_key: Mutex<Option<BIPrivateKey>>,
+}
+
 impl Sign {
     #[must_use]
     pub const fn new() -> Self {
-        Self
+        Self {
+            reused_key: Mutex::new(None),
+        }
     }
 }
 
@@ -30,11 +34,36 @@ impl Module for Sign {
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
-        if ctx.config().version().git_hash().is_some() {
-            Repository::discover(".")?;
-        }
-
         let mut report = Report::new();
+
+        if let Some(hash) = ctx.config().signing().private_key_hash() {
+            let Some(authority) = ctx.config().signing().authority() else {
+                error!("Signing authority must be set when using a private key hash");
+                std::process::exit(1);
+            };
+            let key_path = ctx
+                .project_folder()
+                .join(format!("{authority}.hemttprivatekey"));
+            if !key_path.exists() {
+                error!("Private key file `{}` does not exist", key_path.display());
+                std::process::exit(1);
+            }
+            if crate::is_ci() {
+                error!(
+                    "Private key file `{}` should not be present in CI environments",
+                    key_path.display()
+                );
+                std::process::exit(1);
+            }
+            let password = dialoguer::Password::new()
+                .with_prompt("Enter password to decrypt private key")
+                .interact()?;
+            let key = BIPrivateKey::read_encrypted(&mut fs_err::File::open(&key_path)?, &password)?;
+            if key.validation_hash()? != hash {
+                error!("Private key validation hash does not match the expected value");
+                std::process::exit(1);
+            }
+        }
 
         ctx.addons().to_vec().iter().for_each(|addon| {
             let entries = fs_err::read_dir(addon.folder())
@@ -62,8 +91,15 @@ impl Module for Sign {
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
-        let authority = get_authority(ctx, None)?;
-        let addons_key = BIPrivateKey::generate(1024, &authority)?;
+        let reused_key = self.reused_key.lock().expect("mutex poisoned");
+        let (addons_key, authority) = if let Some(key) = reused_key.clone() {
+            let authority = key.authority().to_string();
+            (key, authority)
+        } else {
+            let authority = get_authority(ctx, None)?;
+            (BIPrivateKey::generate(1024, &authority)?, authority)
+        };
+        drop(reused_key);
         fs_err::create_dir_all(
             ctx.build_folder()
                 .expect("build folder exists")

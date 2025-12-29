@@ -8,6 +8,8 @@ pub struct SigningConfig {
     version: BISignVersion,
 
     authority: Option<String>,
+
+    private_key_hash: Option<String>,
 }
 
 impl SigningConfig {
@@ -18,6 +20,10 @@ impl SigningConfig {
     pub fn authority(&self) -> Option<&str> {
         self.authority.as_deref()
     }
+
+    pub fn private_key_hash(&self) -> Option<&str> {
+        self.private_key_hash.as_deref()
+    }
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -27,6 +33,9 @@ pub struct SigningSectionFile {
 
     #[serde(default)]
     authority: Option<String>,
+
+    #[serde(default)]
+    private_key_hash: Option<String>,
 }
 
 impl From<SigningSectionFile> for SigningConfig {
@@ -34,6 +43,7 @@ impl From<SigningSectionFile> for SigningConfig {
         Self {
             version: file.version.unwrap_or_default(),
             authority: file.authority,
+            private_key_hash: file.private_key_hash,
         }
     }
 }
@@ -47,11 +57,13 @@ mod tests {
         let toml = r#"
 version = 2
 authority = "test"
+private_key_hash = "abcd1234"
 "#;
         let file: SigningSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = SigningConfig::from(file);
         assert_eq!(config.version(), BISignVersion::V2);
         assert_eq!(config.authority(), Some("test"));
+        assert_eq!(config.private_key_hash(), Some("abcd1234"));
     }
 
     #[test]
