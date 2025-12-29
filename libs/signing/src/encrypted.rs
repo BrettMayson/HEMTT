@@ -23,6 +23,17 @@ pub struct KDFParams {
     pub parallelism: u32,
 }
 
+impl KDFParams {
+    #[must_use]
+    /// Does the KDF params meet minimum security requirements (defaults)?
+    pub fn is_secure(&self) -> bool {
+        let defaults = Self::default();
+        self.mem_cost_kib >= defaults.mem_cost_kib
+            && self.iterations >= defaults.iterations
+            && self.parallelism >= defaults.parallelism
+    }
+}
+
 impl Default for KDFParams {
     fn default() -> Self {
         Self {
@@ -74,6 +85,13 @@ fn derive_key_from_password(
 /// Encrypts the data with the given password.
 pub fn encrypt(data: &[u8], password: &str, kdf_params: KDFParams) -> Result<Vec<u8>, Error> {
     let salt: [u8; 16] = rand::random();
+
+    if !kdf_params.is_secure() {
+        return Err(Error::Io(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "KDF parameters do not meet minimum security requirements (can only be set to higher than the defaults)",
+        ))));
+    }
 
     let key = derive_key_from_password(
         password,
