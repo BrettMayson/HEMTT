@@ -70,8 +70,8 @@ impl LintRunner<LintData> for Runner {
         let mut codes: Codes = Vec::new();
 
         let mut check_prefixes = Vec::new();
-        if let Some(toml::Value::Array(ignore)) = config.option("check_prefixes") {
-            for item in ignore {
+        if let Some(toml::Value::Array(prefixes)) = config.option("check_prefixes") {
+            for item in prefixes {
                 if let toml::Value::String(s) = item {
                     check_prefixes.push(s.to_lowercase());
                 }
