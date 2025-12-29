@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use fs_err::File;
 use hemtt_common::prefix::FILES;
@@ -16,14 +16,14 @@ use super::Module;
 
 #[derive(Debug, Default)]
 pub struct Sign {
-    reused_key: Mutex<Option<BIPrivateKey>>,
+    reused_key: RwLock<Option<BIPrivateKey>>,
 }
 
 impl Sign {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            reused_key: Mutex::new(None),
+            reused_key: RwLock::new(None),
         }
     }
 }
@@ -73,6 +73,7 @@ impl Module for Sign {
                 error!("Private key validation hash does not match the expected value");
                 std::process::exit(1);
             }
+            *self.reused_key.write().expect("rwlock poisoned") = Some(key.bi);
         }
 
         ctx.addons().to_vec().iter().for_each(|addon| {
@@ -101,7 +102,7 @@ impl Module for Sign {
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
-        let reused_key = self.reused_key.lock().expect("mutex poisoned");
+        let reused_key = self.reused_key.read().expect("rwlock poisoned");
         let (addons_key, authority) = if let Some(key) = reused_key.clone() {
             let authority = key.authority().to_string();
             (key, authority)
@@ -143,8 +144,16 @@ impl Module for Sign {
                 Location::Optionals => {
                     let (mut target_pbo, key, authority) =
                         if ctx.config().hemtt().build().optional_mod_folders() {
-                            let authority = get_authority(ctx, Some(&pbo_name))?;
-                            let key = BIPrivateKey::generate(1024, &authority)?;
+                            let (key, authority) = {
+                                let reused_key = self.reused_key.read().expect("rwlock poisoned");
+                                if let Some(key) = reused_key.clone() {
+                                    let authority = key.authority().to_string();
+                                    (key, authority)
+                                } else {
+                                    let authority = get_authority(ctx, Some(&pbo_name))?;
+                                    (BIPrivateKey::generate(1024, &authority)?, authority)
+                                }
+                            };
                             let mod_root = ctx
                                 .build_folder()
                                 .expect("build folder exists")
