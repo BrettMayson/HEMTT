@@ -108,7 +108,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
             .append(true)
             .create(true)
             .open(gitignore_path)?;
-        gitignore_file.write_all(format!("{gitignore_entry}\n").as_bytes())?;
+        gitignore_file.write_all(format!("\n{gitignore_entry}\n").as_bytes())?;
         println!(".gitignore updated to exclude HEMTT private keys");
     }
 
