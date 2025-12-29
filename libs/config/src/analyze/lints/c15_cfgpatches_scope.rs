@@ -288,7 +288,7 @@ macro_rules! define_cfgpatch_code {
 
 define_cfgpatch_code!(
     Code15CfgPatchItemNotFound,
-    "L-C15a",
+    "L-C15-MISSING-CLASS",
     |classname: &str, patch_type: &PatchType| format!(
         "CfgPatches {}s[] class `{}` not found",
         patch_type.singular(),
