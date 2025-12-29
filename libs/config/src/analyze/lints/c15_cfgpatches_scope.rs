@@ -299,7 +299,7 @@ define_cfgpatch_code!(
 
 define_cfgpatch_code!(
     Code15CfgPatchPublicItemNotListed,
-    "L-C15b",
+    "L-C15-NOT-IN-PATCHES",
     |classname: &str, patch_type: &PatchType| format!(
         "Public {} class `{}` not listed in CfgPatches",
         patch_type.base(),
