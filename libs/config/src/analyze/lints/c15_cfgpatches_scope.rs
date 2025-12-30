@@ -33,6 +33,8 @@ class CfgPatches {
 class CfgVehicles {
     class MyVehicle { scope = 2; }; // Not in CfgPatches's units[]
 };
+```
+
 ### Configuration
 
 - **check_prefixes**: only consider classes that start with any of these prefixes
@@ -41,11 +43,16 @@ By default it will only check classnames that start with the project's prefix. U
 ```toml
 [lints.config.cfgpatches_scope]
 options.check_prefixes = ["abe", "abx"]
+```
 
+### Explanation
+
+Items need to be listed in CfgPatches to be available in Zeus.
+Check [the wiki](https://community.bistudio.com/wiki/CfgPatches).
 "#
     }
     fn default_config(&self) -> LintConfig {
-        LintConfig::warning().with_enabled(hemtt_common::config::LintEnabled::Pedantic)
+        LintConfig::warning()
     }
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
@@ -88,8 +95,8 @@ impl LintRunner<LintData> for Runner {
         let fnc_should_check = |name: &str| accept_all || check_prefixes.iter().any(|p| name.starts_with(p));
 
         // Check for public items not listed in CfgPatches (that start with project's prefix)
-        for (unit, (public, span, _, _)) in &all_vehicles {
-            if *public && !patch_units.contains_key(unit) && fnc_should_check(unit) {
+        for (unit, (expected, span, _, _)) in &all_vehicles {
+            if *expected && !patch_units.contains_key(unit) && fnc_should_check(unit) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
                     unit.clone(),
                     PatchType::Vehicle,
@@ -99,8 +106,8 @@ impl LintRunner<LintData> for Runner {
                 )));
             }
         }
-        for (weapon, (public, span, _, _)) in &all_weapons {
-            if *public && !patch_weapons.contains_key(weapon) && fnc_should_check(weapon) {
+        for (weapon, (expected, span, _, _)) in &all_weapons {
+            if *expected && !patch_weapons.contains_key(weapon) && fnc_should_check(weapon) {
                 codes.push(Arc::new(Code15CfgPatchPublicItemNotListed::new(
                     weapon.clone(),
                     PatchType::Weapon,
@@ -138,7 +145,7 @@ impl LintRunner<LintData> for Runner {
 }
 
 type DefinedMap = IndexMap<String, (bool, Range<usize>, Option<i32>, Option<i32>)>;
-fn get_defined(base_path: &str, target: &Config) -> DefinedMap  {
+fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
     fn get_number(properties: &[Property], key: &str) -> Option<i32> {
         if let Some(property) = properties.iter().find(|p| p.name().value.eq_ignore_ascii_case(key))
             && let Property::Entry { value, .. } = property
@@ -161,15 +168,22 @@ fn get_defined(base_path: &str, target: &Config) -> DefinedMap  {
                 continue;
             };
             let name_lower = name.as_str().to_ascii_lowercase();
-            let (parent_scope, parent_scope_curator) = parent.as_ref().map_or((None, None), |parent| {
-                let parent_lower = parent.as_str().to_ascii_lowercase();
-                defined.get(&parent_lower).map_or((None, None), |parent_def| (parent_def.2, parent_def.3))
-            });
-            
+            let (parent_scope, parent_scope_curator) =
+                parent.as_ref().map_or((None, None), |parent| {
+                    let parent_lower = parent.as_str().to_ascii_lowercase();
+                    defined
+                        .get(&parent_lower)
+                        .map_or((None, None), |parent_def| (parent_def.2, parent_def.3))
+                });
+
             let cfg_scope = get_number(properties, "scope").or(parent_scope);
             let cfg_scope_curator = get_number(properties, "scopeCurator").or(parent_scope_curator);
-            let public_known = cmp::max(cfg_scope.unwrap_or(0), cfg_scope_curator.unwrap_or(0)) > 1 && cfg_scope_curator.is_none_or(|c| c > 1);
-            defined.insert(name_lower, (public_known, name.span(), cfg_scope, cfg_scope_curator));
+            // An item would show if scope or scopeCurator is 2, and scopeCurator is not defined less than 2
+            // our logic will ignore the explicit combo of [scopeCurator=2,scope=1] to reduce false positives
+            let expected = cmp::max(cfg_scope.unwrap_or(0), cfg_scope_curator.unwrap_or(0)) > 1
+                && cfg_scope_curator.is_none_or(|c| c > 1)
+                && cfg_scope.is_none_or(|c| c > 1);
+            defined.insert(name_lower, (expected, name.span(), cfg_scope, cfg_scope_curator));
         }
     }
     defined
@@ -229,7 +243,7 @@ impl PatchType {
 }
 
 macro_rules! define_cfgpatch_code {
-    ($name:ident, $ident:expr, $message_fn:expr, $label_fn:expr) => {
+    ($name:ident, $ident:expr, $message_fn:expr, $label_fn:expr, $note:expr) => {
         pub struct $name {
             classname: String,
             patch_type: PatchType,
@@ -256,6 +270,9 @@ macro_rules! define_cfgpatch_code {
             }
             fn diagnostic(&self) -> Option<Diagnostic> {
                 self.diagnostic.clone()
+            }
+            fn note(&self) -> Option<String> {
+                Some(String::from($note))
             }
         }
 
@@ -294,7 +311,8 @@ define_cfgpatch_code!(
         patch_type.singular(),
         classname
     ),
-    |patch_type: &PatchType| format!("not defined in {}", patch_type.base())
+    |patch_type: &PatchType| format!("not defined in {}", patch_type.base()),
+    "Ensure the class is defined in this addon or remove it from CfgPatches."
 );
 
 define_cfgpatch_code!(
@@ -305,5 +323,6 @@ define_cfgpatch_code!(
         patch_type.base(),
         classname
     ),
-    |patch_type: &PatchType| format!("not in {}s[]", patch_type.singular())
+    |patch_type: &PatchType| format!("not in {}s[]", patch_type.singular()),
+    "Add the class to CfgPatches or it will not be usable to Zanes."
 );
