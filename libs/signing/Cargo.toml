@@ -13,7 +13,6 @@ bench = false
 
 [dependencies]
 hemtt-common = { path = "../common" }
-
 hemtt-pbo = { path = "../pbo" }
 
 byteorder = { workspace = true }

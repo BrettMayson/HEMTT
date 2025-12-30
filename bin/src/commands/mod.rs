@@ -24,6 +24,7 @@ pub mod photoshoot;
 pub fn global_modules(executor: &mut crate::executor::Executor) {
     executor.add_module(Box::<crate::modules::bom::BOMCheck>::default());
     executor.add_module(Box::<crate::modules::fnl::FineNewLineCheck>::default());
+    executor.add_module(Box::<crate::modules::preprocess::PreProcess>::default());
     executor.add_module(Box::<crate::modules::Hooks>::default());
     executor.add_module(Box::<crate::modules::Stringtables>::default());
     executor.add_module(Box::<crate::modules::SQFCompiler>::default());

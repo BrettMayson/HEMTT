@@ -1,6 +1,7 @@
 use std::{env::temp_dir, path::PathBuf, sync::Arc};
 
 use hemtt_common::config::{GlobalConfig, ProjectConfig};
+use hemtt_rhai::libraries::project::RhaiProject;
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath, addons::Addon};
 
 use crate::error::Error;
@@ -258,9 +259,35 @@ impl Context {
     pub fn state(&self) -> Arc<State> {
         self.state.clone()
     }
+
     #[must_use]
     pub fn with_config(self, config: ProjectConfig) -> Self {
         Self { config, ..self }
+    }
+
+    /// Convert the context to a [`RhaiProject`]
+    ///
+    /// # Panics
+    /// If the version config is invalid
+    pub fn as_rhai_project(&self) -> RhaiProject {
+        RhaiProject {
+            name: self.config().name().to_string(),
+            author: self
+                .config()
+                .author()
+                .map_or_else(String::new, std::string::ToString::to_string),
+            prefix: self.config().prefix().to_string(),
+            mainprefix: self
+                .config()
+                .mainprefix()
+                .map_or_else(String::new, std::string::ToString::to_string),
+            version: self
+                .config()
+                .version()
+                .get(self.workspace_path().vfs())
+                .expect("version config is valid to get to rhai module"),
+            addons: self.addons().to_vec(),
+        }
     }
 }
 

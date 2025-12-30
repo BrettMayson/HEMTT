@@ -5,6 +5,7 @@ use rhai::Position;
 pub mod bhe1_script_not_found;
 pub mod bhe3_parse_error;
 pub mod bhe4_runtime_error;
+pub mod bhe5_runtime_fatal;
 
 fn get_offset(content: &str, location: Position) -> usize {
     let mut offset = 0;

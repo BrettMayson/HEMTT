@@ -46,6 +46,9 @@ pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
         dashmap::mapref::entry::Entry::Occupied(entry) => Ok(entry.get().clone()),
         dashmap::mapref::entry::Entry::Vacant(entry) => {
             let source = path.read_to_string()?;
+
+            // TODO preprocess
+
             let res = str(&source, path)?;
 
             // The LSP manages its own caches, having this enabled would cause the LSP to never see any changes

@@ -1,23 +1,25 @@
 use ::rhai::{Engine, Scope, packages::Package};
+use hemtt_rhai::libraries::VfsPackage;
 use hemtt_workspace::WorkspacePath;
-use rhai::{Dynamic, EvalAltResult};
+use rhai::Dynamic;
 use whoami::Result;
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{
+    context::Context,
+    error::Error,
+    modules::hook::{error::bhe5_runtime_fatal::RuntimeFatal, libraries::hemtt::RhaiHemtt},
+    report::Report,
+};
 
-use self::{
-    error::{
-        bhe1_script_not_found::ScriptNotFound, bhe3_parse_error::RhaiParseError,
-        bhe4_runtime_error::RuntimeError,
-    },
-    libraries::hemtt::RhaiHemtt,
+use self::error::{
+    bhe1_script_not_found::ScriptNotFound, bhe3_parse_error::RhaiParseError,
+    bhe4_runtime_error::RuntimeError,
 };
 
 use super::Module;
 
 mod error;
 mod libraries;
-mod time;
 
 /// Creates a sccope for a Rhai script
 ///
@@ -26,36 +28,35 @@ mod time;
 ///
 /// # Panics
 /// If the build folder does not exist
-pub fn scope(ctx: &'_ Context, vfs: bool) -> Result<Scope<'_>, Error> {
+pub fn scope(ctx: &'_ Context, hemtt: bool, vfs: bool) -> Result<Scope<'_>, Error> {
     let mut scope = Scope::new();
     if vfs {
         scope.push_constant("HEMTT_VFS", ctx.workspace_path().vfs().clone());
     }
-    scope.push_constant("HEMTT_DIRECTORY", ctx.project_folder().clone());
-    scope.push_constant(
-        "HEMTT_OUTPUT",
-        ctx.build_folder().expect("build folder exists").clone(),
-    );
     scope.push_constant("HEMTT_RFS", ctx.project_folder().clone());
-    scope.push_constant(
-        "HEMTT_OUT",
-        ctx.build_folder().expect("build folder exists").clone(),
-    );
 
-    scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
+    if hemtt {
+        scope.push_constant(
+            "HEMTT_OUTPUT",
+            ctx.build_folder().expect("build folder exists").clone(),
+        );
+        scope.push_constant(
+            "HEMTT_OUT",
+            ctx.build_folder().expect("build folder exists").clone(),
+        );
+        scope.push_constant("HEMTT", RhaiHemtt::new(ctx));
+    }
 
     Ok(scope)
 }
 
-fn engine(vfs: bool) -> Engine {
-    let mut engine = Engine::new();
+fn engine(name: String, vfs: bool) -> Engine {
+    let mut engine = hemtt_rhai::engine(name);
     if vfs {
-        let virt = libraries::VfsPackage::new();
+        let virt = VfsPackage::new();
         engine.register_static_module("hemtt_vfs", virt.as_shared_module());
     }
-    engine.register_static_module("hemtt_rfs", libraries::RfsPackage::new().as_shared_module());
     engine.register_static_module("hemtt", libraries::HEMTTPackage::new().as_shared_module());
-    engine.register_fn("date", time::date);
     engine
 }
 
@@ -104,6 +105,9 @@ impl Hooks {
             );
             report.merge(Self::run(ctx, file, vfs)?.0);
             ctx.config().version().invalidate();
+            if report.failed() {
+                break;
+            }
         }
         Ok(report)
     }
@@ -134,45 +138,24 @@ impl Hooks {
     #[allow(clippy::needless_pass_by_value)] // rhai things
     fn run(ctx: &Context, path: WorkspacePath, vfs: bool) -> Result<(Report, Dynamic), Error> {
         let mut report = Report::new();
-        let mut engine = engine(vfs);
-        let mut scope = scope(ctx, vfs)?;
         let parts = path.as_str().split('/');
         let name = parts
             .clone()
             .skip(parts.count().saturating_sub(2))
             .collect::<Vec<_>>()
             .join("/");
-        let inner_name = name.clone();
-        engine.on_debug(move |x, _src, _pos| {
-            debug!("[{inner_name}] {x}");
-        });
-        let inner_name = name.clone();
-        engine.on_print(move |s| {
-            info!("[{inner_name}] {s}");
-        });
-        let inner_name = name.clone();
-        engine.register_fn("info", move |s: &str| {
-            info!("[{inner_name}] {s}");
-        });
-        let inner_name = name.clone();
-        engine.register_fn("warn", move |s: &str| {
-            warn!("[{inner_name}] {s}");
-        });
-        let inner_name = name.clone();
-        engine.register_fn("error", move |s: &str| {
-            error!("[{inner_name}] {s}");
-        });
-        let inner_name = name;
-        engine.register_fn("fatal", move |s: &str| -> Result<(), Box<EvalAltResult>> {
-            error!("[{inner_name}] {s}");
-            Err(Box::new(EvalAltResult::ErrorRuntime(
-                "Script called fatal".into(),
-                rhai::Position::NONE,
-            )))
-        });
+        let engine = engine(name, vfs);
+        let mut scope = scope(ctx, true, vfs)?;
         match engine.eval_with_scope(&mut scope, &path.read_to_string()?) {
             Err(e) => {
-                report.push(RuntimeError::code(path, &e));
+                match *e {
+                    rhai::EvalAltResult::ErrorTerminated(message, pos) => {
+                        report.push(RuntimeFatal::code(path, message.to_string(), pos));
+                    }
+                    _ => {
+                        report.push(RuntimeError::code(path, &e));
+                    }
+                }
                 Ok((report, Dynamic::UNIT))
             }
             Ok(ret) => Ok((report, ret)),
@@ -190,7 +173,7 @@ impl Module for Hooks {
         self.0 = ctx.hemtt_folder().join("hooks").exists();
         if self.0 {
             for phase in &["pre_build", "post_build", "pre_release", "post_release"] {
-                let engine = engine(phase != &"post_release");
+                let engine = engine(String::from(*phase), phase != &"post_release");
                 let dir = ctx.hemtt_folder().join("hooks").join(phase);
                 if !dir.exists() {
                     continue;
