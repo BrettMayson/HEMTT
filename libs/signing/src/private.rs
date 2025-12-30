@@ -7,6 +7,7 @@ use rsa::{
     BoxedUint, RsaPrivateKey,
     traits::{PrivateKeyParts, PublicKeyParts},
 };
+use zeroize::Zeroize;
 
 use crate::{
     encrypted::KDFParams, error::Error, generate_hashes, modpow, public::BIPublicKey,
@@ -240,7 +241,7 @@ impl HEMTTPrivateKey {
     /// # Panics
     /// If the version is not 1.
     pub fn read_encrypted<I: Read>(input: &mut I, password: &str) -> Result<Self, Error> {
-        let mut data = Vec::new();
+        let mut data = Vec::with_capacity(2048);
         input.read_to_end(&mut data)?;
         let decrypted = crate::encrypted::decrypt(&data, password)?;
         let mut cursor = std::io::Cursor::new(decrypted);
@@ -255,6 +256,7 @@ impl HEMTTPrivateKey {
         let git_hash = cursor.read_cstring()?;
         let project = cursor.read_cstring()?;
         let bi = BIPrivateKey::read(&mut cursor)?;
+        cursor.into_inner().zeroize();
         Ok(Self {
             bi,
             prefix,
@@ -273,7 +275,7 @@ impl HEMTTPrivateKey {
         password: &str,
         kdf_params: KDFParams,
     ) -> Result<(), Error> {
-        let mut buffer = Vec::new();
+        let mut buffer = Vec::with_capacity(2048);
         buffer.write_all(b"hmtpk")?; // magic header
         buffer.write_u32::<LittleEndian>(1)?; // version
         buffer.write_cstring(&self.prefix)?;
@@ -281,6 +283,7 @@ impl HEMTTPrivateKey {
         buffer.write_cstring(&self.project)?;
         self.bi.write_danger(&mut buffer)?;
         let encrypted = crate::encrypted::encrypt(&buffer, password, kdf_params)?;
+        buffer.zeroize();
         output.write_all(&encrypted)?;
         Ok(())
     }
