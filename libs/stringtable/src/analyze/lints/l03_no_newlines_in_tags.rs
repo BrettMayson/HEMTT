@@ -68,17 +68,14 @@ fn check_package(package: &Package, project: &Project, severity: Severity, codes
 
 fn check_key(key: &Key, _project: &Project, severity: Severity, codes: &mut Codes) {
     for (lang_name, value) in key.as_list() {
-        if let Some(text) = value {
-            // Check if the text starts or ends with newlines/whitespace
-            // This would indicate the pattern from the issue where text is on separate lines
-            if text != text.trim() {
+        if let Some(text) = value
+            && text != text.trim() {
                 codes.push(Arc::new(CodeStringtableNewlineInTag::new(
                     key.id().to_string(),
                     lang_name.to_string(),
                     severity,
                 )));
             }
-        }
     }
 }
 

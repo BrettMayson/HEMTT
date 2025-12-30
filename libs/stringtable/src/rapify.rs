@@ -171,7 +171,6 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
 
 fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
     let binding = key.as_list();
-    // remove original, get values
     let translations = binding
         .iter()
         .filter_map(|(key, value)| {
