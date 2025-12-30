@@ -39,6 +39,10 @@ pub enum Error {
 
     #[error("Preprocessor not found: {0}")]
     PreprocessorNotFound(String),
+    #[error("Preprocessor did not return a string: {0}")]
+    PreprocessorDidNotReturnString(String),
+    #[error("Preprocessor error in '{0}': {1}")]
+    PreprocessorError(String, String),
 
     #[error("Dialoguer Error: {0}")]
     Dialoguer(#[from] dialoguer::Error),

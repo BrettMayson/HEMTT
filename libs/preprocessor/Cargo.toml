@@ -14,6 +14,7 @@ bench = false
 [dependencies]
 hemtt-common = { path = "../common" }
 hemtt-workspace = { path = "../workspace" }
+hemtt-rhai = { path = "../rhai", optional = true }
 
 automod = { workspace = true }
 dashmap = { workspace = true }
@@ -31,7 +32,7 @@ fs-err = { workspace = true }
 paste = { workspace = true }
 
 [features]
-lsp = ["hemtt-workspace/lsp", "lsp-types"]
+lsp = ["hemtt-workspace/lsp", "lsp-types", "hemtt-rhai"]
 
 [[bench]]
 name = "ace_dogtags"

@@ -286,7 +286,7 @@ impl Context {
                 .version()
                 .get(self.workspace_path().vfs())
                 .expect("version config is valid to get to rhai module"),
-            // addons: self.addons().to_vec(),
+            addons: self.addons().to_vec(),
         }
     }
 }

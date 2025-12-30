@@ -4,23 +4,23 @@ use hemtt_workspace::{
     WorkspacePath,
     reporting::{Code, Diagnostic, Label},
 };
-use rhai::{EvalAltResult, Position};
+use rhai::Position;
 
 use super::get_offset;
 
-pub struct RuntimeError {
+pub struct RuntimeFatal {
     script: WorkspacePath,
     error: String,
     location: Position,
 }
 
-impl Code for RuntimeError {
+impl Code for RuntimeFatal {
     fn ident(&self) -> &'static str {
-        "BHE4"
+        "BHE5"
     }
 
     fn message(&self) -> String {
-        format!("Script {} failed at runtime", self.script)
+        format!("Script {} intentionally failed at runtime", self.script)
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -43,12 +43,12 @@ impl Code for RuntimeError {
     }
 }
 
-impl RuntimeError {
-    pub fn code(script: WorkspacePath, error: &EvalAltResult) -> Arc<dyn Code> {
+impl RuntimeFatal {
+    pub fn code(script: WorkspacePath, error: String, location: Position) -> Arc<dyn Code> {
         Arc::new(Self {
             script,
-            error: error.to_string(),
-            location: error.position(),
+            error,
+            location,
         })
     }
 }

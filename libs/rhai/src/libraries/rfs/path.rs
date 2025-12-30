@@ -12,9 +12,14 @@ pub mod path_functions {
 
     use rhai::EvalAltResult;
 
-    #[rhai_fn(global, pure)]
+    #[rhai_fn(global, pure, name = "join")]
     pub fn join(path: &mut PathBuf, other: &str) -> PathBuf {
         path.join(other)
+    }
+
+    #[rhai_fn(global, pure, name = "join")]
+    pub fn join_immutable(path: &mut PathBuf, other: ImmutableString) -> PathBuf {
+        path.join(other.as_str())
     }
 
     #[rhai_fn(global, pure)]

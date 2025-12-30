@@ -10,8 +10,11 @@ workspace = true
 
 [dependencies]
 hemtt-common = { path = "../common" }
+hemtt-workspace = { path = "../workspace" }
 
 fs_extra = { workspace = true }
+fs-err = { workspace = true }
 rhai = { workspace = true }
 time = { workspace = true }
+tracing = { workspace = true }
 vfs = { workspace = true }
