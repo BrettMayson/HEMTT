@@ -7,13 +7,15 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{PaXType, Paa};
 
-// struct TexHeader.bin
-// {
-//  MimeType "0DHT" ;    // NOT asciiz. '0' = 0x30. This is mimetype "TexHeaDer0"
-//  ulong    version;    // 1
-//  ulong    nTextures;  //
-//  TexBody  TexBodies[nTextures];
-// };
+/// ```cpp
+/// struct TexHeader.bin
+/// {
+///  MimeType "0DHT" ;    // NOT asciiz. '0' = 0x30. This is mimetype "TexHeaDer0"
+///  ulong    version;    // 1
+///  ulong    nTextures;  //
+///  TexBody  TexBodies[nTextures];
+/// };
+/// ```
 #[derive(Debug, PartialEq, Eq)]
 pub struct Headers {
     textures: Vec<TextureHeader>,
@@ -77,31 +79,33 @@ impl Headers {
     }
 }
 
-// TexBody
-// {
-//  ulong          nColorPallets;      //always 1
-//  ulong          Pallet_ptr;         //Always0 (there are none)
-//  floats         AverageColor[r,g,b,a];//AVGCTAGG floating-point equivalent.
-//  bytes          AverageColor[b,g,r,a];//AVGCTAGG in PAx file
-//  bytes          MaxColor[b,g,r,a];    //MAXCTAGG in PAx file
-//  ulong          clampflags;         // always 0
-//  ulong          transparentColor;   // always 0xFFFFFFFF
-//  byteBool       has_maxCtagg;       // the MaxColor was set by the paa
-//                 isAlpha;	     // set if FLAGTAG=1: 'basic transparency'
-//                 isTransparent;	     // set if FLAGTAG=2: 'alpha channel is not interpolated'
-//                 isAlphaNonOpaque;   // set if isalpha, AND AverageColor alpha <0x80
-//  ulong          nMipmaps;           // always same as nMipmapsCopy below
-//  ulong          pax_format;         // see below Dxt1,2,3 etc
-//  byteBool       littleEndian;       // Always true;
-//  byte           isPaa; 	     //file was a .paa not .pac
-//  Asciiz         PaaFile[];          // Relative to the file location of the texheader itself.
-//                                     //"data\icons\m4a3_cco_ca.paa"
-//                                     //"fnfal\data\fnfal_smdi.paa"
-//  ulong          pax_suffix_type;    // _co, _ca, smdi, etc
-//  ulong          nMipmapsCopy;       // same as nMipmaps above
-//  MipMap         MipMaps[nMipmaps];  // see below
-//  ulong          SizeOfPaxFile;      //
-// };
+/// ```cpp
+/// struct TexBody
+/// {
+///  ulong          nColorPallets;        // Always 1
+///  ulong          Pallet_ptr;           // Always 0 (there are none)
+///  floats         AverageColor[r,g,b,a];// AVGCTAGG floating-point equivalent.
+///  bytes          AverageColor[b,g,r,a];// AVGCTAGG in PAx file
+///  bytes          MaxColor[b,g,r,a];    // MAXCTAGG in PAx file
+///  ulong          clampflags;           // Always 0
+///  ulong          transparentColor;     // aAlways 0xFFFFFFFF
+///  byteBool       has_maxCtagg;         // the MaxColor was set by the paa
+///                 isAlpha;              // set if FLAGTAG=1: 'basic transparency'
+///                 isTransparent;        // set if FLAGTAG=2: 'alpha channel is not interpolated'
+///                 isAlphaNonOpaque;     // set if isalpha, AND AverageColor alpha <0x80
+///  ulong          nMipmaps;             // Always same as nMipmapsCopy below
+///  ulong          pax_format;           // see below Dxt1,2,3 etc
+///  byteBool       littleEndian;         // Always true;
+///  byte           isPaa;                // file was a .paa not .pac
+///  Asciiz         PaaFile[];            // Relative to the file location of the texheader itself.
+///                                       //"data\icons\m4a3_cco_ca.paa"
+///                                       //"fnfal\data\fnfal_smdi.paa"
+///  ulong          pax_suffix_type;      // _co, _ca, smdi, etc
+///  ulong          nMipmapsCopy;         // same as nMipmaps above
+///  MipMap         MipMaps[nMipmaps];    // see below
+///  ulong          SizeOfPaxFile;        //
+/// };
+/// ```
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Eq)]
 pub struct TextureHeader {
@@ -346,14 +350,16 @@ impl TextureHeader {
     }
 }
 
-// MipMap
-// {
-//  ushort width,height;            //as per same mipmap in the pax
-//  ushort Always0;
-//  byte   pax_format;              //same value as above
-//  byte   Always3;
-//  ulong  dataOffset;              //OFFSTAGG in PAx file. position of mipmap data in pax file
-// };
+/// ```cpp
+/// struct MipMap
+/// {
+///  ushort width,height;     //as per same mipmap in the pax
+///  ushort Always0;
+///  byte   pax_format;       //same value as above
+///  byte   Always3;
+///  ulong  dataOffset;       //OFFSTAGG in PAx file. position of mipmap data in pax file
+/// };
+/// ``````
 #[derive(Debug, PartialEq, Eq)]
 pub struct MipMap {
     width: u16,

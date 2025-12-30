@@ -92,10 +92,6 @@ mod tests {
 
         let workspace = hemtt_workspace::Workspace::builder()
             .memory()
-            // .physical(
-            //     &std::path::PathBuf::from(crate::ROOT),
-            //     hemtt_workspace::LayerType::Source,
-            // )
             .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
             .expect("for test");
         let source = workspace.join("test_wiki_examples.sqf").expect("for test");

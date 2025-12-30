@@ -190,21 +190,13 @@ impl BIPrivateKey {
         output.write_all(b"RSA2")?;
         output.write_u32::<LittleEndian>(self.length)?;
         super::write_boxeduint(output, &self.exponent, 4)?;
-        // output.write_all(&self.exponent.to_bytes_le())?;
         super::write_boxeduint(output, &self.n, (self.length / 8) as usize)?;
-        // output.write_all(&self.n.to_bytes_le())?;
         super::write_boxeduint(output, &self.p, (self.length / 16) as usize)?;
-        // output.write_all(&self.p.to_bytes_le())?;
         super::write_boxeduint(output, &self.q, (self.length / 16) as usize)?;
-        // output.write_all(&self.q.to_bytes_le())?;
         super::write_boxeduint(output, &self.dp, (self.length / 16) as usize)?;
-        // output.write_all(&self.dp.to_bytes_le())?;
         super::write_boxeduint(output, &self.dq, (self.length / 16) as usize)?;
-        // output.write_all(&self.dq.to_bytes_le())?;
         super::write_boxeduint(output, &self.qinv, (self.length / 16) as usize)?;
-        // output.write_all(&self.qinv.to_bytes_le())?;
         super::write_boxeduint(output, &self.d, (self.length / 8) as usize)?;
-        // output.write_all(&self.d.to_bytes_le())?;
         Ok(())
     }
 }
