@@ -55,18 +55,26 @@ impl MipMap {
     ///
     /// # Errors
     /// [`std::io::Error`] if the image cannot be converted to the specified format
+    /// [`std::io::Error`] if the width or height exceed u16 limits
+    /// [`std::io::Error`] if the width or height are not powers of two
+    /// 
+    /// # Panics
+    /// If the `PaXType` is not a valid DXT format
     #[cfg(feature = "generate")]
     pub fn from_rgba_image(
         image: &image::RgbaImage,
         format: PaXType,
     ) -> Result<Self, std::io::Error> {
         use image::EncodableLayout;
-        use texpresso::Format;
         let (width, height) = image.dimensions();
-        let mut data = {
-            let format: Format = format.into();
-            vec![0u8; format.compressed_size(width as usize, height as usize)]
-        };
+        // dimensions must be power of two
+        // if !width.is_power_of_two() || !height.is_power_of_two() {
+        //     return Err(std::io::Error::new(
+        //         std::io::ErrorKind::InvalidInput,
+        //         "Width and height must be powers of two",
+        //     ));
+        // }
+        let mut data = vec![0u8; format.compressed_size(width as usize, height as usize)];
         format.compress(image.as_bytes(), width as usize, height as usize, &mut data);
         let compress = format.is_dxt() && width >= 256 && height >= 256;
         let stored_width = u16::try_from(width).map_err(|_| {

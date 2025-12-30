@@ -97,10 +97,22 @@ impl PaXType {
         )
     }
 
+    pub fn compressed_size(&self, width: usize, height: usize) -> usize {
+        match *self {
+            Self::DXT1 | Self::DXT2 | Self::DXT3 | Self::DXT4 | Self::DXT5 => {
+                let format: Format = (*self).try_into().expect("DXT formats are valid");
+                format.compressed_size(width, height)
+            }
+            Self::ARGBA5 | Self::ARGB4 => width * height * 2,
+            Self::ARGB8 => width * height * 4,
+            Self::GRAYA => width * height,
+        }
+    }
+
     pub fn compress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
         match *self {
             Self::DXT1 | Self::DXT3 | Self::DXT5 => {
-                let format: Format = (*self).into();
+                let format: Format = (*self).try_into().expect("DXT formats are valid");
                 format.compress(
                     data,
                     width,
@@ -116,8 +128,61 @@ impl PaXType {
             Self::DXT2 | Self::DXT4 => {
                 unimplemented!()
             }
-            _ => {
-                unimplemented!()
+            Self::ARGBA5 => {
+                // convert from RGBA8 to ARGB1555
+                for i in 0..(width * height) {
+                    let offset = i * 2; // ARGB1555 uses 2 bytes per pixel
+                    if offset + 1 < output.len() {
+                        let r = u16::from(data[i * 4] >> 3); // R (5 bits)
+                        let g = u16::from(data[i * 4 + 1] >> 3); // G (5 bits)
+                        let b = u16::from(data[i * 4 + 2] >> 3); // B (5 bits)
+                        let a = u16::from(data[i * 4 + 3] >= 128); // A (1 bit)
+                        let pixel = (a << 15) | (r << 10) | (g << 5) | b;
+                        output[offset] = (pixel & 0xFF) as u8;
+                        output[offset + 1] = (pixel >> 8) as u8;
+                    }
+                }
+            }
+            Self::ARGB4 => {
+                // convert from RGBA8 to ARGB4444
+                for i in 0..(width * height) {
+                    let offset = i * 2; // ARGB4444 uses 2 bytes per pixel
+                    if offset + 1 < output.len() {
+                        let r = u16::from(data[i * 4] >> 4); // R (4 bits)
+                        let g = u16::from(data[i * 4 + 1] >> 4); // G (4 bits)
+                        let b = u16::from(data[i * 4 + 2] >> 4); // B (4 bits)
+                        let a = u16::from(data[i * 4 + 3] >> 4); // A (4 bits)
+                        let pixel = (a << 12) | (b << 8) | (g << 4) | r;
+                        output[offset] = (pixel & 0xFF) as u8;
+                        output[offset + 1] = (pixel >> 8) as u8;
+                    }
+                }
+            }
+            Self::ARGB8 => {
+                // convert from RGBA8 to ARGB8888
+                for i in 0..(width * height) {
+                    let offset = i * 4; // Each pixel is 4 bytes
+                    if offset + 3 < output.len() {
+                        output[offset] = data[i * 4 + 2]; // B
+                        output[offset + 1] = data[i * 4 + 1]; // G
+                        output[offset + 2] = data[i * 4]; // R
+                        output[offset + 3] = data[i * 4 + 3]; // A
+                    }
+                }
+            }
+            Self::GRAYA => {
+                // convert from RGBA8 to GRAY8
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                for i in 0..(width * height) {
+                    if i < output.len() {
+                        let r = u16::from(data[i * 4]);
+                        let g = u16::from(data[i * 4 + 1]);
+                        let b = u16::from(data[i * 4 + 2]);
+                        // Use luminosity method to calculate grayscale value
+                        let gray = 0.07f32.mul_add(f32::from(b), 0.21f32.mul_add(f32::from(r), 0.72 * f32::from(g))) as u8;
+                        output[i] = gray;
+                    }
+                }
             }
         }
     }
@@ -125,7 +190,7 @@ impl PaXType {
     pub fn decompress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
         match *self {
             Self::DXT1 | Self::DXT3 | Self::DXT5 => {
-                let format: Format = (*self).into();
+                let format: Format = (*self).try_into().expect("DXT formats are valid");
                 format.decompress(data, width, height, output);
             }
             Self::DXT2 | Self::DXT4 => {
@@ -188,13 +253,14 @@ impl PaXType {
     }
 }
 
-impl From<PaXType> for Format {
-    fn from(pax: PaXType) -> Self {
+impl TryFrom<PaXType> for Format {
+    type Error = ();
+    fn try_from(pax: PaXType) -> Result<Self, Self::Error> {
         match pax {
-            PaXType::DXT1 => Self::Bc1,
-            PaXType::DXT3 => Self::Bc2,
-            PaXType::DXT5 => Self::Bc3,
-            _ => unimplemented!(),
+            PaXType::DXT1 => Ok(Self::Bc1),
+            PaXType::DXT3 => Ok(Self::Bc2),
+            PaXType::DXT5 => Ok(Self::Bc3),
+            _ => Err(()),
         }
     }
 }
