@@ -170,33 +170,18 @@ pub fn rapify(project: &Project) -> Option<XmlbLayout> {
 }
 
 fn get_translations(key: &Key, languages: &mut [Translation]) -> bool {
-    let translations = [
-        key.english(),
-        key.czech(),
-        key.french(),
-        key.spanish(),
-        key.italian(),
-        key.polish(),
-        key.portuguese(),
-        key.russian(),
-        key.german(),
-        key.korean(),
-        key.japanese(),
-        key.chinese(),
-        key.chinesesimp(),
-        key.turkish(),
-        key.swedish(),
-        key.slovak(),
-        key.serbocroatian(),
-        key.norwegian(),
-        key.icelandic(),
-        key.hungarian(),
-        key.greek(),
-        key.finnish(),
-        key.dutch(),
-        key.ukrainian(),
-        key.danish(),
-    ];
+    let binding = key.as_list();
+    // remove original, get values
+    let translations = binding
+        .iter()
+        .filter_map(|(key, value)| {
+            if *key == "Original" {
+                None
+            } else {
+                Some(value.as_deref())
+            }
+        })
+        .collect::<Vec<Option<&str>>>();
     debug_assert_eq!(translations.len(), ALL_LANGUAGES.len()); // order needs to be synced // Todo: meta programing?
 
     for (index, result) in translations.into_iter().enumerate() {

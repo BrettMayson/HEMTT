@@ -20,11 +20,11 @@ impl Lint<LintData> for LintL03NoNewlinesInTags {
     }
 
     fn description(&self) -> &'static str {
-        "Checks that localization tags do not contain newlines"
+        "Checks that localization tags do not contain leading or trailing newlines"
     }
 
     fn documentation(&self) -> &'static str {
-        "Localization tags should not contain newlines. When stringtable contains newlines inside tags like `<English>\\n    Text\\n</English>`, after binarization in Arma it will include unwanted whitespace: `\"   Text   \"`."
+        "Localization tags should not contain leading or trailing newlines. When stringtable contains newlines inside tags like `<English>\\n    Text\\n</English>`, after binarization in Arma it will include unwanted whitespace: `\"   Text   \"`."
     }
 
     fn default_config(&self) -> LintConfig {
@@ -49,11 +49,9 @@ impl LintRunner<LintData> for Runner {
         _data: &LintData,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
-        
         for package in target.packages() {
             check_package(package, target, config.severity(), &mut codes);
         }
-        
         codes
     }
 }
@@ -69,36 +67,7 @@ fn check_package(package: &Package, project: &Project, severity: Severity, codes
 }
 
 fn check_key(key: &Key, _project: &Project, severity: Severity, codes: &mut Codes) {
-    let languages = [
-        ("Original", key.original()),
-        ("English", key.english()),
-        ("Czech", key.czech()),
-        ("French", key.french()),
-        ("Spanish", key.spanish()),
-        ("Italian", key.italian()),
-        ("Polish", key.polish()),
-        ("Portuguese", key.portuguese()),
-        ("Russian", key.russian()),
-        ("German", key.german()),
-        ("Korean", key.korean()),
-        ("Japanese", key.japanese()),
-        ("Chinese", key.chinese()),
-        ("Chinesesimp", key.chinesesimp()),
-        ("Turkish", key.turkish()),
-        ("Swedish", key.swedish()),
-        ("Slovak", key.slovak()),
-        ("SerboCroatian", key.serbocroatian()),
-        ("Norwegian", key.norwegian()),
-        ("Icelandic", key.icelandic()),
-        ("Hungarian", key.hungarian()),
-        ("Greek", key.greek()),
-        ("Finnish", key.finnish()),
-        ("Dutch", key.dutch()),
-        ("Ukrainian", key.ukrainian()),
-        ("Danish", key.danish()),
-    ];
-    
-    for (lang_name, value) in languages {
+    for (lang_name, value) in key.as_list() {
         if let Some(text) = value {
             // Check if the text starts or ends with newlines/whitespace
             // This would indicate the pattern from the issue where text is on separate lines
@@ -138,7 +107,7 @@ impl Code for CodeStringtableNewlineInTag {
     }
 
     fn help(&self) -> Option<String> {
-        Some("Remove newlines and extra whitespace from inside localization tags. The text should be on the same line as the tag, e.g., `<English>Text</English>` instead of `<English>\\n    Text\\n</English>`.".to_string())
+        Some("Remove newlines and extra whitespace from inside localization tags.\nThe text should be on the same line as the tag\ne.g., `<English>Text</English>` instead of `<English>\\n    Text\\n</English>`.".to_string())
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
