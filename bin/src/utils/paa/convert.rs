@@ -40,22 +40,34 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
         }
     } else {
         let image = image::open(from)?;
-        let paa = hemtt_paa::Paa::from_dynamic(&image, {
-            let (width, height) = image.dimensions();
-            if !height.is_power_of_two() || !width.is_power_of_two() {
-                hemtt_paa::PaXType::ARGB8
-            } else {
-                let has_transparency = image.pixels().any(|p| p.2[3] < 255);
-                if has_transparency {
-                    hemtt_paa::PaXType::DXT5
-                } else {
-                    hemtt_paa::PaXType::DXT1
-                }
+        let (width, height) = image.dimensions();
+        let format = if !height.is_power_of_two() || !width.is_power_of_two() {
+            warn!(
+                "Image dimensions are not powers of two ({}x{})",
+                width, height
+            );
+            warn!("This is likely unintended and will not work as a standard texture.");
+            if !dialoguer::Confirm::new()
+                .with_prompt("Continue?")
+                .default(false)
+                .interact()?
+            {
+                info!("Aborting conversion");
+                return Ok(());
             }
-        })?;
+            hemtt_paa::PaXType::ARGB8
+        } else {
+            let has_transparency = image.pixels().any(|p| p.2[3] < 255);
+            if has_transparency {
+                hemtt_paa::PaXType::DXT5
+            } else {
+                hemtt_paa::PaXType::DXT1
+            }
+        };
+        let paa = hemtt_paa::Paa::from_dynamic(&image, format)?;
         let mut file = fs_err::File::create(output)?;
         paa.write(&mut file)?;
-        info!("Image converted to PAA");
+        info!("Image converted to {} PAA", format.to_string());
     }
     Ok(())
 }
