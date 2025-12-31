@@ -79,7 +79,13 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             dialoguer::Confirm::new()
                 .with_prompt("Confirm")
                 .default(false)
-                .interact()?;
+            if !dialoguer::Confirm::new()
+                .with_prompt("Confirm")
+                .default(false)
+                .interact()?
+            {
+                return Ok(Report::new());
+            }
 
             let hemtt_private_key = HEMTTPrivateKey {
                 bi: BIPrivateKey::generate(1024, &authority)?,
