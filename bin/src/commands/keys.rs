@@ -76,9 +76,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             println!("Authority: {authority}");
             println!();
             warn!("The generated key will be usable ONLY with this project");
-            dialoguer::Confirm::new()
-                .with_prompt("Confirm")
-                .default(false)
             if !dialoguer::Confirm::new()
                 .with_prompt("Confirm")
                 .default(false)
