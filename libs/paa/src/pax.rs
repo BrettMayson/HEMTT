@@ -133,51 +133,61 @@ impl PaXType {
             }
             Self::ARGBA5 => {
                 // convert from RGBA8 to ARGB1555
-                for i in 0..(width * height) {
+                let max_pixels = std::cmp::min(
+                    width * height,
+                    std::cmp::min(data.len() / 4, output.len() / 2),
+                );
+                for i in 0..max_pixels {
                     let offset = i * 2; // ARGB1555 uses 2 bytes per pixel
-                    if offset + 1 < output.len() {
-                        let r = u16::from(data[i * 4] >> 3); // R (5 bits)
-                        let g = u16::from(data[i * 4 + 1] >> 3); // G (5 bits)
-                        let b = u16::from(data[i * 4 + 2] >> 3); // B (5 bits)
-                        let a = u16::from(data[i * 4 + 3] >= 128); // A (1 bit)
-                        let pixel = (a << 15) | (r << 10) | (g << 5) | b;
-                        output[offset] = (pixel & 0xFF) as u8;
-                        output[offset + 1] = (pixel >> 8) as u8;
-                    }
+                    let r = u16::from(data[i * 4] >> 3); // R (5 bits)
+                    let g = u16::from(data[i * 4 + 1] >> 3); // G (5 bits)
+                    let b = u16::from(data[i * 4 + 2] >> 3); // B (5 bits)
+                    let a = u16::from(data[i * 4 + 3] >= 128); // A (1 bit)
+                    let pixel = (a << 15) | (r << 10) | (g << 5) | b;
+                    output[offset] = (pixel & 0xFF) as u8;
+                    output[offset + 1] = (pixel >> 8) as u8;
                 }
             }
             Self::ARGB4 => {
                 // convert from RGBA8 to ARGB4444
-                for i in 0..(width * height) {
+                let max_pixels = std::cmp::min(
+                    width * height,
+                    std::cmp::min(data.len() / 4, output.len() / 2),
+                );
+                for i in 0..max_pixels {
                     let offset = i * 2; // ARGB4444 uses 2 bytes per pixel
-                    if offset + 1 < output.len() {
-                        let r = u16::from(data[i * 4] >> 4); // R (4 bits)
-                        let g = u16::from(data[i * 4 + 1] >> 4); // G (4 bits)
-                        let b = u16::from(data[i * 4 + 2] >> 4); // B (4 bits)
-                        let a = u16::from(data[i * 4 + 3] >> 4); // A (4 bits)
-                        let pixel = (a << 12) | (b << 8) | (g << 4) | r;
-                        output[offset] = (pixel & 0xFF) as u8;
-                        output[offset + 1] = (pixel >> 8) as u8;
-                    }
+                    let r = u16::from(data[i * 4] >> 4); // R (4 bits)
+                    let g = u16::from(data[i * 4 + 1] >> 4); // G (4 bits)
+                    let b = u16::from(data[i * 4 + 2] >> 4); // B (4 bits)
+                    let a = u16::from(data[i * 4 + 3] >> 4); // A (4 bits)
+                    let pixel = (a << 12) | (b << 8) | (g << 4) | r;
+                    output[offset] = (pixel & 0xFF) as u8;
+                    output[offset + 1] = (pixel >> 8) as u8;
                 }
             }
             Self::ARGB8 => {
                 // convert from RGBA8 to ARGB8888
-                for i in 0..(width * height) {
+                let max_pixels = std::cmp::min(
+                    width * height,
+                    std::cmp::min(data.len() / 4, output.len() / 4),
+                );
+                for i in 0..max_pixels {
                     let offset = i * 4; // Each pixel is 4 bytes
-                    if offset + 3 < output.len() {
-                        output[offset] = data[i * 4 + 2]; // B
-                        output[offset + 1] = data[i * 4 + 1]; // G
-                        output[offset + 2] = data[i * 4]; // R
-                        output[offset + 3] = data[i * 4 + 3]; // A
-                    }
+                    output[offset] = data[i * 4 + 2]; // B
+                    output[offset + 1] = data[i * 4 + 1]; // G
+                    output[offset + 2] = data[i * 4]; // R
+                    output[offset + 3] = data[i * 4 + 3]; // A
                 }
             }
             Self::GRAYA => {
                 // convert from RGBA8 to GRAY8
                 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-                for i in 0..(width * height) {
-                    if i < output.len() {
+                {
+                    let max_pixels = std::cmp::min(
+                        width * height,
+                        std::cmp::min(data.len() / 4, output.len()),
+                    );
+                    for i in 0..max_pixels {
                         let r = u16::from(data[i * 4]);
                         let g = u16::from(data[i * 4 + 1]);
                         let b = u16::from(data[i * 4 + 2]);
