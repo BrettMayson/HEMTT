@@ -31,7 +31,7 @@ fn non_power_of_two() {
     let image =
         image::open("tests/mountain.png").expect("Failed to open mountain.png");
     let paa_result = hemtt_paa::Paa::from_dynamic(&image, hemtt_paa::PaXType::ARGB8);
-    // assert!(paa_result.is_err(), "Expected error for non-power-of-two dimensions");
+
     let output_file_path = "tests/mountain_converted.paa";
     let output_file = fs_err::File::create(output_file_path);
     paa_result
