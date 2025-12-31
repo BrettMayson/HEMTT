@@ -97,7 +97,9 @@ impl PaXType {
         )
     }
 
-    pub fn compressed_size(&self, width: usize, height: usize) -> usize {
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn image_size(&self, width: usize, height: usize) -> usize {
         match *self {
             Self::DXT1 | Self::DXT2 | Self::DXT3 | Self::DXT4 | Self::DXT5 => {
                 let format: Format = (*self).try_into().expect("DXT formats are valid");
@@ -109,6 +111,7 @@ impl PaXType {
         }
     }
 
+    #[allow(clippy::missing_panics_doc)]
     pub fn compress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
         match *self {
             Self::DXT1 | Self::DXT3 | Self::DXT5 => {
@@ -179,7 +182,10 @@ impl PaXType {
                         let g = u16::from(data[i * 4 + 1]);
                         let b = u16::from(data[i * 4 + 2]);
                         // Use luminosity method to calculate grayscale value
-                        let gray = 0.07f32.mul_add(f32::from(b), 0.21f32.mul_add(f32::from(r), 0.72 * f32::from(g))) as u8;
+                        let gray = 0.07f32.mul_add(
+                            f32::from(b),
+                            0.21f32.mul_add(f32::from(r), 0.72 * f32::from(g)),
+                        ) as u8;
                         output[i] = gray;
                     }
                 }
@@ -187,6 +193,7 @@ impl PaXType {
         }
     }
 
+    #[allow(clippy::missing_panics_doc)]
     pub fn decompress(&self, data: &[u8], width: usize, height: usize, output: &mut [u8]) {
         match *self {
             Self::DXT1 | Self::DXT3 | Self::DXT5 => {
