@@ -211,7 +211,7 @@ impl MipMap {
                 }
             }
         } else if decompression == Compression::Lz77 {
-            hemtt_lzo::lz77::decompress(data, &mut buffer).expect("Failed to decompress LZSS data");
+            hemtt_lzo::lz77::decompress(data, &mut buffer).expect("Failed to decompress LZ77 data");
             self.format.decompress(
                 &buffer,
                 usize::from(actual_width),
