@@ -17,6 +17,10 @@ pub fn compress(input: &[u8], out_buf: &mut [u8]) -> Result<usize, &'static str>
     let mut po = 0; // Output position
     let mut checksum: u32 = 0;
 
+    // Hash table to store positions of 3-byte sequences for fast lookup
+    let mut hash_table: std::collections::HashMap<u32, Vec<usize>> =
+        std::collections::HashMap::new();
+
     while pi < input.len() {
         if po >= out_buf.len() {
             return Err("Output buffer too small");
@@ -31,24 +35,42 @@ pub fn compress(input: &[u8], out_buf: &mut [u8]) -> Result<usize, &'static str>
                 break;
             }
 
-            // Try to find a match in the previous data
+            // Try to find a match in the previous data using hash table
             let mut best_match_pos = 0;
             let mut best_match_len = 0;
 
-            let search_start = pi.saturating_sub(MAX_OFFSET);
-            for search_pos in search_start..pi {
-                let mut match_len = 0;
-                while match_len < MAX_MATCH
-                    && pi + match_len < input.len()
-                    && input[search_pos + match_len] == input[pi + match_len]
-                {
-                    match_len += 1;
+            if pi + MIN_MATCH <= input.len() {
+                // Calculate hash for current position
+                let hash = u32::from(input[pi])
+                    | (u32::from(input[pi + 1]) << 8)
+                    | (u32::from(input[pi + 2]) << 16);
+
+                // Look up previous positions with same hash
+                if let Some(positions) = hash_table.get(&hash) {
+                    let search_start = pi.saturating_sub(MAX_OFFSET);
+                    for &search_pos in positions.iter().rev() {
+                        if search_pos < search_start {
+                            break;
+                        }
+
+                        let mut match_len = 0;
+                        while match_len < MAX_MATCH
+                            && pi + match_len < input.len()
+                            && search_pos + match_len < input.len()
+                            && input[search_pos + match_len] == input[pi + match_len]
+                        {
+                            match_len += 1;
+                        }
+
+                        if match_len >= MIN_MATCH && match_len > best_match_len {
+                            best_match_len = match_len;
+                            best_match_pos = pi - search_pos;
+                        }
+                    }
                 }
 
-                if match_len >= MIN_MATCH && match_len > best_match_len {
-                    best_match_len = match_len;
-                    best_match_pos = pi - search_pos;
-                }
+                // Add current position to hash table
+                hash_table.entry(hash).or_default().push(pi);
             }
 
             #[allow(clippy::cast_possible_truncation)]

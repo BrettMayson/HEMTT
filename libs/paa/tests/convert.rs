@@ -28,8 +28,7 @@ fn baer_to_paa() {
 #[test]
 #[cfg(feature = "generate")]
 fn non_power_of_two() {
-    let image =
-        image::open("tests/mountain.png").expect("Failed to open mountain.png");
+    let image = image::open("tests/mountain.png").expect("Failed to open mountain.png");
     let paa_result = hemtt_paa::Paa::from_dynamic(&image, hemtt_paa::PaXType::ARGB8);
 
     let output_file_path = "tests/mountain_converted.paa";

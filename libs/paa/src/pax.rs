@@ -183,10 +183,8 @@ impl PaXType {
                 // convert from RGBA8 to GRAY8
                 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 {
-                    let max_pixels = std::cmp::min(
-                        width * height,
-                        std::cmp::min(data.len() / 4, output.len()),
-                    );
+                    let max_pixels =
+                        std::cmp::min(width * height, std::cmp::min(data.len() / 4, output.len()));
                     for i in 0..max_pixels {
                         let r = u16::from(data[i * 4]);
                         let g = u16::from(data[i * 4 + 1]);
@@ -218,7 +216,7 @@ impl PaXType {
                 // convert from ARGB1555 to RGBA8
                 for i in 0..(width * height) {
                     let offset = i * 2; // ARGB1555 uses 2 bytes per pixel
-                    if offset + 1 < data.len() {
+                    if offset + 1 < data.len() && i * 4 + 3 < output.len() {
                         let pixel = u16::from_le_bytes([data[offset], data[offset + 1]]);
                         output[i * 4] = (((pixel >> 10) & 0x1F) << 3) as u8; // R (5 bits)
                         output[i * 4 + 1] = (((pixel >> 5) & 0x1F) << 3) as u8; // G (5 bits)
@@ -232,7 +230,7 @@ impl PaXType {
                 // convert from ARGB4444 to RGBA8
                 for i in 0..(width * height) {
                     let offset = i * 2; // ARGB4444 uses 2 bytes per pixel
-                    if offset + 1 < data.len() {
+                    if offset + 1 < data.len() && i * 4 + 3 < output.len() {
                         let pixel = u16::from_le_bytes([data[offset], data[offset + 1]]);
                         output[i * 4] = ((pixel & 0x0F) << 4) as u8; // R (4 bits)
                         output[i * 4 + 1] = (((pixel >> 4) & 0x0F) << 4) as u8; // G (4 bits)
@@ -246,7 +244,7 @@ impl PaXType {
                 // convert from ARGB8888 to RGBA8
                 for i in 0..(width * height) {
                     let offset = i * 4; // Each pixel is 4 bytes
-                    if offset + 3 < data.len() {
+                    if offset + 3 < data.len() && i * 4 + 3 < output.len() {
                         output[i * 4] = data[offset + 2]; // R
                         output[i * 4 + 1] = data[offset + 1]; // G
                         output[i * 4 + 2] = data[offset]; // B

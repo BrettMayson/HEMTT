@@ -67,13 +67,6 @@ impl MipMap {
     ) -> Result<Self, std::io::Error> {
         use image::EncodableLayout;
         let (width, height) = image.dimensions();
-        // dimensions must be power of two
-        // if !width.is_power_of_two() || !height.is_power_of_two() {
-        //     return Err(std::io::Error::new(
-        //         std::io::ErrorKind::InvalidInput,
-        //         "Width and height must be powers of two",
-        //     ));
-        // }
         let mut data = vec![0u8; format.image_size(width as usize, height as usize)];
         format.compress(image.as_bytes(), width as usize, height as usize, &mut data);
         let dxt_compress = format.is_dxt() && width >= 256 && height >= 256;
