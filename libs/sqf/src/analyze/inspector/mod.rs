@@ -380,9 +380,10 @@ impl Inspector {
         let mut debug_type = String::new();
         let possible_values = match expression {
             Expression::Variable(var, source) => self.var_retrieve(var, source, false),
-            Expression::Number(_, source) => {
-                IndexSet::from([(GameValue::Number(Some(expression.clone())), source.clone())])
-            }
+            Expression::Number(_, source) => IndexSet::from([(
+                GameValue::Number(Some(expression.clone()), None),
+                source.clone(),
+            )]),
             Expression::Boolean(_, source) => {
                 IndexSet::from([(GameValue::Boolean(Some(expression.clone())), source.clone())])
             }
@@ -462,7 +463,7 @@ impl Inspector {
                                         &vec![
                                             ("_this", GameValue::Anything),
                                             ("_thisEvent", GameValue::String(None)),
-                                            ("_thisEventHandler", GameValue::Number(None)),
+                                            ("_thisEventHandler", GameValue::Number(None, None)),
                                             ("_thisArgs", GameValue::Anything), // gv_array[2]?
                                         ],
                                         database,
@@ -574,7 +575,7 @@ impl Inspector {
                         "foreach" | "foreachreversed" => {
                             let mut magic = vec![
                                 ("_x", GameValue::get_array_value_type(&rhs_set)),
-                                ("_forEachIndex", GameValue::Number(None)),
+                                ("_forEachIndex", GameValue::Number(None, None)),
                             ];
                             if !rhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
                                 magic.push(("_y", GameValue::Anything));
@@ -632,7 +633,7 @@ impl Inspector {
                                         &vec![
                                             ("_this", GameValue::Anything),
                                             ("_thisEvent", GameValue::String(None)),
-                                            ("_thisEventHandler", GameValue::Number(None)),
+                                            ("_thisEventHandler", GameValue::Number(None, None)),
                                         ],
                                         database,
                                     );

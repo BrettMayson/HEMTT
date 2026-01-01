@@ -1,6 +1,6 @@
 //! Game Values and mapping them from commands
 
-use std::ops::Range;
+use std::ops::{Range, RangeInclusive};
 
 use arma3_wiki::model::{Arg, Call, Param, Value};
 use indexmap::IndexSet;
@@ -28,7 +28,7 @@ pub enum GameValue {
     IfType,
     Location,
     Namespace,
-    Number(Option<Expression>),
+    Number(Option<Expression>, Option<RangeInclusive<i32>>),
     Nothing(NilSource),
     Object,
     ScriptHandle,
@@ -44,7 +44,10 @@ pub enum GameValue {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum ArrayType {
+    Unsized(Box<GameValue>),
+
     Color,
+
     // Pos2d,
     PosAGL,
     // PosAGLS,
@@ -54,6 +57,8 @@ pub enum ArrayType {
     /// from object's center `getPosWorld`
     PosWorld,
     PosRelative,
+
+    Vector3D,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -150,7 +155,7 @@ impl GameValue {
                     }
                 }
             }
-            let value = &syntax.ret().0;
+            let value = syntax.ret().typ();
             let game_value = Self::from_wiki_value(value, NilSource::CommandReturn);
             // println!("match syntax {syntax:?}");
             return_types.extend(game_value);
@@ -283,27 +288,141 @@ impl GameValue {
             // println!("array mismatch {lpos:?}!={rpos:?}");
             // return false;
         }
+        if matches!(left, Self::Array(_, _)) && matches!(right, Self::Array(_, _)) {
+            return Self::compatible_array(left, right) || Self::compatible_array(right, left);
+        }
+        if matches!(left, Self::Number(_, _)) && matches!(right, Self::Number(_, _)) {
+            return Self::compatible_number(left, right);
+        }
         std::mem::discriminant(left) == std::mem::discriminant(right)
     }
+
+    pub fn compatible_number(left: &Self, right: &Self) -> bool {
+        let Self::Number(left_expr, left_range) = left else {
+            return true;
+        };
+        let Self::Number(_, right_range) = right else {
+            return true;
+        };
+        let Some(right_range) = right_range else {
+            return true;
+        };
+        // Check static values
+        if let Some(Expression::Number(left_value, _)) = left_expr {
+            let left_value = f64::from(left_value.0);
+            if left_value < f64::from(*right_range.start())
+                || left_value > f64::from(*right_range.end())
+            {
+                return false;
+            }
+        }
+        // ensure that the right range encompasses the left
+        if let Some(left_range) = left_range
+            && (left_range.start() < right_range.start() || left_range.end() > right_range.end())
+        {
+            return false;
+        }
+        true
+    }
+
+    pub fn compatible_array(left: &Self, right: &Self) -> bool {
+        let (template, value) = if let (
+            Self::Array(_, Some(type_data)),
+            Self::Array(right_value, None),
+        ) = (left, right)
+        {
+            (type_data, right_value)
+        } else if let (Self::Array(left_value, None), Self::Array(_, Some(type_data))) =
+            (left, right)
+        {
+            (type_data, left_value)
+        } else {
+            return true;
+        };
+        if value.is_none() {
+            return true;
+        }
+        match template {
+            ArrayType::Color => {
+                // Color arrays must have 3 or 4 number elements
+                let data = value.as_ref().expect("color array data");
+                Self::matches_array_length(
+                    data,
+                    3..=4,
+                    &Self::Number(None, Some(RangeInclusive::new(0, 3000))),
+                ) // 3000 because drawLaser allows it
+            }
+            ArrayType::Unsized(expected_type) => {
+                let data = value.as_ref().expect("unsized array data");
+                for outer in data {
+                    for (inner, _) in outer {
+                        if !Self::match_values(inner, expected_type) {
+                            return false;
+                        }
+                    }
+                }
+                true
+            }
+            ArrayType::PosAGL
+            | ArrayType::PosASL
+            | ArrayType::PosASLW
+            | ArrayType::PosATL
+            | ArrayType::PosWorld
+            | ArrayType::PosRelative => {
+                // Position arrays must have 3 number elements
+                let data = value.as_ref().expect("position array data");
+                Self::matches_array_length(data, 3..=3, &Self::Number(None, None))
+            }
+            ArrayType::Vector3D => {
+                // Vector3D arrays must have 3 number elements
+                let data = value.as_ref().expect("vector3d array data");
+                Self::matches_array_length(data, 3..=3, &Self::Number(None, None))
+            }
+        }
+    }
+
+    pub fn matches_array_length(
+        value: &Vec<Vec<(Self, Range<usize>)>>,
+        length: RangeInclusive<usize>,
+        inner_type: &Self,
+    ) -> bool {
+        if value.len() < *length.start() || value.len() > *length.end() {
+            return false;
+        }
+        for outer in value {
+            outer.iter().any(|(inner, _)| {
+                if !Self::match_values(inner, inner_type) {
+                    return false;
+                }
+                true
+            });
+        }
+        true
+    }
+
     #[must_use]
     /// Maps from `Wiki:Value` to Set of `GameValues`
     pub fn from_wiki_value(value: &Value, nil_type: NilSource) -> IndexSet<Self> {
         match value {
-            Value::Anything | Value::EdenEntity => IndexSet::from([Self::Anything]),
-            Value::ArrayColor
-            | Value::ArrayColorRgb
-            | Value::ArrayColorRgba
-            | Value::ArrayDate
+            Value::Anything | Value::EdenEntity => IndexSet::from([Self::Anything]), // TODO EdenEntity
+            Value::ArrayDate
             | Value::ArraySized { .. }
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
             | Value::Position // position is often too generic to match?
-            | Value::Waypoint => IndexSet::from([Self::Array(None, None)]),
-            // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
-            Value::Position3dAGLS | Value::Position3dAGL => IndexSet::from([Self::Array(None, Some(ArrayType::PosAGL))]), // merge
+            | Value::Waypoint | Value::ArrayEdenEntities => IndexSet::from([Self::Array(None, None)]),
+            Value::ArrayEmpty => IndexSet::from([Self::Array(Some(vec![]), None)]),
+            Value::ArrayColor
+            | Value::ArrayColorRgb
+            | Value::ArrayColorRgba => {
+                IndexSet::from([Self::Array(None, Some(ArrayType::Color))])
+            }
+            Value::Position3dAGLS | Value::Position3dAGL => IndexSet::from([Self::Array(None, Some(ArrayType::PosAGL))]),
             Value::Position3dASL => IndexSet::from([Self::Array(None, Some(ArrayType::PosASL))]),
             Value::Position3DASLW => IndexSet::from([Self::Array(None, Some(ArrayType::PosASLW))]),
             Value::Position3dATL => IndexSet::from([Self::Array(None, Some(ArrayType::PosATL))]),
+            Value::Position3dRelative => IndexSet::from([Self::Array(None, Some(ArrayType::PosRelative))]),
+            Value::Vector3d => IndexSet::from([Self::Array(None, Some(ArrayType::Vector3D))]),
             Value::Boolean => IndexSet::from([Self::Boolean(None)]),
             Value::Code => IndexSet::from([Self::Code(None)]),
             Value::Config => IndexSet::from([Self::Config]),
@@ -317,7 +436,10 @@ impl GameValue {
             Value::Location => IndexSet::from([Self::Location]),
             Value::Namespace => IndexSet::from([Self::Namespace]),
             Value::Nothing => IndexSet::from([Self::Nothing(nil_type)]),
-            Value::Number => IndexSet::from([Self::Number(None)]),
+            Value::Number | Value::EdenID => IndexSet::from([Self::Number(None, None)]),
+            Value::NumberRange(min, max) => {
+                IndexSet::from([Self::Number(None, Some(RangeInclusive::new(*min, *max)))])
+            }
             Value::Object => IndexSet::from([Self::Object]),
             Value::ScriptHandle => IndexSet::from([Self::ScriptHandle]),
             Value::Side => IndexSet::from([Self::Side]),
@@ -330,8 +452,8 @@ impl GameValue {
             Value::WithType => IndexSet::from([Self::WithType]),
             Value::OneOf(vec) => {
                 let mut set = IndexSet::new();
-                for (v, _) in vec {
-                    set.extend(Self::from_wiki_value(v, nil_type.clone()));
+                for oneofvalue in vec {
+                    set.extend(Self::from_wiki_value(&oneofvalue.typ, nil_type.clone()));
                 }
                 set
             }
@@ -340,12 +462,22 @@ impl GameValue {
                 trace!("wiki has syntax with [unknown] type");
                 IndexSet::from([Self::Anything])
             }
-            _ => {
-                warn!("wiki type [{value:?}] not matched");
+            Value::ExceptionHandle
+            | Value::HashMapKnownKeys(_)
+            | Value::HashMapKey
+            | Value::NumberEnum(_)
+            | Value::StringEnum(_)
+            | Value::TurretPath
+            | Value::UnitLoadoutArray
+            | Value::Position2d
+            | Value::Position3d => {
+                #[cfg(debug_assertions)]
+                trace!("wiki has syntax with unsupported type: {value:?}");
                 IndexSet::from([Self::Anything])
             }
         }
     }
+
     #[must_use]
     /// Gets a generic version of a type
     pub fn make_generic(&self) -> Self {
@@ -354,7 +486,7 @@ impl GameValue {
             Self::Boolean(_) => Self::Boolean(None),
             Self::Code(_) => Self::Code(None),
             Self::ForType(_) => Self::ForType(None),
-            Self::Number(_) => Self::Number(None),
+            Self::Number(_, _) => Self::Number(None, None),
             Self::String(_) => Self::String(None),
             Self::Nothing(_) => Self::Nothing(NilSource::Generic),
             _ => self.clone(),
@@ -440,6 +572,9 @@ impl std::fmt::Display for GameValue {
         if let Self::Array(_, Some(array_type)) = self {
             return write!(f, "Array<{array_type:?}>");
         }
+        if let Self::Number(_, Some(range)) = self {
+            return write!(f, "Number<{}..{}>", range.start(), range.end());
+        }
         write!(
             f,
             "{}",
@@ -459,7 +594,7 @@ impl std::fmt::Display for GameValue {
                 Self::IfType => "IfType",
                 Self::Location => "Location",
                 Self::Namespace => "Namespace",
-                Self::Number(_) => "Number",
+                Self::Number(_, _) => "Number",
                 Self::Nothing(_) => "Nil",
                 Self::Object => "Object",
                 Self::ScriptHandle => "ScriptHandle",

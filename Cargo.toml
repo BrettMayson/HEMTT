@@ -41,7 +41,7 @@ future_incompatible = "warn"
 nonstandard_style = "warn"
 
 [workspace.dependencies]
-arma3-wiki = "0.4.5"
+arma3-wiki = "0.5.1"
 automod =  "1.0.15"
 byteorder = "1.5.0"
 chumsky = "0.9.3"

@@ -237,9 +237,9 @@ dependencies = [
 
 [[package]]
 name = "arma3-wiki"
-version = "0.4.5"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95f79de9794487f9f324e911bafa01ddba0e69a242530813768c598a4d411cc4"
+checksum = "8af553c7c61e977b0c2261bae15cc40caca52b4edf391b812f93a548bda2c091"
 dependencies = [
  "directories",
  "fs-err",
@@ -5651,9 +5651,9 @@ checksum = "40990edd51aae2c2b6907af74ffb635029d5788228222c4bb811e9351c0caad3"
 
 [[package]]
 name = "zmij"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3280a1b827474fcd5dbef4b35a674deb52ba5c312363aef9135317df179d81b"
+checksum = "aac060176f7020d62c3bcc1cdbcec619d54f48b07ad1963a3f80ce7a0c17755f"
 
 [[package]]
 name = "zopfli"

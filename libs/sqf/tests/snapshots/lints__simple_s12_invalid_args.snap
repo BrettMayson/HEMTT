@@ -20,7 +20,7 @@ expression: "lint(stringify! (s12_invalid_args), false).0"
   [0m[36m│[0m                          [0m[33m^^^^[0m [0m[33mtype not expected[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: found    Bool
-          expected Number
+          expected Number<0..1>
 
 
 [0m[1m[38;5;11mwarning[L-S12][0m[1m: Invalid argument type for `[B:setVariable]`[0m

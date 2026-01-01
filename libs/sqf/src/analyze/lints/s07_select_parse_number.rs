@@ -129,11 +129,11 @@ fn safe_command(command: &str, database: &Database) -> bool {
     let Some(cmd) = database.wiki().commands().get(command) else {
         return false;
     };
-    cmd.syntax().iter().all(|s| match &s.ret().0 {
+    cmd.syntax().iter().all(|s| match s.ret().typ() {
         Value::Boolean | Value::String => true,
         Value::OneOf(rets) => rets
             .iter()
-            .all(|(r, _)| matches!(r, Value::String | Value::Boolean)),
+            .all(|r| matches!(r.typ, Value::String | Value::Boolean)),
         _ => false,
     })
 }
