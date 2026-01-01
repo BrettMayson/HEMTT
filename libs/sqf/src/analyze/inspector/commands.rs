@@ -7,14 +7,13 @@ use indexmap::IndexSet;
 use crate::{
     Expression, Statement,
     analyze::inspector::{InvalidArgs, Issue, VarSource, game_value::NilSource},
-    parser::database::Database,
 };
 
 use super::{Inspector, game_value::GameValue};
 
 type MagicVars<'a> = (&'a [(&'a str, GameValue)], &'a Range<usize>);
 
-impl Inspector {
+impl Inspector<'_> {
     #[must_use]
     pub fn cmd_u_private(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         fn push_var(s: &mut Inspector, var: &str, source: &Range<usize>) {
@@ -104,7 +103,7 @@ impl Inspector {
             }
         }
         if let Some(error) = error_type {
-            self.errors.insert(Issue::InvalidArgs {
+            self.error_insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
                 variant: error,
                 span: source.clone(),
@@ -205,7 +204,7 @@ impl Inspector {
         &mut self,
         code_possibilities: &IndexSet<GameValue>,
         magic_opt: Option<MagicVars>,
-        database: &Database,
+        is_loop: bool,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
         for possible in code_possibilities {
@@ -217,7 +216,7 @@ impl Inspector {
                 return_value.insert(GameValue::Anything);
                 continue;
             };
-            let stack_index = self.stack_push(Some(expression));
+            let stack_index = self.stack_push(Some(expression), is_loop);
             if stack_index.is_none() {
                 return_value.insert(GameValue::Anything);
                 continue;
@@ -232,8 +231,12 @@ impl Inspector {
                     );
                 }
             }
-            self.eval_statements(statements, true, database);
+            self.eval_statements(statements, true);
             return_value.extend(self.stack_pop(stack_index));
+        }
+        if is_loop {
+            // repeat the loop, but with error suppression off
+            return self.cmd_generic_call(code_possibilities, magic_opt, false);
         }
         return_value
     }
@@ -242,9 +245,13 @@ impl Inspector {
         &mut self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
-        database: &Database,
+        check_loop: bool,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
+        let is_loop = check_loop
+            && lhs
+                .iter()
+                .any(|p| matches!(p, GameValue::ForType(_)) || matches!(p, GameValue::WhileType));
         for possible in rhs {
             let GameValue::Code(Some(expression)) = possible else {
                 return_value.insert(GameValue::Anything);
@@ -254,7 +261,7 @@ impl Inspector {
                 return_value.insert(GameValue::Anything);
                 continue;
             };
-            let stack_index = self.stack_push(Some(expression));
+            let stack_index = self.stack_push(Some(expression), is_loop);
             if stack_index.is_none() {
                 return_value.insert(GameValue::Anything);
                 continue;
@@ -278,7 +285,7 @@ impl Inspector {
                             }
                             Expression::Code(stage_statement) => {
                                 self.code_used(stage);
-                                self.eval_statements(stage_statement, false, database);
+                                self.eval_statements(stage_statement, false);
                             }
                             _ => {}
                         }
@@ -297,9 +304,13 @@ impl Inspector {
                     } else {
                         true
                     };
-                self.eval_statements(statements, add_final, database);
+                self.eval_statements(statements, add_final);
             }
             return_value.extend(self.stack_pop(stack_index));
+        }
+        if is_loop {
+            // repeat the loop, but with error suppression off
+            return self.cmd_b_do(lhs, rhs, false);
         }
         return_value
     }
@@ -350,11 +361,7 @@ impl Inspector {
         lhs.clone()
     }
     #[must_use]
-    pub fn cmd_u_is_nil(
-        &mut self,
-        rhs: &IndexSet<GameValue>,
-        database: &Database,
-    ) -> IndexSet<GameValue> {
+    pub fn cmd_u_is_nil(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         let mut non_string = false;
         for possible in rhs {
             let GameValue::String(possible) = possible else {
@@ -370,7 +377,7 @@ impl Inspector {
             let _ = self.var_retrieve(var, &expression.span(), true);
         }
         if non_string {
-            let _ = self.cmd_generic_call(rhs, None, database);
+            let _ = self.cmd_generic_call(rhs, None, false);
         }
         IndexSet::from([GameValue::Boolean(None)])
     }
@@ -379,7 +386,6 @@ impl Inspector {
         &mut self,
         rhs: &Expression,
         rhs_set: &IndexSet<GameValue>,
-        database: &Database,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
         for possible in rhs_set {
@@ -387,7 +393,7 @@ impl Inspector {
                 return_value.extend(self.cmd_generic_call(
                     &IndexSet::from([possible.clone()]),
                     None,
-                    database,
+                    false,
                 ));
             }
             if let GameValue::Array(Some(gv_array), _) = possible {
@@ -397,7 +403,7 @@ impl Inspector {
                             return_value.extend(self.cmd_generic_call(
                                 &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
                                 None,
-                                database,
+                                false,
                             ));
                         }
                     }
@@ -420,11 +426,7 @@ impl Inspector {
         lhs.iter().chain(rhs.iter()).cloned().collect()
     }
     #[must_use]
-    pub fn cmd_b_get_or_default_call(
-        &mut self,
-        rhs: &IndexSet<GameValue>,
-        database: &Database,
-    ) -> IndexSet<GameValue> {
+    pub fn cmd_b_get_or_default_call(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         let mut possible_code = IndexSet::new();
         for possible_outer in rhs {
             let GameValue::Array(Some(gv_array), _) = possible_outer else {
@@ -435,7 +437,7 @@ impl Inspector {
             }
             possible_code.extend(gv_array[1].iter().map(|(gv, _)| gv.clone()));
         }
-        let _ = self.cmd_generic_call(&possible_code, None, database);
+        let _ = self.cmd_generic_call(&possible_code, None, false);
         IndexSet::from([GameValue::Anything])
     }
     #[must_use]
@@ -459,15 +461,10 @@ impl Inspector {
         rhs: &IndexSet<GameValue>,
         cmd_set: &IndexSet<GameValue>,
         source: &Range<usize>,
-        database: &Database,
     ) -> IndexSet<GameValue> {
         let mut return_value = cmd_set.clone();
         // Check: `array select expression`
-        let _ = self.cmd_generic_call(
-            rhs,
-            Some((&[("_x", GameValue::Anything)], source)),
-            database,
-        );
+        let _ = self.cmd_generic_call(rhs, Some((&[("_x", GameValue::Anything)], source)), true);
         // if lhs is array, and rhs is bool/number then put array into return
         if lhs.len() == 1
             && rhs
@@ -485,13 +482,7 @@ impl Inspector {
         return_value
     }
 
-    pub fn cmd_eqx_count_lint(
-        &mut self,
-        lhs: &Expression,
-        rhs: &Expression,
-        database: &Database,
-        equal_zero: bool,
-    ) {
+    pub fn cmd_eqx_count_lint(&mut self, lhs: &Expression, rhs: &Expression, equal_zero: bool) {
         let Expression::Number(float_ord::FloatOrd(0.0), _) = *rhs else {
             return;
         };
@@ -503,7 +494,7 @@ impl Inspector {
         if lhs_cmd != "count" {
             return;
         }
-        let count_input_set = self.eval_expression(count_input, database);
+        let count_input_set = self.eval_expression(count_input);
         if count_input_set.is_empty()
             || !count_input_set
                 .iter()
@@ -511,7 +502,7 @@ impl Inspector {
         {
             return;
         }
-        self.errors.insert(Issue::CountArrayComparison(
+        self.error_insert(Issue::CountArrayComparison(
             equal_zero,
             lhs.span().start..rhs.span().end,
             count_input.source(false),
