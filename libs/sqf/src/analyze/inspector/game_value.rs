@@ -61,6 +61,7 @@ pub enum NilSource {
     Generic,
     ExplicitNil,
     CommandReturn,
+    FunctionReturn,
     PrivateArray,
     EmptyStack,
     IfWithoutElse,
@@ -365,7 +366,9 @@ impl GameValue {
     /// Checks if type is a "poisoned" nil type (should not be used as input or assigned)
     pub fn is_poison_nil(&self) -> bool {
         match self {
-            Self::Nothing(NilSource::CommandReturn | NilSource::IfWithoutElse)
+            Self::Nothing(
+                NilSource::CommandReturn | NilSource::FunctionReturn | NilSource::IfWithoutElse,
+            )
             | Self::Assignment => true,
             Self::Array(Some(outer), _) => outer
                 .iter()

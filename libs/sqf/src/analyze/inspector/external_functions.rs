@@ -44,7 +44,7 @@ impl Inspector {
         let params = func.params();
         let ret = func
             .ret()
-            .map(|r| GameValue::from_wiki_value(r, NilSource::CommandReturn));
+            .map(|r| GameValue::from_wiki_value(r, NilSource::FunctionReturn));
         if params.is_empty() {
             // no parameters to check
             return ret;
