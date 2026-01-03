@@ -1,4 +1,5 @@
 use hemtt_common::version::Version;
+use hemtt_workspace::addons::Addon;
 use rhai::plugin::{
     Dynamic, FnNamespace, FuncRegistration, Module, NativeCallContext, PluginFunc, RhaiResult,
     TypeId, export_module,
@@ -14,7 +15,7 @@ pub struct RhaiProject {
     prefix: String,
     mainprefix: String,
     version: Version,
-    // addons: Vec<Addon>,
+    addons: Vec<Addon>,
 }
 
 impl RhaiProject {
@@ -35,7 +36,7 @@ impl RhaiProject {
                 .version()
                 .get(ctx.workspace_path().vfs())
                 .expect("version config is valid to get to rhai module"),
-            // addons: ctx.addons().to_vec(),
+            addons: ctx.addons().to_vec(),
         }
     }
 }
@@ -71,9 +72,8 @@ pub mod project_functions {
         project.version.clone()
     }
 
-    // TODO: Add functions to addons
-    // #[rhai_fn(global, pure)]
-    // pub fn addons(project: &mut RhaiProject) -> Vec<Addon> {
-    //     project.addons.clone()
-    // }
+    #[rhai_fn(global, pure)]
+    pub fn addons(project: &mut RhaiProject) -> Vec<Addon> {
+        project.addons.clone()
+    }
 }

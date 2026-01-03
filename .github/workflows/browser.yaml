@@ -26,7 +26,7 @@ jobs:
         mv libs/paa/pkg/hemtt_paa_bg.wasm hemtt_paa_bg.wasm
         mv libs/paa/pkg/hemtt_paa.js hemtt_paa.js
     - name: Upload
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: wasm
         path: |
@@ -41,7 +41,7 @@ jobs:
     - name: Checkout the source code
       uses: actions/checkout@v6
     - name: Download wasm
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: wasm
         path: wasm
@@ -57,7 +57,7 @@ jobs:
         zip -r firefox.zip *
         mv firefox.zip ../firefox.zip
     - name: Upload
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: firefox
         path: firefox.zip
@@ -70,7 +70,7 @@ jobs:
     - name: Checkout the source code
       uses: actions/checkout@v6
     - name: Download wasm
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: wasm
         path: wasm
@@ -86,7 +86,7 @@ jobs:
         zip -r chrome.zip *
         mv chrome.zip ../chrome.zip
     - name: Upload
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: chrome
         path: chrome.zip

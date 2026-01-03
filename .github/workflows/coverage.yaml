@@ -44,7 +44,7 @@ jobs:
       - name: cargo llvm-cov
         run: cargo llvm-cov nextest --locked --all-features --lcov --output-path out.lcov
       - name: Upload Coverage to GitHub Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.os.name }}-coverage
           path: out.lcov

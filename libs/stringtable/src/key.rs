@@ -276,4 +276,37 @@ impl Key {
             _ => panic!("Unknown language: {language}"),
         }
     }
+
+    #[must_use]
+    /// Get all language values as a list of tuples (language, value)
+    pub fn as_list(&self) -> Vec<(&str, Option<&str>)> {
+        vec![
+            ("Original", self.original()),
+            ("English", self.english()),
+            ("Czech", self.czech()),
+            ("French", self.french()),
+            ("Spanish", self.spanish()),
+            ("Italian", self.italian()),
+            ("Polish", self.polish()),
+            ("Portuguese", self.portuguese()),
+            ("Russian", self.russian()),
+            ("German", self.german()),
+            ("Korean", self.korean()),
+            ("Japanese", self.japanese()),
+            ("Chinese", self.chinese()),
+            ("ChineseSimp", self.chinesesimp()),
+            ("Turkish", self.turkish()),
+            ("Swedish", self.swedish()),
+            ("Slovak", self.slovak()),
+            ("Serbocroatian", self.serbocroatian()),
+            ("Norwegian", self.norwegian()),
+            ("Icelandic", self.icelandic()),
+            ("Hungarian", self.hungarian()),
+            ("Greek", self.greek()),
+            ("Finnish", self.finnish()),
+            ("Dutch", self.dutch()),
+            ("Ukrainian", self.ukrainian()),
+            ("Danish", self.danish()),
+        ]
+    }
 }

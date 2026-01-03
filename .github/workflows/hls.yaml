@@ -42,13 +42,13 @@ jobs:
           cd hls
           cargo build --release --bin hemtt-language-server
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.os.artifact }}
           path: target/release/${{ matrix.os.exe }}
       - name: Upload Language (Linux)
         if: startsWith(matrix.os.runner, 'ubuntu')
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: languages
           path: hls/languages
@@ -62,11 +62,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: linux-x64
           path: linux
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: windows-x64
           path: windows
@@ -81,7 +81,7 @@ jobs:
         run: |
           rm -rf hls/languages
       - name: Download Languages
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: languages
           path: hls/languages
@@ -92,7 +92,7 @@ jobs:
           npm install -g @vscode/vsce
           vsce package
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: hls
           path: hls/*.vsix

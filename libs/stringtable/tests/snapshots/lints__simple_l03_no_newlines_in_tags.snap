@@ -1,0 +1,20 @@
+---
+source: libs/stringtable/tests/lints.rs
+expression: lint(stringify! (l03_no_newlines_in_tags))
+---
+[0m[1m[38;5;11mwarning[L-L03][0m[1m: Key `STR_A3_startTime` has leading or trailing whitespace in `English` tag[0m
+ [0m[36m=[0m [33mhelp[0m: Remove newlines and extra whitespace from inside localization tags.
+         The text should be on the same line as the tag
+         e.g., `<English>Text</English>` instead of `<English>\n    Text\n</English>`.
+
+
+[0m[1m[38;5;11mwarning[L-L03][0m[1m: Key `STR_Bad_Multiline` has leading or trailing whitespace in `French` tag[0m
+ [0m[36m=[0m [33mhelp[0m: Remove newlines and extra whitespace from inside localization tags.
+         The text should be on the same line as the tag
+         e.g., `<English>Text</English>` instead of `<English>\n    Text\n</English>`.
+
+
+[0m[1m[38;5;11mwarning[L-L03][0m[1m: Key `STR_Bad_Multiline` has leading or trailing whitespace in `German` tag[0m
+ [0m[36m=[0m [33mhelp[0m: Remove newlines and extra whitespace from inside localization tags.
+         The text should be on the same line as the tag
+         e.g., `<English>Text</English>` instead of `<English>\n    Text\n</English>`.

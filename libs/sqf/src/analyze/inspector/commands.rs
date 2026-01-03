@@ -88,7 +88,7 @@ impl Inspector {
                 let set_from_header = header
                     .as_ref()
                     .and_then(|h| h.params().get(i))
-                    .map(|a| GameValue::from_wiki_value(a.typ(), NilSource::CommandReturn));
+                    .map(|a| GameValue::from_wiki_value(a.typ(), NilSource::Generic));
                 for (element, element_span) in gv_index {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}
@@ -435,12 +435,12 @@ impl Inspector {
     #[must_use]
     pub fn cmd_b_then(
         &mut self,
-        _lhs: &IndexSet<GameValue>,
-        rhs: &IndexSet<GameValue>,
+        rhs: &Expression,
+        rhs_set: &IndexSet<GameValue>,
         database: &Database,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
-        for possible in rhs {
+        for possible in rhs_set {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(
                     &IndexSet::from([possible.clone()]),
@@ -461,6 +461,10 @@ impl Inspector {
                     }
                 }
             }
+        }
+        // if without else branch, add a possible nil result in addition to then-branch results
+        if let Expression::Code(_) = rhs {
+            return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
         }
         return_value
     }

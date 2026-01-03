@@ -6,6 +6,9 @@ pub enum Error {
     #[error("`.hemtt/project.toml` not found")]
     ConfigNotFound,
 
+    #[error("Not in a git repository: {0}")]
+    NotInGitRepository(String),
+
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),
