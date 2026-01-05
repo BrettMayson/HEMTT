@@ -67,7 +67,7 @@ tracing-subscriber = { version = "0.3.20", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
 webbrowser = "1.0.6"
-whoami = "1.6.1"
+whoami = "2.0.0"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
