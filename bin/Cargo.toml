@@ -45,6 +45,7 @@ glob = "0.3.3"
 image = "0.25.9"
 indicatif = "0.18.3"
 interprocess = { workspace = true }
+lzma-rust2 = "0.15.6" # TODO: remove when not needed, currently breaks build if not specified
 num_cpus = "1.17.0"
 paste = { workspace = true }
 rand = { workspace = true }
