@@ -604,7 +604,7 @@ fn decompress_buffer(reader: &mut impl Read, size: usize) -> DeserializeResult<V
     let mut buffer_uncompressed = vec![0; size];
     reader.read_exact(&mut buffer_uncompressed)?;
     let mut buffer = Vec::with_capacity(buffer_size);
-    hemtt_lzo::decompress_to_slice(&buffer_uncompressed, &mut buffer)?;
+    hemtt_lzo::lzss::decompress_to_slice(&buffer_uncompressed, &mut buffer)?;
     Ok(buffer)
 }
 
@@ -621,9 +621,9 @@ fn serialize_compress_buffer(buffer: impl AsRef<[u8]>, writer: &mut impl Write) 
     let buffer = buffer.as_ref();
     // Uncompressed size
     let buffer_size = try_truncate_or(buffer.len(), SerializeError::BufferSizeLimit)?;
-    let len: usize = hemtt_lzo::worst_compress(std::mem::size_of_val(buffer));
+    let len: usize = hemtt_lzo::lzss::worst_compress(std::mem::size_of_val(buffer));
     let mut buffer_compressed = Vec::with_capacity(len);
-    hemtt_lzo::compress(buffer, &mut buffer_compressed)?;
+    hemtt_lzo::lzss::compress(buffer, &mut buffer_compressed)?;
     writer.write_u32::<LE>(buffer_size)?;
     // Compression method, always 2
     writer.write_u8(2)?;
@@ -670,7 +670,7 @@ pub(crate) enum DeserializeError {
     #[error("unexpected block type {0:?}")]
     UnexpectedBlock(BlockType),
     #[error("lzo error")]
-    LzoError(#[from] hemtt_lzo::LzoError),
+    LzoError(#[from] hemtt_lzo::lzss::LzoError),
 }
 
 type DeserializeResult<T> = Result<T, DeserializeError>;
@@ -696,7 +696,7 @@ pub enum SerializeError {
     #[error("invalid command/name index {0}, not found in compiled context")]
     InvalidNameIndex(u16),
     #[error("Lzo error {0}")]
-    LzoError(#[from] hemtt_lzo::LzoError),
+    LzoError(#[from] hemtt_lzo::lzss::LzoError),
 }
 
 type SerializeResult<T = ()> = Result<T, SerializeError>;

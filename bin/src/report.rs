@@ -11,12 +11,22 @@ use crate::Error;
 #[derive(Debug, Default)]
 pub struct Report {
     codes: Codes,
+    error_on_all: bool,
 }
 
 impl Report {
     #[must_use]
     pub fn new() -> Self {
-        Self { codes: Vec::new() }
+        Self {
+            codes: Vec::new(),
+            error_on_all: false,
+        }
+    }
+
+    #[must_use]
+    pub const fn with_error_on_all(mut self, error_on_all: bool) -> Self {
+        self.error_on_all = error_on_all;
+        self
     }
 
     /// Write the report to the `ci_annotations.txt` file for GitHub Actions
@@ -107,7 +117,11 @@ impl Report {
     #[must_use]
     /// Returns `true` if there are any errors
     pub fn failed(&self) -> bool {
-        !self.errors().is_empty()
+        if self.error_on_all {
+            !self.codes.is_empty()
+        } else {
+            !self.errors().is_empty()
+        }
     }
 }
 

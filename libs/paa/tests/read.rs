@@ -36,3 +36,20 @@ fn read_dxt5() {
     assert_eq!(mipmap.data().len(), 4096);
     let _ = paa.maps()[0].0.get_image();
 }
+
+#[test]
+fn read_argba5() {
+    let file = fs_err::File::open("tests/argba5.paa").unwrap();
+    let paa = hemtt_paa::Paa::read(file).unwrap();
+    assert_eq!(paa.format(), &PaXType::ARGBA5);
+    assert_eq!(paa.taggs().len(), 3);
+    assert!(paa.taggs().contains_key(&"SFFO".to_string()));
+    assert!(paa.taggs().contains_key(&"CGVA".to_string()));
+    assert!(paa.taggs().contains_key(&"CXAM".to_string()));
+    let mipmap = &paa.maps()[0].0;
+    assert_eq!(mipmap.width(), 196);
+    assert!(mipmap.is_compressed());
+    assert_eq!(mipmap.format(), &PaXType::ARGBA5);
+    assert_eq!(mipmap.data().len(), 13719);
+    let _ = paa.maps()[0].0.get_image();
+}

@@ -54,6 +54,7 @@ enum Commands {
     Launch(commands::launch::Command),
     License(commands::license::Command),
     Build(commands::build::Command),
+    Keys(commands::keys::Command),
     Release(commands::release::Command),
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
@@ -144,6 +145,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Launch(cmd) => commands::launch::execute(cmd),
         Commands::License(cmd) => commands::license::execute(cmd),
         Commands::Build(cmd) => commands::build::execute(cmd),
+        Commands::Keys(cmd) => commands::keys::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Localization(cmd) => commands::localization::execute(cmd),
         Commands::Script(cmd) => commands::script::execute(cmd),

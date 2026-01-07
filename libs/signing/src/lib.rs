@@ -18,13 +18,15 @@ use hemtt_pbo::ReadablePbo;
 use rsa::BoxedUint;
 use sha1::{Digest, Sha1};
 
+mod encrypted;
 mod error;
 mod private;
 mod public;
 mod signature;
 
+pub use encrypted::KDFParams;
 pub use error::Error;
-pub use private::BIPrivateKey;
+pub use private::{BIPrivateKey, HEMTTPrivateKey};
 pub use public::BIPublicKey;
 pub use signature::BISign;
 

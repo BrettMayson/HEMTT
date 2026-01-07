@@ -2,6 +2,15 @@
 source: libs/sqf/tests/lints.rs
 expression: "lint(stringify! (s14_unused), false).0"
 ---
+[0m[1m[38;5;14mhelp[L-S14][0m[1m: Unused variable `_x`[0m
+  [0m[36m┌─[0m s14_unused.sqf:4:9
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m private [0m[36m_x[0m = 10;
+  [0m[36m│[0m         [0m[36m^^[0m [0m[36munused variable[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: variable overwritten before being used
+
+
 [0m[1m[38;5;14mhelp[L-S14][0m[1m: Unused variable `_z`[0m
   [0m[36m┌─[0m s14_unused.sqf:1:9
   [0m[36m│[0m

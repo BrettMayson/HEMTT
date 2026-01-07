@@ -3,7 +3,7 @@
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::cast_ptr_alignment)]
 
-use crate::LzoError;
+use super::LzoError;
 
 const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p.cast::<u8>();

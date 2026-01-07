@@ -127,7 +127,7 @@ pub fn execute(cmd: &Command, in_test: bool) -> Result<Report, Error> {
 
     // Create .gitignore
     let mut file = fs_err::File::create(path.join(".gitignore"))?;
-    file.write_all(b"*.pbo\n.hemttout\nhemtt\nhemtt.exe\n*.biprivatekey\n")?;
+    file.write_all(b"*.pbo\n.hemttout\nhemtt\nhemtt.exe\n*.biprivatekey\n*.hemttprivatekey\n")?;
 
     // Create LICENSE
     if let Some(license) = license {

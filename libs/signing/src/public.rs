@@ -4,6 +4,7 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use hemtt_common::io::{ReadExt, WriteExt};
 use hemtt_pbo::ReadablePbo;
 use rsa::BoxedUint;
+use sha1::Digest as _;
 
 use crate::{BISign, Error, generate_hashes};
 
@@ -53,6 +54,18 @@ impl BIPublicKey {
             out.push(c);
         }
         out
+    }
+
+    /// Computes the SHA-1 hash of the public key
+    ///
+    /// # Errors
+    /// If writing the public key fails
+    pub fn hash(&self) -> Result<Vec<u8>, Error> {
+        let mut hasher = sha1::Sha1::new();
+        let mut data = Vec::new();
+        self.write(&mut data)?;
+        hasher.update(&data);
+        Ok(hasher.finalize().to_vec())
     }
 
     /// Write the public key to a writer

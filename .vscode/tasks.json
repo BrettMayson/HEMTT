@@ -37,6 +37,22 @@
     {
       "label": "build hls",
       "dependsOn": ["build hls (vscode)", "build hls (p3d viewer)", "build hls (paa viewer)"]
-    }
+    },
+    {
+        "label": "cargo release hemtt",
+        "type": "shell",
+        "command": "cargo build --release -p hemtt",
+        "problemMatcher": [
+            "$rustc"
+        ]
+    },
+    {
+        "label": "cargo nextest (windoze)",
+        "type": "shell",
+        "command": "cargo nextest run --config profile.test.opt-level=3 --config profile.test.codegen-units=1",
+        "problemMatcher": [
+            "$rustc"
+        ]
+    },
   ]
 }

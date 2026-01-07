@@ -258,54 +258,22 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn array_nested_missing() {
-    //     assert_eq!(
-    //         property()
-    //             .parse_recovery("MyProperty[] = {{1,2,3},{4,5,6};")
-    //             .0,
-    //         Some(Property::Entry {
-    //             name: crate::Ident {
-    //                 value: "MyProperty".to_string(),
-    //                 span: 0..10,
-    //             },
-    //             value: Value::Array(crate::Array {
-    //                 expand: false,
-    //                 items: vec![
-    //                     crate::Item::Array(vec![
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 1,
-    //                             span: 0..1
-    //                         }),
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 2,
-    //                             span: 2..3
-    //                         }),
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 3,
-    //                             span: 4..5
-    //                         }),
-    //                     ]),
-    //                     crate::Item::Array(vec![
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 4,
-    //                             span: 6..7
-    //                         }),
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 5,
-    //                             span: 8..9
-    //                         }),
-    //                         crate::Item::Number(crate::Number::Int32 {
-    //                             value: 6,
-    //                             span: 10..11
-    //                         }),
-    //                     ]),
-    //                 ],
-    //                 span: 15..32,
-    //             })
-    //         })
-    //     );
-    // }
+    #[test]
+    fn array_nested_missing() {
+        assert_eq!(
+            property()
+                .parse_recovery("MyProperty[] = {{1,2,3},{4,5,6};")
+                .0,
+            Some(Property::Entry {
+                expected_array: true,
+                name: crate::Ident {
+                    value: "MyProperty".to_string(),
+                    span: 0..10,
+                },
+                value: Value::Invalid(15..31),
+            })
+        );
+    }
 
     #[test]
     fn string() {

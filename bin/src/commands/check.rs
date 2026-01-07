@@ -31,6 +31,9 @@ pub struct CheckArgs {
     ///
     /// Enables stricter checking for code quality and best practices.
     pedantic: bool,
+    #[arg(long, short = 'e', action = clap::ArgAction::SetTrue)]
+    /// Treat all help and warning messages as errors
+    error_on_all: bool,
     #[arg(long, short = 'L', action = clap::ArgAction::Append)]
     /// Explicit Lints
     ///
@@ -80,5 +83,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     executor.check();
     executor.build(false);
 
-    executor.run()
+    executor
+        .run()
+        .map(|report| report.with_error_on_all(cmd.check.error_on_all))
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="test">
+    <Package name="test">
+        <Key ID="STR_A3_startTime">
+            <English>
+    Time of the day
+    </English>
+        </Key>
+        <Key ID="STR_Good">
+            <English>This is fine</English>
+        </Key>
+        <Key ID="STR_Bad_Multiline">
+            <German>
+            German text with spaces
+            </German>
+            <French>
+French text
+</French>
+        </Key>
+    </Package>
+</Project>
