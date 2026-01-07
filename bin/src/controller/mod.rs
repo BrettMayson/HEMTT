@@ -2,15 +2,13 @@
 
 use std::{
     io::{Read, Write},
+    net::{TcpListener, TcpStream},
     process::Child,
 };
 
 use hemtt_common::{
     arma::control::{fromarma, toarma},
     config::LaunchOptions,
-};
-use interprocess::local_socket::{
-    GenericNamespaced, ListenerNonblockingMode, ListenerOptions, ToNsName, traits::Listener,
 };
 
 use crate::{
@@ -22,6 +20,10 @@ use crate::{
 
 mod action;
 mod profile;
+
+/// TCP port for communication between HEMTT and Arma 3
+/// Using port 21337 (HEMTT backwards in leet speak)
+const HEMTT_TCP_PORT: u16 = 21337;
 
 pub use action::Action;
 pub use profile::AutotestMission;
@@ -69,45 +71,40 @@ impl Controller {
         let Some(mut child) = child else {
             return Ok(report);
         };
-        let opts = ListenerOptions::new().name("hemtt_arma".to_ns_name::<GenericNamespaced>()?);
-        let socket = opts.create_sync()?;
-        socket.set_nonblocking(ListenerNonblockingMode::Both)?;
+        let listener = TcpListener::bind(format!("127.0.0.1:{HEMTT_TCP_PORT}"))?;
+        listener.set_nonblocking(true)?;
         info!("Waiting for Arma...");
         let start = std::time::Instant::now();
         let mut did_warn = false;
         let mut socket = loop {
-            if let Ok(s) = socket.accept() {
+            if let Ok((s, _)) = listener.accept() {
                 break s;
             }
             if !did_warn && start.elapsed().as_secs() > 120 {
                 warn!("Still waiting after 120 seconds");
                 did_warn = true;
             }
+            std::thread::sleep(std::time::Duration::from_millis(100));
         };
 
         info!("Connected!");
 
         let mut current = None;
 
-        loop {
-            let status = child.try_wait();
-            if status.is_err() {
-                warn!("No longer able to determine Arma's status");
-                break;
-            }
-            if let Ok(Some(_)) = status {
-                info!("Arma has exited");
-                break;
-            }
+        let (from_arma_tx, from_arma_rx) = std::sync::mpsc::channel();
+        let (to_arma_tx, to_arma_rx) = std::sync::mpsc::channel();
 
+        std::thread::spawn(move || loop {
             let mut len_buf = [0u8; 4];
+            socket.set_nonblocking(true).expect("Failed to set nonblocking mode");
             if socket.read_exact(&mut len_buf).is_ok() && !len_buf.is_empty() {
                 let len = u32::from_le_bytes(len_buf);
                 trace!("Receiving: {}", len);
                 let mut buf = vec![0u8; len as usize];
+                socket.set_nonblocking(false).expect("Failed to set blocking mode");
                 socket.read_exact(&mut buf).expect("Failed to read message");
                 let buf = String::from_utf8(buf).expect("Failed to parse message");
-                let message: fromarma::Message = serde_json::from_str(&buf)?;
+                let message: fromarma::Message = serde_json::from_str(&buf).expect("Failed to deserialize message");
                 trace!("Received: {:?}", message);
                 if let fromarma::Message::Control(control) = message {
                     match control {
@@ -131,16 +128,39 @@ impl Controller {
                     }
                 } else if let Some(current) = &current {
                     trace!("msg for {current}: {message:?}");
-                    self.actions
-                        .iter()
-                        .find(|a| a.missions(ctx).iter().any(|m| m.1.as_str() == current))
-                        .expect("No action for mission")
-                        .incoming(ctx, message)
-                        .iter()
-                        .for_each(|m| send(m, &mut socket));
+                    from_arma_tx.send((current.clone(), message)).unwrap();
                 } else {
                     warn!("Message without mission: {:?}", message);
                 }
+            }
+            if let Ok(message) = to_arma_rx.try_recv() {
+                send(&message, &mut socket);
+            }
+        });
+
+        loop {
+            if cfg!(windows) {
+                let status = child.try_wait();
+                if status.is_err() {
+                    warn!("No longer able to determine Arma's status");
+                    break;
+                }
+                if let Ok(Some(_)) = status {
+                    info!("Arma has exited");
+                    break;
+                }
+            }
+
+            if let Ok((mission, message)) = from_arma_rx.recv_timeout(std::time::Duration::from_millis(100)) {
+                self.actions
+                    .iter()
+                    .find(|a| a.missions(ctx).iter().any(|m| m.1.as_str() == mission))
+                    .expect("No action for mission")
+                    .incoming(ctx, message)
+                    .into_iter()
+                    .for_each(|m| {
+                        to_arma_tx.send(m).unwrap();
+                    });
             }
         }
         Ok(report)
@@ -180,10 +200,7 @@ fn launch(
 }
 
 #[allow(clippy::cast_possible_truncation)]
-fn send(
-    message: &toarma::Message,
-    socket: &mut interprocess::local_socket::prelude::LocalSocketStream,
-) {
+fn send(message: &toarma::Message, socket: &mut TcpStream) {
     let message = serde_json::to_string(message).unwrap();
     trace!("sending: {}", message);
     socket

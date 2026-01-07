@@ -243,20 +243,26 @@ impl Action for Photoshoot {
                 if self.weapons.is_empty() && self.vehicles.is_empty() {
                     return vec![self.next_message()];
                 }
-                let mut messages = Vec::new();
-                for weapon in self.weapons.keys() {
-                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Weapon(
+                let mut messages = self.pending.lock().expect("pending lock");
+                let mut keys = self.weapons.keys().collect::<Vec<&String>>();
+                keys.sort();
+                for weapon in keys {
+                    messages.push(toarma::Photoshoot::Weapon(
                         weapon.clone(),
-                    )));
+                    ));
                 }
-                for vehicle in self.vehicles.keys() {
-                    messages.push(toarma::Message::Photoshoot(toarma::Photoshoot::Vehicle(
+                let mut keys = self.vehicles.keys().collect::<Vec<&String>>();
+                keys.sort();
+                for vehicle in keys {
+                    messages.push(toarma::Photoshoot::Vehicle(
                         vehicle.clone(),
-                    )));
+                    ));
                 }
-                messages
+                drop(messages);
+                vec![self.next_message()]
             }
             fromarma::Photoshoot::Weapon(class) | fromarma::Photoshoot::Vehicle(class) => {
+                std::thread::sleep(std::time::Duration::from_millis(500)); // give Arma time to save the screenshot
                 let target = if matches!(msg, fromarma::Photoshoot::Weapon(_)) {
                     debug!("Photoshoot: Weapon: {}", class);
                     PathBuf::from(self.weapons.get(class).expect("received unknown weapon"))

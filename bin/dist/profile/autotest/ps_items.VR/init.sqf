@@ -95,6 +95,10 @@ addMissionEventHandler ["ExtensionCallback", {
                 "hemtt_comm" callExtension ["log", ["error", format ["Unknown: %1", _function]]];
             };
         };
+        if !(isNil "ps_cam") then {
+            camDestroy ps_cam;
+            ps_cam = nil;
+        };
     };
 }];
 
