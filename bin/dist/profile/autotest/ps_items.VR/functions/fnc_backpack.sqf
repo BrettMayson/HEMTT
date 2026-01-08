@@ -14,6 +14,8 @@ ps_cam camSetDir vectorDir camera_uniform;
 ps_cam camSetPos getPos camera_uniform;
 hideObject camera_uniform;
 ps_cam camCommit 0;
+ps_cam camPreload 0;
+waitUntil { camPreloaded ps_cam };
 model_clothing hideObject false;
 
 // Take screenshot
@@ -24,7 +26,9 @@ model_clothing setFace "HEMTTPhotoshoot";
 model_clothing setDir 0;
 sleep 0.3;
 waitUntil { 10 preloadObject model_clothing };
+
 screenshot format ["%1.png", _class];
+"hemtt_comm" callExtension ["photoshoot:items:vehicle", [_class]];
+
 sleep 0.3;
 model_clothing hideObject true;
-"hemtt_comm" callExtension ["photoshoot:vehicle", [_class]];

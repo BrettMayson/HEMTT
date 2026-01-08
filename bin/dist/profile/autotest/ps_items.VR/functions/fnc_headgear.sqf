@@ -22,12 +22,12 @@ ps_cam camSetPos _campos;
 ps_cam camSetFov 0.1;
 ps_cam camSetTarget [_pos#0,_pos#1 + 0.425,_pos#2 + 1.3];
 ps_cam camCommit 0;
-
-sleep 0.5;
+ps_cam camPreload 0;
+waitUntil { camPreloaded ps_cam };
 
 screenshot format ["%1.png", _class];
-sleep 0.3;
 "hemtt_comm" callExtension ["photoshoot:items:weapon", [_class]];
+sleep 0.3;
 
 deleteVehicle _holder;
 
