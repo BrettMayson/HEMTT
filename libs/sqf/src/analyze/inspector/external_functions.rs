@@ -110,7 +110,7 @@ impl Inspector {
                                 &gv_array[2],
                                 &vec![
                                     ("_thisType", GameValue::String(None)),
-                                    ("_thisId", GameValue::Number(None)),
+                                    ("_thisId", GameValue::Number(None, None)),
                                     ("_thisFnc", GameValue::Code(None)),
                                     ("_thisArgs", GameValue::Anything),
                                 ],
@@ -124,7 +124,7 @@ impl Inspector {
                                 &gv_array[1],
                                 &vec![
                                     ("_thisType", GameValue::String(None)),
-                                    ("_thisId", GameValue::Number(None)),
+                                    ("_thisId", GameValue::Number(None, None)),
                                     ("_thisFnc", GameValue::Code(None)),
                                     ("_thisArgs", GameValue::Anything),
                                 ],
