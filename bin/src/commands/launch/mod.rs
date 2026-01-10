@@ -18,7 +18,7 @@ pub mod launcher;
 mod platforms;
 pub mod preset;
 
-#[derive(clap::Parser)]
+#[derive(clap::Parser, Debug)]
 #[command(verbatim_doc_comment)]
 /// Test your project
 ///
@@ -256,7 +256,7 @@ pub struct Command {
     global: crate::GlobalArgs,
 }
 
-#[derive(Default, clap::Args)]
+#[derive(Default, Debug, clap::Args)]
 #[allow(clippy::module_name_repetitions)]
 pub struct LaunchArgs {
     #[arg(action = clap::ArgAction::Append, verbatim_doc_comment)]
@@ -322,6 +322,8 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         report.push(MissingMainPrefix::code());
         return Ok(report);
     };
+
+    println!("Command: {:?}", cmd);
 
     let launch = read_profile(
         &global,
@@ -389,7 +391,7 @@ pub fn read_profile(
     profiles: &[String],
     report: &mut Report,
 ) -> Option<LaunchOptions> {
-    let launch = if profiles.is_empty() || profiles.iter().all(|c| c.starts_with('+')) {
+    let launch = if profiles.is_empty() {
         config
             .hemtt()
             .launch()
@@ -445,7 +447,19 @@ pub fn read_profile(
         .collect::<Option<Vec<_>>>()
     {
         launch.into_iter().fold(
-            LaunchOptions::default(),
+            if profiles
+                .iter()
+                .all(|c| c.starts_with('+') || c.starts_with('@'))
+            {
+                config
+                    .hemtt()
+                    .launch()
+                    .get("default")
+                    .cloned()
+                    .unwrap_or_default()
+            } else {
+                LaunchOptions::default()
+            },
             hemtt_common::config::LaunchOptions::overlay,
         )
     } else {
