@@ -31,7 +31,7 @@ pub fn global_modules(executor: &mut crate::executor::Executor) {
     executor.add_module(Box::<crate::modules::SQFCompiler>::default());
 }
 
-#[derive(clap::Args)]
+#[derive(clap::Args, Debug)]
 pub struct JustArgs {
     #[arg(long, action = clap::ArgAction::Append)]
     /// Only build the given addon

@@ -48,7 +48,7 @@ pub struct Command {
     pub(crate) global: crate::GlobalArgs,
 }
 
-#[derive(clap::Args)]
+#[derive(clap::Args, Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DevArgs {
     #[arg(long, short, action = clap::ArgAction::Append, verbatim_doc_comment)]
@@ -74,7 +74,7 @@ pub struct DevArgs {
     pub(crate) no_rap: bool,
 }
 
-#[derive(Clone, clap::Args)]
+#[derive(Clone, clap::Args, Debug)]
 pub struct BinarizeArgs {
     #[arg(long, short, action = clap::ArgAction::SetTrue, verbatim_doc_comment)]
     /// Use BI's binarize on supported files
