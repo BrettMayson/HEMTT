@@ -323,8 +323,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         return Ok(report);
     };
 
-    println!("Command: {:?}", cmd);
-
     let launch = read_profile(
         &global,
         &config,
