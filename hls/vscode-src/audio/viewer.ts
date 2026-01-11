@@ -4,13 +4,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { channel } from '../extension';
-import { WssConversion } from '.';
+import { AudioConversionResult, WssConversion } from '.';
 
 export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
   public static readonly viewType = 'hemtt.wssViewer';
   private tempDir: string;
-  private tempFiles: Map<string, WssConversion> = new Map();
-  
+  private tempFiles: Map<string, AudioConversionResult> = new Map();
+
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly client: LanguageClient
@@ -43,7 +43,7 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
     };
 
     // Convert WSS to WAV
-    const wavPath = await this.convertToWav(document.uri);
+    const wavPath = await this.tryConvertToWav(document.uri);
     if (!wavPath) {
       webview.html = this.getErrorHtml();
       return;
@@ -54,13 +54,36 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
     webview.html = this.getHtml(webview, wavPath.path, wssInfo);
   }
 
-  private async convertToWav(wssUri: vscode.Uri): Promise<WssConversion | undefined> {
-    try {
-      // If we've already converted this file, return the cached path
-      if (this.tempFiles.has(wssUri.toString())) {
-        return this.tempFiles.get(wssUri.toString());
+  private async tryConvertToWav(wssUri: vscode.Uri): Promise<WssConversion | undefined> {
+
+    // If we've already converted this file, return the cached path
+    if (this.tempFiles.has(wssUri.toString())) {
+      const processedFile = this.tempFiles.get(wssUri.toString());
+      const stats = fs.statSync(wssUri.fsPath);
+      if (stats.mtime > processedFile?.conversionDate!) {
+        return processedFile?.conversion;
       }
-      
+
+      // delete old temp file
+      if (fs.existsSync(processedFile?.conversion.path!)) {
+        fs.unlinkSync(processedFile!.conversion.path);
+      }
+    }
+
+    const result = await this.convertoWav(wssUri);
+    if (!result) {
+      return undefined;
+    }
+
+    // Save the mapping for cleanup later
+    this.tempFiles.set(wssUri.toString(), { conversionDate: new Date(), conversion: result });
+    return result;
+  }
+
+  private async convertoWav(wssUri: vscode.Uri) {
+    try {
+
+
       // Create a unique name for the temp file
       const fileName = path.basename(wssUri.fsPath, '.wss');
       const tempWavPath = path.join(this.tempDir, `${fileName}-${Date.now()}.wav`);
@@ -77,9 +100,7 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
         vscode.window.showErrorMessage("Failed to convert WSS file to WAV");
         return undefined;
       }
-      
-      // Save the mapping for cleanup later
-      this.tempFiles.set(wssUri.toString(), result);
+
       return result;
     } catch (error) {
       console.error(error);
@@ -167,8 +188,8 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
     try {
       // Delete all temporary files
       for (const filePath of this.tempFiles.values()) {
-        if (fs.existsSync(filePath.path)) {
-          fs.unlinkSync(filePath.path);
+        if (fs.existsSync(filePath.conversion.path)) {
+          fs.unlinkSync(filePath.conversion.path);
         }
       }
       
