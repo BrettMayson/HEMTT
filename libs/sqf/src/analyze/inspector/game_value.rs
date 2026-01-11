@@ -374,6 +374,23 @@ impl GameValue {
         }
     }
 
+    pub fn is_matching_set(input: &[&IndexSet<Self>]) -> bool {
+        if input.len() < 2 {
+            return true;
+        }
+        for (index, s1) in input.iter().enumerate() {
+            for s2 in &input[index + 1..] {
+                if !s1
+                    .iter()
+                    .any(|v1| s2.iter().any(|v2| Self::match_values(v1, v2)))
+                {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     #[must_use]
     /// Returns the common generic type of all array elements.
     ///
