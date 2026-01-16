@@ -10,11 +10,13 @@ impl Module for Git {
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
+        let mut using_private_key = false;
         if let Ok(repo) = Repository::discover(".") {
             for entry in walkdir::WalkDir::new(ctx.project_folder()) {
                 let entry = entry?;
                 let name = entry.file_name().to_string_lossy();
                 if name.ends_with(".hemttprivatekey") || name.ends_with(".biprivatekey") {
+                    using_private_key = true;
                     let rel_path = entry
                         .path()
                         .strip_prefix(ctx.project_folder())
@@ -66,7 +68,7 @@ impl Module for Git {
         }
 
         let gitignore = ctx.project_folder().join(".gitignore");
-        if gitignore.exists() {
+        if using_private_key && gitignore.exists() {
             let mut search = false;
             let content = fs_err::read_to_string(&gitignore)?;
             if !content.contains(".hemttprivatekey") {

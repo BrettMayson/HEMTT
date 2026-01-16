@@ -272,7 +272,7 @@ impl Inspector {
                                 self.var_assign(
                                     var.as_ref(),
                                     true,
-                                    IndexSet::from([GameValue::Number(None)]),
+                                    IndexSet::from([GameValue::Number(None, None)]),
                                     VarSource::ForLoop(source.clone()),
                                 );
                             }
