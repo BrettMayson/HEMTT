@@ -118,8 +118,10 @@ impl Report {
     /// Returns `true` if there are any errors
     pub fn failed(&self) -> bool {
         if self.error_on_all {
+            trace!("failed(error_on_all): codes {:?}", self.codes);
             !self.codes.is_empty()
         } else {
+            trace!("failed() errors {:?}", self.errors());
             !self.errors().is_empty()
         }
     }
