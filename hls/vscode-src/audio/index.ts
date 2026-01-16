@@ -35,6 +35,11 @@ export interface WssConversion {
   compression: string,
 }
 
+export interface AudioConversionResult {
+  conversionDate: Date,
+  conversion: WssConversion
+}
+
 async function conversion(url: string, to: string, client: LanguageClient, channel: vscode.OutputChannel) {
   const conv: WssConversion | undefined = await client.sendRequest("hemtt/audio/convert", {
     url,
