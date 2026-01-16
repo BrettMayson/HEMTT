@@ -1,0 +1,11 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s35_count_skipable), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S35][0m[1m: count could be replaced with findIf[0m
+  [0m[36m┌─[0m s35_count_skipable.sqf:1:27
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m {alive _x} count allUnits [0m[36m>[0m 0;
+  [0m[36m│[0m                           [0m[36m^[0m [0m[36mcount compared to 0[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: using `findIf` can skip unnecessary checks once a match is found
