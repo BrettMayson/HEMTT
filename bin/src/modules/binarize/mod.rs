@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     ffi::OsStr,
     path::PathBuf,
-    process::Command,
     sync::{RwLock, atomic::AtomicUsize},
 };
 
@@ -13,16 +12,18 @@ use hemtt_workspace::reporting::Severity;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
 
-#[allow(unused_imports)] // some are Linux only
-use self::error::{
-    bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
-    bbw2_platform_not_supported::PlatformNotSupported,
-};
 use self::error::{bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive};
 use super::Module;
 use crate::{
-    context::Context, error::Error, link::create_link,
-    modules::binarize::error::bbe5_missing_material::MissingMaterials, progress::progress_bar,
+    bi_tool::BiTool,
+    context::Context,
+    error::Error,
+    link::create_link,
+    modules::binarize::error::{
+        bbe3_binarize_failed::BinarizeFailed, bbe5_missing_material::MissingMaterials,
+        bbw1_tools_not_found::ToolsNotFound, bbw2_platform_not_supported::PlatformNotSupported,
+    },
+    progress::progress_bar,
     report::Report,
 };
 
@@ -32,7 +33,6 @@ mod error;
 pub struct Binarize {
     check_only: bool,
     command: Option<String>,
-    compatibility: CompatibiltyTool,
     prechecked: RwLock<Vec<BinarizeTarget>>,
     search_cache: SearchCache,
 }
@@ -43,7 +43,6 @@ impl Binarize {
         Self {
             check_only,
             command: None,
-            compatibility: CompatibiltyTool::Wine64,
             prechecked: RwLock::new(Vec::new()),
             search_cache: SearchCache::new(),
         }
@@ -55,44 +54,7 @@ impl Module for Binarize {
         "Binarize"
     }
 
-    #[cfg(windows)]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        let mut report = Report::new();
-
-        if self.check_only {
-            return Ok(report);
-        }
-
-        let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
-            trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
-            PathBuf::from(path)
-        } else {
-            trace!("Using Binarize path from registry");
-            let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-            let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-                report.push(ToolsNotFound::code(Severity::Warning));
-                return Ok(report);
-            };
-            let Ok(path) = key.get_value::<String, _>("path") else {
-                report.push(ToolsNotFound::code(Severity::Warning));
-                return Ok(report);
-            };
-            PathBuf::from(path)
-        };
-        let path = folder.join("binarize_x64.exe");
-        if path.exists() {
-            self.command = Some(path.display().to_string());
-        } else {
-            report.push(ToolsNotFound::code(Severity::Warning));
-        }
-        setup_tmp(ctx)?;
-        Ok(report)
-    }
-
-    #[cfg(not(windows))]
-    fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        use hemtt_common::steam;
-
         let mut report = Report::new();
 
         if self.check_only {
@@ -104,36 +66,9 @@ impl Module for Binarize {
             return Ok(report);
         }
 
-        let tools_path = {
-            let default = dirs::home_dir()
-                .expect("home directory exists")
-                .join(".local/share/arma3tools");
-            if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
-                PathBuf::from(path)
-            } else if !default.exists() {
-                let Some(tools_dir) = steam::find_app(233_800) else {
-                    report.push(ToolsNotFound::code(Severity::Warning));
-                    return Ok(report);
-                };
-                tools_dir
-            } else {
-                default
-            }
-        };
-        let path = tools_path.join("Binarize").join("binarize_x64.exe");
-        if path.exists() {
-            self.command = Some(path.display().to_string());
-            let compatibility = CompatibiltyTool::determine();
-            if let Some(tool) = compatibility {
-                info!("Using {} for binarization compatibilty", tool.to_string());
-                self.compatibility = tool;
-            } else {
-                debug!("tools found, but not wine64 or proton");
-                report.push(ToolsNotFound::code(Severity::Warning));
-                self.command = None;
-            }
-        } else {
+        if !BiTool::Binarize.is_installed() {
             report.push(ToolsNotFound::code(Severity::Warning));
+            return Ok(report);
         }
         setup_tmp(ctx)?;
         Ok(report)
@@ -314,54 +249,26 @@ impl Module for Binarize {
                 let path = PathBuf::from(&target.output).join(&target.entry);
                 let path_hash = hash_filename(path.to_str().expect("path should be valid utf-8"));
                 if cache.artifacts.contains_key(&path_hash) {
-                    let artifact = cache.artifacts.get(&path_hash).expect("should be able to get artifact from cache");
+                    let artifact = cache
+                        .artifacts
+                        .get(&path_hash)
+                        .expect("should be able to get artifact from cache");
                     if up_to_date(artifact, &self.search_cache) {
-                        debug!("skipping binarization of {} as it is already up-to-date", target.entry);
-                        fs_err::copy(cache_dir.join(path_hash).with_extension("hb"), &path).expect("should be able to copy from cache to output");
+                        debug!(
+                            "skipping binarization of {} as it is already up-to-date",
+                            target.entry
+                        );
+                        fs_err::copy(cache_dir.join(path_hash).with_extension("hb"), &path)
+                            .expect("should be able to copy from cache to output");
                         progress.inc(1);
                         cache_hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         return None;
                     }
                 }
                 debug!("binarizing {}", target.entry);
-                let exe = self
-                    .command
-                    .as_ref()
-                    .expect("command should be set if we attempted to binarize");
-                let mut cmd = if cfg!(windows) {
-                    Command::new(exe)
-                } else {
-                    match self.compatibility {
-                        CompatibiltyTool::Wine64 | CompatibiltyTool::Wine => {
-                            let mut cmd = Command::new(self.compatibility.to_string());
-                            cmd.arg(exe);
-                            cmd.env("WINEPREFIX", "/tmp/hemtt-wine");
-                            fs_err::create_dir_all("/tmp/hemtt-wine")
-                                .expect("should be able to create wine prefix");
-                            cmd
-                        }
-                        CompatibiltyTool::Proton => {
-                            let mut home = dirs::home_dir().expect("home directory exists");
-                            if exe.contains("/.var/") {
-                                home = home.join(".var/app/com.valvesoftware.Steam");
-                            }
-                            let mut cmd = Command::new({
-                                home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-                            });
-                            cmd.env("STEAM_COMPAT_CLIENT_INSTALL_PATH", 
-                                home.join(".local/share/Steam")
-                            ).env(
-                                "STEAM_COMPAT_DATA_PATH",
-                                home.join(".local/share/Steam/steamapps/compatdata/233800")
-                            ).env("STEAM_COMPAT_INSTALL_PATH", "/tmp/hemtt-scip").arg("--").arg(
-                                home.join(".local/share/Steam/steamapps/common/Proton - Experimental/proton")
-                            ).arg("run").arg(
-                                home.join(".local/share/Steam/steamapps/common/Arma 3 Tools/Binarize/binarize_x64.exe")
-                            );
-                            cmd
-                        }
-                    }
-                };
+                let mut cmd = BiTool::Binarize
+                    .command()
+                    .expect("binarize should be located if we got this far");
                 cmd.args([
                     "-norecurse",
                     "-always",
@@ -685,53 +592,6 @@ impl Artifact {
             size,
             dependencies,
         })
-    }
-}
-
-#[derive(Default)]
-#[allow(dead_code)]
-pub enum CompatibiltyTool {
-    #[default]
-    Wine64,
-    Wine,
-    Proton,
-}
-
-impl CompatibiltyTool {
-    #[allow(dead_code)]
-    pub fn determine() -> Option<Self> {
-        use dirs::home_dir;
-        if cfg!(windows) {
-            return None;
-        }
-        let mut cmd = Command::new("wine64");
-        cmd.arg("--version");
-        if cmd.output().is_ok() {
-            return Some(Self::Wine64);
-        }
-        let mut cmd = Command::new("wine");
-        cmd.arg("--version");
-        if cmd.output().is_ok() {
-            return Some(Self::Wine);
-        }
-        if home_dir()
-            .expect("home directory exists")
-            .join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-            .exists()
-        {
-            return Some(Self::Proton);
-        }
-        None
-    }
-}
-
-impl std::fmt::Display for CompatibiltyTool {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Wine64 => write!(f, "wine64"),
-            Self::Wine => write!(f, "wine"),
-            Self::Proton => write!(f, "proton"),
-        }
     }
 }
 

@@ -55,11 +55,18 @@ pub fn autotest(ctx: &Context, missions: &[(String, AutotestMission)]) -> Result
                 match file {
                     AutotestMission::Internal(s) => format!(
                         r"{}\autotest\{}",
-                        ctx.profile()
-                            .display()
-                            .to_string()
-                            .replace('/', "\\")
-                            .replace('\n', "\r\n"),
+                        {
+                            let mut mission = ctx
+                                .profile()
+                                .display()
+                                .to_string()
+                                .replace('/', "\\")
+                                .replace('\n', "\r\n");
+                            if !cfg!(windows) {
+                                mission = format!("Z:{}", mission.replace('/', "\\"));
+                            }
+                            mission
+                        },
                         s
                     ),
                     AutotestMission::Custom(s) => s.clone(),
