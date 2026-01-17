@@ -277,6 +277,13 @@ pub fn lint_all(
     addons: &Vec<Addon>,
     database: Arc<Database>,
 ) -> Codes {
+    if let Some(project_config) = project_config
+        && !project_config.runtime().is_just()
+    {
+        let prefix = project_config.prefix();
+        // All sqf have been processed, export project functions only if not in "--just"
+        database.export_project_functions_to_file(prefix);
+    }
     let mut manager = LintManager::new(
         project_config.map_or_else(Default::default, |project| project.lints().sqf().clone()),
         project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),

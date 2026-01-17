@@ -1,16 +1,20 @@
 //! Allows customization of the commands list at runtime in order to facilitate forwards-compatibility.
 
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use arma3_wiki::{
     Wiki,
-    model::{Call, Version},
+    model::{Call, Function, Version},
 };
 use hemtt_workspace::WorkspacePath;
+use indexmap::IndexMap;
 use tracing::{error, trace, warn};
 
 use crate::Error;
-
+pub mod functions;
 /// The list of commands that are valid nular command constants for the compiler.
 pub const NULAR_COMMANDS_CONSTANTS: &[&str] = &[
     // NOTE: `netobjnull` is not included because it's broken
@@ -52,6 +56,10 @@ pub struct Database {
     unary_commands: HashSet<String>,
     binary_commands: HashSet<String>,
     wiki: Wiki,
+    /// All external functions loaded from files.
+    external_functions: IndexMap<String, Function>,
+    /// project functions collected from parsed files during build
+    project_functions: Arc<Mutex<Vec<Arc<Function>>>>,
 }
 
 impl Database {
@@ -63,6 +71,8 @@ impl Database {
             unary_commands: HashSet::new(),
             binary_commands: HashSet::new(),
             wiki: load_wiki(force_pull),
+            external_functions: IndexMap::new(),
+            project_functions: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -96,12 +106,15 @@ impl Database {
         for &command in BINARY_COMMANDS_SPECIAL {
             binary_commands.remove(command);
         }
+        let external_functions = Self::load_functions(&wiki);
 
         Self {
             nular_commands,
             unary_commands,
             binary_commands,
             wiki,
+            external_functions,
+            project_functions: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
