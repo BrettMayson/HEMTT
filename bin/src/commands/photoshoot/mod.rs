@@ -5,7 +5,7 @@ use hemtt_common::arma::control::{
     toarma,
 };
 use hemtt_config::{Class, Config, Property, Value};
-use image::codecs::jpeg::JpegEncoder;
+use image::GenericImageView;
 
 use crate::{
     context::{Context, PreservePrevious},
@@ -13,12 +13,9 @@ use crate::{
     error::Error,
     modules::AddonConfigs,
     report::Report,
-    utils,
 };
 
-mod error;
-
-use self::error::bcpe1_tools_not_found::ToolsNotFound;
+mod capture;
 
 use super::{
     JustArgs, dev,
@@ -56,22 +53,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         .unwrap_or_default()
     {
         return Ok(Report::new());
-    }
-
-    let mut report = Report::new();
-    let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-    let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\ImageToPAA") else {
-        report.push(ToolsNotFound::code());
-        return Ok(report);
-    };
-    let Ok(path) = key.get_value::<String, _>("tool") else {
-        report.push(ToolsNotFound::code());
-        return Ok(report);
-    };
-    let command = PathBuf::from(path);
-    if !command.exists() {
-        report.push(ToolsNotFound::code());
-        return Ok(report);
     }
 
     let mut report = Report::new();
@@ -132,11 +113,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
     let ctx = Context::new(Some("photoshoot"), PreservePrevious::Remove, false)?;
 
-    let mut ps = Photoshoot::new(
-        command,
-        ctx.profile().join("Users/hemtt/Screenshots"),
-        launch.dev_mission().map(std::string::ToString::to_string),
-    );
+    let mut ps = Photoshoot::new(launch.dev_mission().map(std::string::ToString::to_string));
 
     ps.add_weapons(find_weapons(&dev_ctx));
     ps.add_vehicles(find_vehicles(&dev_ctx));
@@ -173,21 +150,19 @@ pub struct Photoshoot {
     vehicles: HashMap<String, String>,
     previews: HashMap<String, String>,
     pending: Mutex<Vec<toarma::Photoshoot>>,
-    from: PathBuf,
-    command: PathBuf,
+    capturer: Mutex<Option<capture::Capture>>,
 }
 
 impl Photoshoot {
     #[must_use]
-    pub fn new(command: PathBuf, from: PathBuf, dev_mission: Option<String>) -> Self {
+    pub fn new(dev_mission: Option<String>) -> Self {
         Self {
             dev_mission,
-            command,
-            from,
             weapons: HashMap::new(),
             vehicles: HashMap::new(),
             previews: HashMap::new(),
             pending: Mutex::new(Vec::new()),
+            capturer: Mutex::new(None),
         }
     }
 
@@ -205,10 +180,56 @@ impl Photoshoot {
 
     fn next_message(&self) -> toarma::Message {
         let mut pending = self.pending.lock().expect("pending lock");
-        pending.pop().map_or_else(
+        let message = pending.pop().map_or_else(
             || toarma::Message::Photoshoot(toarma::Photoshoot::Done),
             toarma::Message::Photoshoot,
-        )
+        );
+        drop(pending);
+        if message == toarma::Message::Photoshoot(toarma::Photoshoot::Done) {
+            std::thread::spawn(|| {
+                // Allow some time for the message to be sent and processed
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                std::process::exit(0);
+            });
+        }
+        message
+    }
+
+    /// Initialize the screen capturer if not already initialized
+    ///
+    /// # Panics
+    /// - If the capturer mutex is poisoned
+    /// - If the capturer fails to initialize
+    pub fn init_capturer(&self) {
+        let mut capturer_lock = self.capturer.lock().expect("capturer lock");
+        if capturer_lock.is_none() {
+            *capturer_lock =
+                Some(capture::Capture::new().expect("failed to initialize screen capturer"));
+            drop(capturer_lock);
+        }
+    }
+
+    /// Stop the screen capturer
+    ///
+    /// # Panics
+    /// - If the capturer mutex is poisoned
+    pub fn stop_capturer(&self) {
+        let mut capturer_lock = self.capturer.lock().expect("capturer lock");
+        *capturer_lock = None;
+    }
+
+    /// Capture a screenshot of the Arma window
+    ///
+    /// # Panics
+    /// - If the capturer mutex is poisoned
+    pub fn screenshot(&self) -> Option<image::DynamicImage> {
+        self.init_capturer();
+        self.capturer
+            .lock()
+            .expect("capturer lock")
+            .as_ref()
+            .expect("capturer")
+            .screenshot()
     }
 }
 
@@ -233,7 +254,8 @@ impl Action for Photoshoot {
         missions
     }
 
-    fn incoming(&self, ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
+    fn incoming(&self, _ctx: &Context, msg: fromarma::Message) -> Vec<toarma::Message> {
+        self.init_capturer();
         let Message::Photoshoot(msg) = msg else {
             return Vec::new();
         };
@@ -259,33 +281,46 @@ impl Action for Photoshoot {
             fromarma::Photoshoot::Weapon(class) | fromarma::Photoshoot::Vehicle(class) => {
                 let target = if matches!(msg, fromarma::Photoshoot::Weapon(_)) {
                     debug!("Photoshoot: Weapon: {}", class);
-                    PathBuf::from(self.weapons.get(class).expect("received unknown weapon"))
+                    PathBuf::from(
+                        self.weapons
+                            .get(class)
+                            .expect("received unknown weapon")
+                            .replace('\\', "/"),
+                    )
                 } else {
                     debug!("Photoshoot: Vehicle: {}", class);
-                    PathBuf::from(self.vehicles.get(class).expect("received unknown vehicle"))
+                    PathBuf::from(
+                        self.vehicles
+                            .get(class)
+                            .expect("received unknown vehicle")
+                            .replace('\\', "/"),
+                    )
                 };
                 if target.exists() {
                     warn!("Target already exists: {}", target.display());
                     return vec![self.next_message()];
                 }
-                let image =
-                    utils::photoshoot::Photoshoot::weapon(class, &self.from, false).expect("image");
-                let dst_png = ctx
-                    .build_folder()
-                    .expect("photoshoot has a folder")
-                    .join(format!("{class}_ca.png"));
-                image.save(&dst_png).expect("save");
-                std::process::Command::new(&self.command)
-                    .arg(dst_png)
-                    .output()
-                    .expect("failed to execute process");
-                let dst_paa = ctx
-                    .build_folder()
-                    .expect("photoshoot has a folder")
-                    .join(format!("{class}_ca.paa"));
+                // let image = utils::photoshoot::Photoshoot::weapon(class, &self.from, false)
+                //     .expect("image")
+                //     .into();
+                let image = self.screenshot().expect("screenshot");
+                let paa = hemtt_paa::Paa::from_dynamic(&image, {
+                    let (width, height) = image.dimensions();
+                    if !height.is_power_of_two() || !width.is_power_of_two() {
+                        hemtt_paa::PaXType::ARGB8
+                    } else {
+                        let has_transparency = image.pixels().any(|p| p.2[3] < 255);
+                        if has_transparency {
+                            hemtt_paa::PaXType::DXT5
+                        } else {
+                            hemtt_paa::PaXType::DXT1
+                        }
+                    }
+                })
+                .expect("paa");
                 fs_err::create_dir_all(target.parent().expect("has parent")).expect("create dir");
-                info!("Created `{}` at `{}`", class, target.display());
-                fs_err::rename(dst_paa, target).expect("rename");
+                let mut file = fs_err::File::create(target).expect("create paa");
+                paa.write(&mut file).expect("write paa");
                 vec![self.next_message()]
             }
             fromarma::Photoshoot::WeaponUnsupported(weapon) => {
@@ -311,46 +346,34 @@ impl Action for Photoshoot {
                     messages
                 }
             }
-            fromarma::Photoshoot::PreviewsDone => {
-                debug!("Photoshoot: Previews");
-                let source = self
-                    .from
-                    .join("EditorPreviews")
-                    .join(".hemttout")
-                    .join("dev");
-                for image in fs_err::read_dir(source).expect("read dir") {
-                    let src = image.expect("image exists").path();
-                    let target = PathBuf::from(
-                        self.previews
-                            .get(
-                                &src.file_stem()
-                                    .expect("has stem")
-                                    .to_string_lossy()
-                                    .to_string(),
-                            )
-                            .expect("received unknown preview"),
-                    );
-                    let image = utils::photoshoot::Photoshoot::preview(&src).expect("image");
-                    fs_err::create_dir_all(target.parent().expect("has parent"))
-                        .expect("create dir");
-                    info!(
-                        "Created `{}` at `{}`",
-                        src.file_stem()
-                            .expect("has stem")
-                            .to_string_lossy()
-                            .to_string(),
-                        target.display()
-                    );
-                    let target = fs_err::File::create(target).expect("create");
-                    JpegEncoder::new_with_quality(target, 90)
-                        .encode(
-                            &image,
-                            image.width(),
-                            image.height(),
-                            image::ExtendedColorType::Rgb8,
-                        )
-                        .expect("encode");
+            fromarma::Photoshoot::Previews(class) => {
+                debug!("Photoshoot: Preview: {}", class);
+                let target = PathBuf::from(
+                    self.previews
+                        .get(class)
+                        .expect("received unknown preview")
+                        .replace('\\', "/"),
+                );
+                if target.exists() {
+                    warn!("Target already exists: {}", target.display());
+                    return vec![self.next_message()];
                 }
+                let image = self.screenshot().expect("screenshot");
+                let image: image::DynamicImage = image::imageops::resize(
+                    &image,
+                    455,
+                    256,
+                    image::imageops::FilterType::Lanczos3,
+                )
+                .into();
+                fs_err::create_dir_all(target.parent().expect("has parent")).expect("create dir");
+                image
+                    .save_with_format(target, image::ImageFormat::Jpeg)
+                    .expect("save");
+                vec![self.next_message()]
+            }
+            fromarma::Photoshoot::PreviewsDone => {
+                debug!("Photoshoot: PreviewsDone");
                 vec![toarma::Message::Photoshoot(toarma::Photoshoot::Done)]
             }
         }

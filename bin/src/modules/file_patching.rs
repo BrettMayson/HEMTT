@@ -63,10 +63,11 @@ impl Module for FilePatching {
         let link = prefix_folder.join(ctx.config().prefix());
         if link.exists() {
             trace!("removing existing symlink at {}", link.display());
-            #[cfg(windows)]
-            fs_err::remove_dir(&link)?;
-            #[cfg(not(windows))]
-            fs_err::remove_file(&link)?;
+            if cfg!(windows) {
+                fs_err::remove_dir(&link)?;
+            } else {
+                fs_err::remove_file(&link)?;
+            }
         }
         create_link(&link, ctx.build_folder().expect("build folder exists"))?;
         info!("Symlink created at {}", link.display());

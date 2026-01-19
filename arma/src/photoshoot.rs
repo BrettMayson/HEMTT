@@ -16,6 +16,7 @@ pub fn group() -> Group {
             "previews",
             Group::new()
                 .command("ready", previews::ready)
+                .command("class", previews::class)
                 .command("done", previews::done),
         )
 }
@@ -84,6 +85,16 @@ mod previews {
         };
         sender
             .send(Message::Photoshoot(Photoshoot::PreviewsReady))
+            .unwrap();
+    }
+
+    pub fn class(ctx: Context, class: String) {
+        let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
+            println!("`photoshoot:previews:class` called without a sender");
+            return;
+        };
+        sender
+            .send(Message::Photoshoot(Photoshoot::Previews(class)))
             .unwrap();
     }
 

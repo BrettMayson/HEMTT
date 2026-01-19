@@ -35,8 +35,7 @@ addMissionEventHandler ["ExtensionCallback", {
 }];
 
 setWind [10, 10, true];
-
-showCinemaBorder false;
+setDate [2035,5,28,10,0];
 
 0 spawn {
     sleep 1;

@@ -2,8 +2,6 @@ use std::path::PathBuf;
 
 use crate::error::Error;
 
-#[allow(clippy::module_name_repetitions)]
-#[cfg(windows)]
 /// Create a symbolic link
 ///
 /// # Errors
@@ -13,6 +11,14 @@ use crate::error::Error;
 /// # Panics
 /// - If a symlinks exists and points to a real location, but fails to be read
 pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
+    if cfg!(windows) {
+        windows(link, target)
+    } else {
+        unix(link, target)
+    }
+}
+
+fn windows(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     use std::process::Command;
 
     if link.is_symlink() {
@@ -92,13 +98,7 @@ pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-#[allow(clippy::module_name_repetitions)]
-#[cfg(not(windows))]
-/// Create a symbolic link
-///
-/// # Errors
-/// - [`std::io::Error`] if the link could not be created
-pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
+fn unix(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
     if link.exists() {
         warn!(
             "link {:?} already exists, intended to point to {:?}",
