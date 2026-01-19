@@ -61,6 +61,8 @@ pub struct ScriptScope {
     vars_local: Vec<Stack>,
     /// Set of possible return values from this scope
     returns_set: Vec<IndexSet<GameValue>>,
+    /// Error suppression for scopes below this one (for trial runs of loops)
+    errors_suppressed: Vec<bool>,
     /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
 }
@@ -75,7 +77,7 @@ impl ScriptScope {
     }
 }
 
-pub struct Inspector {
+pub struct Inspector<'a> {
     errors: IndexSet<Issue>,
     vars_global: Stack,
     ignored_vars: IndexSet<String>,
@@ -83,11 +85,12 @@ pub struct Inspector {
     code_used: IndexSet<Expression>,
     code_active: IndexSet<Expression>,
     scopes: Vec<ScriptScope>,
+    database: &'a Database,
 }
 
-impl Inspector {
+impl<'a> Inspector<'a> {
     #[must_use]
-    pub fn new(ignored_vars: &IndexSet<String>) -> Self {
+    pub fn new(ignored_vars: &IndexSet<String>, database: &'a Database) -> Self {
         let mut inspector = Self {
             errors: IndexSet::new(),
             vars_global: Stack::new(),
@@ -96,6 +99,7 @@ impl Inspector {
             code_used: IndexSet::new(),
             code_active: IndexSet::new(),
             scopes: Vec::new(),
+            database,
         };
         inspector.scope_push(false);
         inspector
@@ -111,9 +115,10 @@ impl Inspector {
             vars_local: Vec::new(),
             returns_set: Vec::new(),
             is_orphan_scope,
+            errors_suppressed: Vec::new(),
         };
         self.scopes.push(scope);
-        self.stack_push(None);
+        self.stack_push(None, false);
         for var in &self.ignored_vars.clone() {
             self.var_assign(
                 var,
@@ -129,7 +134,7 @@ impl Inspector {
         self.scopes.pop();
     }
     #[must_use]
-    pub fn finish(mut self, database: &Database) -> Vec<Issue> {
+    pub fn finish(mut self) -> Vec<Issue> {
         self.scope_pop();
         debug_assert!(self.scopes.is_empty());
         let unused = &self.code_seen - &self.code_used;
@@ -140,7 +145,7 @@ impl Inspector {
             self.code_used(code);
             // println!("-- Checking external scope");
             self.scope_push(true); // create orphan scope
-            self.eval_statements(statements, false, database);
+            self.eval_statements(statements, false);
             self.scope_pop();
         }
         self.errors.into_iter().collect()
@@ -153,8 +158,25 @@ impl Inspector {
         debug_assert!(self.code_seen.contains(expression));
         self.code_used.insert(expression.clone());
     }
+    pub fn error_insert(&mut self, issue: Issue) {
+        // skip if errors are suppressed in any parent scope
+        if self
+            .active_scope()
+            .errors_suppressed
+            .iter()
+            .rev()
+            .skip(1)
+            .all(|s| !*s)
+        {
+            self.errors.insert(issue);
+        }
+    }
 
-    pub fn stack_push(&mut self, expression_opt: Option<&Expression>) -> Option<usize> {
+    pub fn stack_push(
+        &mut self,
+        expression_opt: Option<&Expression>,
+        test_run: bool,
+    ) -> Option<usize> {
         // println!("-- Stack Push {}", self.active_scope().vars_local.len());
         let return_index = match expression_opt {
             Some(expression) => {
@@ -169,6 +191,7 @@ impl Inspector {
         };
         self.active_scope().vars_local.push(Stack::new());
         self.active_scope().returns_set.push(IndexSet::new());
+        self.active_scope().errors_suppressed.push(test_run);
         return_index
     }
     /// # Panics
@@ -187,9 +210,10 @@ impl Inspector {
                 && !holder.source.skip_errors()
                 && !self.ignored_vars.contains(&var)
             {
-                self.errors.insert(Issue::Unused(var, holder.source, false));
+                self.error_insert(Issue::Unused(var, holder.source, false));
             }
         }
+        self.active_scope().errors_suppressed.pop();
         let mut returns_set = self
             .active_scope()
             .returns_set
@@ -236,7 +260,7 @@ impl Inspector {
         }
         if stack_level_search.is_none() {
             if !local {
-                self.errors.insert(Issue::NotPrivate(
+                self.error_insert(Issue::NotPrivate(
                     var.to_owned(),
                     source.get_range().unwrap_or_default(),
                 ));
@@ -270,7 +294,7 @@ impl Inspector {
             None
         };
         if let Some(error) = error_opt {
-            self.errors.insert(error);
+            self.error_insert(error);
         }
         let vars_local = &mut self.active_scope().vars_local;
         let holder = vars_local[stack_level]
@@ -345,7 +369,7 @@ impl Inspector {
     ) {
         // there should never be any valid reason to have these as inputs
         if result_set.iter().any(GameValue::is_poison_nil) {
-            self.errors.insert(Issue::InvalidArgs {
+            self.error_insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
                 span: source.clone(),
                 variant: InvalidArgs::NilResultUsed {
@@ -362,7 +386,6 @@ impl Inspector {
     pub fn eval_expression(
         &mut self,
         expression: &Expression,
-        database: &Database,
     ) -> IndexSet<(GameValue, Range<usize>)> {
         fn command_return(
             cmd_set: IndexSet<GameValue>,
@@ -392,13 +415,13 @@ impl Inspector {
             Expression::Array(array, source) => {
                 let gv_array: Vec<Vec<(GameValue, Range<usize>)>> = array
                     .iter()
-                    .map(|e| self.eval_expression(e, database).into_iter().collect())
+                    .map(|e| self.eval_expression(e).into_iter().collect())
                     .collect();
                 IndexSet::from([(GameValue::Array(Some(gv_array), None), source.clone())])
             }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
-                let mut cmd_set = GameValue::from_cmd(expression, None, None, database).0;
+                let mut cmd_set = GameValue::from_cmd(expression, None, None, self.database).0;
                 if cmd_set.is_empty() {
                     warn!("cmd_set is empty on nular command `{}`", cmd.as_str()); // should not be possible
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
@@ -414,14 +437,14 @@ impl Inspector {
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
                 let rhs_set = self
-                    .eval_expression(rhs, database)
+                    .eval_expression(rhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
                     .collect();
                 let (mut cmd_set, _, expected_rhs) =
-                    GameValue::from_cmd(expression, None, Some(&rhs_set), database);
+                    GameValue::from_cmd(expression, None, Some(&rhs_set), self.database);
                 if cmd_set.is_empty() {
-                    self.errors.insert(Issue::InvalidArgs {
+                    self.error_insert(Issue::InvalidArgs {
                         command: debug_type.clone(),
                         span: source.clone(),
                         variant: InvalidArgs::TypeNotExpected {
@@ -438,15 +461,19 @@ impl Inspector {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
                         "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "private" => Some(self.cmd_u_private(&rhs_set)),
-                        "call" => Some(self.cmd_generic_call(&rhs_set, None, database)),
+                        "call" => Some(self.cmd_generic_call(&rhs_set, None, false)),
                         "default" => {
-                            let returns = self.cmd_generic_call(&rhs_set, None, database);
+                            let returns = self.cmd_generic_call(&rhs_set, None, false);
                             self.active_scope().add_returns(returns);
                             None
                         }
-                        "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" | "try" => {
-                            let _ = self.cmd_generic_call(&rhs_set, None, database);
+                        "isnil" => Some(self.cmd_u_is_nil(&rhs_set)),
+                        "while" | "waituntil" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, true); // loop
+                            None
+                        }
+                        "try" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, false);
                             None
                         }
                         "for" => Some(self.cmd_for(&rhs_set)),
@@ -465,7 +492,6 @@ impl Inspector {
                                             ("_thisEventHandler", GameValue::Number(None)),
                                             ("_thisArgs", GameValue::Anything), // gv_array[2]?
                                         ],
-                                        database,
                                     );
                                 }
                             }
@@ -480,21 +506,21 @@ impl Inspector {
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
                 let lhs_set = self
-                    .eval_expression(lhs, database)
+                    .eval_expression(lhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
                     .collect();
                 let rhs_set = self
-                    .eval_expression(rhs, database)
+                    .eval_expression(rhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
                     .collect();
                 let (mut cmd_set, expected_lhs, expected_rhs) =
-                    GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
+                    GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), self.database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
                     if !expected_lhs.is_empty() {
-                        self.errors.insert(Issue::InvalidArgs {
+                        self.error_insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
                             variant: InvalidArgs::TypeNotExpected {
@@ -505,7 +531,7 @@ impl Inspector {
                         });
                     }
                     if !expected_rhs.is_empty() {
-                        self.errors.insert(Issue::InvalidArgs {
+                        self.error_insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
                             variant: InvalidArgs::TypeNotExpected {
@@ -523,21 +549,21 @@ impl Inspector {
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
                         // the : from case ToDo: these run outside of the do scope
-                        let returns = self.cmd_generic_call(&rhs_set, None, database);
+                        let returns = self.cmd_generic_call(&rhs_set, None, false);
                         self.active_scope().add_returns(returns);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
-                        let _ = self.cmd_generic_call(&rhs_set, None, database);
+                        let _ = self.cmd_generic_call(&rhs_set, None, false);
                         None
                     }
                     BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
                     BinaryCommand::Eq => {
-                        self.cmd_eqx_count_lint(lhs, rhs, database, true);
+                        self.cmd_eqx_count_lint(lhs, rhs, true);
                         None
                     }
                     BinaryCommand::Greater | BinaryCommand::NotEq => {
-                        self.cmd_eqx_count_lint(lhs, rhs, database, false);
+                        self.cmd_eqx_count_lint(lhs, rhs, false);
                         None
                     }
                     BinaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -548,29 +574,28 @@ impl Inspector {
                         }
                         "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
                         "call" => {
-                            self.external_function(&lhs_set, rhs, database);
-                            Some(self.cmd_generic_call(&rhs_set, None, database))
+                            self.external_function(&lhs_set, rhs);
+                            Some(self.cmd_generic_call(&rhs_set, None, false))
                         }
                         "spawn" => {
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],
-                                database,
                             );
                             None
                         }
                         "exitwith" => {
-                            let returns = self.cmd_generic_call(&rhs_set, None, database);
+                            let returns = self.cmd_generic_call(&rhs_set, None, false);
                             self.active_scope().add_returns(returns);
                             None
                         }
                         "do" => {
                             // from While, With, For, and Switch
                             // todo: handle switch return value
-                            Some(self.cmd_b_do(&lhs_set, &rhs_set, database))
+                            Some(self.cmd_b_do(&lhs_set, &rhs_set, true))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
-                        "then" => Some(self.cmd_b_then(rhs, &rhs_set, database)),
+                        "then" => Some(self.cmd_b_then(rhs, &rhs_set)),
                         "foreach" | "foreachreversed" => {
                             let mut magic = vec![
                                 ("_x", GameValue::get_array_value_type(&rhs_set)),
@@ -579,12 +604,11 @@ impl Inspector {
                             if !rhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
                                 magic.push(("_y", GameValue::Anything));
                             }
-                            Some(self.cmd_generic_call(&lhs_set, Some((&magic, source)), database))
+                            Some(self.cmd_generic_call(&lhs_set, Some((&magic, source)), true))
                         }
                         "count" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&rhs_set))];
-                            let _ =
-                                self.cmd_generic_call(&lhs_set, Some((&magic, source)), database);
+                            let _ = self.cmd_generic_call(&lhs_set, Some((&magic, source)), true);
                             None
                         }
                         "apply" => {
@@ -592,32 +616,25 @@ impl Inspector {
                             if !lhs_set.iter().all(|gv| matches!(gv, GameValue::Array(..))) {
                                 magic.push(("_y", GameValue::Anything));
                             }
-                            let _ =
-                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            let _ = self.cmd_generic_call(&rhs_set, Some((&magic, source)), true);
                             None
                         }
                         "findif" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
-                            let _ =
-                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            let _ = self.cmd_generic_call(&rhs_set, Some((&magic, source)), true);
                             None
                         }
                         "try" => {
-                            let _ = self.cmd_generic_call(&rhs_set, None, database);
+                            let _ = self.cmd_generic_call(&rhs_set, None, false);
                             None
                         }
                         "catch" => {
                             let magic = vec![("_exception", GameValue::Anything)];
-                            let _ =
-                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            let _ = self.cmd_generic_call(&rhs_set, Some((&magic, source)), false);
                             None
                         }
-                        "getordefaultcall" => {
-                            Some(self.cmd_b_get_or_default_call(&rhs_set, database))
-                        }
-                        "select" => {
-                            Some(self.cmd_b_select(&lhs_set, &rhs_set, &cmd_set, source, database))
-                        }
+                        "getordefaultcall" => Some(self.cmd_b_get_or_default_call(&rhs_set)),
+                        "select" => Some(self.cmd_b_select(&lhs_set, &rhs_set, &cmd_set, source)),
                         "addeventhandler"
                         | "addmpeventhandler"
                         | "ctrladdeventhandler"
@@ -634,7 +651,6 @@ impl Inspector {
                                             ("_thisEvent", GameValue::String(None)),
                                             ("_thisEventHandler", GameValue::Number(None)),
                                         ],
-                                        database,
                                     );
                                 }
                             }
@@ -667,19 +683,14 @@ impl Inspector {
     }
 
     /// Evaluate statements in the current scope and return possible return values of last command
-    fn eval_statements(
-        &mut self,
-        statements: &Statements,
-        add_to_stack: bool,
-        database: &Database,
-    ) {
+    fn eval_statements(&mut self, statements: &Statements, add_to_stack: bool) {
         let mut last_statement = IndexSet::new();
         for statement in statements.content() {
             last_statement = match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self
-                        .eval_expression(expression, database)
+                        .eval_expression(expression)
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
@@ -698,7 +709,7 @@ impl Inspector {
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
                     let possible_values = self
-                        .eval_expression(expression, database)
+                        .eval_expression(expression)
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
@@ -715,7 +726,7 @@ impl Inspector {
                     IndexSet::from([GameValue::Assignment])
                 }
                 Statement::Expression(expression, _) => self
-                    .eval_expression(expression, database)
+                    .eval_expression(expression)
                     .into_iter()
                     .map(|(gv, _)| gv)
                     .collect(),
@@ -756,9 +767,9 @@ pub fn run_processed(
         }
     }
 
-    let mut inspector = Inspector::new(&ignored_vars);
-    inspector.eval_statements(statements, true, database);
-    let issues = inspector.finish(database);
+    let mut inspector = Inspector::new(&ignored_vars, database);
+    inspector.eval_statements(statements, true);
+    let issues = inspector.finish();
     // for ig in ignored_vars.clone() {
     //     if ig == "_this" || ig == "_fnc_scriptname" || ig == "_fnc_scriptnameparent" {
     //         continue;
