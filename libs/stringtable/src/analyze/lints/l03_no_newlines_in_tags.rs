@@ -66,11 +66,12 @@ fn check_package(package: &Package, project: &Project, severity: Severity, codes
     }
 }
 
-fn check_key(key: &Key, _project: &Project, severity: Severity, codes: &mut Codes) {
+fn check_key(key: &Key, project: &Project, severity: Severity, codes: &mut Codes) {
     for (lang_name, value) in key.as_list() {
         if let Some(text) = value
             && text != text.trim() {
                 codes.push(Arc::new(CodeStringtableNewlineInTag::new(
+                    project.path().to_string(),
                     key.id().to_string(),
                     lang_name.to_string(),
                     severity,
@@ -81,6 +82,7 @@ fn check_key(key: &Key, _project: &Project, severity: Severity, codes: &mut Code
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeStringtableNewlineInTag {
+    path: String,
     key_id: String,
     language: String,
     severity: Severity,
@@ -98,9 +100,16 @@ impl Code for CodeStringtableNewlineInTag {
 
     fn message(&self) -> String {
         format!(
-            "Key `{}` has leading or trailing whitespace in `{}` tag",
-            self.key_id, self.language
+            "Stringtable at `{}` has leading or trailing whitespace",
+            self.path
         )
+    }
+
+    fn note(&self) -> Option<String> {
+        Some(format!(
+            "Key `{}` - Language `{}`",
+            self.key_id, self.language
+        ))
     }
 
     fn help(&self) -> Option<String> {
@@ -115,11 +124,13 @@ impl Code for CodeStringtableNewlineInTag {
 impl CodeStringtableNewlineInTag {
     #[must_use]
     pub fn new(
+        path: String,
         key_id: String,
         language: String,
         severity: Severity,
     ) -> Self {
         Self {
+            path,
             key_id,
             language,
             severity,
