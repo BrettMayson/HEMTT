@@ -1605,7 +1605,6 @@ version = "0.1.0"
 dependencies = [
  "arma-rs",
  "hemtt-common",
- "interprocess",
  "serde_json",
 ]
 
