@@ -90,7 +90,7 @@ impl Context {
             let mut tmp = temp_dir().join("hemtt");
             // on linux add the user to the path for multiple users
             if !cfg!(target_os = "windows") {
-                tmp = tmp.join(whoami::username());
+                tmp = tmp.join(whoami::username().unwrap_or_else(|_| String::from("unknownusername")));
             }
             tmp
         };
