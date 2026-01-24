@@ -8,4 +8,7 @@ try {
     hint str _exception;
 };
 
+private _testHandler = { YYY = _testVariable };
+"XXX" addPublicVariableEventHandler _testHandler; // called in event scope, so _testVariable is undef
+
 // ToDo 2.22 spawn/continueWith
