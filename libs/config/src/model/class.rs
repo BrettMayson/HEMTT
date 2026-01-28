@@ -81,13 +81,21 @@ impl serde::Serialize for Class {
     where
         S: serde::Serializer,
     {
+        use serde::ser::SerializeMap;
         match self {
-            Self::Local { properties, .. } | Self::Root { properties } => {
-                use serde::ser::SerializeMap;
+            Self::Root { properties } => {
                 let mut state = serializer.serialize_map(Some(properties.len()))?;
-                if let Self::Local { parent, .. } = self
-                    && let Some(parent) = parent
-                {
+                for property in properties {
+                    state.serialize_entry(property.name().as_str(), property)?;
+                }
+                state.end()
+            }
+            Self::Local { properties, parent, .. } => {
+                // Account for __parent entry in map size when parent exists
+                let size = properties.len() + usize::from(parent.is_some());
+                let mut state = serializer.serialize_map(Some(size))?;
+                
+                if let Some(parent) = parent {
                     state.serialize_entry("__parent", parent.as_str())?;
                 }
                 for property in properties {
@@ -95,11 +103,9 @@ impl serde::Serialize for Class {
                 }
                 state.end()
             }
-            Self::External { name } => {
-                use serde::ser::SerializeMap;
-                let mut state = serializer.serialize_map(Some(1))?;
-                state.serialize_entry(name.as_str(), &{})?;
-                state.end()
+            Self::External { .. } => {
+                // External class declarations serialize to null
+                serializer.serialize_none()
             }
         }
     }
