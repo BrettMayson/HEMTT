@@ -205,10 +205,11 @@ impl Defines {
                         let path = site.path().filename();
                         return Some((
                             key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Word(path),
-                                key.position().clone(),
-                            ))])),
+                            Definition::Value(Arc::new(vec![
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                                Arc::new(Token::new(Symbol::Word(path), key.position().clone())),
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                            ])),
                             DefineSource::Generated,
                         ));
                     }
@@ -226,10 +227,11 @@ impl Defines {
                             .collect::<String>();
                         return Some((
                             key.clone(),
-                            Definition::Value(Arc::new(vec![Arc::new(Token::new(
-                                Symbol::Word(path),
-                                key.position().clone(),
-                            ))])),
+                            Definition::Value(Arc::new(vec![
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                                Arc::new(Token::new(Symbol::Word(path), key.position().clone())),
+                                Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
+                            ])),
                             DefineSource::Generated,
                         ));
                     }
