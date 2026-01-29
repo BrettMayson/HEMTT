@@ -105,9 +105,10 @@ impl serde::Serialize for Class {
                 }
                 state.end()
             }
-            Self::External { .. } => {
-                // External class declarations serialize to null
-                serializer.serialize_none()
+            Self::External { name } => {
+                let mut state = serializer.serialize_map(Some(1))?;
+                state.serialize_entry(name.as_str(), &{})?;
+                state.end()
             }
         }
     }
