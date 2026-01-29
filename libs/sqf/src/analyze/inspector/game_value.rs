@@ -341,6 +341,7 @@ impl GameValue {
                 IndexSet::from([Self::Anything])
             }
             _ => {
+                #[cfg(debug_assertions)]
                 warn!("wiki type [{value:?}] not matched");
                 IndexSet::from([Self::Anything])
             }
