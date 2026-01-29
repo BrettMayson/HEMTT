@@ -90,11 +90,13 @@ impl serde::Serialize for Class {
                 }
                 state.end()
             }
-            Self::Local { properties, parent, .. } => {
+            Self::Local {
+                properties, parent, ..
+            } => {
                 // Account for __parent entry in map size when parent exists
                 let size = properties.len() + usize::from(parent.is_some());
                 let mut state = serializer.serialize_map(Some(size))?;
-                
+
                 if let Some(parent) = parent {
                     state.serialize_entry("__parent", parent.as_str())?;
                 }
