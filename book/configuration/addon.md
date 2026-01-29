@@ -24,6 +24,9 @@ exclude = [
 
 [properties]
 iso = "14001"
+
+# ignore mismatched $PBOPREFIX$ for addon
+ignore_pboprefix = true # Default: false
 ```
 
 ## binarize

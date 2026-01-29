@@ -1,0 +1,12 @@
+---
+source: bin/src/commands/script.rs
+expression: output
+---
+[32m INFO[0m Config loaded for My Mod 3.15.2.69
+[32m INFO[0m Running checks
+[32m INFO[0m Validated 0 files for binarization
+[32m INFO[0m Rapified 3 addon configs
+[32m INFO[0m Compiled 0 sqf files
+[32m INFO[0m Checked 0 stringtables
+[0m[1m[38;5;11mwarning[INVALID-PBOPREFIX][0m[1m: Unexpected pboprefix for addon: `wrong`[0m
+ [0m[36m=[0m [33mhelp[0m: Expected prefix: `z\test\addons\wrong`
