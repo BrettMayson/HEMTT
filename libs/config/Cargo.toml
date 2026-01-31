@@ -31,4 +31,4 @@ serde = { workspace = true, features = ["derive"], optional = true }
 hemtt-preprocessor = { path = "../preprocessor" }
 insta = { workspace = true }
 paste = { workspace = true }
-
+serde_json = { workspace = true }
