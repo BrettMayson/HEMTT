@@ -17,6 +17,10 @@ pub mod report;
 pub mod update;
 pub mod utils;
 
+pub const TEXT_EXTENSIONS: [&str; 10] = [
+    "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
+];
+
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 #[command(version = env!("HEMTT_VERSION"), about, long_about = None)]
