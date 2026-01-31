@@ -75,6 +75,9 @@ mod tests {
                 "isnull",             // example - creatediaryrecord null
                 "buttonaction",       // example
                 "privateall",         // example
+                "setturretlimits",    // syntax2 (fixed)
+                "breakwith",          // example
+                "cutrsc",             // example3 (fixed)
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {

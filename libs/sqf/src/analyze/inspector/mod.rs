@@ -577,7 +577,7 @@ impl<'a> Inspector<'a> {
                             self.external_function(&lhs_set, rhs);
                             Some(self.cmd_generic_call(&rhs_set, None, false))
                         }
-                        "spawn" => {
+                        "spawn" | "addpublicvariableeventhandler" => {
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],

@@ -43,3 +43,6 @@ enabled = true
 options.always = [
     "FREEZE_GAME",
 ]
+
+[lints.sqf.count_skipable]
+enabled = true

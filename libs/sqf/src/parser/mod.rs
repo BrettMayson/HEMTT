@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 pub mod codes;
 pub mod database;
 pub mod lexer;

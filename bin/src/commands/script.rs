@@ -90,4 +90,16 @@ mod tests {
         let output = capture.finish();
         insta::assert_snapshot!(output);
     }
+    #[test]
+    fn workspace_pboprefix() {
+        let _directory =
+            hemtt_test::directory::TemporaryDirectory::copy(&std::path::PathBuf::from(format!(
+                "{}/tests/workspace_pboprefix",
+                env!("CARGO_MANIFEST_DIR")
+            )));
+        let capture = hemtt_test::capture::OutputCapture::new();
+        let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "check"]));
+        let output = capture.finish();
+        insta::assert_snapshot!(output);
+    }
 }
