@@ -189,7 +189,7 @@ impl Paa {
         }
         // - Max
         {
-            let max_color: [u8; 4] = [255,255,255,255]; // always this value for some reason
+            let max_color: [u8; 4] = [255, 255, 255, 255]; // always this value for some reason
             paa.taggs.insert(
                 "CXAM".to_string(),
                 vec![max_color[0], max_color[1], max_color[2], max_color[3]],
