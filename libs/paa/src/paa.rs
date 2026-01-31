@@ -189,16 +189,7 @@ impl Paa {
         }
         // - Max
         {
-            let max_color = rgba_image
-                .pixels()
-                .map(|p| p.0)
-                .fold([0, 0, 0, 0], |mut acc, p| {
-                    acc[0] = acc[0].max(p[0]);
-                    acc[1] = acc[1].max(p[1]);
-                    acc[2] = acc[2].max(p[2]);
-                    acc[3] = acc[3].max(p[3]);
-                    acc
-                });
+            let max_color: [u8; 4] = [255,255,255,255]; // always this value for some reason
             paa.taggs.insert(
                 "CXAM".to_string(),
                 vec![max_color[0], max_color[1], max_color[2], max_color[3]],
