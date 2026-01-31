@@ -68,8 +68,17 @@ Statements {
             ),
             151..222,
         ),
+        AssignGlobal(
+            "g",
+            String(
+                "123456",
+                244..245,
+                DoubleQuote,
+            ),
+            225..260,
+        ),
     ],
-    source: "\n\n\nb2 = toString {\"double q\"};\n\n\n\nc2 = toString {'single q'};\n\n\n\nd2 = toString { \" hello 'you there' \" };\n\n\n\ne2 = toString { ' hello \"you there\" ' };\n\n_f ctrlSetEventHandler [\"ButtonClick\", toString {\n    x = \"clicked\";\n}];\n",
-    span: 3..223,
+    source: "\n\n\nb2 = toString {\"double q\"};\n\n\n\nc2 = toString {'single q'};\n\n\n\nd2 = toString { \" hello 'you there' \" };\n\n\n\ne2 = toString { ' hello \"you there\" ' };\n\n_f ctrlSetEventHandler [\"ButtonClick\", toString {\n    x = \"clicked\";\n}];\n\ng = toString {123} + toString {456};\n",
+    span: 3..261,
     issues: [],
 }

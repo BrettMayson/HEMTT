@@ -20,3 +20,5 @@ e2 = toString { ' hello "you there" ' };
 _f ctrlSetEventHandler ["ButtonClick", toString {
     x = "clicked";
 }];
+
+g = toString {123} + toString {456};
