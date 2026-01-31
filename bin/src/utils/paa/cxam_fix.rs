@@ -4,7 +4,7 @@ use crate::Error;
 
 #[derive(clap::Parser)]
 /// Fix PAAs with incorrect CXAM (color ambient max) tagg values
-/// 
+///
 /// This was due to a bug in HEMTT v1.18.1 and earlier where the CXAM tagg
 /// was correctly calculated (which is bad I guess) when converting images to PAA format.
 pub struct Command {}

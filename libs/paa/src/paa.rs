@@ -222,7 +222,8 @@ impl Paa {
     }
 
     pub fn fix_cxam_tagg(&mut self) {
-        self.taggs.insert("CXAM".to_string(), vec![255, 255, 255, 255]);
+        self.taggs
+            .insert("CXAM".to_string(), vec![255, 255, 255, 255]);
     }
 
     #[cfg(feature = "json")]

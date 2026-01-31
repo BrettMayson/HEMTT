@@ -3,8 +3,8 @@ use std::{fs::File, path::PathBuf};
 use crate::Error;
 
 mod convert;
-mod inspect;
 mod cxam_fix;
+mod inspect;
 
 pub use inspect::inspect;
 
