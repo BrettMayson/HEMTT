@@ -1,0 +1,75 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (to_string))
+---
+Statements {
+    content: [
+        AssignGlobal(
+            "b2",
+            String(
+                "\"double q\"",
+                8..16,
+                DoubleQuote,
+            ),
+            3..29,
+        ),
+        AssignGlobal(
+            "c2",
+            String(
+                "'single q'",
+                39..47,
+                DoubleQuote,
+            ),
+            34..60,
+        ),
+        AssignGlobal(
+            "d2",
+            String(
+                "\" hello 'you there' \"",
+                70..78,
+                DoubleQuote,
+            ),
+            65..104,
+        ),
+        AssignGlobal(
+            "e2",
+            String(
+                "' hello \"you there\" '",
+                114..122,
+                DoubleQuote,
+            ),
+            109..148,
+        ),
+        Expression(
+            BinaryCommand(
+                Named(
+                    "ctrlSetEventHandler",
+                ),
+                Variable(
+                    "_f",
+                    151..153,
+                ),
+                Array(
+                    [
+                        String(
+                            "ButtonClick",
+                            175..188,
+                            DoubleQuote,
+                        ),
+                        String(
+                            "x = \"clicked\";",
+                            190..198,
+                            DoubleQuote,
+                        ),
+                    ],
+                    175..221,
+                ),
+                154..173,
+            ),
+            151..222,
+        ),
+    ],
+    source: "\n\n\nb2 = toString {\"double q\"};\n\n\n\nc2 = toString {'single q'};\n\n\n\nd2 = toString { \" hello 'you there' \" };\n\n\n\ne2 = toString { ' hello \"you there\" ' };\n\n_f ctrlSetEventHandler [\"ButtonClick\", toString {\n    x = \"clicked\";\n}];\n",
+    span: 3..223,
+    issues: [],
+}
