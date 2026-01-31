@@ -221,6 +221,10 @@ impl Paa {
         Ok(paa)
     }
 
+    pub fn fix_cxam_tagg(&mut self) {
+        self.taggs.insert("CXAM".to_string(), vec![255, 255, 255, 255]);
+    }
+
     #[cfg(feature = "json")]
     /// Get the Paa as a JSON string
     ///

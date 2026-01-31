@@ -4,6 +4,7 @@ use crate::Error;
 
 mod convert;
 mod inspect;
+mod cxam_fix;
 
 pub use inspect::inspect;
 
@@ -27,6 +28,8 @@ enum Subcommands {
     Convert(convert::PaaConvertArgs),
     /// Inspect a PAA file
     Inspect(inspect::PaaInspectArgs),
+    /// Fix PAAs with incorrect CXAM (color ambient max) tagg values
+    CxamFix(cxam_fix::Command),
 }
 
 /// Execute the paa command
@@ -42,5 +45,6 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         Subcommands::Inspect(args) => {
             inspect::inspect(File::open(PathBuf::from(&args.paa))?, &args.format)
         }
+        Subcommands::CxamFix(args) => cxam_fix::execute(args),
     }
 }
