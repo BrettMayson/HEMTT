@@ -247,16 +247,12 @@ impl Action for Photoshoot {
                 let mut keys = self.weapons.keys().collect::<Vec<&String>>();
                 keys.sort();
                 for weapon in keys {
-                    messages.push(toarma::Photoshoot::Weapon(
-                        weapon.clone(),
-                    ));
+                    messages.push(toarma::Photoshoot::Weapon(weapon.clone()));
                 }
                 let mut keys = self.vehicles.keys().collect::<Vec<&String>>();
                 keys.sort();
                 for vehicle in keys {
-                    messages.push(toarma::Photoshoot::Vehicle(
-                        vehicle.clone(),
-                    ));
+                    messages.push(toarma::Photoshoot::Vehicle(vehicle.clone()));
                 }
                 drop(messages);
                 vec![self.next_message()]

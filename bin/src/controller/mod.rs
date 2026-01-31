@@ -94,47 +94,54 @@ impl Controller {
         let (from_arma_tx, from_arma_rx) = std::sync::mpsc::channel();
         let (to_arma_tx, to_arma_rx) = std::sync::mpsc::channel();
 
-        std::thread::spawn(move || loop {
-            let mut len_buf = [0u8; 4];
-            socket.set_nonblocking(true).expect("Failed to set nonblocking mode");
-            if socket.read_exact(&mut len_buf).is_ok() && !len_buf.is_empty() {
-                let len = u32::from_le_bytes(len_buf);
-                trace!("Receiving: {}", len);
-                let mut buf = vec![0u8; len as usize];
-                socket.set_nonblocking(false).expect("Failed to set blocking mode");
-                socket.read_exact(&mut buf).expect("Failed to read message");
-                let buf = String::from_utf8(buf).expect("Failed to parse message");
-                let message: fromarma::Message = serde_json::from_str(&buf).expect("Failed to deserialize message");
-                trace!("Received: {:?}", message);
-                if let fromarma::Message::Control(control) = message {
-                    match control {
-                        fromarma::Control::Mission(mission) => {
-                            if let Some((_, mission)) = mission.split_once("\\autotest\\") {
-                                debug!("Mission: {}", mission);
-                                current = Some(mission.replace('\\', ""));
-                            } else {
-                                debug!("Custom Mission: {}", mission);
-                                current = Some(mission.trim_end_matches('\\').to_string());
+        std::thread::spawn(move || {
+            loop {
+                let mut len_buf = [0u8; 4];
+                socket
+                    .set_nonblocking(true)
+                    .expect("Failed to set nonblocking mode");
+                if socket.read_exact(&mut len_buf).is_ok() && !len_buf.is_empty() {
+                    let len = u32::from_le_bytes(len_buf);
+                    trace!("Receiving: {}", len);
+                    let mut buf = vec![0u8; len as usize];
+                    socket
+                        .set_nonblocking(false)
+                        .expect("Failed to set blocking mode");
+                    socket.read_exact(&mut buf).expect("Failed to read message");
+                    let buf = String::from_utf8(buf).expect("Failed to parse message");
+                    let message: fromarma::Message =
+                        serde_json::from_str(&buf).expect("Failed to deserialize message");
+                    trace!("Received: {:?}", message);
+                    if let fromarma::Message::Control(control) = message {
+                        match control {
+                            fromarma::Control::Mission(mission) => {
+                                if let Some((_, mission)) = mission.split_once("\\autotest\\") {
+                                    debug!("Mission: {}", mission);
+                                    current = Some(mission.replace('\\', ""));
+                                } else {
+                                    debug!("Custom Mission: {}", mission);
+                                    current = Some(mission.trim_end_matches('\\').to_string());
+                                }
                             }
                         }
+                    } else if let fromarma::Message::Log(level, text) = message {
+                        match level {
+                            fromarma::Level::Trace => trace!("arma: {}", text),
+                            fromarma::Level::Debug => debug!("arma: {}", text),
+                            fromarma::Level::Info => info!("arma: {}", text),
+                            fromarma::Level::Warn => warn!("arma: {}", text),
+                            fromarma::Level::Error => error!("arma: {}", text),
+                        }
+                    } else if let Some(current) = &current {
+                        trace!("msg for {current}: {message:?}");
+                        from_arma_tx.send((current.clone(), message)).unwrap();
+                    } else {
+                        warn!("Message without mission: {:?}", message);
                     }
-                } else if let fromarma::Message::Log(level, text) = message {
-                    match level {
-                        fromarma::Level::Trace => trace!("arma: {}", text),
-                        fromarma::Level::Debug => debug!("arma: {}", text),
-                        fromarma::Level::Info => info!("arma: {}", text),
-                        fromarma::Level::Warn => warn!("arma: {}", text),
-                        fromarma::Level::Error => error!("arma: {}", text),
-                    }
-                } else if let Some(current) = &current {
-                    trace!("msg for {current}: {message:?}");
-                    from_arma_tx.send((current.clone(), message)).unwrap();
-                } else {
-                    warn!("Message without mission: {:?}", message);
                 }
-            }
-            if let Ok(message) = to_arma_rx.try_recv() {
-                send(&message, &mut socket);
+                if let Ok(message) = to_arma_rx.try_recv() {
+                    send(&message, &mut socket);
+                }
             }
         });
 
@@ -151,7 +158,9 @@ impl Controller {
                 }
             }
 
-            if let Ok((mission, message)) = from_arma_rx.recv_timeout(std::time::Duration::from_millis(100)) {
+            if let Ok((mission, message)) =
+                from_arma_rx.recv_timeout(std::time::Duration::from_millis(100))
+            {
                 self.actions
                     .iter()
                     .find(|a| a.missions(ctx).iter().any(|m| m.1.as_str() == mission))
