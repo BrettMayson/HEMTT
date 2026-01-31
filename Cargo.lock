@@ -1645,6 +1645,7 @@ dependencies = [
  "lsp-types 0.97.0",
  "paste",
  "serde",
+ "serde_json",
  "toml",
 ]
 
