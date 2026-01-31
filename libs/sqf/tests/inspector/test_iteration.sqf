@@ -54,7 +54,7 @@ for "_i" from 1 to 11 do {
 
 private "_someVar";
 [1,2,3] select {
-    if (!isNil "someVar") then {
+    if (!isNil "_someVar") then {
         x = (_x + _someVar) > 5 // safe
     };
     _someVar = _x;
