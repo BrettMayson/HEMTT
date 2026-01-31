@@ -1,7 +1,9 @@
-mod compress;
-mod decompress;
+use std::alloc::{Layout, alloc, dealloc};
 use std::mem;
 use std::slice;
+
+mod compress;
+mod decompress;
 
 use thiserror::Error;
 
@@ -49,9 +51,16 @@ pub enum LzoError {
 ///
 /// # Errors
 /// [`LzoError`] if an error occurs
+///
+/// # Panics
+/// If the layout creation fails
 pub fn compress(input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
     unsafe {
-        let wrkmem = libc::malloc(LZO1X_MEM_COMPRESS);
+        use std::ffi::c_void;
+
+        let layout = Layout::from_size_align(LZO1X_MEM_COMPRESS, std::mem::align_of::<u8>())
+            .expect("Failed to create layout");
+        let wrkmem = alloc(layout).cast::<c_void>();
         let mut out_len = output.capacity();
         let err = compress::lzo1x_1_compress(
             input.as_ptr(),
@@ -62,7 +71,7 @@ pub fn compress(input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
         );
 
         output.set_len(out_len);
-        libc::free(wrkmem);
+        dealloc(wrkmem.cast::<u8>(), layout);
         let res = mem::transmute::<i32, LzoError>(err);
         if res == LzoError::Ok {
             Ok(())
@@ -77,9 +86,14 @@ pub fn compress(input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
 ///
 /// # Errors
 /// [`LzoError`] if an error occurs
+///
+/// # Panics
+/// If the layout creation fails
 pub fn compress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut [u8], LzoError> {
     unsafe {
-        let wrkmem = libc::malloc(LZO1X_MEM_COMPRESS);
+        let layout = Layout::from_size_align(LZO1X_MEM_COMPRESS, std::mem::align_of::<u8>())
+            .expect("Failed to create layout");
+        let wrkmem = alloc(layout).cast::<std::ffi::c_void>();
         let mut out_len = out.len();
         let err = compress::lzo1x_1_compress(
             in_.as_ptr(),
@@ -88,7 +102,7 @@ pub fn compress_to_slice<'a>(in_: &[u8], out: &'a mut [u8]) -> Result<&'a mut [u
             &raw mut out_len,
             wrkmem,
         );
-        libc::free(wrkmem);
+        dealloc(wrkmem.cast::<u8>(), layout);
         let res = mem::transmute::<i32, LzoError>(err);
         if res == LzoError::Ok {
             Ok(slice::from_raw_parts_mut(out.as_mut_ptr(), out_len))
@@ -143,12 +157,12 @@ fn compress_and_back() {
             let size = mem::size_of_val(&data[0]) * data.len();
             let dst_len: usize = worst_compress(size);
             let mut v = Vec::with_capacity(dst_len);
-            let dst = libc::malloc(dst_len);
+            let dst = alloc(Layout::from_size_align(dst_len, mem::align_of::<u8>()).unwrap());
             let dst = slice::from_raw_parts_mut(dst.cast::<u8>(), dst_len);
             let dst = compress_to_slice(&data, dst).unwrap();
             compress(&data, &mut v).unwrap();
 
-            let dec_dst = libc::malloc(size);
+            let dec_dst = alloc(Layout::from_size_align(size, mem::align_of::<u8>()).unwrap());
             let dec_dst = slice::from_raw_parts_mut(dec_dst.cast::<u8>(), size);
             let result = decompress_to_slice(dst, dec_dst).unwrap();
             assert!(result.len() == size);
