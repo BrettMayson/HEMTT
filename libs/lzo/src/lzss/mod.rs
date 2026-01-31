@@ -61,7 +61,6 @@ pub fn compress(input: &[u8], output: &mut Vec<u8>) -> Result<(), LzoError> {
         let layout = Layout::from_size_align(LZO1X_MEM_COMPRESS, std::mem::align_of::<u8>())
             .expect("Failed to create layout");
         let wrkmem = alloc(layout).cast::<c_void>();
-        // let wrkmem = libc::malloc(LZO1X_MEM_COMPRESS);
         let mut out_len = output.capacity();
         let err = compress::lzo1x_1_compress(
             input.as_ptr(),
