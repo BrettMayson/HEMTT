@@ -62,6 +62,7 @@ lint!(s33_max, true);
 lint!(s33_min, true);
 lint!(s33_mod, true);
 lint!(s33_pi, true);
+lint!(s35_count_skipable, true);
 
 #[test]
 fn test_s29_function_undefined() {

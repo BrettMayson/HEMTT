@@ -17,7 +17,7 @@ pub fn create_link(link: &PathBuf, target: &PathBuf) -> Result<(), Error> {
 
     if link.is_symlink() {
         if link.exists() {
-            if &link.read_link().expect("link exists") == target {
+            if &fs_err::read_link(link).expect("link exists") == target {
                 return Ok(());
             }
             warn!(

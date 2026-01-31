@@ -15,6 +15,10 @@ pub enum Error {
     /// Invalid length while reading a file
     InvalidLength,
 
+    #[error("Invalid private key format")]
+    /// Invalid private key format
+    InvalidMagic,
+
     #[error("Missing authority")]
     /// No authority was provided
     AuthorityMissing,

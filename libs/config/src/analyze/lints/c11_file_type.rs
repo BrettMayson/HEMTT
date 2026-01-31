@@ -204,7 +204,7 @@ fn allowed_ext(name: &str) -> Vec<&str> {
     if name.ends_with("opticsmodel") {
         return vec!["p3d"];
     }
-    if name.contains("sound") && !name.contains("soundset") {
+    if name.contains("sound") && !name.contains("soundset") || name.eq("samples") {
         return vec!["wss", "ogg", "wav"];
     }
     if name.starts_with("scud") {

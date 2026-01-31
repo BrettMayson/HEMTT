@@ -136,6 +136,12 @@ impl Package {
             if key.dutch().is_some() {
                 totals.inc_dutch();
             }
+            if key.ukrainian().is_some() {
+                totals.inc_ukrainian();
+            }
+            if key.danish().is_some() {
+                totals.inc_danish();
+            }
         }
         for container in &self.containers {
             totals.merge(&container.totals());

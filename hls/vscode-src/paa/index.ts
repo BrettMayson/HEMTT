@@ -4,12 +4,12 @@ import { PaaViewerProvider } from './viewer';
 import { orActive } from "../util";
 
 export function init(client: LanguageClient, channel: vscode.OutputChannel, context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertPaa', async (uri: vscode.Uri | undefined) => {
-    orActive(uri, async (uri) => await conversion(uri.toString(), "paa", client, channel));
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertPaa', async (uri: vscode.Uri | undefined, multiselection: Array<vscode.Uri> | undefined) => {
+    orActive(uri, multiselection, async (uri) => await conversion(uri.toString(), "paa", client, channel));
   }));
   ["png", "jpg", "bmp", "tga", "webp"].forEach(ext => {
-    context.subscriptions.push(vscode.commands.registerCommand(`hemtt.convert${ext.charAt(0).toUpperCase() + ext.slice(1)}`, async (uri: vscode.Uri | undefined) => {
-      orActive(uri, async (uri) => await conversion(uri.toString(), ext, client, channel));
+    context.subscriptions.push(vscode.commands.registerCommand(`hemtt.convert${ext.charAt(0).toUpperCase() + ext.slice(1)}`, async (uri: vscode.Uri | undefined, multiselection: Array<vscode.Uri> | undefined) => {
+      orActive(uri, multiselection, async (uri) => await conversion(uri.toString(), ext, client, channel));
     }));
   });
 

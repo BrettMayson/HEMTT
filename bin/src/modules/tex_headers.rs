@@ -19,11 +19,26 @@ impl Module for TexHeaders {
         &self,
         ctx: &crate::context::Context,
     ) -> Result<crate::report::Report, crate::Error> {
-        let addons = ctx.addons().len();
-        let progress = progress_bar(addons as u64).with_message("Generating Texture Headers");
+        let addons = ctx
+            .addons()
+            .iter()
+            .filter(|addon| {
+                !ctx.workspace_path()
+                    .join(addon.folder())
+                    .expect("addon folder")
+                    .read_dir()
+                    .expect("read addon folder")
+                    .iter()
+                    .any(|entry| entry.filename().eq_ignore_ascii_case("texheaders.bin"))
+            })
+            .collect::<Vec<_>>();
+        if addons.is_empty() {
+            return Ok(crate::report::Report::new());
+        }
+        let progress = progress_bar(addons.len() as u64).with_message("Generating Texture Headers");
         let created = AtomicU16::new(0);
         let failed = AtomicU16::new(0);
-        ctx.addons().par_iter().for_each(|addon| {
+        addons.par_iter().for_each(|addon| {
             let res = generate_texture_headers(ctx, addon);
             if let Err(e) = res {
                 error!(

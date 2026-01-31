@@ -17,122 +17,8 @@ use tracing::warn;
 mod commands;
 mod external_functions;
 mod game_value;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum InvalidArgs {
-    TypeNotExpected {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-    DefaultDifferentType {
-        expected: Vec<GameValue>,
-        found: Vec<GameValue>,
-        span: Range<usize>,
-        default: Range<usize>,
-    },
-    NilResultUsed {
-        found: Vec<GameValue>,
-        span: Range<usize>,
-    },
-}
-
-impl InvalidArgs {
-    #[must_use]
-    pub fn note(&self) -> String {
-        let found = self
-            .found_types()
-            .iter()
-            .map(GameValue::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-        format!(
-            "found type{} was {found}",
-            if self.found_types().len() > 1 {
-                "s"
-            } else {
-                ""
-            }
-        )
-    }
-
-    #[must_use]
-    pub fn message(&self, command: &str) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!("Invalid argument type for `{command}`"),
-            Self::NilResultUsed { .. } => format!("Invalid argument (nil) for `{command}`"),
-            Self::DefaultDifferentType { .. } => {
-                String::from("Default value is not an expected type for the parameter")
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn label_message(&self) -> String {
-        match self {
-            Self::TypeNotExpected { .. } => format!(
-                "expected {}",
-                self.expected_types()
-                    .iter()
-                    .map(GameValue::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-            Self::NilResultUsed { .. } => String::from("expected non-nil value"),
-            Self::DefaultDifferentType { .. } => {
-                format!(
-                    "expected {}",
-                    self.expected_types()
-                        .iter()
-                        .map(GameValue::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn found_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::TypeNotExpected { found, .. }
-            | Self::DefaultDifferentType { found, .. }
-            | Self::NilResultUsed { found, .. } => found.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn expected_types(&self) -> Vec<GameValue> {
-        match self {
-            Self::NilResultUsed { .. } => vec![],
-            Self::TypeNotExpected { expected, .. }
-            | Self::DefaultDifferentType { expected, .. } => expected.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        match self {
-            Self::TypeNotExpected { span, .. }
-            | Self::DefaultDifferentType { span, .. }
-            | Self::NilResultUsed { span, .. } => span.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Issue {
-    InvalidArgs {
-        command: String,
-        span: Range<usize>,
-        variant: InvalidArgs,
-    },
-    Undefined(String, Range<usize>, bool),
-    Unused(String, VarSource),
-    Shadowed(String, Range<usize>),
-    NotPrivate(String, Range<usize>),
-    CountArrayComparison(bool, Range<usize>, String),
-}
+mod issue;
+pub use issue::{InvalidArgs, Issue};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum VarSource {
@@ -301,7 +187,7 @@ impl Inspector {
                 && !holder.source.skip_errors()
                 && !self.ignored_vars.contains(&var)
             {
-                self.errors.insert(Issue::Unused(var, holder.source));
+                self.errors.insert(Issue::Unused(var, holder.source, false));
             }
         }
         let mut returns_set = self
@@ -355,16 +241,36 @@ impl Inspector {
                     source.get_range().unwrap_or_default(),
                 ));
             }
-        } else if local {
-            // Only check shadowing inside the same scope-level (could make an option)
-            if stack_level_search.unwrap_or_default() == 0 && !source.skip_errors() {
-                self.errors.insert(Issue::Shadowed(
+        } else if !local {
+            stack_level -= stack_level_search.unwrap_or_default();
+        }
+        // If we are writing to a variable at our current level
+        let error_opt: Option<Issue> = if stack_level_search == Some(0)
+            && !source.skip_errors()
+            && let Some(current_vars) = self.active_scope().vars_local.last()
+            && let Some(existing_var) = current_vars.get(&var_lower)
+            && !existing_var.source.skip_errors()
+        {
+            if existing_var.usage == 0 && !matches!(existing_var.source, VarSource::Private(_)) {
+                Some(Issue::Unused(
+                    var.to_owned(),
+                    existing_var.source.clone(),
+                    true, // overwritten before use
+                ))
+            } else if local {
+                // shadowed (only at same level and not also unused)
+                Some(Issue::Shadowed(
                     var.to_owned(),
                     source.get_range().unwrap_or_default(),
-                ));
+                ))
+            } else {
+                None
             }
         } else {
-            stack_level -= stack_level_search.unwrap_or_default();
+            None
+        };
+        if let Some(error) = error_opt {
+            self.errors.insert(error);
         }
         let vars_local = &mut self.active_scope().vars_local;
         let holder = vars_local[stack_level]
@@ -372,9 +278,15 @@ impl Inspector {
             .or_insert_with(|| VarHolder {
                 possible: IndexSet::new(),
                 usage: 0,
-                source,
+                source: source.clone(),
             });
-        holder.possible.extend(possible_values);
+        if stack_level_search.unwrap_or_default() == 0 {
+            // Brand new or at same level as origin, totally replace possible values
+            holder.possible = possible_values;
+        } else {
+            // In a inner scope, just extend possible values
+            holder.possible.extend(possible_values);
+        }
     }
 
     #[must_use]
@@ -432,9 +344,7 @@ impl Inspector {
         result_set: &IndexSet<GameValue>,
     ) {
         // there should never be any valid reason to have these as inputs
-        if result_set.contains(&GameValue::Nothing(NilSource::CommandReturn)) // EmptyStack has false positives on {} default
-            || result_set.contains(&GameValue::Assignment)
-        {
+        if result_set.iter().any(GameValue::is_poison_nil) {
             self.errors.insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
                 span: source.clone(),
@@ -535,7 +445,7 @@ impl Inspector {
                             None
                         }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set, database)),
-                        "while" | "waituntil" => {
+                        "while" | "waituntil" | "try" => {
                             let _ = self.cmd_generic_call(&rhs_set, None, database);
                             None
                         }
@@ -583,9 +493,7 @@ impl Inspector {
                     GameValue::from_cmd(expression, Some(&lhs_set), Some(&rhs_set), database);
                 if cmd_set.is_empty() {
                     // we must have invalid args
-                    if expected_lhs.difference(&lhs_set).count() != 0
-                        && !expected_lhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_lhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -596,9 +504,7 @@ impl Inspector {
                             },
                         });
                     }
-                    if expected_rhs.difference(&rhs_set).count() != 0
-                        && !expected_rhs.contains(&GameValue::Anything)
-                    {
+                    if !expected_rhs.is_empty() {
                         self.errors.insert(Issue::InvalidArgs {
                             command: debug_type.clone(),
                             span: source.clone(),
@@ -645,7 +551,7 @@ impl Inspector {
                             self.external_function(&lhs_set, rhs, database);
                             Some(self.cmd_generic_call(&rhs_set, None, database))
                         }
-                        "spawn" => {
+                        "spawn" | "addpublicvariableeventhandler" => {
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],
@@ -664,7 +570,7 @@ impl Inspector {
                             Some(self.cmd_b_do(&lhs_set, &rhs_set, database))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
-                        "then" => Some(self.cmd_b_then(&lhs_set, &rhs_set, database)),
+                        "then" => Some(self.cmd_b_then(rhs, &rhs_set, database)),
                         "foreach" | "foreachreversed" => {
                             let mut magic = vec![
                                 ("_x", GameValue::get_array_value_type(&rhs_set)),
@@ -692,6 +598,16 @@ impl Inspector {
                         }
                         "findif" => {
                             let magic = vec![("_x", GameValue::get_array_value_type(&lhs_set))];
+                            let _ =
+                                self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
+                            None
+                        }
+                        "try" => {
+                            let _ = self.cmd_generic_call(&rhs_set, None, database);
+                            None
+                        }
+                        "catch" => {
+                            let magic = vec![("_exception", GameValue::Anything)];
                             let _ =
                                 self.cmd_generic_call(&rhs_set, Some((&magic, source)), database);
                             None
@@ -767,6 +683,7 @@ impl Inspector {
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
+                    self.eval_check_bad_args("=", source, expression, &possible_values);
                     self.var_assign(
                         var,
                         false,
@@ -785,6 +702,7 @@ impl Inspector {
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
+                    self.eval_check_bad_args("=", source, expression, &possible_values);
                     self.var_assign(
                         var,
                         true,

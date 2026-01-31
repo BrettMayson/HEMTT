@@ -167,16 +167,18 @@ impl Inspector {
                             expected: var_types.iter().cloned().collect(),
                             found: vec![default_value.clone()],
                             span: element[1][0].1.clone(),
-                            default: (element[2]
-                                .first()
-                                .map(|(_, s)| s.clone())
-                                .unwrap_or_default()
-                                .start)
-                                ..(element[2]
-                                    .last()
+                            default: Some(
+                                (element[2]
+                                    .first()
                                     .map(|(_, s)| s.clone())
                                     .unwrap_or_default()
-                                    .end),
+                                    .start)
+                                    ..(element[2]
+                                        .last()
+                                        .map(|(_, s)| s.clone())
+                                        .unwrap_or_default()
+                                        .end),
+                            ),
                         });
                     }
                     var_types.insert(default_value);
@@ -375,12 +377,12 @@ impl Inspector {
     #[must_use]
     pub fn cmd_b_then(
         &mut self,
-        _lhs: &IndexSet<GameValue>,
-        rhs: &IndexSet<GameValue>,
+        rhs: &Expression,
+        rhs_set: &IndexSet<GameValue>,
         database: &Database,
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
-        for possible in rhs {
+        for possible in rhs_set {
             if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
                 return_value.extend(self.cmd_generic_call(
                     &IndexSet::from([possible.clone()]),
@@ -401,6 +403,10 @@ impl Inspector {
                     }
                 }
             }
+        }
+        // if without else branch, add a possible nil result in addition to then-branch results
+        if let Expression::Code(_) = rhs {
+            return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
         }
         return_value
     }

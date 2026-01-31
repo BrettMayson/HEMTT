@@ -132,7 +132,7 @@ impl ProjectConfig {
     }
 
     #[must_use]
-    /// Expected combined-path prefix for the project (in lowercase, without leading backslash)
+    /// Expected combined-path prefix for the project (in lowercase, without leading backslash, with trailing backslash)
     pub fn expected_path(&self) -> &str {
         &self.expected_path
     }

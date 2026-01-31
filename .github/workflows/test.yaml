@@ -29,7 +29,7 @@ jobs:
           - stable
           - beta
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Install Arma 3 Tools
@@ -46,5 +46,9 @@ jobs:
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       # https://twitter.com/jonhoo/status/1571290371124260865
-      - name: cargo test --locked
+      - name: cargo test --locked [Unices]
+        if: ${{ ! startsWith(matrix.os.runner, 'windows') }}
         run: cargo nextest run --locked --all-features --all-targets
+      - name: cargo test --locked [Win]
+        if: ${{ startsWith(matrix.os.runner, 'windows') }}
+        run: cargo nextest run --locked --all-features --all-targets --config profile.test.opt-level=3 --config profile.test.codegen-units=1

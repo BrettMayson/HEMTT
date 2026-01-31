@@ -7,3 +7,7 @@ private _limbs = [
     if (alive player) then { "torso" } else { "legs" },
     if (alive player) then { "torso" } else { "legs" }
 ];
+
+private _isAlive = if (alive player) then { true } else { false };
+private _isDry = if (surfaceIsWater position player) then { false } else { true };
+private _isWarmStr = if (temperature > 20) then { "true" } else { "false" };

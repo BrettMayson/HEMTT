@@ -25,6 +25,8 @@ pub struct Totals {
     greek: u32,
     finnish: u32,
     dutch: u32,
+    ukrainian: u32,
+    danish: u32,
 }
 
 macro_rules! field {
@@ -78,6 +80,8 @@ impl Totals {
         self.greek += other.greek;
         self.finnish += other.finnish;
         self.dutch += other.dutch;
+        self.ukrainian += other.ukrainian;
+        self.danish += other.danish;
     }
 
     field!(original);
@@ -104,4 +108,6 @@ impl Totals {
     field!(greek);
     field!(finnish);
     field!(dutch);
+    field!(ukrainian);
+    field!(danish);
 }

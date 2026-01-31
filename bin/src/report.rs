@@ -11,12 +11,22 @@ use crate::Error;
 #[derive(Debug, Default)]
 pub struct Report {
     codes: Codes,
+    error_on_all: bool,
 }
 
 impl Report {
     #[must_use]
     pub fn new() -> Self {
-        Self { codes: Vec::new() }
+        Self {
+            codes: Vec::new(),
+            error_on_all: false,
+        }
+    }
+
+    #[must_use]
+    pub const fn with_error_on_all(mut self, error_on_all: bool) -> Self {
+        self.error_on_all = error_on_all;
+        self
     }
 
     /// Write the report to the `ci_annotations.txt` file for GitHub Actions
@@ -54,21 +64,25 @@ impl Report {
         );
         Ok(())
     }
-
-    pub fn write_to_stdout(&self) {
+    /// Get all reported codes (warnings, errors, helps) (including includes based on env var)
+    fn codes_reported(&self) -> Vec<Arc<dyn Code>> {
         let with_includes = if std::env::var("HEMTT_REPORT_WITH_INCLUDES") == Ok("true".to_string())
         {
             WithIncludes::Yes
         } else {
             WithIncludes::No
         };
-        let workspace_files = WorkspaceFiles::new();
-        for code in self
-            .helps(with_includes)
+        self.helps(with_includes)
             .iter()
             .chain(self.warnings(with_includes).iter())
             .chain(self.errors().iter())
-        {
+            .cloned()
+            .collect::<Vec<_>>()
+    }
+
+    pub fn write_to_stdout(&self) {
+        let workspace_files = WorkspaceFiles::new();
+        for code in self.codes_reported() {
             if let Some(diag) = code.diagnostic() {
                 eprintln!("{}", diag.to_string(&workspace_files));
             }
@@ -107,7 +121,11 @@ impl Report {
     #[must_use]
     /// Returns `true` if there are any errors
     pub fn failed(&self) -> bool {
-        !self.errors().is_empty()
+        if self.error_on_all {
+            !self.codes_reported().is_empty()
+        } else {
+            !self.errors().is_empty()
+        }
     }
 }
 

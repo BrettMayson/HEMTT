@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(3, [InvalidArgs { command: "[B:/]", span: 208..209, variant: TypeNotExpected { expected: [Number(None), Config], found: [String(Some(String("a", 175..178, DoubleQuote)))], span: 194..207 } }, InvalidArgs { command: "[B:/]", span: 208..209, variant: TypeNotExpected { expected: [Number(None), String(None)], found: [Number(Some(Number(FloatOrd(2.0), 210..211)))], span: 210..211 } }, Undefined("_testVariable", 320..333, false)])

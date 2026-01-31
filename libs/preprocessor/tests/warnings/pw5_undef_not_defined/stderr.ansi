@@ -1,0 +1,12 @@
+[0m[1m[38;5;11mwarning[PW5][0m[1m: Undef not defined[0m
+  [0m[36m┌─[0m source.hpp:2:8
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m #undef [0m[33mALFA[0m
+  [0m[36m│[0m        [0m[33m^^^^[0m [0m[33mundefined macro[0m
+
+[0m[1m[38;5;11mwarning[PW5][0m[1m: Undef not defined[0m
+  [0m[36m┌─[0m source.hpp:6:8
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m #undef [0m[33mBRAVO[0m
+  [0m[36m│[0m        [0m[33m^^^^^[0m [0m[33mundefined macro[0m
+

@@ -1,10 +1,9 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use fs_err::File;
-use git2::Repository;
 use hemtt_common::prefix::FILES;
 use hemtt_pbo::ReadablePbo;
-use hemtt_signing::BIPrivateKey;
+use hemtt_signing::{BIPrivateKey, HEMTTPrivateKey};
 use hemtt_workspace::{
     addons::Location,
     reporting::{Code, Diagnostic},
@@ -16,11 +15,16 @@ use crate::{context::Context, error::Error, report::Report};
 use super::Module;
 
 #[derive(Debug, Default)]
-pub struct Sign;
+pub struct Sign {
+    reused_key: RwLock<Option<BIPrivateKey>>,
+}
+
 impl Sign {
     #[must_use]
     pub const fn new() -> Self {
-        Self
+        Self {
+            reused_key: RwLock::new(None),
+        }
     }
 }
 
@@ -30,11 +34,47 @@ impl Module for Sign {
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
-        if ctx.config().version().git_hash().is_some() {
-            Repository::discover(".")?;
-        }
-
         let mut report = Report::new();
+
+        if let Some(hash) = ctx.config().signing().private_key_hash() {
+            let authority = get_authority(ctx, None)?;
+            let key_path = ctx
+                .project_folder()
+                .join(format!("{authority}.hemttprivatekey"));
+            if !key_path.exists() {
+                error!("Private key file `{}` does not exist", key_path.display());
+                std::process::exit(1);
+            }
+            if crate::is_ci() {
+                error!(
+                    "Private key file `{}` should not be present in CI environments",
+                    key_path.display()
+                );
+                std::process::exit(1);
+            }
+            let password = dialoguer::Password::new()
+                .with_prompt("Enter password to decrypt private key")
+                .interact()?;
+            let key =
+                HEMTTPrivateKey::read_encrypted(&mut fs_err::File::open(&key_path)?, &password)?;
+            if key.prefix != ctx.config().prefix() {
+                error!("Private key prefix does not match the project prefix");
+                std::process::exit(1);
+            }
+            if key.project != ctx.config().name() {
+                error!("Private key project does not match the project name");
+                std::process::exit(1);
+            }
+            if key.git_hash != get_git_first_hash()? {
+                error!("Private key git hash does not match the project's first commit hash");
+                std::process::exit(1);
+            }
+            if key.validation_hash()? != hash {
+                error!("Private key validation hash does not match the expected value");
+                std::process::exit(1);
+            }
+            *self.reused_key.write().expect("rwlock poisoned") = Some(key.bi);
+        }
 
         ctx.addons().to_vec().iter().for_each(|addon| {
             let entries = fs_err::read_dir(addon.folder())
@@ -62,8 +102,15 @@ impl Module for Sign {
     }
 
     fn pre_release(&self, ctx: &Context) -> Result<Report, Error> {
-        let authority = get_authority(ctx, None)?;
-        let addons_key = BIPrivateKey::generate(1024, &authority)?;
+        let reused_key = self.reused_key.read().expect("rwlock poisoned");
+        let (addons_key, authority) = if let Some(key) = reused_key.clone() {
+            let authority = key.authority().to_string();
+            (key, authority)
+        } else {
+            let authority = get_authority(ctx, None)?;
+            (BIPrivateKey::generate(1024, &authority)?, authority)
+        };
+        drop(reused_key);
         fs_err::create_dir_all(
             ctx.build_folder()
                 .expect("build folder exists")
@@ -97,8 +144,16 @@ impl Module for Sign {
                 Location::Optionals => {
                     let (mut target_pbo, key, authority) =
                         if ctx.config().hemtt().build().optional_mod_folders() {
-                            let authority = get_authority(ctx, Some(&pbo_name))?;
-                            let key = BIPrivateKey::generate(1024, &authority)?;
+                            let (key, authority) = {
+                                let reused_key = self.reused_key.read().expect("rwlock poisoned");
+                                if let Some(key) = reused_key.clone() {
+                                    let authority = key.authority().to_string();
+                                    (key, authority)
+                                } else {
+                                    let authority = get_authority(ctx, Some(&pbo_name))?;
+                                    (BIPrivateKey::generate(1024, &authority)?, authority)
+                                }
+                            };
                             let mod_root = ctx
                                 .build_folder()
                                 .expect("build folder exists")
@@ -140,19 +195,38 @@ impl Module for Sign {
 }
 
 pub fn get_authority(ctx: &Context, suffix: Option<&str>) -> Result<String, Error> {
-    let mut authority = format!(
-        "{}_{}",
-        ctx.config().signing().authority().map_or_else(
-            || ctx.config().prefix().to_string(),
-            std::string::ToString::to_string
-        ),
-        ctx.config().version().get(ctx.workspace_path().vfs())?
+    let config_authority = ctx.config().signing().authority().map_or_else(
+        || ctx.config().prefix().to_string(),
+        std::string::ToString::to_string,
     );
+    let mut authority = if ctx.config().signing().private_key_hash().is_some() {
+        config_authority
+    } else {
+        format!(
+            "{}_{}",
+            config_authority,
+            ctx.config().version().get(ctx.workspace_path().vfs())?
+        )
+    };
     if let Some(suffix) = suffix {
         authority.push('_');
         authority.push_str(suffix);
     }
     Ok(authority)
+}
+
+pub fn get_git_first_hash() -> Result<String, Error> {
+    let repo = git2::Repository::discover(".")?;
+    // get the hash of the first commit
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push_head()?;
+    let first_commit = revwalk.last().ok_or_else(|| {
+        Error::Io(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "repository has no commits",
+        ))
+    })??;
+    Ok(first_commit.to_string())
 }
 
 pub struct EmptyAddon {

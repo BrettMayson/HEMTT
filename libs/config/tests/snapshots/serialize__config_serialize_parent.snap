@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/serialize.rs
+expression: serialize(stringify! (parent))
+---
+{"External":null,"Parent":{"__parent":"External","number":42},"Derived":{"__parent":"Parent","string":"Derived Class"}}
