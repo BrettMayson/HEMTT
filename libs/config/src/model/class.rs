@@ -101,9 +101,7 @@ impl serde::Serialize for Class {
                 }
                 state.end()
             }
-            Self::External { .. } => {
-                serializer.serialize_none()
-            }
+            Self::External { .. } => serializer.serialize_none(),
         }
     }
 }
