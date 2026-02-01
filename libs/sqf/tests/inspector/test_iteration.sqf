@@ -23,3 +23,40 @@ private _a4 = [1];
 _a4 resize 0;
 _a4 pushBack "x";
 { _x + "D" } forEach _a4; // ok
+
+
+// "test runs" for loop iterations
+private _oldLoc = false;
+{
+    _x params ["_locNew", "_colorNew"];
+    if (_oldLoc isNotEqualTo false) then {
+        drawLine3D [_oldLoc, _locNew, _colorNew]; // safe because it happens inside an inner if-scope
+    };
+    _oldLoc = _locNew;
+} forEach x_points;
+
+private _oldLoc2 = false;
+{
+    _x params ["_locNew", "_colorNew"];
+    drawLine3D [_oldLoc2, _locNew, _colorNew]; // error
+    _oldLoc2 = _locNew;
+} forEach x_points;
+
+private _z = "5"; 
+for "_i" from 1 to 11 do {
+    if (_i % 2 == 0) then { 
+        _z = str (_z / 10); // safe
+    };
+    if (_i % 2 == 1) then { 
+        _z = parseNumber (_z + "0"); 
+    }; 
+};
+
+private "_someVar";
+[1,2,3] select {
+    if (!isNil "_someVar") then {
+        x = (_x + _someVar) > 5 // safe
+    };
+    _someVar = _x;
+    false;
+};
