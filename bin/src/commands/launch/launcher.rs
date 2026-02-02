@@ -303,6 +303,8 @@ impl<'a> Launcher<'a> {
         if instances.len() == 1 {
             let mut cmd = if cfg!(target_os = "windows") {
                 super::platforms::windows(&self.arma3, &self.executable, &instances[0])
+            } else if cfg!(target_os = "macos") {
+                super::platforms::macos(&instances[0])
             } else {
                 super::platforms::linux(&instances[0])
             }?;
@@ -319,6 +321,8 @@ impl<'a> Launcher<'a> {
                 children.push(
                     if cfg!(target_os = "windows") {
                         super::platforms::windows(&self.arma3, &self.executable, &instance)?
+                    } else if cfg!(target_os = "macos") {
+                        super::platforms::macos(&instance)?
                     } else {
                         super::platforms::linux(&instance)?
                     }
