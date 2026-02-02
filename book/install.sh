@@ -7,6 +7,21 @@ GITHUB_API="https://api.github.com/repos/brettmayson/HEMTT/releases/latest"
 RELEASE_INFO=$(curl -s "$GITHUB_API")
 DOWNLOAD_URL=""
 
+# --- macOS preflight checks ---
+if [ "$(uname -s)" = "Darwin" ]; then
+    if ! command -v brew >/dev/null 2>&1; then
+        echo "Homebrew is required on macOS but was not found."
+        echo "Install it from https://brew.sh and re-run this installer."
+        exit 1
+    fi
+
+    if ! brew list --versions openssl@3 >/dev/null 2>&1; then
+        echo "openssl@3 not found. Installing via Homebrew..."
+        brew install openssl@3
+    fi
+fi
+# --- end macOS preflight checks ---
+
 case "$(uname -s)" in
     Linux*)
         ARCH="$(uname -m)"
@@ -50,7 +65,7 @@ fi
 mkdir -p "$binaryLocation"
 
 
-config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile"
+config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile $HOME/.zprofile"
 addedBash=false
 for config in $config_files; do
     addedByHEMTT=false
