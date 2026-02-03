@@ -3,7 +3,6 @@
 set -e
 
 GITHUB_API="https://api.github.com/repos/brettmayson/HEMTT/releases/latest"
-
 RELEASE_INFO=$(curl -s "$GITHUB_API")
 DOWNLOAD_URL=""
 
@@ -20,11 +19,13 @@ if [ "$(uname -s)" = "Darwin" ]; then
         brew install openssl@3
     fi
 fi
-# --- end macOS preflight checks ---
 
-case "$(uname -s)" in
+# --- Determine download URL ---
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+
+case "$OS" in
     Linux*)
-        ARCH="$(uname -m)"
         if [ "$ARCH" = "x86_64" ]; then
             DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'linux-x64' | head -n 1)
         else
@@ -33,7 +34,6 @@ case "$(uname -s)" in
         fi
         ;;
     Darwin*)
-        ARCH="$(uname -m)"
         if [ "$ARCH" = "arm64" ]; then
             DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'darwin-arm64' | head -n 1)
         else
@@ -42,7 +42,7 @@ case "$(uname -s)" in
         fi
         ;;
     *)
-        echo "Unsupported OS: $(uname -s)"
+        echo "Unsupported OS: $OS"
         exit 1
         ;;
 esac
@@ -53,55 +53,79 @@ if [ -z "$DOWNLOAD_URL" ]; then
 fi
 
 echo "Downloading from $DOWNLOAD_URL..."
-mkdir -p /tmp/hemtt-installer
-curl -L -o /tmp/hemtt-installer/hemtt "$DOWNLOAD_URL"
+TMP_DIR=$(mktemp -d)
+curl -L -o "$TMP_DIR/hemtt" "$DOWNLOAD_URL"
+chmod +x "$TMP_DIR/hemtt"
 
-chmod +x /tmp/hemtt-installer/hemtt
+# --- Install location ---
+BINARY_DIR="$HOME/.local/bin"
+mkdir -p "$BINARY_DIR"
 
-binaryLocation="$HOME/.local/bin"
-if [ "$(uname -s)" = "Darwin" ]; then
-    binaryLocation="$HOME/bin"
-fi
-mkdir -p "$binaryLocation"
-
-
-config_files="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile $HOME/.zprofile"
-addedBash=false
-for config in $config_files; do
-    addedByHEMTT=false
-    if [ -f "$config" ]; then
-        if ! echo "$PATH" | grep -q "$binaryLocation"; then
-            if ! grep -q -s "export PATH=$binaryLocation:\$PATH" "$config"; then
-                echo "Appending $binaryLocation to $config"
-                echo "" >>"$config"
-                echo "# Added by HEMTT" >>"$config"
-                echo "export PATH=$binaryLocation:\$PATH" >>"$config"
-                addedByHEMTT=true
-            fi
-            export PATH=$binaryLocation:$PATH
-        fi
-        if ! grep -q -s "source <(hemtt manage completions" "$config"; then
-            if [ "$config" = "$HOME/.bashrc" ] || [ "$config" = "$HOME/.bash_profile" ]; then
-                if [ "$addedBash" = true ]; then
-                    continue
-                fi
-                addedBash=true
-            fi
-            echo "Adding completions to $config"
-            echo "" >>"$config"
-            if [ "$addedByHEMTT" = false ]; then
-                echo "# Added by HEMTT" >>"$config"
-            fi
-            echo "source <(hemtt manage completions \$(basename \$SHELL))" >>"$config"
-        fi
+# --- Update PATH ---
+update_path() {
+    CONFIG="$1"
+    if [ ! -f "$CONFIG" ]; then
+        touch "$CONFIG"
     fi
-done
+    if ! grep -q "$BINARY_DIR" "$CONFIG"; then
+        echo "" >> "$CONFIG"
+        echo "# Added by HEMTT installer" >> "$CONFIG"
+        echo "export PATH=\"$BINARY_DIR:\$PATH\"" >> "$CONFIG"
+        echo "Added $BINARY_DIR to PATH in $CONFIG"
+    fi
+}
 
-if [ -w "$binaryLocation" ]; then
-    mv /tmp/hemtt-installer/hemtt "$binaryLocation"
-else
-    echo "The installer was unable to move the binary to $binaryLocation"
-    exit 1
+# --- Update shell completions ---
+update_completion() {
+    CONFIG="$1"
+    SHELL_NAME="$2"
+    if [ ! -f "$CONFIG" ]; then
+        touch "$CONFIG"
+    fi
+    if ! grep -q "source <(hemtt manage completions" "$CONFIG"; then
+        echo "" >> "$CONFIG"
+        echo "# Added by HEMTT installer" >> "$CONFIG"
+        echo "source <(hemtt manage completions $SHELL_NAME)" >> "$CONFIG"
+        echo "Added HEMTT completions to $CONFIG"
+    fi
+}
+
+# --- macOS specific ---
+if [ "$OS" = "Darwin" ]; then
+    # PATH for Zsh login shells
+    update_path "$HOME/.zprofile"
+
+    # Completions for Zsh
+    update_completion "$HOME/.zshrc" "zsh"
+
+    # Completions for Bash if present
+    [ -f "$HOME/.bashrc" ] && update_completion "$HOME/.bashrc" "bash"
+
+    # Completions for Fish if config exists
+    FISH_CONFIG="$HOME/.config/fish/config.fish"
+    if [ -f "$FISH_CONFIG" ]; then
+        update_completion "$FISH_CONFIG" "fish"
+    fi
 fi
 
-echo "Installation complete. You can run HEMTT using 'hemtt'"
+# --- Linux ---
+if [ "$OS" = "Linux" ]; then
+    CONFIG_FILES="$HOME/.bashrc $HOME/.bash_profile $HOME/.profile $HOME/.zshrc $HOME/.zprofile"
+    for CONFIG in $CONFIG_FILES; do
+        [ -f "$CONFIG" ] && update_path "$CONFIG"
+    done
+
+    # Fish completions
+    FISH_CONFIG="$HOME/.config/fish/config.fish"
+    if [ -f "$FISH_CONFIG" ]; then
+        update_completion "$FISH_CONFIG" "fish"
+    fi
+fi
+
+# --- Move binary ---
+mv "$TMP_DIR/hemtt" "$BINARY_DIR/hemtt"
+rm -rf "$TMP_DIR"
+
+echo "Installation complete."
+echo "Please restart your terminal or source the relevant shell config."
+echo "You can run HEMTT using: hemtt"
