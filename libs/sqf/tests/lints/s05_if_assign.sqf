@@ -11,3 +11,10 @@ private _limbs = [
 private _isAlive = if (alive player) then { true } else { false };
 private _isDry = if (surfaceIsWater position player) then { false } else { true };
 private _isWarmStr = if (temperature > 20) then { "true" } else { "false" };
+
+[] spawn {
+    // suppressed with
+    // [lints.sqf.if_assign]
+    // options.skip_vars = true
+    if (someLogic) then { someVar } else { 5 };
+};

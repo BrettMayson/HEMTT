@@ -21,7 +21,14 @@ impl Lint<LintData> for LintS05IfAssign {
     }
 
     fn documentation(&self) -> &'static str {
-r#"### Example
+r#"### Configuration
+
+- **skip_vars**: Skips variables when looking for constants. This is needed for code that may be run in scheduled environment (`spawn`). Default: false
+
+```toml
+[lints.sqf.if_assign]
+options.skip_vars = true
+```
 
 **Incorrect**
 ```sqf
@@ -71,14 +78,15 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
+        let skip_vars = config.option("skip_vars").and_then(toml::Value::as_bool).unwrap_or(false);
         if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target
             && name.eq_ignore_ascii_case("then") {
                 let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
                     return Vec::new();
                 };
                 if let Expression::BinaryCommand(BinaryCommand::Else, lhs_expr, rhs_expr, _) = &**code {
-                    let lhs = extract_constant(lhs_expr);
-                    let rhs = extract_constant(rhs_expr);
+                    let lhs = extract_constant(lhs_expr, skip_vars);
+                    let rhs = extract_constant(rhs_expr, skip_vars);
                     if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
                         if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition

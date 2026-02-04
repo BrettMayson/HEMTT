@@ -254,7 +254,7 @@ impl Analyze for Expression {
 /// Extracts a constant from an expression
 ///
 /// Returns a tuple of the constant and a boolean indicating if quotes are needed
-fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
+fn extract_constant(expression: &Expression, skip_vars: bool) -> Option<(String, bool)> {
     if let Expression::Code(code) = &expression
         && code.content.len() == 1
         && let Statement::Expression(expr, _) = &code.content[0]
@@ -263,7 +263,13 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
             Expression::Boolean(bool, _) => Some((bool.to_string(), false)),
             Expression::Number(num, _) => Some((num.0.to_string(), false)),
             Expression::String(string, _, _) => Some((string.to_string(), true)),
-            Expression::Variable(var, _) => Some((var.clone(), false)),
+            Expression::Variable(var, _) => {
+                if skip_vars {
+                    None
+                } else {
+                    Some((var.clone(), false))
+                }
+            }
             _ => None,
         };
     }

@@ -6,6 +6,9 @@ options.ignore = [
     "addPublicVariableEventHandler",
 ]
 
+[lints.sqf.if_assign]
+options.skip_vars = true
+
 [lints.sqf]
 if_not_else = true
 
