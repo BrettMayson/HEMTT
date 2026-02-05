@@ -300,10 +300,7 @@ fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bo
             }
         }
         Expression::BinaryCommand(_, left, right, _) => {
-            if check_expression_deep(left, f) {
-                return true;
-            }
-            if check_expression_deep(right, f) {
+            if check_expression_deep(left, f) || check_expression_deep(right, f) {
                 return true;
             }
         }
