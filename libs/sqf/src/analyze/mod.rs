@@ -251,10 +251,10 @@ impl Analyze for Expression {
     }
 }
 
+#[must_use]
 /// Extracts a constant from an expression
 ///
 /// Returns a tuple of the constant and a boolean indicating if quotes are needed
-#[must_use]
 fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
     if let Expression::Code(code) = &expression
         && code.content.len() == 1
@@ -271,6 +271,7 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
     None
 }
 #[must_use]
+/// Checks if a function returns true for any sub-expression
 fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bool) -> bool {
     match expression {
         Expression::Array(elements, _) => {
