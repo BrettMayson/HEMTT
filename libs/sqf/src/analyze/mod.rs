@@ -276,24 +276,36 @@ fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bo
     match expression {
         Expression::Array(elements, _) => {
             for element in elements {
-                if check_expression_deep(element, f) { return true }
+                if check_expression_deep(element, f) {
+                    return true;
+                }
             }
         }
         Expression::Code(statements) => {
             for statement in &statements.content {
                 match statement {
-                    Statement::Expression(expr, _) | Statement::AssignLocal(_, expr, _) | Statement::AssignGlobal(_, expr, _) => {
-                        if check_expression_deep(expr, f) { return true }
+                    Statement::Expression(expr, _)
+                    | Statement::AssignLocal(_, expr, _)
+                    | Statement::AssignGlobal(_, expr, _) => {
+                        if check_expression_deep(expr, f) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         Expression::UnaryCommand(_, expr, _) => {
-            if check_expression_deep(expr, f) { return true }
+            if check_expression_deep(expr, f) {
+                return true;
+            }
         }
         Expression::BinaryCommand(_, left, right, _) => {
-            if check_expression_deep(left, f) { return true }
-            if check_expression_deep(right, f) { return true }
+            if check_expression_deep(left, f) {
+                return true;
+            }
+            if check_expression_deep(right, f) {
+                return true;
+            }
         }
         _ => {}
     }
