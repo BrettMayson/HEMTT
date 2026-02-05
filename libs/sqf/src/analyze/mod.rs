@@ -254,7 +254,8 @@ impl Analyze for Expression {
 /// Extracts a constant from an expression
 ///
 /// Returns a tuple of the constant and a boolean indicating if quotes are needed
-fn extract_constant(expression: &Expression, skip_vars: bool) -> Option<(String, bool)> {
+#[must_use]
+fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
     if let Expression::Code(code) = &expression
         && code.content.len() == 1
         && let Statement::Expression(expr, _) = &code.content[0]
@@ -263,17 +264,39 @@ fn extract_constant(expression: &Expression, skip_vars: bool) -> Option<(String,
             Expression::Boolean(bool, _) => Some((bool.to_string(), false)),
             Expression::Number(num, _) => Some((num.0.to_string(), false)),
             Expression::String(string, _, _) => Some((string.to_string(), true)),
-            Expression::Variable(var, _) => {
-                if skip_vars {
-                    None
-                } else {
-                    Some((var.clone(), false))
-                }
-            }
+            Expression::Variable(var, _) => Some((var.clone(), false)),
             _ => None,
         };
     }
     None
+}
+#[must_use]
+fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bool) -> bool {
+    match expression {
+        Expression::Array(elements, _) => {
+            for element in elements {
+                if check_expression_deep(element, f) { return true }
+            }
+        }
+        Expression::Code(statements) => {
+            for statement in &statements.content {
+                match statement {
+                    Statement::Expression(expr, _) | Statement::AssignLocal(_, expr, _) | Statement::AssignGlobal(_, expr, _) => {
+                        if check_expression_deep(expr, f) { return true }
+                    }
+                }
+            }
+        }
+        Expression::UnaryCommand(_, expr, _) => {
+            if check_expression_deep(expr, f) { return true }
+        }
+        Expression::BinaryCommand(_, left, right, _) => {
+            if check_expression_deep(left, f) { return true }
+            if check_expression_deep(right, f) { return true }
+        }
+        _ => {}
+    }
+    f(expression)
 }
 
 #[must_use]

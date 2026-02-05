@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::{extract_constant, LintData}, BinaryCommand, Expression, UnaryCommand};
+use crate::{analyze::{extract_constant, check_expression_deep, LintData}, BinaryCommand, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS05IfAssign);
 
@@ -21,14 +21,7 @@ impl Lint<LintData> for LintS05IfAssign {
     }
 
     fn documentation(&self) -> &'static str {
-r#"### Configuration
-
-- **skip_vars**: Skips variables when looking for constants. This is needed for code that may be run in scheduled environment (`spawn`). Default: false
-
-```toml
-[lints.sqf.if_assign]
-options.skip_vars = true
-```
+r#"### Example
 
 **Incorrect**
 ```sqf
@@ -78,21 +71,25 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let skip_vars = config.option("skip_vars").and_then(toml::Value::as_bool).unwrap_or(false);
         if let Expression::BinaryCommand(BinaryCommand::Named(name), if_cmd, code, _) = target
             && name.eq_ignore_ascii_case("then") {
                 let Expression::UnaryCommand(UnaryCommand::Named(_), condition, _) = &**if_cmd else {
                     return Vec::new();
                 };
                 if let Expression::BinaryCommand(BinaryCommand::Else, lhs_expr, rhs_expr, _) = &**code {
-                    let lhs = extract_constant(lhs_expr, skip_vars);
-                    let rhs = extract_constant(rhs_expr, skip_vars);
+                    let lhs = extract_constant(lhs_expr);
+                    let rhs = extract_constant(rhs_expr);
                     if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
-                        if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
-                            && name.eq_ignore_ascii_case("isnil") {
-                                return Vec::new();
-                            }
+                        if check_expression_deep(condition, &|expr| {
+                            if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = expr
+                                && name.eq_ignore_ascii_case("isnil") {
+                                    return true;
+                                }
+                            false
+                        }) {
+                            return Vec::new();
+                        }
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),
                             (condition.source(false), condition.full_span()),

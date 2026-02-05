@@ -242,7 +242,7 @@ fn check_unknown(
         id.1.clone(),
         name.to_owned(),
         id.0.clone(),
-        target.and_then(|t| extract_constant(t, false)),
+        target.and_then(extract_constant),
         eh.iter().map(|(ns, _)| ns).copied().collect(),
         processed,
         database,
