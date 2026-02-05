@@ -37,7 +37,7 @@ if (_test1 && _test2) then { };
 
 ### Explanation
 
-Short circuit evaultion on a variable that is a boolean is inefficient
+Short circuit evaluation on a variable that is a boolean is inefficient
 False positives are possible if the var could be undefined, e.g.:
 ```sqf
 someLogic = !isNil "z";
