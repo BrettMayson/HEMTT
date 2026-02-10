@@ -4,17 +4,12 @@ use std::ops::Range;
 
 use indexmap::IndexSet;
 
-use crate::{Expression, analyze::inspector::VarSource, parser::database::Database};
+use crate::{Expression, analyze::inspector::VarSource};
 
 use super::{Inspector, game_value::GameValue};
 
-impl Inspector {
-    pub fn external_function(
-        &mut self,
-        lhs: &IndexSet<GameValue>,
-        rhs: &Expression,
-        database: &Database,
-    ) {
+impl Inspector<'_> {
+    pub fn external_function(&mut self, lhs: &IndexSet<GameValue>, rhs: &Expression) {
         let Expression::Variable(ext_func, _) = rhs else {
             return;
         };
@@ -27,7 +22,6 @@ impl Inspector {
                         self.external_current_scope(
                             &vec![(GameValue::Code(Some(statements.clone())), statements.span())],
                             &vec![],
-                            database,
                         );
                     }
                 }
@@ -41,7 +35,6 @@ impl Inspector {
                                     ("_key", GameValue::Anything),
                                     ("_value", GameValue::Anything),
                                 ],
-                                database,
                             );
                         }
                     }
@@ -50,7 +43,6 @@ impl Inspector {
                             self.external_current_scope(
                                 &gv_array[1],
                                 &vec![("_x", GameValue::Anything)],
-                                database,
                             );
                         }
                     }
@@ -62,18 +54,17 @@ impl Inspector {
                                     ("_x", GameValue::Anything),
                                     ("_accumulator", GameValue::Anything),
                                 ],
-                                database,
                             );
                         }
                     }
                     "cba_fnc_directcall" => {
                         if !gv_array.is_empty() {
-                            self.external_current_scope(&gv_array[0], &vec![], database);
+                            self.external_current_scope(&gv_array[0], &vec![]);
                         }
                     }
                     "ace_common_fnc_cachedcall" => {
                         if gv_array.len() > 1 {
-                            self.external_current_scope(&gv_array[1], &vec![], database);
+                            self.external_current_scope(&gv_array[1], &vec![]);
                         }
                     }
                     // Functions that will start in a new scope
@@ -87,7 +78,6 @@ impl Inspector {
                                         ("_player", GameValue::Object),
                                         ("_actionParams", GameValue::Anything),
                                     ],
-                                    database,
                                 );
                             }
                         }
@@ -96,12 +86,12 @@ impl Inspector {
                     | "cba_fnc_waitandexecute"
                     | "cba_fnc_execnextframe" => {
                         if !gv_array.is_empty() {
-                            self.external_new_scope(&gv_array[0], &vec![], database);
+                            self.external_new_scope(&gv_array[0], &vec![]);
                         }
                     }
                     "cba_fnc_addclasseventhandler" => {
                         if gv_array.len() > 2 {
-                            self.external_new_scope(&gv_array[2], &vec![], database);
+                            self.external_new_scope(&gv_array[2], &vec![]);
                         }
                     }
                     "cba_fnc_addbiseventhandler" => {
@@ -114,7 +104,6 @@ impl Inspector {
                                     ("_thisFnc", GameValue::Code(None)),
                                     ("_thisArgs", GameValue::Anything),
                                 ],
-                                database,
                             );
                         }
                     }
@@ -128,7 +117,6 @@ impl Inspector {
                                     ("_thisFnc", GameValue::Code(None)),
                                     ("_thisArgs", GameValue::Anything),
                                 ],
-                                database,
                             );
                         }
                     }
@@ -142,7 +130,6 @@ impl Inspector {
         &mut self,
         code_arg: &Vec<(GameValue, Range<usize>)>,
         vars: &Vec<(&str, GameValue)>,
-        database: &Database,
     ) {
         for (element, _) in code_arg {
             let GameValue::Code(Some(expression)) = element else {
@@ -152,7 +139,7 @@ impl Inspector {
                 continue;
             };
             self.scope_push(false);
-            let stack_index = self.stack_push(Some(expression));
+            let stack_index = self.stack_push(Some(expression), false);
             if stack_index.is_some() {
                 // prevent infinite recursion
                 for (var, value) in vars {
@@ -163,7 +150,7 @@ impl Inspector {
                         VarSource::Ignore,
                     );
                 }
-                self.eval_statements(statements, false, database);
+                self.eval_statements(statements, false);
                 let _ = self.stack_pop(stack_index);
             }
             self.scope_pop();
@@ -173,7 +160,6 @@ impl Inspector {
         &mut self,
         code_arg: &Vec<(GameValue, Range<usize>)>,
         vars: &Vec<(&str, GameValue)>,
-        database: &Database,
     ) {
         for (element, _) in code_arg {
             let GameValue::Code(Some(expression)) = element else {
@@ -182,7 +168,7 @@ impl Inspector {
             let Expression::Code(statements) = expression else {
                 continue;
             };
-            let stack_index = self.stack_push(Some(expression));
+            let stack_index = self.stack_push(Some(expression), false);
             if stack_index.is_none() {
                 continue;
             }
@@ -194,7 +180,7 @@ impl Inspector {
                     VarSource::Ignore,
                 );
             }
-            self.eval_statements(statements, true, database);
+            self.eval_statements(statements, true);
             self.stack_pop(stack_index);
         }
     }
