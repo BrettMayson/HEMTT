@@ -507,8 +507,7 @@ impl Expression {
     #[must_use]
     fn op_uni_tostring_code(
         &self,
-        #[allow(unused_variables)]
-        op_type: &UnaryCommand,
+        #[allow(unused_variables)] op_type: &UnaryCommand,
         range: &Range<usize>,
         right: &Self,
     ) -> Option<Self> {
