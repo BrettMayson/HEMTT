@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Diagnostic, Processed, Severity}};
 
-use crate::{analyze::{extract_constant, LintData}, BinaryCommand, Expression, UnaryCommand};
+use crate::{analyze::{extract_constant, check_expression_deep, LintData}, BinaryCommand, Expression, UnaryCommand};
 
 crate::analyze::lint!(LintS05IfAssign);
 
@@ -81,10 +81,15 @@ impl LintRunner<LintData> for Runner {
                     let rhs = extract_constant(rhs_expr);
                     if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
-                        if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = &**condition
-                            && name.eq_ignore_ascii_case("isnil") {
-                                return Vec::new();
-                            }
+                        if check_expression_deep(condition, &|expr| {
+                            if let Expression::UnaryCommand(UnaryCommand::Named(name), _, _) = expr
+                                && name.eq_ignore_ascii_case("isnil") {
+                                    return true;
+                                }
+                            false
+                        }) {
+                            return Vec::new();
+                        }
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),
                             (condition.source(false), condition.full_span()),

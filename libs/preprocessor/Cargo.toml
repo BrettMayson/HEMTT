@@ -26,7 +26,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.8.0"
+criterion = "0.8.2"
 fs-err = { workspace = true }
 paste = { workspace = true }
 

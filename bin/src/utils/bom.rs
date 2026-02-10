@@ -1,6 +1,6 @@
 use std::io::{Read, Seek, Write};
 
-use crate::Error;
+use crate::{Error, TEXT_EXTENSIONS};
 
 #[derive(clap::Parser)]
 /// Convert UTF-8 with BOM to UTF-8 without BOM
@@ -19,10 +19,6 @@ use crate::Error;
 /// encounter unexpected parsing errors or as part of project maintenance.
 pub struct Command {}
 
-const ALLOWED_EXTENSIONS: [&str; 10] = [
-    "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
-];
-
 /// Execute the bom command
 ///
 /// # Errors
@@ -35,33 +31,37 @@ pub fn execute(_: &Command) -> Result<(), Error> {
     for entry in walkdir::WalkDir::new(".") {
         let entry = entry?;
         let path = entry.path();
-        if path.is_file() {
-            let ext = path
-                .extension()
-                .unwrap_or_default()
-                .to_str()
-                .unwrap_or_default();
-            if ALLOWED_EXTENSIONS.contains(&ext) {
-                let mut file = fs_err::OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open(path)?;
-                let mut buf = [0; 3];
-                if file.read_exact(&mut buf).is_err() {
-                    continue;
-                }
-                if buf == [0xEF, 0xBB, 0xBF] {
-                    let mut buf = Vec::new();
-                    file.read_to_end(&mut buf)?;
-                    file.seek(std::io::SeekFrom::Start(0))?;
-                    file.write_all(&buf)?;
-                    file.set_len(buf.len() as u64)?;
-                    info!("Removed BOM from {}", path.display());
-                    count += 1;
-                }
-            } else {
-                debug!("Skipping {}", path.display());
+        if !path.is_file() {
+            continue;
+        }
+        let ext = path
+            .extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or_default();
+        if !TEXT_EXTENSIONS.contains(&ext) {
+            debug!("Skipping {}", path.display());
+            continue;
+        }
+        let mut file = fs_err::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(path)?;
+        let mut buf = [0; 3];
+        if file.read_exact(&mut buf).is_err() {
+            continue;
+        }
+        if buf == [0xEF, 0xBB, 0xBF] {
+            let mut buf = Vec::new();
+            file.read_to_end(&mut buf)?;
+            file.seek(std::io::SeekFrom::Start(0))?;
+            if let Err(e) = file.write_all(&buf) {
+                error!("Failed to write to {}: {}", path.display(), e);
+                continue;
             }
+            file.set_len(buf.len() as u64)?;
+            info!("Removed BOM from {}", path.display());
+            count += 1;
         }
     }
 

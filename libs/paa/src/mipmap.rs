@@ -41,6 +41,12 @@ impl MipMap {
     pub fn write(&self, output: &mut impl std::io::Write) -> Result<(), std::io::Error> {
         output.write_u16::<LittleEndian>(self.width)?;
         output.write_u16::<LittleEndian>(self.height)?;
+        if self.data.len() > 0x00FF_FFFF {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "MipMap data length exceeds 24-bit limit",
+            ));
+        }
         output.write_u24::<LittleEndian>(u32::try_from(self.data.len()).map_err(|_| {
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,

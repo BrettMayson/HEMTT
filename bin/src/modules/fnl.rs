@@ -6,11 +6,9 @@ use std::{
 
 use hemtt_workspace::reporting::{Code, Severity};
 
-use crate::{context::Context, report::Report};
+use crate::{TEXT_EXTENSIONS, context::Context, report::Report};
 
 use super::Module;
-
-pub const TEXT_EXTENSIONS: [&str; 7] = ["sqf", "txt", "hpp", "cpp", "rvmat", "ext", "inc"];
 
 #[derive(Default)]
 pub struct FineNewLineCheck {}
@@ -51,7 +49,7 @@ impl Module for FineNewLineCheck {
                     .trim_start_matches(ctx.project_folder().to_str().unwrap_or_default())
                     .to_string();
                 if file.seek(std::io::SeekFrom::End(-1)).is_err() {
-                    report.push(Arc::new(FNLError { file: display_path }));
+                    // File is empty, so it has no final newline
                     continue;
                 }
                 let mut last_byte = [0; 1];
