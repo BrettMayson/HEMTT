@@ -175,7 +175,6 @@ impl<'a> Inspector<'a> {
     pub fn stack_push(
         &mut self,
         expression_opt: Option<&Expression>,
-        test_run: bool,
         suppress_errors: bool,
     ) -> Option<usize> {
         // println!("-- Stack Push {}", self.active_scope().vars_local.len());
