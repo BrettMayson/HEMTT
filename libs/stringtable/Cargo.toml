@@ -18,14 +18,14 @@ fs-err = { workspace = true }
 indexmap = { workspace = true }
 linkme = { workspace = true }
 paste = { workspace = true }
-quick-xml = { version = "0.38.4", features = ["serialize"] }
+quick-xml = { version = "0.39.0", features = ["serialize"] }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.8.0"
+criterion = "0.8.2"
 insta = { workspace = true }
 
 [[bench]]

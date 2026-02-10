@@ -1,6 +1,6 @@
 # Arma 3 Tools
 
-HEMTT will use your installation of Arm 3 Tools to binarize supported files (p3d, rtm, wrp).
+HEMTT will use your installation of Arma 3 Tools to binarize supported files (p3d, rtm, wrp).
 
 ## Installation
 

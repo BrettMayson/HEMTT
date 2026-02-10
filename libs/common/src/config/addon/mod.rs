@@ -24,6 +24,9 @@ pub struct AddonConfig {
 
     /// Files to exclude from the pbo
     files: files::FilesConfig,
+
+    /// Ignore pboprefix checks
+    ignore_pboprefix: bool,
 }
 
 impl AddonConfig {
@@ -49,6 +52,12 @@ impl AddonConfig {
     /// Files to exclude from the pbo
     pub const fn files(&self) -> &files::FilesConfig {
         &self.files
+    }
+
+    #[must_use]
+    /// Ignore pboprefix checks
+    pub const fn ignore_pboprefix(&self) -> bool {
+        self.ignore_pboprefix
     }
 
     /// Load a configuration from a file.
@@ -83,6 +92,9 @@ pub struct AddonConfigFile {
 
     #[serde(default)]
     files: files::FilesSectionFile,
+
+    #[serde(default)]
+    ignore_pboprefix: bool,
 }
 
 static DEPRECATION: Once = Once::new();
@@ -136,6 +148,7 @@ impl From<AddonConfigFile> for AddonConfig {
                 files.exclude_mut().extend(file.exclude);
                 files
             },
+            ignore_pboprefix: file.ignore_pboprefix,
         }
     }
 }

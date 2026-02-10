@@ -40,9 +40,13 @@ class CfgVehicles {
 - **check_prefixes**: only consider classes that start with any of these prefixes
 By default it will only check classnames that start with the project's prefix. Use `*` to check all.
 
+- **check_cfgpatches**: warn if items in CfgPatches do not exist in CfgVehicles/CfgWeapons
+By default this is enabled.
+
 ```toml
 [lints.config.cfgpatches_scope]
 options.check_prefixes = ["abe", "abx"]
+options.check_cfgpatches = true
 ```
 
 ### Explanation
@@ -118,6 +122,9 @@ impl LintRunner<LintData> for Runner {
             }
         }
         // Check for items in CfgPatches that are not defined in CfgVehicles/CfgWeapons
+        if config.option("check_cfgpatches") == Some(&toml::Value::Boolean(false)) {
+            return codes;
+        }
         for (unit, span) in &patch_units {
             if !all_vehicles.contains_key(unit) {
                 codes.push(Arc::new(Code15CfgPatchItemNotFound::new(

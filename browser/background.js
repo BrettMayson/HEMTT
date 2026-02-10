@@ -1,4 +1,4 @@
-import init, { ImageResult } from './hemtt_paa.js';
+import init, { FromPaaResult } from './hemtt_paa.js';
 
 async function run() {
     // Firefox linter has trouble with 'import', so import directly here
@@ -6,7 +6,7 @@ async function run() {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.contentScriptQuery == "fetch_blob") {
             let b = new Uint8Array(request.ab);
-            let result = new ImageResult(b);
+            let result = new FromPaaResult(b);
             let arr = new Uint8Array(app.memory.buffer, result.data_ptr(), result.data_len());
             let blob = new Blob([arr], { type: 'image/png' });
             let reader = new FileReader();

@@ -40,7 +40,8 @@ if (_test1 && _test2) then { };
 Short circuit evaultion on a variable that is a boolean is inefficient
 False positives are possible if the var could be undefined, e.g.:
 ```sqf
-(!isNil "z") && {z}
+someLogic = !isNil "z";
+someLogic && {z}
 ```
 "#
     }
@@ -70,7 +71,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(cmd, _left, right, _) = target else {
+        let Expression::BinaryCommand(cmd, left, right, _) = target else {
             return Vec::new();
         };
         if !(matches!(cmd, BinaryCommand::Or) || matches!(cmd, BinaryCommand::And)) {
@@ -82,9 +83,18 @@ impl LintRunner<LintData> for Runner {
         if statements.content().len() != 1 { 
             return Vec::new()
         }
-        let Statement::Expression(Expression::Variable(ref _var_name, _), ref range) = statements.content()[0] else {
+        let Statement::Expression(Expression::Variable(ref bool_var_name, _), ref range) = statements.content()[0] else {
             return Vec::new();
         };
+        if let Expression::UnaryCommand(not_cmd, not_rhs, _) = &**left
+            && not_cmd.as_str().eq_ignore_ascii_case("!")
+            && let Expression::UnaryCommand(isnil_cmd, isnil_rhs, _) = &**not_rhs
+            && isnil_cmd.as_str().eq_ignore_ascii_case("isNil")
+            && let Expression::String(isnil_input_str, _, _) = &**isnil_rhs
+            && isnil_input_str.eq_ignore_ascii_case(bool_var_name)
+        {
+            return Vec::new();
+        }
         vec![Arc::new(CodeS26ShortCircuitBoolVar::new(
             range.clone(),
             processed,

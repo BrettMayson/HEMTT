@@ -251,6 +251,7 @@ impl Analyze for Expression {
     }
 }
 
+#[must_use]
 /// Extracts a constant from an expression
 ///
 /// Returns a tuple of the constant and a boolean indicating if quotes are needed
@@ -268,6 +269,44 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
         };
     }
     None
+}
+#[must_use]
+/// Checks if a function returns true for any sub-expression
+fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bool) -> bool {
+    match expression {
+        Expression::Array(elements, _) => {
+            for element in elements {
+                if check_expression_deep(element, f) {
+                    return true;
+                }
+            }
+        }
+        Expression::Code(statements) => {
+            for statement in &statements.content {
+                match statement {
+                    Statement::Expression(expr, _)
+                    | Statement::AssignLocal(_, expr, _)
+                    | Statement::AssignGlobal(_, expr, _) => {
+                        if check_expression_deep(expr, f) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        Expression::UnaryCommand(_, expr, _) => {
+            if check_expression_deep(expr, f) {
+                return true;
+            }
+        }
+        Expression::BinaryCommand(_, left, right, _) => {
+            if check_expression_deep(left, f) || check_expression_deep(right, f) {
+                return true;
+            }
+        }
+        _ => {}
+    }
+    f(expression)
 }
 
 #[must_use]

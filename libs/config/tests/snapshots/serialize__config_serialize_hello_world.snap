@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/serialize.rs
+expression: serialize(stringify! (hello_world))
+---
+{"MyStruct":{"number":1,"string":"Hello, World!","Child":{"array":[1,2,3]}}}

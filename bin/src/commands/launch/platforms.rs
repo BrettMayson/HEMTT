@@ -90,3 +90,16 @@ pub fn linux(args: &[String]) -> Result<Command, Error> {
     };
     Ok(cmd)
 }
+
+#[allow(clippy::unnecessary_wraps)]
+pub fn macos(args: &[String]) -> Result<Command, Error> {
+    info!("Launching with:\n  {}", args.join("\n  "));
+    let mut cmd = std::process::Command::new("/Applications/Steam.app/Contents/MacOS/steam_osx");
+    cmd.arg("-applaunch")
+        .arg("107410")
+        .arg("-nolauncher")
+        .args(args)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+    Ok(cmd)
+}

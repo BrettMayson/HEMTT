@@ -39,6 +39,10 @@ pub fn inspect(mut file: File, format: &TableFormat) -> Result<(), Error> {
     let paa = hemtt_paa::Paa::read(&mut file)?;
     println!("PAA");
     println!("  - Format: {}", paa.format());
+    println!("  - Tags:");
+    for tag in paa.taggs() {
+        println!("    - {} = {:?}", tag.0, tag.1);
+    }
     let maps = paa.maps();
     println!("Maps: {}", maps.len());
     let data = maps

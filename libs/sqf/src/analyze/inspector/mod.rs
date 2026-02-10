@@ -176,6 +176,7 @@ impl<'a> Inspector<'a> {
         &mut self,
         expression_opt: Option<&Expression>,
         test_run: bool,
+        suppress_errors: bool,
     ) -> Option<usize> {
         // println!("-- Stack Push {}", self.active_scope().vars_local.len());
         let return_index = match expression_opt {
@@ -191,7 +192,7 @@ impl<'a> Inspector<'a> {
         };
         self.active_scope().vars_local.push(Stack::new());
         self.active_scope().returns_set.push(IndexSet::new());
-        self.active_scope().errors_suppressed.push(test_run);
+        self.active_scope().errors_suppressed.push(suppress_errors);
         return_index
     }
     /// # Panics
@@ -577,7 +578,7 @@ impl<'a> Inspector<'a> {
                             self.external_function(&lhs_set, rhs);
                             Some(self.cmd_generic_call(&rhs_set, None, false))
                         }
-                        "spawn" => {
+                        "spawn" | "addpublicvariableeventhandler" => {
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],
