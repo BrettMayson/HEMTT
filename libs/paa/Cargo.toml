@@ -21,8 +21,8 @@ indexmap = { workspace = true }
 texpresso = "2.0.2"
 
 # WASM
-js-sys = { version = "0.3.82", optional = true }
-wasm-bindgen = { version = "0.2.105", optional = true }
+js-sys = { version = "0.3.85", optional = true }
+wasm-bindgen = { version = "0.2.108", optional = true }
 
 # JSON
 serde = { workspace = true, features = ["derive"], optional = true }
