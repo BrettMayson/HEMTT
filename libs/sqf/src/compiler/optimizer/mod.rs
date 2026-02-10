@@ -2,7 +2,7 @@
 //! `ToDo`: what commands consume arrays
 //!
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
-use std::ops::Range;
+use std::{ops::Range, sync::Arc};
 #[allow(unused_imports)]
 use tracing::{trace, warn};
 
@@ -102,6 +102,12 @@ impl Expression {
                         "positioncameratoworld" | "random" => {
                             if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
                                 right_o = consumable;
+                            }
+                        }
+                        "tostring" => {
+                            if let Some(eval) = self.op_uni_tostring_code(op_type, range, &right_o)
+                            {
+                                return eval;
                             }
                         }
                         _ => {}
@@ -495,5 +501,30 @@ impl Expression {
             },
             _ => None,
         }
+    }
+
+    /// Boilerplate for unary string operations
+    #[must_use]
+    fn op_uni_tostring_code(
+        &self,
+        #[allow(unused_variables)] op_type: &UnaryCommand,
+        range: &Range<usize>,
+        right: &Self,
+    ) -> Option<Self> {
+        if let Self::Code(statements) = right {
+            #[cfg(debug_assertions)]
+            trace!(
+                "optimizing [U:{}] ({}) => {}",
+                op_type.as_str(),
+                self.source(false),
+                statements.source()
+            );
+            return Some(Self::String(
+                Arc::from(statements.source().to_owned()),
+                range.clone(),
+                crate::StringWrapper::DoubleQuote,
+            ));
+        }
+        None
     }
 }
