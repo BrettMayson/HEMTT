@@ -4,107 +4,176 @@ expression: config
 ---
 Config(
     [
-        Class(
-            External {
-                name: Ident {
-                    value: "test",
-                    span: 19..24,
-                },
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "thing",
-                    span: 25..31,
-                },
-                parent: Some(
-                    Ident {
-                        value: "test",
-                        span: 73..78,
-                    },
-                ),
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "value",
-                            span: 81..87,
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: External {
+                        name: Spanned {
+                            inner: Ident(
+                                "test",
+                            ),
+                            span: 0..0,
                         },
-                        value: Number(
-                            Int32 {
-                                value: 12,
-                                span: 87..91,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "thing",
+                            ),
+                            span: 0..0,
+                        },
+                        parent: Some(
+                            Spanned {
+                                inner: Ident(
+                                    "test",
+                                ),
+                                span: 0..0,
                             },
                         ),
-                        expected_array: false,
-                    },
-                ],
-                err_missing_braces: false,
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "thing2",
-                    span: 36..43,
-                },
-                parent: None,
-                properties: [
-                    Class(
-                        External {
-                            name: Ident {
-                                value: "things",
-                                span: 98..105,
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "value",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                12,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
                             },
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "thing2",
+                            ),
+                            span: 0..0,
                         },
-                    ),
-                ],
-                err_missing_braces: false,
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "another",
-                    span: 48..56,
-                },
-                parent: Some(
-                    Ident {
-                        value: "thing",
-                        span: 109..115,
-                    },
-                ),
-                properties: [],
-                err_missing_braces: false,
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "yet",
-                    span: 61..65,
-                },
-                parent: Some(
-                    Ident {
-                        value: "another",
-                        span: 120..128,
-                    },
-                ),
-                properties: [
-                    Class(
-                        Local {
-                            name: Ident {
-                                value: "things",
-                                span: 130..137,
+                        parent: None,
+                        properties: [
+                            Spanned {
+                                inner: Class(
+                                    Spanned {
+                                        inner: External {
+                                            name: Spanned {
+                                                inner: Ident(
+                                                    "things",
+                                                ),
+                                                span: 0..0,
+                                            },
+                                        },
+                                        span: 0..0,
+                                    },
+                                ),
+                                span: 0..0,
                             },
-                            parent: None,
-                            properties: [],
-                            err_missing_braces: false,
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "another",
+                            ),
+                            span: 0..0,
                         },
-                    ),
-                ],
-                err_missing_braces: false,
-            },
-        ),
+                        parent: Some(
+                            Spanned {
+                                inner: Ident(
+                                    "thing",
+                                ),
+                                span: 0..0,
+                            },
+                        ),
+                        properties: [],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "yet",
+                            ),
+                            span: 0..0,
+                        },
+                        parent: Some(
+                            Spanned {
+                                inner: Ident(
+                                    "another",
+                                ),
+                                span: 0..0,
+                            },
+                        ),
+                        properties: [
+                            Spanned {
+                                inner: Class(
+                                    Spanned {
+                                        inner: Local {
+                                            name: Spanned {
+                                                inner: Ident(
+                                                    "things",
+                                                ),
+                                                span: 0..0,
+                                            },
+                                            parent: None,
+                                            properties: [],
+                                            err_missing_braces: false,
+                                        },
+                                        span: 0..0,
+                                    },
+                                ),
+                                span: 0..0,
+                            },
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
     ],
 )

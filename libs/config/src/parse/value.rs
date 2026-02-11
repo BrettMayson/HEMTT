@@ -1,16 +1,19 @@
-use std::ops::Range;
+use std::sync::Arc;
 
 use chumsky::prelude::*;
 
-use crate::{Expression, Number, Value};
+use crate::{
+    Expression, Number, Value,
+    parse::{ParseError, raise_span},
+};
 
-pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
+pub fn value<'src>() -> impl Parser<'src, &'src str, Spanned<Value>, ParseError<'src>> + Clone {
     choice((
-        eval().map(Value::Expression),
-        super::array::array(false).map(Value::UnexpectedArray),
-        super::str::string('"').map(Value::Str),
-        math().map(Value::Number),
-        super::number::number().map(Value::Number),
+        eval().map(Value::Expression).spanned(),
+        super::array::array(false).map(|i| raise_span(i, Value::UnexpectedArray)),
+        super::str::string('"').map(Value::Str).spanned(),
+        math().map(Value::Number).spanned(),
+        super::number::number().map(Value::Number).spanned(),
     ))
 }
 
@@ -29,7 +32,7 @@ impl std::fmt::Display for Token {
     }
 }
 
-pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
+pub fn math<'src>() -> impl Parser<'src, &'src str, Number, ParseError<'src>> + Clone {
     choice((
         just("-").to(Token::Op('-')),
         just("+").to(Token::Op('+')),
@@ -45,10 +48,10 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     .repeated()
     .at_least(2)
     .collect::<Vec<_>>()
-    .try_map(|tokens, span: Range<usize>| {
+    .try_map(|tokens: Vec<Token>, span: SimpleSpan| {
         let has_operator = tokens.iter().any(|t| matches!(t, Token::Op(_)));
         if !has_operator {
-            return Err(Simple::custom(
+            return Err(Rich::custom(
                 span,
                 "math expression must contain at least one operator",
             ));
@@ -57,10 +60,10 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
             .iter()
             .map(std::string::ToString::to_string)
             .collect::<String>();
-        let number = Number::try_evaluation(&expr, span.clone());
+        let number = Number::try_evaluation(&expr);
         number.map_or_else(
             || {
-                Err(Simple::custom(
+                Err(Rich::custom(
                     span,
                     format!("{expr} is not a valid math expression"),
                 ))
@@ -70,30 +73,29 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     })
 }
 
-pub fn eval() -> impl Parser<char, Expression, Error = Simple<char>> {
-    just("__EVAL".to_string())
+pub fn eval<'src>() -> impl Parser<'src, &'src str, Expression, ParseError<'src>> + Clone {
+    just("__EVAL")
         .ignore_then(recursive(|eval| {
             eval.repeated()
                 .at_least(1)
-                .map(|s| format!("({})", s.join("")))
-                .delimited_by(just("(".to_string()), just(")".to_string()))
-                .or(none_of("()".to_string())
-                    .repeated()
-                    .at_least(1)
-                    .collect::<String>())
+                .to_slice()
+                .map(|s: &str| format!("({s})"))
+                .delimited_by(just("("), just(")"))
+                .or(none_of("()").repeated().at_least(1).collect::<String>())
         }))
-        .map_with_span(|expr, span| Expression {
-            value: expr
-                .strip_prefix('(')
-                .and_then(|s| s.strip_suffix(')'))
-                .expect("eval should be wrapped in brackets")
-                .to_string(),
-            span,
+        .map(|expr| {
+            Expression(Arc::from(
+                expr.strip_prefix('(')
+                    .and_then(|s| s.strip_suffix(')'))
+                    .expect("eval should be wrapped in brackets"),
+            ))
         })
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::{Number, Str, Value};
 
     use super::*;
@@ -101,261 +103,138 @@ mod tests {
     #[test]
     fn str() {
         assert_eq!(
-            value().parse("\"\""),
-            Ok(Value::Str(Str {
-                value: String::new(),
-                span: 0..2
-            }))
+            value().parse("\"\"").unwrap().inner,
+            Value::Str(Str(Arc::from(""))),
         );
         assert_eq!(
-            value().parse("\"abc\""),
-            Ok(Value::Str(Str {
-                value: "abc".to_string(),
-                span: 0..5
-            }))
+            value().parse("\"abc\"").unwrap().inner,
+            Value::Str(Str(Arc::from("abc"))),
         );
         assert_eq!(
-            value().parse("\"abc\"\"def\"\"\""),
-            Ok(Value::Str(Str {
-                value: "abc\"def\"".to_string(),
-                span: 0..12
-            }))
+            value().parse("\"abc\"\"def\"\"\"").unwrap().inner,
+            Value::Str(Str(Arc::from("abc\"def\""))),
         );
         assert_eq!(
-            value().parse("\"abc\ndef\""),
-            Ok(Value::Str(Str {
-                value: "abc\ndef".to_string(),
-                span: 0..9
-            }))
+            value().parse("\"abc\ndef\"").unwrap().inner,
+            Value::Str(Str(Arc::from("abc\ndef"))),
         );
     }
 
     #[test]
     fn eval() {
         assert_eq!(
-            super::eval().parse("__EVAL(1 + 2)"),
-            Ok(Expression {
-                value: "1 + 2".to_string(),
-                span: 0..13
-            })
+            super::eval().parse("__EVAL(1 + 2)").unwrap(),
+            Expression(Arc::from("1 + 2")),
         );
         assert_eq!(
-            super::eval().parse("__EVAL(2 * (1 + 1))"),
-            Ok(Expression {
-                value: "2 * (1 + 1)".to_string(),
-                span: 0..19
-            })
+            super::eval().parse("__EVAL(2 * (1 + 1))").unwrap(),
+            Expression(Arc::from("2 * (1 + 1)")),
         );
     }
 
     #[test]
     fn number() {
         assert_eq!(
-            value().parse("123"),
-            Ok(Value::Number(Number::Int32 {
-                value: 123,
-                span: 0..3
-            }))
+            value().parse("123").unwrap().inner,
+            Value::Number(Number::Int32(123)),
         );
         assert_eq!(
-            value().parse("123.456"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
+            value().parse("123.456").unwrap().inner,
+            Value::Number(Number::Float32(123.456)),
         );
         assert_eq!(
-            value().parse("123.456e-7"),
-            Ok(Value::Number(Number::Float32 {
-                value: 0.000_012_345_6,
-                span: 0..10
-            }))
+            value().parse("123.456e-7").unwrap().inner,
+            Value::Number(Number::Float32(0.000_012_345_6)),
         );
         assert_eq!(
-            value().parse("123.456e+7"),
-            Ok(Value::Number(Number::Float32 {
-                value: 1_234_560_000.0,
-                span: 0..10
-            }))
+            value().parse("123.456e+7").unwrap().inner,
+            Value::Number(Number::Float32(1_234_560_000.0)),
         );
         assert_eq!(
-            value().parse("123.456e7"),
-            Ok(Value::Number(Number::Float32 {
-                value: 1_234_560_000.0,
-                span: 0..9
-            }))
+            value().parse("123.456e7").unwrap().inner,
+            Value::Number(Number::Float32(1_234_560_000.0)),
         );
-        assert_eq!(
-            value().parse("123.456e+"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
-        assert_eq!(
-            value().parse("123.456e-"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
-        assert_eq!(
-            value().parse("123.456e"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
-        assert_eq!(
-            value().parse("123.456e+abc"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
-        assert_eq!(
-            value().parse("123.456e-abc"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
-        assert_eq!(
-            value().parse("123.456eabc"),
-            Ok(Value::Number(Number::Float32 {
-                value: 123.456,
-                span: 0..7
-            }))
-        );
+        assert!(value().parse("123.456e+").has_errors());
+        assert!(value().parse("123.456e-").has_errors());
+        assert!(value().parse("123.456e").has_errors());
+        assert!(value().parse("123.456e+abc").has_errors());
+        assert!(value().parse("123.456e-abc").has_errors());
+        assert!(value().parse("123.456eabc").has_errors());
     }
 
     #[test]
     fn math() {
         assert_eq!(
-            value().parse("1 + 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: 3,
-                span: 0..5
-            }))
+            value().parse("1 + 2").unwrap().inner,
+            Value::Number(Number::Int32(3)),
         );
         assert_eq!(
-            value().parse("1 - 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: -1,
-                span: 0..5
-            }))
+            value().parse("1 - 2").unwrap().inner,
+            Value::Number(Number::Int32(-1)),
         );
         assert_eq!(
-            value().parse("1 * 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: 2,
-                span: 0..5
-            }))
+            value().parse("1 * 2").unwrap().inner,
+            Value::Number(Number::Int32(2)),
         );
         assert_eq!(
-            value().parse("1 / 2"),
-            Ok(Value::Number(Number::Float32 {
-                value: 0.5,
-                span: 0..5
-            }))
+            value().parse("1 / 2").unwrap().inner,
+            Value::Number(Number::Float32(0.5)),
         );
         assert_eq!(
-            value().parse("1 % 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: 1,
-                span: 0..5
-            }))
+            value().parse("1 % 2").unwrap().inner,
+            Value::Number(Number::Int32(1)),
         );
         assert_eq!(
-            value().parse("1 ^ 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: 1,
-                span: 0..5
-            }))
+            value().parse("1 ^ 2").unwrap().inner,
+            Value::Number(Number::Int32(1)),
         );
         assert_eq!(
-            value().parse("1 + 2 * 3"),
-            Ok(Value::Number(Number::Int32 {
-                value: 7,
-                span: 0..9
-            }))
+            value().parse("1 + 2 * 3").unwrap().inner,
+            Value::Number(Number::Int32(7)),
         );
         assert_eq!(
-            value().parse("(1 + 2) * 3"),
-            Ok(Value::Number(Number::Int32 {
-                value: 9,
-                span: 0..11
-            }))
+            value().parse("(1 + 2) * 3").unwrap().inner,
+            Value::Number(Number::Int32(9)),
         );
         assert_eq!(
-            value().parse("1 + 2 * 3 + 4"),
-            Ok(Value::Number(Number::Int32 {
-                value: 11,
-                span: 0..13
-            }))
+            value().parse("1 + 2 * 3 + 4").unwrap().inner,
+            Value::Number(Number::Int32(11)),
         );
         assert_eq!(
-            value().parse("1 + 2 * (3 + 4)"),
-            Ok(Value::Number(Number::Int32 {
-                value: 15,
-                span: 0..15
-            }))
+            value().parse("1 + 2 * (3 + 4)").unwrap().inner,
+            Value::Number(Number::Int32(15)),
         );
         assert_eq!(
-            value().parse("2 ^ 3"),
-            Ok(Value::Number(Number::Int32 {
-                value: 8,
-                span: 0..5
-            }))
+            value().parse("2 ^ 3").unwrap().inner,
+            Value::Number(Number::Int32(8)),
         );
         assert_eq!(
-            value().parse("10 % 3"),
-            Ok(Value::Number(Number::Int32 {
-                value: 1,
-                span: 0..6
-            }))
+            value().parse("10 % 3").unwrap().inner,
+            Value::Number(Number::Int32(1)),
         );
         assert_eq!(
-            value().parse("10 % 3 + 2"),
-            Ok(Value::Number(Number::Int32 {
-                value: 3,
-                span: 0..10
-            }))
+            value().parse("10 % 3 + 2").unwrap().inner,
+            Value::Number(Number::Int32(3)),
         );
         assert_eq!(
-            value().parse("-0.01*0.5"),
-            Ok(Value::Number(Number::Float32 {
-                value: -0.005,
-                span: 0..9
-            }))
+            value().parse("-0.01*0.5").unwrap().inner,
+            Value::Number(Number::Float32(-0.005)),
         );
         assert_eq!(
-            value().parse("-(0.01*0.5)"),
-            Ok(Value::Number(Number::Float32 {
-                value: -0.005,
-                span: 0..11
-            }))
+            value().parse("-(0.01*0.5)").unwrap().inner,
+            Value::Number(Number::Float32(-0.005)),
         );
         assert_eq!(
-            value().parse("(-0.01)"),
-            Ok(Value::Number(Number::Float32 {
-                value: -0.01,
-                span: 0..7
-            }))
+            value().parse("(-0.01)").unwrap().inner,
+            Value::Number(Number::Float32(-0.01)),
         );
         assert_eq!(
-            value().parse("1-2-3"),
-            Ok(Value::Number(Number::Int32 {
-                value: -4,
-                span: 0..5
-            }))
+            value().parse("1-2-3").unwrap().inner,
+            Value::Number(Number::Int32(-4)),
         );
         assert_eq!(
-            value().parse("1 - 2 - 3"),
-            Ok(Value::Number(Number::Int32 {
-                value: -4,
-                span: 0..9
-            }))
+            value().parse("1 - 2 - 3").unwrap().inner,
+            Value::Number(Number::Int32(-4)),
         );
     }
 }

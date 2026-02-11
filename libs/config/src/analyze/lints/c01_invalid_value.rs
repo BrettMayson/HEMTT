@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -57,27 +58,28 @@ Arma configs only support Strings, Numbers, and Arrays. While other tools would 
 struct RunnerValue;
 
 impl LintRunner<LintData> for RunnerValue {
-    type Target = Value;
+    type Target = Spanned<Value>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &Value,
+        target: &Spanned<Value>,
         _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
-        if let Value::Invalid(invalid) = target {
+        let span = target.span;
+        if let Value::Invalid(invalid) = &target.inner {
             vec![if processed
-                .mapping(invalid.start)
+                .mapping(span.start)
                 .is_some_and(hemtt_workspace::reporting::Mapping::was_macro)
             {
-                Arc::new(CodeC01InvalidValueMacro::new(invalid.clone(), processed))
+                Arc::new(CodeC01InvalidValueMacro::new(span.into_range(), invalid.clone(), processed))
             } else {
-                Arc::new(CodeC01InvalidValue::new(invalid.clone(), processed))
+                Arc::new(CodeC01InvalidValue::new(span.into_range(), invalid.clone(), processed))
             }]
         } else {
             vec![]
@@ -87,27 +89,28 @@ impl LintRunner<LintData> for RunnerValue {
 
 struct RunnerItem;
 impl LintRunner<LintData> for RunnerItem {
-    type Target = Item;
+    type Target = Spanned<Item>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &Item,
+        target: &Spanned<Item>,
         _data: &LintData,
     ) -> Codes {
         let Some(processed) = processed else {
             return vec![];
         };
-        if let Item::Invalid(invalid) = target {
+        let span = target.span;
+        if let Item::Invalid(invalid) = &target.inner {
             vec![if processed
-                .mapping(invalid.start)
+                .mapping(span.start)
                 .is_some_and(hemtt_workspace::reporting::Mapping::was_macro)
             {
-                Arc::new(CodeC01InvalidValueMacro::new(invalid.clone(), processed))
+                Arc::new(CodeC01InvalidValueMacro::new(span.into_range(), invalid.clone(), processed))
             } else {
-                Arc::new(CodeC01InvalidValue::new(invalid.clone(), processed))
+                Arc::new(CodeC01InvalidValue::new(span.into_range(), invalid.clone(), processed))
             }]
         } else {
             vec![]
@@ -119,7 +122,7 @@ impl LintRunner<LintData> for RunnerItem {
 pub struct CodeC01InvalidValue {
     span: Range<usize>,
     diagnostic: Option<Diagnostic>,
-    value: String,
+    value: Arc<str>,
 }
 
 impl Code for CodeC01InvalidValue {
@@ -140,7 +143,7 @@ impl Code for CodeC01InvalidValue {
     }
 
     fn help(&self) -> Option<String> {
-        match self.value.as_str() {
+        match self.value.as_ref() {
             "true" | "false" => Some("use quotes `\"`, or 0 for false and 1 for true".to_string()),
             _ => {
                 if self.value.starts_with('\'') && self.value.ends_with('\'') {
@@ -159,9 +162,9 @@ impl Code for CodeC01InvalidValue {
 
 impl CodeC01InvalidValue {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed) -> Self {
+    pub fn new(span: Range<usize>, value: Arc<str>, processed: &Processed) -> Self {
         Self {
-            value: processed.extract(span.clone()).to_string(),
+            value,
             span,
             diagnostic: None,
         }
@@ -176,6 +179,7 @@ impl CodeC01InvalidValue {
 
 pub struct CodeC01InvalidValueMacro {
     span: Range<usize>,
+    value: Arc<str>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -207,9 +211,10 @@ impl Code for CodeC01InvalidValueMacro {
 
 impl CodeC01InvalidValueMacro {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed) -> Self {
+    pub fn new(span: Range<usize>, value: Arc<str>, processed: &Processed) -> Self {
         Self {
             span,
+            value,
             diagnostic: None,
         }
         .generate_processed(processed)
@@ -220,7 +225,7 @@ impl CodeC01InvalidValueMacro {
         if let Some(diag) = &mut self.diagnostic {
             diag.notes.push(format!(
                 "The processed output was:\n{} ",
-                processed.extract(self.span.clone())
+                self.value,
             ));
         }
         self

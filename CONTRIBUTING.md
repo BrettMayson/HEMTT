@@ -7,7 +7,7 @@ When running tests locally, it is highly recommended to use `cargo-nextest`.
 It runs the tests much faster, and can detect slow and leaky tests, among other features.
 
 ```bash
-cargo install cargo-nextest
+cargo install cargo-nextest --locked
 cargo nextest run
 ```
 

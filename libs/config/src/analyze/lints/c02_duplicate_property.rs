@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -74,7 +75,7 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        let mut seen: HashMap<String, Vec<(bool, Ident)>> = HashMap::with_capacity(target.0.len());
+        let mut seen: HashMap<String, Vec<(bool, Spanned<Ident>)>> = HashMap::with_capacity(target.0.len());
         duplicate_properties_inner("", &target.0, &mut seen);
         let mut codes: Codes = Vec::new();
         for (_, idents) in seen {
@@ -91,27 +92,27 @@ impl LintRunner<LintData> for Runner {
 
 fn duplicate_properties_inner(
     scope: &str,
-    properties: &[Property],
-    seen: &mut HashMap<String, Vec<(bool, Ident)>>,
+    properties: &[Spanned<Property>],
+    seen: &mut HashMap<String, Vec<(bool, Spanned<Ident>)>>,
 ) {
     for property in properties {
-        match property {
-            Property::Class(Class::Local {
+        match &property.inner {
+            Property::Class(Spanned { inner: Class::Local {
                 name, properties, ..
-            }) => {
+            }, ..}) => {
                 duplicate_properties_inner(
-                    &format!("{}.{}", scope, name.value.to_lowercase()),
+                    &format!("{}.{}", scope, name.0.to_lowercase()),
                     properties,
                     seen,
                 );
                 let entry = seen
-                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .entry(format!("{}.{}", scope, name.0.to_lowercase()))
                     .or_default();
                 entry.push((true, name.clone()));
             }
-            Property::Entry { name, .. } | Property::MissingSemicolon(name, _) => {
+            Property::Entry { name, .. } | Property::MissingSemicolon(name) => {
                 let entry = seen
-                    .entry(format!("{}.{}", scope, name.value.to_lowercase()))
+                    .entry(format!("{}.{}", scope, name.0.to_lowercase()))
                     .or_default();
                 entry.push((false, name.clone()));
             }
@@ -122,7 +123,7 @@ fn duplicate_properties_inner(
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeC02DuplicateProperty {
-    conflicts: Vec<Ident>,
+    conflicts: Vec<Spanned<Ident>>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -150,7 +151,7 @@ impl Code for CodeC02DuplicateProperty {
 
 impl CodeC02DuplicateProperty {
     #[must_use]
-    pub fn new(conflicts: Vec<Ident>, processed: &Processed) -> Self {
+    pub fn new(conflicts: Vec<Spanned<Ident>>, processed: &Processed) -> Self {
         Self {
             conflicts,
             diagnostic: None,
@@ -165,7 +166,7 @@ impl CodeC02DuplicateProperty {
                 .last()
                 .expect("conflicts should have at least one element if it was created with new")
                 .span
-                .clone(),
+                .into_range(),
             processed,
         );
         if let Some(diag) = &mut self.diagnostic {
@@ -177,7 +178,7 @@ impl CodeC02DuplicateProperty {
                 diag.labels.push(
                     Label::secondary(
                         file.0.clone(),
-                        map.original_start()..map.original_start() + conflict.span.len(),
+                        map.original_start()..map.original_start() + conflict.span.into_range().len(),
                     )
                     .with_message("also defined here"),
                 );

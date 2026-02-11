@@ -1,5 +1,6 @@
-use std::{ops::Range, sync::Arc};
+use std::sync::Arc;
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     addons::Addon,
@@ -97,47 +98,47 @@ impl LintRunner<LintData> for RunnerScan {
         let mut codes = Vec::new();
         let mut classes = Vec::new();
 
-        if let Some(Property::Class(Class::Local {
+        if let Some(Spanned { inner: Property::Class(Spanned { inner: Class::Local {
             properties: magazines,
             ..
-        })) = target
+        }, ..}), ..}) = target
             .0
             .iter()
-            .find(|p| p.name().value.eq_ignore_ascii_case("cfgmagazines"))
+            .find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case("cfgmagazines")))
         {
             for property in magazines {
-                if let Property::Class(Class::Local { name, .. }) = property {
+                if let Property::Class(Spanned { inner: Class::Local { name, .. }, .. }) = &property.inner {
                     classes.push(name);
                 }
             }
         }
 
-        if let Some(Property::Class(Class::Local {
+        if let Some(Spanned { inner: Property::Class(Spanned { inner: Class::Local {
             properties: magwells,
             ..
-        })) = target
+        }, ..}), .. }) = target
             .0
             .iter()
-            .find(|p| p.name().value.eq_ignore_ascii_case("cfgmagazinewells"))
+            .find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case("cfgmagazinewells")))
         {
             for magwell in magwells {
-                let Property::Class(Class::Local {
+                let Property::Class(Spanned { inner: Class::Local {
                     properties: addons, ..
-                }) = magwell
+                }, ..}) = &magwell.inner
                 else {
                     continue;
                 };
                 for addon in addons {
                     let Property::Entry {
                         name,
-                        value: Value::Array(magazines),
+                        value: Spanned { inner: Value::Array(magazines), .. },
                         ..
-                    } = addon
+                    } = &addon.inner
                     else {
                         continue;
                     };
-                    for mag in &magazines.items {
-                        let Item::Str(Str { value, span }) = mag else {
+                    for mag in magazines.items.iter() {
+                        let Item::Str(Str(value)) = &mag.inner else {
                             continue;
                         };
                         if let Some(project) = project
@@ -147,10 +148,9 @@ impl LintRunner<LintData> for RunnerScan {
                             {
                                 continue;
                             }
-                        if !classes.iter().any(|c| c.value == *value) {
+                        if !classes.iter().any(|c| c.0 == *value) {
                             let code: Arc<dyn Code> = Arc::new(Code09MagwellMissingMagazine::new(
                                 name.clone(),
-                                span.clone(),
                                 processed,
                             ));
                             codes.push((value.clone(), code));
@@ -163,7 +163,7 @@ impl LintRunner<LintData> for RunnerScan {
         let mut magazine_well_error_info = data.magazine_well_info.lock().expect("mutex safety");
         magazine_well_error_info
             .0
-            .extend(classes.iter().map(|i| i.as_str().to_string()));
+            .extend(classes.iter().map(|i| i.0.clone()));
         magazine_well_error_info.1.extend(codes);
         }
         vec![]
@@ -206,8 +206,7 @@ impl LintRunner<LintData> for RunnerFinal {
 }
 
 pub struct Code09MagwellMissingMagazine {
-    array: Ident,
-    span: Range<usize>,
+    array: Spanned<Ident>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -237,17 +236,16 @@ impl Code for Code09MagwellMissingMagazine {
 
 impl Code09MagwellMissingMagazine {
     #[must_use]
-    pub fn new(array: Ident, span: Range<usize>, processed: &Processed) -> Self {
+    pub fn new(array: Spanned<Ident>, processed: &Processed) -> Self {
         Self {
             array,
-            span,
             diagnostic: None,
         }
         .diagnostic_generate_processed(processed)
     }
 
     fn diagnostic_generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, self.array.span.into_range(), processed);
         if let Some(diag) = &mut self.diagnostic {
             diag.labels.push({
                 let Some(map) = processed.mapping(self.array.span.start) else {

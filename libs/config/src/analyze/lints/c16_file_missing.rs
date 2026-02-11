@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner}, missing::check_is_missing_file, reporting::{Code, Diagnostic, Processed, Severity}
@@ -35,14 +36,14 @@ Files should exists
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Value;
+    type Target = Spanned<crate::Value>;
     fn run(
         &self,
         project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Value,
+        target: &Spanned<crate::Value>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(project) = project else {
@@ -53,13 +54,13 @@ impl LintRunner<LintData> for Runner {
         };
         let mut codes = Vec::new();
 
-        match target {
+        match &target.inner {
             Value::Array(arr) => {
-                for item in &arr.items {
+                for item in arr.items.iter() {
                     check_item(item, processed, project, config, &mut codes);
                 }
             }
-            Value::Str(str) => check_str(str, processed, project, config, &mut codes),
+            Value::Str(str) => check_str(str, target.span.into_range(), processed, project, config, &mut codes),
             _ => {}
         }
         codes
@@ -67,20 +68,20 @@ impl LintRunner<LintData> for Runner {
 }
 
 fn check_item(
-    target: &crate::Item,
+    target: &Spanned<crate::Item>,
     processed: &Processed,
     project: &ProjectConfig,
     config: &LintConfig,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
-    match target {
+    match &target.inner {
         Item::Array(items) => {
             for element in items {
                 check_item(element, processed, project, config, codes);
             }
         }
         Item::Str(target_str) => {
-            check_str(target_str, processed, project, config, codes);
+            check_str(target_str, target.span.into_range(), processed, project, config, codes);
         }
         _ => {}
     }
@@ -88,6 +89,7 @@ fn check_item(
 
 fn check_str(
     target_str: &crate::Str,
+    span: Range<usize>,
     processed: &Processed,
     project: &ProjectConfig,
     config: &LintConfig,
@@ -96,7 +98,7 @@ fn check_str(
     if !check_is_missing_file(target_str.value(), project, processed) {
         return;
     }
-    let span = target_str.span().start + 1..target_str.span().end - 1;
+    let span = span.start + 1..span.end - 1;
     codes.push(Arc::new(Code16FileMissing::new(
         span,
         target_str.value().to_owned(),

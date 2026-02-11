@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -78,19 +79,19 @@ impl LintRunner<LintData> for Runner {
 }
 
 fn check(
-    properties: &[Property],
-    defined: &mut HashMap<String, Class>,
+    properties: &[Spanned<Property>],
+    defined: &mut HashMap<String, Spanned<Class>>,
     processed: &Processed,
 ) -> Codes {
     let mut codes: Codes = Vec::new();
     for property in properties {
-        if let Property::Class(c) = property {
-            match c {
+        if let Property::Class(c) = &property.inner {
+            match &c.inner {
                 Class::Root { .. } => {
                     panic!("Root class should not be in the config");
                 }
                 Class::External { name } => {
-                    let name = name.value.to_lowercase();
+                    let name = name.0.to_lowercase();
                     defined.entry(name).or_insert_with(|| c.clone());
                 }
                 Class::Local {
@@ -99,12 +100,12 @@ fn check(
                     properties,
                     err_missing_braces: _,
                 } => {
-                    let name_lower = name.value.to_lowercase();
+                    let name_lower = name.0.to_lowercase();
                     if let Some(parent) = parent {
-                        let parent_lower = parent.value.to_lowercase();
-                        if (parent_lower != name_lower || parent.value != name.value)
+                        let parent_lower = parent.0.to_lowercase();
+                        if (parent_lower != name_lower || parent.0 != name.0)
                             && let Some(parent_class) = defined.get(&parent_lower)
-                                && parent_class.name().map(|p| &p.value) != Some(&parent.value) {
+                                && parent_class.name().map(|p| &p.0) != Some(&parent.0) {
                                     codes.push(Arc::new(Code05ExternalParentCase::new(
                                         c.clone(),
                                         parent_class.clone(),
@@ -122,8 +123,8 @@ fn check(
 }
 
 pub struct Code05ExternalParentCase {
-    class: Class,
-    parent: Class,
+    class: Spanned<Class>,
+    parent: Spanned<Class>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -165,7 +166,7 @@ impl Code for Code05ExternalParentCase {
 
 impl Code05ExternalParentCase {
     #[must_use]
-    pub fn new(class: Class, parent: Class, processed: &Processed) -> Self {
+    pub fn new(class: Spanned<Class>, parent: Spanned<Class>, processed: &Processed) -> Self {
         Self {
             class,
             parent,
@@ -182,7 +183,7 @@ impl Code05ExternalParentCase {
                 .parent()
                 .expect("parent existed to create error")
                 .span
-                .clone(),
+                .into_range(),
             processed,
         );
         if let Some(diag) = &mut self.diagnostic {
@@ -204,7 +205,7 @@ impl Code05ExternalParentCase {
             diag.labels.push(
                 Label::secondary(
                     file.0.clone(),
-                    map.original_start()..map.original_start() + parent.span.len(),
+                    map.original_start()..map.original_start() + parent.span.into_range().len(),
                 )
                 .with_message("parent definition here"),
             );

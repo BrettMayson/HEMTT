@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -43,14 +44,14 @@ impl Lint<LintData> for LintColectStringtables {
 struct Runner;
 
 impl LintRunner<LintData> for Runner {
-    type Target = Value;
+    type Target = Spanned<Value>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &Value,
+        target: &Spanned<Value>,
         data: &LintData,
     ) -> Codes {
         fn check_string(
@@ -77,17 +78,17 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        match target {
+        match &target.inner {
             Value::Array(array_data) => {
-                for item in &array_data.items {
-                    let Item::Str(item_data) = item else {
+                for item in array_data.items.iter() {
+                    let Item::Str(item_data) = &item.inner else {
                         continue;
                     };
-                    check_string(item_data, &item_data.span(), processed, data);
+                    check_string(item_data, &item.span.into_range(), processed, data);
                 }
             }
             Value::Str(cstring_data) => {
-                check_string(cstring_data, &target.span(), processed, data);
+                check_string(cstring_data, &target.span.into_range(), processed, data);
             }
             _ => {}
         }
