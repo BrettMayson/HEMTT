@@ -235,11 +235,12 @@ pub fn clean_output(processed: &mut Processed) {
 
         let pending_line = comitted_line + pending_empty;
         let linenum = map.original().start().line();
-        let file = map
-            .original()
-            .path()
-            .as_virtual_str()
-            .replace('/', "\\");
+        let virtual_str = map.original().path().as_virtual_str();
+        let file = if virtual_str.contains('/') {
+            virtual_str.replace('/', "\\")
+        } else {
+            virtual_str
+        };
         if file != comitted_file || pending_line != linenum {
             comitted_file = file;
             comitted_line = linenum;
@@ -435,18 +436,25 @@ impl Processed {
             return Arc::from(&self.output[span.start..end]);
         }
         // Slow path: convert char offsets to byte offsets using char_indices
-        let mut real_start = self.output.len();
-        let mut real_end = self.output.len();
+        let mut real_start = None;
+        let mut real_end = None;
         for (char_idx, (byte_idx, _)) in self.output.char_indices().enumerate() {
             if char_idx == span.start {
-                real_start = byte_idx;
+                real_start = Some(byte_idx);
             }
             if char_idx == span.end {
-                real_end = byte_idx;
+                real_end = Some(byte_idx);
                 break;
             }
         }
-        Arc::from(&self.output[real_start..real_end])
+        match (real_start, real_end) {
+            (Some(start), Some(end)) => Arc::from(&self.output[start..end]),
+            (Some(start), None) => Arc::from(&self.output[start..]),
+            _ => {
+                warn!("span {span:?} not found in output");
+                Arc::from("")
+            }
+        }
     }
 
     #[must_use]
