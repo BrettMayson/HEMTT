@@ -63,6 +63,7 @@ lint!(s33_min, true);
 lint!(s33_mod, true);
 lint!(s33_pi, true);
 lint!(s35_count_skipable, true);
+lint!(s36_global_var_in_local, true);
 
 #[test]
 fn test_s29_function_undefined() {
