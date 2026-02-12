@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use hemtt_common::io::{ReadExt, WriteExt};
 
 use crate::Str;
@@ -10,12 +12,12 @@ impl Rapify for Str {
         output: &mut O,
         _offset: usize,
     ) -> Result<usize, std::io::Error> {
-        output.write_cstring(&self.value)?;
-        Ok(self.value.len() + 1)
+        output.write_cstring(self.value())?;
+        Ok(self.value().len() + 1)
     }
 
     fn rapified_length(&self) -> usize {
-        self.value.len() + 1
+        self.value().len() + 1
     }
 
     fn rapified_code(&self) -> u8 {
@@ -28,18 +30,15 @@ impl Derapify for Str {
     where
         Self: Sized,
     {
-        let start = input.stream_position()? as usize;
-        let value = input.read_cstring()?;
-        Ok(Self {
-            value,
-            span: start..input.stream_position()? as usize,
-        })
+        Ok(Self(Arc::from(input.read_cstring()?)))
     }
 }
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::Str;
 
     use super::Rapify;
@@ -47,12 +46,9 @@ mod tests {
     #[test]
     fn str() {
         let mut buffer = Vec::new();
-        let written = Str {
-            value: "Hello World".to_string(),
-            span: 0..12,
-        }
-        .rapify(&mut buffer, 0)
-        .unwrap();
+        let written = Str(Arc::from("Hello World"))
+            .rapify(&mut buffer, 0)
+            .unwrap();
         assert_eq!(written, 12);
         assert_eq!(
             buffer,

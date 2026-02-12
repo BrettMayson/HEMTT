@@ -2,6 +2,7 @@ use std::{cmp, ops::Range, sync::Arc};
 
 use crate::{Class, Config, Item, Number, Property, Value, analyze::LintData};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -153,24 +154,24 @@ impl LintRunner<LintData> for Runner {
 
 type DefinedMap = IndexMap<String, (bool, Range<usize>, Option<i32>, Option<i32>)>;
 fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
-    fn get_number(properties: &[Property], key: &str) -> Option<i32> {
-        if let Some(property) = properties.iter().find(|p| p.name().value.eq_ignore_ascii_case(key))
-            && let Property::Entry { value, .. } = property
-            && let Value::Number(number) = value
-            && let Number::Int32 { value, .. } = number
+    fn get_number(properties: &[Spanned<Property>], key: &str) -> Option<i32> {
+        if let Some(property) = properties.iter().find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case(key)))
+            && let Property::Entry { value, .. } = &property.inner
+            && let Value::Number(number) = &value.inner
+            && let Number::Int32(value)  = number
         {
             return Some(*value);
         }
         None
     }
     let mut defined: DefinedMap = IndexMap::new();
-    if let Some(Property::Class(Class::Local { properties, .. })) =
-        target.0.iter().find(|p| p.name().value.eq_ignore_ascii_case(base_path))
+    if let Some(Property::Class(Spanned { inner: Class::Local { properties, .. }, .. })) =
+        target.0.iter().find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case(base_path))).map(|f| &f.inner)
     {
         for class in properties {
-            let Property::Class(Class::Local {
+            let Property::Class(Spanned { inner: Class::Local {
                 name, parent, properties, ..
-            }) = class
+            }, .. }) = &class.inner
             else {
                 continue;
             };
@@ -190,24 +191,24 @@ fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
             let expected = cmp::max(cfg_scope.unwrap_or(0), cfg_scope_curator.unwrap_or(0)) > 1
                 && cfg_scope_curator.is_none_or(|c| c > 1)
                 && cfg_scope.is_none_or(|c| c > 1);
-            defined.insert(name_lower, (expected, name.span(), cfg_scope, cfg_scope_curator));
+            defined.insert(name_lower, (expected, name.span.into_range(), cfg_scope, cfg_scope_curator));
         }
     }
     defined
 }
 
 fn get_patch_arrays(target: &Config) -> (IndexMap<String, Range<usize>>, IndexMap<String, Range<usize>>) {
-    fn get_array_property(key: &str, properties: &[Property]) -> IndexMap<String, Range<usize>> {
+    fn get_array_property(key: &str, properties: &[Spanned<Property>]) -> IndexMap<String, Range<usize>> {
         let mut patch_classes = IndexMap::new();
         for property in properties {
-            if let Property::Entry { name, value, .. } = property
+            if let Property::Entry { name, value, .. } = &property.inner
                 && name.as_str().eq_ignore_ascii_case(key)
-                && let Value::Array(elements) = value
+                && let Value::Array(elements) = &value.inner
             {
-                for item in &elements.items {
-                    if let Item::Str(s) = item {
-                        let key = s.value.to_ascii_lowercase();
-                        patch_classes.insert(key, s.span.clone());
+                for item in elements.items.iter() {
+                    if let Item::Str(s) = &item.inner {
+                        let key = s.0.to_ascii_lowercase();
+                        patch_classes.insert(key, item.span.into_range());
                     }
                 }
             }
@@ -216,11 +217,11 @@ fn get_patch_arrays(target: &Config) -> (IndexMap<String, Range<usize>>, IndexMa
     }
     let mut patch_units = IndexMap::new();
     let mut patch_weapons = IndexMap::new();
-    if let Some(Property::Class(Class::Local { properties, .. })) =
-        target.0.iter().find(|p| p.name().value.eq_ignore_ascii_case("cfgpatches"))
+    if let Some(Property::Class(Spanned { inner: Class::Local { properties, .. }, .. })) =
+        target.0.iter().find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case("cfgpatches"))).map(|f| &f.inner)
     {
         for patch in properties {
-            let Property::Class(Class::Local { properties, .. }) = patch else {
+            let Property::Class(Spanned { inner: Class::Local { properties, .. }, .. }) = &patch.inner else {
                 continue;
             };
             patch_units.extend(get_array_property("units", properties));

@@ -12,15 +12,15 @@ impl Rapify for Number {
     ) -> Result<usize, std::io::Error> {
         let mut written = 0;
         match self {
-            Self::Int32 { value, .. } => {
+            Self::Int32(value) => {
                 output.write_i32::<LittleEndian>(*value)?;
                 written += 4;
             }
-            Self::Int64 { value, .. } => {
+            Self::Int64(value) => {
                 output.write_i64::<LittleEndian>(*value)?;
                 written += 8;
             }
-            Self::Float32 { value, .. } => {
+            Self::Float32(value) => {
                 output.write_f32::<LittleEndian>(*value)?;
                 written += 4;
             }
@@ -30,16 +30,16 @@ impl Rapify for Number {
 
     fn rapified_length(&self) -> usize {
         match self {
-            Self::Int32 { .. } | Self::Float32 { .. } => 4,
-            Self::Int64 { .. } => 8,
+            Self::Int32(_) | Self::Float32(_) => 4,
+            Self::Int64(_) => 8,
         }
     }
 
     fn rapified_code(&self) -> u8 {
         match self {
-            Self::Int32 { .. } => 2,
-            Self::Int64 { .. } => 6,
-            Self::Float32 { .. } => 1,
+            Self::Int32(_) => 2,
+            Self::Int64(_) => 6,
+            Self::Float32(_) => 1,
         }
     }
 }
@@ -52,12 +52,7 @@ impl Number {
     pub fn derapify_int32<I: std::io::Read + std::io::Seek>(
         input: &mut I,
     ) -> Result<Self, std::io::Error> {
-        let start = input.stream_position()? as usize;
-        let value = input.read_i32::<LittleEndian>()?;
-        Ok(Self::Int32 {
-            value,
-            span: start..start + 4,
-        })
+        Ok(Self::Int32(input.read_i32::<LittleEndian>()?))
     }
 
     /// Derapify an int64 value from the input stream
@@ -67,12 +62,7 @@ impl Number {
     pub fn derapify_int64<I: std::io::Read + std::io::Seek>(
         input: &mut I,
     ) -> Result<Self, std::io::Error> {
-        let start = input.stream_position()? as usize;
-        let value = input.read_i64::<LittleEndian>()?;
-        Ok(Self::Int64 {
-            value,
-            span: start..start + 8,
-        })
+        Ok(Self::Int64(input.read_i64::<LittleEndian>()?))
     }
 
     /// Derapify a float32 value from the input stream
@@ -82,12 +72,7 @@ impl Number {
     pub fn derapify_float32<I: std::io::Read + std::io::Seek>(
         input: &mut I,
     ) -> Result<Self, std::io::Error> {
-        let start = input.stream_position()? as usize;
-        let value = input.read_f32::<LittleEndian>()?;
-        Ok(Self::Float32 {
-            value,
-            span: start..start + 4,
-        })
+        Ok(Self::Float32(input.read_f32::<LittleEndian>()?))
     }
 }
 
@@ -101,12 +86,7 @@ mod tests {
     #[test]
     fn int32() {
         let mut buffer = Vec::new();
-        let written = Number::Int32 {
-            value: 1234,
-            span: 0..4,
-        }
-        .rapify(&mut buffer, 0)
-        .unwrap();
+        let written = Number::Int32(1234).rapify(&mut buffer, 0).unwrap();
         assert_eq!(written, 4);
         assert_eq!(buffer, vec![0xd2, 0x04, 0x00, 0x00]);
     }
@@ -114,12 +94,7 @@ mod tests {
     #[test]
     fn int64() {
         let mut buffer = Vec::new();
-        let written = Number::Int64 {
-            value: 1234,
-            span: 0..4,
-        }
-        .rapify(&mut buffer, 0)
-        .unwrap();
+        let written = Number::Int64(1234).rapify(&mut buffer, 0).unwrap();
         assert_eq!(written, 8);
         assert_eq!(buffer, vec![0xd2, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     }
@@ -127,12 +102,7 @@ mod tests {
     #[test]
     fn float32() {
         let mut buffer = Vec::new();
-        let written = Number::Float32 {
-            value: 1234.0,
-            span: 0..4,
-        }
-        .rapify(&mut buffer, 0)
-        .unwrap();
+        let written = Number::Float32(1234.0).rapify(&mut buffer, 0).unwrap();
         assert_eq!(written, 4);
         assert_eq!(buffer, vec![0x00, 0x40, 0x9A, 0x44]);
     }

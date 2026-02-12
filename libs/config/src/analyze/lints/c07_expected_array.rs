@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -57,14 +58,14 @@ Only properties that are arrays must have `[]` after the property name.
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
@@ -74,18 +75,18 @@ impl LintRunner<LintData> for Runner {
             value,
             expected_array,
             ..
-        } = target
+        } = &target.inner
         else {
             return vec![];
         };
         if !expected_array {
             return vec![];
         }
-        if let Value::Array(_) = value {
+        if let Value::Array(_) = value.inner {
             return vec![];
         }
         // If we can't tell what the value is, we can't tell if it's an array or not
-        if let Value::Invalid(_) = value {
+        if let Value::Invalid(_) = value.inner {
             return vec![];
         }
         vec![Arc::new(Code07ExpectedArray::new(
@@ -96,7 +97,7 @@ impl LintRunner<LintData> for Runner {
 }
 
 pub struct Code07ExpectedArray {
-    property: Property,
+    property: Spanned<Property>,
     diagnostic: Option<Diagnostic>,
     suggestion: Option<String>,
 }
@@ -133,7 +134,7 @@ impl Code for Code07ExpectedArray {
 
 impl Code07ExpectedArray {
     #[must_use]
-    pub fn new(property: Property, processed: &Processed) -> Self {
+    pub fn new(property: Spanned<Property>, processed: &Processed) -> Self {
         Self {
             property,
             diagnostic: None,
@@ -147,7 +148,7 @@ impl Code07ExpectedArray {
             name,
             value,
             expected_array,
-        } = &self.property
+        } = &self.property.inner
         else {
             panic!("Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property");
         };
@@ -155,7 +156,7 @@ impl Code07ExpectedArray {
             expected_array,
             "Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property"
         );
-        if let Value::Array(_) = value {
+        if let Value::Array(_) = value.inner {
             panic!("Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property");
         }
         let ident_start = processed
@@ -167,9 +168,9 @@ impl Code07ExpectedArray {
         let ident_end = processed
             .mapping(name.span.end)
             .expect("mapping should exist");
-        let haystack = &processed.extract(ident_end.original_start()..value.span().start);
+        let haystack = &processed.extract(ident_end.original_start()..value.span.start);
         let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
-        self.suggestion = Some(name.value.clone());
+        self.suggestion = Some(name.0.to_string());
         self.diagnostic = Diagnostic::from_code_processed(
             &self,
             ident_start.original_start()..possible_end,
@@ -177,7 +178,7 @@ impl Code07ExpectedArray {
         );
         if let Some(diag) = &mut self.diagnostic {
             diag.labels.push(
-                Label::secondary(ident_file.0.clone(), value.span()).with_message("not an array"),
+                Label::secondary(ident_file.0.clone(), value.span.into_range()).with_message("not an array"),
             );
         }
         self

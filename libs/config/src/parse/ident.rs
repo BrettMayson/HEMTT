@@ -1,17 +1,22 @@
+use std::sync::Arc;
+
 use chumsky::prelude::*;
 
-use crate::Ident;
+use crate::{Ident, parse::ParseError};
 
-pub fn ident() -> impl Parser<char, Ident, Error = Simple<char>> {
+pub fn ident<'src>() -> impl Parser<'src, &'src str, Spanned<Ident>, ParseError<'src>> + Clone {
     one_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
         .repeated()
         .at_least(1)
-        .collect::<String>()
-        .map_with_span(|value, span| Ident { value, span })
+        .to_slice()
+        .map(|value| Ident(Arc::from(value)))
+        .spanned()
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use chumsky::Parser;
 
     use crate::Ident;
@@ -19,25 +24,22 @@ mod tests {
     #[test]
     fn ident() {
         assert_eq!(
-            super::ident().parse("abc"),
-            Ok(Ident {
-                value: "abc".to_string(),
-                span: 0..3,
-            })
+            super::ident().parse("abc").into_output().map(|s| s.inner),
+            Some(Ident(Arc::from("abc")))
         );
         assert_eq!(
-            super::ident().parse("abc123"),
-            Ok(Ident {
-                value: "abc123".to_string(),
-                span: 0..6,
-            })
+            super::ident()
+                .parse("abc123")
+                .into_output()
+                .map(|s| s.inner),
+            Some(Ident(Arc::from("abc123")))
         );
         assert_eq!(
-            super::ident().parse("abc_123"),
-            Ok(Ident {
-                value: "abc_123".to_string(),
-                span: 0..7,
-            })
+            super::ident()
+                .parse("abc_123")
+                .into_output()
+                .map(|s| s.inner),
+            Some(Ident(Arc::from("abc_123")))
         );
     }
 }

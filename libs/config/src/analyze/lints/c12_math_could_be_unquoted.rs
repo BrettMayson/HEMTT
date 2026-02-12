@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -66,21 +67,21 @@ Quoted math statements will have to be evaulated on each use in-game, by allowin
 }
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let mut codes = Vec::new();
         let Some(processed) = processed else {
             return vec![];
         };
-        let Property::Entry { name, value, .. } = target else {
+        let Property::Entry { name, value, .. } = &target.inner else {
             return vec![];
         };
         let name = name.as_str().to_lowercase();
@@ -101,13 +102,13 @@ impl LintRunner<LintData> for Runner {
                 false
             }
         };
-        match value {
+        match &value.inner {
             Value::Array(arr) => {
-                for item in &arr.items {
+                for item in arr.items.iter() {
                     check_item(item, processed, config, check_if_equation, &mut codes);
                 }
             }
-            Value::Str(str) => check_str(str, processed, config, check_if_equation, &mut codes),
+            Value::Str(str) => check_str(str, value.span.into_range(), processed, config, check_if_equation, &mut codes),
             _ => {}
         }
 
@@ -116,20 +117,20 @@ impl LintRunner<LintData> for Runner {
 }
 
 fn check_item(
-    target: &crate::Item,
+    target: &Spanned<crate::Item>,
     processed: &Processed,
     config: &LintConfig,
     check_if_equation: bool,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
-    match target {
+    match &target.inner {
         Item::Array(items) => {
             for element in items {
                 check_item(element, processed, config, check_if_equation, codes);
             }
         }
         Item::Str(target_str) => {
-            check_str(target_str, processed, config, check_if_equation, codes);
+            check_str(target_str, target.span.into_range(), processed, config, check_if_equation, codes);
         }
         _ => {}
     }
@@ -137,6 +138,7 @@ fn check_item(
 
 fn check_str(
     target_str: &crate::Str,
+    span: Range<usize>,
     processed: &Processed,
     config: &LintConfig,
     check_if_equation: bool,
@@ -152,10 +154,10 @@ fn check_str(
         return;
     }
     // attempt to parse it as a number
-    let Some(num) = Number::try_evaluation(raw_string, target_str.span()) else {
+    let Some(num) = Number::try_evaluation(raw_string) else {
         return;
     };
-    let span = target_str.span().start + 1..target_str.span().end - 1;
+    let span = span.start + 1..span.end - 1;
     codes.push(Arc::new(Code12MathCouldBeUnquoted::new(
         span,
         processed,

@@ -2,6 +2,7 @@ use std::{
     cell::RefCell, io::Write, path::Path, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}
 };
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -196,14 +197,14 @@ impl ClassNode {
     }
 }
 
-fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
+fn check(properties: &[Spanned<Property>], base: &Rc<RefCell<ClassNode>>) {
     for property in properties {
-        if let Property::Class(c) = property {
+        if let Property::Class(c) = &property.inner {
             let name = c
                 .name()
-                .map_or_else(|| "None".to_string(), |name| name.value.clone())
+                .map_or_else(|| "None".to_string(), |name| name.0.to_string())
                 .to_ascii_lowercase();
-            match c {
+            match &c.inner {
                 Class::Root { properties } => {
                     check(properties, base);
                 }
@@ -223,7 +224,7 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>) {
                         let (class, _found) = ClassNode::get_inherited_class(
                             base,
                             c,
-                            &parent.clone().expect("parent exists").value,
+                            &parent.clone().expect("parent exists").0,
                         );
                         class
                     };
@@ -326,8 +327,8 @@ impl CodeC14UnusedExternal {
         let Some(name) = self.class.name() else {
             panic!("CodeC14UnusedExternal::generate_processed called on class without name");
         };
-        self.class_name = name.value.clone();
-        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.clone(), processed);
+        self.class_name = name.0.to_string();
+        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.into_range(), processed);
         self
     }
 }

@@ -1,10 +1,11 @@
+use chumsky::span::Spanned;
 use hemtt_common::version::Version;
 
 use crate::{Class, Number, Property, Value, analyze::CfgPatch};
 
 #[derive(Clone, Debug, PartialEq)]
 /// A config file
-pub struct Config(pub Vec<Property>);
+pub struct Config(pub Vec<Spanned<Property>>);
 
 impl Config {
     #[must_use]
@@ -21,23 +22,30 @@ impl Config {
     pub fn get_patches(&self) -> Vec<CfgPatch> {
         let mut patches = Vec::new();
         for property in &self.0 {
-            if let Property::Class(Class::Local {
-                name, properties, ..
-            }) = property
+            if let Property::Class(Spanned {
+                inner: Class::Local {
+                    name, properties, ..
+                },
+                ..
+            }) = &property.inner
                 && name.as_str().eq_ignore_ascii_case("cfgpatches")
             {
                 for patch in properties {
-                    if let Property::Class(Class::Local {
-                        name, properties, ..
-                    }) = patch
+                    if let Property::Class(Spanned {
+                        inner:
+                            Class::Local {
+                                name, properties, ..
+                            },
+                        ..
+                    }) = &patch.inner
                     {
                         let mut required_version = Version::new(0, 0, 0, None);
                         for property in properties {
-                            if let Property::Entry { name, value, .. } = property
+                            if let Property::Entry { name, value, .. } = &property.inner
                                 && name.as_str().eq_ignore_ascii_case("requiredversion")
-                                && let Value::Number(Number::Float32 { value, .. }) = value
+                                && let Value::Number(Number::Float32(value)) = value.inner
                             {
-                                required_version = Version::from(*value);
+                                required_version = Version::from(value);
                             }
                         }
                         patches.push(CfgPatch::new(name.clone(), required_version));

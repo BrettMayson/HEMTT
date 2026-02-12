@@ -1,5 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -83,18 +84,18 @@ impl LintRunner<LintData> for Runner {
 }
 
 #[must_use]
-pub fn check(properties: &[Property], processed: &Processed) -> Codes {
-    let mut defined: HashMap<String, Vec<Class>> = HashMap::with_capacity(properties.len());
+pub fn check(properties: &[Spanned<Property>], processed: &Processed) -> Codes {
+    let mut defined: HashMap<String, Vec<Spanned<Class>>> = HashMap::with_capacity(properties.len());
     let mut codes = Vec::new();
     for property in properties {
-        if let Property::Class(c) = property {
-            match c {
+        if let Property::Class(c) = &property.inner {
+            match &c.inner {
                 Class::Root { properties } => {
                     codes.extend(check(properties, processed));
                 }
                 Class::External { name } => {
                     defined
-                        .entry(name.value.to_lowercase())
+                        .entry(name.0.to_lowercase())
                         .or_default()
                         .push(c.clone());
                 }
@@ -106,7 +107,7 @@ pub fn check(properties: &[Property], processed: &Processed) -> Codes {
                 } => {
                     codes.extend(check(properties, processed));
                     defined
-                        .entry(name.value.to_lowercase())
+                        .entry(name.0.to_lowercase())
                         .or_default()
                         .push(c.clone());
                 }
@@ -125,7 +126,7 @@ pub fn check(properties: &[Property], processed: &Processed) -> Codes {
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeC03DuplicateClasses {
-    classes: Vec<Class>,
+    classes: Vec<Spanned<Class>>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -166,7 +167,7 @@ impl Code for CodeC03DuplicateClasses {
 
 impl CodeC03DuplicateClasses {
     #[must_use]
-    pub fn new(classes: Vec<Class>, processed: &Processed) -> Self {
+    pub fn new(classes: Vec<Spanned<Class>>, processed: &Processed) -> Self {
         Self {
             classes,
             diagnostic: None,
@@ -178,7 +179,7 @@ impl CodeC03DuplicateClasses {
         let Some(name) = self.classes[0].name() else {
             panic!("CodeC03DuplicateClasses::generate_processed called on class without name");
         };
-        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.into_range(), processed);
         if let Some(diag) = &mut self.diagnostic {
             for class in self.classes.iter().skip(1) {
                 let map = processed
@@ -190,7 +191,7 @@ impl CodeC03DuplicateClasses {
                         file.0.clone(),
                         map.original_start()
                             ..map.original_start()
-                                + class.name().expect("class should have name").span.len(),
+                                + class.name().expect("class should have name").span.into_range().len(),
                     )
                     .with_message("also defined here"),
                 );

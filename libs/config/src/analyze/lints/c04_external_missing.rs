@@ -1,5 +1,6 @@
-use std::{cell::RefCell, fmt, rc::Rc, sync::Arc};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -89,15 +90,15 @@ struct ClassNode {
     upper: Option<Rc<RefCell<Self>>>,
     subclasses: IndexMap<String, Rc<RefCell<Self>>>, // keep insertion order constant
 }
-impl fmt::Debug for ClassNode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Debug for ClassNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let upper_name = self.upper.as_ref().map_or_else(
             || "None".to_string(),
             |p| {
                 p.borrow()
                     .class
                     .name()
-                    .map_or_else(|| "None".to_string(), |name| name.value.clone())
+                    .map_or_else(|| "None".to_string(), |name| name.0.to_string())
             },
         );
         write!(f, "Cfg {{ name: {}, upper: {}", self.class, upper_name)?;
@@ -152,15 +153,15 @@ impl ClassNode {
     }
 }
 
-fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Processed) -> Codes {
+fn check(properties: &[Spanned<Property>], base: &Rc<RefCell<ClassNode>>, processed: &Processed) -> Codes {
     let mut codes: Codes = Vec::new();
     for property in properties {
-        if let Property::Class(c) = property {
+        if let Property::Class(c) = &property.inner {
             let name = c
                 .name()
-                .map_or_else(|| "None".to_string(), |name| name.value.clone())
+                .map_or_else(|| "None", |name| name.0.as_ref())
                 .to_ascii_lowercase();
-            match c {
+            match &c.inner {
                 Class::Root { properties } => {
                     codes.extend(check(properties, base, processed));
                 }
@@ -180,7 +181,7 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Pro
                         let (class, found) = ClassNode::get_inherited_class(
                             base,
                             c,
-                            &parent.clone().expect("parent exists").value,
+                            &parent.clone().expect("parent exists").0,
                         );
                         if !found {
                             codes.push(Arc::new(CodeC04ExternalMissing::new(c.clone(), processed)));
@@ -198,7 +199,7 @@ fn check(properties: &[Property], base: &Rc<RefCell<ClassNode>>, processed: &Pro
 
 #[allow(clippy::module_name_repetitions)]
 pub struct CodeC04ExternalMissing {
-    class: Class,
+    class: Spanned<Class>,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -235,7 +236,7 @@ impl Code for CodeC04ExternalMissing {
 
 impl CodeC04ExternalMissing {
     #[must_use]
-    pub fn new(class: Class, processed: &Processed) -> Self {
+    pub fn new(class: Spanned<Class>, processed: &Processed) -> Self {
         Self {
             class,
             diagnostic: None,
@@ -247,7 +248,7 @@ impl CodeC04ExternalMissing {
         let Some(parent) = self.class.parent() else {
             panic!("CodeC04ExternalMissing::generate_processed called on class without parent");
         };
-        self.diagnostic = Diagnostic::from_code_processed(&self, parent.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, parent.span.into_range(), processed);
         self
     }
 }

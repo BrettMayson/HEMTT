@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -62,23 +63,23 @@ All classes using inheritance with a parent class must use braces `{}`, even if 
 struct Runner;
 
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
         };
-        if let Property::Class(Class::Local { err_missing_braces, parent, .. }) = target
+        if let Property::Class(Spanned{ inner: Class::Local { err_missing_braces, parent, .. }, ..}) = &target.inner
             && *err_missing_braces {
                 return vec![Arc::new(Code10ClassMissingBraces::new(
-                    parent.clone().expect("parent must be present for err_missing_braces").span,
+                    parent.clone().expect("parent must be present for err_missing_braces").span.into_range(),
                     processed,
                 ))];
             }

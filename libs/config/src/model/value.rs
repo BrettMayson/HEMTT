@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::sync::Arc;
 
 use super::{Array, Expression, Number, Str};
 
@@ -34,21 +34,7 @@ pub enum Value {
     /// ```
     UnexpectedArray(Array),
     /// An invalid value
-    Invalid(Range<usize>),
-}
-
-impl Value {
-    #[must_use]
-    /// Get the range of the value
-    pub fn span(&self) -> Range<usize> {
-        match self {
-            Self::Str(s) => s.span.clone(),
-            Self::Number(n) => n.span(),
-            Self::Expression(e) => e.span.clone(),
-            Self::Array(a) | Self::UnexpectedArray(a) => a.span.clone(),
-            Self::Invalid(span) => span.clone(),
-        }
-    }
+    Invalid(Arc<str>),
 }
 
 #[cfg(feature = "serde")]
@@ -62,7 +48,7 @@ impl serde::Serialize for Value {
             Self::Number(number) => number.serialize(serializer),
             Self::Expression(expression) => expression.serialize(serializer),
             Self::Array(array) | Self::UnexpectedArray(array) => array.serialize(serializer),
-            Self::Invalid(..) => serializer.serialize_none(),
+            Self::Invalid(_) => serializer.serialize_none(),
         }
     }
 }

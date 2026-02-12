@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
     reporting::{Code, Diagnostic, Label, Processed},
 };
 
-use crate::{analyze::LintData, Property, Value};
+use crate::{Array, Property, Value, analyze::LintData};
 
 crate::analyze::lint!(LintC06UnexpectedArray);
 
@@ -57,35 +58,40 @@ Arrays in Arma configs are denoted by `[]` after the property name.
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
         };
         let Property::Entry {
-            value: Value::UnexpectedArray(_),
+            value: Spanned { inner: Value::UnexpectedArray(array), span },
             ..
-        } = target
+        } = &target.inner
         else {
             return vec![];
         };
         vec![Arc::new(Code06UnexpectedArray::new(
             target.clone(),
+            Spanned {
+                inner: array.clone(),
+                span: *span,
+            },
             processed,
         ))]
     }
 }
 
 pub struct Code06UnexpectedArray {
-    property: Property,
+    property: Spanned<Property>,
+    array: Spanned<Array>,
     diagnostic: Option<Diagnostic>,
     suggestion: Option<String>,
 }
@@ -122,9 +128,10 @@ impl Code for Code06UnexpectedArray {
 
 impl Code06UnexpectedArray {
     #[must_use]
-    pub fn new(property: Property, processed: &Processed) -> Self {
+    pub fn new(property: Spanned<Property>, array: Spanned<Array>, processed: &Processed) -> Self {
         Self {
             property,
+            array,
             diagnostic: None,
             suggestion: None,
         }
@@ -134,14 +141,14 @@ impl Code06UnexpectedArray {
     fn generate_processed(mut self, processed: &Processed) -> Self {
         let Property::Entry {
             name,
-            value: Value::UnexpectedArray(array),
+            value: Spanned { inner: Value::UnexpectedArray(_), .. },
             ..
-        } = &self.property
+        } = &self.property.inner
         else {
             panic!("Code06UnexpectedArray::generate_processed called on non-Code06UnexpectedArray property");
         };
         let array_start = processed
-            .mapping(array.span.start)
+            .mapping(self.array.span.start)
             .expect("mapping should exist");
         let array_file = processed
             .source(array_start.source())
@@ -152,7 +159,7 @@ impl Code06UnexpectedArray {
         let ident_end = processed
             .mapping(name.span.end)
             .expect("mapping should exist");
-        self.suggestion = Some(format!("{}[]", name.value));
+        self.suggestion = Some(format!("{}[]", name.0));
         self.diagnostic = Diagnostic::from_code_processed(
             &self,
             ident_start.original_start()..ident_end.original_start(),
@@ -160,7 +167,7 @@ impl Code06UnexpectedArray {
         );
         if let Some(diag) = &mut self.diagnostic {
             diag.labels.push(
-                Label::secondary(array_file.0.clone(), array.span.clone())
+                Label::secondary(array_file.0.clone(), self.array.span.into_range())
                     .with_message("unexpected array"),
             );
         }

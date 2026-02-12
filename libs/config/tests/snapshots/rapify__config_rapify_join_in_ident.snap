@@ -1,33 +1,48 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (join_in_ident))
+expression: config
 ---
 Config(
     [
-        Class(
-            Local {
-                name: Ident {
-                    value: "thing",
-                    span: 19..25,
-                },
-                parent: None,
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "helloworld",
-                            span: 37..48,
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "thing",
+                            ),
+                            span: 0..0,
                         },
-                        value: Str(
-                            Str {
-                                value: "test",
-                                span: 48..53,
+                        parent: None,
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "helloworld",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "test",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
                             },
-                        ),
-                        expected_array: false,
+                        ],
+                        err_missing_braces: false,
                     },
-                ],
-                err_missing_braces: false,
-            },
-        ),
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
     ],
 )
