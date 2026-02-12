@@ -47,6 +47,7 @@ pub struct Processed {
 #[derive(Default, Debug)]
 struct Processing {
     sources: Sources,
+    source_index: HashMap<WorkspacePath, usize>,
 
     output: String,
 
@@ -86,18 +87,15 @@ fn append_token(
         append_token(processing, string_stack, next_is_escape, escape_token)?;
     }
     let path = token.position().path().clone();
-    let source = processing
-        .sources
-        .iter()
-        .position(|(s, _)| s == &path)
-        .map_or_else(
-            || {
-                let content = path.read_to_string()?;
-                processing.sources.push((path.clone(), content));
-                Ok::<usize, Error>(processing.sources.len() - 1)
-            },
-            Ok,
-        )?;
+    let source = if let Some(&idx) = processing.source_index.get(&path) {
+        idx
+    } else {
+        let content = path.read_to_string()?;
+        let idx = processing.sources.len();
+        processing.sources.push((path.clone(), content));
+        processing.source_index.insert(path.clone(), idx);
+        idx
+    };
     if token.symbol().is_double_quote() {
         if string_stack.is_empty() {
             string_stack.push('"');
@@ -187,15 +185,15 @@ fn append_output(
                 append_output(processing, string_stack, next_is_escape, o)?;
                 let end = processing.total_chars;
                 let path = root.position().path().clone();
-                let source = processing
-                    .sources
-                    .iter()
-                    .position(|(s, _)| s.as_str() == path.as_str())
-                    .unwrap_or_else(|| {
-                        let content = path.read_to_string().expect("file should exist if used");
-                        processing.sources.push((path, content));
-                        processing.sources.len() - 1
-                    });
+                let source = if let Some(&idx) = processing.source_index.get(&path) {
+                    idx
+                } else {
+                    let content = path.read_to_string().expect("file should exist if used");
+                    let idx = processing.sources.len();
+                    processing.sources.push((path.clone(), content));
+                    processing.source_index.insert(path, idx);
+                    idx
+                };
                 processing.mappings.push(Mapping {
                     processed: (
                         LineCol(start, (line, col)),
@@ -237,12 +235,12 @@ pub fn clean_output(processed: &mut Processed) {
 
         let pending_line = comitted_line + pending_empty;
         let linenum = map.original().start().line();
-        let file = map
-            .original()
-            .path()
-            .as_virtual_str()
-            .clone()
-            .replace('/', "\\");
+        let virtual_str = map.original().path().as_virtual_str();
+        let file = if virtual_str.contains('/') {
+            virtual_str.replace('/', "\\")
+        } else {
+            virtual_str
+        };
         if file != comitted_file || pending_line != linenum {
             comitted_file = file;
             comitted_line = linenum;
@@ -353,8 +351,8 @@ impl Processed {
 
     #[must_use]
     /// Get the files used in preprocessing
-    pub fn sources(&self) -> Vec<(WorkspacePath, String)> {
-        self.sources.clone()
+    pub fn sources(&self) -> &Sources {
+        &self.sources
     }
 
     #[must_use]
@@ -428,21 +426,35 @@ impl Processed {
     #[must_use]
     /// Return a string with the source from the span
     pub fn extract(&self, span: Range<usize>) -> Arc<str> {
-        if span.start == span.end {
+        if span.start == span.end || span.start >= self.total_chars {
             warn!("tried to extract an invalid span");
             return Arc::from("");
         }
-        let mut real_start = 0;
-        let mut real_end = 0;
-        self.output.chars().enumerate().for_each(|(p, c)| {
-            if p < span.start {
-                real_start += c.len_utf8();
+        // Fast path: if the output is ASCII-only, char offsets == byte offsets
+        if self.output.is_ascii() {
+            let end = span.end.min(self.output.len());
+            return Arc::from(&self.output[span.start..end]);
+        }
+        // Slow path: convert char offsets to byte offsets using char_indices
+        let mut real_start = None;
+        let mut real_end = None;
+        for (char_idx, (byte_idx, _)) in self.output.char_indices().enumerate() {
+            if char_idx == span.start {
+                real_start = Some(byte_idx);
             }
-            if p < span.end {
-                real_end += c.len_utf8();
+            if char_idx == span.end {
+                real_end = Some(byte_idx);
+                break;
             }
-        });
-        Arc::from(&self.output[real_start..real_end])
+        }
+        match (real_start, real_end) {
+            (Some(start), Some(end)) => Arc::from(&self.output[start..end]),
+            (Some(start), None) => Arc::from(&self.output[start..]),
+            _ => {
+                warn!("span {span:?} not found in output");
+                Arc::from("")
+            }
+        }
     }
 
     #[must_use]
