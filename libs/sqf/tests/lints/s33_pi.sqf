@@ -23,3 +23,7 @@ private _notPi6 = 4.14;
 // Should NOT trigger: using the correct pi command
 private _correct = _x / pi;
 private _correct2 = sin(pi / 2);
+
+// looks like 🥧 but it's just data in an array, should NOT trigger
+data = ["land_house_k_3_ep1",[1.9079,2.71822,3.14022]];
+data2 = ["land_house_k_3_ep1",[[-5.54529,-3.52778,-0.717676],[2.9529,5.68822,-0.299778],[1.9079,2.71822,3.14022],[-5.39259,4.35341,-0.89525],[-5.18259,3.54341,1.99825],[-2.42948,-0.243622,-0.716877],[-1.33908,5.83411,2.85086],[-2.42948,-0.243622,-0.716877]]];
