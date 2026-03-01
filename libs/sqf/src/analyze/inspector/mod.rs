@@ -760,7 +760,7 @@ pub fn run_processed(
     let re2 =
         RE_IGNORE_VARIABLE_ENTRIES.get_or_init(|| Regex::new(r#""(.*?)""#).expect("regex ok"));
     for (_path, raw_source) in processed.sources() {
-        for (_, [ignores]) in re1.captures_iter(&raw_source).map(|c| c.extract()) {
+        for (_, [ignores]) in re1.captures_iter(raw_source).map(|c| c.extract()) {
             for (_, [var]) in re2.captures_iter(ignores).map(|c| c.extract()) {
                 ignored_vars.insert(var.to_ascii_lowercase());
             }

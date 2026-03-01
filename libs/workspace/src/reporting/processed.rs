@@ -353,8 +353,8 @@ impl Processed {
 
     #[must_use]
     /// Get the files used in preprocessing
-    pub fn sources(&self) -> Vec<(WorkspacePath, String)> {
-        self.sources.clone()
+    pub const fn sources(&self) -> &Sources {
+        &self.sources
     }
 
     #[must_use]
