@@ -1,7 +1,7 @@
 // dead code from a previous hemtt version, don't feel the need to delete atm
 #![allow(dead_code)]
 
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use super::Whitespace;
 
@@ -202,6 +202,46 @@ impl Symbol {
             Self::RightAngle => Some(Self::LeftAngle),
             Self::DoubleQuote => Some(Self::DoubleQuote),
             _ => None,
+        }
+    }
+
+    #[must_use]
+    /// Get the symbol as a `Cow<str>` without allocating for static variants
+    pub fn to_cow(&self) -> Cow<'_, str> {
+        match self {
+            Self::Word(w) => Cow::Borrowed(w.as_str()),
+            Self::Alpha(c) => {
+                let mut buf = [0u8; 4];
+                Cow::Owned(c.encode_utf8(&mut buf).to_owned())
+            }
+            Self::Digit(d) => Cow::Owned(d.to_string()),
+            Self::Underscore => Cow::Borrowed("_"),
+            Self::Dash => Cow::Borrowed("-"),
+            Self::Equals => Cow::Borrowed("="),
+            Self::Plus => Cow::Borrowed("+"),
+            Self::LeftBrace => Cow::Borrowed("{"),
+            Self::RightBrace => Cow::Borrowed("}"),
+            Self::LeftBracket => Cow::Borrowed("["),
+            Self::RightBracket => Cow::Borrowed("]"),
+            Self::LeftParenthesis => Cow::Borrowed("("),
+            Self::RightParenthesis => Cow::Borrowed(")"),
+            Self::Colon => Cow::Borrowed(":"),
+            Self::Semicolon => Cow::Borrowed(";"),
+            Self::Join => Cow::Borrowed("##"),
+            Self::Directive => Cow::Borrowed("#"),
+            Self::Escape => Cow::Borrowed("\\"),
+            Self::Slash => Cow::Borrowed("/"),
+            Self::Comma => Cow::Borrowed(","),
+            Self::Decimal => Cow::Borrowed("."),
+            Self::DoubleQuote => Cow::Borrowed("\""),
+            Self::SingleQuote => Cow::Borrowed("'"),
+            Self::LeftAngle => Cow::Borrowed("<"),
+            Self::RightAngle => Cow::Borrowed(">"),
+            Self::Unicode(s) => Cow::Borrowed(s.as_str()),
+            Self::Newline => Cow::Borrowed("\n"),
+            Self::Whitespace(Whitespace::Space) => Cow::Borrowed(" "),
+            Self::Whitespace(Whitespace::Tab) => Cow::Borrowed("\t"),
+            Self::Eoi | Self::Comment(_) => Cow::Borrowed(""),
         }
     }
 }

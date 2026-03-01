@@ -1,4 +1,5 @@
 use byteorder::ReadBytesExt;
+use chumsky::span::{SimpleSpan, Spanned};
 use hemtt_common::io::ReadExt;
 
 use crate::{Array, Class, Ident, Property, Value};
@@ -17,20 +18,20 @@ impl Rapify for Property {
     fn rapified_length(&self) -> usize {
         self.property_code().len()
             + match self {
-                Self::Entry { value, .. } => match value {
-                    Value::Str(s) => s.rapified_length(),
-                    Value::Number(n) => n.rapified_length(),
-                    Value::Expression(e) => e.rapified_length(),
-                    Value::Array(a) => a.rapified_length(),
+                Self::Entry { value, .. } => match value.inner {
+                    Value::Str(ref s) => s.rapified_length(),
+                    Value::Number(ref n) => n.rapified_length(),
+                    Value::Expression(ref e) => e.rapified_length(),
+                    Value::Array(ref a) => a.rapified_length(),
                     Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
                 },
-                Self::Class(c) => match c {
+                Self::Class(c) => match c.inner {
                     Class::Root { .. } => panic!("root should not be a property"),
                     Class::Local { .. } => 4,
                     Class::External { .. } => 0,
                 },
                 Self::Delete(_) => 0,
-                Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => unreachable!(),
+                Self::MissingSemicolon(_) | Self::ExtraSemicolons(_) => unreachable!(),
             }
     }
 }
@@ -40,11 +41,11 @@ impl Property {
     #[must_use]
     pub fn property_code(&self) -> Vec<u8> {
         match self {
-            Self::Entry { value, .. } => match value {
-                Value::Str(s) => vec![1, s.rapified_code()],
-                Value::Number(n) => vec![1, n.rapified_code()],
-                Value::Expression(e) => vec![1, e.rapified_code()],
-                Value::Array(a) => {
+            Self::Entry { value, .. } => match value.inner {
+                Value::Str(ref s) => vec![1, s.rapified_code()],
+                Value::Number(ref n) => vec![1, n.rapified_code()],
+                Value::Expression(ref e) => vec![1, e.rapified_code()],
+                Value::Array(ref a) => {
                     if a.expand {
                         vec![5, 1, 0, 0, 0]
                     } else {
@@ -53,14 +54,14 @@ impl Property {
                 }
                 Value::UnexpectedArray(_) | Value::Invalid(_) => unreachable!(),
             },
-            Self::Class(c) => match c {
+            Self::Class(c) => match c.inner {
                 Class::Local { .. } | Class::Root { .. } => vec![0],
                 Class::External { .. } => vec![3],
             },
             Self::Delete(_) => {
                 vec![4]
             }
-            Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => unreachable!(),
+            Self::MissingSemicolon(_) | Self::ExtraSemicolons(_) => unreachable!(),
         }
     }
 
@@ -77,11 +78,11 @@ impl Derapify for Property {
     fn derapify<I: std::io::Read + std::io::Seek>(input: &mut I) -> Result<Self, std::io::Error> {
         fn read_name<I: std::io::Read + std::io::Seek>(
             input: &mut I,
-        ) -> Result<Ident, std::io::Error> {
-            let start = input.stream_position()? as usize;
-            let name = input.read_cstring()?;
-            let name = Ident::new(name, start..input.stream_position()? as usize);
-            Ok(name)
+        ) -> Result<Spanned<Ident>, std::io::Error> {
+            Ok(Spanned {
+                inner: Ident::new(&input.read_cstring()?),
+                span: SimpleSpan::default(),
+            })
         }
         let code = input.read_u8()?;
         Ok(match code {
@@ -91,7 +92,10 @@ impl Derapify for Property {
                 let seek_back = input.stream_position()? as usize;
                 #[allow(clippy::cast_possible_wrap)]
                 input.seek(std::io::SeekFrom::Start(class_offset as u64))?;
-                let class = Self::Class(Class::derapify(input, Some(name))?);
+                let class = Self::Class(Spanned {
+                    inner: Class::derapify(input, Some(name))?,
+                    span: SimpleSpan::default(),
+                });
                 input.seek(std::io::SeekFrom::Start(seek_back as u64))?;
                 class
             }
@@ -99,17 +103,26 @@ impl Derapify for Property {
                 let subcode = input.read_u8()?;
                 Self::Entry {
                     name: read_name(input)?,
-                    value: Value::derapify(input, subcode)?,
+                    value: Spanned {
+                        inner: Value::derapify(input, subcode)?,
+                        span: SimpleSpan::default(),
+                    },
                     expected_array: false,
                 }
             }
             2 => Self::Entry {
                 name: read_name(input)?,
-                value: Value::Array(Array::derapify(input, false)?),
+                value: Spanned {
+                    inner: Value::Array(Array::derapify(input, false)?),
+                    span: SimpleSpan::default(),
+                },
                 expected_array: true,
             },
-            3 => Self::Class(Class::External {
-                name: read_name(input)?,
+            3 => Self::Class(Spanned {
+                inner: Class::External {
+                    name: read_name(input)?,
+                },
+                span: SimpleSpan::default(),
             }),
             4 => Self::Delete(read_name(input)?),
             5 => {
@@ -117,7 +130,10 @@ impl Derapify for Property {
                 input.seek_relative(3)?;
                 Self::Entry {
                     name: read_name(input)?,
-                    value: Value::Array(Array::derapify(input, expand)?),
+                    value: Spanned {
+                        inner: Value::Array(Array::derapify(input, expand)?),
+                        span: SimpleSpan::default(),
+                    },
                     expected_array: true,
                 }
             }

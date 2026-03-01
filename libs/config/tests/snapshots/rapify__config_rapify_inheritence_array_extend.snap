@@ -1,159 +1,243 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (inheritence_array_extend))
+expression: config
 ---
 Config(
     [
-        Class(
-            External {
-                name: Ident {
-                    value: "external",
-                    span: 19..28,
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: External {
+                        name: Spanned {
+                            inner: Ident(
+                                "external",
+                            ),
+                            span: 0..0,
+                        },
+                    },
+                    span: 0..0,
                 },
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "local",
-                    span: 29..35,
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "local",
+                            ),
+                            span: 0..0,
+                        },
+                        parent: Some(
+                            Spanned {
+                                inner: Ident(
+                                    "external",
+                                ),
+                                span: 0..0,
+                            },
+                        ),
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "extend",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: true,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item1",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item2",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "complete",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: false,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item3",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item4",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
+                            },
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
                 },
-                parent: Some(
-                    Ident {
-                        value: "external",
-                        span: 53..62,
-                    },
-                ),
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "extend",
-                            span: 68..75,
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "solo",
+                            ),
+                            span: 0..0,
                         },
-                        value: Array(
-                            Array {
-                                expand: true,
-                                items: [
-                                    Str(
-                                        Str {
-                                            value: "item1",
-                                            span: 77..83,
-                                        },
-                                    ),
-                                    Str(
-                                        Str {
-                                            value: "item2",
-                                            span: 84..90,
-                                        },
-                                    ),
-                                ],
-                                span: 75..90,
+                        parent: None,
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "extend",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: true,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item1",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item2",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
                             },
-                        ),
-                        expected_array: true,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "complete",
-                            span: 91..100,
-                        },
-                        value: Array(
-                            Array {
-                                expand: false,
-                                items: [
-                                    Str(
-                                        Str {
-                                            value: "item3",
-                                            span: 102..108,
-                                        },
-                                    ),
-                                    Str(
-                                        Str {
-                                            value: "item4",
-                                            span: 109..115,
-                                        },
-                                    ),
-                                ],
-                                span: 100..115,
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "complete",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: false,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item3",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item4",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Str(
+                                                                Str(
+                                                                    "item5",
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
                             },
-                        ),
-                        expected_array: true,
+                        ],
+                        err_missing_braces: false,
                     },
-                ],
-                err_missing_braces: false,
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "solo",
-                    span: 40..45,
+                    span: 0..0,
                 },
-                parent: None,
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "extend",
-                            span: 126..133,
-                        },
-                        value: Array(
-                            Array {
-                                expand: true,
-                                items: [
-                                    Str(
-                                        Str {
-                                            value: "item1",
-                                            span: 135..141,
-                                        },
-                                    ),
-                                    Str(
-                                        Str {
-                                            value: "item2",
-                                            span: 142..148,
-                                        },
-                                    ),
-                                ],
-                                span: 133..148,
-                            },
-                        ),
-                        expected_array: true,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "complete",
-                            span: 149..158,
-                        },
-                        value: Array(
-                            Array {
-                                expand: false,
-                                items: [
-                                    Str(
-                                        Str {
-                                            value: "item3",
-                                            span: 160..166,
-                                        },
-                                    ),
-                                    Str(
-                                        Str {
-                                            value: "item4",
-                                            span: 167..173,
-                                        },
-                                    ),
-                                    Str(
-                                        Str {
-                                            value: "item5",
-                                            span: 174..180,
-                                        },
-                                    ),
-                                ],
-                                span: 158..180,
-                            },
-                        ),
-                        expected_array: true,
-                    },
-                ],
-                err_missing_braces: false,
-            },
-        ),
+            ),
+            span: 0..0,
+        },
     ],
 )

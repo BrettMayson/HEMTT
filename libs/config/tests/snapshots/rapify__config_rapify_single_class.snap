@@ -4,232 +4,352 @@ expression: config
 ---
 Config(
     [
-        Entry {
-            name: Ident {
-                value: "version",
-                span: 20..28,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "version",
+                    ),
+                    span: 0..0,
+                },
+                value: Spanned {
+                    inner: Number(
+                        Int32(
+                            10,
+                        ),
+                    ),
+                    span: 0..0,
+                },
+                expected_array: false,
             },
-            value: Number(
-                Int32 {
-                    value: 10,
-                    span: 28..32,
-                },
-            ),
-            expected_array: false,
+            span: 0..0,
         },
-        Entry {
-            name: Ident {
-                value: "name",
-                span: 34..39,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "name",
+                    ),
+                    span: 0..0,
+                },
+                value: Spanned {
+                    inner: Str(
+                        Str(
+                            "HEMTT",
+                        ),
+                    ),
+                    span: 0..0,
+                },
+                expected_array: false,
             },
-            value: Str(
-                Str {
-                    value: "HEMTT",
-                    span: 39..45,
-                },
-            ),
-            expected_array: false,
+            span: 0..0,
         },
-        Entry {
-            name: Ident {
-                value: "points",
-                span: 46..53,
-            },
-            value: Array(
-                Array {
-                    expand: false,
-                    items: [
-                        Number(
-                            Int32 {
-                                value: 1,
-                                span: 55..59,
-                            },
-                        ),
-                        Number(
-                            Int32 {
-                                value: 2,
-                                span: 60..64,
-                            },
-                        ),
-                        Number(
-                            Int32 {
-                                value: 3,
-                                span: 65..69,
-                            },
-                        ),
-                    ],
-                    span: 53..69,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "points",
+                    ),
+                    span: 0..0,
                 },
-            ),
-            expected_array: true,
-        },
-        Class(
-            Local {
-                name: Ident {
-                    value: "test",
-                    span: 70..75,
-                },
-                parent: None,
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "version",
-                            span: 97..105,
-                        },
-                        value: Number(
-                            Int32 {
-                                value: 10,
-                                span: 105..109,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "version",
-                            span: 111..119,
-                        },
-                        value: Number(
-                            Int32 {
-                                value: 10,
-                                span: 119..123,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "name",
-                            span: 125..130,
-                        },
-                        value: Str(
-                            Str {
-                                value: "HEMTT",
-                                span: 130..136,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "points",
-                            span: 137..144,
-                        },
-                        value: Array(
-                            Array {
-                                expand: false,
-                                items: [
-                                    Number(
-                                        Int32 {
-                                            value: 1,
-                                            span: 146..150,
-                                        },
-                                    ),
-                                    Number(
-                                        Int32 {
-                                            value: 2,
-                                            span: 151..155,
-                                        },
-                                    ),
-                                    Number(
-                                        Int32 {
-                                            value: 3,
-                                            span: 156..160,
-                                        },
-                                    ),
+                value: Spanned {
+                    inner: Array(
+                        Array {
+                            expand: false,
+                            items: Spanned {
+                                inner: [
+                                    Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                1,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                2,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                3,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
                                 ],
-                                span: 144..160,
+                                span: 0..0,
                             },
-                        ),
-                        expected_array: true,
-                    },
-                ],
-                err_missing_braces: false,
-            },
-        ),
-        Class(
-            Local {
-                name: Ident {
-                    value: "test",
-                    span: 80..85,
+                        },
+                    ),
+                    span: 0..0,
                 },
-                parent: None,
-                properties: [
-                    Entry {
-                        name: Ident {
-                            value: "version",
-                            span: 168..176,
-                        },
-                        value: Number(
-                            Int32 {
-                                value: 10,
-                                span: 176..180,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "version",
-                            span: 182..190,
-                        },
-                        value: Number(
-                            Int32 {
-                                value: 10,
-                                span: 190..194,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "name",
-                            span: 196..201,
-                        },
-                        value: Str(
-                            Str {
-                                value: "HEMTT",
-                                span: 201..207,
-                            },
-                        ),
-                        expected_array: false,
-                    },
-                    Entry {
-                        name: Ident {
-                            value: "points",
-                            span: 208..215,
-                        },
-                        value: Array(
-                            Array {
-                                expand: false,
-                                items: [
-                                    Number(
-                                        Int32 {
-                                            value: 1,
-                                            span: 217..221,
-                                        },
-                                    ),
-                                    Number(
-                                        Int32 {
-                                            value: 2,
-                                            span: 222..226,
-                                        },
-                                    ),
-                                    Number(
-                                        Int32 {
-                                            value: 3,
-                                            span: 227..231,
-                                        },
-                                    ),
-                                ],
-                                span: 215..231,
-                            },
-                        ),
-                        expected_array: true,
-                    },
-                ],
-                err_missing_braces: false,
+                expected_array: true,
             },
-        ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "test",
+                            ),
+                            span: 0..0,
+                        },
+                        parent: None,
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "version",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                10,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "version",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                10,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "name",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "HEMTT",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "points",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: false,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    1,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    2,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    3,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
+                            },
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
+        Spanned {
+            inner: Class(
+                Spanned {
+                    inner: Local {
+                        name: Spanned {
+                            inner: Ident(
+                                "test",
+                            ),
+                            span: 0..0,
+                        },
+                        parent: None,
+                        properties: [
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "version",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                10,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "version",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                10,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "name",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "HEMTT",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: false,
+                                },
+                                span: 0..0,
+                            },
+                            Spanned {
+                                inner: Entry {
+                                    name: Spanned {
+                                        inner: Ident(
+                                            "points",
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    value: Spanned {
+                                        inner: Array(
+                                            Array {
+                                                expand: false,
+                                                items: Spanned {
+                                                    inner: [
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    1,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    2,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                        Spanned {
+                                                            inner: Number(
+                                                                Int32(
+                                                                    3,
+                                                                ),
+                                                            ),
+                                                            span: 0..0,
+                                                        },
+                                                    ],
+                                                    span: 0..0,
+                                                },
+                                            },
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    expected_array: true,
+                                },
+                                span: 0..0,
+                            },
+                        ],
+                        err_missing_braces: false,
+                    },
+                    span: 0..0,
+                },
+            ),
+            span: 0..0,
+        },
     ],
 )

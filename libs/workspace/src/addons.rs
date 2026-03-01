@@ -241,7 +241,7 @@ impl Display for Location {
 type RequiredVersion = (Version, WorkspacePath, Range<usize>);
 pub type UsedFunctions = Vec<(String, Position, Mapping, Mapping, WorkspacePath)>;
 pub type DefinedFunctions = HashSet<(String, Arc<str>)>;
-pub type MagazineWellInfo = (Vec<String>, Vec<(String, Arc<dyn Code>)>);
+pub type MagazineWellInfo = (Vec<Arc<str>>, Vec<(Arc<str>, Arc<dyn Code>)>);
 
 #[derive(Debug, Clone, Default)]
 pub struct BuildData {

@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -95,21 +96,21 @@ Some properties require a specific file type. This lint will report on propertie
 struct Runner;
 
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let mut codes = Vec::new();
         let Some(processed) = processed else {
             return vec![];
         };
-        let Property::Entry { name, value, .. } = target else {
+        let Property::Entry { name, value, .. } = &target.inner else {
             return vec![];
         };
         let allow_no_extension = if let Some(toml::Value::Boolean(allow_no_extension)) = config.option("allow_no_extension") {
@@ -119,13 +120,13 @@ impl LintRunner<LintData> for Runner {
         };
         let name = name.as_str().to_lowercase();
 
-        match value {
+        match &value.inner {
             Value::Array(arr) => {
-                for item in &arr.items {
+                for item in arr.items.iter() {
                     check_item(&name, item, allow_no_extension, processed, config, &mut codes);
                 }
             }
-            Value::Str(value) => check_str(&name, value, allow_no_extension, processed, config, &mut codes),
+            Value::Str(str) => check_str(&name, str, value.span.into_range(), allow_no_extension, processed, config, &mut codes),
             _ => {}
         }
         codes
@@ -134,26 +135,26 @@ impl LintRunner<LintData> for Runner {
 
 fn check_item(
     name: &str,
-    target: &crate::Item,
+    target: &Spanned<crate::Item>,
     allow_no_extension: bool,
     processed: &Processed,
     config: &LintConfig,
     codes: &mut Vec<Arc<dyn Code>>,
 ) {
-    match target {
+    match &target.inner {
         Item::Array(values) => {
             for value in values {
                 check_item(name, value, allow_no_extension, processed, config, codes);
             }
         }
         Item::Str(value) => {
-            check_str(name, value, allow_no_extension, processed,  config, codes);
+            check_str(name, value, target.span.into_range(), allow_no_extension, processed, config, codes);
         }
         _ => {}
     }
 }
 
-fn check_str(name: &str, value: &Str, allow_no_extension: bool, processed: &Processed, config: &LintConfig, 
+fn check_str(name: &str, value: &Str, span: Range<usize>, allow_no_extension: bool, processed: &Processed, config: &LintConfig, 
     codes: &mut Vec<Arc<dyn Code>>) {
     let value_str = value.value();
     // Skip if it contains no backslashes, probably a class name
@@ -179,13 +180,13 @@ fn check_str(name: &str, value: &Str, allow_no_extension: bool, processed: &Proc
         };
         if ext.is_empty() {
             if !allow_no_extension {
-                let span = value.span().start + 1..value.span().end - 1;
+                let span = span.start + 1..span.end - 1;
                 codes.push(Arc::new(CodeC11MissingExtension::new(span, processed, config.severity())));
             }
             return;
         }
         if !allowed.contains(&ext){
-            let span = value.span().start + 2 + (value_str.len() - ext.len())..value.span().end - 1;
+            let span = span.start + 2 + (value_str.len() - ext.len())..span.end - 1;
             codes.push(Arc::new(CodeC11UnusualExtension::new(span, (*allowed.first().expect("not empty extensions")).to_string(), processed, config.severity())));
         }
     }

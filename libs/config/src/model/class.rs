@@ -1,5 +1,7 @@
 // use crate::rapify::Rapify;
 
+use chumsky::span::Spanned;
+
 use crate::Property;
 
 use super::Ident;
@@ -10,7 +12,7 @@ pub enum Class {
     /// The root class definition
     Root {
         /// The children of the class
-        properties: Vec<Property>,
+        properties: Vec<Spanned<Property>>,
     },
     /// A local class definition
     ///
@@ -21,7 +23,7 @@ pub enum Class {
     /// ```
     Local {
         /// The name of the class
-        name: Ident,
+        name: Spanned<Ident>,
         /// The parent class
         ///
         /// ```cpp
@@ -29,9 +31,9 @@ pub enum Class {
         ///    ...
         /// };
         /// ```
-        parent: Option<Ident>,
+        parent: Option<Spanned<Ident>>,
         /// The children of the class
-        properties: Vec<Property>,
+        properties: Vec<Spanned<Property>>,
         /// Was the class missing {}
         err_missing_braces: bool,
     },
@@ -42,14 +44,14 @@ pub enum Class {
     /// ```
     External {
         /// The name of the class
-        name: Ident,
+        name: Spanned<Ident>,
     },
 }
 
 impl Class {
     #[must_use]
     /// Get the name of the class
-    pub const fn name(&self) -> Option<&Ident> {
+    pub const fn name(&self) -> Option<&Spanned<Ident>> {
         match self {
             Self::External { name } | Self::Local { name, .. } => Some(name),
             Self::Root { .. } => None,
@@ -58,7 +60,7 @@ impl Class {
 
     #[must_use]
     /// Get the parent of the class
-    pub const fn parent(&self) -> Option<&Ident> {
+    pub const fn parent(&self) -> Option<&Spanned<Ident>> {
         match self {
             Self::External { .. } | Self::Root { .. } => None,
             Self::Local { parent, .. } => parent.as_ref(),
@@ -67,7 +69,7 @@ impl Class {
 
     #[must_use]
     /// Get the properties of the class
-    pub fn properties(&self) -> &[Property] {
+    pub fn properties(&self) -> &[Spanned<Property>] {
         match self {
             Self::Root { properties } | Self::Local { properties, .. } => properties,
             Self::External { .. } => &[],
@@ -97,7 +99,10 @@ impl serde::Serialize for Class {
                     state.serialize_entry("__parent", parent.as_str())?;
                 }
                 for property in properties {
-                    state.serialize_entry(property.name().as_str(), property)?;
+                    state.serialize_entry(
+                        property.name().expect("not invalid prop").as_str(),
+                        &property.inner,
+                    )?;
                 }
                 state.end()
             }

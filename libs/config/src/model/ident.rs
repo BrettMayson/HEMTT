@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// An identifier
@@ -12,50 +12,29 @@ use std::ops::Range;
 ///    ...
 /// };
 /// ```
-pub struct Ident {
-    /// Identifier value
-    pub value: String,
-    /// Identifier span
-    pub span: Range<usize>,
-}
+pub struct Ident(pub(crate) Arc<str>);
 
 impl Ident {
     #[must_use]
-    pub const fn new(value: String, span: Range<usize>) -> Self {
-        Self { value, span }
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn test_new<S: Into<String>>(value: S) -> Self {
-        let value = value.into();
-        Self {
-            span: 0..value.len(),
-            value,
-        }
+    pub fn new(value: &str) -> Self {
+        Self(value.into())
     }
 
     #[must_use]
     /// Get the value of the identifier
     pub fn as_str(&self) -> &str {
-        &self.value
+        &self.0
     }
 
     #[must_use]
     /// Get the length of the identifier
-    pub const fn len(&self) -> usize {
-        self.value.len()
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 
     #[must_use]
     /// Check if the identifier is empty
-    pub const fn is_empty(&self) -> bool {
-        self.value.is_empty()
-    }
-
-    #[must_use]
-    /// Get the span of the identifier
-    pub fn span(&self) -> Range<usize> {
-        self.span.clone()
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }

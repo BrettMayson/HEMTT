@@ -1,6 +1,7 @@
 use std::iter::Sum;
 
 use byteorder::ReadBytesExt;
+use chumsky::span::{SimpleSpan, Spanned};
 use hemtt_common::io::{ReadExt, WriteExt, compressed_int_len};
 
 use crate::{Array, Item, Number, Str};
@@ -14,7 +15,7 @@ impl Rapify for Array {
         offset: usize,
     ) -> Result<usize, std::io::Error> {
         let mut written = output.write_compressed_int(self.items.len() as u32)?;
-        for item in &self.items {
+        for item in self.items.iter() {
             output.write_all(&[item.rapified_code()])?;
             written += item.rapify(output, offset)? + 1;
         }
@@ -37,16 +38,20 @@ impl Array {
         input: &mut I,
         expand: bool,
     ) -> Result<Self, std::io::Error> {
-        let start = input.stream_position()? as usize;
         let length = input.read_compressed_int()?;
         let mut items = Vec::with_capacity(length as usize);
         for _ in 0..length {
             let item = Item::derapify(input)?;
-            items.push(item);
+            items.push(Spanned {
+                inner: item,
+                span: SimpleSpan::default(),
+            });
         }
         Ok(Self {
-            items,
-            span: start..input.stream_position()? as usize,
+            items: Spanned {
+                inner: items,
+                span: SimpleSpan::default(),
+            },
             expand,
         })
     }
@@ -110,7 +115,10 @@ impl Derapify for Item {
                 let mut items = Vec::with_capacity(length as usize);
                 for _ in 0..length {
                     let item = Self::derapify(input)?;
-                    items.push(item);
+                    items.push(Spanned {
+                        inner: item,
+                        span: SimpleSpan::default(),
+                    });
                 }
                 Ok(Self::Array(items))
             }

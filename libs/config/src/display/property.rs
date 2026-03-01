@@ -1,3 +1,5 @@
+use chumsky::span::Spanned;
+
 use crate::{Array, Property};
 
 impl std::fmt::Display for Property {
@@ -9,24 +11,29 @@ impl std::fmt::Display for Property {
                 expected_array,
             } => {
                 if *expected_array {
-                    let equals = if matches!(value, crate::Value::Array(Array { expand: true, .. }))
-                    {
+                    let equals = if matches!(
+                        value,
+                        Spanned {
+                            inner: crate::Value::Array(Array { expand: true, .. }),
+                            ..
+                        }
+                    ) {
                         "+="
                     } else {
                         "="
                     };
-                    writeln!(f, "{name}[] {equals} {value};")
+                    writeln!(f, "{}[] {equals} {};", name.inner, value.inner)
                 } else {
-                    writeln!(f, "{name} = {value};")
+                    writeln!(f, "{} = {};", name.inner, value.inner)
                 }
             }
             Self::Delete(name) => {
-                writeln!(f, "delete {name};")
+                writeln!(f, "delete {};", name.inner)
             }
             Self::Class(class) => {
-                write!(f, "{class}")
+                write!(f, "{}", class.inner)
             }
-            Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => {
+            Self::MissingSemicolon(_) | Self::ExtraSemicolons(_) => {
                 unreachable!()
             }
         }
@@ -35,14 +42,24 @@ impl std::fmt::Display for Property {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use chumsky::span::SimpleSpan;
+
     use super::*;
     use crate::{Ident, Str, Value};
 
     #[test]
     fn test_property_entry() {
         let property = Property::Entry {
-            name: Ident::test_new("test"),
-            value: Value::Str(Str::test_new("value")),
+            name: Spanned {
+                inner: Ident(Arc::from("test")),
+                span: SimpleSpan::default(),
+            },
+            value: Spanned {
+                inner: Value::Str(Str(Arc::from("value"))),
+                span: SimpleSpan::default(),
+            },
             expected_array: false,
         };
         assert_eq!(property.to_string(), "test = \"value\";\n");

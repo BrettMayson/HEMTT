@@ -1,4 +1,6 @@
-use std::ops::Range;
+use std::sync::Arc;
+
+use chumsky::span::Spanned;
 
 use crate::{Number, Str};
 
@@ -6,19 +8,27 @@ use crate::{Number, Str};
 /// An array of entries
 pub struct Array {
     pub(crate) expand: bool,
-    pub(crate) items: Vec<Item>,
-    pub(crate) span: Range<usize>,
+    pub(crate) items: Spanned<Vec<Spanned<Item>>>,
 }
 
+#[cfg(test)]
 impl Array {
-    #[cfg(test)]
     #[must_use]
     pub fn test_new(items: Vec<Item>) -> Self {
-        let span = items.first().map_or(0..0, Item::span);
+        use chumsky::span::SimpleSpan;
+
         Self {
             expand: false,
-            items,
-            span,
+            items: Spanned {
+                inner: items
+                    .into_iter()
+                    .map(|i| Spanned {
+                        inner: i,
+                        span: SimpleSpan::default(),
+                    })
+                    .collect(),
+                span: SimpleSpan::default(),
+            },
         }
     }
 }
@@ -31,27 +41,9 @@ pub enum Item {
     /// A number value
     Number(Number),
     /// An array value
-    Array(Vec<Self>),
+    Array(Vec<Spanned<Self>>),
     /// An invalid value
-    Invalid(Range<usize>),
-}
-
-impl Item {
-    #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        match self {
-            Self::Str(s) => s.span.clone(),
-            Self::Number(n) => n.span(),
-            Self::Array(items) => {
-                if let (Some(first), Some(last)) = (items.first(), items.last()) {
-                    first.span().start..last.span().end
-                } else {
-                    0..0
-                }
-            }
-            Self::Invalid(span) => span.clone(),
-        }
-    }
+    Invalid(Arc<str>),
 }
 
 #[cfg(feature = "serde")]
@@ -62,8 +54,8 @@ impl serde::Serialize for Array {
     {
         use serde::ser::SerializeSeq;
         let mut state = serializer.serialize_seq(Some(self.items.len()))?;
-        for item in &self.items {
-            state.serialize_element(&item)?;
+        for item in self.items.iter() {
+            state.serialize_element(&item.inner)?;
         }
         state.end()
     }
@@ -82,7 +74,7 @@ impl serde::Serialize for Item {
                 use serde::ser::SerializeSeq;
                 let mut state = serializer.serialize_seq(Some(items.len()))?;
                 for item in items {
-                    state.serialize_element(item)?;
+                    state.serialize_element(&item.inner)?;
                 }
                 state.end()
             }

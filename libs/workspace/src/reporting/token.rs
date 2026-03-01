@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use crate::position::Position;
 
@@ -31,9 +31,9 @@ impl Token {
     }
 
     #[must_use]
-    /// For writing to a file for later parsing
-    pub fn to_source(&self) -> String {
-        self.symbol.to_string()
+    /// For writing to a file for later parsing, returns a Cow to avoid allocation when possible
+    pub fn to_source(&self) -> Cow<'_, str> {
+        self.symbol.to_cow()
     }
 }
 

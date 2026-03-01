@@ -1,3 +1,4 @@
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -51,30 +52,31 @@ impl LintRunner<LintData> for Runner {
         target: &Config,
         data: &LintData,
     ) -> Codes {
-        let Some(Property::Class(Class::Local {
+        let Some(Property::Class(Spanned{ inner: Class::Local {
             properties: prefices_properties,
             ..
-        })) = target
+        }, ..})) = target
             .0
             .iter()
-            .find(|p| p.name().value.eq_ignore_ascii_case("cfgfunctions"))
+            .find(|p| p.name().is_some_and(|name| name.0.eq_ignore_ascii_case("cfgfunctions")))
+            .map(|f| &f.inner)
         else {
             return Vec::new();
         };
         for prefix in prefices_properties {
-            let Property::Class(Class::Local { name: tag_name, properties: tag_properties, .. }) = prefix else { continue };
+            let Property::Class(Spanned{ inner: Class::Local { name: tag_name, properties: tag_properties, .. }, .. }) = &prefix.inner else { continue };
             let mut prefix_real = tag_name.as_str();
             for p in tag_properties {
-                let Property::Entry { name, value, .. } = p else { continue };
+                let Property::Entry { name, value, .. } = &p.inner else { continue };
                 if !name.as_str().eq_ignore_ascii_case("tag") { continue; }
-                let Value::Str(value) = value else { continue; };
+                let Value::Str(value) = &value.inner else { continue; };
                 prefix_real = value.value();
             }
             for p in tag_properties {
-                let Property::Class(class) = p else { continue };
+                let Property::Class(Spanned{ inner: class, .. }) = &p.inner else { continue };
                 let Class::Local { properties: properties_category, .. } = class else { continue };
                 for function in properties_category {
-                    let Property::Class(func_class) = function else { continue };
+                    let Property::Class(Spanned{ inner: func_class, .. }) = &function.inner else { continue };
                     let Some(class_name) = func_class.name() else { continue; }; 
                     let func_name = format!("{prefix_real}_fnc_{}",class_name.as_str());
                     let func_name_lower = func_name.to_lowercase();

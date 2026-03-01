@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use byteorder::{LittleEndian, WriteBytesExt};
+use chumsky::span::{SimpleSpan, Spanned};
 use hemtt_common::io::{ReadExt, WriteExt, compressed_int_len};
 
 use crate::{Class, Ident, Property};
@@ -27,7 +28,7 @@ impl Rapify for Class {
 
                 let properties_len = properties
                     .iter()
-                    .map(|p| p.name().len() + 1 + p.rapified_length())
+                    .map(|p| p.name().expect("valid property").len() + 1 + p.rapified_length())
                     .sum::<usize>();
                 let mut class_offset = offset + written + properties_len + 4;
                 let mut class_bodies: Vec<Cursor<Box<[u8]>>> = Vec::new();
@@ -38,14 +39,14 @@ impl Rapify for Class {
                     let code = property.property_code();
                     output.write_all(&code)?;
                     written += code.len();
-                    output.write_cstring(property.name().as_str())?;
-                    written += property.name().len() + 1;
-                    match property {
+                    output.write_cstring(property.name().expect("valid property").as_str())?;
+                    written += property.name().expect("valid property").len() + 1;
+                    match &property.inner {
                         Property::Entry { value, .. } => {
                             written += value.rapify(output, offset)?;
                         }
                         Property::Class(c) => {
-                            if let Self::Local { .. } = c {
+                            if let Self::Local { .. } = c.inner {
                                 output.write_u32::<LittleEndian>(class_offset as u32)?;
                                 written += 4;
                                 let buffer: Box<[u8]> =
@@ -58,13 +59,15 @@ impl Rapify for Class {
                             }
                         }
                         Property::Delete(_) => continue,
-                        Property::MissingSemicolon(_, _) | Property::ExtraSemicolon(_, _) => {
+                        Property::MissingSemicolon(_) | Property::ExtraSemicolons(_) => {
                             unreachable!()
                         }
                     }
                     assert_eq!(
                         written - pre_write,
-                        property.rapified_length() + property.name().len() + 1
+                        property.rapified_length()
+                            + property.name().expect("valid property").len()
+                            + 1
                     );
                 }
 
@@ -91,7 +94,7 @@ impl Rapify for Class {
         match self {
             Self::External { .. } => 0,
             Self::Local { properties, .. } | Self::Root { properties, .. } => {
-                let parent_length = self.parent().map_or(0, Ident::len);
+                let parent_length = self.parent().map_or(0, |i| i.len());
                 parent_length
                     + 1 // parent null terminator
                     + 4 // offset to next class
@@ -99,10 +102,10 @@ impl Rapify for Class {
                     + properties
                         .iter()
                         .map(|p| {
-                            p.name().len()
+                            p.name().expect("valid property").len()
                                 + 1 // name null terminator
                                 + p.rapified_length()
-                                + match p {
+                                + match &p.inner {
                                     Property::Class(c) => c.rapified_length(),
                                     _ => 0,
                                 }
@@ -120,17 +123,19 @@ impl Class {
     /// [`std::io::Error`] if the input stream is invalid or if the class cannot be read.
     pub fn derapify<I: std::io::Read + std::io::Seek>(
         input: &mut I,
-        name: Option<Ident>,
+        name: Option<Spanned<Ident>>,
     ) -> Result<Self, std::io::Error>
     where
         Self: Sized,
     {
-        let start = input.stream_position()? as usize;
         let parent = input.read_cstring()?;
         let parent = if parent.is_empty() {
             None
         } else {
-            Some(Ident::new(parent, start..input.stream_position()? as usize))
+            Some(Spanned {
+                inner: Ident::new(&parent),
+                span: SimpleSpan::default(),
+            })
         };
         let properties_len = input.read_compressed_int()?;
         let mut properties = Vec::with_capacity(properties_len as usize);
@@ -138,7 +143,10 @@ impl Class {
         for _ in 0..properties_len {
             let prop = Property::derapify(input)?;
             end_offset += prop.derapify_offset();
-            properties.push(prop);
+            properties.push(Spanned {
+                inner: prop,
+                span: SimpleSpan::default(),
+            });
         }
         #[allow(clippy::cast_possible_wrap)]
         input.seek_relative(end_offset as i64)?;

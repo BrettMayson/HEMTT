@@ -1,26 +1,21 @@
+use std::sync::Arc;
+
 use chumsky::prelude::*;
 
-use crate::Str;
+use crate::{Str, parse::ParseError};
 
-pub fn string(delimiter: char) -> impl Parser<char, Str, Error = Simple<char>> {
-    let content = just(delimiter).not().or(just([delimiter; 2]).to(delimiter));
+pub fn string<'src>(
+    delimiter: char,
+) -> impl Parser<'src, &'src str, Str, ParseError<'src>> + Clone {
+    let content = (any().and_is(just(delimiter).not())).or(just([delimiter; 2]).to(delimiter));
     let segment = just(delimiter)
-        .ignore_then(content.repeated())
-        .then_ignore(just(delimiter))
-        .collect();
+        .ignore_then(content.repeated().collect::<String>())
+        .then_ignore(just(delimiter));
     segment
         .separated_by(just("\\n").padded())
         .at_least(1)
         .collect::<Vec<String>>()
-        .map_with_span(|tok, span| (tok, span))
-        .map(|(segments, span)| Str {
-            value: segments
-                .into_iter()
-                .collect::<Vec<_>>()
-                .join("\n")
-                .replace("\\\n", ""),
-            span,
-        })
+        .map(|segments: Vec<String>| Str(Arc::from(segments.join("\n").replace("\\\n", ""))))
 }
 
 #[cfg(test)]
@@ -30,63 +25,51 @@ mod tests {
     #[test]
     fn simple() {
         assert_eq!(
-            string('"').parse("\"hello world\""),
-            Ok(Str {
-                value: "hello world".to_string(),
-                span: 0..13
-            })
+            string('"').parse("\"hello world\"").into_output(),
+            Some(Str(Arc::from("hello world")))
         );
     }
 
     #[test]
     fn multiline() {
         assert_eq!(
-            string('"').parse("\"hello\" \\n \"world\""),
-            Ok(Str {
-                value: "hello\nworld".to_string(),
-                span: 0..18
-            })
+            string('"').parse("\"hello\" \\n \"world\"").into_output(),
+            Some(Str(Arc::from("hello\nworld")))
         );
     }
 
     #[test]
     fn escaped() {
         assert_eq!(
-            string('"').parse("\"hello \"\"world\"\"\""),
-            Ok(Str {
-                value: "hello \"world\"".to_string(),
-                span: 0..17
-            })
+            string('"').parse("\"hello \"\"world\"\"\"").into_output(),
+            Some(Str(Arc::from("hello \"world\"")))
         );
         assert_eq!(
-            string('"').parse("\"and he said \"\"hello \"\"\"\"world\"\"\"\"\"\"\""),
-            Ok(Str {
-                value: "and he said \"hello \"\"world\"\"\"".to_string(),
-                span: 0..37
-            })
+            string('"')
+                .parse("\"and he said \"\"hello \"\"\"\"world\"\"\"\"\"\"\"")
+                .into_output(),
+            Some(Str(Arc::from("and he said \"hello \"\"world\"\"\"")))
         );
     }
 
     #[test]
     fn multiline_escape() {
         assert_eq!(
-            string('"').parse("\"hello\\\nworld\""),
-            Ok(Str {
-                value: "helloworld".to_string(),
-                span: 0..14
-            })
+            string('"').parse("\"hello\\\nworld\"").into_output(),
+            Some(Str(Arc::from("helloworld")))
         );
         assert_eq!(
-            string('"').parse(
-                r#""\
+            string('"')
+                .parse(
+                    r#""\
                 'multi';\
                 'line';\
             ""#
-            ),
-            Ok(Str {
-                value: "                'multi';                'line';            ".to_string(),
-                span: 0..67
-            })
+                )
+                .into_output(),
+            Some(Str(Arc::from(
+                "                'multi';                'line';            "
+            )))
         );
     }
 }

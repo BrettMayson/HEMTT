@@ -5,7 +5,7 @@ impl std::fmt::Display for Class {
         match self {
             Self::Root { properties } => {
                 for property in properties {
-                    write!(f, "{property}")?;
+                    write!(f, "{}", property.inner)?;
                 }
                 Ok(())
             }
@@ -16,9 +16,9 @@ impl std::fmt::Display for Class {
                 ..
             } => {
                 if let Some(parent) = parent {
-                    write!(f, "class {name}: {parent} {{")?;
+                    write!(f, "class {}: {} {{", name.inner, parent.inner)?;
                 } else {
-                    write!(f, "class {name} {{")?;
+                    write!(f, "class {} {{", name.inner)?;
                 }
                 if !self.properties().is_empty() {
                     writeln!(f)?;
@@ -34,7 +34,7 @@ impl std::fmt::Display for Class {
                 Ok(())
             }
             Self::External { name } => {
-                writeln!(f, "class {name};")
+                writeln!(f, "class {};", name.inner)
             }
         }
     }

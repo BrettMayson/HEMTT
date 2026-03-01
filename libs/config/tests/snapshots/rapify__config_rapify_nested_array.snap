@@ -4,171 +4,253 @@ expression: config
 ---
 Config(
     [
-        Entry {
-            name: Ident {
-                value: "value",
-                span: 19..25,
-            },
-            value: Array(
-                Array {
-                    expand: false,
-                    items: [
-                        Array(
-                            [
-                                Number(
-                                    Int32 {
-                                        value: 1,
-                                        span: 29..33,
-                                    },
-                                ),
-                            ],
-                        ),
-                        Array(
-                            [
-                                Number(
-                                    Int32 {
-                                        value: 2,
-                                        span: 36..40,
-                                    },
-                                ),
-                            ],
-                        ),
-                    ],
-                    span: 25..40,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "value",
+                    ),
+                    span: 0..0,
                 },
-            ),
-            expected_array: true,
+                value: Spanned {
+                    inner: Array(
+                        Array {
+                            expand: false,
+                            items: Spanned {
+                                inner: [
+                                    Spanned {
+                                        inner: Array(
+                                            [
+                                                Spanned {
+                                                    inner: Number(
+                                                        Int32(
+                                                            1,
+                                                        ),
+                                                    ),
+                                                    span: 0..0,
+                                                },
+                                            ],
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Array(
+                                            [
+                                                Spanned {
+                                                    inner: Number(
+                                                        Int32(
+                                                            2,
+                                                        ),
+                                                    ),
+                                                    span: 0..0,
+                                                },
+                                            ],
+                                        ),
+                                        span: 0..0,
+                                    },
+                                ],
+                                span: 0..0,
+                            },
+                        },
+                    ),
+                    span: 0..0,
+                },
+                expected_array: true,
+            },
+            span: 0..0,
         },
-        Entry {
-            name: Ident {
-                value: "value2",
-                span: 41..48,
-            },
-            value: Array(
-                Array {
-                    expand: false,
-                    items: [
-                        Array(
-                            [
-                                Str(
-                                    Str {
-                                        value: "test",
-                                        span: 52..57,
-                                    },
-                                ),
-                            ],
-                        ),
-                        Str(
-                            Str {
-                                value: "hello",
-                                span: 58..64,
-                            },
-                        ),
-                        Array(
-                            [
-                                Str(
-                                    Str {
-                                        value: "hello",
-                                        span: 67..73,
-                                    },
-                                ),
-                                Str(
-                                    Str {
-                                        value: "hello",
-                                        span: 74..80,
-                                    },
-                                ),
-                            ],
-                        ),
-                    ],
-                    span: 48..80,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "value2",
+                    ),
+                    span: 0..0,
                 },
-            ),
-            expected_array: true,
+                value: Spanned {
+                    inner: Array(
+                        Array {
+                            expand: false,
+                            items: Spanned {
+                                inner: [
+                                    Spanned {
+                                        inner: Array(
+                                            [
+                                                Spanned {
+                                                    inner: Str(
+                                                        Str(
+                                                            "test",
+                                                        ),
+                                                    ),
+                                                    span: 0..0,
+                                                },
+                                            ],
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "hello",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Array(
+                                            [
+                                                Spanned {
+                                                    inner: Str(
+                                                        Str(
+                                                            "hello",
+                                                        ),
+                                                    ),
+                                                    span: 0..0,
+                                                },
+                                                Spanned {
+                                                    inner: Str(
+                                                        Str(
+                                                            "hello",
+                                                        ),
+                                                    ),
+                                                    span: 0..0,
+                                                },
+                                            ],
+                                        ),
+                                        span: 0..0,
+                                    },
+                                ],
+                                span: 0..0,
+                            },
+                        },
+                    ),
+                    span: 0..0,
+                },
+                expected_array: true,
+            },
+            span: 0..0,
         },
-        Entry {
-            name: Ident {
-                value: "modes",
-                span: 81..87,
-            },
-            value: Array(
-                Array {
-                    expand: false,
-                    items: [
-                        Str(
-                            Str {
-                                value: "Single",
-                                span: 89..96,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "manual",
-                                span: 97..104,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "close",
-                                span: 105..111,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "short",
-                                span: 112..118,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "medium",
-                                span: 119..126,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "far_optic1",
-                                span: 127..138,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "far_optic2",
-                                span: 139..150,
-                            },
-                        ),
-                        Str(
-                            Str {
-                                value: "ACE_Burst_far",
-                                span: 151..165,
-                            },
-                        ),
-                    ],
-                    span: 87..165,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "modes",
+                    ),
+                    span: 0..0,
                 },
-            ),
-            expected_array: true,
+                value: Spanned {
+                    inner: Array(
+                        Array {
+                            expand: false,
+                            items: Spanned {
+                                inner: [
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "Single",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "manual",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "close",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "short",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "medium",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "far_optic1",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "far_optic2",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                    Spanned {
+                                        inner: Str(
+                                            Str(
+                                                "ACE_Burst_far",
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                ],
+                                span: 0..0,
+                            },
+                        },
+                    ),
+                    span: 0..0,
+                },
+                expected_array: true,
+            },
+            span: 0..0,
         },
-        Entry {
-            name: Ident {
-                value: "values",
-                span: 170..177,
-            },
-            value: Array(
-                Array {
-                    expand: true,
-                    items: [
-                        Number(
-                            Int32 {
-                                value: 1,
-                                span: 179..183,
-                            },
-                        ),
-                    ],
-                    span: 177..183,
+        Spanned {
+            inner: Entry {
+                name: Spanned {
+                    inner: Ident(
+                        "values",
+                    ),
+                    span: 0..0,
                 },
-            ),
-            expected_array: true,
+                value: Spanned {
+                    inner: Array(
+                        Array {
+                            expand: true,
+                            items: Spanned {
+                                inner: [
+                                    Spanned {
+                                        inner: Number(
+                                            Int32(
+                                                1,
+                                            ),
+                                        ),
+                                        span: 0..0,
+                                    },
+                                ],
+                                span: 0..0,
+                            },
+                        },
+                    ),
+                    span: 0..0,
+                },
+                expected_array: true,
+            },
+            span: 0..0,
         },
     ],
 )

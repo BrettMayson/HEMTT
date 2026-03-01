@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, LintEnabled, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -53,20 +54,20 @@ When using `call`, the called code will inherit `_this` from the calling scope. 
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Value;
+    type Target = Spanned<crate::Value>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Value,
+        target: &Spanned<crate::Value>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
         };
-        let Value::Str(target_str) = target else {
+        let Value::Str(target_str) = &target.inner else {
             return vec![];
         };
 
@@ -80,7 +81,7 @@ impl LintRunner<LintData> for Runner {
             return vec![];
         }
 
-        let span = target_str.span().start + 1..target_str.span().end - 1;
+        let span = target.span.start + 1..target.span.end - 1;
 
         vec![Arc::new(Code13ConfigThisCall::new(
             span,

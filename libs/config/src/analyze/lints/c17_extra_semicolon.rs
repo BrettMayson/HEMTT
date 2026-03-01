@@ -1,5 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
+use chumsky::span::Spanned;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
@@ -74,22 +75,22 @@ Extra semicolons after properties are not allowed in config files. This lint ide
 struct Runner;
 
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Property;
+    type Target = Spanned<crate::Property>;
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
-        target: &crate::Property,
+        target: &Spanned<crate::Property>,
         _data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
         };
-        if let Property::ExtraSemicolon(_, span) = target {
+        if let Property::ExtraSemicolons(span) = &target.inner {
             vec![Arc::new(Code17ExtraSemicolon::new(
-                span.clone(),
+                span.into_range(),
                 processed,
             ))]
         } else {

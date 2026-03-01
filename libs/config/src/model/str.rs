@@ -1,33 +1,14 @@
-use std::ops::Range;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// A string value
-pub struct Str {
-    pub(crate) value: String,
-    pub(crate) span: Range<usize>,
-}
+pub struct Str(pub(crate) Arc<str>);
 
 impl Str {
     #[must_use]
     /// Get the value
     pub fn value(&self) -> &str {
-        &self.value
-    }
-
-    #[must_use]
-    /// Get the span
-    pub fn span(&self) -> Range<usize> {
-        self.span.clone()
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn test_new<S: Into<String>>(value: S) -> Self {
-        let value = value.into();
-        Self {
-            span: 0..value.len(),
-            value,
-        }
+        &self.0
     }
 }
 
@@ -37,6 +18,6 @@ impl serde::Serialize for Str {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&self.value)
+        serializer.serialize_str(self.value())
     }
 }

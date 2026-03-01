@@ -3,6 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use ::chumsky::span::Spanned;
 use hemtt_common::config::{ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, MagazineWellInfo},
@@ -20,7 +21,6 @@ pub mod lints {
 }
 
 pub struct LintData {
-    pub(crate) path: String,
     pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
     pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
@@ -72,6 +72,21 @@ impl Analyze for Config {
     }
 }
 
+impl Analyze for Spanned<Class> {
+    fn analyze(
+        &self,
+        data: &LintData,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<LintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(self.inner.analyze(data, project, processed, manager));
+        codes
+    }
+}
+
 impl Analyze for Class {
     fn analyze(
         &self,
@@ -86,10 +101,6 @@ impl Analyze for Class {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } | Self::Root { properties, .. } => {
                 let data = LintData {
-                    path: self.name().map_or_else(
-                        || data.path.clone(),
-                        |name| format!("{}/{}", data.path, name.value),
-                    ),
                     localizations: data.localizations.clone(),
                     functions_defined: data.functions_defined.clone(),
                     magazine_well_info: data.magazine_well_info.clone(),
@@ -100,6 +111,21 @@ impl Analyze for Class {
                     .collect::<Vec<_>>()
             }
         });
+        codes
+    }
+}
+
+impl Analyze for Spanned<Property> {
+    fn analyze(
+        &self,
+        data: &LintData,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<LintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(self.inner.analyze(data, project, processed, manager));
         codes
     }
 }
@@ -117,7 +143,6 @@ impl Analyze for Property {
         codes.extend(match self {
             Self::Entry { value, .. } => {
                 let data = LintData {
-                    path: format!("{}.{}", data.path, self.name().value),
                     localizations: data.localizations.clone(),
                     functions_defined: data.functions_defined.clone(),
                     magazine_well_info: data.magazine_well_info.clone(),
@@ -125,8 +150,23 @@ impl Analyze for Property {
                 value.analyze(&data, project, processed, manager)
             }
             Self::Class(c) => c.analyze(data, project, processed, manager),
-            Self::Delete(_) | Self::MissingSemicolon(_, _) | Self::ExtraSemicolon(_, _) => vec![],
+            Self::Delete(_) | Self::MissingSemicolon(_) | Self::ExtraSemicolons(_) => vec![],
         });
+        codes
+    }
+}
+
+impl Analyze for Spanned<Value> {
+    fn analyze(
+        &self,
+        data: &LintData,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<LintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(self.inner.analyze(data, project, processed, manager));
         codes
     }
 }
@@ -175,6 +215,21 @@ impl Analyze for Array {
     }
 }
 
+impl Analyze for Spanned<Item> {
+    fn analyze(
+        &self,
+        data: &LintData,
+        project: Option<&ProjectConfig>,
+        processed: &Processed,
+        manager: &LintManager<LintData>,
+    ) -> Codes {
+        let mut codes = vec![];
+        codes.extend(manager.run(data, project, Some(processed), self));
+        codes.extend(self.inner.analyze(data, project, processed, manager));
+        codes
+    }
+}
+
 impl Analyze for Item {
     fn analyze(
         &self,
@@ -216,7 +271,6 @@ pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
 
     manager.run(
         &LintData {
-            path: String::new(),
             localizations: Arc::new(Mutex::new(vec![])),
             functions_defined: Arc::new(Mutex::new(HashSet::new())),
             magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),

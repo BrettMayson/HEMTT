@@ -40,61 +40,58 @@ pub fn parse(
     project: Option<&ProjectConfig>,
     processed: &Processed,
 ) -> Result<ConfigReport, Codes> {
-    let (config, errors) = parse::config().parse_recovery(processed.as_str());
-    config.map_or_else(
-        || {
-            Err(errors
-                .into_iter()
-                .map(|e| {
-                    let e: Arc<dyn Code> = Arc::new(ChumskyCode::new(e, processed));
-                    e
-                })
-                .collect())
-        },
-        |config| {
-            let mut manager = LintManager::new(
-                project.map_or_else(Default::default, |project| project.lints().config().clone()),
-                project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
-            );
-            manager.extend(
-                analyze::CONFIG_LINTS
-                    .iter()
-                    .map(|l| (**l).clone())
-                    .collect::<Vec<_>>(),
-            )?;
-            let localizations = Arc::new(Mutex::new(vec![]));
-            let functions_defined = Arc::new(Mutex::new(HashSet::new()));
-            let magazine_well_info = Arc::new(Mutex::new((Vec::new(), Vec::new())));
-            let codes = config.analyze(
-                &LintData {
-                    path: String::new(),
-                    localizations: localizations.clone(),
-                    functions_defined: functions_defined.clone(),
-                    magazine_well_info: magazine_well_info.clone(),
-                },
-                project,
-                processed,
-                &manager,
-            );
-            Ok(ConfigReport {
-                codes,
-                patches: config.get_patches(),
-                localized: Arc::<Mutex<Vec<(String, Position)>>>::try_unwrap(localizations)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
-                config,
-                functions_defined: Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
-                magazine_well_info: Arc::<Mutex<MagazineWellInfo>>::try_unwrap(magazine_well_info)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
+    let result = parse::config().parse(processed.as_str());
+    if let Some(config) = result.output() {
+        let mut manager = LintManager::new(
+            project.map_or_else(Default::default, |project| project.lints().config().clone()),
+            project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
+        );
+        manager.extend(
+            analyze::CONFIG_LINTS
+                .iter()
+                .map(|l| (**l).clone())
+                .collect::<Vec<_>>(),
+        )?;
+        let localizations = Arc::new(Mutex::new(vec![]));
+        let functions_defined = Arc::new(Mutex::new(HashSet::new()));
+        let magazine_well_info = Arc::new(Mutex::new((Vec::new(), Vec::new())));
+        let codes = config.analyze(
+            &LintData {
+                localizations: localizations.clone(),
+                functions_defined: functions_defined.clone(),
+                magazine_well_info: magazine_well_info.clone(),
+            },
+            project,
+            processed,
+            &manager,
+        );
+        Ok(ConfigReport {
+            codes,
+            patches: config.get_patches(),
+            localized: Arc::<Mutex<Vec<(String, Position)>>>::try_unwrap(localizations)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            config: result.into_output().expect("inside output check"),
+            functions_defined: Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            magazine_well_info: Arc::<Mutex<MagazineWellInfo>>::try_unwrap(magazine_well_info)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+        })
+    } else {
+        Err(result
+            .into_errors()
+            .into_iter()
+            .map(|e| {
+                let e: Arc<dyn Code> = Arc::new(ChumskyCode::new(&e, processed));
+                e
             })
-        },
-    )
+            .collect())
+    }
 }
 
 /// A parsed config file with warnings and errors
