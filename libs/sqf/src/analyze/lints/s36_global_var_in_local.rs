@@ -3,10 +3,10 @@ use std::{ops::Range, sync::Arc};
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Processed, Severity, diagnostic::Blue},
 };
 
-use crate::{BinaryCommand, Expression, UnaryCommand, analyze::LintData};
+use crate::{BinaryCommand, Expression, Statement, UnaryCommand, analyze::LintData};
 
 crate::analyze::lint!(LintS35CountSkippable);
 
@@ -36,7 +36,7 @@ private ["_z"];
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::warning()
+        LintConfig::error()
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -46,7 +46,7 @@ private ["_z"];
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Expression;
+    type Target = crate::Statement;
 
     fn run(
         &self,
@@ -85,12 +85,26 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         match target {
-            Expression::BinaryCommand(BinaryCommand::Named(cname), _, rhs, _)
-            | Expression::UnaryCommand(UnaryCommand::Named(cname), rhs, _) => {
+            Statement::Expression(Expression::BinaryCommand(BinaryCommand::Named(cname), _, rhs, _)
+            | Expression::UnaryCommand(UnaryCommand::Named(cname), rhs, _), _) => {
                 if (cname.eq_ignore_ascii_case("private") || cname.eq_ignore_ascii_case("params")) && let Some(span) = has_global_var(rhs) {
                     return vec![Arc::new(Code36GlobalVarInLocal::new(
                         cname.clone(),
+                        processed.extract(span).to_string(),
                         span.clone(),
+                        processed,
+                        config.severity(),
+                    ))];
+                }
+            }
+            Statement::AssignLocal(var, _, span) => {
+                if !(var.is_empty() || var.starts_with('_')) {
+                    let haystack = processed.extract(span);
+                    let start = span.start + haystack.find(var).unwrap_or(0);
+                    return vec![Arc::new(Code36GlobalVarInLocal::new(
+                        "assignment".to_string(),
+                        var.clone(),
+                        start..start + var.len(),
                         processed,
                         config.severity(),
                     ))];
@@ -105,6 +119,7 @@ impl LintRunner<LintData> for Runner {
 #[allow(clippy::module_name_repetitions)]
 pub struct Code36GlobalVarInLocal {
     cmd: String,
+    variable: String,
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -126,6 +141,12 @@ impl Code for Code36GlobalVarInLocal {
     fn label_message(&self) -> String {
         "global variable".to_string()
     }
+    fn help(&self) -> Option<String> {
+        Some(format!(
+            "private variables start with an underscore, e.g. {}",
+            Blue.paint(format!("_{}", self.variable.trim_matches('"')))
+        ))
+    }
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
@@ -133,9 +154,10 @@ impl Code for Code36GlobalVarInLocal {
 
 impl Code36GlobalVarInLocal {
     #[must_use]
-    pub fn new(cmd: String, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(cmd: String, variable: String, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
         Self {
             cmd,
+            variable,
             span,
             severity,
             diagnostic: None,

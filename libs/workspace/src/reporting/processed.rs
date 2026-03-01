@@ -427,7 +427,7 @@ impl Processed {
 
     #[must_use]
     /// Return a string with the source from the span
-    pub fn extract(&self, span: Range<usize>) -> Arc<str> {
+    pub fn extract(&self, span: &Range<usize>) -> Arc<str> {
         if span.start == span.end {
             warn!("tried to extract an invalid span");
             return Arc::from("");
