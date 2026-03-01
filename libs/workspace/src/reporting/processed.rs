@@ -351,7 +351,7 @@ impl Processed {
 
     #[must_use]
     /// Get the files used in preprocessing
-    pub fn sources(&self) -> &Sources {
+    pub const fn sources(&self) -> &Sources {
         &self.sources
     }
 
@@ -426,6 +426,7 @@ impl Processed {
     #[must_use]
     /// Return a string with the source from the span
     pub fn extract(&self, span: Range<usize>) -> Arc<str> {
+        #[allow(clippy::suspicious_operation_groupings)] // False positive, nursery lint
         if span.start == span.end || span.start >= self.total_chars {
             warn!("tried to extract an invalid span");
             return Arc::from("");
