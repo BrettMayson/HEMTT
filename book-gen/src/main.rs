@@ -13,7 +13,7 @@ fn main() {
         return;
     }
 
-    let (_ctx, mut book) = parse_input(std::io::stdin()).unwrap();
+    let (_ctx, mut book) = parse_input(std::io::stdin()).expect("failed to parse book");
 
     for section in &mut book.items {
         if let BookItem::Chapter(chapter) = section {
@@ -27,5 +27,5 @@ fn main() {
         }
     }
 
-    serde_json::to_writer(std::io::stdout(), &book).unwrap();
+    serde_json::to_writer(std::io::stdout(), &book).expect("failed to write book");
 }

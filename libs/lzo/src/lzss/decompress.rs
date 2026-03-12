@@ -7,7 +7,7 @@ use super::LzoError;
 
 const unsafe extern "C" fn get_unaligned_le16(p: *const ::std::os::raw::c_void) -> u16 {
     let input: *const u8 = p.cast::<u8>();
-    unsafe { (*input.offset(0isize) as i32 | ((*input.offset(1isize) as i32) << 8i32)) as u16 }
+    unsafe { (*input.add(0) as i32 | ((*input.add(1) as i32) << 8i32)) as u16 }
 }
 
 #[unsafe(no_mangle)]
@@ -34,7 +34,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
             if i32::from(*ip) > 17i32 {
                 t = (i32::from(*{
                     let old = ip;
-                    ip = ip.offset(1isize);
+                    ip = ip.add(1);
                     old
                 }) - 17i32) as usize;
                 if t < 4usize {
@@ -59,11 +59,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             }
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = *{
                                 let old = ip;
-                                ip = ip.offset(1isize);
+                                ip = ip.add(1);
                                 old
                             };
                             t = t.wrapping_sub(1usize);
@@ -84,11 +84,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                     loop {
                         *{
                             let old = op;
-                            op = op.offset(1isize);
+                            op = op.add(1);
                             old
                         } = *{
                             let old = ip;
-                            ip = ip.offset(1isize);
+                            ip = ip.add(1);
                             old
                         };
                         t -= 1;
@@ -108,7 +108,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                     if current_block == 11 {
                         t = *{
                             let old = ip;
-                            ip = ip.offset(1isize);
+                            ip = ip.add(1);
                             old
                         } as usize;
                         if t < 16usize {
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                         if i32::from(*ip) != 0i32 {
                                             break;
                                         }
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         if (((ip_end as isize).wrapping_sub(ip as isize)
                                             / ::std::mem::size_of::<u8>() as isize)
                                             as usize)
@@ -145,7 +145,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                     t = t.wrapping_add(offset.wrapping_add(15usize).wrapping_add(
                                         *{
                                             let old = ip;
-                                            ip = ip.offset(1isize);
+                                            ip = ip.add(1);
                                             old
                                         } as usize,
                                     ));
@@ -170,11 +170,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 loop {
                                     *{
                                         let old = op;
-                                        op = op.offset(1isize);
+                                        op = op.add(1);
                                         old
                                     } = *{
                                         let old = ip;
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         old
                                     };
                                     t -= 1;
@@ -187,12 +187,12 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 continue;
                             } else if state != 4usize {
                                 next = t & 3usize;
-                                m_pos = op.offset(-1isize).cast_const();
+                                m_pos = op.sub(1).cast_const();
                                 m_pos = m_pos.offset(-((t >> 2i32) as isize));
                                 m_pos = m_pos.offset(
                                     -((i32::from(*{
                                         let old = ip;
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         old
                                     }) << 2i32) as isize),
                                 );
@@ -208,9 +208,9 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                     current_block = 63;
                                     continue;
                                 }
-                                *op.offset(0isize) = *m_pos.offset(0isize);
-                                *op.offset(1isize) = *m_pos.offset(1isize);
-                                op = op.offset(2isize);
+                                *op.add(0) = *m_pos.add(0);
+                                *op.add(1) = *m_pos.add(1);
+                                op = op.add(2);
                                 current_block = 44;
                             } else {
                                 next = t & 3usize;
@@ -219,7 +219,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 m_pos = m_pos.offset(
                                     -((i32::from(*{
                                         let old = ip;
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         old
                                     }) << 2i32) as isize),
                                 );
@@ -229,12 +229,12 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                         } else {
                             if t >= 64usize {
                                 next = t & 3usize;
-                                m_pos = op.offset(-1isize).cast_const();
+                                m_pos = op.sub(1).cast_const();
                                 m_pos = m_pos.offset(-(((t >> 2i32) & 7usize) as isize));
                                 m_pos = m_pos.offset(
                                     -((i32::from(*{
                                         let old = ip;
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         old
                                     }) << 3i32) as isize),
                                 );
@@ -250,7 +250,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                         if i32::from(*ip) != 0i32 {
                                             break;
                                         }
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         if (((ip_end as isize).wrapping_sub(ip as isize)
                                             / ::std::mem::size_of::<u8>() as isize)
                                             as usize)
@@ -275,7 +275,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                     t = t.wrapping_add(offset.wrapping_add(31usize).wrapping_add(
                                         *{
                                             let old = ip;
-                                            ip = ip.offset(1isize);
+                                            ip = ip.add(1);
                                             old
                                         } as usize,
                                     ));
@@ -288,10 +288,10 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                         break;
                                     }
                                 }
-                                m_pos = op.offset(-1isize).cast_const();
+                                m_pos = op.sub(1).cast_const();
                                 next = get_unaligned_le16(ip.cast::<::std::os::raw::c_void>())
                                     as usize;
-                                ip = ip.offset(2isize);
+                                ip = ip.add(2);
                                 m_pos = m_pos.offset(-((next >> 2i32) as isize));
                                 next &= 3usize;
                             } else {
@@ -305,7 +305,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                         if i32::from(*ip) != 0i32 {
                                             break;
                                         }
-                                        ip = ip.offset(1isize);
+                                        ip = ip.add(1);
                                         if (((ip_end as isize).wrapping_sub(ip as isize)
                                             / ::std::mem::size_of::<u8>() as isize)
                                             as usize)
@@ -330,7 +330,7 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                     t = t.wrapping_add(offset.wrapping_add(7usize).wrapping_add(
                                         *{
                                             let old = ip;
-                                            ip = ip.offset(1isize);
+                                            ip = ip.add(1);
                                             old
                                         } as usize,
                                     ));
@@ -345,14 +345,14 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 }
                                 next = get_unaligned_le16(ip.cast::<::std::os::raw::c_void>())
                                     as usize;
-                                ip = ip.offset(2isize);
+                                ip = ip.add(2);
                                 m_pos = m_pos.offset(-((next >> 2i32) as isize));
                                 next &= 3usize;
                                 if std::ptr::eq(m_pos, op.cast_const()) {
                                     current_block = 21;
                                     break;
                                 }
-                                m_pos = m_pos.offset(-0x4000isize);
+                                m_pos = m_pos.sub(0x4000);
                             }
                             current_block = 36;
                         }
@@ -370,18 +370,18 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                                 current_block = 63;
                                 continue;
                             }
-                            *op.offset(0isize) = *m_pos.offset(0isize);
-                            *op.offset(1isize) = *m_pos.offset(1isize);
-                            op = op.offset(2isize);
-                            m_pos = m_pos.offset(2isize);
+                            *op.add(0) = *m_pos.add(0);
+                            *op.add(1) = *m_pos.add(1);
+                            op = op.add(2);
+                            m_pos = m_pos.add(2);
                             loop {
                                 *{
                                     let old = op;
-                                    op = op.offset(1isize);
+                                    op = op.add(1);
                                     old
                                 } = *{
                                     let old = m_pos;
-                                    m_pos = m_pos.offset(1isize);
+                                    m_pos = m_pos.add(1);
                                     old
                                 };
                                 if op >= oe {
@@ -414,11 +414,11 @@ pub unsafe extern "C" fn lzo1x_decompress_safe(
                             }
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = *{
                                 let old = ip;
-                                ip = ip.offset(1isize);
+                                ip = ip.add(1);
                                 old
                             };
                             t = t.wrapping_sub(1usize);

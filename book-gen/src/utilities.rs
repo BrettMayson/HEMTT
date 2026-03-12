@@ -8,7 +8,7 @@ pub fn run(chapter: &mut Chapter) {
     let utilities = command_cli
         .get_subcommands()
         .find(|c| c.get_name() == "utils")
-        .unwrap()
+        .expect("utils command exists")
         .get_subcommands()
         .collect::<Vec<_>>();
     for chapter in &mut chapter.sub_items {
@@ -38,7 +38,6 @@ pub fn run(chapter: &mut Chapter) {
                     .get_subcommands()
                     .find(|c| *c.get_name() == chapter.name)
                     .expect("utility exists")
-                    .to_owned()
                     .to_owned();
                 chapter.content = process_command(
                     &chapter.name,

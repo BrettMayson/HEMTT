@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use clap::{Command, CommandFactory};
 use mdbook_preprocessor::book::{BookItem, Chapter};
 
@@ -12,26 +14,28 @@ pub fn summary_commands() {
         }
         let subs = subcommand.get_subcommands().collect::<Vec<_>>();
         if subs.is_empty() {
-            command_text.push_str(&format!(
-                "  - [{}](commands/{}.md)\n",
+            let _ = writeln!(
+                command_text,
+                "  - [{}](commands/{}.md)",
                 subcommand.get_name(),
                 subcommand.get_name()
-            ));
+            );
         } else {
-            command_text.push_str(&format!("  - [{}]()\n", subcommand.get_name(),));
+            let _ = writeln!(command_text, "  - [{}]()", subcommand.get_name());
             for sub in subs {
-                command_text.push_str(&format!(
-                    "    - [{}](commands/{}/{}.md)\n",
+                let _ = writeln!(
+                    command_text,
+                    "    - [{}](commands/{}/{}.md)",
                     sub.get_name(),
                     subcommand.get_name(),
                     sub.get_name()
-                ));
+                );
             }
         }
     }
     // Open SUMMARY.md and replace the commands section (between - [Commands](commands/index.md) and - [Rhai](rhai/index.md))
     let summary_path = std::path::Path::new("book/SUMMARY.md");
-    let summary_content = fs_err::read_to_string(summary_path).unwrap();
+    let summary_content = fs_err::read_to_string(summary_path).expect("failed to read SUMMARY.md");
     let mut new_summary_content = String::new();
     let mut in_commands_section = false;
     for line in summary_content.lines() {
@@ -49,7 +53,7 @@ pub fn summary_commands() {
             new_summary_content.push('\n');
         }
     }
-    fs_err::write(summary_path, new_summary_content).unwrap();
+    fs_err::write(summary_path, new_summary_content).expect("failed to write SUMMARY.md");
 }
 
 pub fn summary_utilities() {
@@ -58,32 +62,34 @@ pub fn summary_utilities() {
     let utilities = command_cli
         .get_subcommands()
         .find(|c| c.get_name() == "utils")
-        .unwrap()
+        .expect("utils command exists")
         .get_subcommands()
         .collect::<Vec<_>>();
     for utility in utilities {
         let subs = utility.get_subcommands().collect::<Vec<_>>();
         if subs.is_empty() {
-            utility_text.push_str(&format!(
-                "  - [{}](utilities/{}.md)\n",
+            let _ = writeln!(
+                utility_text,
+                "  - [{}](utilities/{}.md)",
                 utility.get_name(),
                 utility.get_name()
-            ));
+            );
             continue;
         }
-        utility_text.push_str(&format!("  - [{}]()\n", utility.get_name(),));
+        let _ = writeln!(utility_text, "  - [{}]()", utility.get_name());
         for sub in subs {
-            utility_text.push_str(&format!(
-                "    - [{}](utilities/{}/{}.md)\n",
+            let _ = writeln!(
+                utility_text,
+                "    - [{}](utilities/{}/{}.md)",
                 sub.get_name(),
                 utility.get_name(),
                 sub.get_name()
-            ));
+            );
         }
     }
     // Open SUMMARY.md and replace the utilities section (between # Utilities and # Reference)
     let summary_path = std::path::Path::new("book/SUMMARY.md");
-    let summary_content = fs_err::read_to_string(summary_path).unwrap();
+    let summary_content = fs_err::read_to_string(summary_path).expect("failed to read SUMMARY.md");
     let mut new_summary_content = String::new();
     let mut in_utilities_section = false;
     for line in summary_content.lines() {
@@ -103,7 +109,7 @@ pub fn summary_utilities() {
             new_summary_content.push('\n');
         }
     }
-    fs_err::write(summary_path, new_summary_content).unwrap();
+    fs_err::write(summary_path, new_summary_content).expect("failed to write SUMMARY.md");
 }
 
 pub fn run(chapter: &mut Chapter) {
@@ -144,7 +150,7 @@ pub fn process_command(name: &str, nested: Option<&str>, mut command: Command) -
     );
 
     output.push_str("<pre><code class=\"nohighlight\">");
-    output.push_str(&global_options(command.render_help().to_string()));
+    output.push_str(&global_options(&command.render_help().to_string()));
     output.push_str("\n</code></pre>\n\n");
 
     if let Some(long_about) = command.get_long_about() {
@@ -181,16 +187,16 @@ pub fn process_command(name: &str, nested: Option<&str>, mut command: Command) -
             };
             if let Some(name) = arg
                 .get_value_names()
-                .map(|w| w.iter().map(|s| s.to_string()))
+                .map(|w| w.iter().map(std::string::ToString::to_string))
                 .and_then(|mut l| l.next())
                 && matches!(
                     arg.get_action(),
                     clap::ArgAction::Set | clap::ArgAction::Append
                 )
             {
-                header.push_str(&format!(" &lt;{name}&gt;"));
+                let _ = write!(header, " &lt;{name}&gt;");
             }
-            output.push_str(&format!("### {header}\n\n"));
+            let _ = write!(output, "### {header}\n\n");
             output.push_str(
                 &arg.get_long_help()
                     .unwrap_or_else(|| arg.get_help().unwrap_or_default())
@@ -199,11 +205,12 @@ pub fn process_command(name: &str, nested: Option<&str>, mut command: Command) -
             if !arg.get_possible_values().is_empty() {
                 output.push_str("\n\nPossible values:\n\n");
                 for value in arg.get_possible_values() {
-                    output.push_str(&format!(
-                        "- {} - {}\n",
+                    let _ = writeln!(
+                        output,
+                        "- {} - {}",
                         value.get_name(),
                         value.get_help().unwrap_or_default()
-                    ));
+                    );
                 }
             }
             output.push_str("\n\n");
@@ -212,9 +219,9 @@ pub fn process_command(name: &str, nested: Option<&str>, mut command: Command) -
     output
 }
 
-fn global_options(usage: String) -> String {
+fn global_options(usage: &str) -> String {
     let mut output = String::new();
-    let usage = usage.replace("<", "&lt;").replace(">", "&gt;");
+    let usage = usage.replace('<', "&lt;").replace('>', "&gt;");
     usage.lines().for_each(|line| {
         let mut line = line.to_string();
 
@@ -235,7 +242,7 @@ fn global_options(usage: String) -> String {
             ),
         ];
 
-        for (from, to) in links.iter() {
+        for (from, to) in &links {
             if line.starts_with(from) {
                 line = format!("{}{}", to, &line[from.len()..]);
             }

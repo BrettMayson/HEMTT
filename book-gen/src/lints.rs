@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::sync::Arc;
 
 use hemtt_common::config::LintEnabled;
@@ -82,22 +83,20 @@ fn stringtables(chapter: &mut Chapter) {
 
 fn get_text<D>(lint: &Arc<Box<dyn Lint<D>>>, prefix: &str) -> String {
     let mut text = String::new();
-    text.push_str(&format!("\n***\n## {}\n", lint.ident()));
-    text.push_str(&format!("Code: **{prefix}{}**  \n", lint.doc_ident()));
-    text.push_str(&format!(
-        "Default Severity: **{:?}** {}  \n",
+    let _ = write!(text, "\n***\n## {}\n", lint.ident());
+    let _ = writeln!(text, "Code: **{prefix}{}**  ", lint.doc_ident());
+    let _ = writeln!(
+        text,
+        "Default Severity: **{:?}** {}  ",
         lint.default_config().severity(),
         match lint.default_config().enabled() {
             LintEnabled::Enabled => "",
             LintEnabled::Disabled => "(Disabled)",
             LintEnabled::Pedantic => "(Pedantic)",
-        },
-    ));
-    text.push_str(&format!(
-        "Minimum Severity: {:?}  \n",
-        lint.minimum_severity()
-    ));
-    text.push_str(&format!("\n{}\n", lint.description()));
-    text.push_str(&format!("\n{}\n", lint.documentation()));
+        }
+    );
+    let _ = writeln!(text, "Minimum Severity: {:?}  ", lint.minimum_severity());
+    let _ = write!(text, "\n{}\n", lint.description());
+    let _ = write!(text, "\n{}\n", lint.documentation());
     text
 }

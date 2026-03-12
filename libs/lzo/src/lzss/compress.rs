@@ -19,10 +19,10 @@ unsafe extern "C" {
 const unsafe extern "C" fn get_unaligned_le32(p: *const ::std::os::raw::c_void) -> u32 {
     let input: *const u8 = p.cast::<u8>();
     unsafe {
-        (*input.offset(0isize) as i32
-            | ((*input.offset(1isize) as i32) << 8i32)
-            | ((*input.offset(2isize) as i32) << 16i32)
-            | ((*input.offset(3isize) as i32) << 24i32)) as u32
+        (*input.add(0) as i32
+            | ((*input.add(1) as i32) << 8i32)
+            | ((*input.add(2) as i32) << 16i32)
+            | ((*input.add(3) as i32) << 24i32)) as u32
     }
 }
 
@@ -62,7 +62,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
         let mut ip: *const u8;
         let mut op: *mut u8;
         let in_end: *const u8 = in_.add(in_len);
-        let ip_end: *const u8 = in_.add(in_len).offset(-20isize);
+        let ip_end: *const u8 = in_.add(in_len).sub(20);
         let mut ii: *const u8;
         let dict: *mut u16 = wrkmem.cast::<u16>();
         op = out;
@@ -106,7 +106,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     if t <= 3usize {
                         {
                             let rhs = t;
-                            let lhs = &mut *op.offset(-2isize);
+                            let lhs = &mut *op.sub(2);
                             *lhs = (*lhs as usize | rhs) as u8;
                         }
                         put_unaligned(
@@ -117,7 +117,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                     } else if t <= 16usize {
                         *{
                             let old = op;
-                            op = op.offset(1isize);
+                            op = op.add(1);
                             old
                         } = t.wrapping_sub(3usize) as u8;
                         put_unaligned(
@@ -125,34 +125,22 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             op.cast::<u32>().cast::<::std::os::raw::c_void>(),
                         );
                         put_unaligned(
-                            get_unaligned(
-                                ii.offset(4isize)
-                                    .cast::<u32>()
-                                    .cast::<::std::os::raw::c_void>(),
-                            ),
-                            op.offset(4isize)
-                                .cast::<u32>()
-                                .cast::<::std::os::raw::c_void>(),
+                            get_unaligned(ii.add(4).cast::<u32>().cast::<::std::os::raw::c_void>()),
+                            op.add(4).cast::<u32>().cast::<::std::os::raw::c_void>(),
+                        );
+                        put_unaligned(
+                            get_unaligned(ii.add(8).cast::<u32>().cast::<::std::os::raw::c_void>()),
+                            op.add(8).cast::<u32>().cast::<::std::os::raw::c_void>(),
                         );
                         put_unaligned(
                             get_unaligned(
-                                ii.offset(8isize)
+                                ii.add(8)
+                                    .add(4)
                                     .cast::<u32>()
                                     .cast::<::std::os::raw::c_void>(),
                             ),
-                            op.offset(8isize)
-                                .cast::<u32>()
-                                .cast::<::std::os::raw::c_void>(),
-                        );
-                        put_unaligned(
-                            get_unaligned(
-                                ii.offset(8isize)
-                                    .offset(4isize)
-                                    .cast::<u32>()
-                                    .cast::<::std::os::raw::c_void>(),
-                            ),
-                            op.offset(8isize)
-                                .offset(4isize)
+                            op.add(8)
+                                .add(4)
                                 .cast::<u32>()
                                 .cast::<::std::os::raw::c_void>(),
                         );
@@ -161,14 +149,14 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         if t <= 18usize {
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = t.wrapping_sub(3usize) as u8;
                         } else {
                             let mut tt: usize = t.wrapping_sub(18usize);
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = 0u8;
                             loop {
@@ -178,13 +166,13 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                                 tt = tt.wrapping_sub(255usize);
                                 *{
                                     let old = op;
-                                    op = op.offset(1isize);
+                                    op = op.add(1);
                                     old
                                 } = 0u8;
                             }
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = tt as u8;
                         }
@@ -195,38 +183,30 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             );
                             put_unaligned(
                                 get_unaligned(
-                                    ii.offset(4isize)
-                                        .cast::<u32>()
-                                        .cast::<::std::os::raw::c_void>(),
+                                    ii.add(4).cast::<u32>().cast::<::std::os::raw::c_void>(),
                                 ),
-                                op.offset(4isize)
-                                    .cast::<u32>()
-                                    .cast::<::std::os::raw::c_void>(),
+                                op.add(4).cast::<u32>().cast::<::std::os::raw::c_void>(),
                             );
                             put_unaligned(
                                 get_unaligned(
-                                    ii.offset(8isize)
-                                        .cast::<u32>()
-                                        .cast::<::std::os::raw::c_void>(),
+                                    ii.add(8).cast::<u32>().cast::<::std::os::raw::c_void>(),
                                 ),
-                                op.offset(8isize)
-                                    .cast::<u32>()
-                                    .cast::<::std::os::raw::c_void>(),
+                                op.add(8).cast::<u32>().cast::<::std::os::raw::c_void>(),
                             );
                             put_unaligned(
                                 get_unaligned(
-                                    ii.offset(8isize)
-                                        .offset(4isize)
+                                    ii.add(8)
+                                        .add(4)
                                         .cast::<u32>()
                                         .cast::<::std::os::raw::c_void>(),
                                 ),
-                                op.offset(8isize)
-                                    .offset(4isize)
+                                op.add(8)
+                                    .add(4)
                                     .cast::<u32>()
                                     .cast::<::std::os::raw::c_void>(),
                             );
-                            op = op.offset(16isize);
-                            ii = ii.offset(16isize);
+                            op = op.add(16);
+                            ii = ii.add(16);
                             t = t.wrapping_sub(16usize);
                             if t < 16usize {
                                 break;
@@ -236,11 +216,11 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             loop {
                                 *{
                                     let old = op;
-                                    op = op.offset(1isize);
+                                    op = op.add(1);
                                     old
                                 } = *{
                                     let old = ii;
-                                    ii = ii.offset(1isize);
+                                    ii = ii.add(1);
                                     old
                                 };
                                 t -= 1;
@@ -324,14 +304,14 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         if m_len <= 33usize {
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = (32usize | m_len.wrapping_sub(2usize)) as u8;
                         } else {
                             m_len = m_len.wrapping_sub(33usize);
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = 32i32 as u8;
                             loop {
@@ -341,13 +321,13 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                                 m_len = m_len.wrapping_sub(255usize);
                                 *{
                                     let old = op;
-                                    op = op.offset(1isize);
+                                    op = op.add(1);
                                     old
                                 } = 0u8;
                             }
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = m_len as u8;
                         }
@@ -356,7 +336,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                         if m_len <= 9usize {
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = (16usize | (m_off >> 11i32) & 8usize | m_len.wrapping_sub(2usize))
                                 as u8;
@@ -364,7 +344,7 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                             m_len = m_len.wrapping_sub(9usize);
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = (16usize | (m_off >> 11i32) & 8usize) as u8;
                             loop {
@@ -374,37 +354,37 @@ unsafe extern "C" fn lzo1x_1_do_compress(
                                 m_len = m_len.wrapping_sub(255usize);
                                 *{
                                     let old = op;
-                                    op = op.offset(1isize);
+                                    op = op.add(1);
                                     old
                                 } = 0u8;
                             }
                             *{
                                 let old = op;
-                                op = op.offset(1isize);
+                                op = op.add(1);
                                 old
                             } = m_len as u8;
                         }
                     }
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = (m_off << 2i32) as u8;
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = (m_off >> 6i32) as u8;
                 } else {
                     m_off = m_off.wrapping_sub(1usize);
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = ((m_len.wrapping_sub(1usize) << 5i32) | ((m_off & 7usize) << 2i32)) as u8;
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = (m_off >> 3i32) as u8;
                 }
@@ -462,24 +442,24 @@ pub unsafe extern "C" fn lzo1x_1_compress(
             if std::ptr::eq(op, out) && (t <= 238usize) {
                 *{
                     let old = op;
-                    op = op.offset(1isize);
+                    op = op.add(1);
                     old
                 } = 17usize.wrapping_add(t) as u8;
             } else if t <= 3usize {
                 let rhs = t;
-                let lhs = &mut *op.offset(-2isize);
+                let lhs = &mut *op.sub(2);
                 *lhs = (*lhs as usize | rhs) as u8;
             } else if t <= 18usize {
                 *{
                     let old = op;
-                    op = op.offset(1isize);
+                    op = op.add(1);
                     old
                 } = t.wrapping_sub(3usize) as u8;
             } else {
                 let mut tt: usize = t.wrapping_sub(18usize);
                 *{
                     let old = op;
-                    op = op.offset(1isize);
+                    op = op.add(1);
                     old
                 } = 0u8;
                 loop {
@@ -489,13 +469,13 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                     tt = tt.wrapping_sub(255usize);
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = 0u8;
                 }
                 *{
                     let old = op;
-                    op = op.offset(1isize);
+                    op = op.add(1);
                     old
                 } = tt as u8;
             }
@@ -511,39 +491,27 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                         op.cast::<u32>().cast::<::std::os::raw::c_void>(),
                     );
                     put_unaligned(
-                        get_unaligned(
-                            ii.offset(4isize)
-                                .cast::<u32>()
-                                .cast::<::std::os::raw::c_void>(),
-                        ),
-                        op.offset(4isize)
-                            .cast::<u32>()
-                            .cast::<::std::os::raw::c_void>(),
+                        get_unaligned(ii.add(4).cast::<u32>().cast::<::std::os::raw::c_void>()),
+                        op.add(4).cast::<u32>().cast::<::std::os::raw::c_void>(),
+                    );
+                    put_unaligned(
+                        get_unaligned(ii.add(8).cast::<u32>().cast::<::std::os::raw::c_void>()),
+                        op.add(8).cast::<u32>().cast::<::std::os::raw::c_void>(),
                     );
                     put_unaligned(
                         get_unaligned(
-                            ii.offset(8isize)
+                            ii.add(8)
+                                .add(4)
                                 .cast::<u32>()
                                 .cast::<::std::os::raw::c_void>(),
                         ),
-                        op.offset(8isize)
+                        op.add(8)
+                            .add(4)
                             .cast::<u32>()
                             .cast::<::std::os::raw::c_void>(),
                     );
-                    put_unaligned(
-                        get_unaligned(
-                            ii.offset(8isize)
-                                .offset(4isize)
-                                .cast::<u32>()
-                                .cast::<::std::os::raw::c_void>(),
-                        ),
-                        op.offset(8isize)
-                            .offset(4isize)
-                            .cast::<u32>()
-                            .cast::<::std::os::raw::c_void>(),
-                    );
-                    op = op.offset(16isize);
-                    ii = ii.offset(16isize);
+                    op = op.add(16);
+                    ii = ii.add(16);
                     t = t.wrapping_sub(16usize);
                     if t >= 16usize {
                         current_block = 16;
@@ -562,11 +530,11 @@ pub unsafe extern "C" fn lzo1x_1_compress(
                 loop {
                     *{
                         let old = op;
-                        op = op.offset(1isize);
+                        op = op.add(1);
                         old
                     } = *{
                         let old = ii;
-                        ii = ii.offset(1isize);
+                        ii = ii.add(1);
                         old
                     };
                     t -= 1;
@@ -578,17 +546,17 @@ pub unsafe extern "C" fn lzo1x_1_compress(
         }
         *{
             let old = op;
-            op = op.offset(1isize);
+            op = op.add(1);
             old
         } = (16i32 | 1i32) as u8;
         *{
             let old = op;
-            op = op.offset(1isize);
+            op = op.add(1);
             old
         } = 0u8;
         *{
             let old = op;
-            op = op.offset(1isize);
+            op = op.add(1);
             old
         } = 0u8;
         *out_len = ((op as isize).wrapping_sub(out as isize) / ::std::mem::size_of::<u8>() as isize)
