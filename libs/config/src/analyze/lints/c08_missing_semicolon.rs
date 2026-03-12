@@ -141,7 +141,7 @@ impl Code08MissingSemicolon {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let haystack = &processed.extract(self.span.clone());
+        let haystack = &processed.extract(&self.span);
         let possible_end = self.span.start
             + haystack
                 .find('\n')

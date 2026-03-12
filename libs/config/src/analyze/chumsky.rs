@@ -55,7 +55,7 @@ impl ChumskyCode {
                     {
                         end += 1;
                     }
-                    processed.extract(start..end).to_string()
+                    processed.extract(&(start..end)).to_string()
                 }
             ));
         }
