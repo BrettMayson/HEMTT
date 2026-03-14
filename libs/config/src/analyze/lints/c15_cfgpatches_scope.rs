@@ -331,5 +331,5 @@ define_cfgpatch_code!(
         classname
     ),
     |patch_type: &PatchType| format!("not in {}s[]", patch_type.singular()),
-    "Add the class to CfgPatches or it will not be usable to Zanes."
+    "Add the class to CfgPatches or it will not be usable to Zeus."
 );
