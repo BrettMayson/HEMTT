@@ -8,7 +8,7 @@ expression: lint(stringify! (c15_cfgpatches_scope)).0
 [0m[36m13[0m [0m[36m│[0m     class [0m[33mabe_car2[0m: Car { // Missing
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mnot in units[][0m
    [0m[36m│[0m
-   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable to Zanes.
+   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable as Zeus.
 
 
 [0m[1m[38;5;11mwarning[L-C15-NOT-IN-PATCHES][0m[1m: Public CfgVehicles class `abe_car5` not listed in CfgPatches[0m
@@ -17,7 +17,7 @@ expression: lint(stringify! (c15_cfgpatches_scope)).0
 [0m[36m22[0m [0m[36m│[0m     class [0m[33mabe_car5[0m: abe_car2 { }; // Missing
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mnot in units[][0m
    [0m[36m│[0m
-   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable to Zanes.
+   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable as Zeus.
 
 
 [0m[1m[38;5;11mwarning[L-C15-NOT-IN-PATCHES][0m[1m: Public CfgWeapons class `abe_gun3` not listed in CfgPatches[0m
@@ -26,7 +26,7 @@ expression: lint(stringify! (c15_cfgpatches_scope)).0
 [0m[36m35[0m [0m[36m│[0m     class [0m[33mabe_gun3[0m: abe_gun2 {}; // Missing
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mnot in weapons[][0m
    [0m[36m│[0m
-   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable to Zanes.
+   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable as Zeus.
 
 
 [0m[1m[38;5;11mwarning[L-C15-NOT-IN-PATCHES][0m[1m: Public CfgWeapons class `abx_gun1` not listed in CfgPatches[0m
@@ -35,7 +35,7 @@ expression: lint(stringify! (c15_cfgpatches_scope)).0
 [0m[36m36[0m [0m[36m│[0m     class [0m[33mabx_gun1[0m: Rifle {
    [0m[36m│[0m           [0m[33m^^^^^^^^[0m [0m[33mnot in weapons[][0m
    [0m[36m│[0m
-   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable to Zanes.
+   [0m[36m=[0m [36mnote[0m: Add the class to CfgPatches or it will not be usable as Zeus.
 
 
 [0m[1m[38;5;11mwarning[L-C15-MISSING-CLASS][0m[1m: CfgPatches units[] class `abe_bar22` not found[0m
