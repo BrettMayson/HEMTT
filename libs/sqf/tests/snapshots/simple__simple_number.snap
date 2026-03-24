@@ -1,0 +1,16 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    AssignLocal(
+        "_number",
+        Number(
+            FloatOrd(
+                6000000000.0,
+            ),
+            18..28,
+        ),
+        0..28,
+    ),
+]
