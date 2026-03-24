@@ -28,6 +28,7 @@ simple!(get_visibility);
 simple!(hash_select);
 simple!(hello);
 simple!(include);
+simple!(number);
 simple!(oneline);
 simple!(semicolons);
 

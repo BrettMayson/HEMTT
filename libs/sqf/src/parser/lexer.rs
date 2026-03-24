@@ -203,21 +203,21 @@ fn number() -> impl Parser<char, crate::Scalar<f32>, Error = Simple<char>> {
     .map(crate::Scalar)
 }
 
-fn number_hex() -> impl Parser<char, u32, Error = Simple<char>> {
+fn number_hex() -> impl Parser<char, u64, Error = Simple<char>> {
     let digits = one_of("0123456789abcdefABCDEF").repeated().at_least(1);
     just("$")
         .or(just("0x"))
         .ignore_then(digits)
         .collect::<String>()
-        .map(|value| u32::from_str_radix(&value, 16))
+        .map(|value| u64::from_str_radix(&value, 16))
         .try_map(error_map)
 }
 
-fn number_int() -> impl Parser<char, u32, Error = Simple<char>> {
+fn number_int() -> impl Parser<char, u64, Error = Simple<char>> {
     number_digits()
         .collect::<String>()
         //.then_ignore(just('.').not().rewind())
-        .from_str::<u32>()
+        .from_str::<u64>()
         .try_map(error_map)
 }
 
