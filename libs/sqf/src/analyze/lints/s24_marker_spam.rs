@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath,
 };
 
-use crate::{analyze::LintData, BinaryCommand, Expression, Statement};
+use crate::{BinaryCommand, Expression, Statement, UnaryCommand, analyze::LintData};
 
 crate::analyze::lint!(LintS24MarkerSpam);
 
@@ -85,6 +85,12 @@ impl LintRunner<LintData> for Runner {
                         continue;
                     };
                     pending.entry(name.clone()).or_default().push((cmd.clone(), cmd_span.clone()));
+                }
+                Statement::Expression(Expression::UnaryCommand(UnaryCommand::Named(cmd), _, _), _) => {
+                    if cmd.eq_ignore_ascii_case("sleep") || cmd.eq_ignore_ascii_case("uiSleep") {
+                        // Must be in scheduled environment, so repeated global calls may be intended behavior.
+                        pending.clear();
+                    }
                 }
                 Statement::Expression(_, _) => {}
                 Statement::AssignGlobal(name, _, _) | Statement::AssignLocal(name, _, _) => {
