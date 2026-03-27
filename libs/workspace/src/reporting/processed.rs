@@ -5,6 +5,7 @@ use tracing::warn;
 use crate::{
     Error, WorkspacePath,
     position::{LineCol, Position},
+    reporting::ExpansionMetadataStore,
 };
 
 use super::{Code, Codes, Output, Token, definition::Definition};
@@ -42,6 +43,9 @@ pub struct Processed {
 
     /// The preprocessor was able to check the file, but it should not be rapified
     no_rapify: bool,
+
+    /// Macro expansion metadata
+    pub expansions: ExpansionMetadataStore,
 }
 
 #[derive(Default, Debug)]
@@ -318,6 +322,7 @@ impl Processed {
             usage,
             warnings,
             no_rapify,
+            expansions: ExpansionMetadataStore::new(),
         };
 
         clean_output(&mut processed);

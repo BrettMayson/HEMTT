@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use hemtt_common::version::Version;
-use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
     analyze::{analyze, lint_all, lint_check},
     parser::{ParserError, database::Database},
@@ -76,8 +75,10 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed_with_metadata =
-                    match hemtt_preprocessor::Processor::run_with_metadata(entry, ctx.config().preprocessor()).map_err(|(_, e)| e) {
+                let processed =
+                    match hemtt_preprocessor::Processor::run(entry, ctx.config().preprocessor())
+                        .map_err(|(_, e)| e)
+                    {
                         Ok(p) => p,
                         Err(e) => {
                             if let hemtt_preprocessor::Error::Code(code) = e {
@@ -87,15 +88,15 @@ impl Module for SQFCompiler {
                             return Err(e.into());
                         }
                     };
-                for warning in processed_with_metadata.warnings() {
+                for warning in processed.warnings() {
                     report.push(warning.clone());
                 }
-                match hemtt_sqf::parser::run(&database, &processed_with_metadata) {
+                match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
                         let (codes, sqf_report) = analyze(
                             &sqf,
                             Some(ctx.config()),
-                            &processed_with_metadata,
+                            &processed,
                             addon.clone(),
                             database.clone(),
                         );
@@ -104,7 +105,7 @@ impl Module for SQFCompiler {
                         }
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
-                            sqf.optimize().compile_to_writer(&processed_with_metadata, &mut out)?;
+                            sqf.optimize().compile_to_writer(&processed, &mut out)?;
                             progress.inc(1);
                         }
                         for code in codes {

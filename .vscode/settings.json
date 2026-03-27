@@ -3,6 +3,7 @@
     "-l"
 ],
 "chat.tools.terminal.autoApprove": {
-    "cargo nextest": true
+    "cargo nextest": true,
+    "cargo insta": true
 }
 }

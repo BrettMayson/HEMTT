@@ -91,12 +91,18 @@ impl LintRunner<LintData> for Runner {
                 Expression::Variable(name, _) => name.clone(),
                 _ => return Vec::new(),
             };
+            
+            let original_haystack = crate::analyze::recover_original_source(processed, haystack.span().start);
+            let original_needle = crate::analyze::recover_original_source(processed, needle.span().start);
+            
             return vec![Arc::new(CodeS06FindInStr::new(
                 haystack.span().start..target.full_span().end,
                 (haystack_str, haystack.span()),
                 (format!("\"{needle_str}\""), needle.span()),
                 processed,
                 config.severity(),
+                original_haystack,
+                original_needle,
             ))];
         }
         Vec::new()
@@ -108,7 +114,8 @@ pub struct CodeS06FindInStr {
     span: Range<usize>,
     haystack: (String, Range<usize>),
     needle: (String, Range<usize>),
-
+    original_haystack: Option<String>,
+    original_needle: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -131,10 +138,10 @@ impl Code for CodeS06FindInStr {
     }
 
     fn suggestion(&self) -> Option<String> {
+        let needle_str = self.original_needle.as_ref().unwrap_or(&self.needle.0);
+        let haystack_str = self.original_haystack.as_ref().unwrap_or(&self.haystack.0);
         Some(format!(
-            "{} in {}",
-            self.needle.0.as_str(),
-            self.haystack.0.as_str()
+            "{needle_str} in {haystack_str}"
         ))
     }
 
@@ -155,12 +162,15 @@ impl CodeS06FindInStr {
         needle: (String, Range<usize>),
         processed: &Processed,
         severity: Severity,
+        original_haystack: Option<String>,
+        original_needle: Option<String>,
     ) -> Self {
         Self {
             span,
             haystack,
             needle,
-
+            original_haystack,
+            original_needle,
             severity,
             diagnostic: None,
         }

@@ -6,7 +6,10 @@ use hemtt_common::config::PreprocessorOptions;
 use hemtt_workspace::{
     WorkspacePath,
     position::Position,
-    reporting::{Codes, Definition, Output, Processed, Symbol, Token},
+    reporting::{
+        Codes, Definition, ExpansionMetadata, ExpansionMetadataStore, MacroExpander, Output,
+        Processed, Symbol, Token,
+    },
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -18,8 +21,6 @@ use crate::codes::{
 use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
-use crate::MacroExpander;
-use crate::ExpansionMetadataStore;
 use crate::{Error, codes::pe29_circular_include::CircularInclude};
 
 use self::pragma::Pragma;
@@ -66,6 +67,11 @@ pub struct Processor {
     /// Storage for expansion metadata captured during preprocessing
     #[allow(dead_code)]
     pub(crate) expansion_metadata: ExpansionMetadataStore,
+
+    /// Map from token position to expansion metadata
+    /// Used to link macro tokens to their expansion info
+    pub(crate) metadata_by_token:
+        std::collections::HashMap<std::ops::Range<usize>, ExpansionMetadata>,
 }
 
 impl Processor {
@@ -77,13 +83,13 @@ impl Processor {
 
     #[must_use]
     /// Returns the macro expansion metadata store
-    pub const fn expansion_metadata(&self) -> &crate::ExpansionMetadataStore {
+    pub const fn expansion_metadata(&self) -> &ExpansionMetadataStore {
         &self.expansion_metadata
     }
 
     #[must_use]
     /// Returns the macro expander
-    pub const fn macro_expander(&self) -> &crate::MacroExpander {
+    pub const fn macro_expander(&self) -> &MacroExpander {
         &self.macro_expander
     }
 
@@ -91,23 +97,10 @@ impl Processor {
     ///
     /// # Errors
     /// See [`Error`]
-    ///
-    /// For access to macro expansion metadata, use [`Self::run_with_metadata`]
     pub fn run(
         path: &WorkspacePath,
         options: &PreprocessorOptions,
     ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
-        Self::run_with_metadata(path, options).map(|pwm| pwm.into_parts().0)
-    }
-
-    /// Preprocess a file and return both processed output and macro metadata
-    ///
-    /// # Errors
-    /// See [`Error`]
-    pub fn run_with_metadata(
-        path: &WorkspacePath,
-        options: &PreprocessorOptions,
-    ) -> Result<crate::ProcessedWithMetadata, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
 
         processor.defines.option_runtime(options.runtime_macros());
@@ -136,7 +129,7 @@ impl Processor {
                 .push(Arc::new(InvalidConfigCase::new(path.clone())));
         }
 
-        let processed = Processed::new(
+        let mut processed = Processed::new(
             buffer,
             processor.macros,
             processor.included_files.clone(),
@@ -147,10 +140,14 @@ impl Processor {
         )
         .map_err(|e| (processor.included_files, e.into()))?;
 
-        // Extract the expansion metadata
-        let expansions = processor.expansion_metadata;
+        // Set expansions on the processed struct
+        let mut expansions_store = ExpansionMetadataStore::new();
+        for (token_span, metadata) in processor.metadata_by_token {
+            expansions_store.register(token_span, metadata);
+        }
+        processed.expansions = expansions_store;
 
-        Ok(crate::ProcessedWithMetadata::new(processed, expansions))
+        Ok(processed)
     }
 
     fn file(
