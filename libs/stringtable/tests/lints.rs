@@ -23,6 +23,7 @@ macro_rules! lint {
 }
 
 lint!(l01_sorted);
+lint!(l02_usage_single_quotes);
 lint!(l03_no_newlines_in_tags);
 
 fn lint(file: &str) -> String {

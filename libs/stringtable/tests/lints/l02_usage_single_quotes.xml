@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="test">
+    <Package name="test">
+        <Key ID='MyID'>
+            <English>My ID</English>
+        </Key>
+    </Package>
+</Project>

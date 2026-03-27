@@ -172,7 +172,8 @@ fn process_keys(
         }
     }
     let mut offset = 0;
-    let regex = Regex::new(r#"(?m)ID\s?=\s?\"([^\"]+?)\""#).expect("Failed to compile regex");
+    let regex =
+        Regex::new(r#"(?m)ID\s?=\s?['\"]([^'\"]+?)['\"]"#).expect("Failed to compile regex");
     for (linenum, line) in source.lines().enumerate() {
         let result = regex.captures_iter(line);
         for cap in result {
