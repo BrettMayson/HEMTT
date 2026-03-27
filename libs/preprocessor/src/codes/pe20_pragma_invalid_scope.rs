@@ -38,7 +38,7 @@ impl Code for PragmaInvalidScope {
     }
 
     fn message(&self) -> String {
-        format!("unknown #pragma scope `{}`", self.token.symbol(),)
+        format!("unknown #pragma scope `{}`", self.token.symbol())
     }
 
     fn label_message(&self) -> String {

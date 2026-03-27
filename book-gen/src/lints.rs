@@ -35,7 +35,7 @@ fn config(chapter: &mut Chapter) {
     for lint in CONFIG_LINTS.iter().filter(|l| l.display()) {
         lint_text.push((lint.sort(), get_text(&**lint, "L-C")));
     }
-    lint_text.sort_by(|a, b| a.0.cmp(&b.0));
+    lint_text.sort_by_key(|a| a.0);
     for (_, text) in lint_text {
         output.push_str(&text);
     }
@@ -61,7 +61,7 @@ fn sqf(chapter: &mut Chapter) {
     for lint in lints {
         lint_text.push((lint.sort(), get_text(&lint, "L-S")));
     }
-    lint_text.sort_by(|a, b| a.0.cmp(&b.0));
+    lint_text.sort_by_key(|a| a.0);
     for (_, text) in lint_text {
         output.push_str(&text);
     }
@@ -74,7 +74,7 @@ fn stringtables(chapter: &mut Chapter) {
     for lint in STRINGTABLE_LINTS.iter().filter(|l| l.display()) {
         lint_text.push((lint.sort(), get_text(&**lint, "L-L")));
     }
-    lint_text.sort_by(|a, b| a.0.cmp(&b.0));
+    lint_text.sort_by_key(|a| a.0);
     for (_, text) in lint_text {
         output.push_str(&text);
     }

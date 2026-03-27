@@ -242,8 +242,7 @@ impl SqfAnalyzer {
                         || bundle.sources.iter().any(|source| {
                             workspace
                                 .join_url(&url)
-                                .map(|joined| joined == *source)
-                                .unwrap_or(false)
+                                .is_ok_and(|joined| joined == *source)
                         })
                     {
                         Some(path.clone())

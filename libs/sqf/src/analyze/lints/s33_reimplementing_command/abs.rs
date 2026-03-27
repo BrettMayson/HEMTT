@@ -55,9 +55,9 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
 
     // Check if then and else branches match the abs pattern
     match comparison_op {
-        BinaryCommand::GreaterEq | BinaryCommand::Greater => {
+        BinaryCommand::GreaterEq | BinaryCommand::Greater
             // if (x >= 0) then {x} else {-x}
-            if super::expressions_match(var_expr, then_branch, true) && is_negation_of(var_expr, else_branch) {
+            if super::expressions_match(var_expr, then_branch, true) && is_negation_of(var_expr, else_branch) => {
                 let var_text = var_expr.source(true);
                 codes.push(Arc::new(CodeS33ReimplementingCommandAbs::new(
                     target.full_span(),
@@ -65,11 +65,10 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
                     processed,
                     config.severity(),
                 )));
-            }
         }
-        BinaryCommand::Less | BinaryCommand::LessEq => {
+        BinaryCommand::Less | BinaryCommand::LessEq
             // if (x < 0) then {-x} else {x}
-            if is_negation_of(var_expr, then_branch) && super::expressions_match(var_expr, else_branch, true) {
+            if is_negation_of(var_expr, then_branch) && super::expressions_match(var_expr, else_branch, true) => {
                 let var_text = var_expr.source(true);
                 codes.push(Arc::new(CodeS33ReimplementingCommandAbs::new(
                     target.full_span(),
@@ -77,7 +76,6 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
                     processed,
                     config.severity(),
                 )));
-            }
         }
         _ => {}
     }

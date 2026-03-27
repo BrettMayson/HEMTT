@@ -60,13 +60,15 @@ impl LintRunner<LintData> for Runner {
         fn has_global_var(exp: &Expression) -> Option<&Range<usize>> {
             match exp {
                 // check var name for private (`private "var"`)
-                Expression::String(var, span, _) => if !(var.is_empty() || var.starts_with('_')) { return Some(span); },
+                Expression::String(var, span, _) if !(var.is_empty() || var.starts_with('_')) => {
+                    return Some(span);
+                }
                 Expression::Array(outer_arr, _) => {
                     for e in outer_arr {
                         match e {
                             // check any element for global (`params ["var"]` or `private ["var"]`)
-                            Expression::String(var, span, _) => {
-                                if !(var.is_empty() || var.starts_with('_')) { return Some(span); }
+                            Expression::String(var, span, _) if !(var.is_empty() || var.starts_with('_')) => {
+                                return Some(span);
                             }
                             Expression::Array(innest_arr, _) => {
                                 // check any first element in inner array (`params [["var"]]`)
@@ -97,8 +99,8 @@ impl LintRunner<LintData> for Runner {
                     ))];
                 }
             }
-            Statement::AssignLocal(var, _, span) => {
-                if !(var.is_empty() || var.starts_with('_')) {
+            Statement::AssignLocal(var, _, span) if !(var.is_empty() || var.starts_with('_')) => {
+                 
                     let haystack = processed.extract(span);
                     let start = span.start + haystack.find(var).unwrap_or(0);
                     return vec![Arc::new(Code36GlobalVarInLocal::new(
@@ -108,7 +110,7 @@ impl LintRunner<LintData> for Runner {
                         processed,
                         config.severity(),
                     ))];
-                }
+                
             }
             _ => {}
         }

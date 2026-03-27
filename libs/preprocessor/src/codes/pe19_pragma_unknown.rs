@@ -26,7 +26,7 @@ impl Code for PragmaUnknown {
     }
 
     fn message(&self) -> String {
-        format!("unknown `{}` pragma command", self.token.symbol(),)
+        format!("unknown `{}` pragma command", self.token.symbol())
     }
 
     fn label_message(&self) -> String {

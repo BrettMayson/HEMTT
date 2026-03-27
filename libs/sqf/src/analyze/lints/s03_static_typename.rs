@@ -105,12 +105,8 @@ impl LintRunner<LintData> for Runner {
                 };
                 (a, b, name.len())
             }
-            Expression::UnaryCommand(UnaryCommand::Named(name), _, span) => {
-                if name == "text" {
-                    ("TEXT", span, name.len())
-                } else {
-                    return Vec::new();
-                }
+            Expression::UnaryCommand(UnaryCommand::Named(name), _, span) if name == "text" => {
+                ("TEXT", span, name.len())
             }
             _ => return Vec::new(),
         };

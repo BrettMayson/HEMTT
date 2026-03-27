@@ -155,7 +155,7 @@ impl Code for CodeS05IfAssign {
 
     fn suggestion(&self) -> Option<String> {
         if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
-            Some(format!("parseNumber {}", self.condition.0.as_str(),))
+            Some(format!("parseNumber {}", self.condition.0.as_str()))
         } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
             Some(self.condition.0.as_str().to_string())
         } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {

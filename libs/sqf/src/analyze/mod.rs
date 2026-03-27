@@ -294,15 +294,13 @@ fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bo
                 }
             }
         }
-        Expression::UnaryCommand(_, expr, _) => {
-            if check_expression_deep(expr, f) {
-                return true;
-            }
+        Expression::UnaryCommand(_, expr, _) if check_expression_deep(expr, f) => {
+            return true;
         }
-        Expression::BinaryCommand(_, left, right, _) => {
-            if check_expression_deep(left, f) || check_expression_deep(right, f) {
-                return true;
-            }
+        Expression::BinaryCommand(_, left, right, _)
+            if (check_expression_deep(left, f) || check_expression_deep(right, f)) =>
+        {
+            return true;
         }
         _ => {}
     }

@@ -113,7 +113,7 @@ pub fn check(properties: &[Property], processed: &Processed) -> Codes {
             }
         }
     }
-    codes.extend(defined.into_iter().filter_map(|(_, classes)| {
+    codes.extend(defined.into_values().filter_map(|classes| {
         if classes.len() > 1 {
             Some(Arc::new(CodeC03DuplicateClasses::new(classes, processed)) as Arc<dyn Code>)
         } else {

@@ -111,7 +111,7 @@ impl LintRunner<LintData> for Runner {
 
 #[must_use]
 fn get_format_problem(input: &str, extra_args: usize) -> Option<String> {
-    let format = format!("{input} ",); // add extra terminator
+    let format = format!("{input} "); // add extra terminator
 
     let mut tokens: Vec<usize> = Vec::new();
     let mut token_active = false;

@@ -59,10 +59,10 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
 
     // Check if then and else branches match the max pattern
     match comparison_op {
-        BinaryCommand::Greater | BinaryCommand::GreaterEq => {
+        BinaryCommand::Greater | BinaryCommand::GreaterEq
             // if (x > y) then {x} else {y}
             if super::expressions_match(left, then_branch, true)
-                && super::expressions_match(right, else_branch, true)
+                && super::expressions_match(right, else_branch, true) =>
             {
                 let left_text = left.source(true);
                 let right_text = right.source(true);
@@ -73,12 +73,11 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
                     processed,
                     config.severity(),
                 )) as Arc<dyn Code>);
-            }
         }
-        BinaryCommand::Less | BinaryCommand::LessEq => {
+        BinaryCommand::Less | BinaryCommand::LessEq
             // if (x < y) then {y} else {x}
             if super::expressions_match(right, then_branch, true)
-                && super::expressions_match(left, else_branch, true)
+                && super::expressions_match(left, else_branch, true) =>
             {
                 let left_text = left.source(true);
                 let right_text = right.source(true);
@@ -89,7 +88,6 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
                     processed,
                     config.severity(),
                 )) as Arc<dyn Code>);
-            }
         }
         _ => {}
     }
