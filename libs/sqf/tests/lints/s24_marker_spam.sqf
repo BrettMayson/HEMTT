@@ -39,3 +39,15 @@ call {
     "m1" setMarkerShape "ICON";
     "m2" setMarkerType "hd_dot";
 };
+
+// no message - sleep means these are not considered consecutive
+call {
+    "m1" setMarkerShape "ICON";
+    sleep 1;
+    "m1" setMarkerType "hd_dot";
+};
+call {
+    "m1" setMarkerShape "ICON";
+    uiSleep 1;
+    "m1" setMarkerType "hd_dot";
+};
