@@ -215,16 +215,14 @@ fn append_output(
 pub fn clean_output(processed: &mut Processed) {
     let mut comitted_file = String::new();
     let mut comitted_line = 0;
-    let mut lines = processed.output.lines();
+    let lines = processed.output.lines();
     let mut output = String::new();
     let mut indexes = Vec::new();
     let mut cursor_offset = 0;
     let mut clean_cursor = 0;
     let mut pending_empty = 0;
-    loop {
-        let Some(line) = lines.next() else {
-            break;
-        };
+
+    for line in lines {
         if line.trim().is_empty() {
             cursor_offset += line.chars().count() + 1;
             pending_empty += 1;
