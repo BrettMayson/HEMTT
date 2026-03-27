@@ -76,8 +76,8 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed =
-                    match Processor::run(entry, ctx.config().preprocessor()).map_err(|(_, e)| e) {
+                let processed_with_metadata =
+                    match hemtt_preprocessor::Processor::run_with_metadata(entry, ctx.config().preprocessor()).map_err(|(_, e)| e) {
                         Ok(p) => p,
                         Err(e) => {
                             if let hemtt_preprocessor::Error::Code(code) = e {
@@ -87,15 +87,15 @@ impl Module for SQFCompiler {
                             return Err(e.into());
                         }
                     };
-                for warning in processed.warnings() {
+                for warning in processed_with_metadata.warnings() {
                     report.push(warning.clone());
                 }
-                match hemtt_sqf::parser::run(&database, &processed) {
+                match hemtt_sqf::parser::run(&database, &processed_with_metadata) {
                     Ok(sqf) => {
                         let (codes, sqf_report) = analyze(
                             &sqf,
                             Some(ctx.config()),
-                            &processed,
+                            &processed_with_metadata,
                             addon.clone(),
                             database.clone(),
                         );
@@ -104,7 +104,7 @@ impl Module for SQFCompiler {
                         }
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
-                            sqf.optimize().compile_to_writer(&processed, &mut out)?;
+                            sqf.optimize().compile_to_writer(&processed_with_metadata, &mut out)?;
                             progress.inc(1);
                         }
                         for code in codes {

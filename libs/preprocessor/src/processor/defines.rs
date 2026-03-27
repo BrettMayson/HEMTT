@@ -257,6 +257,15 @@ impl Processor {
                     );
                 }
                 self.defines.push(&ident_string, arg_defines);
+                
+                // Track macro expansion for diagnostics and source mapping
+                self.macro_expander.push_expansion(
+                    ident_string.clone(),
+                    source.position().clone(),
+                    callsite.clone(),
+                    function.args().len(),
+                );
+                
                 let mut layer = Vec::new();
                 self.walk(
                     Some(callsite),
@@ -265,6 +274,16 @@ impl Processor {
                     &mut function.stream(),
                     &mut layer,
                 )?;
+                
+                // Capture expansion metadata
+                let _metadata = self.macro_expander.capture_metadata(
+                    ident_string.clone(),
+                    source.position().clone(),
+                    callsite.clone(),
+                    function.args().len(),
+                );
+                self.macro_expander.pop_expansion();
+                
                 buffer.push(Output::Macro(ident.clone(), layer));
                 self.defines.pop();
             }
@@ -277,6 +296,14 @@ impl Processor {
                         body.iter().map(|t| Output::Direct(t.clone())).collect(),
                     ));
                 } else {
+                    // Track macro expansion for diagnostics and source mapping
+                    self.macro_expander.push_expansion(
+                        ident_string.clone(),
+                        source.position().clone(),
+                        callsite.clone(),
+                        0, // value macros don't have argument count
+                    );
+                    
                     let mut layer = Vec::new();
                     let body: Vec<_> = body
                         .iter()
@@ -290,6 +317,16 @@ impl Processor {
                         &mut body.into_iter().peekmore(),
                         &mut layer,
                     )?;
+                    
+                    // Capture expansion metadata
+                    let _metadata = self.macro_expander.capture_metadata(
+                        ident_string.clone(),
+                        source.position().clone(),
+                        callsite.clone(),
+                        0,
+                    );
+                    self.macro_expander.pop_expansion();
+                    
                     buffer.push(Output::Macro(ident.clone(), layer));
                 }
             }

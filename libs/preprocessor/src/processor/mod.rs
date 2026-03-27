@@ -18,6 +18,8 @@ use crate::codes::{
 use crate::codes::{pe18_eoi_ifstate::EoiIfState, pe25_exec::ExecNotSupported};
 use crate::defines::Defines;
 use crate::ifstate::IfStates;
+use crate::MacroExpander;
+use crate::ExpansionMetadataStore;
 use crate::{Error, codes::pe29_circular_include::CircularInclude};
 
 use self::pragma::Pragma;
@@ -56,6 +58,14 @@ pub struct Processor {
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,
+
+    /// Macro expander for tracking expansion history and recursion
+    #[allow(dead_code)]
+    pub(crate) macro_expander: MacroExpander,
+
+    /// Storage for expansion metadata captured during preprocessing
+    #[allow(dead_code)]
+    pub(crate) expansion_metadata: ExpansionMetadataStore,
 }
 
 impl Processor {
@@ -65,14 +75,39 @@ impl Processor {
         &self.defines
     }
 
+    #[must_use]
+    /// Returns the macro expansion metadata store
+    pub const fn expansion_metadata(&self) -> &crate::ExpansionMetadataStore {
+        &self.expansion_metadata
+    }
+
+    #[must_use]
+    /// Returns the macro expander
+    pub const fn macro_expander(&self) -> &crate::MacroExpander {
+        &self.macro_expander
+    }
+
     /// Preprocess a file
     ///
     /// # Errors
     /// See [`Error`]
+    ///
+    /// For access to macro expansion metadata, use [`Self::run_with_metadata`]
     pub fn run(
         path: &WorkspacePath,
         options: &PreprocessorOptions,
     ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
+        Self::run_with_metadata(path, options).map(|pwm| pwm.into_parts().0)
+    }
+
+    /// Preprocess a file and return both processed output and macro metadata
+    ///
+    /// # Errors
+    /// See [`Error`]
+    pub fn run_with_metadata(
+        path: &WorkspacePath,
+        options: &PreprocessorOptions,
+    ) -> Result<crate::ProcessedWithMetadata, (Vec<WorkspacePath>, Error)> {
         let mut processor = Self::default();
 
         processor.defines.option_runtime(options.runtime_macros());
@@ -101,7 +136,7 @@ impl Processor {
                 .push(Arc::new(InvalidConfigCase::new(path.clone())));
         }
 
-        Processed::new(
+        let processed = Processed::new(
             buffer,
             processor.macros,
             processor.included_files.clone(),
@@ -110,7 +145,12 @@ impl Processor {
             processor.warnings,
             processor.no_rapify,
         )
-        .map_err(|e| (processor.included_files, e.into()))
+        .map_err(|e| (processor.included_files, e.into()))?;
+
+        // Extract the expansion metadata
+        let expansions = processor.expansion_metadata;
+
+        Ok(crate::ProcessedWithMetadata::new(processed, expansions))
     }
 
     fn file(
