@@ -6,7 +6,6 @@ use hemtt_config::{
     parse,
     rapify::Rapify,
 };
-use hemtt_preprocessor;
 use hemtt_workspace::{
     WorkspacePath,
     addons::{Addon, Location},

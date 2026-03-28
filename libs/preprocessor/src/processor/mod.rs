@@ -61,11 +61,9 @@ pub struct Processor {
     pub(crate) no_rapify: bool,
 
     /// Macro expander for tracking expansion history and recursion
-    #[allow(dead_code)]
     pub(crate) macro_expander: MacroExpander,
 
     /// Storage for expansion metadata captured during preprocessing
-    #[allow(dead_code)]
     pub(crate) expansion_metadata: ExpansionMetadataStore,
 
     /// Map from token position to expansion metadata
