@@ -70,21 +70,23 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
-        let Some(check) = is_in_vehicle_check(lhs, rhs).or_else(|| is_in_vehicle_check(rhs, lhs)) else {
+        let Some((check, check_span)) = is_in_vehicle_check(lhs, rhs).or_else(|| is_in_vehicle_check(rhs, lhs)) else {
             return Vec::new();
         };
 
+        let original = crate::analyze::recover_original_source(processed, check_span.start);
         vec![Arc::new(CodeS18InVehicleCheck::new(
             target.full_span(),
             processed,
             config.severity(),
             check,
             matches!(target, Expression::BinaryCommand(BinaryCommand::NotEq, _, _, _)),
+            original,
         ))]
     }
 }
 
-fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<String> {
+fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<(String, Range<usize>)> {
     // vehicle x == x
     let Expression::UnaryCommand(UnaryCommand::Named(name), object, _) = lhs else {
         return None;
@@ -92,14 +94,15 @@ fn is_in_vehicle_check(lhs: &Expression, rhs: &Expression) -> Option<String> {
     if !name.eq_ignore_ascii_case("vehicle") {
         return None;
     }
-    let (Expression::Variable(var, _) | Expression::NularCommand(NularCommand { name: var}, _)) = &**object else {
-        return None;
-    };
+    let var_and_span = match &**object {
+        Expression::Variable(var, span) | Expression::NularCommand(NularCommand { name: var}, span) => Some((var.clone(), span.clone())),
+        _ => None,
+    }?;
     let (Expression::Variable(var2, _) | Expression::NularCommand(NularCommand { name: var2}, _)) = rhs else {
         return None;
     };
-    if var == var2 {
-        return Some(var.clone());
+    if var_and_span.0 == *var2 {
+        return Some((var_and_span.0, var_and_span.1));
     }
     None
 }
@@ -111,6 +114,7 @@ pub struct CodeS18InVehicleCheck {
     diagnostic: Option<Diagnostic>,
     ident: String,
     negated: bool,
+    original_source: Option<String>,
 }
 
 impl Code for CodeS18InVehicleCheck {
@@ -139,8 +143,9 @@ impl Code for CodeS18InVehicleCheck {
     }
 
     fn suggestion(&self) -> Option<String> {
+        let var = self.original_source.as_ref().unwrap_or(&self.ident);
         Some(
-            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, self.ident),
+            format!("{} objectParent {}", if self.negated { "!isNull" } else { "isNull" }, var),
         )
     }
 
@@ -151,13 +156,14 @@ impl Code for CodeS18InVehicleCheck {
 
 impl CodeS18InVehicleCheck {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, negated: bool) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, negated: bool, original_source: Option<String>) -> Self {
         Self {
             span,
             severity,
             diagnostic: None,
             ident,
             negated,
+            original_source,
         }
         .generate_processed(processed)
     }

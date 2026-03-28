@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use hemtt_common::version::Version;
-use hemtt_preprocessor::Processor;
 use hemtt_sqf::{
     analyze::{analyze, lint_all, lint_check},
     parser::{ParserError, database::Database},
@@ -77,7 +76,9 @@ impl Module for SQFCompiler {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
                 let processed =
-                    match Processor::run(entry, ctx.config().preprocessor()).map_err(|(_, e)| e) {
+                    match hemtt_preprocessor::Processor::run(entry, ctx.config().preprocessor())
+                        .map_err(|(_, e)| e)
+                    {
                         Ok(p) => p,
                         Err(e) => {
                             if let hemtt_preprocessor::Error::Code(code) = e {

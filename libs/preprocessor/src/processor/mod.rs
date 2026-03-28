@@ -6,7 +6,10 @@ use hemtt_common::config::PreprocessorOptions;
 use hemtt_workspace::{
     WorkspacePath,
     position::Position,
-    reporting::{Codes, Definition, Output, Processed, Symbol, Token},
+    reporting::{
+        Codes, Definition, ExpansionMetadata, ExpansionMetadataStore, MacroExpander, Output,
+        Processed, Symbol, Token,
+    },
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -56,6 +59,17 @@ pub struct Processor {
 
     /// The preprocessor was able to run checks, but the output should not be rapified
     pub(crate) no_rapify: bool,
+
+    /// Macro expander for tracking expansion history and recursion
+    pub(crate) macro_expander: MacroExpander,
+
+    /// Storage for expansion metadata captured during preprocessing
+    pub(crate) expansion_metadata: ExpansionMetadataStore,
+
+    /// Map from token position to expansion metadata
+    /// Used to link macro tokens to their expansion info
+    pub(crate) metadata_by_token:
+        std::collections::HashMap<std::ops::Range<usize>, ExpansionMetadata>,
 }
 
 impl Processor {
@@ -63,6 +77,18 @@ impl Processor {
     /// Returns the defines
     pub const fn defines(&self) -> &Defines {
         &self.defines
+    }
+
+    #[must_use]
+    /// Returns the macro expansion metadata store
+    pub const fn expansion_metadata(&self) -> &ExpansionMetadataStore {
+        &self.expansion_metadata
+    }
+
+    #[must_use]
+    /// Returns the macro expander
+    pub const fn macro_expander(&self) -> &MacroExpander {
+        &self.macro_expander
     }
 
     /// Preprocess a file
@@ -101,7 +127,7 @@ impl Processor {
                 .push(Arc::new(InvalidConfigCase::new(path.clone())));
         }
 
-        Processed::new(
+        let mut processed = Processed::new(
             buffer,
             processor.macros,
             processor.included_files.clone(),
@@ -110,7 +136,16 @@ impl Processor {
             processor.warnings,
             processor.no_rapify,
         )
-        .map_err(|e| (processor.included_files, e.into()))
+        .map_err(|e| (processor.included_files, e.into()))?;
+
+        // Set expansions on the processed struct
+        let mut expansions_store = ExpansionMetadataStore::new();
+        for (token_span, metadata) in processor.metadata_by_token {
+            expansions_store.register(token_span, metadata);
+        }
+        processed.expansions = expansions_store;
+
+        Ok(processed)
     }
 
     fn file(
