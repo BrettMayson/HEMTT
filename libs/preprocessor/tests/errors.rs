@@ -74,6 +74,7 @@ bootstrap!(pe10_function_as_value);
 bootstrap!(pe11_expected_function_or_value);
 bootstrap!(pe12_include_not_found);
 bootstrap!(pe13_include_not_encased);
+bootstrap!(pe13_include_not_encased_single_quotes);
 bootstrap!(pe13_include_not_encased_start_only);
 bootstrap!(pe13_include_not_encased_end_only);
 bootstrap!(pe14_include_unexpected_suffix);
