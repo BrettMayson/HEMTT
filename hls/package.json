@@ -219,8 +219,20 @@
         "enablement": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
       },
       {
-        "command": "hemtt.convertAudioWss",
-        "title": "Convert to wss",
+        "command": "hemtt.convertAudioWssNone",
+        "title": "Convert to wss (Compression: None)",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+      },
+      {
+        "command": "hemtt.convertAudioWssNibble",
+        "title": "Convert to wss (Compression: Nibble)",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+      },
+      {
+        "command": "hemtt.convertAudioWssByte",
+        "title": "Convert to wss (Compression: Byte)",
         "category": "HEMTT Audio",
         "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
       },
@@ -313,8 +325,18 @@
           "when": "resourceExtname =~ /\\.(wav|wss|mp3)$/i"
         },
         {
-          "command": "hemtt.convertAudioWss",
-          "group": "1_convert",
+          "command": "hemtt.convertAudioWssNone",
+          "group": "1_convert@1",
+          "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+        },
+        {
+          "command": "hemtt.convertAudioWssNibble",
+          "group": "1_convert@2",
+          "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+        },
+        {
+          "command": "hemtt.convertAudioWssByte",
+          "group": "1_convert@3",
           "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
         }
       ],
