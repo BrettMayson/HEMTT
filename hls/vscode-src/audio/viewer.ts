@@ -60,7 +60,7 @@ export class WssViewerProvider implements vscode.CustomReadonlyEditorProvider {
     if (this.tempFiles.has(wssUri.toString())) {
       const processedFile = this.tempFiles.get(wssUri.toString());
       const stats = fs.statSync(wssUri.fsPath);
-      if (stats.mtime < processedFile?.conversionDate!) {
+      if (stats.mtime <= processedFile?.conversionDate!) {
         return processedFile?.conversion;
       }
 
