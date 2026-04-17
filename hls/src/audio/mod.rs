@@ -13,7 +13,7 @@ pub struct WssInfo {
     pub compression: String,
 }
 
-pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, String> {
+pub fn convert(url: &Url, to: &str, out: Option<String>, compression: Option<u32>) -> Result<WssInfo, String> {
     let path = url
         .to_file_path()
         .map_err(|()| "Only file URLs are supported".to_string())?;
@@ -39,7 +39,10 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<WssInfo, Stri
     let data = match to {
         "wss" => {
             let mut buffer = Vec::new();
-            wss.set_compression(hemtt_wss::Compression::Nibble);
+            wss.set_compression(compression
+                .map(|c| hemtt_wss::Compression::from_u32(c).unwrap_or(hemtt_wss::Compression::None))
+                .unwrap_or(hemtt_wss::Compression::None));
+        
             wss.write(&mut buffer)
                 .map_err(|e| format!("Error writing file: {e}"))?;
             Ok(buffer)
@@ -69,7 +72,7 @@ impl Backend {
         &self,
         params: ConvertParams,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
-        match convert(&params.url, &params.to, params.out) {
+        match convert(&params.url, &params.to, params.out, params.compression) {
             Ok(res) => Ok(Some(
                 serde_json::to_value(res).expect("Serialization failed"),
             )),
@@ -86,4 +89,5 @@ pub struct ConvertParams {
     url: Url,
     to: String,
     out: Option<String>,
+    compression: Option<u32>,
 }
