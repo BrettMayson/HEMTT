@@ -13,7 +13,12 @@ pub struct WssInfo {
     pub compression: String,
 }
 
-pub fn convert(url: &Url, to: &str, out: Option<String>, compression: Option<u32>) -> Result<WssInfo, String> {
+pub fn convert(
+    url: &Url,
+    to: &str,
+    out: Option<String>,
+    compression: Option<u32>,
+) -> Result<WssInfo, String> {
     let path = url
         .to_file_path()
         .map_err(|()| "Only file URLs are supported".to_string())?;
@@ -39,10 +44,9 @@ pub fn convert(url: &Url, to: &str, out: Option<String>, compression: Option<u32
     let data = match to {
         "wss" => {
             let mut buffer = Vec::new();
-            wss.set_compression(compression
-                .map(|c| hemtt_wss::Compression::from_u32(c).unwrap_or(hemtt_wss::Compression::None))
-                .unwrap_or(hemtt_wss::Compression::None));
-        
+            wss.set_compression(compression.map_or(hemtt_wss::Compression::None, |c| {
+                hemtt_wss::Compression::from_u32(c).unwrap_or(hemtt_wss::Compression::None)
+            }));
             wss.write(&mut buffer)
                 .map_err(|e| format!("Error writing file: {e}"))?;
             Ok(buffer)
