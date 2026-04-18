@@ -39,9 +39,9 @@ pub fn execute(_: &Command) -> Result<Report, Error> {
         if path.is_symlink() {
             info!("Removing symbolic link: {}", path.display());
             #[cfg(windows)]
-            fs_err::remove_dir(&path)?;
+            fs_err::remove_dir(path)?;
             #[cfg(not(windows))]
-            fs_err::remove_file(&path)?;
+            fs_err::remove_file(path)?;
             count += 1;
         }
     }
