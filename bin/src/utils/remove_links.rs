@@ -4,13 +4,13 @@ use crate::{Error, commands::launch::error::bcle4_arma_not_found::ArmaNotFound, 
 
 #[derive(clap::Parser)]
 /// Remove file-patching links from within the Arma 3 game directory
-/// 
+///
 /// ## Global Configuration
 ///
 /// `remove_links` can be configured in the [global configuration file](/configuration/global.md).
-/// 
+///
 /// When enabled, HEMTT will run `hemtt utils remove-links` before launching with `hemtt launch`. This is useful to avoid conflicts when mods have dependencies on other mods that are developed locally.
-/// 
+///
 /// ```toml,fp={config}/hemtt/config.toml
 /// [launch]
 /// remove_links = true
