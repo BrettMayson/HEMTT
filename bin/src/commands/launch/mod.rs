@@ -186,6 +186,15 @@ pub mod preset;
 /// ## Global Configuration
 ///
 /// Launch configuration can be stored in the [global configuration file](/configuration/global.md).
+/// 
+/// ### Remove Links
+/// 
+/// When enabled, HEMTT will run `hemtt utils remove-links` before launching. This is useful to avoid conflicts when mods have dependencies on other mods that are developed locally.
+/// 
+/// ```toml,fp={config}/hemtt/config.toml
+/// [launch]
+/// remove_links = true
+/// ```
 ///
 /// ### Global Profiles
 ///
@@ -322,6 +331,13 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         report.push(MissingMainPrefix::code());
         return Ok(report);
     };
+
+    if global.launch().remove_links() {
+        report.merge(crate::utils::remove_links::execute(&crate::utils::remove_links::Command {})?);
+    }
+    if report.failed() {
+        return Ok(report);
+    }
 
     let launch = read_profile(
         &global,
