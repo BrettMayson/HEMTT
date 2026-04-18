@@ -3,8 +3,8 @@ private _a1 = [1,2,3];
 { systemChat format ["Value: %1, Key %2", _x, _y]; } forEach _a1; // _y is invalid (set is an array)
 _a1 apply { systemChat format ["Value: %1, Key %2", _x, _y]; }; // _y is invalid (set is an array)
 _a1 findIf { systemChat str _forEachIndex; _x > 2 }; // _forEachIndex is invalid
-{ _x + "A" } forEach _a1; // invalid cmd:+ (_x is a number)
-_a1 findIf { _x + "B" };  // invalid cmd:+ (_x is a number)
+{ toLower _x } forEach _a1; // invalid cmd:toLower (_x is a number)
+_a1 findIf { toUpper _x };  // invalid cmd:toUpper (_x is a number)
 { _x + "C" } forEach ["B", 1]; // "ok"
 
 private _a2 = xUnknown;
