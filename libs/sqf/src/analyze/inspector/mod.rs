@@ -557,7 +557,7 @@ impl<'a> Inspector<'a> {
                         let _ = self.cmd_generic_call(&rhs_set, None, false);
                         None
                     }
-                    BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
+                    BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set, source)),
                     BinaryCommand::Eq => {
                         self.cmd_eqx_count_lint(lhs, rhs, true);
                         None
