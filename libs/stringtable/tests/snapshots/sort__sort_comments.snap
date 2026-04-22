@@ -43,6 +43,8 @@ Project {
                         dutch: None,
                         ukrainian: None,
                         danish: None,
+                        bulgarian: None,
+                        latin: None,
                     },
                     Key {
                         id: "HasComment",
@@ -76,6 +78,8 @@ Project {
                         dutch: None,
                         ukrainian: None,
                         danish: None,
+                        bulgarian: None,
+                        latin: None,
                     },
                 ],
                 containers: [],
