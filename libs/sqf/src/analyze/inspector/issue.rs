@@ -12,7 +12,7 @@ pub enum Issue {
     Unused(String, VarSource, bool),
     Shadowed(String, Range<usize>),
     NotPrivate(String, Range<usize>),
-    CountArrayComparison(bool, Range<usize>, String),
+    CountArrayComparison(bool, Range<usize>, String, Range<usize>),
     InvalidReturnType {
         variant: InvalidArgs,
     },

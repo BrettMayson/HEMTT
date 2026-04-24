@@ -65,10 +65,11 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         
-        let Some((ident, against_true)) = is_static_comparison(lhs, rhs).or_else(|| is_static_comparison(rhs, lhs)) else {
+        let Some((ident, against_true, var_span)) = is_static_comparison(lhs, rhs).or_else(|| is_static_comparison(rhs, lhs)) else {
             return Vec::new();
         };
 
+        let original = crate::analyze::recover_original_source(processed, var_span.start);
         vec![Arc::new(CodeS20BoolStaticComparison::new(
             target.full_span(),
             processed,
@@ -76,15 +77,16 @@ impl LintRunner<LintData> for Runner {
             ident,
             against_true,
             matches!(target, Expression::BinaryCommand(BinaryCommand::NotEq, _, _, _)),
+            original,
         ))]
     }
 }
 
-fn is_static_comparison(lhs: &Expression, rhs: &Expression) -> Option<(String, bool)> {
+fn is_static_comparison(lhs: &Expression, rhs: &Expression) -> Option<(String, bool, Range<usize>)> {
     match rhs {
         Expression::Boolean(against_true, _) => {
             match lhs {
-                Expression::Variable(var, _) => Some((var.clone(), *against_true)),
+                Expression::Variable(var, span) => Some((var.clone(), *against_true, span.clone())),
                 _ => None,
             }
         }
@@ -100,6 +102,7 @@ pub struct CodeS20BoolStaticComparison {
     ident: String,
     against_true: bool,
     negated: bool,
+    original_source: Option<String>,
 }
 
 impl Code for CodeS20BoolStaticComparison {
@@ -124,16 +127,17 @@ impl Code for CodeS20BoolStaticComparison {
     }
 
     fn suggestion(&self) -> Option<String> {
+        let var = self.original_source.as_ref().unwrap_or(&self.ident);
         Some(if self.against_true {
             if self.negated {
-                format!("!{}", self.ident)
+                format!("!{var}")
             } else {
-                self.ident.clone()
+                var.clone()
             }
         } else if self.negated {
-            self.ident.clone()
+            var.clone()
         } else {
-            format!("!{}", self.ident)
+            format!("!{var}")
         })
     }
 
@@ -144,7 +148,7 @@ impl Code for CodeS20BoolStaticComparison {
 
 impl CodeS20BoolStaticComparison {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, against_true: bool, negated: bool) -> Self {
+    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity, ident: String, against_true: bool, negated: bool, original_source: Option<String>) -> Self {
         Self {
             span,
             severity,
@@ -152,6 +156,7 @@ impl CodeS20BoolStaticComparison {
             ident,
             against_true,
             negated,
+            original_source,
         }
         .generate_processed(processed)
     }

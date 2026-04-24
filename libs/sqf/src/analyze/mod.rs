@@ -108,6 +108,76 @@ pub fn analyze(
 }
 
 pub type Localizations = Vec<(String, Position)>;
+
+#[must_use]
+/// Try to recover the original source text for a span
+///
+/// If the span came from a macro expansion, this looks up the original source
+/// text before expansion. This is useful for showing macro names in suggestions.
+pub fn recover_original_source(processed: &Processed, span_start: usize) -> Option<String> {
+    // Try to find a mapping at the start of the span
+    if let Some(mapping) = processed.mapping(span_start)
+        && mapping.was_macro()
+    {
+        // This came from a macro, get the original source
+        let source_info = processed.source(mapping.source())?;
+        let source_text = &source_info.1;
+
+        // Extract the original text using the original position
+        let original_start = mapping.original_start();
+        let original_end = mapping.original_end();
+
+        // Get the original token's symbol as a fallback
+        let token = mapping.token();
+        let macro_text = token.symbol();
+
+        // Try to find the full macro call in the original source
+        // Look forward from the original position to find the closing paren/bracket
+        if original_start < source_text.len() {
+            // Start with the macro name
+            let mut end = original_end;
+
+            // Look ahead for parentheses (macro arguments)
+            while end < source_text.len()
+                && source_text
+                    .chars()
+                    .nth(end)
+                    .is_some_and(|c| c == ' ' || c == '\t')
+            {
+                end += 1;
+            }
+
+            // If we find an opening paren, include everything until the closing paren
+            if end < source_text.len() && source_text.chars().nth(end) == Some('(') {
+                let mut paren_count = 0;
+                for (i, ch) in source_text[end..].chars().enumerate() {
+                    if ch == '(' {
+                        paren_count += 1;
+                    } else if ch == ')' {
+                        paren_count -= 1;
+                        if paren_count == 0 {
+                            end = end + i + 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Ensure we have valid indices
+            if original_start <= source_text.len()
+                && end <= source_text.len()
+                && original_start <= end
+            {
+                return Some(source_text[original_start..end].trim().to_string());
+            }
+        }
+
+        // Fallback: just use the token's symbol
+        return Some(macro_text.to_string().trim().to_string());
+    }
+    None
+}
+
 pub struct LintData {
     pub(crate) addon: Option<Arc<Addon>>,
     pub(crate) database: Arc<Database>,

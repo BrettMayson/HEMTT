@@ -89,6 +89,7 @@ impl LintRunner<LintData> for Runner {
                     if index.0 < 1.0 {
                         return Vec::new();
                     }
+                    let original = crate::analyze::recover_original_source(processed, array.span().start);
                     #[allow(clippy::cast_possible_truncation)]
                     #[allow(clippy::cast_sign_loss)]
                     return vec![Arc::new(CodeS27SelectCount::new(
@@ -97,6 +98,7 @@ impl LintRunner<LintData> for Runner {
                         target.full_span(),
                         processed,
                         config.severity(),
+                        original,
                     ))];
                 }
             }
@@ -112,6 +114,7 @@ pub struct CodeS27SelectCount {
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
+    original_source: Option<String>,
 }
 
 impl Code for CodeS27SelectCount {
@@ -136,10 +139,11 @@ impl Code for CodeS27SelectCount {
     }
 
     fn suggestion(&self) -> Option<String> {
-        if self.array.contains("select") {
-            Some(format!("({}) select -{}", self.array, self.index))
+        let to_suggest = self.original_source.as_ref().unwrap_or(&self.array);
+        if to_suggest.contains("select") {
+            Some(format!("({}) select -{}", to_suggest, self.index))
         } else {
-            Some(format!("{} select -{}", self.array, self.index))
+            Some(format!("{} select -{}", to_suggest, self.index))
         }
     }
 
@@ -150,7 +154,7 @@ impl Code for CodeS27SelectCount {
 
 impl CodeS27SelectCount {
     #[must_use]
-    pub fn new(index: usize, array: String, mut span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(index: usize, array: String, mut span: Range<usize>, processed: &Processed, severity: Severity, original_source: Option<String>) -> Self {
         #[allow(clippy::range_plus_one)]
         if array.contains("select") {
             span = span.start - 1..span.end + 1;
@@ -163,6 +167,7 @@ impl CodeS27SelectCount {
             span,
             severity,
             diagnostic: None,
+            original_source,
         }
         .generate_processed(processed)
     }

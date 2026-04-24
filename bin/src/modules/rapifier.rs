@@ -6,7 +6,6 @@ use hemtt_config::{
     parse,
     rapify::Rapify,
 };
-use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
     WorkspacePath,
     addons::{Addon, Location},
@@ -111,7 +110,7 @@ impl Module for Rapifier {
 
 pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
     let mut report = Report::new();
-    let processed = match Processor::run(path, ctx.config().preprocessor()) {
+    let processed = match hemtt_preprocessor::Processor::run(path, ctx.config().preprocessor()) {
         Ok(processed) => processed,
         Err((_, hemtt_preprocessor::Error::Code(e))) => {
             report.push(e);

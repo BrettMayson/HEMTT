@@ -1,0 +1,33 @@
+---
+source: libs/sqf/tests/lints.rs
+assertion_line: 60
+expression: "lint(stringify! (s27_macro), false).0"
+---
+[0m[1m[38;5;14mhelp[L-S13][0m[1m: Undefined variable `_inventory`[0m
+  [0m[36m┌─[0m s27_macro.sqf:3:17
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _last = [0m[36mITEMS[0m select (count ITEMS - 1);
+  [0m[36m│[0m                 [0m[36m^^^^^[0m [0m[36mundefined variable[0m
+
+
+[0m[1m[38;5;14mhelp[L-S13][0m[1m: Undefined variable `_inventory`[0m
+  [0m[36m┌─[0m s27_macro.sqf:3:37
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _last = ITEMS select (count [0m[36mITEMS[0m - 1);
+  [0m[36m│[0m                                     [0m[36m^^^^^[0m [0m[36mundefined variable[0m
+
+
+[0m[1m[38;5;14mhelp[L-S14][0m[1m: Unused variable `_last`[0m
+  [0m[36m┌─[0m s27_macro.sqf:3:9
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private [0m[36m_last[0m = ITEMS select (count ITEMS - 1);
+  [0m[36m│[0m         [0m[36m^^^^^[0m [0m[36munused variable[0m
+
+
+[0m[1m[38;5;14mhelp[L-S27][0m[1m: Using `select` with `count`[0m
+  [0m[36m┌─[0m s27_macro.sqf:3:17
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _last = [0m[36mITEMS select (count ITEMS - 1)[0m;
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: ITEMS select -1

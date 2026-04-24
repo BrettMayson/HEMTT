@@ -112,12 +112,14 @@ impl LintRunner<LintData> for Runner {
         if lhs.abs() > f32::EPSILON || (rhs - 1.0).abs() > f32::EPSILON {
             return Vec::new();
         }
+        let original = crate::analyze::recover_original_source(processed, condition.span().start);
         vec![Arc::new(CodeS07SelectParseNumber::new(
             expression.full_span(),
             (**condition).clone(),
             processed,
             negate,
             config.severity(),
+            original,
         ))]
     }
 }
@@ -143,7 +145,7 @@ pub struct CodeS07SelectParseNumber {
     span: Range<usize>,
     expr: Expression,
     negate: bool,
-
+    original_source: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -170,9 +172,7 @@ impl Code for CodeS07SelectParseNumber {
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(format!(
-            "parseNumber {}",
-            if matches!(
+        let expr_str = self.original_source.as_ref().map_or_else(|| if matches!(
                 self.expr,
                 Expression::UnaryCommand(_, _, _) | Expression::BinaryCommand(_, _, _, _)
             ) || self.negate
@@ -215,8 +215,20 @@ impl Code for CodeS07SelectParseNumber {
                 )
             } else {
                 self.expr.source(false)
-            }
-        ))
+            }, |original| if matches!(
+                self.expr,
+                Expression::UnaryCommand(_, _, _) | Expression::BinaryCommand(_, _, _, _)
+            ) || self.negate
+            {
+                format!(
+                    "{}({})",
+                    if self.negate { "!" } else { "" },
+                    original
+                )
+            } else {
+                original.clone()
+            });
+        Some(format!("parseNumber {expr_str}"))
     }
 
     fn note(&self) -> Option<String> {
@@ -241,12 +253,12 @@ impl Code for CodeS07SelectParseNumber {
 
 impl CodeS07SelectParseNumber {
     #[must_use]
-    pub fn new(span: Range<usize>, expr: Expression, processed: &Processed, negate: bool, severity: Severity) -> Self {
+    pub fn new(span: Range<usize>, expr: Expression, processed: &Processed, negate: bool, severity: Severity, original_source: Option<String>) -> Self {
         Self {
             span,
             expr,
             negate,
-
+            original_source,
             severity,
             diagnostic: None,
         }
