@@ -46,21 +46,47 @@ impl Module for FilePatching {
     }
 
     fn post_build(&self, ctx: &Context) -> Result<Report, Error> {
+        self.create(ctx)
+    }
+}
+
+impl FilePatching {
+    /// Get the symlink path with validation
+    ///
+    /// # Errors
+    /// Returns a `Report` with warnings if Arma 3 is not found or mainprefix is not set
+    fn get_link_path(&self, ctx: &Context) -> Result<std::path::PathBuf, Report> {
         let mut report = Report::new();
         let Some(arma3dir) = &self.arma3dir else {
             report.push(ArmaNotFound::code());
-            return Ok(report);
+            return Err(report);
         };
         let Some(mainprefix) = ctx.config().mainprefix() else {
             report.push(NoMainPrefix::code());
-            return Ok(report);
+            return Err(report);
         };
         let prefix_folder = arma3dir.join(mainprefix);
+        Ok(prefix_folder.join(ctx.config().prefix()))
+    }
+
+    /// Create the symlink in the Arma 3 directory for file patching
+    ///
+    /// # Errors
+    /// [`Error`] if the link cannot be created, or if the Arma 3 directory cannot be found
+    ///
+    /// # Panics
+    /// If the link's parent directory cannot be resolved
+    pub fn create(&self, ctx: &Context) -> Result<Report, Error> {
+        let link = match self.get_link_path(ctx) {
+            Ok(path) => path,
+            Err(report) => return Ok(report),
+        };
+
+        let prefix_folder = link.parent().expect("link has parent");
         if !prefix_folder.exists() {
-            fs_err::create_dir_all(&prefix_folder)?;
+            fs_err::create_dir_all(prefix_folder)?;
         }
 
-        let link = prefix_folder.join(ctx.config().prefix());
         if link.exists() {
             trace!("removing existing symlink at {}", link.display());
             #[cfg(windows)]
@@ -68,9 +94,32 @@ impl Module for FilePatching {
             #[cfg(not(windows))]
             fs_err::remove_file(&link)?;
         }
-        create_link(&link, ctx.build_folder().expect("build folder exists"))?;
+        create_link(&link, ctx.project_folder())?;
         info!("Symlink created at {}", link.display());
-        Ok(report)
+        Ok(Report::new())
+    }
+
+    /// Remove the symlink from the Arma 3 directory
+    ///
+    /// # Errors
+    /// [`Error`] if the link cannot be removed, or if the Arma 3 directory cannot be found
+    pub fn remove(&self, ctx: &Context) -> Result<Report, Error> {
+        let link = match self.get_link_path(ctx) {
+            Ok(path) => path,
+            Err(report) => return Ok(report),
+        };
+
+        if link.exists() {
+            trace!("removing symlink at {}", link.display());
+            #[cfg(windows)]
+            fs_err::remove_dir(&link)?;
+            #[cfg(not(windows))]
+            fs_err::remove_file(&link)?;
+            info!("Symlink removed from {}", link.display());
+        } else {
+            info!("No symlink found at {}", link.display());
+        }
+        Ok(Report::new())
     }
 }
 

@@ -21,6 +21,7 @@ enum Subcommands {
     P3d(utils::p3d::Command),
     Paa(utils::paa::Command),
     Pbo(utils::pbo::Command),
+    RemoveLinks(utils::remove_links::Command),
     Sqf(utils::sqf::Command),
     Verify(utils::verify::Command),
 }
@@ -30,6 +31,7 @@ enum Subcommands {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    let mut report = Report::new();
     match &cmd.commands {
         Subcommands::Audio(cmd) => {
             utils::audio::execute(cmd)?;
@@ -55,6 +57,9 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         Subcommands::Pbo(cmd) => {
             utils::pbo::execute(cmd)?;
         }
+        Subcommands::RemoveLinks(cmd) => {
+            report = utils::remove_links::execute(cmd)?;
+        }
         Subcommands::Sqf(cmd) => {
             utils::sqf::execute(cmd)?;
         }
@@ -62,5 +67,5 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
             utils::verify::execute(cmd)?;
         }
     }
-    Ok(Report::new())
+    Ok(report)
 }

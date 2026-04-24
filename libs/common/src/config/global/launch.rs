@@ -11,6 +11,8 @@ pub struct LaunchConfig {
     profiles: HashMap<String, LaunchOptions>,
 
     pointers: HashMap<String, PathBuf>,
+
+    remove_links: bool,
 }
 
 impl LaunchConfig {
@@ -25,6 +27,12 @@ impl LaunchConfig {
     pub const fn pointers(&self) -> &HashMap<String, PathBuf> {
         &self.pointers
     }
+
+    #[must_use]
+    /// Whether to remove symbolic links
+    pub const fn remove_links(&self) -> bool {
+        self.remove_links
+    }
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -36,6 +44,9 @@ pub struct LaunchConfigFile {
 
     #[serde(default)]
     pointers: HashMap<String, PathBuf>,
+
+    #[serde(default)]
+    remove_links: bool,
 }
 
 impl From<LaunchConfigFile> for LaunchConfig {
@@ -47,6 +58,7 @@ impl From<LaunchConfigFile> for LaunchConfig {
                 .map(|(k, v)| (k, v.into()))
                 .collect(),
             pointers: file.pointers,
+            remove_links: file.remove_links,
         }
     }
 }
