@@ -13,7 +13,7 @@ pub use project::Project;
 pub use totals::Totals;
 
 /// Languages in className format
-static ALL_LANGUAGES: [&str; 25] = [
+static ALL_LANGUAGES: [&str; 27] = [
     "English",
     "Czech",
     "French",
@@ -39,4 +39,6 @@ static ALL_LANGUAGES: [&str; 25] = [
     "Dutch",
     "Ukrainian",
     "Danish",
+    "Bulgarian",
+    "Latin",
 ];
