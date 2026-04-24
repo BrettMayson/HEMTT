@@ -33,7 +33,7 @@ impl Array {
     }
 
     #[must_use]
-    pub const fn items(&self) -> &[Item] {
+    pub fn items(&self) -> &[Item] {
         &self.items
     }
 }
