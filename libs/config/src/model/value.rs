@@ -40,13 +40,13 @@ pub enum Value {
 impl Value {
     #[must_use]
     /// Get the range of the value
-    pub fn span(&self) -> Range<usize> {
+    pub fn span(&self) -> &Range<usize> {
         match self {
-            Self::Str(s) => s.span.clone(),
+            Self::Str(s) => s.span(),
             Self::Number(n) => n.span(),
-            Self::Expression(e) => e.span.clone(),
-            Self::Array(a) | Self::UnexpectedArray(a) => a.span.clone(),
-            Self::Invalid(span) => span.clone(),
+            Self::Expression(e) => e.span(),
+            Self::Array(a) | Self::UnexpectedArray(a) => a.span(),
+            Self::Invalid(span) => span,
         }
     }
 }

@@ -56,7 +56,7 @@ impl Item {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Str(s) => s.span.clone(),
-            Self::Number(n) => n.span(),
+            Self::Number(n) => n.span().clone(),
             Self::Array(items) => {
                 if let (Some(first), Some(last)) = (items.first(), items.last()) {
                     first.span().start..last.span().end

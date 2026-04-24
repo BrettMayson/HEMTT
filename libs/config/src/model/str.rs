@@ -16,8 +16,8 @@ impl Str {
 
     #[must_use]
     /// Get the span
-    pub fn span(&self) -> Range<usize> {
-        self.span.clone()
+    pub const fn span(&self) -> &Range<usize> {
+        &self.span
     }
 
     #[cfg(test)]
