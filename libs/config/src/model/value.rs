@@ -40,7 +40,7 @@ pub enum Value {
 impl Value {
     #[must_use]
     /// Get the range of the value
-    pub fn span(&self) -> &Range<usize> {
+    pub const fn span(&self) -> &Range<usize> {
         match self {
             Self::Str(s) => s.span(),
             Self::Number(n) => n.span(),

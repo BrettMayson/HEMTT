@@ -190,7 +190,7 @@ fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
             let expected = cmp::max(cfg_scope.unwrap_or(0), cfg_scope_curator.unwrap_or(0)) > 1
                 && cfg_scope_curator.is_none_or(|c| c > 1)
                 && cfg_scope.is_none_or(|c| c > 1);
-            defined.insert(name_lower, (expected, name.span(), cfg_scope, cfg_scope_curator));
+            defined.insert(name_lower, (expected, name.span().clone(), cfg_scope, cfg_scope_curator));
         }
     }
     defined

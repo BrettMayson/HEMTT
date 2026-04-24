@@ -97,7 +97,7 @@ impl LintRunner<LintData> for Runner {
                         return vec![Arc::new(CodeS28BannedMacros::new(
                             ban_name,
                             type_release,
-                            span,
+                            span.clone(),
                             processed,
                             config.severity(),
                         ))];
