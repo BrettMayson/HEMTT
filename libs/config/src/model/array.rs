@@ -21,6 +21,21 @@ impl Array {
             span,
         }
     }
+
+    #[must_use]
+    pub const fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    #[must_use]
+    pub const fn expand(&self) -> bool {
+        self.expand
+    }
+
+    #[must_use]
+    pub const fn items(&self) -> &[Item] {
+        &self.items
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
