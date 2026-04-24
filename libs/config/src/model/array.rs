@@ -21,6 +21,21 @@ impl Array {
             span,
         }
     }
+
+    #[must_use]
+    pub const fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    #[must_use]
+    pub const fn expand(&self) -> bool {
+        self.expand
+    }
+
+    #[must_use]
+    pub fn items(&self) -> &[Item] {
+        &self.items
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,7 +56,7 @@ impl Item {
     pub fn span(&self) -> Range<usize> {
         match self {
             Self::Str(s) => s.span.clone(),
-            Self::Number(n) => n.span(),
+            Self::Number(n) => n.span().clone(),
             Self::Array(items) => {
                 if let (Some(first), Some(last)) = (items.first(), items.last()) {
                     first.span().start..last.span().end

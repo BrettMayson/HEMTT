@@ -665,7 +665,10 @@ impl<'a> Inspector<'a> {
             Expression::Code(statements) => {
                 self.code_seen(expression);
                 debug_type = format!("CODE:{}", statements.content().len());
-                IndexSet::from([(GameValue::Code(Some(expression.clone())), statements.span())])
+                IndexSet::from([(
+                    GameValue::Code(Some(expression.clone())),
+                    statements.span().clone(),
+                )])
             }
             Expression::ConsumeableArray(_, _) => unreachable!(""),
         };

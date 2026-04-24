@@ -44,14 +44,9 @@ pub fn convert(
     let data = match to {
         "wss" => {
             let mut buffer = Vec::new();
-            wss.set_compression(
-                compression
-                    .map(|c| {
-                        hemtt_wss::Compression::from_u32(c).unwrap_or(hemtt_wss::Compression::None)
-                    })
-                    .unwrap_or(hemtt_wss::Compression::None),
-            );
-
+            wss.set_compression(compression.map_or(hemtt_wss::Compression::None, |c| {
+                hemtt_wss::Compression::from_u32(c).unwrap_or(hemtt_wss::Compression::None)
+            }));
             wss.write(&mut buffer)
                 .map_err(|e| format!("Error writing file: {e}"))?;
             Ok(buffer)

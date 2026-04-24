@@ -38,8 +38,8 @@ impl Statements {
     }
 
     #[must_use]
-    pub fn span(&self) -> Range<usize> {
-        self.span.clone()
+    pub const fn span(&self) -> &Range<usize> {
+        &self.span
     }
 
     #[must_use]
@@ -143,11 +143,11 @@ impl Statement {
     }
 
     #[must_use]
-    pub fn span(&self) -> Range<usize> {
+    pub const fn span(&self) -> &Range<usize> {
         match self {
             Self::AssignGlobal(_, _, span)
             | Self::AssignLocal(_, _, span)
-            | Self::Expression(_, span) => span.clone(),
+            | Self::Expression(_, span) => span,
         }
     }
 }
@@ -283,7 +283,7 @@ impl Expression {
     #[must_use]
     pub fn span(&self) -> Range<usize> {
         match self {
-            Self::Code(code) => code.span(),
+            Self::Code(code) => code.span().clone(),
             #[allow(clippy::range_plus_one)]
             Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
                 if items.is_empty() {
@@ -305,7 +305,7 @@ impl Expression {
     #[must_use]
     pub fn full_span(&self) -> Range<usize> {
         match self {
-            Self::Code(code) => code.span(),
+            Self::Code(code) => code.span().clone(),
             Self::ConsumeableArray(_, _) | Self::Array(_, _) => self.span(),
             Self::String(_, span, _)
             | Self::Number(_, span)
