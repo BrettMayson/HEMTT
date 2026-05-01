@@ -83,11 +83,11 @@ impl LintRunner<LintData> for Runner {
                     let Item::Str(item_data) = item else {
                         continue;
                     };
-                    check_string(item_data, &item_data.span(), processed, data);
+                    check_string(item_data, item_data.span(), processed, data);
                 }
             }
             Value::Str(cstring_data) => {
-                check_string(cstring_data, &target.span(), processed, data);
+                check_string(cstring_data, target.span(), processed, data);
             }
             _ => {}
         }

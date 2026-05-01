@@ -14,7 +14,7 @@ fs-err = { workspace = true }
 git2 = { workspace = true }
 rustversion = { workspace = true }
 serde = { workspace = true }
-steamlocate = "2.0.1"
+steamlocate = "2.1.0"
 strsim = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }

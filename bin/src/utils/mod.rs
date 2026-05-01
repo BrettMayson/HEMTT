@@ -7,6 +7,7 @@ pub mod p3d;
 pub mod paa;
 pub mod pbo;
 pub mod photoshoot;
+pub mod remove_links;
 pub mod sqf;
 pub mod verify;
 

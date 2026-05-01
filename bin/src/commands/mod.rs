@@ -5,6 +5,7 @@ pub mod dev;
 pub mod keys;
 pub mod launch;
 pub mod license;
+pub mod link;
 pub mod localization;
 pub mod manage;
 pub mod new;

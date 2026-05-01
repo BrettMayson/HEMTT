@@ -76,6 +76,17 @@ impl Header {
     pub const fn size(&self) -> u32 {
         self.size
     }
+
+    pub(crate) fn as_blank(&self) -> Self {
+        Self {
+            filename: self.filename.clone(),
+            mime: Mime::Blank,
+            original: self.original,
+            reserved: self.reserved,
+            timestamp: self.timestamp,
+            size: self.size,
+        }
+    }
 }
 
 impl WritePbo for Header {

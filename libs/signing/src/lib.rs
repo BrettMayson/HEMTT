@@ -124,7 +124,7 @@ fn pow_mod_params(base: &BoxedUint, exp: &BoxedUint, n_params: &BoxedMontyParams
 fn reduce_vartime(n: &BoxedUint, p: &BoxedMontyParams) -> BoxedMontyForm {
     let modulus = p.modulus().as_nz_ref().clone();
     let n_reduced = n.rem_vartime(&modulus).resize_unchecked(p.bits_precision());
-    BoxedMontyForm::new(n_reduced, p.clone())
+    BoxedMontyForm::new(n_reduced, p)
 }
 
 #[cfg(test)]

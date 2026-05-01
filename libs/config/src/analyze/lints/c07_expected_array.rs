@@ -177,7 +177,7 @@ impl Code07ExpectedArray {
         );
         if let Some(diag) = &mut self.diagnostic {
             diag.labels.push(
-                Label::secondary(ident_file.0.clone(), value.span()).with_message("not an array"),
+                Label::secondary(ident_file.0.clone(), value.span().clone()).with_message("not an array"),
             );
         }
         self

@@ -55,7 +55,7 @@ impl Ident {
 
     #[must_use]
     /// Get the span of the identifier
-    pub fn span(&self) -> Range<usize> {
-        self.span.clone()
+    pub const fn span(&self) -> &Range<usize> {
+        &self.span
     }
 }

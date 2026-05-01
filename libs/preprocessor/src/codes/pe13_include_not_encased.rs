@@ -33,24 +33,23 @@ impl Code for IncludeNotEncased {
     }
 
     fn suggestion(&self) -> Option<String> {
-        self.start.as_ref()?;
+        let mut wrapper = self.start.as_ref()?.symbol();
+        if wrapper.is_single_quote() {
+            wrapper = &hemtt_workspace::reporting::Symbol::DoubleQuote;
+        }
         if self.path.is_empty() {
             return None;
         }
         Some(format!(
             "{}{}{}",
-            self.start
-                .as_ref()
-                .map_or_else(|| "<".to_string(), |t| t.symbol().to_string()),
+            wrapper,
             self.path
-                .iter()
+                .iter().filter(|t| !t.symbol().is_single_quote())
                 .map(|t| t.symbol().to_string())
                 .collect::<String>(),
-            self.start.as_ref().map_or_else(|| ">".to_string(), |t| t
-                .symbol()
+            wrapper
                 .matching_enclosure()
                 .expect("matching enclosure should exist if first exists")
-                .to_string())
         ))
     }
 

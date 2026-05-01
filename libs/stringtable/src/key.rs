@@ -95,6 +95,12 @@ pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "danish", alias = "DANISH")]
     danish: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "bulgarian", alias = "BULGARIAN")]
+    bulgarian: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
+    #[serde(alias = "latin", alias = "LATIN")]
+    latin: Option<String>,
 }
 
 impl Key {
@@ -242,6 +248,16 @@ impl Key {
         self.danish.as_deref()
     }
 
+    #[must_use]
+    pub fn bulgarian(&self) -> Option<&str> {
+        self.bulgarian.as_deref()
+    }
+
+    #[must_use]
+    pub fn latin(&self) -> Option<&str> {
+        self.latin.as_deref()
+    }
+
     /// Set the value for a specific language.
     ///
     /// # Panics
@@ -273,6 +289,8 @@ impl Key {
             "dutch" => self.dutch = Some(value),
             "ukrainian" => self.ukrainian = Some(value),
             "danish" => self.danish = Some(value),
+            "bulgarian" => self.bulgarian = Some(value),
+            "latin" => self.latin = Some(value),
             _ => panic!("Unknown language: {language}"),
         }
     }
@@ -307,6 +325,8 @@ impl Key {
             ("Dutch", self.dutch()),
             ("Ukrainian", self.ukrainian()),
             ("Danish", self.danish()),
+            ("Bulgarian", self.bulgarian()),
+            ("Latin", self.latin()),
         ]
     }
 }
