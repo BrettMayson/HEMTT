@@ -14,6 +14,9 @@ pub struct File<'a, I: Read> {
 
 impl<'a, I: Read> File<'a, I> {
     /// Create a new file from a header and a reader
+    ///
+    /// # Panics
+    /// If the file is compressed and the compressed data cannot be read or decompressed
     pub fn new(header: &Header, input: &'a mut I) -> Self {
         Self {
             size: if header.mime().is_compressed() {
