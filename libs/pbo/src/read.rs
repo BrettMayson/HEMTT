@@ -125,6 +125,27 @@ impl<I: Seek + Read> ReadablePbo<I> {
         Ok(None)
     }
 
+    /// Read a file from the PBO, without decompressing it if it's compressed
+    ///
+    /// # Errors
+    /// if the file cannot be read
+    pub fn file_raw(&'_ mut self, name: &str) -> Result<Option<File<'_, I>>, Error> {
+        self.input.seek(SeekFrom::Start(self.blob_start))?;
+        for header in &self.headers {
+            if header
+                .filename()
+                .eq_ignore_ascii_case(&name.replace('/', "\\"))
+            {
+                // Lie that the file is uncompressed, so it won't be decompressed when read
+                let header = header.as_blank();
+                return Ok(Some(File::new(&header, &mut self.input)));
+            }
+            self.input
+                .seek(SeekFrom::Current(i64::from(header.size())))?;
+        }
+        Ok(None)
+    }
+
     /// Find the offset of a file
     ///
     /// # Errors
@@ -212,7 +233,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         for header in &self.files_sorted() {
             let mut file = self
-                .file(header.filename())?
+                .file_raw(header.filename())?
                 .expect("file with header should exist");
             std::io::copy(&mut file, &mut hasher)?;
         }

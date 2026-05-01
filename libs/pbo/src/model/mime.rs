@@ -36,6 +36,12 @@ impl Mime {
             _ => None,
         }
     }
+
+    #[must_use]
+    /// Is the mime compressed?
+    pub const fn is_compressed(&self) -> bool {
+        matches!(self, Self::Cprs)
+    }
 }
 
 impl std::fmt::Display for Mime {

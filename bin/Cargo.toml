@@ -35,7 +35,7 @@ hemtt-wss = { path = "../libs/wss" }
 arma3-wiki = { workspace = true }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-clap_complete = "4.6.0"
+clap_complete = "4.6.3"
 dialoguer = "0.12.0"
 dirs = { workspace = true }
 fs_extra = { workspace = true }
@@ -48,12 +48,12 @@ interprocess = { workspace = true }
 lzma-rust2 = "0.15.6" # TODO: remove when not needed, currently breaks build if not specified
 paste = { workspace = true }
 rand = { workspace = true }
-rayon = "1.11.0"
+rayon = "1.12.0"
 regex = { workspace = true }
 reqwest = { version = "0.12.28", features = ["blocking", "json"] }
 rhai = "1.24.0"
 rust-embed = "8.11.0"
-semver = "1.0.27"
+semver = "1.0.28"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha-1 = { workspace = true }
@@ -67,14 +67,14 @@ tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["json"] }
 vfs = { workspace = true }
 walkdir = { workspace = true }
-webbrowser = "1.2.0"
-whoami = "2.1.1"
+webbrowser = "1.2.1"
+whoami = "2.1.2"
 zip = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 enable-ansi-support = "0.3.1"
 winapi = { version = "0.3.9", features = ["winuser"] }
-winreg = "0.55.0"
+winreg = "0.56.0"
 
 [dev-dependencies]
 sealed_test = "1.1.0"
