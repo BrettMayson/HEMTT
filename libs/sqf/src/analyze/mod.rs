@@ -168,7 +168,12 @@ pub fn recover_original_source(processed: &Processed, span_start: usize) -> Opti
                 && end <= source_text.len()
                 && original_start <= end
             {
-                return Some(source_text[original_start..end].trim().to_string());
+                let original_text = source_text
+                    .chars()
+                    .skip(original_start)
+                    .take(end - original_start)
+                    .collect::<String>();
+                return Some(original_text.trim().to_string());
             }
         }
 

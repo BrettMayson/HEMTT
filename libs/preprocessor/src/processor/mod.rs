@@ -143,6 +143,7 @@ impl Processor {
         for (token_span, metadata) in processor.metadata_by_token {
             expansions_store.register(token_span, metadata);
         }
+        expansions_store.build_interval_tree();
         processed.expansions = expansions_store;
 
         Ok(processed)

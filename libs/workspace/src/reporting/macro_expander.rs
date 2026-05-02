@@ -16,7 +16,7 @@ pub struct ExpansionMetadata {
     /// Where the macro is defined
     pub definition_location: Position,
 
-    /// Byte span of the macro name in the definition file
+    /// Char span of the macro name in the definition file
     pub definition_span: std::ops::Range<usize>,
 
     /// Where the macro was called

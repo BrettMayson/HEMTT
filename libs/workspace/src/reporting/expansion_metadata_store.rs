@@ -13,6 +13,7 @@ use crate::reporting::macro_expander::ExpansionMetadata;
 pub struct ExpansionMetadataStore {
     /// Map from output character range to expansion metadata
     expansions: HashMap<Range<usize>, ExpansionMetadata>,
+    expansions_interval: Option<intervaltree::IntervalTree<usize, ExpansionMetadata>>,
 }
 
 impl ExpansionMetadataStore {
@@ -29,15 +30,30 @@ impl ExpansionMetadataStore {
         self.expansions.insert(range, metadata);
     }
 
+    /// Build an interval tree for efficient lookups (optional)
+    pub fn build_interval_tree(&mut self) {
+        self.expansions_interval = Some(
+            self.expansions
+                .iter()
+                .map(|(range, metadata)| (range.clone(), metadata.clone()))
+                .collect(),
+        );
+    }
+
     #[must_use]
     /// Look up expansion metadata by output position
     ///
     /// Returns the metadata for any expansion that contains the given position
     pub fn get_at(&self, position: usize) -> Option<&ExpansionMetadata> {
-        self.expansions
-            .iter()
-            .find(|(range, _)| range.contains(&position))
-            .map(|(_, metadata)| metadata)
+        self.expansions_interval.as_ref().map_or_else(
+            || {
+                self.expansions
+                    .iter()
+                    .find(|(range, _)| range.contains(&position))
+                    .map(|(_, metadata)| metadata)
+            },
+            |tree| tree.query_point(position).next().map(|el| &el.value),
+        )
     }
 
     #[must_use]
@@ -52,7 +68,7 @@ impl ExpansionMetadataStore {
             .collect()
     }
 
-    /// Iterate through all registr ed expansions
+    /// Iterate through all registered expansions
     pub fn iter(&self) -> impl Iterator<Item = (&Range<usize>, &ExpansionMetadata)> {
         self.expansions.iter()
     }
