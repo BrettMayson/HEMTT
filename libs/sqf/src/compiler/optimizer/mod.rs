@@ -503,7 +503,7 @@ impl Expression {
         }
     }
 
-    /// Boilerplate for unary string operations
+    /// Handle toString command
     #[must_use]
     fn op_uni_tostring_code(
         &self,
