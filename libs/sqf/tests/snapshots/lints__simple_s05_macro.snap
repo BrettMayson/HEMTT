@@ -1,0 +1,20 @@
+---
+source: libs/sqf/tests/lints.rs
+assertion_line: 32
+expression: "lint(stringify! (s05_macro), false).0"
+---
+[0m[1m[38;5;11mwarning[L-S05][0m[1m: assignment to if can be replaced with parseNumber[0m
+  [0m[36m┌─[0m s05_macro.sqf:5:19
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _result = [0m[33mif CONDITION then { TRUE_VAL } else { FALSE_VAL }[0m;
+  [0m[36m│[0m                   [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33muse parseNumber[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: parseNumber returns 1 for true and 0 for false
+  [0m[36m=[0m [32mtry[0m: parseNumber CONDITION
+
+
+[0m[1m[38;5;14mhelp[L-S14][0m[1m: Unused variable `_result`[0m
+  [0m[36m┌─[0m s05_macro.sqf:5:9
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private [0m[36m_result[0m = if CONDITION then { TRUE_VAL } else { FALSE_VAL };
+  [0m[36m│[0m         [0m[36m^^^^^^^[0m [0m[36munused variable[0m

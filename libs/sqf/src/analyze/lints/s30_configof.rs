@@ -78,7 +78,8 @@ impl LintRunner<LintData> for Runner {
         && let Expression::String(str, _, _) = lhs_rhs.as_ref()
         && (str.eq_ignore_ascii_case("cfgvehicles") || str.eq_ignore_ascii_case("cfgammo"))
     {
-        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(false), lhs_lhs.full_span().start .. rhs_rhs.full_span().end, processed, config.severity()))];
+        let original = crate::analyze::recover_original_source(processed, rhs_rhs.span().start);
+        return vec![Arc::new(CodeS30ConfigOf::new(rhs_rhs.source(false), lhs_lhs.full_span().start .. rhs_rhs.full_span().end, processed, config.severity(), original))];
     }
         Vec::new()
     }
@@ -90,6 +91,7 @@ pub struct CodeS30ConfigOf {
     span: Range<usize>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
+    original_source: Option<String>,
 }
 
 impl Code for CodeS30ConfigOf {
@@ -114,7 +116,8 @@ impl Code for CodeS30ConfigOf {
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(format!("configOf {}", if self.variable.contains(' ') { format!("({})", self.variable) } else { self.variable.clone() }))
+        let to_suggest = self.original_source.as_ref().unwrap_or(&self.variable);
+        Some(format!("configOf {}", if to_suggest.contains(' ') { format!("({to_suggest})") } else { to_suggest.clone() }))
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -124,12 +127,13 @@ impl Code for CodeS30ConfigOf {
 
 impl CodeS30ConfigOf {
     #[must_use]
-    pub fn new(variable: String, span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(variable: String, span: Range<usize>, processed: &Processed, severity: Severity, original_source: Option<String>) -> Self {
         Self {
             variable,
             span,
             severity,
             diagnostic: None,
+            original_source,
         }
         .generate_processed(processed)
     }

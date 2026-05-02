@@ -1,0 +1,19 @@
+---
+source: libs/sqf/tests/lints.rs
+assertion_line: 34
+expression: "lint(stringify! (s06_macro), false).0"
+---
+[0m[1m[38;5;11mwarning[L-S06][0m[1m: string search using `in` is faster than `find`[0m
+  [0m[36m┌─[0m s06_macro.sqf:4:5
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m if ([0m[33mHAYSTACK find NEEDLE > -1[0m) then {
+  [0m[36m│[0m     [0m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[33musing `find` with -1[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: NEEDLE in HAYSTACK
+
+
+[0m[1m[38;5;14mhelp[L-S13][0m[1m: Undefined variable `_text`[0m
+  [0m[36m┌─[0m s06_macro.sqf:4:5
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m if ([0m[36mHAYSTACK[0m find NEEDLE > -1) then {
+  [0m[36m│[0m     [0m[36m^^^^^^^^[0m [0m[36mundefined variable[0m

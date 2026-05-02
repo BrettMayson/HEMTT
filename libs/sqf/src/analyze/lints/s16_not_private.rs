@@ -72,12 +72,14 @@ impl LintRunner<LintData> for Runner {
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
             if let Issue::NotPrivate(var, range) = issue {
+                let original = crate::analyze::recover_original_source(processed, range.start);
                 errors.push(Arc::new(CodeS16NotPrivate::new(
                     range.to_owned(),
                     var.to_owned(),
                     None,
                     config.severity(),
                     processed,
+                    original,
                 )));
             }
         }
@@ -92,6 +94,7 @@ pub struct CodeS16NotPrivate {
     error_hint: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
+    original_source: Option<String>,
 }
 
 impl Code for CodeS16NotPrivate {
@@ -111,7 +114,8 @@ impl Code for CodeS16NotPrivate {
         self.error_hint.clone()
     }
     fn suggestion(&self) -> Option<String> {
-        Some(format!("private {}", self.variable))
+        let var = self.original_source.as_ref().unwrap_or(&self.variable);
+        Some(format!("private {var}"))
     }
     fn severity(&self) -> Severity {
         self.severity
@@ -129,6 +133,7 @@ impl CodeS16NotPrivate {
         error_hint: Option<String>,
         severity: Severity,
         processed: &Processed,
+        original_source: Option<String>,
     ) -> Self {
         Self {
             span,
@@ -136,6 +141,7 @@ impl CodeS16NotPrivate {
             error_hint,
             severity,
             diagnostic: None,
+            original_source,
         }
         .generate_processed(processed)
     }

@@ -506,6 +506,7 @@ impl Inspector<'_> {
             equal_zero,
             lhs.span().start..rhs.span().end,
             count_input.source(false),
+            count_input.span(),
         ));
     }
     /// emulate a possibly modified l-value array by a command

@@ -90,6 +90,7 @@ impl LintRunner<LintData> for Runner {
                         }) {
                             return Vec::new();
                         }
+                        let original_condition = crate::analyze::recover_original_source(processed, condition.span().start);
                         return vec![Arc::new(CodeS05IfAssign::new(
                             if_cmd.span(),
                             (condition.source(false), condition.full_span()),
@@ -97,6 +98,7 @@ impl LintRunner<LintData> for Runner {
                             (rhs, rhs_expr.span()),
                             processed,
                             config.severity(),
+                            original_condition,
                         ))];
                     }
                 }
@@ -111,7 +113,7 @@ pub struct CodeS05IfAssign {
     condition: (String, Range<usize>),
     lhs: ((String, bool), Range<usize>),
     rhs: ((String, bool), Range<usize>),
-
+    original_condition: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -154,12 +156,13 @@ impl Code for CodeS05IfAssign {
     }
 
     fn suggestion(&self) -> Option<String> {
+        let cond = self.original_condition.as_ref().unwrap_or(&self.condition.0);
         if self.lhs.0 .0 == "1" && self.rhs.0 .0 == "0" {
-            Some(format!("parseNumber {}", self.condition.0.as_str()))
+            Some(format!("parseNumber {}", cond.as_str()))
         } else if self.lhs.0 == (String::from("true"), false) && self.rhs.0 == (String::from("false"), false) {
-            Some(self.condition.0.as_str().to_string())
+            Some(cond.as_str().to_string())
         } else if self.lhs.0 == (String::from("false"), false) && self.rhs.0 == (String::from("true"), false) {
-            Some(format!("!({})", self.condition.0.as_str()))
+            Some(format!("!({})", cond.as_str()))
         } else {
             Some(format!(
                 "[{}, {}] select ({})",
@@ -173,7 +176,7 @@ impl Code for CodeS05IfAssign {
                 } else {
                     self.lhs.0 .0.clone()
                 },
-                self.condition.0.as_str(),
+                cond.as_str(),
             ))
         }
     }
@@ -207,13 +210,14 @@ impl CodeS05IfAssign {
         rhs: ((String, bool), Range<usize>),
         processed: &Processed,
         severity: Severity,
+        original_condition: Option<String>,
     ) -> Self {
         Self {
             if_cmd,
             condition,
             lhs,
             rhs,
-
+            original_condition,
             severity,
             diagnostic: None,
         }

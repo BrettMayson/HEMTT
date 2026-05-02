@@ -1,7 +1,7 @@
 use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
-use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}};
+use hemtt_workspace::{lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity}, WorkspacePath};
 
 use crate::{analyze::LintData, Expression};
 
@@ -81,10 +81,23 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         if command != wiki.name() {
+            let mappings = processed.mappings(target.span().start);
+            let mut definition_location = None;
+            'outer: for mapping in mappings {
+                let original_range = mapping.original_start()..mapping.original_end();
+                for offset in &[original_range.start, original_range.end, original_range.start + 1] {
+                    if let Some(metadata) = processed.expansions.get_at(*offset) {
+                        definition_location = Some((metadata.definition_location.path().clone(), metadata.definition_span.clone()));
+                        break 'outer;
+                    }
+                }
+            }
+
             return vec![Arc::new(CodeS04CommandCase::new(
                 target.span(),
                 command.to_string(),
                 wiki.name().to_string(),
+                definition_location,
                 processed,
                 config.severity(),
             ))];
@@ -98,6 +111,7 @@ pub struct CodeS04CommandCase {
     span: Range<usize>,
     used: String,
     wiki: String,
+    definition_location: Option<(WorkspacePath, Range<usize>)>,
 
     include: bool,
     severity: Severity,
@@ -130,7 +144,7 @@ impl Code for CodeS04CommandCase {
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(format!("\"{}\"", self.wiki))
+        Some(self.wiki.clone())
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -140,13 +154,21 @@ impl Code for CodeS04CommandCase {
 
 impl CodeS04CommandCase {
     #[must_use]
-    pub fn new(span: Range<usize>, used: String, wiki: String, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(
+        span: Range<usize>,
+        used: String,
+        wiki: String,
+        definition_location: Option<(WorkspacePath, Range<usize>)>,
+        processed: &Processed,
+        severity: Severity,
+    ) -> Self {
         Self {
             include: processed.mappings(span.end).first().is_some_and(|mapping| {
                 mapping.original().path().is_include()
             }),
             severity,
             diagnostic: None,
+            definition_location,
             
             span,
             used,
@@ -156,7 +178,16 @@ impl CodeS04CommandCase {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        self.diagnostic = Diagnostic::from_code_processed(&self, self.span.clone(), processed);
+        let Some(mut diag) = Diagnostic::from_code_processed(&self, self.span.clone(), processed) else {
+            return self;
+        };
+        if let Some((def_file, def_span)) = &self.definition_location {
+            diag = diag.with_label(
+                hemtt_workspace::reporting::Label::secondary(def_file.clone(), def_span.clone())
+                    .with_message("defined here")
+            );
+        }
+        self.diagnostic = Some(diag);
         self
     }
 }

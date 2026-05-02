@@ -1,3 +1,9 @@
 {
-  "terminal.integrated.shellArgs.linux": ["-l"]
+"terminal.integrated.shellArgs.linux": [
+    "-l"
+],
+"chat.tools.terminal.autoApprove": {
+    "cargo nextest": true,
+    "cargo insta": true
+}
 }

@@ -65,11 +65,13 @@ impl LintRunner<LintData> for Runner {
         };
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
-            if let Issue::CountArrayComparison(equal_zero, range, variable) = issue {
+            if let Issue::CountArrayComparison(equal_zero, range, variable, input_span) = issue {
+                let original_source = crate::analyze::recover_original_source(processed, input_span.start);
                 errors.push(Arc::new(CodeS25CountArrayComp::new(
                     range.to_owned(),
                     equal_zero.to_owned(),
                     variable.to_owned(),
+                    original_source,
                     config.severity(),
                     processed,
                 )));
@@ -84,6 +86,7 @@ pub struct CodeS25CountArrayComp {
     span: Range<usize>,
     equal_zero: bool,
     variable: String,
+    original_source: Option<String>,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
@@ -106,10 +109,11 @@ impl Code for CodeS25CountArrayComp {
     }
 
     fn suggestion(&self) -> Option<String> {
+        let var_to_use = self.original_source.as_ref().unwrap_or(&self.variable);
         if self.equal_zero {
-            Some(format!("{} isEqualTo []", self.variable))
+            Some(format!("{var_to_use} isEqualTo []"))
         } else {
-            Some(format!("{} isNotEqualTo []", self.variable))
+            Some(format!("{var_to_use} isNotEqualTo []"))
         }
     }
 
@@ -128,6 +132,7 @@ impl CodeS25CountArrayComp {
         span: Range<usize>,
         equal_zero: bool,
         variable: String,
+        original_source: Option<String>,
         severity: Severity,
         processed: &Processed,
     ) -> Self {
@@ -135,6 +140,7 @@ impl CodeS25CountArrayComp {
             span,
             equal_zero,
             variable,
+            original_source,
             severity,
             diagnostic: None,
         }
