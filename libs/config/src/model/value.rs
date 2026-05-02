@@ -17,7 +17,7 @@ pub enum Value {
     /// my_number = 1;
     /// ```
     Number(Number),
-    /// An expression
+    /// An expression, marked with `__EVAL`
     /// This is ran by the game at startup
     Expression(Expression),
     /// An array value

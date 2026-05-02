@@ -1,6 +1,6 @@
 use chumsky::prelude::*;
 
-use crate::{Array, Item};
+use crate::{Array, Item, parse::value::eval};
 
 use super::value::math;
 
@@ -32,6 +32,7 @@ fn array_value() -> impl Parser<char, Item, Error = Simple<char>> {
         super::str::string('"').map(Item::Str),
         math().map(Item::Number),
         super::number::number().map(Item::Number),
+        eval().map(Item::Expression),
     ))
 }
 

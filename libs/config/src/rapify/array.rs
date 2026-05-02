@@ -3,7 +3,7 @@ use std::iter::Sum;
 use byteorder::ReadBytesExt;
 use hemtt_common::io::{ReadExt, WriteExt, compressed_int_len};
 
-use crate::{Array, Item, Number, Str};
+use crate::{Array, Expression, Item, Number, Str};
 
 use super::{Derapify, Rapify};
 
@@ -69,6 +69,7 @@ impl Rapify for Item {
                 }
                 Ok(written)
             }
+            Self::Expression(e) => e.rapify(output, offset),
             Self::Invalid(_) => unreachable!(),
         }
     }
@@ -81,6 +82,7 @@ impl Rapify for Item {
                 compressed_int_len(a.len() as u32)
                     + usize::sum(a.iter().map(|e| e.rapified_length() + 1))
             }
+            Self::Expression(e) => e.rapified_length(),
             Self::Invalid(_) => unreachable!(),
         }
     }
@@ -90,6 +92,7 @@ impl Rapify for Item {
             Self::Str(s) => s.rapified_code(),
             Self::Number(n) => n.rapified_code(),
             Self::Array(_) => 3,
+            Self::Expression(e) => e.rapified_code(),
             Self::Invalid(_) => unreachable!(),
         }
     }
@@ -114,6 +117,7 @@ impl Derapify for Item {
                 }
                 Ok(Self::Array(items))
             }
+            4 => Ok(Self::Expression(Expression::derapify(input)?)),
             6 => Ok(Self::Number(Number::derapify_int64(input)?)),
             _ => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,

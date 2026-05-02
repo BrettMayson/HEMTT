@@ -1,6 +1,6 @@
 ---
 source: libs/config/tests/rapify.rs
-expression: rapify(stringify! (eval))
+expression: config
 ---
 Config(
     [
@@ -16,6 +16,33 @@ Config(
                 },
             ),
             expected_array: false,
+        },
+        Entry {
+            name: Ident {
+                value: "values",
+                span: 50..57,
+            },
+            value: Array(
+                Array {
+                    expand: false,
+                    items: [
+                        Expression(
+                            Expression {
+                                value: "getResolution select 0",
+                                span: 59..82,
+                            },
+                        ),
+                        Expression(
+                            Expression {
+                                value: "getResolution select 1",
+                                span: 83..106,
+                            },
+                        ),
+                    ],
+                    span: 57..106,
+                },
+            ),
+            expected_array: true,
         },
     ],
 )
