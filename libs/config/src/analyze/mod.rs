@@ -192,6 +192,7 @@ impl Analyze for Item {
                 .iter()
                 .flat_map(|i| i.analyze(data, project, processed, manager))
                 .collect::<Vec<_>>(),
+            Self::Expression(e) => e.analyze(data, project, processed, manager),
             Self::Invalid(_) => {
                 vec![]
             }

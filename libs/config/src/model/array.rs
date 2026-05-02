@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::{Number, Str};
+use crate::{Expression, Number, Str};
 
 #[derive(Debug, Clone, PartialEq)]
 /// An array of entries
@@ -47,6 +47,9 @@ pub enum Item {
     Number(Number),
     /// An array value
     Array(Vec<Self>),
+    /// An expression, marked with `__EVAL`
+    /// This is ran by the game at startup
+    Expression(Expression),
     /// An invalid value
     Invalid(Range<usize>),
 }
@@ -64,6 +67,7 @@ impl Item {
                     0..0
                 }
             }
+            Self::Expression(e) => e.span().clone(),
             Self::Invalid(span) => span.clone(),
         }
     }
@@ -101,6 +105,7 @@ impl serde::Serialize for Item {
                 }
                 state.end()
             }
+            Self::Expression(expression) => expression.serialize(serializer),
             Self::Invalid(_) => serializer.serialize_none(),
         }
     }

@@ -43,6 +43,7 @@ impl std::fmt::Display for Item {
                 }
                 write!(f, "}}")
             }
+            Self::Expression(expression) => write!(f, "{expression}"),
             Self::Invalid(_) => unreachable!(),
         }
     }
