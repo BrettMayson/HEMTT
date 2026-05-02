@@ -21,6 +21,7 @@ optimize!(static_math);
 optimize!(scalar);
 optimize!(string_case);
 optimize!(chain);
+optimize!(to_string);
 
 const ROOT: &str = "tests/optimizer/";
 
