@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Diagnostic, Label, Processed},
+    reporting::{Code, Diagnostic, Processed},
 };
 
 use crate::{analyze::LintData, Property, Value};
@@ -158,28 +158,15 @@ impl Code07ExpectedArray {
         if let Value::Array(_) = value {
             panic!("Code07ExpectedArray::generate_processed called on non-Code07ExpectedArray property");
         }
-        let ident_start = processed
-            .mapping(name.span.start)
-            .expect("mapping should exist");
-        let ident_file = processed
-            .source(ident_start.source())
-            .expect("source should exist");
-        let ident_end = processed
-            .mapping(name.span.end)
-            .expect("mapping should exist");
-        let haystack = &processed.extract(&(ident_end.original_start()..value.span().start));
-        let possible_end = ident_end.original_start() + haystack.find(']').unwrap_or(1) + 1;
+        // Extract from processed output between the end of the name and the start of the value
+        let haystack = &processed.extract(&(name.span.end..value.span().start));
+        let possible_end = name.span.end + haystack.find(']').unwrap_or(1) + 1;
         self.suggestion = Some(name.value.clone());
         self.diagnostic = Diagnostic::from_code_processed(
             &self,
-            ident_start.original_start()..possible_end,
+            name.span.start..possible_end,
             processed,
         );
-        if let Some(diag) = &mut self.diagnostic {
-            diag.labels.push(
-                Label::secondary(ident_file.0.clone(), value.span().clone()).with_message("not an array"),
-            );
-        }
         self
     }
 }
