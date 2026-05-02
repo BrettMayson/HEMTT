@@ -66,6 +66,7 @@
 
 # Reference
 
+- [Math](math/index.md)
 - [Lints](lints/index.md)
   - [Preprocessor](lints/preprocessor.md)
   - [Config](lints/config.md)

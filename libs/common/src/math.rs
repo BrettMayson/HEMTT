@@ -43,7 +43,7 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
                 }
                 operator_stack.push(token);
             }
-            Token::UnaryMinus => {
+            Token::Function(_) | Token::UnaryMinus => {
                 operator_stack.push(token);
             }
             Token::LeftParenthesis => operator_stack.push(token),
@@ -58,6 +58,10 @@ fn shunting_yard(expression: &str) -> Option<Vec<Token>> {
                 }
                 if !hit_left {
                     return None;
+                }
+                // If there's a function on top of the stack, pop it to output
+                if let Some(Token::Function(_)) = operator_stack.last() {
+                    output_queue.push(operator_stack.pop()?);
                 }
             }
         }
@@ -90,6 +94,21 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
                 };
                 stack.push(result);
             }
+            Token::Function(name) => {
+                let operand = stack.pop()?;
+                let result = match name.as_str() {
+                    "sin" => operand.sin(),
+                    "cos" => operand.cos(),
+                    "tan" | "tg" => operand.tan(),
+                    "asin" => operand.asin(),
+                    "acos" => operand.acos(),
+                    "atan" | "atg" => operand.atan(),
+                    "rad" => operand.to_radians(),
+                    "deg" => operand.to_degrees(),
+                    _ => return None,
+                };
+                stack.push(result);
+            }
             Token::UnaryMinus => {
                 let operand = stack.pop()?;
                 stack.push(-operand);
@@ -101,10 +120,11 @@ fn evaluate_postfix(tokens: &[Token]) -> Option<f64> {
     stack.pop()
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 enum Token {
     Number(f64),
     Operator(char),
+    Function(String),
     UnaryMinus,
     LeftParenthesis,
     RightParenthesis,
@@ -119,11 +139,40 @@ enum Associativity {
 fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut current_number = String::new();
+    let mut current_identifier = String::new();
     let chars: Vec<char> = expression.chars().collect();
+    let functions = [
+        "acos", "asin", "atan", "atg", "cos", "deg", "rad", "sin", "tan", "tg",
+    ];
 
     for (i, &c) in chars.iter().enumerate() {
         match c {
-            '0'..='9' | '.' => current_number.push(c),
+            '0'..='9' | '.' => {
+                if !current_identifier.is_empty() {
+                    // We were reading an identifier, so finish it first
+                    let identifier = current_identifier.clone();
+                    current_identifier.clear();
+                    if identifier == "pi" {
+                        tokens.push(Token::Number(std::f64::consts::PI));
+                    } else if functions.contains(&identifier.as_str()) {
+                        tokens.push(Token::Function(identifier));
+                    } else {
+                        return Err(format!("Unknown identifier: {identifier}"));
+                    }
+                }
+                current_number.push(c);
+            }
+            'a'..='z' | 'A'..='Z' | '_' => {
+                if !current_number.is_empty() {
+                    tokens.push(Token::Number(
+                        current_number
+                            .parse()
+                            .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
+                    ));
+                    current_number.clear();
+                }
+                current_identifier.push(c);
+            }
             _ => {
                 if !current_number.is_empty() {
                     tokens.push(Token::Number(
@@ -133,6 +182,18 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                     ));
                     current_number.clear();
                 }
+                if !current_identifier.is_empty() {
+                    let identifier = current_identifier.clone();
+                    current_identifier.clear();
+                    if identifier == "pi" {
+                        tokens.push(Token::Number(std::f64::consts::PI));
+                    } else if functions.contains(&identifier.as_str()) {
+                        tokens.push(Token::Function(identifier));
+                    } else {
+                        return Err(format!("Unknown identifier: {identifier}"));
+                    }
+                }
+
                 match c {
                     '+' | '*' | '/' | '^' | '%' => tokens.push(Token::Operator(c)),
                     '(' => tokens.push(Token::LeftParenthesis),
@@ -140,7 +201,8 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                     '-' => {
                         let is_unary_context = matches!(
                             tokens.last(),
-                            Some(Token::Operator(_) | Token::LeftParenthesis) | None
+                            Some(Token::Operator(_) | Token::LeftParenthesis | Token::Function(_))
+                                | None
                         );
 
                         if is_unary_context {
@@ -167,6 +229,16 @@ fn tokenize(expression: &str) -> Result<Vec<Token>, String> {
                 .parse()
                 .map_err(|e: <f64 as FromStr>::Err| e.to_string())?,
         ));
+    }
+    if !current_identifier.is_empty() {
+        let identifier = current_identifier.clone();
+        if identifier == "pi" {
+            tokens.push(Token::Number(std::f64::consts::PI));
+        } else if functions.contains(&identifier.as_str()) {
+            tokens.push(Token::Function(identifier));
+        } else {
+            return Err(format!("Unknown identifier: {identifier}"));
+        }
     }
 
     Ok(tokens)
@@ -295,5 +367,77 @@ mod tests {
         assert_eq!(super::eval("(-1)"), Some(-1.0));
         assert_eq!(super::eval("2--1"), Some(3.0));
         assert_eq!(super::eval("(-1) + 2"), Some(1.0));
+    }
+
+    #[test]
+    fn constants() {
+        assert_eq!(super::eval("pi"), Some(std::f64::consts::PI));
+        assert_eq!(super::eval("pi + 1"), Some(std::f64::consts::PI + 1.0));
+        assert_eq!(super::eval("2 * pi"), Some(2.0 * std::f64::consts::PI));
+    }
+
+    #[test]
+    fn trigonometric() {
+        // sin(0) = 0
+        assert_eq!(super::eval("sin(0)"), Some(0.0));
+        // sin(pi/2) = 1
+        let sin_pi_half = super::eval("sin(pi / 2)").expect("Failed to evaluate sin(pi / 2)");
+        assert!((sin_pi_half - 1.0).abs() < 1e-10);
+
+        // cos(0) = 1
+        assert_eq!(super::eval("cos(0)"), Some(1.0));
+        // cos(pi) = -1
+        let cos_pi = super::eval("cos(pi)").expect("Failed to evaluate cos(pi)");
+        assert!((cos_pi - (-1.0)).abs() < 1e-10);
+
+        // tan(0) = 0
+        assert_eq!(super::eval("tan(0)"), Some(0.0));
+
+        // tg is alias for tan
+        assert_eq!(super::eval("tg(0)"), Some(0.0));
+    }
+
+    #[test]
+    fn inverse_trigonometric() {
+        // asin(0) = 0
+        assert_eq!(super::eval("asin(0)"), Some(0.0));
+        // asin(1) = pi/2
+        let asin_one = super::eval("asin(1)").expect("Failed to evaluate asin(1)");
+        assert!((asin_one - std::f64::consts::PI / 2.0).abs() < 1e-10);
+
+        // acos(1) = 0
+        assert_eq!(super::eval("acos(1)"), Some(0.0));
+        // acos(0) = pi/2
+        let acos_zero = super::eval("acos(0)").expect("Failed to evaluate acos(0)");
+        assert!((acos_zero - std::f64::consts::PI / 2.0).abs() < 1e-10);
+
+        // atan(0) = 0
+        assert_eq!(super::eval("atan(0)"), Some(0.0));
+
+        // atg is alias for atan
+        assert_eq!(super::eval("atg(0)"), Some(0.0));
+    }
+
+    #[test]
+    fn angle_conversion() {
+        // rad(180) = pi
+        let rad_180 = super::eval("rad(180)").expect("Failed to evaluate rad(180)");
+        assert!((rad_180 - std::f64::consts::PI).abs() < 1e-10);
+
+        // deg(pi) = 180
+        let deg_pi = super::eval("deg(pi)").expect("Failed to evaluate deg(pi)");
+        assert!((deg_pi - 180.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn complex_expressions() {
+        // sin(pi / 2) + cos(0)
+        let expr =
+            super::eval("sin(pi / 2) + cos(0)").expect("Failed to evaluate sin(pi / 2) + cos(0)");
+        assert!((expr - 2.0).abs() < 1e-10);
+
+        // 2 * sin(pi / 6) = 1 (sin(30°) = 0.5)
+        let expr = super::eval("2 * sin(rad(30))").expect("Failed to evaluate 2 * sin(rad(30))");
+        assert!((expr - 1.0).abs() < 1e-10);
     }
 }
