@@ -94,7 +94,7 @@ impl FilePatching {
             #[cfg(not(windows))]
             fs_err::remove_file(&link)?;
         }
-        create_link(&link, ctx.project_folder())?;
+        create_link(&link, ctx.build_folder().expect("build folder exists"))?;
         info!("Symlink created at {}", link.display());
         Ok(Report::new())
     }
