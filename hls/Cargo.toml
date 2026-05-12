@@ -1,6 +1,6 @@
 [package]
 name = "hemtt-language-server"
-version = "1.19.1"
+version = "1.19.2"
 edition = "2024"
 
 [lints]
