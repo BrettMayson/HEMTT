@@ -33,9 +33,12 @@ pub fn execute(_: &Command) -> Result<Report, Error> {
 
     // Traverse every file in the Arma 3 directory and remove any symbolic links
     let mut count = 0;
-    for entry in walkdir::WalkDir::new(arma3).follow_links(false) {
+    for entry in walkdir::WalkDir::new(arma3) {
         let entry = entry?;
         let path = entry.path();
+        if path.components().any(|c| c.as_os_str() == "!Workshop") {
+            continue;
+        }
         if path.is_symlink() {
             info!("Removing symbolic link: {}", path.display());
             #[cfg(windows)]
