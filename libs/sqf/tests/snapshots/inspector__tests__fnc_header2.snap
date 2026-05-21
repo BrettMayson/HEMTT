@@ -1,0 +1,5 @@
+---
+source: libs/sqf/tests/inspector.rs
+expression: "(issues.len(), issues)"
+---
+(1, [InvalidReturnType { variant: InvalidReturnType { expected: [Boolean(None)], found: [Nothing(EmptyStack)], span: 3..4 } }])
