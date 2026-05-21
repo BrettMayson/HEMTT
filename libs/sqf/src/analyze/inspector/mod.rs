@@ -1,11 +1,17 @@
 //! Inspects code, checking code args and variable usage
 //!
-use std::{hash::Hash, ops::Range, sync::OnceLock, vec};
+use std::{
+    hash::Hash,
+    ops::Range,
+    sync::{Arc, OnceLock},
+    vec,
+};
 
 use crate::{
     BinaryCommand, Expression, Statement, Statements, UnaryCommand,
     analyze::inspector::game_value::NilSource, parser::database::Database,
 };
+use arma3_wiki::model::Function;
 use game_value::GameValue;
 use hemtt_workspace::reporting::Processed;
 use indexmap::{IndexMap, IndexSet};
@@ -17,6 +23,7 @@ use tracing::warn;
 mod commands;
 mod external_functions;
 mod game_value;
+pub mod headers;
 mod issue;
 pub use issue::{InvalidArgs, Issue};
 
@@ -61,20 +68,11 @@ pub struct ScriptScope {
     vars_local: Vec<Stack>,
     /// Set of possible return values from this scope
     returns_set: Vec<IndexSet<GameValue>>,
+    expected_returns: Option<IndexSet<GameValue>>,
     /// Error suppression for scopes below this one (for trial runs of loops)
     errors_suppressed: Vec<bool>,
     /// Orphan scopes are code blocks that are created but don't appear to be called in a known way
     is_orphan_scope: bool,
-}
-
-impl ScriptScope {
-    /// # Panics
-    pub fn add_returns(&mut self, values: IndexSet<GameValue>) {
-        self.returns_set
-            .last_mut()
-            .expect("stack not empty")
-            .extend(values);
-    }
 }
 
 pub struct Inspector<'a> {
@@ -85,12 +83,29 @@ pub struct Inspector<'a> {
     code_used: IndexSet<Expression>,
     code_active: IndexSet<Expression>,
     scopes: Vec<ScriptScope>,
+    function_info: Option<Arc<Function>>,
+    in_primary: bool,
     database: &'a Database,
 }
 
 impl<'a> Inspector<'a> {
     #[must_use]
-    pub fn new(ignored_vars: &IndexSet<String>, database: &'a Database) -> Self {
+    pub fn new(
+        ignored_vars: &IndexSet<String>,
+        function_info: Option<Arc<Function>>,
+        database: &'a Database,
+    ) -> Self {
+        let expected_returns = function_info.as_ref().and_then(|fi| {
+            let ret = fi
+                .ret()
+                .map(|m| GameValue::from_wiki_value(m, NilSource::Generic));
+            if ret == Some(IndexSet::from([GameValue::Nothing(NilSource::Generic)])) {
+                // ret of just `Nothing` is just assumed to not be anything useful, so no need to check
+                None
+            } else {
+                ret
+            }
+        });
         let mut inspector = Self {
             errors: IndexSet::new(),
             vars_global: Stack::new(),
@@ -99,9 +114,11 @@ impl<'a> Inspector<'a> {
             code_used: IndexSet::new(),
             code_active: IndexSet::new(),
             scopes: Vec::new(),
+            function_info,
+            in_primary: true,
             database,
         };
-        inspector.scope_push(false);
+        inspector.scope_push(false, expected_returns);
         inspector
     }
     /// # Panics
@@ -109,11 +126,16 @@ impl<'a> Inspector<'a> {
     pub fn active_scope(&mut self) -> &mut ScriptScope {
         self.scopes.last_mut().expect("there is always a scope")
     }
-    pub fn scope_push(&mut self, is_orphan_scope: bool) {
+    pub fn scope_push(
+        &mut self,
+        is_orphan_scope: bool,
+        expected_returns: Option<IndexSet<GameValue>>,
+    ) {
         // println!("Creating ScriptScope, orphan: {is_orphan_scope}");
         let scope = ScriptScope {
             vars_local: Vec::new(),
             returns_set: Vec::new(),
+            expected_returns,
             is_orphan_scope,
             errors_suppressed: Vec::new(),
         };
@@ -134,9 +156,43 @@ impl<'a> Inspector<'a> {
         self.scopes.pop();
     }
     #[must_use]
+    pub fn in_primary_scope(&mut self) -> bool {
+        self.in_primary && self.scopes.len() == 1 && self.active_scope().vars_local.len() == 1
+    }
+    /// # Panics
+    pub fn add_returns(&mut self, values: IndexSet<GameValue>, source: &Range<usize>) {
+        let scope = self.active_scope();
+
+        let err_opt = if scope.returns_set.len() == 1
+            && let Some(expected_returns) = &scope.expected_returns
+            && !values.iter().any(|ret| match ret {
+                GameValue::Anything => true,
+                _ => expected_returns
+                    .iter()
+                    .any(|ev| GameValue::match_values(ev, ret)),
+            }) {
+            Some(Issue::InvalidReturnType {
+                variant: InvalidArgs::InvalidReturnType {
+                    expected: expected_returns.iter().cloned().collect(),
+                    found: values.iter().cloned().collect(),
+                    span: source.clone(),
+                },
+            })
+        } else {
+            None
+        };
+        scope
+            .returns_set
+            .last_mut()
+            .expect("stack not empty")
+            .extend(values);
+        self.errors.extend(err_opt);
+    }
+    #[must_use]
     pub fn finish(mut self) -> Vec<Issue> {
         self.scope_pop();
-        debug_assert!(self.scopes.is_empty());
+        debug_assert!(self.in_primary && self.scopes.is_empty());
+        self.in_primary = false;
         let unused = &self.code_seen - &self.code_used;
         for code in &unused {
             let Expression::Code(statements) = code else {
@@ -144,7 +200,7 @@ impl<'a> Inspector<'a> {
             };
             self.code_used(code);
             // println!("-- Checking external scope");
-            self.scope_push(true); // create orphan scope
+            self.scope_push(true, None); // create orphan scope
             self.eval_statements(statements, false);
             self.scope_pop();
         }
@@ -395,8 +451,13 @@ impl<'a> Inspector<'a> {
             // Use custom return if it exists or just use wiki set
             let mut set = return_set.unwrap_or(cmd_set);
             // If a command could return multiple values, make the nil results generic
-            if set.len() > 1 && set.swap_remove(&GameValue::Nothing(NilSource::CommandReturn)) {
-                set.insert(GameValue::Nothing(NilSource::Generic));
+            if set.len() > 1 {
+                if set.swap_remove(&GameValue::Nothing(NilSource::CommandReturn)) {
+                    set.insert(GameValue::Nothing(NilSource::Generic));
+                }
+                if set.swap_remove(&GameValue::Nothing(NilSource::FunctionReturn)) {
+                    set.insert(GameValue::Nothing(NilSource::Generic));
+                }
             }
             set.into_iter().map(|gv| (gv, source.clone())).collect()
         }
@@ -459,12 +520,17 @@ impl<'a> Inspector<'a> {
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
-                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
+                        "params" => {
+                            Some(self.cmd_generic_params(&rhs_set, &debug_type, source, true))
+                        }
                         "private" => Some(self.cmd_u_private(&rhs_set)),
-                        "call" => Some(self.cmd_generic_call(&rhs_set, None, false)),
+                        "call" => Some(
+                            self.external_function_call(None, rhs)
+                                .unwrap_or_else(|| self.cmd_generic_call(&rhs_set, None, false)),
+                        ),
                         "default" => {
                             let returns = self.cmd_generic_call(&rhs_set, None, false);
-                            self.active_scope().add_returns(returns);
+                            self.add_returns(returns, source);
                             None
                         }
                         "isnil" => Some(self.cmd_u_is_nil(&rhs_set)),
@@ -550,7 +616,7 @@ impl<'a> Inspector<'a> {
                     BinaryCommand::Associate => {
                         // the : from case ToDo: these run outside of the do scope
                         let returns = self.cmd_generic_call(&rhs_set, None, false);
-                        self.active_scope().add_returns(returns);
+                        self.add_returns(returns, source);
                         None
                     }
                     BinaryCommand::And | BinaryCommand::Or => {
@@ -572,12 +638,22 @@ impl<'a> Inspector<'a> {
                             self.cmd_generic_modify_lvalue(lhs);
                             None
                         }
-                        "params" => Some(self.cmd_generic_params(&rhs_set, &debug_type, source)),
-                        "call" => {
-                            self.external_function(&lhs_set, rhs);
-                            Some(self.cmd_generic_call(&rhs_set, None, false))
+                        "params" => {
+                            Some(self.cmd_generic_params(&rhs_set, &debug_type, source, false))
                         }
-                        "spawn" | "addpublicvariableeventhandler" => {
+                        "call" => Some(
+                            self.external_function_call(Some(&lhs_set), rhs)
+                                .unwrap_or_else(|| self.cmd_generic_call(&rhs_set, None, false)),
+                        ),
+                        "spawn" => {
+                            let _ = self.external_function_call(Some(&lhs_set), rhs);
+                            self.external_new_scope(
+                                &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
+                                &vec![],
+                            );
+                            None
+                        }
+                        "addpublicvariableeventhandler" => {
                             self.external_new_scope(
                                 &rhs_set.into_iter().map(|gv| (gv, source.clone())).collect(),
                                 &vec![],
@@ -586,7 +662,7 @@ impl<'a> Inspector<'a> {
                         }
                         "exitwith" => {
                             let returns = self.cmd_generic_call(&rhs_set, None, false);
-                            self.active_scope().add_returns(returns);
+                            self.add_returns(returns, source);
                             None
                         }
                         "do" => {
@@ -656,6 +732,7 @@ impl<'a> Inspector<'a> {
                             }
                             None
                         }
+                        "getvariable" => self.cmd_b_getvariable(lhs, rhs),
                         _ => None,
                     },
                     _ => None,
@@ -687,9 +764,9 @@ impl<'a> Inspector<'a> {
 
     /// Evaluate statements in the current scope and return possible return values of last command
     fn eval_statements(&mut self, statements: &Statements, add_to_stack: bool) {
-        let mut last_statement = IndexSet::new();
         for statement in statements.content() {
-            last_statement = match statement {
+            let add_returns = add_to_stack && statements.content().last() == Some(statement);
+            match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
                     let possible_values = self
@@ -707,7 +784,9 @@ impl<'a> Inspector<'a> {
                             expression.span().clone(),
                         ),
                     );
-                    IndexSet::from([GameValue::Assignment])
+                    if add_returns {
+                        self.add_returns(IndexSet::from([GameValue::Assignment]), source);
+                    }
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
@@ -726,17 +805,17 @@ impl<'a> Inspector<'a> {
                             expression.span().clone(),
                         ),
                     );
-                    IndexSet::from([GameValue::Assignment])
+                    if add_returns {
+                        self.add_returns(IndexSet::from([GameValue::Assignment]), source);
+                    }
                 }
-                Statement::Expression(expression, _) => self
-                    .eval_expression(expression)
-                    .into_iter()
-                    .map(|(gv, _)| gv)
-                    .collect(),
+                Statement::Expression(expression, source) => {
+                    let returns = self.eval_expression(expression);
+                    if add_returns {
+                        self.add_returns(returns.into_iter().map(|(gv, _)| gv).collect(), source);
+                    }
+                }
             }
-        }
-        if add_to_stack {
-            self.active_scope().add_returns(last_statement);
         }
     }
 }
@@ -752,10 +831,26 @@ pub fn run_processed(
     static RE_IGNORE_VARIABLES: OnceLock<Regex> = OnceLock::new();
     static RE_IGNORE_VARIABLE_ENTRIES: OnceLock<Regex> = OnceLock::new();
 
+    let inspector_config = database.inspector_config();
+    let function_info = headers::extract_from_header(processed, inspector_config);
+    if let Some(function_info) = &function_info
+        && function_info.name().is_some()
+    {
+        database.project_functions_push(function_info.clone());
+    }
+
     let mut ignored_vars = IndexSet::new();
     ignored_vars.insert("_this".to_ascii_lowercase());
-    ignored_vars.insert("_fnc_scriptName".to_ascii_lowercase()); // may be set via cfgFunctions
-    ignored_vars.insert("_fnc_scriptNameParent".to_ascii_lowercase());
+
+    if let Some(Some(vars_to_ignore)) = inspector_config.map(|c| c.vars_to_ignore()) {
+        for var in vars_to_ignore {
+            ignored_vars.insert(var.to_ascii_lowercase());
+        }
+    } else {
+        ignored_vars.insert("_fnc_scriptName".to_ascii_lowercase());
+        ignored_vars.insert("_fnc_scriptNameParent".to_ascii_lowercase());
+    }
+
     let re1 = RE_IGNORE_VARIABLES.get_or_init(|| {
         Regex::new(r"(?:\#pragma hemtt ignore_variables|\/\/ ?IGNORE_PRIVATE_WARNING) ?\[(.*)\]")
             .expect("regex ok")
@@ -770,7 +865,7 @@ pub fn run_processed(
         }
     }
 
-    let mut inspector = Inspector::new(&ignored_vars, database);
+    let mut inspector = Inspector::new(&ignored_vars, function_info, database);
     inspector.eval_statements(statements, true);
     let issues = inspector.finish();
     // for ig in ignored_vars.clone() {

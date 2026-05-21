@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use hemtt_common::config::ProjectConfig;
+use hemtt_common::config::{InspectorOptions, ProjectConfig};
 use hemtt_sqf::{
     analyze::{SqfReport, analyze},
     parser::database::Database,
@@ -71,8 +71,10 @@ lint!(s33_max, true);
 lint!(s33_min, true);
 lint!(s33_mod, true);
 lint!(s33_pi, true);
+lint!(fnc_s34_invalid_return_type, false);
 lint!(s35_count_skipable, true);
 lint!(s36_global_var_in_local, true);
+lint!(s37_calling_user_code, false);
 
 #[test]
 fn test_s29_function_undefined() {
@@ -101,7 +103,9 @@ fn lint(file: &str, ignore_inspector: bool) -> (String, SqfReport) {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .unwrap();
-    let database = Arc::new(Database::a3(false));
+    let database = Arc::new(Database::a3(false).with_inspector_config(Some(
+        InspectorOptions::default().with_header_regex("ace".to_string()),
+    )));
     let workspace_files = WorkspaceFiles::new();
 
     let config_path_full = std::path::PathBuf::from(ROOT).join("project_tests.toml");
