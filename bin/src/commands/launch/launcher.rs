@@ -16,7 +16,7 @@ use crate::{
         error::{
             bcle1_preset_not_found::PresetNotFound, bcle4_arma_not_found::ArmaNotFound,
             bcle10_pointer_mod_not_found::PointerModNotFound,
-            bcle11_pointer_not_found::PointerNotFound,
+            bcle11_pointer_not_found::PointerNotFound, bcle12_ace_not_loaded::AceNotLoaded,
         },
         preset,
     },
@@ -250,41 +250,55 @@ impl<'a> Launcher<'a> {
         args.extend(self.options.clone());
 
         if let Some(mission) = &self.mission {
-            let mut path = PathBuf::from(mission);
-
-            if path.is_absolute() {
-                report.push(MissionAbsolutePath::code(mission.clone()));
-                return Ok(None);
-            }
-            path = std::env::current_dir()?.join(mission);
-
-            if !path.ends_with("mission.sqm") {
-                path.push("mission.sqm");
-            }
-
-            if !path.is_file() {
-                path = std::env::current_dir()?
-                    .join(".hemtt")
-                    .join("missions")
-                    .join(mission)
-                    .join("mission.sqm");
-            }
-
-            if path.is_file() {
-                if cfg!(windows) {
-                    args.push(format!("\"{}\"", path.display()));
+            if mission == "ace_arsenal" {
+                // is ace being loaded?
+                if self
+                    .workshop
+                    .iter()
+                    .any(|m| m == "463939057" || m.contains("ace"))
+                {
+                    args.push("-init=playMission[\"\",\"\\z\\ace\\addons\\arsenal\\missions\\Arsenal.VR\"]".to_string());
                 } else {
-                    args.push(format!(
-                        "\"Z:{}\"",
-                        path.display().to_string().replace('/', "\\")
-                    ));
+                    report.push(AceNotLoaded::code());
+                    return Ok(None);
                 }
             } else {
-                report.push(MissionNotFound::code(
-                    mission.clone(),
-                    &std::env::current_dir()?,
-                ));
-                return Ok(None);
+                let mut path = PathBuf::from(mission);
+
+                if path.is_absolute() {
+                    report.push(MissionAbsolutePath::code(mission.clone()));
+                    return Ok(None);
+                }
+                path = std::env::current_dir()?.join(mission);
+
+                if !path.ends_with("mission.sqm") {
+                    path.push("mission.sqm");
+                }
+
+                if !path.is_file() {
+                    path = std::env::current_dir()?
+                        .join(".hemtt")
+                        .join("missions")
+                        .join(mission)
+                        .join("mission.sqm");
+                }
+
+                if path.is_file() {
+                    if cfg!(windows) {
+                        args.push(format!("\"{}\"", path.display()));
+                    } else {
+                        args.push(format!(
+                            "\"Z:{}\"",
+                            path.display().to_string().replace('/', "\\")
+                        ));
+                    }
+                } else {
+                    report.push(MissionNotFound::code(
+                        mission.clone(),
+                        &std::env::current_dir()?,
+                    ));
+                    return Ok(None);
+                }
             }
         }
 

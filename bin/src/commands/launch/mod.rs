@@ -143,6 +143,8 @@ pub mod preset;
 /// or the relative (to the project root) path to a `mission.sqm`
 /// file or a folder containing it.
 ///
+/// To launch directly into the ACE Arsenal, you can use `ace_arsenal` as the mission name.
+///
 /// ### parameters
 ///
 /// A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters) to pass to the Arma 3 executable.
@@ -182,6 +184,12 @@ pub mod preset;
 /// ```bash
 /// hemtt launch my_profile +ws
 /// ```
+///
+/// ## ACE Arsenal
+///
+/// To launch directly into the ACE Arsenal, you can use the
+/// `mission = "ace_arsenal"` option in your launch profile,
+/// or use the `hemtt launch ... +ace_arsenal` after any other profiles.
 ///
 /// ## Global Configuration
 ///
@@ -435,17 +443,21 @@ pub fn read_profile(
                     Some,
                 )
             } else if let Some(cdlc) = c.strip_prefix("+") {
-                LaunchOptions::new_cdlc(cdlc).map_or_else(
-                    |_| {
-                        report.push(LaunchProfileNotFound::code(
-                            LaunchSource::CDLC,
-                            cdlc.to_string(),
-                            &[],
-                        ));
-                        None
-                    },
-                    Some,
-                )
+                if cdlc == "ace_arsenal" {
+                    Some(LaunchOptions::new_ace_arsenal())
+                } else {
+                    LaunchOptions::new_cdlc(cdlc).map_or_else(
+                        |_| {
+                            report.push(LaunchProfileNotFound::code(
+                                LaunchSource::CDLC,
+                                cdlc.to_string(),
+                                &[],
+                            ));
+                            None
+                        },
+                        Some,
+                    )
+                }
             } else {
                 config.hemtt().launch().get(c).cloned().map_or_else(
                     || {

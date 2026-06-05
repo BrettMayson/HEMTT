@@ -56,6 +56,15 @@ impl LaunchOptions {
     }
 
     #[must_use]
+    /// Create new launch options for the ace arsenal
+    pub fn new_ace_arsenal() -> Self {
+        Self {
+            mission: Some("ace_arsenal".to_string()),
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
     /// Workshop mods that should be launched with the mod
     pub fn workshop(&self) -> &[String] {
         &self.workshop
