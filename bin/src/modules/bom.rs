@@ -31,7 +31,7 @@ impl Module for BOMCheck {
                 .collect::<Vec<_>>()
         }
         let mut report = Report::new();
-        for folder in ["addons", "optionals"] {
+        for folder in ["addons", "optionals", "include"] {
             let folder = ctx.project_folder().join(folder);
             if !folder.exists() {
                 continue;
