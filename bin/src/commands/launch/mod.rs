@@ -142,7 +142,7 @@ pub mod preset;
 /// (e.g., `test.VR` would launch `.hemtt/missions/test.VR/mission.sqm`)
 /// or the relative (to the project root) path to a `mission.sqm`
 /// file or a folder containing it.
-/// 
+///
 /// To launch directly into the ACE Arsenal, you can use `ace_arsenal` as the mission name.
 ///
 /// ### parameters
@@ -184,10 +184,10 @@ pub mod preset;
 /// ```bash
 /// hemtt launch my_profile +ws
 /// ```
-/// 
+///
 /// ## ACE Arsenal
-/// 
-/// To launch directly into the ACE Arsenal, you can use the 
+///
+/// To launch directly into the ACE Arsenal, you can use the
 /// `mission = "ace_arsenal"` option in your launch profile,
 /// or use the `hemtt launch ... +ace_arsenal` after any other profiles.
 ///
