@@ -397,16 +397,29 @@ impl Inspector<'_> {
                 ));
             }
             if let GameValue::Array(Some(gv_array), _) = possible {
-                for gv_index in gv_array {
-                    for (element, _) in gv_index {
-                        if let GameValue::Code(Some(expression)) = element {
-                            return_value.extend(self.cmd_generic_call(
-                                &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
-                                None,
-                                false,
-                            ));
+                let sets_vec: Vec<IndexSet<GameValue>> = gv_array
+                    .iter()
+                    .map(|gv_index| {
+                        let mut set = IndexSet::new();
+                        for (element, _element_span) in gv_index {
+                            if let GameValue::Code(Some(expression)) = element {
+                                set.extend(self.cmd_generic_call(
+                                    &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
+                                    None,
+                                    false,
+                                ));
+                            }
                         }
-                    }
+                        set
+                    })
+                    .collect();
+                let sets_refs: Vec<&IndexSet<GameValue>> = sets_vec.iter().collect();
+                if !GameValue::is_matching_set(&sets_refs) {
+                    return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse)); // todo: mismatch type???
+                    println!("TempDebug: inconsistent then-branch return types");
+                }
+                for set in sets_vec {
+                    return_value.extend(set);
                 }
             }
         }
@@ -417,13 +430,18 @@ impl Inspector<'_> {
         return_value
     }
     #[must_use]
-    /// just merge both sides (this is equilivalent to generating an else array)
+    /// Generate an else array
     pub fn cmd_b_else(
         &self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
+        source: &Range<usize>,
     ) -> IndexSet<GameValue> {
-        lhs.iter().chain(rhs.iter()).cloned().collect()
+        let gvs = vec![
+            lhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+            rhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+        ];
+        IndexSet::from([GameValue::Array(Some(gvs), None)])
     }
     #[must_use]
     pub fn cmd_b_get_or_default_call(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
