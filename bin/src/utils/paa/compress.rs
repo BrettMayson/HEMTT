@@ -33,7 +33,7 @@ struct CompressionStats {
 }
 
 impl CompressionStats {
-    fn bytes_saved(&self) -> u64 {
+    const fn bytes_saved(&self) -> u64 {
         self.bytes_before.saturating_sub(self.bytes_after)
     }
 
@@ -131,7 +131,7 @@ fn process_paa_file(
 ) -> Result<(), Error> {
     stats.total_files += 1;
 
-    let original_size = std::fs::metadata(file_path)?.len();
+    let original_size = fs_err::metadata(file_path)?.len();
     stats.bytes_before += original_size;
 
     debug!("Processing: {}", file_path.display());
@@ -218,7 +218,7 @@ fn process_paa_file(
         new_paa.write(&mut output)?;
         output.flush()?;
 
-        let compressed_size = std::fs::metadata(file_path)?.len();
+        let compressed_size = fs_err::metadata(file_path)?.len();
         stats.bytes_after += compressed_size;
         stats.compressed_files += 1;
 
