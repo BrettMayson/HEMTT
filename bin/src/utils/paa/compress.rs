@@ -1,8 +1,8 @@
 use std::io::{Cursor, Write};
 use std::path::{Path, PathBuf};
 
-use crate::utils::bytes_to_human_readable;
 use crate::Error;
+use crate::utils::bytes_to_human_readable;
 
 #[derive(clap::Args)]
 /// Compress all PAA textures in the project to save space
@@ -147,9 +147,7 @@ fn process_paa_file(
     // Copy taggs (excluding SFFO which will be regenerated on write)
     for (name, data) in original_paa.taggs() {
         if name != "SFFO" {
-            new_paa
-                .taggs_mut()
-                .insert(name.clone(), data.clone());
+            new_paa.taggs_mut().insert(name.clone(), data.clone());
         }
     }
 
@@ -167,29 +165,28 @@ fn process_paa_file(
                 "  Trying to compress mipmap: {}x{} (format: {:?})",
                 width, height, format
             );
-            
+
             // Get original mipmap size when serialized
             let mut original_buffer = Cursor::new(Vec::new());
             mipmap.write(&mut original_buffer)?;
             let original_mipmap_size = original_buffer.get_ref().len();
-            
+
             // Try recompressing
-            match hemtt_paa::MipMap::from_rgba_image(
-                &mipmap.get_image().to_rgba8(),
-                format,
-            ) {
+            match hemtt_paa::MipMap::from_rgba_image(&mipmap.get_image().to_rgba8(), format) {
                 Ok(new_mipmap) => {
                     // Get compressed mipmap size when serialized
                     let mut compressed_buffer = Cursor::new(Vec::new());
                     new_mipmap.write(&mut compressed_buffer)?;
                     let compressed_mipmap_size = compressed_buffer.get_ref().len();
-                    
+
                     if compressed_mipmap_size < original_mipmap_size {
                         debug!(
                             "    Compressed: {} → {} (saved {})",
                             bytes_to_human_readable(original_mipmap_size as u64),
                             bytes_to_human_readable(compressed_mipmap_size as u64),
-                            bytes_to_human_readable((original_mipmap_size - compressed_mipmap_size) as u64)
+                            bytes_to_human_readable(
+                                (original_mipmap_size - compressed_mipmap_size) as u64
+                            )
                         );
                         new_paa.push_mipmap(new_mipmap);
                         mipmaps_compressed += 1;
@@ -204,10 +201,7 @@ fn process_paa_file(
                     }
                 }
                 Err(e) => {
-                    warn!(
-                        "  Failed to recompress mipmap {}x{}: {}",
-                        width, height, e
-                    );
+                    warn!("  Failed to recompress mipmap {}x{}: {}", width, height, e);
                     // Keep original if recompression fails
                     new_paa.push_mipmap(mipmap.clone());
                 }

@@ -77,7 +77,8 @@ impl MipMap {
         let (width, height) = image.dimensions();
         let mut data = vec![0u8; format.image_size(width as usize, height as usize)];
         format.compress(image.as_bytes(), width as usize, height as usize, &mut data);
-        let dxt_compress = format.is_dxt() && (width >= u32::from(COMPRESS_THRESHOLD) || height >= u32::from(COMPRESS_THRESHOLD));
+        let dxt_compress = format.is_dxt()
+            && (width >= u32::from(COMPRESS_THRESHOLD) || height >= u32::from(COMPRESS_THRESHOLD));
         let stored_width = u16::try_from(width).map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::InvalidInput, "Width exceeds u16 limit")
         })? + if dxt_compress { 32768 } else { 0 };
