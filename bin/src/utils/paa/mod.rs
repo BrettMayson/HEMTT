@@ -2,6 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use crate::Error;
 
+mod compress;
 mod convert;
 mod cxam_fix;
 mod inspect;
@@ -19,6 +20,12 @@ pub struct Command {
 
 #[derive(clap::Subcommand)]
 enum Subcommands {
+    /// Compress uncompressed PAA textures
+    ///
+    /// Scans the project for PAA files and applies compression to mipmaps
+    /// where compression results in a smaller file size. Each mipmap is tested
+    /// individually to determine if compression is beneficial.
+    Compress(compress::Command),
     /// Convert an image to/from PAA format
     ///
     /// For PAAs, extracts the first mipmap and saves it as an image.
@@ -41,6 +48,7 @@ enum Subcommands {
 /// If the args are not present from clap
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     match &cmd.commands {
+        Subcommands::Compress(args) => compress::execute(args),
         Subcommands::Convert(args) => convert::execute(args),
         Subcommands::Inspect(args) => {
             inspect::inspect(File::open(PathBuf::from(&args.paa))?, &args.format)

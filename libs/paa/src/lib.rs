@@ -4,7 +4,7 @@ mod paa;
 mod pax;
 
 pub use self::headers::{Headers, TextureHeader};
-pub use self::mipmap::MipMap;
+pub use self::mipmap::{MipMap, COMPRESS_THRESHOLD};
 pub use self::paa::Paa;
 pub use self::pax::PaXType;
 

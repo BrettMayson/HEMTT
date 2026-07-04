@@ -40,6 +40,12 @@ impl Paa {
     }
 
     #[must_use]
+    /// Get mutable access to the taggs of the Paa
+    pub const fn taggs_mut(&mut self) -> &mut IndexMap<String, Vec<u8>> {
+        &mut self.taggs
+    }
+
+    #[must_use]
     /// Get the maps of the Paa
     pub const fn maps(&self) -> &Vec<(MipMap, u64)> {
         &self.maps
@@ -224,6 +230,14 @@ impl Paa {
     pub fn fix_cxam_tagg(&mut self) {
         self.taggs
             .insert("CXAM".to_string(), vec![255, 255, 255, 255]);
+    }
+
+    /// Add a mipmap to this PAA
+    ///
+    /// # Errors
+    /// None in current implementation
+    pub fn push_mipmap(&mut self, mipmap: MipMap) {
+        self.maps.push((mipmap, 0));
     }
 
     #[cfg(feature = "json")]
