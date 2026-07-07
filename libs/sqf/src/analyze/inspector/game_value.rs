@@ -40,6 +40,7 @@ pub enum GameValue {
     TeamMember,
     WhileType,
     WithType,
+    Flag(FlagType),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -61,9 +62,16 @@ pub enum NilSource {
     Generic,
     ExplicitNil,
     CommandReturn,
+    FunctionReturn,
     PrivateArray,
     EmptyStack,
     IfWithoutElse,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum FlagType {
+    FromUinamespace(Expression, String),
+    FromProfilenamespace(Expression, String),
 }
 
 impl GameValue {
@@ -366,7 +374,9 @@ impl GameValue {
     /// Checks if type is a "poisoned" nil type (should not be used as input or assigned)
     pub fn is_poison_nil(&self) -> bool {
         match self {
-            Self::Nothing(NilSource::CommandReturn | NilSource::IfWithoutElse)
+            Self::Nothing(
+                NilSource::CommandReturn | NilSource::FunctionReturn | NilSource::IfWithoutElse,
+            )
             | Self::Assignment => true,
             Self::Array(Some(outer), _) => outer
                 .iter()
@@ -472,6 +482,8 @@ impl std::fmt::Display for GameValue {
                 Self::TeamMember => "TeamMember",
                 Self::WhileType => "WhileType",
                 Self::WithType => "WithType",
+                Self::Flag(FlagType::FromUinamespace(_, _)) => "FromUinamespace",
+                Self::Flag(FlagType::FromProfilenamespace(_, _)) => "FromProfilenamespace",
             }
         )
     }

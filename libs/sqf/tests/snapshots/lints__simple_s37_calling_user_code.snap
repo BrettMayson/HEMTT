@@ -1,0 +1,16 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s37_calling_user_code), false).0"
+---
+[0m[1m[38;5;11mwarning[L-S37][0m[1m: Calling user code[0m
+  [0m[36m┌─[0m s37_calling_user_code.sqf:1:38
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m private _condition = alive player && [0m[33muiNamespace[0m getVariable ["someVar", false];
+  [0m[36m│[0m                                      [0m[33m^^^^^^^^^^^[0m [0m[33mvariable `somevar` may be user code[0m
+
+
+[0m[1m[38;5;11mwarning[L-S37][0m[1m: Calling user code[0m
+  [0m[36m┌─[0m s37_calling_user_code.sqf:3:47
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _renderDistance = [3000, 500] select ([0m[33mprofileNamespace[0m getVariable ["performanceMode", false]);
+  [0m[36m│[0m                                               [0m[33m^^^^^^^^^^^^^^^^[0m [0m[33mvariable `performancemode` may be user code[0m

@@ -1,3 +1,4 @@
+use hemtt_common::config::InspectorOptions;
 use hemtt_sqf::Statements;
 use hemtt_workspace::reporting::Processed;
 
@@ -20,6 +21,11 @@ macro_rules! inspect {
     };
 }
 fn get_statements(file: &str) -> (Processed, Statements, Database) {
+    let database = Database::a3(false).with_inspector_config(Some(
+        InspectorOptions::default()
+            .with_check_function_calls(vec!["*".to_string()])
+            .with_header_regex("ace".to_string()),
+    ));
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -31,8 +37,7 @@ fn get_statements(file: &str) -> (Processed, Statements, Database) {
         &hemtt_common::config::PreprocessorOptions::default(),
     )
     .expect("for test");
-    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).expect("for test");
-    let database = Database::a3(false);
+    let statements = hemtt_sqf::parser::run(&database, &processed).expect("for test");
     (processed, statements, database)
 }
 
@@ -42,11 +47,12 @@ mod tests {
     use hemtt_sqf::analyze::inspector::Issue;
 
     #[test]
-    pub fn test_0() {
-        let (_pro, sqf, _database) = get_statements("test_0.sqf");
-        // let result = inspector::run_processed(&sqf, &pro, &database);
-        let result = sqf.issues();
-        println!("done: {}, {result:?}", result.len());
+    pub fn test_fnc_dev_testing() {
+        let (_pro, sqf, database) = get_statements("fnc_dev_testing.sqf");
+        let issues = sqf.issues();
+        println!("issues: {}, {issues:?}", issues.len());
+        let headers = database.project_functions_testing();
+        println!("headers: {headers:?}");
     }
     inspect!(test_main);
     inspect!(test_optional_args);
@@ -54,6 +60,8 @@ mod tests {
     inspect!(test_variadic);
     inspect!(test_code_usage);
     inspect!(test_variable_usage);
+    inspect!(fnc_header1);
+    inspect!(cba_funcs);
 
     #[test]
     #[ignore = "more of a test of the wiki than of hemtt, may break on bad edits to the wiki"]
