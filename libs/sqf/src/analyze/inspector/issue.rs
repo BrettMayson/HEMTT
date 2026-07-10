@@ -20,6 +20,10 @@ pub enum Issue {
         span: Range<usize>,
         var: String,
     },
+    MismatchedTypes {
+        command: String,
+        span: Range<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

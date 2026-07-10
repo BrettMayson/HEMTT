@@ -183,7 +183,7 @@ impl WorkspacePath {
             path_lower[..vfs_str.len()].eq_ignore_ascii_case(vfs_str)
                 && path_lower.chars().nth(vfs_str.len()) == Some('/')
         }) {
-            path = format!("{}{}", base, &path[root.as_str().len()..].to_string());
+            path = format!("{}{}", base, &path[root.as_str().len()..]);
         }
 
         path

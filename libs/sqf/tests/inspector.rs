@@ -61,6 +61,7 @@ mod tests {
     inspect!(test_code_usage);
     inspect!(test_variable_usage);
     inspect!(fnc_header1);
+    inspect!(fnc_header2);
     inspect!(cba_funcs);
 
     #[test]

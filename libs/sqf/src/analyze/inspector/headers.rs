@@ -22,12 +22,12 @@ pub(crate) fn extract_from_header(
                 Ok(header) => return Some(header),
                 // possible todo: warn on bad header parse, but for now just ignore
                 Err(HeaderError::NoMatch) => {
-                    #[cfg(debug_assertions)]
+                    // #[cfg(debug_assertions)]
                     println!("DEBUG: no match for header in source: {filename}");
                 }
                 #[allow(unused_variables)]
                 Err(e) => {
-                    #[cfg(debug_assertions)]
+                    // #[cfg(debug_assertions)]
                     println!("DEBUG: error {e:?} matching header in source: {filename}");
                 }
             }

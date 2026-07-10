@@ -43,7 +43,7 @@ impl Inspector<'_> {
         }
 
         let Some(func) = self.database.external_functions_get(&ext_func_lower) else {
-            // trace!("TEMP_DEBUG: Unknown external function: {ext_func_lower}");  // could warn if we know that addon's funcs are all loaded?
+            trace!("TEMP_DEBUG: Unknown external function: {ext_func_lower}"); // could warn if we know that addon's funcs are all loaded?
             return None;
         };
         let cmd_name = ext_func.as_str();
@@ -256,7 +256,7 @@ impl Inspector<'_> {
                 );
             }
             self.eval_statements(statements, true);
-            self.stack_pop(stack_index);
+            let _ = self.stack_pop(stack_index);
         }
     }
 }

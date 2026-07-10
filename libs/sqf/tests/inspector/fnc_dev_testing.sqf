@@ -1,11 +1,7 @@
-/* abe_fnc_dev_testing
- * Arguments:
- * 0: Gun Position ASL <ARRAY>
- *
- * Return Value:
- * X <BOOLEAN>
- */
+params [["_list", [], [[], {}]]];
 
-[4, {
-    acre_sys_core_arsenalOpen = false;
-}] call CBA_fnc_addEventHandler;
+if (_list isEqualType {}) then {
+    _list = [] call {}
+} else {
+    _list = _list select {!isNull _x};
+};

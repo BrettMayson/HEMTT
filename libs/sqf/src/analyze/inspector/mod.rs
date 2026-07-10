@@ -9,7 +9,11 @@ use std::{
 
 use crate::{
     BinaryCommand, Expression, Statement, Statements, UnaryCommand,
-    analyze::inspector::game_value::NilSource, parser::database::Database,
+    analyze::inspector::game_value::{
+        FlagType::{self},
+        NilSource,
+    },
+    parser::database::Database,
 };
 use arma3_wiki::model::Function;
 use game_value::GameValue;
@@ -67,7 +71,7 @@ pub type Stack = IndexMap<String, VarHolder>;
 pub struct ScriptScope {
     vars_local: Vec<Stack>,
     /// Set of possible return values from this scope
-    returns_set: Vec<IndexSet<GameValue>>,
+    returns_sets: Vec<Vec<IndexSet<GameValue>>>,
     expected_returns: Option<IndexSet<GameValue>>,
     /// Error suppression for scopes below this one (for trial runs of loops)
     errors_suppressed: Vec<bool>,
@@ -134,13 +138,13 @@ impl<'a> Inspector<'a> {
         // println!("Creating ScriptScope, orphan: {is_orphan_scope}");
         let scope = ScriptScope {
             vars_local: Vec::new(),
-            returns_set: Vec::new(),
+            returns_sets: Vec::new(),
             expected_returns,
             is_orphan_scope,
             errors_suppressed: Vec::new(),
         };
         self.scopes.push(scope);
-        self.stack_push(None, false);
+        let _ = self.stack_push(None, false);
         for var in &self.ignored_vars.clone() {
             self.var_assign(
                 var,
@@ -151,8 +155,10 @@ impl<'a> Inspector<'a> {
         }
     }
     pub fn scope_pop(&mut self) {
-        let _ = self.stack_pop(None);
-        debug_assert!(self.scopes.last().is_some_and(|s| s.vars_local.is_empty()));
+        let set = self.stack_pop(None);
+        debug_assert!(
+            !set.is_empty() && self.scopes.last().is_some_and(|s| s.vars_local.is_empty())
+        );
         self.scopes.pop();
     }
     #[must_use]
@@ -163,7 +169,7 @@ impl<'a> Inspector<'a> {
     pub fn add_returns(&mut self, values: IndexSet<GameValue>, source: &Range<usize>) {
         let scope = self.active_scope();
 
-        let err_opt = if scope.returns_set.len() == 1
+        let err_opt = if scope.returns_sets.len() == 1
             && let Some(expected_returns) = &scope.expected_returns
             && !values.iter().any(|ret| match ret {
                 GameValue::Anything => true,
@@ -182,10 +188,10 @@ impl<'a> Inspector<'a> {
             None
         };
         scope
-            .returns_set
+            .returns_sets
             .last_mut()
             .expect("stack not empty")
-            .extend(values);
+            .push(values);
         self.errors.extend(err_opt);
     }
     #[must_use]
@@ -199,7 +205,7 @@ impl<'a> Inspector<'a> {
                 unreachable!("only code");
             };
             self.code_used(code);
-            // println!("-- Checking external scope");
+            // println!("-- Checking external scope {:?}", statements.content().len());
             self.scope_push(true, None); // create orphan scope
             self.eval_statements(statements, false);
             self.scope_pop();
@@ -216,18 +222,20 @@ impl<'a> Inspector<'a> {
     }
     pub fn error_insert(&mut self, issue: Issue) {
         // skip if errors are suppressed in any parent scope
-        if self
-            .active_scope()
-            .errors_suppressed
-            .iter()
-            .rev()
-            .skip(1)
-            .all(|s| !*s)
+        if self.scopes.is_empty()
+            || self
+                .active_scope()
+                .errors_suppressed
+                .iter()
+                .rev()
+                .skip(1)
+                .all(|s| !*s)
         {
             self.errors.insert(issue);
         }
     }
 
+    #[must_use]
     pub fn stack_push(
         &mut self,
         expression_opt: Option<&Expression>,
@@ -246,14 +254,15 @@ impl<'a> Inspector<'a> {
             None => None,
         };
         self.active_scope().vars_local.push(Stack::new());
-        self.active_scope().returns_set.push(IndexSet::new());
+        self.active_scope().returns_sets.push(Vec::new());
         self.active_scope().errors_suppressed.push(suppress_errors);
         return_index
     }
     /// # Panics
-    pub fn stack_pop(&mut self, index: Option<usize>) -> IndexSet<GameValue> {
-        if let Some(index) = index {
-            let _ = self.code_active.swap_remove_index(index);
+    #[must_use]
+    pub fn stack_pop(&mut self, stack_index: Option<usize>) -> IndexSet<GameValue> {
+        if let Some(stack_index) = stack_index {
+            let _ = self.code_active.swap_remove_index(stack_index);
         }
         // Check for unused vars in this stack level
         for (var, holder) in self
@@ -270,15 +279,20 @@ impl<'a> Inspector<'a> {
             }
         }
         self.active_scope().errors_suppressed.pop();
-        let mut returns_set = self
+        let returns_set = self
             .active_scope()
-            .returns_set
+            .returns_sets
             .pop()
             .expect("stack to exist");
-        if returns_set.is_empty() {
-            returns_set.insert(GameValue::Nothing(NilSource::EmptyStack));
+        let empty = returns_set.is_empty();
+        let (matched, mut merged) = GameValue::check_match_and_merge(returns_set);
+        if empty {
+            merged.insert(GameValue::Nothing(NilSource::EmptyStack));
         }
-        returns_set
+        if !matched {
+            merged.insert(GameValue::Flag(FlagType::MismatchedTypes));
+        }
+        merged
     }
 
     pub fn var_assign(
@@ -416,14 +430,15 @@ impl<'a> Inspector<'a> {
     }
 
     /// Checks for bad argument values if the syntax was otherwise valid (e.g. cmd that takes anything)
+    /// Checked for unary and binary commands as well as assigment (=) and return values
     fn eval_check_bad_args(
         &mut self,
         debug_type: &str,
         source: &Range<usize>,
         expression: &Expression,
-        result_set: &IndexSet<GameValue>,
-    ) {
-        // there should never be any valid reason to have these as inputs
+        mut result_set: IndexSet<GameValue>,
+    ) -> IndexSet<GameValue> {
+        // there should never be any valid reason to have these nil types as inputs
         if result_set.iter().any(GameValue::is_poison_nil) {
             self.error_insert(Issue::InvalidArgs {
                 command: debug_type.to_string(),
@@ -434,6 +449,18 @@ impl<'a> Inspector<'a> {
                 },
             });
         }
+        // check for flag types and filter
+        result_set.retain(|gv| {
+            if matches!(gv, GameValue::Flag(FlagType::MismatchedTypes)) {
+                self.error_insert(Issue::MismatchedTypes {
+                    span: source.clone(),
+                    command: debug_type.to_string(),
+                });
+                return false;
+            }
+            true
+        });
+        result_set
     }
 
     #[must_use]
@@ -497,7 +524,7 @@ impl<'a> Inspector<'a> {
             }
             Expression::UnaryCommand(cmd, rhs, source) => {
                 debug_type = format!("[U:{}]", cmd.as_str());
-                let rhs_set = self
+                let mut rhs_set = self
                     .eval_expression(rhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
@@ -516,7 +543,7 @@ impl<'a> Inspector<'a> {
                     });
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 } else {
-                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
+                    rhs_set = self.eval_check_bad_args(&debug_type, source, rhs, rhs_set);
                 }
                 let return_set = match cmd {
                     UnaryCommand::Named(named) => match named.to_ascii_lowercase().as_str() {
@@ -571,12 +598,12 @@ impl<'a> Inspector<'a> {
             }
             Expression::BinaryCommand(cmd, lhs, rhs, source) => {
                 debug_type = format!("[B:{}]", cmd.as_str());
-                let lhs_set = self
+                let mut lhs_set = self
                     .eval_expression(lhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
                     .collect();
-                let rhs_set = self
+                let mut rhs_set = self
                     .eval_expression(rhs)
                     .into_iter()
                     .map(|(gv, _)| gv)
@@ -609,8 +636,8 @@ impl<'a> Inspector<'a> {
                     }
                     cmd_set.insert(GameValue::Anything); // don't cause confusing errors for code downstream
                 } else {
-                    self.eval_check_bad_args(&debug_type, source, lhs, &lhs_set);
-                    self.eval_check_bad_args(&debug_type, source, rhs, &rhs_set);
+                    lhs_set = self.eval_check_bad_args(&debug_type, source, lhs, lhs_set);
+                    rhs_set = self.eval_check_bad_args(&debug_type, source, rhs, rhs_set);
                 }
                 let return_set = match cmd {
                     BinaryCommand::Associate => {
@@ -623,7 +650,7 @@ impl<'a> Inspector<'a> {
                         let _ = self.cmd_generic_call(&rhs_set, None, false);
                         None
                     }
-                    BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set)),
+                    BinaryCommand::Else => Some(self.cmd_b_else(&lhs_set, &rhs_set, source)),
                     BinaryCommand::Eq => {
                         self.cmd_eqx_count_lint(lhs, rhs, true);
                         None
@@ -671,7 +698,7 @@ impl<'a> Inspector<'a> {
                             Some(self.cmd_b_do(&lhs_set, &rhs_set, true))
                         }
                         "from" | "to" | "step" => Some(self.cmd_b_from_chain(&lhs_set, &rhs_set)),
-                        "then" => Some(self.cmd_b_then(rhs, &rhs_set)),
+                        "then" => Some(self.cmd_b_then(&rhs_set)),
                         "foreach" | "foreachreversed" => {
                             let mut magic = vec![
                                 ("_x", GameValue::get_array_value_type(&rhs_set)),
@@ -764,17 +791,24 @@ impl<'a> Inspector<'a> {
 
     /// Evaluate statements in the current scope and return possible return values of last command
     fn eval_statements(&mut self, statements: &Statements, add_to_stack: bool) {
+        if add_to_stack && statements.content().is_empty() {
+            self.add_returns(
+                IndexSet::from([GameValue::Nothing(NilSource::EmptyStack)]),
+                statements.span(),
+            );
+        }
         for statement in statements.content() {
             let add_returns = add_to_stack && statements.content().last() == Some(statement);
             match statement {
                 Statement::AssignGlobal(var, expression, source) => {
                     // x or _x
-                    let possible_values = self
+                    let mut possible_values = self
                         .eval_expression(expression)
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
-                    self.eval_check_bad_args("=", source, expression, &possible_values);
+                    possible_values =
+                        self.eval_check_bad_args("=", source, expression, possible_values);
                     self.var_assign(
                         var,
                         false,
@@ -790,12 +824,13 @@ impl<'a> Inspector<'a> {
                 }
                 Statement::AssignLocal(var, expression, source) => {
                     // private _x
-                    let possible_values = self
+                    let mut possible_values = self
                         .eval_expression(expression)
                         .into_iter()
                         .map(|(gv, _)| gv)
                         .collect();
-                    self.eval_check_bad_args("=", source, expression, &possible_values);
+                    possible_values =
+                        self.eval_check_bad_args("=", source, expression, possible_values);
                     self.var_assign(
                         var,
                         true,

@@ -5,7 +5,7 @@ use std::{ops::Range, vec};
 use indexmap::IndexSet;
 
 use crate::{
-    Expression, NularCommand, Statement,
+    Expression, NularCommand, Statement, UnaryCommand,
     analyze::inspector::{
         InvalidArgs, Issue, VarSource,
         game_value::{FlagType, NilSource},
@@ -210,7 +210,13 @@ impl Inspector<'_> {
                 // It would be nice to move this above the is_empty check but not always safe
                 // ie: assume `params ["_z", ""]` is type string, but this is not guaranteed
                 if element.len() > 1 && !element[1].is_empty() {
-                    let default_value = element[1][0].0.clone();
+                    let mut default_value = element[1][0].0.clone();
+                    // if default value is `{}` then just make it generic so it doesn't return nil
+                    if let GameValue::Code(Some(Expression::Code(statements))) = &default_value
+                        && statements.content().is_empty()
+                    {
+                        default_value = GameValue::Code(None);
+                    }
                     // Verify that the default value matches one of the types
                     if !(matches!(default_value, GameValue::Anything)
                         || matches!(default_value, GameValue::Nothing(NilSource::ExplicitNil))
@@ -337,47 +343,46 @@ impl Inspector<'_> {
                 return_value.insert(GameValue::Anything);
                 continue;
             }
+            let is_switch = lhs.iter().any(|p| matches!(p, GameValue::SwitchType));
+            let add_switch_nil = is_switch && !statements.content().iter().any(|s| matches!(s, Statement::Expression(Expression::UnaryCommand(UnaryCommand::Named(name), _, _), _) if name.eq_ignore_ascii_case("default")));
             let mut do_run = false;
             for possible in lhs {
-                if let GameValue::ForType(option) = possible {
-                    let Some(for_args_array) = option else {
-                        continue;
-                    };
-                    do_run = true;
-                    for stage in for_args_array {
-                        match stage {
-                            Expression::String(var, source, _) => {
-                                self.var_assign(
-                                    var.as_ref(),
-                                    true,
-                                    IndexSet::from([GameValue::Number(None)]),
-                                    VarSource::ForLoop(source.clone()),
-                                );
+                match possible {
+                    GameValue::ForType(option) => {
+                        let Some(for_args_array) = option else {
+                            continue;
+                        };
+                        do_run = true;
+                        for stage in for_args_array {
+                            match stage {
+                                Expression::String(var, source, _) => {
+                                    self.var_assign(
+                                        var.as_ref(),
+                                        true,
+                                        IndexSet::from([GameValue::Number(None)]),
+                                        VarSource::ForLoop(source.clone()),
+                                    );
+                                }
+                                Expression::Code(stage_statement) => {
+                                    self.code_used(stage);
+                                    self.eval_statements(stage_statement, false);
+                                }
+                                _ => {}
                             }
-                            Expression::Code(stage_statement) => {
-                                self.code_used(stage);
-                                self.eval_statements(stage_statement, false);
-                            }
-                            _ => {}
                         }
                     }
-                } else {
-                    do_run = true;
+                    _ => {
+                        do_run = true;
+                    }
                 }
             }
             if do_run {
-                let add_final =
-                    if let Some(Statement::Expression(Expression::UnaryCommand(named, _, _), _)) =
-                        statements.content().last()
-                    {
-                        // if we know we end on a default, then we don't need to add it's nil return
-                        !named.as_str().eq_ignore_ascii_case("default")
-                    } else {
-                        true
-                    };
-                self.eval_statements(statements, add_final);
+                self.eval_statements(statements, !is_switch);
             }
             return_value.extend(self.stack_pop(stack_index));
+            if add_switch_nil {
+                return_value.insert(GameValue::Nothing(NilSource::SwitchWithoutDefault));
+            }
         }
         if is_loop {
             // repeat the loop, but with error suppression off
@@ -453,48 +458,64 @@ impl Inspector<'_> {
         IndexSet::from([GameValue::Boolean(None)])
     }
     #[must_use]
-    pub fn cmd_b_then(
-        &mut self,
-        rhs: &Expression,
-        rhs_set: &IndexSet<GameValue>,
-    ) -> IndexSet<GameValue> {
+    pub fn cmd_b_then(&mut self, rhs_set: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
         for possible in rhs_set {
-            if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
-                return_value.extend(self.cmd_generic_call(
-                    &IndexSet::from([possible.clone()]),
-                    None,
-                    false,
-                ));
-            }
-            if let GameValue::Array(Some(gv_array), _) = possible {
-                for gv_index in gv_array {
-                    for (element, _) in gv_index {
-                        if let GameValue::Code(Some(expression)) = element {
-                            return_value.extend(self.cmd_generic_call(
-                                &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
-                                None,
-                                false,
-                            ));
-                        }
+            match possible {
+                GameValue::Code(Some(Expression::Code(_statements))) => {
+                    return_value.extend(self.cmd_generic_call(
+                        &IndexSet::from([possible.clone()]),
+                        None,
+                        false,
+                    ));
+                    // if without else branch, add a possible nil result in addition to then-branch results
+                    return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
+                }
+                GameValue::Array(Some(gv_array), _) => {
+                    let sets_vec: Vec<IndexSet<GameValue>> = gv_array
+                        .iter()
+                        .map(|gv_index| {
+                            let mut set = IndexSet::new();
+                            for (element, _element_span) in gv_index {
+                                if let GameValue::Code(Some(expression)) = element {
+                                    set.extend(self.cmd_generic_call(
+                                        &IndexSet::from([GameValue::Code(Some(
+                                            expression.clone(),
+                                        ))]),
+                                        None,
+                                        false,
+                                    ));
+                                }
+                            }
+                            set
+                        })
+                        .collect();
+                    let (matched, merged) = GameValue::check_match_and_merge(sets_vec);
+                    if !matched {
+                        return_value.insert(GameValue::Flag(FlagType::MismatchedTypes));
                     }
+                    return_value.extend(merged);
+                }
+                _ => {
+                    return_value.insert(GameValue::Anything);
                 }
             }
-        }
-        // if without else branch, add a possible nil result in addition to then-branch results
-        if let Expression::Code(_) = rhs {
-            return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
         }
         return_value
     }
     #[must_use]
-    /// just merge both sides (this is equilivalent to generating an else array)
+    /// Generate an else array
     pub fn cmd_b_else(
         &self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
+        source: &Range<usize>,
     ) -> IndexSet<GameValue> {
-        lhs.iter().chain(rhs.iter()).cloned().collect()
+        let gvs = vec![
+            lhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+            rhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+        ];
+        IndexSet::from([GameValue::Array(Some(gvs), None)])
     }
     #[must_use]
     pub fn cmd_b_get_or_default_call(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {

@@ -7,5 +7,5 @@
  */
 
 params ["_gunPos"];
-alive _gunPos;
-""
+alive _gunPos; // wrong param
+"" // wrong return
