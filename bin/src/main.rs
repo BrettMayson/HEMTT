@@ -36,6 +36,14 @@ It is always best to the include the log and a link to your project when reporti
         tracing::warn!("Failed to enable ANSI support, colored output will not work");
     }
 
+    // Disable ansi colors if the user has requested it
+    if std::env::var("NO_COLOR").is_ok()
+        || std::env::args().any(|arg| arg == "--no-color")
+        || !atty::is(atty::Stream::Stdout)
+    {
+        hemtt::NO_COLOR.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
     let cli = match hemtt::Cli::try_parse() {
         Ok(cli) => cli,
         Err(e) => {

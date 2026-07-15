@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicBool;
+
 use clap::CommandFactory;
 pub use error::Error;
 
@@ -20,6 +22,8 @@ pub mod utils;
 pub const TEXT_EXTENSIONS: [&str; 10] = [
     "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
 ];
+
+pub static NO_COLOR: AtomicBool = AtomicBool::new(false);
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
@@ -44,6 +48,8 @@ pub struct GlobalArgs {
     #[arg(global = true, hide = true, long)]
     /// Directory to run in
     dir: Option<String>,
+    #[arg(global = true, long, action = clap::ArgAction::SetTrue)]
+    no_color: bool,
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     exp_bin_cache: bool,
 }

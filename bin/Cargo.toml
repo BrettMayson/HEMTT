@@ -33,6 +33,7 @@ hemtt-workspace = { path = "../libs/workspace" }
 hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
+atty = { version = "0.2.14" }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 clap_complete = "4.6.5"
