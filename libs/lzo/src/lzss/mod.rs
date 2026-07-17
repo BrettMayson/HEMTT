@@ -1,3 +1,4 @@
+#[allow(unused_imports, reason = "used in compress feature")]
 use std::alloc::{Layout, alloc, dealloc};
 use std::mem;
 use std::slice;
@@ -165,8 +166,8 @@ fn compress_and_back() {
             let dec_dst = alloc(Layout::from_size_align(size, mem::align_of::<u8>()).unwrap());
             let dec_dst = slice::from_raw_parts_mut(dec_dst.cast::<u8>(), size);
             let result = decompress_to_slice(dst, dec_dst).unwrap();
-            assert!(result.len() == size);
-            assert!(&data[..] == result);
+            assert_eq!(result.len(), size);
+            assert_eq!(&data[..], result);
         }
     }
 }

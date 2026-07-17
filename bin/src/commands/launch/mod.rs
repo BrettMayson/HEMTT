@@ -422,58 +422,58 @@ pub fn read_profile(
             .get("default")
             .cloned()
             .unwrap_or_default()
-    } else if let Some(launch) = profiles
-        .iter()
-        .map(|c| {
-            if let Some(gc) = c.strip_prefix("@") {
-                global.launch().profiles().get(gc).cloned().map_or_else(
-                    || {
-                        report.push(LaunchProfileNotFound::code(
-                            LaunchSource::Global,
-                            gc.to_string(),
-                            &global
-                                .launch()
-                                .profiles()
-                                .keys()
-                                .cloned()
-                                .collect::<Vec<_>>(),
-                        ));
-                        None
-                    },
-                    Some,
-                )
-            } else if let Some(cdlc) = c.strip_prefix("+") {
-                if cdlc == "ace_arsenal" {
-                    Some(LaunchOptions::new_ace_arsenal())
-                } else {
-                    LaunchOptions::new_cdlc(cdlc).map_or_else(
-                        |_| {
+    } else {
+        let launch = profiles
+            .iter()
+            .map(|c| {
+                if let Some(gc) = c.strip_prefix("@") {
+                    global.launch().profiles().get(gc).cloned().map_or_else(
+                        || {
                             report.push(LaunchProfileNotFound::code(
-                                LaunchSource::CDLC,
-                                cdlc.to_string(),
-                                &[],
+                                LaunchSource::Global,
+                                gc.to_string(),
+                                &global
+                                    .launch()
+                                    .profiles()
+                                    .keys()
+                                    .cloned()
+                                    .collect::<Vec<_>>(),
+                            ));
+                            None
+                        },
+                        Some,
+                    )
+                } else if let Some(cdlc) = c.strip_prefix("+") {
+                    if cdlc == "ace_arsenal" {
+                        Some(LaunchOptions::new_ace_arsenal())
+                    } else {
+                        LaunchOptions::new_cdlc(cdlc).map_or_else(
+                            |_| {
+                                report.push(LaunchProfileNotFound::code(
+                                    LaunchSource::CDLC,
+                                    cdlc.to_string(),
+                                    &[],
+                                ));
+                                None
+                            },
+                            Some,
+                        )
+                    }
+                } else {
+                    config.hemtt().launch().get(c).cloned().map_or_else(
+                        || {
+                            report.push(LaunchProfileNotFound::code(
+                                LaunchSource::Project,
+                                c.clone(),
+                                &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
                             ));
                             None
                         },
                         Some,
                     )
                 }
-            } else {
-                config.hemtt().launch().get(c).cloned().map_or_else(
-                    || {
-                        report.push(LaunchProfileNotFound::code(
-                            LaunchSource::Project,
-                            c.clone(),
-                            &config.hemtt().launch().keys().cloned().collect::<Vec<_>>(),
-                        ));
-                        None
-                    },
-                    Some,
-                )
-            }
-        })
-        .collect::<Option<Vec<_>>>()
-    {
+            })
+            .collect::<Option<Vec<_>>>()?;
         launch.into_iter().fold(
             if profiles
                 .iter()
@@ -490,8 +490,6 @@ pub fn read_profile(
             },
             hemtt_common::config::LaunchOptions::overlay,
         )
-    } else {
-        return None;
     };
     Some(launch)
 }
