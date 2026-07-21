@@ -53,6 +53,13 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     .at_least(2)
     .collect::<Vec<_>>()
     .try_map(|tokens, span: Range<usize>| {
+        // contains at least one non-digit token, so we can assume it's a math expression
+        if tokens.iter().all(|t| matches!(t, Token::Number(_))) {
+            return Err(Simple::custom(
+                span,
+                "Math expression must contain at least one operator or identifier",
+            ));
+        }
         let expr = tokens
             .iter()
             .map(std::string::ToString::to_string)

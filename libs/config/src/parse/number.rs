@@ -67,6 +67,7 @@ fn number_float_exponent() -> impl Parser<char, f32, Error = Simple<char>> {
 
 fn number_float_basic() -> impl Parser<char, f32, Error = Simple<char>> {
     number_digits()
+        .or_not()
         .chain::<char, _, _>(just('.'))
         .chain::<char, _, _>(number_digits())
         .collect::<String>()
