@@ -424,6 +424,15 @@ mod tests {
         let rad_180 = super::eval("rad(180)").expect("Failed to evaluate rad(180)");
         assert!((rad_180 - std::f64::consts::PI).abs() < 1e-10);
 
+        let rad_180 = super::eval("rad 180").expect("Failed to evaluate rad 180");
+        assert!((rad_180 - std::f64::consts::PI).abs() < 1e-10);
+
+        let rad_180 = super::eval("rad(-180)").expect("Failed to evaluate rad(-180)");
+        assert!((rad_180 - (-std::f64::consts::PI)).abs() < 1e-10);
+
+        let rad_180 = super::eval("rad -180").expect("Failed to evaluate rad -180");
+        assert!((rad_180 - (-std::f64::consts::PI)).abs() < 1e-10);
+
         // deg(pi) = 180
         let deg_pi = super::eval("deg(pi)").expect("Failed to evaluate deg(pi)");
         assert!((deg_pi - 180.0).abs() < 1e-10);

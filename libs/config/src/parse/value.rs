@@ -18,6 +18,7 @@ pub fn value() -> impl Parser<char, Value, Error = Simple<char>> {
 enum Token {
     Number(String),
     Op(char),
+    Identifier(String),
 }
 
 impl std::fmt::Display for Token {
@@ -25,6 +26,7 @@ impl std::fmt::Display for Token {
         match self {
             Self::Number(n) => write!(f, "{n}"),
             Self::Op(op) => write!(f, "{op}"),
+            Self::Identifier(id) => write!(f, "{id}"),
         }
     }
 }
@@ -39,6 +41,11 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
         just("^").to(Token::Op('^')),
         just("(").to(Token::Op('(')),
         just(")").to(Token::Op(')')),
+        one_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+            .repeated()
+            .at_least(1)
+            .collect::<String>()
+            .map(Token::Identifier),
         super::number::number().map(|n| Token::Number(n.to_string())),
     ))
     .padded()
@@ -46,13 +53,6 @@ pub fn math() -> impl Parser<char, Number, Error = Simple<char>> {
     .at_least(2)
     .collect::<Vec<_>>()
     .try_map(|tokens, span: Range<usize>| {
-        let has_operator = tokens.iter().any(|t| matches!(t, Token::Op(_)));
-        if !has_operator {
-            return Err(Simple::custom(
-                span,
-                "math expression must contain at least one operator",
-            ));
-        }
         let expr = tokens
             .iter()
             .map(std::string::ToString::to_string)
@@ -357,5 +357,69 @@ mod tests {
                 span: 0..9
             }))
         );
+    }
+
+    #[test]
+    fn math_functions() {
+        assert_eq!(
+            super::math().parse("rad(180)"),
+            Ok(Number::Float32 {
+                value: std::f64::consts::PI as f32,
+                span: 0..8
+            })
+        );
+        assert_eq!(
+            super::math().parse("rad 180"),
+            Ok(Number::Float32 {
+                value: std::f64::consts::PI as f32,
+                span: 0..7
+            })
+        );
+    }
+
+    #[test]
+    fn not_math() {
+        // Incomplete math expression - trailing operator
+        assert!(
+            value()
+                .padded()
+                .then_ignore(end())
+                .parse("1 + 2 +")
+                .is_err(),
+        );
+
+        // Leading operator without operand
+        assert!(
+            value()
+                .padded()
+                .then_ignore(end())
+                .parse("+ 1 + 2")
+                .is_err(),
+        );
+
+        // Double operators
+        assert!(
+            value()
+                .padded()
+                .then_ignore(end())
+                .parse("1 + + 2")
+                .is_err(),
+        );
+
+        // Unmatched parentheses
+        assert!(value().padded().then_ignore(end()).parse("(1 + 2").is_err(),);
+        assert!(value().padded().then_ignore(end()).parse("1 + 2)").is_err(),);
+
+        // Invalid function
+        assert!(
+            value()
+                .padded()
+                .then_ignore(end())
+                .parse("foo(123)")
+                .is_err(),
+        );
+
+        // Just an identifier
+        assert!(value().padded().then_ignore(end()).parse("xyz").is_err(),);
     }
 }
