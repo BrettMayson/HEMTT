@@ -1,5 +1,3 @@
-use std::sync::atomic::AtomicBool;
-
 use clap::CommandFactory;
 pub use error::Error;
 
@@ -22,8 +20,6 @@ pub mod utils;
 pub const TEXT_EXTENSIONS: [&str; 10] = [
     "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
 ];
-
-pub static NO_COLOR: AtomicBool = AtomicBool::new(false);
 
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
