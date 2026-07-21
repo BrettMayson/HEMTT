@@ -323,7 +323,9 @@ mod tests {
                 expected_array: false,
             })
         );
+        assert!(property().parse("MyProperty = 1.;").is_err());
         assert!(property().parse("MyProperty = 1.0.2;").is_err());
+        assert!(property().parse("MyProperty = 1.2;").is_ok());
         assert!(property().parse("MyProperty = 1 ;").is_ok());
     }
 
