@@ -41,7 +41,10 @@ impl CompressionStats {
         if self.bytes_before == 0 {
             0.0
         } else {
-            (self.bytes_saved() as f64 / self.bytes_before as f64) * 100.0
+            #[allow(clippy::cast_precision_loss, reason = "hopefully less than 500 TB")]
+            {
+                (self.bytes_saved() as f64 / self.bytes_before as f64) * 100.0
+            }
         }
     }
 }
@@ -50,6 +53,7 @@ impl CompressionStats {
 ///
 /// # Errors
 /// [`Error`] if file operations fail
+#[allow(clippy::unnecessary_wraps)]
 pub fn execute(cmd: &Command) -> Result<(), Error> {
     let root_path = PathBuf::from(&cmd.path);
 
@@ -72,7 +76,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         if matches!(
             path.extension()
                 .and_then(|s| s.to_str())
-                .map(|s| s.to_lowercase()),
+                .map(str::to_lowercase),
             Some(ext) if ext == "paa" || ext == "pac"
         ) {
             files.push(path.to_path_buf());

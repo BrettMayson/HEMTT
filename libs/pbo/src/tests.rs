@@ -37,7 +37,10 @@ pub fn pbo(
     }
     // TODO hemtt can't do this correctly right now?
     if prefix.is_some() {
-        assert!(Checksum::from_bytes(*pbo.gen_checksum().unwrap().as_bytes()) == gen_checksum);
+        assert_eq!(
+            Checksum::from_bytes(*pbo.gen_checksum().unwrap().as_bytes()),
+            gen_checksum
+        );
         assert_eq!(pbo.gen_checksum().unwrap(), gen_checksum);
     }
     pbo
