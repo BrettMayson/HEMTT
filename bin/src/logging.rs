@@ -20,7 +20,9 @@ pub fn init(verbosity: u8, hemttout: bool) -> Result<(), Error> {
         .with_target(false)
         .compact();
 
-    let stdout = tracing_subscriber::fmt::layer().event_format(format);
+    let stdout = tracing_subscriber::fmt::layer()
+        .event_format(format)
+        .with_ansi(hemtt_common::ansi::ansi_supported());
 
     let filter = if crate::is_ci() && !cfg!(debug_assertions) {
         LevelFilter::TRACE

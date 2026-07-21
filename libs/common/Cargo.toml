@@ -9,6 +9,7 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
+enable-ansi-support = "0.3.1"
 codespan-reporting = { workspace = true }
 fs-err = { workspace = true }
 git2 = { workspace = true }

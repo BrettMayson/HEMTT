@@ -1,5 +1,6 @@
 //! HEMTT - Common Library
 
+pub mod ansi;
 pub mod arma;
 pub mod config;
 pub mod error;

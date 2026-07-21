@@ -44,6 +44,8 @@ pub struct GlobalArgs {
     #[arg(global = true, hide = true, long)]
     /// Directory to run in
     dir: Option<String>,
+    #[arg(global = true, long, action = clap::ArgAction::SetTrue)]
+    no_color: bool,
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     exp_bin_cache: bool,
 }
