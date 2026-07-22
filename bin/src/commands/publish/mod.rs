@@ -39,14 +39,14 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         std::process::exit(1);
     }
 
-    let client = silence_steam_output(|| match steamworks::Client::init_app(APP_ID) {
+    let client = match silence_steam_output(|| steamworks::Client::init_app(APP_ID)) {
         Ok(client) => client,
         Err(e) => {
             error!("Failed to initialize Steam client. Is Steam running?");
             error!("Error: {e}");
             std::process::exit(1);
         }
-    });
+    };
     info!("Steam client initialized successfully.");
     let ugc = client.ugc();
     let (tx, rx) = std::sync::mpsc::channel();
