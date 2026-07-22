@@ -29,6 +29,7 @@ pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, 
     if create {
         handle = handle
             .title(executor.ctx().config().name())
+            .tags(vec!["Mod"], true)
             .add_key_value_tag("bis_platform", "-")
             .add_key_value_tag("bis_displayName", executor.ctx().config().name());
     }
