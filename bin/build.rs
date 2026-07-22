@@ -1,6 +1,4 @@
 pub fn main() {
-    use std::env;
-
     let mut base = env!("CARGO_PKG_VERSION").to_string();
     if option_env!("CI").is_none() {
         base.push_str("-local");

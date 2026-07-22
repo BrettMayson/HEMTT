@@ -7,20 +7,15 @@ pub fn execute(ugc: &UGC) -> Result<Report, Error> {
     ugc.create_item(
         super::APP_ID,
         steamworks::FileType::Community,
-        |create_result| {
-            // handle the result
-            match create_result {
-                Ok((published_id, needs_to_agree_to_terms)) => {
-                    store_id(published_id.0).expect("Failed to store published id");
-                    if needs_to_agree_to_terms {
-                        warn!(
-                            "You need to agree to the terms of use before you can upload any files"
-                        );
-                    }
+        |create_result| match create_result {
+            Ok((published_id, needs_to_agree_to_terms)) => {
+                store_id(published_id.0).expect("Failed to store published id");
+                if needs_to_agree_to_terms {
+                    warn!("You need to agree to the terms of use before you can upload any files");
                 }
-                Err(e) => {
-                    error!("Error creating workshop item: {:?}", e);
-                }
+            }
+            Err(e) => {
+                error!("Error creating workshop item: {:?}", e);
             }
         },
     );

@@ -34,9 +34,6 @@ pub struct Command {
 /// # Panics
 /// Panics if the Steam client cannot be initialized, or if the callback thread cannot be joined.
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
-    // Load the Steam API library dynamically before any Steam functionality is used.
-    // This extracts the embedded library and loads it with RTLD_GLOBAL (on Unix)
-    // or adjusts DLL search paths (on Windows), ensuring Steamworks can find it.
     if let Err(e) = steamworks_sys::load_steam_library() {
         error!("Warning: Failed to preload Steam API library: {e}");
         std::process::exit(1);
@@ -52,19 +49,11 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     });
     info!("Steam client initialized successfully.");
     let ugc = client.ugc();
-    // create a channel to communicate with the upcoming callback thread
-    // this is technically not *needed* but it is cleaner in order to properly exit the thread
     let (tx, rx) = std::sync::mpsc::channel();
-    // create a thread for callbacks
-    // if you have an active loop (like in a game), you can skip this and just run the callbacks on update
     let callback_thread = std::thread::spawn(move || {
         loop {
-            // run callbacks
             client.run_callbacks();
             std::thread::sleep(std::time::Duration::from_millis(100));
-
-            // check if the channel is closed or if there is a message
-            // end the thread if either is true
             match rx.try_recv() {
                 Ok(()) | Err(TryRecvError::Disconnected) => break,
                 Err(TryRecvError::Empty) => {}
@@ -72,7 +61,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         }
     });
 
-    // Check if already published
     let has_id = get_id().is_ok();
 
     if !has_id {
