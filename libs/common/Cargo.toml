@@ -9,9 +9,10 @@ license = "GPL-2.0"
 workspace = true
 
 [dependencies]
-enable-ansi-support = "0.3.1"
 codespan-reporting = { workspace = true }
+enable-ansi-support = "0.3.1"
 fs-err = { workspace = true }
+gag = "1.0.0"
 git2 = { workspace = true }
 rustversion = { workspace = true }
 serde = { workspace = true }

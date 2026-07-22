@@ -2,6 +2,7 @@
 
 pub mod ansi;
 pub mod arma;
+pub mod capture;
 pub mod config;
 pub mod error;
 pub mod io;

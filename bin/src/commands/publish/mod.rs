@@ -173,111 +173,12 @@ fn prompt_create_item(ugc: &UGC) -> Result<Report, Error> {
     }
 }
 
-#[cfg(unix)]
-struct FdRestore {
-    stdout: libc::c_int,
-    stderr: libc::c_int,
-    devnull: libc::c_int,
-}
-
-#[cfg(unix)]
-impl Drop for FdRestore {
-    fn drop(&mut self) {
-        unsafe {
-            libc::dup2(self.stdout, libc::STDOUT_FILENO);
-            libc::dup2(self.stderr, libc::STDERR_FILENO);
-            libc::close(self.stdout);
-            libc::close(self.stderr);
-            libc::close(self.devnull);
-        }
-    }
-}
-
-#[cfg(unix)]
 fn silence_steam_output<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    unsafe {
-        let stdout = libc::dup(libc::STDOUT_FILENO);
-        let stderr = libc::dup(libc::STDERR_FILENO);
-
-        let devnull = libc::open(c"/dev/null".as_ptr().cast(), libc::O_WRONLY);
-
-        libc::dup2(devnull, libc::STDOUT_FILENO);
-        libc::dup2(devnull, libc::STDERR_FILENO);
-        libc::close(devnull);
-
-        let _restore = FdRestore {
-            stdout,
-            stderr,
-            devnull,
-        };
-
-        f()
-    }
-}
-
-#[cfg(windows)]
-struct StdHandleRestore {
-    stdout: windows::Win32::Foundation::HANDLE,
-    stderr: windows::Win32::Foundation::HANDLE,
-    null: windows::Win32::Foundation::HANDLE,
-}
-
-#[cfg(windows)]
-impl Drop for StdHandleRestore {
-    fn drop(&mut self) {
-        use windows::Win32::Foundation::CloseHandle;
-        use windows::Win32::System::Console::{STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle};
-
-        unsafe {
-            let _ = SetStdHandle(STD_OUTPUT_HANDLE, self.stdout);
-            let _ = SetStdHandle(STD_ERROR_HANDLE, self.stderr);
-            let _ = CloseHandle(self.null);
-        }
-    }
-}
-
-#[cfg(windows)]
-fn silence_steam_output<F, R>(f: F) -> R
-where
-    F: FnOnce() -> R,
-{
-    use std::ptr::null_mut;
-    use windows::Win32::Foundation::HANDLE;
-    use windows::Win32::System::Console::{
-        GetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle,
-    };
-
-    unsafe {
-        let stdout = GetStdHandle(STD_OUTPUT_HANDLE).unwrap_or(HANDLE(null_mut()));
-        let stderr = GetStdHandle(STD_ERROR_HANDLE).unwrap_or(HANDLE(null_mut()));
-
-        let null = windows::Win32::Storage::FileSystem::CreateFileW(
-            windows::core::w!("NUL"),
-            windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0,
-            windows::Win32::Storage::FileSystem::FILE_SHARE_READ
-                | windows::Win32::Storage::FileSystem::FILE_SHARE_WRITE,
-            None,
-            windows::Win32::Storage::FileSystem::OPEN_EXISTING,
-            windows::Win32::Storage::FileSystem::FILE_ATTRIBUTE_NORMAL,
-            None,
-        );
-
-        let Ok(null) = null else {
-            return f();
-        };
-
-        let _restore = StdHandleRestore {
-            stdout,
-            stderr,
-            null,
-        };
-
-        let _ = SetStdHandle(STD_OUTPUT_HANDLE, null);
-        let _ = SetStdHandle(STD_ERROR_HANDLE, null);
-
-        f()
-    }
+    let capture = hemtt_common::capture::OutputCapture::new();
+    let res = f();
+    capture.finish();
+    res
 }

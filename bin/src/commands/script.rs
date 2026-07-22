@@ -58,7 +58,7 @@ mod tests {
                 "{}/tests/workspace_post_release",
                 env!("CARGO_MANIFEST_DIR")
             )));
-        let capture = hemtt_test::capture::OutputCapture::new();
+        let capture = hemtt_common::capture::OutputCapture::new();
         crate::execute(&crate::Cli::parse_from(vec!["hemtt", "script", "math"]))
             .expect("Failed to run script");
         let output = capture.finish();
@@ -72,7 +72,7 @@ mod tests {
                 "{}/tests/workspace_post_release",
                 env!("CARGO_MANIFEST_DIR")
             )));
-        let capture = hemtt_test::capture::OutputCapture::new();
+        let capture = hemtt_common::capture::OutputCapture::new();
         let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "script", "vfs"]));
         let output = capture.finish();
         insta::assert_snapshot!(output);
@@ -85,7 +85,7 @@ mod tests {
                 "{}/tests/workspace_bad_script",
                 env!("CARGO_MANIFEST_DIR")
             )));
-        let capture = hemtt_test::capture::OutputCapture::new();
+        let capture = hemtt_common::capture::OutputCapture::new();
         let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "dev"]));
         let output = capture.finish();
         insta::assert_snapshot!(output);
@@ -97,7 +97,7 @@ mod tests {
                 "{}/tests/workspace_pboprefix",
                 env!("CARGO_MANIFEST_DIR")
             )));
-        let capture = hemtt_test::capture::OutputCapture::new();
+        let capture = hemtt_common::capture::OutputCapture::new();
         let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "check"]));
         let output = capture.finish();
         insta::assert_snapshot!(output);

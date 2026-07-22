@@ -1,10 +1,9 @@
 {
   "terminal.integrated.shellArgs.linux": [
-      "-l"
+    "-l"
   ],
   "chat.tools.terminal.autoApprove": {
-      "cargo nextest": true,
-      "cargo insta": true
+    "cargo nextest": true,
+    "cargo insta": true
   },
-  "rust-analyzer.cargo.target": "x86_64-pc-windows-gnu",
 }
