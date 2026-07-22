@@ -27,7 +27,10 @@ pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, 
 
     let mut handle = ugc.start_item_update(APP_ID, id).content_path(content);
     if create {
-        handle = handle.title(executor.ctx().config().name());
+        handle = handle
+            .title(executor.ctx().config().name())
+            .add_key_value_tag("bis_platform", "-")
+            .add_key_value_tag("bis_displayName", executor.ctx().config().name());
     }
     let _upload_handle = handle.submit(Some(&version), |upload_result| match upload_result {
         Ok((published_id, needs_to_agree_to_terms)) => {
