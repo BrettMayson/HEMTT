@@ -135,6 +135,7 @@ fn prompt_create_item(ugc: &UGC) -> Result<Report, Error> {
 struct FdRestore {
     stdout: libc::c_int,
     stderr: libc::c_int,
+    devnull: libc::c_int,
 }
 
 #[cfg(unix)]
@@ -145,6 +146,7 @@ impl Drop for FdRestore {
             libc::dup2(self.stderr, libc::STDERR_FILENO);
             libc::close(self.stdout);
             libc::close(self.stderr);
+            libc::close(self.devnull);
         }
     }
 }
@@ -164,7 +166,11 @@ where
         libc::dup2(devnull, libc::STDERR_FILENO);
         libc::close(devnull);
 
-        let _restore = FdRestore { stdout, stderr };
+        let _restore = FdRestore {
+            stdout,
+            stderr,
+            devnull,
+        };
 
         f()
     }
@@ -174,15 +180,19 @@ where
 struct StdHandleRestore {
     stdout: windows::Win32::Foundation::HANDLE,
     stderr: windows::Win32::Foundation::HANDLE,
+    null: windows::Win32::Foundation::HANDLE,
 }
 
 #[cfg(windows)]
 impl Drop for StdHandleRestore {
     fn drop(&mut self) {
+        use windows::Win32::Foundation::CloseHandle;
         use windows::Win32::System::Console::{STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle};
+
         unsafe {
             let _ = SetStdHandle(STD_OUTPUT_HANDLE, self.stdout);
             let _ = SetStdHandle(STD_ERROR_HANDLE, self.stderr);
+            let _ = CloseHandle(self.null);
         }
     }
 }
@@ -217,7 +227,11 @@ where
             return f();
         };
 
-        let _restore = StdHandleRestore { stdout, stderr };
+        let _restore = StdHandleRestore {
+            stdout,
+            stderr,
+            null,
+        };
 
         let _ = SetStdHandle(STD_OUTPUT_HANDLE, null);
         let _ = SetStdHandle(STD_ERROR_HANDLE, null);
