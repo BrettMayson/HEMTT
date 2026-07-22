@@ -1,8 +1,5 @@
 use hemtt_common::version::Version;
-use rhai::plugin::{
-    Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
-    RhaiResult, TypeId, export_module, mem,
-};
+use rhai::plugin::{Dynamic, export_module};
 
 use crate::context::Context;
 

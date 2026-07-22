@@ -136,7 +136,7 @@ fn version(ctx: &Context) -> Version {
 #[cfg(test)]
 mod tests {
     use clap::Parser as _;
-    use hemtt_test::capture::OutputCapture;
+    use hemtt_common::capture::OutputCapture;
 
     #[test]
     fn enumerate() {

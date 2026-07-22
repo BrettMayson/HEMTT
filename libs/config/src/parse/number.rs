@@ -33,6 +33,7 @@ pub fn number() -> impl Parser<char, Number, Error = Simple<char>> {
             Some(_) => value.negate(span),
             None => value,
         })
+        .labelled("number")
 }
 
 fn number_hex() -> impl Parser<char, i64, Error = Simple<char>> {

@@ -100,7 +100,7 @@ impl Backend {
         {
             source
         } else {
-            let texture = format!("\\{}", &params.texture);
+            let texture = format!("\\{}", params.texture);
             tracing::debug!("Locating {:?}", &texture);
             if let Ok(Some(source)) = workspace.root().locate_with_pdrive(&texture) {
                 source

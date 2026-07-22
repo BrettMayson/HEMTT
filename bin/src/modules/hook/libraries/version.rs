@@ -1,7 +1,4 @@
-use rhai::plugin::{
-    Dynamic, FnNamespace, FuncRegistration, Module, NativeCallContext, PluginFunc, RhaiResult,
-    TypeId, export_module,
-};
+use rhai::plugin::export_module;
 
 #[allow(clippy::needless_pass_by_ref_mut)]
 #[allow(clippy::unwrap_used)] // coming from rhai codegen

@@ -26,7 +26,7 @@ impl OutputCapture {
         Self { reader: buf }
     }
 
-    #[must_use]
+    #[allow(clippy::must_use_candidate)]
     /// Stop capturing and return all captured output as a `String`
     pub fn finish(mut self) -> String {
         let mut output = String::new();

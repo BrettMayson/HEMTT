@@ -323,7 +323,9 @@ mod tests {
                 expected_array: false,
             })
         );
+        assert!(property().parse("MyProperty = 1.;").is_err());
         assert!(property().parse("MyProperty = 1.0.2;").is_err());
+        assert!(property().parse("MyProperty = 1.2;").is_ok());
         assert!(property().parse("MyProperty = 1 ;").is_ok());
     }
 
@@ -464,6 +466,126 @@ mod tests {
                 })),
                 vec![]
             )
+        );
+    }
+
+    #[test]
+    fn invalid_unquoted_text() {
+        // Unquoted text should fail (not a valid value type)
+        assert!(property().parse("MyProperty = hello;").is_err());
+        assert!(property().parse("MyProperty = world;").is_err());
+        assert!(property().parse("MyProperty = some_identifier;").is_err());
+    }
+
+    #[test]
+    fn invalid_math_expressions() {
+        // Incomplete math - trailing operator
+        let (result, _) = property().parse_recovery("math = 1 + 2 +;");
+        assert!(result.is_some());
+        // Should recover with Invalid value
+        if let Some(Property::Entry { value, .. }) = result {
+            assert!(matches!(value, Value::Invalid(_)));
+        }
+
+        // Leading operator
+        assert!(property().parse("math = + 1;").is_err());
+
+        // Double operators
+        assert!(property().parse("math = 1 ++ 2;").is_err());
+
+        // Invalid function names
+        assert!(property().parse("math = foo(10);").is_err());
+        assert!(property().parse("math = bar(5 + 3);").is_err());
+
+        // Non-numeric function arguments
+        assert!(property().parse("math = sin(abc);").is_err());
+    }
+
+    #[test]
+    fn invalid_malformed_numbers() {
+        // Multiple dots
+        assert!(property().parse("MyProperty = 1.2.3;").is_err());
+
+        // Text after number without operator
+        assert!(property().parse("MyProperty = 123 abc;").is_err());
+    }
+
+    #[test]
+    fn invalid_array_mismatched_braces() {
+        // Missing closing brace
+        let (result, _) = property().parse_recovery("MyProperty[] = {1, 2, 3;");
+        assert!(result.is_some());
+        // Should recover with Invalid value
+        if let Some(Property::Entry { value, .. }) = result {
+            assert!(matches!(value, Value::Invalid(_)));
+        }
+
+        // Missing opening brace - tries to parse "1" as value
+        let result = property().parse("MyProperty[] = 1;");
+        // This succeeds but returns just the number value (not as array)
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn invalid_empty_property_name() {
+        // Empty property name
+        assert!(property().parse("= 123;").is_err());
+    }
+
+    #[test]
+    fn invalid_missing_equals() {
+        // Missing equals sign
+        assert!(property().parse("MyProperty 123;").is_err());
+    }
+
+    #[test]
+    fn valid_math_with_functions() {
+        // Valid math functions should work
+        assert_eq!(
+            property().parse("math = rad(180);"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                value: Value::Number(crate::Number::Float32 {
+                    value: std::f64::consts::PI as f32,
+                    span: 7..15,
+                }),
+                expected_array: false,
+            })
+        );
+
+        // sin(0) returns 0 as Int32 (whole number)
+        assert_eq!(
+            property().parse("math = sin(0);"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                value: Value::Number(crate::Number::Int32 {
+                    value: 0,
+                    span: 7..13,
+                }),
+                expected_array: false,
+            })
+        );
+
+        // cos(0) returns 1 as Int32 (whole number)
+        assert_eq!(
+            property().parse("math = cos(0);"),
+            Ok(Property::Entry {
+                name: crate::Ident {
+                    value: "math".to_string(),
+                    span: 0..4,
+                },
+                value: Value::Number(crate::Number::Int32 {
+                    value: 1,
+                    span: 7..13,
+                }),
+                expected_array: false,
+            })
         );
     }
 }

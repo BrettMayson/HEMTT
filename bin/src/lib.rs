@@ -44,6 +44,8 @@ pub struct GlobalArgs {
     #[arg(global = true, hide = true, long)]
     /// Directory to run in
     dir: Option<String>,
+    #[arg(global = true, long, action = clap::ArgAction::SetTrue)]
+    no_color: bool,
     #[arg(global = true, long, hide = true, action = clap::ArgAction::SetTrue)]
     exp_bin_cache: bool,
 }
@@ -60,6 +62,7 @@ enum Commands {
     Build(commands::build::Command),
     Keys(commands::keys::Command),
     Release(commands::release::Command),
+    Publish(commands::publish::Command),
     #[clap(alias = "ln")]
     Localization(commands::localization::Command),
     Script(commands::script::Command),
@@ -153,6 +156,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::Build(cmd) => commands::build::execute(cmd),
         Commands::Keys(cmd) => commands::keys::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
+        Commands::Publish(cmd) => commands::publish::execute(cmd),
         Commands::Localization(cmd) => commands::localization::execute(cmd),
         Commands::Script(cmd) => commands::script::execute(cmd),
         Commands::Utils(cmd) => commands::utils::execute(cmd),

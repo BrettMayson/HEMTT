@@ -1,4 +1,7 @@
-use crate::{context::Context, error::Error, modules::Sign, report::Report};
+use crate::{
+    commands::build::BuildArgs, context::Context, error::Error, executor::Executor, modules::Sign,
+    report::Report,
+};
 
 use super::build;
 
@@ -41,7 +44,7 @@ use super::build;
 /// If `archive` is set to `false`, a zip archive will not be created. The output will be in `.hemttout/release`.
 pub struct Command {
     #[clap(flatten)]
-    build: build::BuildArgs,
+    build: BuildArgs,
 
     #[clap(flatten)]
     release: ReleaseArgs,
@@ -74,6 +77,14 @@ pub struct ReleaseArgs {
 /// # Errors
 /// [`Error`] depending on the modules
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    executor(&cmd.release, &cmd.build)?.run()
+}
+
+/// Create an executor for the release command
+///
+/// # Errors
+/// [`Error`] depending on the modules
+pub fn executor(release_args: &ReleaseArgs, build_args: &BuildArgs) -> Result<Executor, Error> {
     let mut ctx = Context::new(
         Some("release"),
         crate::context::PreservePrevious::Remove,
@@ -84,19 +95,18 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     let config = ctx.config().clone().with_runtime(runtime);
     ctx = ctx.with_config(config);
 
-    let mut executor = build::executor(ctx, &cmd.build);
+    let mut executor = build::executor(ctx, build_args);
 
-    if !cmd.release.no_sign && executor.ctx().config().hemtt().release().sign() {
+    if !release_args.no_sign && executor.ctx().config().hemtt().release().sign() {
         executor.add_module(Box::new(Sign::new()));
     }
 
-    let archive = if cmd.release.no_archive {
+    let archive = if release_args.no_archive {
         false
     } else {
         executor.ctx().config().hemtt().release().archive()
     };
 
     executor.release(archive);
-
-    executor.run()
+    Ok(executor)
 }

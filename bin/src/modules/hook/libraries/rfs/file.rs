@@ -1,9 +1,6 @@
 use std::{cell::RefCell, fs::File, io::Write, rc::Rc};
 
-use rhai::plugin::{
-    Dynamic, FnNamespace, FuncRegistration, ImmutableString, Module, NativeCallContext, PluginFunc,
-    RhaiResult, TypeId, export_module, mem,
-};
+use rhai::plugin::export_module;
 
 #[derive(Clone)]
 pub struct ReadFile(Rc<RefCell<File>>);

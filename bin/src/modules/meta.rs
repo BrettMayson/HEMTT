@@ -34,7 +34,6 @@ impl Module for Meta {
             format!("{content}\ntimestamp = {now};\n")
         };
         fs_err::write(&path, new_content)?;
-        info!("Updated meta.cpp with current timestamp.");
         Ok(crate::report::Report::new())
     }
 }

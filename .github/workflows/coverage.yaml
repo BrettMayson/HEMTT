@@ -24,7 +24,7 @@ jobs:
           - runner: windows-latest
             name: windows
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
       - name: Install stable
@@ -49,7 +49,7 @@ jobs:
           name: ${{ matrix.os.name }}-coverage
           path: out.lcov
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: out.lcov
           fail_ci_if_error: true

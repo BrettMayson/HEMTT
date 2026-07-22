@@ -27,13 +27,12 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
-            # ARM Mac - always build (more available runners)
           - runner: macos-latest
             name: macos-arm
             artifact: macos-arm64
             exe: hemtt
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
@@ -88,7 +87,7 @@ jobs:
           name: ${{ matrix.os.artifact }}
           path: hemtt
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ matrix.mod.repo }}
           path: mod
@@ -120,7 +119,7 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download Linux x64
         uses: actions/download-artifact@v8

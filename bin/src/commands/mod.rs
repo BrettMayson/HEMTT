@@ -9,6 +9,7 @@ pub mod link;
 pub mod localization;
 pub mod manage;
 pub mod new;
+pub mod publish;
 pub mod release;
 pub mod script;
 pub mod utils;

@@ -14,6 +14,7 @@
 ## Release
 
 - [hemtt release](/commands/release.md) - Build the project for release
+- [hemtt publish](/commands/publish.md) - Publish the project to Steam Workshop
 
 ## Options
 

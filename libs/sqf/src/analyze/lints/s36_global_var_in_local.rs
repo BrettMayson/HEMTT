@@ -8,9 +8,9 @@ use hemtt_workspace::{
 
 use crate::{BinaryCommand, Expression, Statement, UnaryCommand, analyze::LintData};
 
-crate::analyze::lint!(LintS35CountSkippable);
+crate::analyze::lint!(LintS36GlobalVarInLocal);
 
-impl Lint<LintData> for LintS35CountSkippable {
+impl Lint<LintData> for LintS36GlobalVarInLocal {
     fn ident(&self) -> &'static str {
         "global_var_in_local"
     }

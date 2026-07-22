@@ -59,7 +59,7 @@ pub fn execute(_: &Command) -> Result<(), Error> {
         file.seek(SeekFrom::End(-1))?;
         let mut last_byte = [0u8; 1];
         file.read_exact(&mut last_byte)?;
-        if last_byte != [b'\n'] {
+        if last_byte != *b"\n" {
             if let Err(e) = file.write_all(b"\n") {
                 error!("Failed to write to {}: {}", path.display(), e);
                 continue;
