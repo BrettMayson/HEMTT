@@ -14,7 +14,49 @@ mod update;
 const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 
 #[derive(clap::Parser)]
-/// Publish addon to Steam Workshop. If not already published, offers to create a new item.
+#[command(verbatim_doc_comment)]
+/// Publish addon to Steam Workshop
+///
+/// `hemtt publish` will upload your mod to the Steam Workshop.
+/// It builds your project using [`hemtt release`](./release.md) and uploads the build
+/// to the Steam Workshop, handling both initial creation and updates of existing items.
+///
+/// ## Getting Started
+///
+/// When you run `hemtt publish`, if you don't have a published item ID, you will be prompted to create a new Steam Workshop item.
+/// This will generate a `meta.cpp` file in the current directory with your published item ID.
+/// Subsequent runs will update the existing item without prompting.
+///
+/// ## meta.cpp
+///
+/// The `meta.cpp` file stores your Steam Workshop published item ID. It must be located
+/// in the root of your project (where you run `hemtt publish`).
+///
+/// ```
+/// protocol = 1;
+/// publishedid = 1234567890;
+/// ```
+///
+/// ### Storing the ID
+///
+/// When you run `hemtt publish` and create a new item, HEMTT will
+/// automatically create or update your `meta.cpp` file with the `publishedid`.
+/// This file should be committed to version control so the team can publish updates.
+///
+/// To manually set the published ID, add it to your `meta.cpp`:
+/// ```cpp
+/// protocol = 1;
+/// publishedid = YOUR_WORKSHOP_ID_HERE;
+/// ```
+///
+/// You can find your Workshop item ID in the URL on the Steam Community Hub:
+/// `https://steamcommunity.com/sharedfiles/filedetails/?id=YOUR_WORKSHOP_ID_HERE`
+///
+/// ## Configuration
+///
+/// `hemtt publish` uses the same build configuration as [`hemtt release`](./release.md).
+/// All signing and archiving options apply to the released build before upload.
+///
 pub struct Command {
     #[clap(flatten)]
     pub build: BuildArgs,
