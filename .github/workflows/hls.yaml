@@ -28,6 +28,10 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt-language-server.exe
+          - runner: macos-latest
+            name: macos-arm
+            artifact: macos-arm64
+            exe: hemtt-language-server
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -63,17 +67,21 @@ jobs:
         with:
           node-version: 24
       - uses: actions/download-artifact@v8
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           name: linux-x64
           path: linux
       - uses: actions/download-artifact@v8
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           name: windows-x64
           path: windows
       - name: Set Executable
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           chmod +x linux/hemtt-language-server
       - name: Move Server
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           mv linux/hemtt-language-server hls/hemtt-language-server
           mv windows/hemtt-language-server.exe hls/hemtt-language-server.exe
@@ -101,3 +109,42 @@ jobs:
         run: |
           cd hls
           vsce publish -p ${{ secrets.VSCE_TOKEN }}
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    steps:
+      - name: Download Linux x64
+        uses: actions/download-artifact@v8
+        with:
+          name: linux-x64
+      - name: Rename Linux x64
+        run: |
+          mv hemtt-language-server hls-linux-x64
+      - name: Download Windows x64
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-x64
+      - name: Rename Windows x64
+        run: |
+          mv hemtt-language-server.exe hls-windows-x64
+      - name: Download MacOS ARM64
+        uses: actions/download-artifact@v8
+        with:
+          name: macos-arm64
+      - name: Rename MacOS ARM64
+        run: |
+          mv hemtt-language-server hls-macos-arm64
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            hls-linux-x64
+            hls-windows-x64
+            hls-macos-arm64
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

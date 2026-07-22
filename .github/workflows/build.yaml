@@ -27,7 +27,6 @@ jobs:
             name: windows
             artifact: windows-x64
             exe: hemtt.exe
-            # ARM Mac - always build (more available runners)
           - runner: macos-latest
             name: macos-arm
             artifact: macos-arm64
