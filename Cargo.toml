@@ -22,8 +22,6 @@ members = [
     "libs/testing",
 
     "arma",
-    
-    "steamworks-sys-dl",
 ]
 resolver = "2"
 

@@ -131,6 +131,7 @@ fn prompt_create_item(ugc: &UGC) -> Result<Report, Error> {
     }
 }
 
+#[cfg(unix)]
 struct FdRestore {
     stdout: libc::c_int,
     stderr: libc::c_int,
@@ -144,18 +145,6 @@ impl Drop for FdRestore {
             libc::dup2(self.stderr, libc::STDERR_FILENO);
             libc::close(self.stdout);
             libc::close(self.stderr);
-        }
-    }
-}
-
-#[cfg(windows)]
-impl Drop for FdRestore {
-    fn drop(&mut self) {
-        unsafe {
-            libc::_dup2(self.stdout, libc::_fileno(libc::stdout));
-            libc::_dup2(self.stderr, libc::_fileno(libc::stderr));
-            libc::_close(self.stdout);
-            libc::_close(self.stderr);
         }
     }
 }
@@ -182,24 +171,56 @@ where
 }
 
 #[cfg(windows)]
+struct StdHandleRestore {
+    stdout: windows::Win32::Foundation::HANDLE,
+    stderr: windows::Win32::Foundation::HANDLE,
+}
+
+#[cfg(windows)]
+impl Drop for StdHandleRestore {
+    fn drop(&mut self) {
+        use windows::Win32::System::Console::{STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle};
+        unsafe {
+            let _ = SetStdHandle(STD_OUTPUT_HANDLE, self.stdout);
+            let _ = SetStdHandle(STD_ERROR_HANDLE, self.stderr);
+        }
+    }
+}
+
+#[cfg(windows)]
 fn silence_steam_output<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
+    use std::ptr::null_mut;
+    use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::System::Console::{
+        GetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle,
+    };
+
     unsafe {
-        let stdout_fd = libc::_fileno(libc::stdout);
-        let stderr_fd = libc::_fileno(libc::stderr);
+        let stdout = GetStdHandle(STD_OUTPUT_HANDLE).unwrap_or(HANDLE(null_mut()));
+        let stderr = GetStdHandle(STD_ERROR_HANDLE).unwrap_or(HANDLE(null_mut()));
 
-        let stdout = libc::_dup(stdout_fd);
-        let stderr = libc::_dup(stderr_fd);
+        let null = windows::Win32::Storage::FileSystem::CreateFileW(
+            windows::core::w!("NUL"),
+            windows::Win32::Storage::FileSystem::FILE_GENERIC_WRITE.0,
+            windows::Win32::Storage::FileSystem::FILE_SHARE_READ
+                | windows::Win32::Storage::FileSystem::FILE_SHARE_WRITE,
+            None,
+            windows::Win32::Storage::FileSystem::OPEN_EXISTING,
+            windows::Win32::Storage::FileSystem::FILE_ATTRIBUTE_NORMAL,
+            None,
+        );
 
-        let devnull = libc::_open(c"NUL".as_ptr().cast(), libc::_O_WRONLY);
+        let Ok(null) = null else {
+            return f();
+        };
 
-        libc::_dup2(devnull, stdout_fd);
-        libc::_dup2(devnull, stderr_fd);
-        libc::_close(devnull);
+        let _restore = StdHandleRestore { stdout, stderr };
 
-        let _restore = FdRestore { stdout, stderr };
+        let _ = SetStdHandle(STD_OUTPUT_HANDLE, null);
+        let _ = SetStdHandle(STD_ERROR_HANDLE, null);
 
         f()
     }

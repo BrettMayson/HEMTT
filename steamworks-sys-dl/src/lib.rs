@@ -174,27 +174,16 @@ pub fn load_steam_library() -> Result<(), Box<dyn std::error::Error>> {
     let result = LOADED.get_or_init(|| {
         // Try to use system-installed Steam library first (if available)
         // But fall back to embedded library if initialization fails
-        let mut last_error: Option<String> = None;
 
         if let Some(system_path) = find_system_steam_library() {
             // Try system library first
             #[cfg(target_os = "windows")]
             {
                 unsafe {
-                    match libloading::Library::new(&system_path) {
-                        Ok(lib) => {
-                            match initialize_steam_api(&lib) {
-                                Ok(()) => {
-                                    let _leaked = Box::leak(Box::new(lib));
-                                    return Ok(());
-                                }
-                                Err(e) => {
-                                    last_error = Some(format!("System library init failed: {}", e));
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            last_error = Some(format!("Failed to load system library: {}", e));
+                    if let Ok(lib) = libloading::Library::new(&system_path) {
+                        if let Ok(()) = initialize_steam_api(&lib) {
+                            let _leaked = Box::leak(Box::new(lib));
+                            return Ok(());
                         }
                     }
                 }
@@ -207,22 +196,14 @@ pub fn load_steam_library() -> Result<(), Box<dyn std::error::Error>> {
                         Some(&system_path),
                         libloading::os::unix::RTLD_GLOBAL | libloading::os::unix::RTLD_LAZY,
                     ) {
-                        Ok(lib) => {
-                            match initialize_steam_api(&lib) {
-                                Ok(()) => {
-                                    let _leaked = Box::leak(Box::new(lib));
-                                    return Ok(());
-                                }
-                                Err(e) => {
-                                    last_error = Some(format!("System library init failed: {}", e));
-                                    eprintln!("Warning: System Steam library initialization failed, falling back to embedded library");
-                                    eprintln!("  Error: {}", e);
-                                }
+                        Ok(lib) => match initialize_steam_api(&lib) {
+                            Ok(()) => {
+                                let _leaked = Box::leak(Box::new(lib));
+                                return Ok(());
                             }
-                        }
-                        Err(e) => {
-                            last_error = Some(format!("Failed to load system library: {}", e));
-                        }
+                            Err(_) => {}
+                        },
+                        Err(_) => {}
                     }
                 }
             }
@@ -234,20 +215,14 @@ pub fn load_steam_library() -> Result<(), Box<dyn std::error::Error>> {
                         Some(&system_path),
                         libloading::os::unix::RTLD_GLOBAL | libloading::os::unix::RTLD_LAZY,
                     ) {
-                        Ok(lib) => {
-                            match initialize_steam_api(&lib) {
-                                Ok(()) => {
-                                    let _leaked = Box::leak(Box::new(lib));
-                                    return Ok(());
-                                }
-                                Err(e) => {
-                                    last_error = Some(format!("System library init failed: {}", e));
-                                }
+                        Ok(lib) => match initialize_steam_api(&lib) {
+                            Ok(()) => {
+                                let _leaked = Box::leak(Box::new(lib));
+                                return Ok(());
                             }
-                        }
-                        Err(e) => {
-                            last_error = Some(format!("Failed to load system library: {}", e));
-                        }
+                            Err(_) => {}
+                        },
+                        Err(_) => {}
                     }
                 }
             }

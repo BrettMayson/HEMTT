@@ -178,14 +178,6 @@ fn generate_wrappers_and_filtered_bindings(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let bindings_content = fs::read_to_string(bindings_path)?;
 
-    // Debug: write first part of bindings to see structure
-    if let Ok(first_1000) = fs::write(
-        out_path.join("DEBUG_bindings_head.txt"),
-        &bindings_content[..std::cmp::min(2000, bindings_content.len())],
-    ) {
-        eprintln!("DEBUG: Wrote bindings head to DEBUG_bindings_head.txt");
-    }
-
     // Extract function signatures with symbol names
     let functions = extract_functions_from_bindings(&bindings_content);
 
@@ -235,7 +227,7 @@ fn generate_wrappers_and_filtered_bindings(
     wrappers.push_str("pub(crate) unsafe fn initialize_steam_api(\n");
     wrappers.push_str("    lib: &libloading::Library,\n");
     wrappers.push_str(") -> Result<(), Box<dyn std::error::Error>> {\n");
-    wrappers.push_str("    let mut api = SteamApiFunctions {\n");
+    wrappers.push_str("    let api = SteamApiFunctions {\n");
 
     for (rust_name, native_name, _params, _ret_type) in &functions {
         let is_required = required_symbols.contains(&native_name.as_str());
@@ -266,7 +258,7 @@ fn generate_wrappers_and_filtered_bindings(
     wrappers.push_str("pub(crate) unsafe fn initialize_steam_api(\n");
     wrappers.push_str("    lib: &libloading::os::unix::Library,\n");
     wrappers.push_str(") -> Result<(), Box<dyn std::error::Error>> {\n");
-    wrappers.push_str("    let mut api = SteamApiFunctions {\n");
+    wrappers.push_str("    let api = SteamApiFunctions {\n");
 
     for (rust_name, native_name, _params, _ret_type) in &functions {
         let is_required = required_symbols.contains(&native_name.as_str());
@@ -297,7 +289,7 @@ fn generate_wrappers_and_filtered_bindings(
     wrappers.push_str("pub(crate) unsafe fn initialize_steam_api(\n");
     wrappers.push_str("    lib: &libloading::os::unix::Library,\n");
     wrappers.push_str(") -> Result<(), Box<dyn std::error::Error>> {\n");
-    wrappers.push_str("    let mut api = SteamApiFunctions {\n");
+    wrappers.push_str("    let api = SteamApiFunctions {\n");
 
     for (rust_name, native_name, _params, _ret_type) in &functions {
         let is_required = required_symbols.contains(&native_name.as_str());

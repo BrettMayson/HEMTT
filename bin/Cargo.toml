@@ -78,6 +78,7 @@ zip = { workspace = true }
 [target.'cfg(windows)'.dependencies]
 enable-ansi-support = "0.3.1"
 winapi = { version = "0.3.9", features = ["winuser"] }
+windows = { version = "0.62.2", features = ["Win32_Security", "Win32_Storage_FileSystem"] }
 winreg = "0.56.0"
 
 [dev-dependencies]
