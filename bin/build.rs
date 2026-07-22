@@ -1,4 +1,6 @@
 pub fn main() {
+    use std::env;
+
     let mut base = env!("CARGO_PKG_VERSION").to_string();
     if option_env!("CI").is_none() {
         base.push_str("-local");
@@ -9,4 +11,5 @@ pub fn main() {
         base.push_str("-debug");
     }
     println!("cargo:rustc-env=HEMTT_VERSION={base}");
+    println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
 }

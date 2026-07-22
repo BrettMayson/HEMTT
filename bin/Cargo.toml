@@ -32,6 +32,8 @@ hemtt-stringtable = { path = "../libs/stringtable" }
 hemtt-workspace = { path = "../libs/workspace" }
 hemtt-wss = { path = "../libs/wss" }
 
+steamworks-sys = "0.13"
+
 arma3-wiki = { workspace = true }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
@@ -45,6 +47,7 @@ glob = "0.3.3"
 image = "0.25.10"
 indicatif = "0.18.4"
 interprocess = { workspace = true }
+libc = { version = "0.2.188" }
 lzma-rust2 = "0.15.8" # TODO: remove when not needed, currently breaks build if not specified
 paste = { workspace = true }
 rand = { workspace = true }
@@ -58,6 +61,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha-1 = { workspace = true }
 state = "0.6.0"
+steamworks = { version = "0.13.1" }
 supports-hyperlinks = { workspace = true }
 tabled = { workspace = true }
 terminal-link = { workspace = true }

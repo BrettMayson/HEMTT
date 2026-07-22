@@ -4,6 +4,7 @@ use std::{
 };
 
 use hemtt_common::{
+    STEAM_APP_ID,
     arma::dlc::DLC,
     config::{GlobalConfig, LaunchOptions},
     steam,
@@ -152,7 +153,7 @@ impl<'a> Launcher<'a> {
                 report.push(WorkshopNotFound::code());
                 return Ok(None);
             };
-            let workshop_folder = root.join("workshop").join("content").join("107410");
+            let workshop_folder = root.join("workshop").join("content").join(STEAM_APP_ID);
             if !workshop_folder.exists() {
                 report.push(WorkshopNotFound::code());
                 return Ok(None);
@@ -379,7 +380,7 @@ impl<'a> Launcher<'a> {
             report.push(WorkshopNotFound::code());
             return report;
         };
-        let workshop_folder = root.join("workshop").join("content").join("107410");
+        let workshop_folder = root.join("workshop").join("content").join(STEAM_APP_ID);
         if !workshop_folder.exists() {
             report.push(WorkshopNotFound::code());
             return report;
