@@ -13,8 +13,6 @@ use tower_lsp::{
 use tracing::debug;
 use url::Url;
 
-use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer};
-
 #[derive(Clone)]
 pub struct EditorWorkspaces {
     workspaces: Arc<RwLock<HashMap<Url, EditorWorkspace>>>,
@@ -105,15 +103,7 @@ impl EditorWorkspaces {
     ) {
         debug!("adding workspace {}", added.uri);
         if let Some(workspace) = EditorWorkspace::new(added) {
-            workspaces.insert(added.uri.clone(), workspace.clone());
-            let config_workspace = workspace.clone();
-            let config_client = client.clone();
-            tokio::spawn(async move {
-                ConfigAnalyzer::get().workspace_added(&config_workspace, config_client);
-            });
-            tokio::spawn(async move {
-                SqfAnalyzer::get().workspace_added(&workspace, client);
-            });
+            workspaces.insert(added.uri.clone(), workspace);
         } else {
             debug!("failed to add workspace {}", added.uri);
         }
