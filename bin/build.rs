@@ -9,4 +9,5 @@ pub fn main() {
         base.push_str("-debug");
     }
     println!("cargo:rustc-env=HEMTT_VERSION={base}");
+    println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
 }

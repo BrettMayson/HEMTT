@@ -8,6 +8,8 @@ pub enum Error {
 
     #[error("Not in a git repository: {0}")]
     NotInGitRepository(String),
+    #[error("No meta.cpp with publishedid found in current directory")]
+    PublishedIdNotFound,
 
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac

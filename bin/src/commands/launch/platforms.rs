@@ -3,6 +3,8 @@ use std::{
     process::Command,
 };
 
+use hemtt_common::STEAM_APP_ID;
+
 use crate::Error;
 
 #[allow(clippy::unnecessary_wraps)] // To match the linux function signature
@@ -55,7 +57,7 @@ pub fn linux(args: &[String]) -> Result<Command, Error> {
         cmd.arg("run")
             .arg("com.valvesoftware.Steam")
             .arg("-applaunch")
-            .arg("107410")
+            .arg(STEAM_APP_ID)
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
@@ -71,7 +73,7 @@ pub fn linux(args: &[String]) -> Result<Command, Error> {
         let mut cmd = std::process::Command::new("distrobox-host-exec");
         cmd.arg("steam")
             .arg("-applaunch")
-            .arg("107410")
+            .arg(STEAM_APP_ID)
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
@@ -81,7 +83,7 @@ pub fn linux(args: &[String]) -> Result<Command, Error> {
         info!("Using native steam with:\n  {}", args.join("\n  "));
         let mut cmd = std::process::Command::new("steam");
         cmd.arg("-applaunch")
-            .arg("107410")
+            .arg(STEAM_APP_ID)
             .arg("-nolauncher")
             .args(args)
             .stdout(std::process::Stdio::null())
@@ -96,7 +98,7 @@ pub fn macos(args: &[String]) -> Result<Command, Error> {
     info!("Launching with:\n  {}", args.join("\n  "));
     let mut cmd = std::process::Command::new("/Applications/Steam.app/Contents/MacOS/steam_osx");
     cmd.arg("-applaunch")
-        .arg("107410")
+        .arg(STEAM_APP_ID)
         .arg("-nolauncher")
         .args(args)
         .stdout(std::process::Stdio::null())

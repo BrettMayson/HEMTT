@@ -2,3 +2,4 @@
 **/*.hpp linguist-vendored
 **/*.cpp linguist-vendored
 book/**/* linguist-vendored
+steamworks-sys-dl/**/* linguist-vendored

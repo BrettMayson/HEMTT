@@ -16,6 +16,8 @@ pub use error::Error;
 mod sign_version;
 pub use sign_version::BISignVersion;
 
+pub const STEAM_APP_ID: &str = "107410";
+
 #[must_use]
 /// Returns up to 3 similar values from a haystack.
 pub fn similar_values<'a>(search: &str, haystack: &'a [&str]) -> Vec<&'a str> {
