@@ -45,6 +45,13 @@ export default async function fetchHLS(
     // Version file doesn't exist.
   }
 
+  if (installedVersion === "dev") {
+    await vscode.window.showWarningMessage(
+      "You are using a development version of the HEMTT Language Server."
+    );
+    return hlsPlatform;
+  }
+
   // Already have the correct HLS version.
   if (
     installedVersion === version &&

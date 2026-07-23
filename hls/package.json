@@ -400,8 +400,9 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "compile": "tsc -p ./",
     "compile-lsp": "run-script-os",
-    "compile-lsp:darwin:linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hemtt-language-server",
-    "compile-lsp:win32": "cargo build --release --bin hemtt-language-server && copy ..\\target\\release\\hemtt-language-server.exe .\\hemtt-language-server.exe",
+    "compile-lsp:darwin": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hls-macos-x64",
+    "compile-lsp:linux": "cargo build --release --bin hemtt-language-server && cp ../target/release/hemtt-language-server ./hls-linux-x64",
+    "compile-lsp:win32": "cargo build --release --bin hemtt-language-server && copy ..\\target\\release\\hemtt-language-server.exe .\\hls-windows-x64",
     "test-compile": "tsc -p ./",
     "lint": "eslint vscode-src --ext ts"
   },

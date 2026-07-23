@@ -1,5 +1,4 @@
 languages/sqf.json
-hemtt-language-server
-hemtt-language-server.exe
+hls-*
 dist
 webview-dist
