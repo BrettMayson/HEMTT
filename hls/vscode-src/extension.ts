@@ -13,6 +13,7 @@ import * as p3d from "./p3d";
 import * as paa from "./paa";
 import * as preprocessor from "./preprocessor";
 import * as rpt from "./rpt";
+import fetchHLS from './fetch-hls';
 
 import { getPortPromise } from "portfinder";
 
@@ -22,10 +23,7 @@ export let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HE
 export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(channel);
 
-  let command = context.asAbsolutePath("hemtt-language-server");
-  if (process.platform === "win32") {
-    command += ".exe";
-  }
+  let command = context.asAbsolutePath(await fetchHLS(context));
 
   const port = await getPortPromise({
     port: 12000,

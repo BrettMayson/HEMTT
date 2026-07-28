@@ -27,7 +27,7 @@ ARCH="$(uname -m)"
 case "$OS" in
     Linux*)
         if [ "$ARCH" = "x86_64" ]; then
-            DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'linux-x64' | head -n 1)
+            DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep '/linux-x64' | head -n 1)
         else
             echo "Unsupported architecture: $ARCH"
             exit 1
@@ -35,7 +35,7 @@ case "$OS" in
         ;;
     Darwin*)
         if [ "$ARCH" = "arm64" ]; then
-            DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep 'darwin-arm64' | head -n 1)
+            DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep -o 'http[^"]*' | grep '/darwin-arm64' | head -n 1)
         else
             echo "Unsupported architecture: $ARCH"
             exit 1
