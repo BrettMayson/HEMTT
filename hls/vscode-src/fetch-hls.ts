@@ -22,9 +22,11 @@ export default async function fetchHLS(
     throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
 
+  let hlsPlatformExe = hlsPlatform + (platform === "win32" ? ".exe" : "");
+
   const destination = path.join(
     context.extensionPath,
-    hlsPlatform,
+    hlsPlatformExe,
   );
 
   const versionFile = path.join(
@@ -56,7 +58,7 @@ export default async function fetchHLS(
     const message = "Using development version of HEMTT Language Server";
     vscode.window.showWarningMessage(message);
     channel.appendLine(message + ". Executable path: " + destination);
-    return hlsPlatform;
+    return hlsPlatformExe;
   }
 
   // Already have the correct HLS version.
@@ -64,7 +66,7 @@ export default async function fetchHLS(
     installedVersion === version &&
     await fileExists(destination)
   ) {
-    return hlsPlatform;
+    return hlsPlatformExe;
   }
 
   const url =
@@ -88,9 +90,6 @@ export default async function fetchHLS(
   // Make executable on Linux/macOS.
   if (platform !== "win32") {
     await fs.promises.chmod(destination, 0o755);
-  } else {
-    await fs.promises.rename(destination, `${destination}.exe`);
-    hlsPlatform = `${hlsPlatform}.exe`;
   }
 
   // Record the version we downloaded.
@@ -100,7 +99,7 @@ export default async function fetchHLS(
     "utf8",
   );
 
-  return hlsPlatform;
+  return hlsPlatformExe;
 }
 
 async function fileExists(file: string): Promise<boolean> {
