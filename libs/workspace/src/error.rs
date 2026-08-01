@@ -17,6 +17,11 @@ pub enum Error {
     #[error("IOError: {0}")]
     /// [`std::io::Error`]
     Io(#[from] std::io::Error),
+
+    #[error("Unknown FileId, it was not created by this SourceDatabase")]
+    /// A [`crate::source::FileId`] was used with a
+    /// [`crate::source::SourceDatabase`] that did not create it
+    UnknownFileId,
 }
 
 impl From<vfs::VfsError> for Error {

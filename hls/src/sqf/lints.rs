@@ -15,6 +15,7 @@ use crate::{
     diag_manager::DiagManager,
     files::FileCache,
     preprocessor::PreprocessorAnalyzer,
+    sources::SourceSync,
     workspace::{EditorWorkspace, EditorWorkspaces},
 };
 
@@ -95,11 +96,8 @@ async fn check_sqf(
     manager.clear_current(&format!("sqf:{}", source.as_str()));
 
     let mut lsp_diags = HashMap::new();
-    PreprocessorAnalyzer::get()
-        .mark_in_progress(source.clone())
-        .await;
     #[allow(clippy::or_fun_call)]
-    let sources = match Processor::run(
+    let sources = match Processor::run_with_sources(
         &source,
         workspace
             .config()
@@ -107,6 +105,7 @@ async fn check_sqf(
             .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
                 f.preprocessor()
             }),
+        &SourceSync::get().database(),
     ) {
         Ok(processed) => {
             {
@@ -172,7 +171,6 @@ async fn check_sqf(
             let sources = processed.included_files().to_owned();
             if FileCache::get().is_open(&workspace.to_url(&source)) {
                 PreprocessorAnalyzer::get().save_processed(source.clone(), processed);
-                PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             }
             sources
         }
@@ -252,7 +250,15 @@ impl SqfAnalyzer {
                 })
                 .collect::<Vec<_>>();
             drop(files);
-            if !saved.exists().unwrap_or(false)
+            // `saved` is always its own compilation unit when it's a `.sqf`
+            // file, so it must always be (re)checked directly, even if it
+            // isn't yet a known cache key - e.g. a brand new file from
+            // `didCreateFiles`, the new path of a `didRenameFiles`, or the
+            // first `didSave`/`didOpen` for a file that was never linted
+            // before. `path == &saved` above already covers a previously
+            // tracked file (including one that was just deleted/renamed
+            // away, so it gets recomputed and evicted from the cache).
+            if !recheck.contains(&saved)
                 && std::path::Path::new(&saved.to_string())
                     .extension()
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))

@@ -1,52 +1,38 @@
 mod goto;
 mod signature;
 
-use std::{
-    collections::HashSet,
-    sync::{Arc, LazyLock},
-};
+use std::sync::{Arc, LazyLock};
 
 use dashmap::DashMap;
+use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
     WorkspacePath,
     reporting::{CacheProcessed, Processed},
 };
-use tokio::sync::Mutex;
+use tracing::warn;
 use url::Url;
 
-use crate::workspace::EditorWorkspaces;
+use crate::{
+    sources::SourceSync,
+    workspace::{EditorWorkspace, EditorWorkspaces},
+};
 
 #[derive(Clone)]
 pub struct PreprocessorAnalyzer {
+    /// The most recent preprocessed output for each addon (keyed by the
+    /// addon's root `config.cpp`) or `.sqf` file. Populated by the
+    /// whole-addon lint scans. Used for hover-style features (goto
+    /// definition, signature help) where briefly stale data while a scan is
+    /// in flight is acceptable.
     processed: Arc<DashMap<WorkspacePath, CacheProcessed>>,
-    in_progress: Arc<Mutex<HashSet<WorkspacePath>>>,
 }
 
 impl PreprocessorAnalyzer {
     pub fn get() -> Self {
         static SINGLETON: LazyLock<PreprocessorAnalyzer> = LazyLock::new(|| PreprocessorAnalyzer {
             processed: Arc::new(DashMap::new()),
-            in_progress: Arc::new(Mutex::new(HashSet::new())),
         });
         (*SINGLETON).clone()
-    }
-
-    pub async fn is_in_progress(&self, source: &WorkspacePath) -> bool {
-        self.in_progress.lock().await.contains(source)
-    }
-
-    pub async fn mark_in_progress(&self, source: WorkspacePath) {
-        self.in_progress.lock().await.insert(source);
-    }
-
-    pub async fn mark_done(&self, source: WorkspacePath) {
-        self.in_progress.lock().await.remove(&source);
-    }
-
-    pub async fn wait_until_done(&self, source: WorkspacePath) {
-        while self.is_in_progress(&source).await {
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        }
     }
 
     pub fn save_processed(&self, source: WorkspacePath, processed: Processed) {
@@ -55,38 +41,67 @@ impl PreprocessorAnalyzer {
 
     pub async fn on_close(&self, url: &Url) {
         let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(url).await else {
-            tracing::warn!("Failed to find workspace for {:?}", url);
+            warn!("Failed to find workspace for {:?}", url);
             return;
         };
         let Ok(source) = workspace.join_url(url) else {
-            tracing::warn!("Failed to join url {:?}", url);
+            warn!("Failed to join url {:?}", url);
             return;
         };
-        if source.extension() == Some("sqf".to_string()) && self.processed.remove(&source).is_some()
+        if source.extension().as_deref() == Some("sqf") && self.processed.remove(&source).is_some()
         {
             tracing::debug!("sqf: removed processed cache for {}", source);
         }
     }
 
+    /// Preprocess `url` on demand and return its clean, macro-expanded
+    /// output, for the `hemtt/processed` preview command.
+    ///
+    /// This always recomputes from the current (possibly unsaved) buffer
+    /// content through [`SourceSync`], rather than relying on a background
+    /// lint scan having already populated a cache, so the preview is never
+    /// stale or racy with an in-flight save.
     pub async fn get_processed(&self, url: Url) -> Option<String> {
-        // Wait for the save job to start
-        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-        let Some(workspace) = EditorWorkspaces::get().guess_workspace_retry(&url).await else {
-            tracing::warn!("Failed to find workspace for {:?}", url);
-            return None;
-        };
-        let Ok(mut source) = workspace.join_url(&url) else {
-            tracing::warn!("Failed to join url {:?}", url);
-            return None;
-        };
-        if source.extension() == Some("cpp".to_string()) {
-            source = source.parent();
+        let workspace = EditorWorkspaces::get().guess_workspace_retry(&url).await?;
+        let source = workspace.join_url(&url).ok()?;
+        let root = resolve_processing_root(&workspace, &source);
+        let config = workspace.config();
+        #[allow(clippy::or_fun_call)]
+        match Processor::run_with_sources(
+            &root,
+            config
+                .as_ref()
+                .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
+                    f.preprocessor()
+                }),
+            &SourceSync::get().database(),
+        ) {
+            Ok(processed) => Some(processed.cache().output),
+            Err((_, e)) => {
+                warn!("failed to preprocess {:?}: {:?}", root, e);
+                None
+            }
         }
-        self.wait_until_done(source.clone()).await;
-        let Some(cache) = self.processed.get(&source) else {
-            tracing::warn!("Failed to find cache for {:?}", source);
-            return None;
-        };
-        Some(cache.output.clone())
     }
+}
+
+/// Config headers (`.hpp`/`.ext`) aren't independently preprocessable, they
+/// only make sense in the context of the addon's root `config.cpp` that
+/// includes them, while `.sqf` files are always self-contained. Resolves
+/// `source` to whichever file should actually be run through the
+/// preprocessor to preview it.
+fn resolve_processing_root(workspace: &EditorWorkspace, source: &WorkspacePath) -> WorkspacePath {
+    if source.extension().as_deref() == Some("sqf") {
+        return source.clone();
+    }
+    workspace
+        .root()
+        .addons()
+        .iter()
+        .filter_map(|config| workspace.root().join(config.as_str()).ok())
+        .find(|config| {
+            config.as_str() == source.as_str()
+                || source.as_str().starts_with(config.parent().as_str())
+        })
+        .unwrap_or_else(|| source.clone())
 }
