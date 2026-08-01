@@ -1,7 +1,7 @@
 use std::{env::temp_dir, path::PathBuf, sync::Arc};
 
 use hemtt_common::config::{GlobalConfig, ProjectConfig};
-use hemtt_workspace::{LayerType, Workspace, WorkspacePath, addons::Addon};
+use hemtt_workspace::{LayerType, SourceDatabase, Workspace, WorkspacePath, addons::Addon};
 
 use crate::error::Error;
 
@@ -31,6 +31,7 @@ pub struct Context {
     tmp: PathBuf,
     profile: PathBuf,
     state: Arc<State>,
+    sources: SourceDatabase,
 }
 
 impl Context {
@@ -159,6 +160,7 @@ impl Context {
             tmp,
             profile,
             state: Arc::new(State::default()),
+            sources: SourceDatabase::new(),
         })
     }
 
@@ -258,6 +260,18 @@ impl Context {
     /// The state of the context
     pub fn state(&self) -> Arc<State> {
         self.state.clone()
+    }
+
+    #[must_use]
+    /// The shared source database for this run.
+    ///
+    /// Preprocessing should go through this (via
+    /// [`hemtt_preprocessor::Processor::run_with_sources`]) rather than
+    /// [`hemtt_preprocessor::Processor::run`], so that files `#include`d
+    /// from multiple addons/entries (e.g. shared macro/common headers) are
+    /// only read and parsed once per run instead of once per entry.
+    pub const fn sources(&self) -> &SourceDatabase {
+        &self.sources
     }
     #[must_use]
     pub fn with_config(self, config: ProjectConfig) -> Self {

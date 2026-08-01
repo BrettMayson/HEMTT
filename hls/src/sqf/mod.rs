@@ -51,12 +51,13 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", document.uri);
             return;
         };
-        let source = workspace.join_url(&document.uri).unwrap_or_else(|_| {
-            hemtt_workspace::Workspace::builder()
-                .memory()
-                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-                .expect("Failed to create in-memory workspace")
-        });
+        let source = match workspace.join_url(&document.uri) {
+            Ok(source) => source,
+            Err(e) => {
+                warn!("Failed to join url {:?}: {}", document.uri, e);
+                return;
+            }
+        };
         let text = FileCache::get().text(&document.uri).unwrap_or_default();
         let Ok(tokens) = hemtt_preprocessor::parse::str(&text, &source) else {
             warn!("Failed to parse file");

@@ -15,6 +15,7 @@ use tower_lsp::lsp_types::*;
 use tracing::{Level, debug, info};
 
 use crate::diag_manager::DiagManager;
+use crate::sources::SourceSync;
 use crate::workspace::EditorWorkspaces;
 
 mod audio;
@@ -28,6 +29,7 @@ mod paa;
 mod positions;
 mod preprocessor;
 mod rpt;
+mod sources;
 mod sqf;
 mod workspace;
 
@@ -218,6 +220,13 @@ impl LanguageServer for Backend {
             version: Some(params.text_document.version),
         };
         FileCache::get().on_change(&document);
+        SourceSync::get()
+            .on_change(
+                &params.text_document.uri,
+                &params.text_document.text,
+                params.text_document.version,
+            )
+            .await;
         ConfigAnalyzer::get()
             .on_open(params.text_document.uri.clone(), self.client.clone())
             .await;
@@ -234,6 +243,11 @@ impl LanguageServer for Backend {
             version: Some(params.text_document.version),
         };
         FileCache::get().on_change(&document);
+        if let Some(text) = FileCache::get().text(&document.uri) {
+            SourceSync::get()
+                .on_change(&document.uri, &text, params.text_document.version)
+                .await;
+        }
         SqfAnalyzer::get().on_change(&document).await;
     }
 
@@ -251,12 +265,14 @@ impl LanguageServer for Backend {
                 version: None,
             };
             FileCache::get().on_change(&document);
+            SourceSync::get().on_change(&document.uri, &text, 0).await;
             SqfAnalyzer::get().on_change(&document).await;
         }
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         FileCache::get().on_close(&params.text_document.uri);
+        SourceSync::get().on_close(&params.text_document.uri);
         SqfAnalyzer::get().on_close(&params.text_document.uri);
         PreprocessorAnalyzer::get()
             .on_close(&params.text_document.uri)

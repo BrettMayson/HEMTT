@@ -2,10 +2,12 @@ use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, LazyLock, RwLock},
+    time::Duration,
 };
 
 use hemtt_common::config::{PDriveOption, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
+use tokio::sync::Notify;
 use tower_lsp::{
     Client,
     lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
@@ -15,15 +17,26 @@ use url::Url;
 
 use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer};
 
+/// Safety-net timeout for [`EditorWorkspaces::guess_workspace_retry`]. A
+/// workspace is expected to be registered almost immediately, so this only
+/// guards against a folder that never gets added (e.g. a client bug), rather
+/// than acting as a polling interval.
+const WORKSPACE_REGISTRATION_TIMEOUT: Duration = Duration::from_secs(5);
+
 #[derive(Clone)]
 pub struct EditorWorkspaces {
     workspaces: Arc<RwLock<HashMap<Url, EditorWorkspace>>>,
+    /// Notified whenever a workspace folder is added, so callers resolving a
+    /// `Url` that arrived just before its owning workspace was registered
+    /// can wake up immediately instead of polling.
+    added: Arc<Notify>,
 }
 
 impl EditorWorkspaces {
     pub fn get() -> Self {
         static SINGLETON: LazyLock<EditorWorkspaces> = LazyLock::new(|| EditorWorkspaces {
             workspaces: Arc::new(RwLock::new(HashMap::new())),
+            added: Arc::new(Notify::new()),
         });
         (*SINGLETON).clone()
     }
@@ -83,16 +96,19 @@ impl EditorWorkspaces {
     }
 
     pub async fn guess_workspace_retry(&self, uri: &Url) -> Option<EditorWorkspace> {
-        let mut tries = 5;
         loop {
+            // Subscribe before checking so an `add()` that happens between
+            // the check and the wait below is never missed.
+            let added = self.added.notified();
             if let Some(workspace) = self.guess_workspace(uri) {
-                break Some(workspace);
+                return Some(workspace);
             }
-            tries -= 1;
-            if tries == 0 {
+            if tokio::time::timeout(WORKSPACE_REGISTRATION_TIMEOUT, added)
+                .await
+                .is_err()
+            {
                 return None;
             }
-            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         }
     }
 
@@ -106,6 +122,7 @@ impl EditorWorkspaces {
         debug!("adding workspace {}", added.uri);
         if let Some(workspace) = EditorWorkspace::new(added) {
             workspaces.insert(added.uri.clone(), workspace.clone());
+            self.added.notify_waiters();
             let config_workspace = workspace.clone();
             let config_client = client.clone();
             tokio::spawn(async move {

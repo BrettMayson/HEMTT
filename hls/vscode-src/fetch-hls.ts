@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 
 export default async function fetchHLS(
   context: vscode.ExtensionContext,
+  channel: vscode.OutputChannel,
 ): Promise<string> {
   const platform = process.platform;
   const arch = process.arch;
@@ -21,9 +22,11 @@ export default async function fetchHLS(
     throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
 
+  let hlsPlatformExe = hlsPlatform + (platform === "win32" ? ".exe" : "");
+
   const destination = path.join(
     context.extensionPath,
-    hlsPlatform,
+    hlsPlatformExe,
   );
 
   const versionFile = path.join(
@@ -46,10 +49,16 @@ export default async function fetchHLS(
   }
 
   if (installedVersion === "dev") {
-    await vscode.window.showWarningMessage(
-      "You are using a development version of the HEMTT Language Server."
-    );
-    return hlsPlatform;
+    if (!(await fileExists(destination))) {
+      const message = "Development version of HEMTT Language Server is missing";
+      channel.appendLine(message);
+      vscode.window.showErrorMessage(message);
+      throw new Error(message);
+    }
+    const message = "Using development version of HEMTT Language Server";
+    vscode.window.showWarningMessage(message);
+    channel.appendLine(message + ". Executable path: " + destination);
+    return hlsPlatformExe;
   }
 
   // Already have the correct HLS version.
@@ -57,7 +66,7 @@ export default async function fetchHLS(
     installedVersion === version &&
     await fileExists(destination)
   ) {
-    return hlsPlatform;
+    return hlsPlatformExe;
   }
 
   const url =
@@ -90,7 +99,7 @@ export default async function fetchHLS(
     "utf8",
   );
 
-  return hlsPlatform;
+  return hlsPlatformExe;
 }
 
 async function fileExists(file: string): Promise<boolean> {
