@@ -251,6 +251,7 @@ impl Processor {
         };
         let current_id = self.sources.file_id(current);
         let included_id = self.sources.file_id(&path);
+        self.sources.clear_dependencies_of(included_id);
         self.sources.record_dependency(current_id, included_id);
         let tokens = crate::parse::file_with_sources(&path, &self.sources)?;
         self.add_include(path, path_tokens)?;
