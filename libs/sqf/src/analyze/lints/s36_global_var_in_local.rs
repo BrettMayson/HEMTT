@@ -100,7 +100,6 @@ impl LintRunner<LintData> for Runner {
                 }
             }
             Statement::AssignLocal(var, _, span) if !(var.is_empty() || var.starts_with('_')) => {
-                 
                     let haystack = processed.extract(span);
                     let start = span.start + haystack.find(var).unwrap_or(0);
                     return vec![Arc::new(Code36GlobalVarInLocal::new(

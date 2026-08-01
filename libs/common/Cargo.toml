@@ -14,6 +14,7 @@ enable-ansi-support = "0.3.1"
 fs-err = { workspace = true }
 gag = "1.0.0"
 git2 = { workspace = true }
+regex = { workspace = true }
 rustversion = { workspace = true }
 serde = { workspace = true }
 steamlocate = "2.1.0"

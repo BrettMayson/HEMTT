@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf, sync::RwLock};
 
 use hemtt_config::{
     Config,
-    analyze::{lint_all, lint_check},
+    analyze::{analyze_toml, lint_all, lint_check},
     parse,
     rapify::Rapify,
 };
@@ -142,6 +142,13 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     configreport.errors().into_iter().for_each(|e| {
         report.push(e.clone());
     });
+    report.extend(analyze_toml(
+        configreport.config(),
+        &path.read_to_string()?,
+        path,
+        Some(ctx.config()),
+        &processed,
+    ));
     if !configreport.errors().is_empty() {
         return Ok(report);
     }

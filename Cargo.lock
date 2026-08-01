@@ -1596,6 +1596,7 @@ dependencies = [
  "fs-err",
  "gag",
  "git2 0.21.0",
+ "regex",
  "rustversion",
  "serde",
  "steamlocate",

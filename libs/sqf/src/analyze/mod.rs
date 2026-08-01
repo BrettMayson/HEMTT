@@ -8,13 +8,16 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use hemtt_common::config::{ProjectConfig, RuntimeArguments};
+use hemtt_common::{
+    config::{ProjectConfig, RuntimeArguments},
+    toml_lint::{TomlLintDef, TomlLintSqfTarget},
+};
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, UsedFunctions},
     lint::LintManager,
     lint_manager,
     position::Position,
-    reporting::{Codes, Processed},
+    reporting::{Codes, Processed, TomlLintCode},
 };
 use lints::s02_event_handlers::{
     EventHandlerRunner, LintS02EventIncorrectCommand, LintS02EventInsufficientVersion,
@@ -105,6 +108,31 @@ pub fn analyze(
             functions_defined,
         }),
     )
+}
+
+pub fn analyze_toml(
+    _statements: &Statements,
+    source: &str,
+    path: &hemtt_workspace::WorkspacePath,
+    project: Option<&ProjectConfig>,
+    _processed: &Processed,
+) -> Codes {
+    let Some(lints) = project.map(hemtt_common::config::ProjectConfig::toml_lints) else {
+        return Vec::new();
+    };
+    if lints.is_empty() {
+        return Vec::new();
+    }
+    let mut codes = Codes::new();
+    for lint in lints {
+        let Some(TomlLintDef::Patterns(patterns)) = lint.sqf().get(&TomlLintSqfTarget::File) else {
+            continue;
+        };
+        for range in lint.run_file(source, patterns) {
+            codes.push(Arc::new(TomlLintCode::new_file(lint, range, path)));
+        }
+    }
+    codes
 }
 
 pub type Localizations = Vec<(String, Position)>;

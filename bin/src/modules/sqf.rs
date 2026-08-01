@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
-    analyze::{analyze, lint_all, lint_check},
+    analyze::{analyze, analyze_toml, lint_all, lint_check},
     parser::{ParserError, database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
@@ -93,7 +93,7 @@ impl Module for SQFCompiler {
                 }
                 match hemtt_sqf::parser::run(&database, &processed) {
                     Ok(sqf) => {
-                        let (codes, sqf_report) = analyze(
+                        let (mut codes, sqf_report) = analyze(
                             &sqf,
                             Some(ctx.config()),
                             &processed,
@@ -103,6 +103,13 @@ impl Module for SQFCompiler {
                         if let Some(sqf_report) = sqf_report {
                             sqf_report.push_to_addon(addon);
                         }
+                        codes.extend(analyze_toml(
+                            &sqf,
+                            &entry.read_to_string()?,
+                            entry,
+                            Some(ctx.config()),
+                            &processed,
+                        ));
                         if !codes.failed() {
                             let mut out = entry.with_extension("sqfc")?.create_file()?;
                             sqf.optimize().compile_to_writer(&processed, &mut out)?;
@@ -111,6 +118,7 @@ impl Module for SQFCompiler {
                         for code in codes {
                             report.push(code);
                         }
+
                         Ok(report)
                     }
                     Err(ParserError::ParsingError(e)) => {
