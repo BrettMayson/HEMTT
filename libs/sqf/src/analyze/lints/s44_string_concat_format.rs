@@ -7,7 +7,7 @@ use hemtt_workspace::{
 };
 
 use crate::{
-    BinaryCommand, Expression, Statement, UnaryCommand, analyze::LintData,
+    BinaryCommand, Expression, Statement, analyze::LintData,
 };
 
 crate::analyze::lint!(LintS44StringConcatFormat);
@@ -45,7 +45,7 @@ Chaining string concatenation with `+` can be harder to read and maintain than u
     }
 
     fn default_config(&self) -> LintConfig {
-        LintConfig::help()
+        LintConfig::help().with_enabled(hemtt_common::config::LintEnabled::Disabled)
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
@@ -146,12 +146,8 @@ fn collect_concat_parts(expr: &Expression, parts: &mut Vec<String>) {
         }
         Expression::String(value, _, _) => parts.push(format!("\"{value}\"")),
         Expression::Variable(name, _) => parts.push(name.clone()),
-        Expression::UnaryCommand(UnaryCommand::Named(cmd), inner, _) => {
-            if cmd.eq_ignore_ascii_case("str") {
-                parts.push(inner.source(false));
-            } else {
-                parts.push(expr.source(false));
-            }
+        Expression::UnaryCommand(_, _, _) => {
+            parts.push(expr.source(false));
         }
         _ => parts.push(expr.source(false)),
     }
