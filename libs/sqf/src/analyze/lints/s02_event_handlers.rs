@@ -174,33 +174,31 @@ impl LintGroupRunner<LintData> for EventHandlerRunner {
             return Vec::new();
         };
         let mut codes: Codes = Vec::new();
-        for statement in target.content() {
-            for expression in statement.walk_expressions() {
-                let Some((ns, name, id, target)) = get_namespaces(expression) else {
-                    continue;
-                };
-                if ns.is_empty() {
-                    continue;
-                }
-                if name.contains("UserAction") {
-                    // Requires arma3-wiki to parse and provide https://community.bistudio.com/wiki/inputAction/actions
-                    continue;
-                }
-                let eh = data.database.wiki().event_handler(&id.0);
-                codes.extend(check_unknown(
-                    &ns,
-                    &name,
-                    &id,
-                    target.map(|t| &**t),
-                    &eh,
-                    processed,
-                    &data.database,
-                    config.get("event_unknown"),
-                ));
-                codes.extend(check_version(
-                    data.addon.as_ref().expect("addon will exist"), &ns, &name, &id, &eh, processed, &data.database,
-                ));
+        for expression in target.walk_expressions() {
+            let Some((ns, name, id, target)) = get_namespaces(expression) else {
+                continue;
+            };
+            if ns.is_empty() {
+                continue;
             }
+            if name.contains("UserAction") {
+                // Requires arma3-wiki to parse and provide https://community.bistudio.com/wiki/inputAction/actions
+                continue;
+            }
+            let eh = data.database.wiki().event_handler(&id.0);
+            codes.extend(check_unknown(
+                &ns,
+                &name,
+                &id,
+                target.map(|t| &**t),
+                &eh,
+                processed,
+                &data.database,
+                config.get("event_unknown"),
+            ));
+            codes.extend(check_version(
+                data.addon.as_ref().expect("addon will exist"), &ns, &name, &id, &eh, processed, &data.database,
+            ));
         }
         codes
     }

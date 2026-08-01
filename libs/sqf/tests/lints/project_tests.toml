@@ -46,3 +46,6 @@ options.always = [
 
 [lints.sqf.count_skipable]
 enabled = true
+
+[lints.sqf.foreach_apply]
+enabled = true

@@ -46,6 +46,25 @@ impl Statements {
     pub const fn issues(&self) -> &Vec<Issue> {
         &self.issues
     }
+
+    #[must_use]
+    pub fn walk_statements(&self) -> Vec<&Statement> {
+        let mut root = vec![];
+        for statement in &self.content {
+            root.extend(statement.walk_statements());
+        }
+        root
+    }
+
+    #[must_use]
+    pub fn walk_expressions(&self) -> Vec<&Expression> {
+        let mut root = vec![];
+        for statement in &self.content {
+            root.extend(statement.walk_expressions());
+        }
+        root
+    }
+
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
@@ -108,6 +127,7 @@ impl Statements {
         }
         (command, version, span)
     }
+
     pub fn testing_clear_issues(&mut self) {
         self.issues.clear();
     }
@@ -259,9 +279,7 @@ impl Expression {
         let mut root = vec![self];
         match self {
             Self::Code(code) => {
-                for statement in code.content() {
-                    root.extend(statement.walk_expressions());
-                }
+                root.extend(code.walk_expressions());
             }
             Self::UnaryCommand(_, child, _) => {
                 root.extend(child.walk_expressions());
