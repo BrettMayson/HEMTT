@@ -127,6 +127,7 @@ impl SourceDatabase {
     ///
     /// The same workspace path always returns the same [`FileId`] for the
     /// lifetime of this database.
+    /// # Panics
     pub fn file_id(&self, path: &WorkspacePath) -> FileId {
         let mut inner = self.inner.write().expect("SourceDatabase lock poisoned");
         if let Some(id) = inner.ids.get(path) {
@@ -142,6 +143,7 @@ impl SourceDatabase {
     #[must_use]
     /// Get the [`WorkspacePath`] a [`FileId`] was created from, if it is
     /// still known to this database.
+    /// # Panics
     pub fn path(&self, id: FileId) -> Option<WorkspacePath> {
         self.inner
             .read()
@@ -159,6 +161,7 @@ impl SourceDatabase {
     /// Normalizes CRLF line endings to LF, matching
     /// [`WorkspacePath::read_to_string`] so that content behaves the same
     /// regardless of origin.
+    /// # Panics
     pub fn set_overlay(&self, id: FileId, content: impl AsRef<str>, version: u64) {
         let normalized: Arc<str> = Arc::from(content.as_ref().replace('\r', ""));
         let mut inner = self.inner.write().expect("SourceDatabase lock poisoned");
@@ -175,6 +178,7 @@ impl SourceDatabase {
     /// `didClose` notification.
     ///
     /// Subsequent reads fall back to the workspace/VFS contents.
+    /// # Panics
     pub fn clear_overlay(&self, id: FileId) {
         self.inner
             .write()
@@ -185,6 +189,7 @@ impl SourceDatabase {
 
     #[must_use]
     /// Whether the given file currently has overlay content
+    /// # Panics
     pub fn has_overlay(&self, id: FileId) -> bool {
         self.inner
             .read()
@@ -201,6 +206,7 @@ impl SourceDatabase {
     /// # Errors
     /// - [`Error::UnknownFileId`] if the id was not created by this database
     /// - Any error from reading the workspace/VFS if there is no overlay
+    /// # Panics
     pub fn source(&self, id: FileId) -> Result<SourceSnapshot, Error> {
         {
             let inner = self.inner.read().expect("SourceDatabase lock poisoned");
@@ -244,6 +250,7 @@ impl SourceDatabase {
     ///
     /// # Errors
     /// Whatever `compute` returns
+    /// # Panics
     pub fn get_or_parse<E>(
         &self,
         id: FileId,
@@ -272,6 +279,7 @@ impl SourceDatabase {
     /// Maintains both the forward (`from` -> `to`) and reverse (`to` ->
     /// `from`) edges, so that incremental re-preprocessing can answer both
     /// "what does this file include" and "what includes this file".
+    /// # Panics
     pub fn record_dependency(&self, from: FileId, to: FileId) {
         let mut inner = self.inner.write().expect("SourceDatabase lock poisoned");
         inner.dependencies.entry(from).or_default().insert(to);
@@ -281,6 +289,7 @@ impl SourceDatabase {
     #[must_use]
     /// The set of files directly `#include`d by `id`, in the most recent
     /// preprocessing run that recorded dependencies for it.
+    /// # Panics
     pub fn dependencies_of(&self, id: FileId) -> Vec<FileId> {
         self.inner
             .read()
@@ -294,6 +303,7 @@ impl SourceDatabase {
     #[must_use]
     /// The set of files that directly `#include` `id`, in the most recent
     /// preprocessing run(s) that recorded dependencies involving it.
+    /// # Panics
     pub fn dependents_of(&self, id: FileId) -> Vec<FileId> {
         self.inner
             .read()
@@ -311,6 +321,7 @@ impl SourceDatabase {
     /// This does not clear `id`'s reverse edges (who depends on `id`),
     /// since those are owned by the files that include `id`, not by `id`
     /// itself.
+    /// # Panics
     pub fn clear_dependencies_of(&self, id: FileId) {
         let mut inner = self.inner.write().expect("SourceDatabase lock poisoned");
         if let Some(old) = inner.dependencies.remove(&id) {
