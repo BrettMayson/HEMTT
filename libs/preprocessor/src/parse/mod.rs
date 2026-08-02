@@ -1,8 +1,7 @@
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 
-use dashmap::DashMap;
 use hemtt_workspace::{
-    WorkspacePath,
+    SourceDatabase, WorkspacePath,
     position::{LineCol, Position},
     reporting::{Symbol, Token, Whitespace},
 };
@@ -17,55 +16,38 @@ use crate::{Error, codes::pe24_parsing_failed::ParsingFailed};
 /// Parser for the preprocessor, generated from `config.pest`
 pub struct PreprocessorParser;
 
-#[derive(Debug, Clone)]
-struct Cache {
-    tokens: Arc<DashMap<WorkspacePath, Vec<Arc<Token>>>>,
-}
-
-impl Cache {
-    pub fn get() -> Self {
-        static SINGLETON: LazyLock<Cache> = LazyLock::new(|| Cache {
-            tokens: Arc::new(DashMap::new()),
-        });
-        (*SINGLETON).clone()
-    }
-}
-
 /// Parse a file into tokens
+///
+/// This creates a throwaway [`SourceDatabase`] and does not benefit from
+/// caching across calls. Prefer [`file_with_sources`] when a
+/// [`SourceDatabase`] is available (e.g. from a [`crate::Processor`]), so
+/// that repeated includes of the same file, and LSP overlay content, are
+/// handled correctly and efficiently.
 ///
 /// # Errors
 /// If the file is invalid
-///
-/// # Panics
-/// If the file is invalid
 pub fn file(path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error> {
-    let cache = Cache::get();
+    let sources = SourceDatabase::new();
+    Ok((*file_with_sources(path, &sources)?).clone())
+}
 
-    // Use entry API to avoid double lookup
-    match cache.tokens.entry(path.clone()) {
-        dashmap::mapref::entry::Entry::Occupied(entry) => Ok(entry.get().clone()),
-        dashmap::mapref::entry::Entry::Vacant(entry) => {
-            let source = path.read_to_string()?;
-            let res = str(&source, path)?;
-
-            // The LSP manages its own caches, having this enabled would cause the LSP to never see any changes
-            // This will make the LSP slower, in the future it could have a way to invalidate the cache (when a file is saved)
-            #[cfg(not(feature = "lsp"))]
-            {
-                let path_str = path.as_str();
-                if ["macros", "common", "script", "component"]
-                    .iter()
-                    .any(|&x| path_str.contains(x))
-                {
-                    entry.insert(res.clone());
-                }
-            }
-            #[cfg(feature = "lsp")]
-            drop(entry); // Avoid unused variable warning
-
-            Ok(res)
-        }
-    }
+/// Parse a file into tokens, reading its content through a [`SourceDatabase`].
+///
+/// The content is resolved via the database, which means:
+/// - an LSP overlay (unsaved editor buffer) is used if present, falling
+///   back to the [`hemtt_workspace::Workspace`]/VFS otherwise, and
+/// - the resulting token stream is memoized per `(file, content version)`,
+///   so the same file included from multiple places under the same content
+///   is only parsed once.
+///
+/// # Errors
+/// If the file is invalid, or its content could not be read
+pub fn file_with_sources(
+    path: &WorkspacePath,
+    sources: &SourceDatabase,
+) -> Result<Arc<Vec<Arc<Token>>>, Error> {
+    let (id, snapshot) = sources.source_for_path(path)?;
+    sources.get_or_parse(id, snapshot.version(), || str(snapshot.content(), path))
 }
 
 /// Parse a string into tokens

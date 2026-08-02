@@ -12,11 +12,11 @@ use hemtt_workspace::{LayerType, addons::Addon, position::Position, reporting::W
 const ROOT: &str = "tests/lints/";
 
 macro_rules! lint {
-    ($dir:ident, $ignore:expr) => {
+    ($dir:ident, $ignore_inspector:expr) => {
         paste::paste! {
             #[test]
             fn [<simple_ $dir>]() {
-                insta::assert_snapshot!(lint(stringify!($dir), $ignore).0);
+                insta::assert_snapshot!(lint(stringify!($dir), $ignore_inspector).0);
             }
         }
     };
@@ -75,6 +75,13 @@ lint!(fnc_s34_invalid_return_type, false);
 lint!(s35_count_skipable, true);
 lint!(s36_global_var_in_local, true);
 lint!(s37_calling_user_code, false);
+lint!(s38_direct_private, true);
+lint!(s39_replaced_functions, true);
+lint!(s40_string_concat_in_loop, true);
+lint!(s41_foreach_apply, true);
+lint!(s42_for_range, true);
+lint!(s43_array_setcount, true);
+lint!(s44_string_concat_format, true);
 
 #[test]
 fn test_s29_function_undefined() {

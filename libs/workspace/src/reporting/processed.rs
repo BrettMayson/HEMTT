@@ -3,7 +3,7 @@ use std::{collections::HashMap, ops::Range, sync::Arc};
 use tracing::warn;
 
 use crate::{
-    Error, WorkspacePath,
+    Error, SourceDatabase, WorkspacePath,
     position::{LineCol, Position},
     reporting::ExpansionMetadataStore,
 };
@@ -70,6 +70,7 @@ fn append_token(
     string_stack: &mut Vec<char>,
     next_is_escape: &mut Option<Arc<Token>>,
     token: Arc<Token>,
+    sources: &SourceDatabase,
 ) -> Result<(), Error> {
     if token.symbol().is_newline() && next_is_escape.is_some() {
         *next_is_escape = None;
@@ -80,14 +81,26 @@ fn append_token(
             *next_is_escape = None;
         } else if let Some(escape_token) = next_is_escape.clone() {
             *next_is_escape = None;
-            append_token(processing, string_stack, next_is_escape, escape_token)?;
+            append_token(
+                processing,
+                string_stack,
+                next_is_escape,
+                escape_token,
+                sources,
+            )?;
         } else {
             *next_is_escape = Some(token);
             return Ok(());
         }
     }
     if let Some(escape_token) = next_is_escape.clone() {
-        append_token(processing, string_stack, next_is_escape, escape_token)?;
+        append_token(
+            processing,
+            string_stack,
+            next_is_escape,
+            escape_token,
+            sources,
+        )?;
     }
     let path = token.position().path().clone();
     let source = processing
@@ -96,7 +109,7 @@ fn append_token(
         .position(|(s, _)| s == &path)
         .map_or_else(
             || {
-                let content = path.read_to_string()?;
+                let content = sources.source_for_path(&path)?.1.content().to_string();
                 processing.sources.push((path.clone(), content));
                 Ok::<usize, Error>(processing.sources.len() - 1)
             },
@@ -178,17 +191,18 @@ fn append_output(
     string_stack: &mut Vec<char>,
     next_is_escape: &mut Option<Arc<Token>>,
     output: Vec<Output>,
+    sources: &SourceDatabase,
 ) -> Result<(), Error> {
     for o in output {
         match o {
             Output::Direct(t) => {
-                append_token(processing, string_stack, next_is_escape, t)?;
+                append_token(processing, string_stack, next_is_escape, t, sources)?;
             }
             Output::Macro(root, o) => {
                 let start = processing.total_chars;
                 let line = processing.line;
                 let col = processing.col;
-                append_output(processing, string_stack, next_is_escape, o)?;
+                append_output(processing, string_stack, next_is_escape, o, sources)?;
                 let end = processing.total_chars;
                 let path = root.position().path().clone();
                 let source = processing
@@ -196,7 +210,12 @@ fn append_output(
                     .iter()
                     .position(|(s, _)| s.as_str() == path.as_str())
                     .unwrap_or_else(|| {
-                        let content = path.read_to_string().expect("file should exist if used");
+                        let content = sources
+                            .source_for_path(&path)
+                            .expect("file should exist if used")
+                            .1
+                            .content()
+                            .to_string();
                         processing.sources.push((path, content));
                         processing.sources.len() - 1
                     });
@@ -283,6 +302,7 @@ impl Processed {
         output: Vec<Output>,
         macros: HashMap<String, Vec<(Position, Definition)>>,
         included_files: Vec<WorkspacePath>,
+        sources: &SourceDatabase,
         #[cfg(feature = "lsp")] usage: HashMap<Position, Vec<Position>>,
         warnings: Codes,
         no_rapify: bool,
@@ -295,6 +315,7 @@ impl Processed {
             &mut string_stack,
             &mut next_is_escape,
             output,
+            sources,
         )?;
 
         let mut processed = Self {

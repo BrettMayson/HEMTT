@@ -22,8 +22,9 @@ export let channel: vscode.OutputChannel = vscode.window.createOutputChannel("HE
 
 export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(channel);
+  channel.appendLine("Activating HEMTT extension");
 
-  let command = context.asAbsolutePath(await fetchHLS(context));
+  let command = context.asAbsolutePath(await fetchHLS(context, channel));
 
   const port = await getPortPromise({
     port: 12000,

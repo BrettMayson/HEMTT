@@ -25,14 +25,13 @@ pub async fn completion(
         );
         return Ok(None);
     };
-    let source = workspace
-        .join_url(&position.text_document.uri)
-        .unwrap_or_else(|_| {
-            hemtt_workspace::Workspace::builder()
-                .memory()
-                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-                .expect("Failed to create in-memory workspace")
-        });
+    let Ok(source) = workspace.join_url(&position.text_document.uri) else {
+        warn!(
+            "Failed to join url {:?} to workspace",
+            position.text_document.uri
+        );
+        return Ok(None);
+    };
     let text = crate::files::FileCache::get()
         .text(&position.text_document.uri)
         .unwrap_or_default();

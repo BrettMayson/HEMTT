@@ -1,0 +1,48 @@
+---
+source: libs/sqf/tests/lints.rs
+assertion_line: 82
+expression: "lint(stringify! (s44_string_concat_format), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S44][0m[1m: Use `format` instead of string concatenation[0m
+  [0m[36m┌─[0m s44_string_concat_format.sqf:1:19
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m private _person = [0m[36m_first + " " + _last + ", " + str _age + " years old"[0m;
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mchained concatenation[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: format ["%1 %2, %3 years old", _first, _last, str _age]
+
+
+[0m[1m[38;5;14mhelp[L-S44][0m[1m: Use `format` instead of string concatenation[0m
+  [0m[36m┌─[0m s44_string_concat_format.sqf:3:17
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m private _text = [0m[36m"Hello" + " " + _name[0m;
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mchained concatenation[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: format ["Hello %1", _name]
+
+
+[0m[1m[38;5;14mhelp[L-S44][0m[1m: Use `format` instead of string concatenation[0m
+  [0m[36m┌─[0m s44_string_concat_format.sqf:5:18
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _title = [0m[36mlocalize "STR_TITLE" + " - " + _subtitle[0m;
+  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mchained concatenation[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: format ["%1 - %2", localize "STR_TITLE", _subtitle]
+
+
+[0m[1m[38;5;14mhelp[L-S44][0m[1m: Use `format` instead of string concatenation[0m
+  [0m[36m┌─[0m s44_string_concat_format.sqf:7:20
+  [0m[36m│[0m
+[0m[36m7[0m [0m[36m│[0m private _message = [0m[36m"We are " + str _progress + "% done."[0m;
+  [0m[36m│[0m                    [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mchained concatenation[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: format ["We are %1%% done.", str _progress]
+
+
+[0m[1m[38;5;14mhelp[L-S44][0m[1m: Use `format` instead of string concatenation[0m
+  [0m[36m┌─[0m s44_string_concat_format.sqf:9:19
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m private _script = [0m[36m"player addEventHandler ['Fired', " + str x + "];"[0m;
+  [0m[36m│[0m                   [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mchained concatenation[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: format ["player addEventHandler ['Fired', %1];", str x]

@@ -14,6 +14,7 @@ use crate::{
     config::ConfigAnalyzer,
     diag_manager::DiagManager,
     preprocessor::PreprocessorAnalyzer,
+    sources::SourceSync,
     workspace::{EditorWorkspace, EditorWorkspaces},
 };
 
@@ -64,11 +65,8 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
     };
     manager.clear_current(&format!("config:{}", source.as_str()));
     let mut lsp_diags = HashMap::new();
-    PreprocessorAnalyzer::get()
-        .mark_in_progress(source.clone())
-        .await;
     #[allow(clippy::or_fun_call)]
-    let sources = match Processor::run(
+    let sources = match Processor::run_with_sources(
         &source,
         workspace
             .config()
@@ -76,6 +74,7 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
             .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
                 f.preprocessor()
             }),
+        &SourceSync::get().database(),
     ) {
         Ok(processed) => {
             {
@@ -131,7 +130,6 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
             }
             let sources = processed.included_files().to_owned();
             PreprocessorAnalyzer::get().save_processed(source.parent(), processed);
-            PreprocessorAnalyzer::get().mark_done(source.clone()).await;
             sources
         }
         Err((err_sources, err)) => {

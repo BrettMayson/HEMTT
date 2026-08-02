@@ -249,9 +249,13 @@ impl Processor {
             }
             found_path
         };
-        let tokens = crate::parse::file(&path)?;
+        let current_id = self.sources.file_id(current);
+        let included_id = self.sources.file_id(&path);
+        self.sources.clear_dependencies_of(included_id);
+        self.sources.record_dependency(current_id, included_id);
+        let tokens = crate::parse::file_with_sources(&path, &self.sources)?;
         self.add_include(path, path_tokens)?;
-        let mut stream = tokens.into_iter().peekmore();
+        let mut stream = tokens.iter().cloned().peekmore();
         let ret = self.file(&mut pragma.child(), &mut stream, buffer);
         self.file_stack.pop();
         ret

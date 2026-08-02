@@ -1,7 +1,7 @@
 use hemtt_preprocessor::Processor;
 use url::Url;
 
-use crate::{Backend, ProviderParams, workspace::EditorWorkspaces};
+use crate::{Backend, ProviderParams, sources::SourceSync, workspace::EditorWorkspaces};
 
 use super::SqfAnalyzer;
 
@@ -20,7 +20,7 @@ impl SqfAnalyzer {
         let source = workspace.join_url(&url).ok()?;
         let database = self.get_database(&workspace);
         #[allow(clippy::or_fun_call)]
-        match Processor::run(
+        match Processor::run_with_sources(
             &source,
             workspace
                 .config()
@@ -28,6 +28,7 @@ impl SqfAnalyzer {
                 .map_or(&hemtt_common::config::PreprocessorOptions::default(), |f| {
                     f.preprocessor()
                 }),
+            &SourceSync::get().database(),
         ) {
             Ok(processed) => match hemtt_sqf::parser::run(&database, &processed) {
                 Ok(sqf) => match sqf.optimize().compile(&processed) {
