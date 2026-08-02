@@ -1,4 +1,4 @@
-use std::{ops::Range, sync::Arc};
+use std::{ops::Range, sync::{Arc, Mutex, OnceLock}};
 
 use hemtt_common::config::{LintConfig, LintEnabled};
 use hemtt_workspace::{
@@ -7,8 +7,7 @@ use hemtt_workspace::{
 };
 
 use crate::{
-    BinaryCommand, Expression, Statements,
-    analyze::LintData,
+    BinaryCommand, Expression, Statement, Statements, analyze::LintData,
 };
 
 crate::analyze::lint!(LintS41ForeachApply);
@@ -54,12 +53,47 @@ When a `forEach` loop never uses `_forEachIndex`, it can often be replaced with 
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
-        vec![Box::new(Runner)]
+        vec![Box::new(StatementRunner), Box::new(ExpressionRunner)]
     }
 }
 
-struct Runner;
-impl LintRunner<LintData> for Runner {
+// forEach cmds that are assigned to a variable
+static ASSIGNED_FOR_EACH: OnceLock<Mutex<Vec<Expression>>> = OnceLock::new();
+
+struct StatementRunner;
+impl LintRunner<LintData> for StatementRunner {
+    type Target = crate::Statement;
+
+    fn run(
+        &self,
+        _project: Option<&hemtt_common::config::ProjectConfig>,
+        _config: &LintConfig,
+        _processed: Option<&hemtt_workspace::reporting::Processed>,
+        _runtime: &hemtt_common::config::RuntimeArguments,
+        target: &Self::Target,
+        _data: &LintData,
+    ) -> Codes {
+        let (Statement::AssignGlobal(_, expression, _) | Statement::AssignLocal(_, expression, _)) = target else {
+            return Vec::new();
+        };
+        let Expression::BinaryCommand(BinaryCommand::Named(command), _, _, _) = expression else {
+            return Vec::new();
+        };
+        if !command.eq_ignore_ascii_case("foreach") {
+            return Vec::new();
+        }
+        let mutex_vec = ASSIGNED_FOR_EACH.get_or_init(|| Mutex::new(Vec::new()));
+        if let Ok(mut lock) = mutex_vec.lock() {
+            lock.push(expression.clone());
+        }
+        Vec::new()
+    }
+}
+
+
+
+struct ExpressionRunner;
+impl LintRunner<LintData> for ExpressionRunner {
     type Target = crate::Expression;
 
     fn run(
@@ -74,21 +108,22 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-
         let Expression::BinaryCommand(BinaryCommand::Named(command), lhs, _, _) = target else {
             return Vec::new();
         };
-        if !command.eq_ignore_ascii_case("foreach") && !command.eq_ignore_ascii_case("forEach") {
+        if !command.eq_ignore_ascii_case("foreach") {
             return Vec::new();
         }
-
         let Expression::Code(body) = lhs.as_ref() else {
             return Vec::new();
         };
         if body_uses_for_each_index(body) {
             return Vec::new();
         }
-
+        let mutex_vec = ASSIGNED_FOR_EACH.get_or_init(|| Mutex::new(Vec::new()));
+        if let Ok(lock) = mutex_vec.lock() && lock.contains(target) {
+            return Vec::new();
+        }
         vec![Arc::new(CodeS41ForeachApply::new(
             target.span(),
             processed,
