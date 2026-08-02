@@ -1,0 +1,92 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (statement_1))
+---
+Statements {
+    content: [
+        AssignLocal(
+            "_a",
+            Number(
+                FloatOrd(
+                    1.0,
+                ),
+                13..14,
+            ),
+            0..14,
+        ),
+        AssignGlobal(
+            "x",
+            BinaryCommand(
+                Add,
+                Variable(
+                    "_a",
+                    20..22,
+                ),
+                Variable(
+                    "_a",
+                    25..27,
+                ),
+                23..24,
+            ),
+            16..27,
+        ),
+        AssignGlobal(
+            "y",
+            BinaryCommand(
+                Add,
+                Number(
+                    FloatOrd(
+                        2.0,
+                    ),
+                    44..45,
+                ),
+                Number(
+                    FloatOrd(
+                        1.0,
+                    ),
+                    56..57,
+                ),
+                54..55,
+            ),
+            47..57,
+        ),
+        AssignLocal(
+            "_c",
+            Number(
+                FloatOrd(
+                    3.0,
+                ),
+                74..75,
+            ),
+            61..75,
+        ),
+        AssignGlobal(
+            "z",
+            BinaryCommand(
+                Add,
+                Variable(
+                    "_c",
+                    81..83,
+                ),
+                Number(
+                    FloatOrd(
+                        1.0,
+                    ),
+                    86..87,
+                ),
+                84..85,
+            ),
+            77..87,
+        ),
+        Expression(
+            Variable(
+                "_c",
+                91..93,
+            ),
+            91..93,
+        ),
+    ],
+    source: "private _a = 1;\nx = _a + _a; \n\nprivate _b = 2;\ny = _b + 1; \n\nprivate _c = 3;\nz = _c + 1; \n\n_c\n",
+    span: 0..93,
+    issues: [],
+}
