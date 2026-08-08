@@ -64,6 +64,7 @@ lint!(s33_abs, true);
 // lint!(s33_atan2, true);
 lint!(s33_ceil, true);
 lint!(s33_clamp, true);
+lint!(s33_count_type_side, true);
 lint!(s33_distance, true);
 lint!(s33_floor, true);
 lint!(s33_linear_conversion, true);

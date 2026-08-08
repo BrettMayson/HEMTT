@@ -7,6 +7,7 @@ mod abs;
 // mod atan2;
 mod ceil;
 mod clamp;
+mod count_type_side;
 mod distance;
 mod floor;
 mod linear_conversion;
@@ -104,6 +105,7 @@ impl LintRunner<LintData> for Runner {
         // https://github.com/acemod/ACE3/pull/6773/files#r250479159
         // codes.extend(atan2::check(target, processed, config));
         codes.extend(ceil::check(target, processed, config));
+        codes.extend(count_type_side::check(target, processed, config));
         codes.extend(distance::check(target, processed, config));
         codes.extend(floor::check(target, processed, config));
         codes.extend(linear_conversion::check(target, processed, config));
