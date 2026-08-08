@@ -80,6 +80,7 @@ lint!(s41_foreach_apply, true);
 lint!(s42_for_range, true);
 lint!(s43_array_setcount, true);
 lint!(s44_string_concat_format, true);
+lint!(s45_array_append, true);
 
 #[test]
 fn test_s29_function_undefined() {
