@@ -1,0 +1,38 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s47_is_equal_type_any), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+  [0m[36m┌─[0m s47_is_equal_type_any.sqf:8:26
+  [0m[36m│[0m
+[0m[36m8[0m [0m[36m│[0m if (_x isEqualType 0 || {[0m[36m_x isEqualType ""[0m}) then { };
+  [0m[36m│[0m                          [0m[36m^^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S47][0m[1m: code can be replaced with `isEqualTypeAny`[0m
+  [0m[36m┌─[0m s47_is_equal_type_any.sqf:4:5
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m if ([0m[36m_x isEqualType 0 || _x isEqualType ""[0m) then { };
+  [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `isEqualTypeAny`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _x isEqualTypeAny [0, ""]
+
+
+[0m[1m[38;5;14mhelp[L-S47][0m[1m: code can be replaced with `isEqualTypeAny`[0m
+  [0m[36m┌─[0m s47_is_equal_type_any.sqf:5:5
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m if ([0m[36m_x isEqualType 0 || _x isEqualType ""[0m || _x isEqualType objNull) then { };
+  [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `isEqualTypeAny`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _x isEqualTypeAny [0, ""]
+
+
+[0m[1m[38;5;14mhelp[L-S47][0m[1m: code can be replaced with `isEqualTypeAny`[0m
+  [0m[36m┌─[0m s47_is_equal_type_any.sqf:8:5
+  [0m[36m│[0m
+[0m[36m8[0m [0m[36m│[0m if ([0m[36m_x isEqualType 0 || {_x isEqualType ""[0m}) then { };
+  [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `isEqualTypeAny`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: _x isEqualTypeAny [0, ""]

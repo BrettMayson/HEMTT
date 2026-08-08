@@ -81,6 +81,12 @@ lint!(s42_for_range, true);
 lint!(s43_array_setcount, true);
 lint!(s44_string_concat_format, true);
 lint!(s45_array_append, true);
+lint!(s46_is_equal_type, true);
+lint!(s47_is_equal_type_any, true);
+lint!(s48_is_equal_type_all, true);
+lint!(s49_count_type, true);
+lint!(s50_count_side, true);
+lint!(s51_push_back_unique, true);
 
 #[test]
 fn test_s29_function_undefined() {
