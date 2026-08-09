@@ -22,6 +22,7 @@ systemChat _testE;
 
 {
     private _x = 6; // safe because _x is magic from forEach
+    systemChat format ["Fake _x is %1", _x];
 } forEach [1];
 
 [a,b,c,d,{ // magic (_target, _player) from ace_interact_menu_fnc_createaction ignored

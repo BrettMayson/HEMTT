@@ -25,7 +25,7 @@ pub enum VarSource {
     Assignment(Range<usize>, Range<usize>),
     ForLoop(Range<usize>),
     Params(Range<usize>),
-    Private(Range<usize>),
+    PrivateCmd(Range<usize>),
     Magic(Range<usize>),
     Ignore,
 }
@@ -40,7 +40,7 @@ impl VarSource {
             Self::Assignment(range, _)
             | Self::ForLoop(range)
             | Self::Params(range)
-            | Self::Private(range)
+            | Self::PrivateCmd(range)
             | Self::Magic(range) => Some(range.clone()),
             Self::Ignore => None,
         }
@@ -51,6 +51,7 @@ impl VarSource {
 pub struct VarHolder {
     possible: IndexSet<GameValue>,
     usage: i32,
+    root: bool,
     source: VarSource,
 }
 
@@ -207,6 +208,7 @@ impl<'a> Inspector<'a> {
             .expect("there is always a stack")
         {
             if holder.usage == 0
+                && holder.root
                 && !holder.source.skip_errors()
                 && !self.ignored_vars.contains(&var)
             {
@@ -232,7 +234,10 @@ impl<'a> Inspector<'a> {
         possible_values: IndexSet<GameValue>,
         source: VarSource,
     ) {
-        // println!("var_assign: `{var}` local:{local} lvl: {}", self.local.len());
+        // println!(
+        //     "var_assign: `{var}` local:{local} lvl: {}",
+        //     self.active_scope().vars_local.len()
+        // );
         let var_lower = var.to_ascii_lowercase();
         if !var_lower.starts_with('_') {
             let holder = self
@@ -241,75 +246,71 @@ impl<'a> Inspector<'a> {
                 .or_insert_with(|| VarHolder {
                     possible: IndexSet::new(),
                     usage: 0,
+                    root: true,
                     source,
                 });
             holder.possible.extend(possible_values);
             return;
         }
-        // read-only borrow to compute stack position with a minimal lifetime so we can
-        // insert errors (which needs &mut self) before taking a mutable borrow again.
-        let stack_level_search: Option<usize>;
-        let mut stack_level;
-        {
-            let current_vars = &self.active_scope().vars_local;
-            stack_level_search = current_vars
-                .iter()
-                .rev()
-                .position(|s| s.contains_key(&var_lower));
-            stack_level = current_vars.len().saturating_sub(1);
-        }
-        if stack_level_search.is_none() {
-            if !local {
-                self.error_insert(Issue::NotPrivate(
-                    var.to_owned(),
-                    source.get_range().unwrap_or_default(),
-                ));
+
+        let mut is_root = local;
+        let mut upper_root_found = is_root;
+        let mut error_opt: Option<Issue> = None;
+        for (index, scope) in self.active_scope().vars_local.iter_mut().rev().enumerate() {
+            if let Some(holder) = scope.get_mut(&var_lower) {
+                if index == 0 {
+                    // copy root status when we overwrite
+                    if holder.root {
+                        is_root = true;
+                    }
+                    if !source.skip_errors() && !holder.source.skip_errors() {
+                        if holder.usage == 0 && !matches!(holder.source, VarSource::PrivateCmd(_)) {
+                            error_opt = Some(Issue::Unused(
+                                var.to_owned(),
+                                holder.source.clone(),
+                                true, // overwritten before use
+                            ));
+                        } else if local {
+                            // shadowed (only at same level and not also unused)
+                            error_opt = Some(Issue::Shadowed(
+                                var.to_owned(),
+                                source.get_range().unwrap_or_default(),
+                            ));
+                        }
+                    }
+                } else {
+                    holder.possible.extend(possible_values.clone());
+                }
+                if holder.root {
+                    upper_root_found = true;
+                }
             }
-        } else if !local {
-            stack_level -= stack_level_search.unwrap_or_default();
-        }
-        // If we are writing to a variable at our current level
-        let error_opt: Option<Issue> = if stack_level_search == Some(0)
-            && !source.skip_errors()
-            && let Some(current_vars) = self.active_scope().vars_local.last()
-            && let Some(existing_var) = current_vars.get(&var_lower)
-            && !existing_var.source.skip_errors()
-        {
-            if existing_var.usage == 0 && !matches!(existing_var.source, VarSource::Private(_)) {
-                Some(Issue::Unused(
-                    var.to_owned(),
-                    existing_var.source.clone(),
-                    true, // overwritten before use
-                ))
-            } else if local {
-                // shadowed (only at same level and not also unused)
-                Some(Issue::Shadowed(
-                    var.to_owned(),
-                    source.get_range().unwrap_or_default(),
-                ))
-            } else {
-                None
+            if upper_root_found {
+                break;
             }
-        } else {
-            None
-        };
+        }
         if let Some(error) = error_opt {
             self.error_insert(error);
         }
-        let vars_local = &mut self.active_scope().vars_local;
-        let holder = vars_local[stack_level]
-            .entry(var_lower)
-            .or_insert_with(|| VarHolder {
-                possible: IndexSet::new(),
-                usage: 0,
-                source: source.clone(),
-            });
-        if stack_level_search.unwrap_or_default() == 0 {
-            // Brand new or at same level as origin, totally replace possible values
-            holder.possible = possible_values;
-        } else {
-            // In a inner scope, just extend possible values
-            holder.possible.extend(possible_values);
+
+        if !upper_root_found && !local {
+            is_root = true; // not private but not found in any upper scope, so treat it as root
+            self.error_insert(Issue::NotPrivate(
+                var.to_owned(),
+                source.get_range().unwrap_or_default(),
+            ));
+        }
+
+        if let Some(last) = self.active_scope().vars_local.last_mut() {
+            last.insert(
+                var_lower,
+                VarHolder {
+                    possible: possible_values,
+                    usage: 0,
+                    source,
+                    root: is_root,
+                },
+            );
         }
     }
 
@@ -322,41 +323,46 @@ impl<'a> Inspector<'a> {
         peek: bool,
     ) -> IndexSet<(GameValue, Range<usize>)> {
         let var_lower = var.to_ascii_lowercase();
-        let holder_option = if var_lower.starts_with('_') {
-            let stack_level_search = self
-                .active_scope()
-                .vars_local
-                .iter()
-                .rev()
-                .position(|s| s.contains_key(&var_lower));
-            let mut stack_level = self.active_scope().vars_local.len() - 1;
-            if let Some(stack_level_search) = stack_level_search {
-                stack_level -= stack_level_search;
-            } else if !peek {
+        if !var_lower.starts_with('_') {
+            if !self.ignored_vars.contains(&var_lower)
+                && let Some(holder) = self.vars_global.get(&var_lower)
+            {
+                return holder
+                    .possible
+                    .iter()
+                    .map(|gv| (gv.clone(), source.clone()))
+                    .collect();
+            }
+            return IndexSet::from([(GameValue::Anything, source.clone())]);
+        }
+
+        let mut found_values: Option<IndexSet<GameValue>> = None;
+        for scope in self.active_scope().vars_local.iter_mut().rev() {
+            if let Some(holder) = scope.get_mut(&var_lower) {
+                holder.usage += 1;
+                if found_values.is_none() {
+                    found_values = Some(holder.possible.clone());
+                }
+                if holder.root {
+                    break;
+                }
+            }
+        }
+
+        let Some(found_values) = found_values else {
+            if !peek {
                 let is_oprhan = self.active_scope().is_orphan_scope;
                 self.errors
                     .insert(Issue::Undefined(var.to_owned(), source.clone(), is_oprhan));
             }
-            self.active_scope().vars_local[stack_level].get_mut(&var_lower)
-        } else if self.vars_global.contains_key(&var_lower) {
-            self.vars_global.get_mut(&var_lower)
-        } else {
+            // Just return Any so it doesn't fail everything after
             return IndexSet::from([(GameValue::Anything, source.clone())]);
         };
-        if let Some(holder) = holder_option {
-            holder.usage += 1;
-            let mut set = holder.possible.clone();
 
-            if !var_lower.starts_with('_') && self.ignored_vars.contains(&var_lower) {
-                // Assume that a ignored global var could be anything
-                set.insert(GameValue::Anything);
-            }
-            // println!("var_retrieve: `{var}` {set:?}");
-            set.into_iter().map(|gv| (gv, source.clone())).collect()
-        } else {
-            // we've reported the error above, just return Any so it doesn't fail everything after
-            IndexSet::from([(GameValue::Anything, source.clone())])
-        }
+        found_values
+            .into_iter()
+            .map(|gv| (gv, source.clone()))
+            .collect()
     }
 
     /// Checks for bad argument values if the syntax was otherwise valid (e.g. cmd that takes anything)
