@@ -18,3 +18,7 @@ MY_array = MY_array + OTHER_array;
 // not an addition, ignore
 MY_array = [1, 2, 3];
 MY_array append ["a"];
+
+// single element literal should use pushBack, no temporary array needed
+GVAR_gunList = GVAR_gunList + [_gun];
+_local = _local + [_gunProfileEntry];

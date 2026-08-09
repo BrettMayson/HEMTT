@@ -95,17 +95,23 @@ impl LintRunner<LintData> for Runner {
         }
         // an array literal is the only right hand side that is certainly an array,
         // a variable could just as easily be a number or a string
-        if !matches!(
-            &**rhs,
-            Expression::Array(..) | Expression::ConsumeableArray(..)
-        ) {
+        let (Expression::Array(elements, _) | Expression::ConsumeableArray(elements, _)) = &**rhs
+        else {
             return Vec::new();
-        }
+        };
+
+        // a single element does not need a temporary array built for it
+        let (command, value) = if let [element] = &elements[..] {
+            ("pushBack", element.source(true))
+        } else {
+            ("append", rhs.source(true))
+        };
 
         vec![Arc::new(CodeS45ArrayAppend::new(
             range.clone(),
             name.clone(),
-            rhs.source(true),
+            command,
+            value,
             processed,
             config.severity(),
         ))]
@@ -116,6 +122,7 @@ impl LintRunner<LintData> for Runner {
 pub struct CodeS45ArrayAppend {
     span: Range<usize>,
     array: String,
+    command: &'static str,
     value: String,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
@@ -135,7 +142,7 @@ impl Code for CodeS45ArrayAppend {
     }
 
     fn message(&self) -> String {
-        "Use `append` instead of `array = array + [...]`".to_string()
+        format!("Use `{}` instead of `array = array + [...]`", self.command)
     }
 
     fn label_message(&self) -> String {
@@ -143,14 +150,14 @@ impl Code for CodeS45ArrayAppend {
     }
 
     fn note(&self) -> Option<String> {
-        Some(
-            "`append` extends the array in place, so anything else holding a reference to it will see the new elements"
-                .to_string(),
-        )
+        Some(format!(
+            "`{}` extends the array in place, so anything else holding a reference to it will see the new elements",
+            self.command
+        ))
     }
 
     fn suggestion(&self) -> Option<String> {
-        Some(format!("{} append {}", self.array, self.value))
+        Some(format!("{} {} {}", self.array, self.command, self.value))
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
@@ -163,6 +170,7 @@ impl CodeS45ArrayAppend {
     pub fn new(
         span: Range<usize>,
         array: String,
+        command: &'static str,
         value: String,
         processed: &Processed,
         severity: Severity,
@@ -170,6 +178,7 @@ impl CodeS45ArrayAppend {
         Self {
             span,
             array,
+            command,
             value,
             severity,
             diagnostic: None,
