@@ -71,6 +71,7 @@ lint!(s33_max, true);
 lint!(s33_min, true);
 lint!(s33_mod, true);
 lint!(s33_pi, true);
+lint!(s33_push_back_unique, true);
 lint!(s35_count_skipable, true);
 lint!(s36_global_var_in_local, true);
 lint!(s38_direct_private, true);

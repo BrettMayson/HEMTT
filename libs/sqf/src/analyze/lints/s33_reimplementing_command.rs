@@ -14,6 +14,7 @@ mod max;
 mod min;
 mod modulo;
 mod pi;
+mod push_back_unique;
 crate::analyze::lint!(LintS33ReimplementingCommand);
 
 /// Check if two expressions match, considering variables and optionally unwrapping code blocks
@@ -111,6 +112,7 @@ impl LintRunner<LintData> for Runner {
         codes.extend(min::check(target, processed, config));
         codes.extend(modulo::check(target, processed, config));
         codes.extend(pi::check(target, processed, config));
+        codes.extend(push_back_unique::check(target, processed, config));
         codes
     }
 }
