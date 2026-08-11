@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use hemtt_common::config::PreprocessorOptions;
+use hemtt_core::symbol::Symbol;
 use hemtt_workspace::{
     SourceDatabase, WorkspacePath,
     position::Position,
     reporting::{
         Codes, Definition, ExpansionMetadata, ExpansionMetadataStore, MacroExpander, Output,
-        Processed, Symbol, Token,
+        Processed, Token,
     },
 };
 use peekmore::{PeekMore, PeekMoreIterator};
@@ -237,14 +238,14 @@ impl Processor {
         while let Some(token) = stream.peek() {
             match (token.symbol(), in_quotes) {
                 (Symbol::Word(w), false) => {
-                    if w == "__EXEC" {
+                    if &**w == "__EXEC" {
                         return Err(ExecNotSupported::code((**token).clone()));
                     }
                     if Defines::is_unsupported_builtin(w) {
                         return Err(BuiltInNotSupported::code((**token).clone()));
                     }
                     just_whitespace = false;
-                    if Some(w.as_str()) != in_macro && self.defines.contains_key(w) {
+                    if Some(&**w) != in_macro && self.defines.contains_key(w) {
                         let token = token.clone();
                         self.define_use(
                             callsite.unwrap_or_else(|| token.position()),

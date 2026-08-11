@@ -1,6 +1,8 @@
 use std::{fmt::Display, sync::Arc};
 
-use super::{Symbol, Token};
+use hemtt_core::symbol::Symbol;
+
+use super::Token;
 
 #[derive(Debug)]
 /// The output of a token

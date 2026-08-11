@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use hemtt_core::symbol::Symbol;
 use hemtt_workspace::{
     path::LocateResult,
     position::Position,
-    reporting::{Definition, FunctionDefinition, Output, Symbol, Token},
+    reporting::{Definition, FunctionDefinition, Output, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 use tracing::debug;
@@ -143,7 +144,7 @@ impl Processor {
         let scope_token = self.next_word(stream, None).unwrap_or_else(|_| {
             hit_end = true;
             Arc::new(Token::new(
-                Symbol::Word("line".to_string()),
+                Symbol::Word(Arc::from("line")),
                 command.position().clone(),
             ))
         });
@@ -392,7 +393,7 @@ impl Processor {
         self.skip_whitespace(stream, None);
         let left = read_value(stream);
         if !left.is_empty()
-            && &Symbol::Word(String::from("__has_include"))
+            && &Symbol::Word(Arc::from("__has_include"))
                 == left
                     .first()
                     .expect("left is not empty, must exist")
@@ -540,7 +541,8 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_workspace::reporting::{Definition, Symbol};
+    use hemtt_core::symbol::Symbol;
+    use hemtt_workspace::reporting::Definition;
 
     use crate::processor::{Processor, pragma::Pragma, tests};
 

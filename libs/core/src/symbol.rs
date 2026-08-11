@@ -1,16 +1,9 @@
-// dead code from a previous hemtt version, don't feel the need to delete atm
-#![allow(dead_code)]
-
-use std::fmt::Display;
-
-use super::Whitespace;
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// The symbol of a [`Token`](crate::Token)
 pub enum Symbol {
     /// A word is a contiguous sequence of letters, digits, and underscores.
     /// A word will never start with a digit.
-    Word(String),
+    Word(std::sync::Arc<str>),
     /// A single alphanumeric character
     Alpha(char),
     /// Parsed digits will always be a single digit, but generated digits may have multiple digits.
@@ -63,26 +56,49 @@ pub enum Symbol {
     /// A unicode character
     Unicode(String),
 
-    /// A newline \n
-    Newline,
-    /// A [`Whitespace`] character
-    Whitespace(Whitespace),
-    /// A comment
-    /// Comments are not parsed, but are kept in the token stream
-    /// so that they can be outputted in the same format as the input.
-    ///
-    /// Comments have two forms:
-    /// Single line comments start with `//` and end with a newline.
-    /// Multi line comments start with `/*` and end with `*/`.
+    /// A [`WhitespaceKind`] character
+    Whitespace(WhitespaceKind),
+
+    // TODO remove and replace with TokenKind
     Comment(String),
+
+    /// A newline character
+    Newline,
 
     /// End of input
     Eoi,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// A kind of comment
+pub enum CommentKind {
+    /// A single line comment, starting with `//` and ending with a newline
+    Line,
+    /// A multi line comment, starting with `/*` and ending with `*/`
+    Block,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// A kind of whitespace
+pub enum WhitespaceKind {
+    /// A space character
+    Space,
+    /// A tab character
+    Tab,
+}
+
+impl std::fmt::Display for WhitespaceKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Space => write!(f, " "),
+            Self::Tab => write!(f, "\t"),
+        }
+    }
+}
+
 impl Symbol {
     /// Create a new [`Word`](Symbol::Word) symbol
-    pub fn from_word<S: Into<String>>(word: S) -> Self {
+    pub fn from_word<S: Into<std::sync::Arc<str>>>(word: S) -> Self {
         Self::Word(word.into())
     }
 
@@ -93,15 +109,21 @@ impl Symbol {
     }
 
     #[must_use]
-    /// Check if a symbol is [`Whitespace`](Symbol::Whitespace) or [`Comment`](Symbol::Comment)
-    pub const fn is_whitespace(&self) -> bool {
-        matches!(&self, Self::Whitespace(_) | Self::Comment(_))
+    /// Get the word of a symbol if it is [`Word`](Symbol::Word)
+    pub fn as_word(&self) -> Option<&str> {
+        match self {
+            Self::Word(w) => Some(&**w),
+            _ => None,
+        }
     }
 
     #[must_use]
-    /// Check if a symbol is [`Newline`](Symbol::Newline)
-    pub const fn is_newline(&self) -> bool {
-        matches!(&self, Self::Newline)
+    /// Check if a symbol is [`Whitespace`](Symbol::Whitespace) that is not a newline (space or tab)
+    pub const fn is_whitespace(&self) -> bool {
+        matches!(
+            &self,
+            Self::Whitespace(WhitespaceKind::Space | WhitespaceKind::Tab)
+        )
     }
 
     #[must_use]
@@ -159,9 +181,15 @@ impl Symbol {
     }
 
     #[must_use]
-    /// Check if a symbol is [`Comment`](Symbol::Comment)
+    /// Check if a symbol is a comment
     pub const fn is_comment(&self) -> bool {
         matches!(self, Self::Comment(_))
+    }
+
+    #[must_use]
+    /// Check if a symbol is a newline
+    pub const fn is_newline(&self) -> bool {
+        matches!(self, Self::Newline)
     }
 
     #[must_use]
@@ -204,9 +232,25 @@ impl Symbol {
             _ => None,
         }
     }
+
+    #[cfg(any(test, feature = "test"))]
+    /// Assert that two symbols are equal, ignoring the difference between [`Word`](Symbol::Word) and [`Arc<str>`](std::sync::Arc<str>)
+    ///
+    /// # Panics
+    /// If the symbols are not equal, this function will panic with a message showing the two symbols that were compared.
+    pub fn assert_eq(&self, other: &Self) {
+        if self.is_word() && other.is_word() {
+            assert_eq!(
+                self.as_word().expect("must be word"),
+                other.as_word().expect("must be word")
+            );
+        } else {
+            assert_eq!(self, other);
+        }
+    }
 }
 
-impl Display for Symbol {
+impl std::fmt::Display for Symbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Self::Alpha(c) = self {
             return write!(f, "{c}");
@@ -221,7 +265,7 @@ impl Display for Symbol {
             f,
             "{}",
             match self {
-                Self::Word(w) => w.as_str(),
+                Self::Word(w) => w,
                 Self::Underscore => "_",
                 Self::Dash => "-",
                 Self::Equals => "=",

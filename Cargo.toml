@@ -8,6 +8,7 @@ members = [
 
     "libs/common",
     "libs/config",
+    "libs/core",
     "libs/lzo",
     "libs/p3d",
     "libs/paa",

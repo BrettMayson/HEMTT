@@ -10,7 +10,6 @@ mod macro_expander;
 mod macros;
 mod output;
 mod processed;
-mod symbol;
 mod token;
 mod whitespace;
 
@@ -23,7 +22,6 @@ pub use macro_expander::{ExpansionMetadata, MacroExpander};
 pub use macros::{MacroExpansionContext, MacroFrame};
 pub use output::Output;
 pub use processed::{CacheProcessed, Mapping, Processed, Sources};
-pub use symbol::Symbol;
 pub use token::Token;
 pub use whitespace::Whitespace;
 

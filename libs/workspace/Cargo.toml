@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 hemtt-common = { path = "../common" }
+hemtt-core = { path = "../core" }
 hemtt-pbo = { path = "../pbo" }
 
 ansi_term = "0.12.1"

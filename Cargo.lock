@@ -1630,6 +1630,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hemtt-core"
+version = "1.21.1"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.19",
+ "tracing",
+]
+
+[[package]]
 name = "hemtt-language-server"
 version = "1.21.1"
 dependencies = [
@@ -1639,6 +1649,7 @@ dependencies = [
  "fs-err",
  "hemtt-common",
  "hemtt-config",
+ "hemtt-core",
  "hemtt-p3d",
  "hemtt-paa",
  "hemtt-preprocessor",
@@ -1719,6 +1730,7 @@ dependencies = [
  "dashmap 6.2.1",
  "fs-err",
  "hemtt-common",
+ "hemtt-core",
  "hemtt-workspace",
  "lsp-types 0.97.0",
  "paste",
@@ -1763,6 +1775,7 @@ dependencies = [
  "float-ord",
  "fs-err",
  "hemtt-common",
+ "hemtt-core",
  "hemtt-lzo",
  "hemtt-preprocessor",
  "hemtt-workspace",
@@ -1816,6 +1829,7 @@ dependencies = [
  "dirs",
  "fs-err",
  "hemtt-common",
+ "hemtt-core",
  "hemtt-pbo",
  "intervaltree",
  "linkme",

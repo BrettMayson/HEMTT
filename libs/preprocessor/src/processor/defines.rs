@@ -1,8 +1,9 @@
 use std::{collections::HashMap, sync::Arc};
 
+use hemtt_core::symbol::Symbol;
 use hemtt_workspace::{
     position::Position,
-    reporting::{Code, Definition, Output, Symbol, Token},
+    reporting::{Code, Definition, Output, Token},
 };
 use peekmore::{PeekMore, PeekMoreIterator};
 
@@ -371,7 +372,10 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_workspace::reporting::{Symbol, Whitespace};
+
+    use std::sync::Arc;
+
+    use hemtt_core::symbol::{Symbol, WhitespaceKind};
 
     use crate::processor::{Processor, pragma::Pragma, tests};
 
@@ -389,7 +393,7 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 1);
         assert_eq!(args[0].len(), 1);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
     }
 
     #[test]
@@ -406,9 +410,12 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 1);
         assert_eq!(args[0].len(), 3);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
-        assert_eq!(*args[0][1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*args[0][2].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
+        assert_eq!(
+            *args[0][1].symbol(),
+            Symbol::Whitespace(WhitespaceKind::Space)
+        );
+        assert_eq!(*args[0][2].symbol(), Symbol::Word(Arc::from("world")));
     }
 
     #[test]
@@ -425,9 +432,9 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 2);
         assert_eq!(args[0].len(), 1);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
         assert_eq!(args[1].len(), 1);
-        assert_eq!(*args[1][0].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*args[1][0].symbol(), Symbol::Word(Arc::from("world")));
     }
 
     #[test]
@@ -444,10 +451,13 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 2);
         assert_eq!(args[0].len(), 1);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
         assert_eq!(args[1].len(), 2);
-        assert_eq!(*args[1][0].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*args[1][1].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(
+            *args[1][0].symbol(),
+            Symbol::Whitespace(WhitespaceKind::Space)
+        );
+        assert_eq!(*args[1][1].symbol(), Symbol::Word(Arc::from("world")));
     }
 
     #[test]
@@ -464,13 +474,19 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 2);
         assert_eq!(args[0].len(), 3);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
-        assert_eq!(*args[0][1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*args[0][2].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
+        assert_eq!(
+            *args[0][1].symbol(),
+            Symbol::Whitespace(WhitespaceKind::Space)
+        );
+        assert_eq!(*args[0][2].symbol(), Symbol::Word(Arc::from("world")));
         assert_eq!(args[1].len(), 3);
-        assert_eq!(*args[1][0].symbol(), Symbol::Word("world".to_string()));
-        assert_eq!(*args[1][1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*args[1][2].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[1][0].symbol(), Symbol::Word(Arc::from("world")));
+        assert_eq!(
+            *args[1][1].symbol(),
+            Symbol::Whitespace(WhitespaceKind::Space)
+        );
+        assert_eq!(*args[1][2].symbol(), Symbol::Word(Arc::from("hello")));
     }
 
     #[test]
@@ -487,14 +503,14 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 2);
         assert_eq!(args[0].len(), 4);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("hello")));
         assert_eq!(*args[0][1].symbol(), Symbol::LeftParenthesis);
-        assert_eq!(*args[0][2].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*args[0][2].symbol(), Symbol::Word(Arc::from("world")));
         assert_eq!(*args[0][3].symbol(), Symbol::RightParenthesis);
         assert_eq!(args[1].len(), 4);
-        assert_eq!(*args[1][0].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*args[1][0].symbol(), Symbol::Word(Arc::from("world")));
         assert_eq!(*args[1][1].symbol(), Symbol::LeftParenthesis);
-        assert_eq!(*args[1][2].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*args[1][2].symbol(), Symbol::Word(Arc::from("hello")));
         assert_eq!(*args[1][3].symbol(), Symbol::RightParenthesis);
     }
 
@@ -512,14 +528,14 @@ mod tests {
             .unwrap();
         assert_eq!(args.len(), 4);
         assert_eq!(args[0].len(), 3);
-        assert_eq!(*args[0][0].symbol(), Symbol::Word("set".to_string()));
+        assert_eq!(*args[0][0].symbol(), Symbol::Word(Arc::from("set")));
         assert_eq!(*args[0][1].symbol(), Symbol::LeftParenthesis);
         assert_eq!(*args[0][2].symbol(), Symbol::Digit(1));
         assert_eq!(args[1].len(), 2);
         assert_eq!(*args[1][0].symbol(), Symbol::Digit(2));
         assert_eq!(*args[1][1].symbol(), Symbol::RightParenthesis);
         assert_eq!(args[2].len(), 3);
-        assert_eq!(*args[2][0].symbol(), Symbol::Word("set".to_string()));
+        assert_eq!(*args[2][0].symbol(), Symbol::Word(Arc::from("set")));
         assert_eq!(*args[2][1].symbol(), Symbol::LeftParenthesis);
         assert_eq!(*args[2][2].symbol(), Symbol::Digit(3));
         assert_eq!(args[3].len(), 2);
@@ -533,7 +549,7 @@ mod tests {
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 1);
-        assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*body[0].symbol(), Symbol::Word(Arc::from("hello")));
     }
 
     #[test]
@@ -542,9 +558,9 @@ mod tests {
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 3);
-        assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
-        assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));
-        assert_eq!(*body[2].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*body[0].symbol(), Symbol::Word(Arc::from("hello")));
+        assert_eq!(*body[1].symbol(), Symbol::Whitespace(WhitespaceKind::Space));
+        assert_eq!(*body[2].symbol(), Symbol::Word(Arc::from("world")));
     }
 
     #[test]
@@ -553,7 +569,7 @@ mod tests {
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 1);
-        assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
+        assert_eq!(*body[0].symbol(), Symbol::Word(Arc::from("hello")));
     }
 
     #[test]
@@ -562,10 +578,10 @@ mod tests {
         let mut processor = Processor::default();
         let body = processor.define_read_body(&mut stream);
         assert_eq!(body.len(), 5);
-        assert_eq!(*body[0].symbol(), Symbol::Word("hello".to_string()));
-        assert_eq!(*body[1].symbol(), Symbol::Whitespace(Whitespace::Space));
+        assert_eq!(*body[0].symbol(), Symbol::Word(Arc::from("hello")));
+        assert_eq!(*body[1].symbol(), Symbol::Whitespace(WhitespaceKind::Space));
         assert_eq!(*body[2].symbol(), Symbol::Escape);
         assert_eq!(*body[3].symbol(), Symbol::Newline);
-        assert_eq!(*body[4].symbol(), Symbol::Word("world".to_string()));
+        assert_eq!(*body[4].symbol(), Symbol::Word(Arc::from("world")));
     }
 }

@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use hemtt_core::symbol::Symbol;
-
-use crate::position::Position;
+use crate::{position::Position, symbol::Symbol};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 /// A token from the tokenizer

@@ -9,6 +9,7 @@ workspace = true
 [dependencies]
 hemtt-common = { path = "../libs/common" }
 hemtt-config = { path = "../libs/config" }
+hemtt-core = { path = "../libs/core" }
 hemtt-p3d = { path = "../libs/p3d" }
 hemtt-paa = { path = "../libs/paa", features = ["json", "generate"] }
 hemtt-preprocessor = { path = "../libs/preprocessor", features = ["lsp"] }

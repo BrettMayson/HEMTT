@@ -35,7 +35,7 @@ impl Code for IncludeNotEncased {
     fn suggestion(&self) -> Option<String> {
         let mut wrapper = self.start.as_ref()?.symbol();
         if wrapper.is_single_quote() {
-            wrapper = &hemtt_workspace::reporting::Symbol::DoubleQuote;
+            wrapper = &hemtt_core::symbol::Symbol::DoubleQuote;
         }
         if self.path.is_empty() {
             return None;

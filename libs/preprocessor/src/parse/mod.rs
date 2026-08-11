@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use hemtt_core::symbol::{Symbol, WhitespaceKind};
 use hemtt_workspace::{
     SourceDatabase, WorkspacePath,
     position::{LineCol, Position},
-    reporting::{Symbol, Token, Whitespace},
+    reporting::Token,
 };
 
 use pest::Parser;
@@ -82,7 +83,7 @@ pub fn str(source: &str, path: &WorkspacePath) -> Result<Vec<Arc<Token>>, Error>
                 if in_single_string || in_double_string {
                     if !skipping_comment {
                         tokens.push(Arc::new(Token::new(
-                            Symbol::Word(pair.as_str().to_string()),
+                            Symbol::Word(Arc::from(pair.as_str())),
                             Position::new(
                                 start,
                                 LineCol(start.0 + 2, (start.1.0 + 2, start.1.1 + 2)),
@@ -175,8 +176,8 @@ impl Parse for Symbol {
             Rule::unicode => Self::Unicode(pair.as_str().to_string()),
 
             Rule::newline => Self::Newline,
-            Rule::space => Self::Whitespace(Whitespace::Space),
-            Rule::tab => Self::Whitespace(Whitespace::Tab),
+            Rule::space => Self::Whitespace(WhitespaceKind::Space),
+            Rule::tab => Self::Whitespace(WhitespaceKind::Tab),
             Rule::WHITESPACE => {
                 Self::to_symbol(pair.into_inner().next().expect("inner token should exist"))
             }

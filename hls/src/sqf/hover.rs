@@ -1,8 +1,8 @@
 use std::fmt::Write;
 
 use arma3_wiki::model::{Command, Locality, Since, Syntax};
+use hemtt_core::symbol::Symbol;
 use hemtt_sqf::parser::database::Database;
-use hemtt_workspace::reporting::Symbol;
 use regex::Regex;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position};
 use tracing::warn;

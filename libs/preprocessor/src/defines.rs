@@ -1,9 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
+use hemtt_core::symbol::Symbol;
 use hemtt_workspace::{
     WorkspacePath,
     position::Position,
-    reporting::{Definition, Symbol, Token},
+    reporting::{Definition, Token},
 };
 use strsim::levenshtein;
 
@@ -119,7 +120,7 @@ impl Defines {
             {
                 return Some((
                     Arc::new(Token::new(
-                        Symbol::Word(key.to_string()),
+                        Symbol::Word(Arc::from(key.to_string())),
                         key.position().clone(),
                     )),
                     Definition::Value(Arc::new(vec![Arc::new(Token::new(
@@ -132,7 +133,7 @@ impl Defines {
             if let Some((_, value)) = BUILTIN_CONST.iter().find(|(k, _)| *k == ident) {
                 return Some((
                     Arc::new(Token::new(
-                        Symbol::Word(key.to_string()),
+                        Symbol::Word(Arc::from(key.to_string())),
                         key.position().clone(),
                     )),
                     Definition::Value(Arc::new(vec![Arc::new(Token::new(
@@ -169,7 +170,7 @@ impl Defines {
                                 Arc::new(site.path().workspace().project().map_or_else(
                                     || {
                                         Token::new(
-                                            Symbol::Word(path.clone()),
+                                            Symbol::Word(Arc::from(path.clone())),
                                             key.position().clone(),
                                         )
                                     },
@@ -177,19 +178,19 @@ impl Defines {
                                         Token::new(
                                             project.mainprefix().map_or_else(
                                                 || {
-                                                    Symbol::Word(format!(
+                                                    Symbol::Word(Arc::from(format!(
                                                         "{}{}",
                                                         project.prefix(),
                                                         path,
-                                                    ))
+                                                    )))
                                                 },
                                                 |mainprefix| {
-                                                    Symbol::Word(format!(
+                                                    Symbol::Word(Arc::from(format!(
                                                         "{}\\{}{}",
                                                         mainprefix,
                                                         project.prefix(),
                                                         path,
-                                                    ))
+                                                    )))
                                                 },
                                             ),
                                             key.position().clone(),
@@ -207,7 +208,10 @@ impl Defines {
                             key.clone(),
                             Definition::Value(Arc::new(vec![
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                                Arc::new(Token::new(Symbol::Word(path), key.position().clone())),
+                                Arc::new(Token::new(
+                                    Symbol::Word(Arc::from(path)),
+                                    key.position().clone(),
+                                )),
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                             ])),
                             DefineSource::Generated,
@@ -229,7 +233,10 @@ impl Defines {
                             key.clone(),
                             Definition::Value(Arc::new(vec![
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
-                                Arc::new(Token::new(Symbol::Word(path), key.position().clone())),
+                                Arc::new(Token::new(
+                                    Symbol::Word(Arc::from(path)),
+                                    key.position().clone(),
+                                )),
                                 Arc::new(Token::new(Symbol::DoubleQuote, key.position().clone())),
                             ])),
                             DefineSource::Generated,

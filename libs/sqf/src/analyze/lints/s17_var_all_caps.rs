@@ -1,9 +1,10 @@
 use std::{ops::Range, sync::Arc};
 
 use hemtt_common::{config::LintConfig, similar_values};
+use hemtt_core::symbol::Symbol;
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, Symbol},
+    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
 };
 
 use crate::{analyze::LintData, Expression};
@@ -166,7 +167,7 @@ impl CodeS17VarAllCaps {
         self.diagnostic = Some(diagnostic.clone());
         let mut mappings = processed.mappings(self.span.start);
         mappings.pop();
-        let symbol = Symbol::Word(self.ident.clone());
+        let symbol = Symbol::Word(Arc::from(self.ident.clone()));
         let Some(mapping) = mappings
             .iter()
             .find(|m| {

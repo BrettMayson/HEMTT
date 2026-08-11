@@ -337,6 +337,8 @@ impl SourceDatabase {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    use hemtt_core::symbol::Symbol;
+
     use super::*;
     use std::io::Write;
 
@@ -428,9 +430,8 @@ mod tests {
 
     fn dummy_token(path: &WorkspacePath) -> Token {
         use crate::position::{LineCol, Position};
-        use crate::reporting::Symbol;
         Token::new(
-            Symbol::Word("x".to_string()),
+            Symbol::Word(Arc::from("x")),
             Position::new(LineCol(0, (1, 0)), LineCol(1, (1, 1)), path.clone()),
         )
     }

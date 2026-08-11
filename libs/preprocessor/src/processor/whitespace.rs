@@ -73,7 +73,9 @@ impl Processor {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use hemtt_workspace::reporting::Symbol;
+    use std::sync::Arc;
+
+    use hemtt_core::symbol::Symbol;
 
     use crate::processor::{Processor, tests};
 
@@ -84,7 +86,7 @@ mod tests {
         processor.skip_whitespace(&mut stream, None);
         assert_eq!(
             *stream.next().unwrap().symbol(),
-            Symbol::Word("a".to_string())
+            Symbol::Word(Arc::from("a"))
         );
     }
 
@@ -95,7 +97,7 @@ mod tests {
         processor.skip_whitespace(&mut stream, None);
         assert_eq!(
             *stream.next().unwrap().symbol(),
-            Symbol::Word("a".to_string())
+            Symbol::Word(Arc::from("a"))
         );
     }
 
@@ -122,7 +124,7 @@ mod tests {
         processor.skip_to_after_newline(&mut stream, None);
         assert_eq!(
             *stream.next().unwrap().symbol(),
-            Symbol::Word("b".to_string())
+            Symbol::Word(Arc::from("b"))
         );
     }
 
