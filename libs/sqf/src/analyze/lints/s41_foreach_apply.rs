@@ -53,12 +53,12 @@ When a `forEach` loop never uses `_forEachIndex`, it can often be replaced with 
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
-        vec![Box::new(StatementRunner)]
+        vec![Box::new(Runner)]
     }
 }
 
-struct StatementRunner;
-impl LintRunner<LintData> for StatementRunner {
+struct Runner;
+impl LintRunner<LintData> for Runner {
     type Target = crate::Statement;
 
     fn run(
