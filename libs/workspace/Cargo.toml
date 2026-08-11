@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-workspace"
-version = "1.0.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 description = "A workspace library for hemtt"
 license = "GPL-2.0"
 

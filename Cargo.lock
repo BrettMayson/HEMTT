@@ -1563,7 +1563,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-book-gen"
-version = "0.1.0"
+version = "1.21.1"
 dependencies = [
  "arma3-wiki",
  "clap",
@@ -1580,7 +1580,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-comm"
-version = "0.1.0"
+version = "1.21.1"
 dependencies = [
  "arma-rs",
  "hemtt-common",
@@ -1589,7 +1589,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-common"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "codespan-reporting",
  "enable-ansi-support",
@@ -1610,7 +1610,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-config"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "automod",
  "byteorder",
@@ -1660,7 +1660,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-lzo"
-version = "1.0.1"
+version = "1.21.1"
 dependencies = [
  "rand 0.9.5",
  "thiserror 2.0.19",
@@ -1668,7 +1668,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-p3d"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "byteorder",
  "fs-err",
@@ -1681,7 +1681,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-paa"
-version = "1.0.1"
+version = "1.21.1"
 dependencies = [
  "base64",
  "byteorder",
@@ -1698,7 +1698,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-pbo"
-version = "1.0.1"
+version = "1.21.1"
 dependencies = [
  "byteorder",
  "fs-err",
@@ -1712,7 +1712,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-preprocessor"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "automod",
  "criterion",
@@ -1732,7 +1732,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-signing"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "argon2",
  "bincode",
@@ -1754,7 +1754,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-sqf"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "arma3-wiki",
  "automod",
@@ -1779,7 +1779,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-stringtable"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "automod",
  "byteorder",
@@ -1800,7 +1800,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-test"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "fs-err",
  "fs_extra",
@@ -1809,7 +1809,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-workspace"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "ansi_term",
  "codespan-reporting",
@@ -1831,7 +1831,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-wss"
-version = "1.0.0"
+version = "1.21.1"
 dependencies = [
  "byteorder",
  "fs-err",

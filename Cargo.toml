@@ -27,6 +27,8 @@ resolver = "2"
 
 [workspace.package]
 repository = "https://github.com/BrettMayson/HEMTT"
+version = "1.21.1"
+edition = "2024"
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }

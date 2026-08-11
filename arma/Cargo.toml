@@ -1,8 +1,8 @@
 [package]
 name = "hemtt-comm"
 authors = ["Brett Mayson <brett@mayson.io>"]
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 name = "hemtt_comm"

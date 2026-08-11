@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-paa"
-version = "1.0.1"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 description = "A PAA library for hemtt"
 license = "GPL-2.0"
 
