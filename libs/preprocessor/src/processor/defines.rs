@@ -131,6 +131,7 @@ impl Processor {
                     return Err(UnexpectedToken::code(
                         stream.next().expect("peeked above").as_ref().clone(),
                         vec!["{variable}".to_string()],
+                        None,
                     ));
                 }
                 stream.next();
@@ -144,11 +145,19 @@ impl Processor {
                 return Err(UnexpectedToken::code(
                     stream.next().expect("peeked above").as_ref().clone(),
                     vec![",".to_string(), ")".to_string()],
+                    None,
+                ));
+            } else if symbol.eq(&Symbol::Unicode(".".to_owned())) {
+                return Err(UnexpectedToken::code(
+                    stream.next().expect("peeked above").as_ref().clone(),
+                    vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
+                    Some("variadic arguments are not supported".to_string()),
                 ));
             } else {
                 return Err(UnexpectedToken::code(
                     stream.next().expect("peeked above").as_ref().clone(),
                     vec!["{variable}".to_string(), ",".to_string(), ")".to_string()],
+                    None,
                 ));
             }
         }

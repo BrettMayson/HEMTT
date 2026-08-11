@@ -11,6 +11,7 @@ pub struct UnexpectedToken {
     token: Box<Token>,
     /// A vec of [`Token`]s that would be valid here
     expected: Vec<String>,
+    note: Option<String>,
 }
 
 impl Code for UnexpectedToken {
@@ -32,6 +33,9 @@ impl Code for UnexpectedToken {
             self.token.symbol().to_string().replace('\n', "\\n")
         )
     }
+    fn note(&self) -> Option<String> {
+        self.note.clone()
+    }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         let mut diag = Diagnostic::new(self.ident(), self.message()).with_label(
@@ -47,18 +51,21 @@ impl Code for UnexpectedToken {
                 Yellow.paint(self.expected.join(" "))
             ));
         }
+        if let Some(note) = self.note() {
+            diag = diag.with_note(note);
+        }
         Some(diag)
     }
 }
 
 impl UnexpectedToken {
     #[must_use]
-    pub const fn new(token: Box<Token>, expected: Vec<String>) -> Self {
-        Self { token, expected }
+    pub const fn new(token: Box<Token>, expected: Vec<String>, note: Option<String>) -> Self {
+        Self { token, expected, note }
     }
 
     #[must_use]
-    pub fn code(token: Token, expected: Vec<String>) -> Error {
-        Error::Code(Arc::new(Self::new(Box::new(token), expected)))
+    pub fn code(token: Token, expected: Vec<String>, note: Option<String>) -> Error {
+        Error::Code(Arc::new(Self::new(Box::new(token), expected, note)))
     }
 }
