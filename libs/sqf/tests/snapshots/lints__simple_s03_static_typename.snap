@@ -1,6 +1,6 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s03_static_typename))
+expression: "lint(stringify! (s03_static_typename), true).0"
 ---
 [0m[1m[38;5;11mwarning[L-S03][0m[1m: using `typeName` on a constant is slower than using the type directly[0m
   [0m[36m┌─[0m s03_static_typename.sqf:1:6
@@ -27,3 +27,12 @@ expression: lint(stringify! (s03_static_typename))
   [0m[36m│[0m                        [0m[33m^^^^^^^^^^^^^[0m [0m[33m`typeName` on a constant[0m
   [0m[36m│[0m
   [0m[36m=[0m [32mtry[0m: "BOOL"
+
+
+[0m[1m[38;5;11mwarning[L-S03][0m[1m: using `typeName` on a constant is slower than using the type directly[0m
+   [0m[36m┌─[0m s03_static_typename.sqf:12:6
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m hint [0m[33mtypeName 1e39[0m;
+   [0m[36m│[0m      [0m[33m^^^^^^^^^^^^^[0m [0m[33m`typeName` on a constant[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: "NaN"
