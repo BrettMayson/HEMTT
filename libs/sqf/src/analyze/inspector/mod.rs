@@ -264,7 +264,7 @@ impl<'a> Inspector<'a> {
                         is_root = true;
                     }
                     if !source.skip_errors() && !holder.source.skip_errors() {
-                        if holder.usage == 0 && !matches!(holder.source, VarSource::PrivateCmd(_)) {
+                        if holder.usage == 0 && !matches!(&holder.source, VarSource::PrivateCmd(_)) {
                             error_opt = Some(Issue::Unused(
                                 var.to_owned(),
                                 holder.source.clone(),
@@ -351,9 +351,9 @@ impl<'a> Inspector<'a> {
 
         let Some(found_values) = found_values else {
             if !peek {
-                let is_oprhan = self.active_scope().is_orphan_scope;
+                let is_orphan = self.active_scope().is_orphan_scope;
                 self.errors
-                    .insert(Issue::Undefined(var.to_owned(), source.clone(), is_oprhan));
+                    .insert(Issue::Undefined(var.to_owned(), source.clone(), is_orphan));
             }
             // Just return Any so it doesn't fail everything after
             return IndexSet::from([(GameValue::Anything, source.clone())]);
