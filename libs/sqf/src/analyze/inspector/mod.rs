@@ -264,7 +264,8 @@ impl<'a> Inspector<'a> {
                         is_root = true;
                     }
                     if !source.skip_errors() && !holder.source.skip_errors() {
-                        if holder.usage == 0 && !matches!(&holder.source, VarSource::PrivateCmd(_)) {
+                        if holder.usage == 0 && !matches!(&holder.source, VarSource::PrivateCmd(_))
+                        {
                             error_opt = Some(Issue::Unused(
                                 var.to_owned(),
                                 holder.source.clone(),
