@@ -9,3 +9,111 @@ expression: "lint(stringify! (s26_short_circuit_bool_var), true).0"
   [0m[36m│[0m                [0m[36m^^^^^^[0m [0m[36munnecessary { }[0m
   [0m[36m│[0m
   [0m[36m=[0m [36mnote[0m: remove the { } and use the variable directly (if safe to do so)
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:12:16
+   [0m[36m│[0m
+[0m[36m12[0m [0m[36m│[0m if (_test1 && {[0m[36m_a isEqualTo _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:13:16
+   [0m[36m│[0m
+[0m[36m13[0m [0m[36m│[0m if (_test1 && {[0m[36m_a isNotEqualTo "text"[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:14:16
+   [0m[36m│[0m
+[0m[36m14[0m [0m[36m│[0m if (_test1 && {[0m[36m_a == _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:15:16
+   [0m[36m│[0m
+[0m[36m15[0m [0m[36m│[0m if (_test1 && {[0m[36m_a != 5[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:16:16
+   [0m[36m│[0m
+[0m[36m16[0m [0m[36m│[0m if (_test1 && {[0m[36m_a > 5[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:17:16
+   [0m[36m│[0m
+[0m[36m17[0m [0m[36m│[0m if (_test1 && {[0m[36m_a < _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:18:16
+   [0m[36m│[0m
+[0m[36m18[0m [0m[36m│[0m if (_test1 && {[0m[36m_a >= 5[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:19:16
+   [0m[36m│[0m
+[0m[36m19[0m [0m[36m│[0m if (_test1 && {[0m[36m_a <= _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:20:16
+   [0m[36m│[0m
+[0m[36m20[0m [0m[36m│[0m if (_test1 || {[0m[36m_a isEqualTo _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:21:16
+   [0m[36m│[0m
+[0m[36m21[0m [0m[36m│[0m if (_test1 && {[0m[36m_a isEqualRef _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:22:16
+   [0m[36m│[0m
+[0m[36m22[0m [0m[36m│[0m if (_test1 && {[0m[36m_a isNotEqualRef _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s26_short_circuit_bool_var.sqf:23:16
+   [0m[36m│[0m
+[0m[36m23[0m [0m[36m│[0m if (_test1 && {[0m[36m_a isEqualType _b[0m}) then { };
+   [0m[36m│[0m                [0m[36m^^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit

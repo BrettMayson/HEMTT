@@ -29,16 +29,28 @@ impl Lint<LintData> for LintS26ShortCircuitBoolVar {
 **Incorrect**
 ```sqf
 if (_test1 && {_test2}) then { };
+if (_test1 && {_a isEqualTo _b}) then { };
 ```
 **Correct**
 ```sqf
 if (_test1 && _test2) then { };
+if (_test1 && _a isEqualTo _b) then { };
 ```
 
 ### Explanation
 
-Short circuit evaultion on a variable that is a boolean is inefficient
-False positives are possible if the var could be undefined, e.g.:
+Short circuit evaluation is not free: the right hand side is a code block that has to be
+created and called. When the right hand side is just a boolean variable, or a comparison
+between simple values, evaluating it eagerly is cheaper than the short circuit that skips it.
+
+Comparisons are only reported when both sides are simple values (a variable, number, string
+or boolean). A comparison that calls a command is left alone, because the short circuit is
+often guarding it:
+```sqf
+if (count _array > 0 && {_array select 0 isEqualTo "x"}) then { }; // not reported
+```
+
+False positives are possible if a variable could be undefined, e.g.:
 ```sqf
 someLogic = !isNil "z";
 someLogic && {z}
@@ -53,6 +65,39 @@ someLogic && {z}
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {
         vec![Box::new(Runner)]
     }
+}
+
+/// Comparisons that are cheaper to evaluate eagerly than to short circuit around.
+fn is_comparison(cmd: &BinaryCommand) -> bool {
+    match cmd {
+        BinaryCommand::Eq
+        | BinaryCommand::NotEq
+        | BinaryCommand::Greater
+        | BinaryCommand::Less
+        | BinaryCommand::GreaterEq
+        | BinaryCommand::LessEq => true,
+        BinaryCommand::Named(name) => [
+            "isEqualTo",
+            "isNotEqualTo",
+            "isEqualRef",
+            "isNotEqualRef",
+            "isEqualType",
+        ]
+        .iter()
+        .any(|candidate| name.eq_ignore_ascii_case(candidate)),
+        _ => false,
+    }
+}
+
+/// A value that can be evaluated without calling a command, so it cannot error or have side effects.
+const fn is_simple_operand(expr: &Expression) -> bool {
+    matches!(
+        expr,
+        Expression::Variable(..)
+            | Expression::Number(..)
+            | Expression::String(..)
+            | Expression::Boolean(..)
+    )
 }
 
 struct Runner;
@@ -83,22 +128,38 @@ impl LintRunner<LintData> for Runner {
         if statements.content().len() != 1 { 
             return Vec::new()
         }
-        let Statement::Expression(Expression::Variable(ref bool_var_name, _), ref range) = statements.content()[0] else {
+        let Statement::Expression(ref inner, ref range) = statements.content()[0] else {
             return Vec::new();
         };
-        if let Expression::UnaryCommand(not_cmd, not_rhs, _) = &**left
-            && not_cmd.as_str().eq_ignore_ascii_case("!")
-            && let Expression::UnaryCommand(isnil_cmd, isnil_rhs, _) = &**not_rhs
-            && isnil_cmd.as_str().eq_ignore_ascii_case("isNil")
-            && let Expression::String(isnil_input_str, _, _) = &**isnil_rhs
-            && isnil_input_str.eq_ignore_ascii_case(bool_var_name)
-        {
-            return Vec::new();
-        }
+        let note = match inner {
+            Expression::Variable(bool_var_name, _) => {
+                // `!isNil "z" && {z}` is guarding against z being undefined, the { } is load bearing
+                if let Expression::UnaryCommand(not_cmd, not_rhs, _) = &**left
+                    && not_cmd.as_str().eq_ignore_ascii_case("!")
+                    && let Expression::UnaryCommand(isnil_cmd, isnil_rhs, _) = &**not_rhs
+                    && isnil_cmd.as_str().eq_ignore_ascii_case("isNil")
+                    && let Expression::String(isnil_input_str, _, _) = &**isnil_rhs
+                    && isnil_input_str.eq_ignore_ascii_case(bool_var_name)
+                {
+                    return Vec::new();
+                }
+                "remove the { } and use the variable directly (if safe to do so)"
+            }
+            // a comparison of simple values cannot error, so the short circuit is not guarding it
+            Expression::BinaryCommand(inner_cmd, inner_left, inner_right, _)
+                if is_comparison(inner_cmd)
+                    && is_simple_operand(inner_left)
+                    && is_simple_operand(inner_right) =>
+            {
+                "remove the { } and use the comparison directly, it is cheaper than the short circuit"
+            }
+            _ => return Vec::new(),
+        };
         vec![Arc::new(CodeS26ShortCircuitBoolVar::new(
             range.clone(),
             processed,
             config.severity(),
+            note,
         ))]
     }
 }
@@ -107,6 +168,7 @@ impl LintRunner<LintData> for Runner {
 pub struct CodeS26ShortCircuitBoolVar {
     span: Range<usize>,
     severity: Severity,
+    note: &'static str,
     diagnostic: Option<Diagnostic>,
 }
 
@@ -132,7 +194,7 @@ impl Code for CodeS26ShortCircuitBoolVar {
     }
 
     fn note(&self) -> Option<String> {
-        Some("remove the { } and use the variable directly (if safe to do so)".to_string())
+        Some(self.note.to_string())
     }
 
     fn help(&self) -> Option<String> {
@@ -145,10 +207,16 @@ impl Code for CodeS26ShortCircuitBoolVar {
 }
 impl CodeS26ShortCircuitBoolVar {
     #[must_use]
-    pub fn new(span: Range<usize>, processed: &Processed, severity: Severity) -> Self {
+    pub fn new(
+        span: Range<usize>,
+        processed: &Processed,
+        severity: Severity,
+        note: &'static str,
+    ) -> Self {
         Self {
             span,
             severity,
+            note,
             diagnostic: None,
         }
         .generate_processed(processed)
