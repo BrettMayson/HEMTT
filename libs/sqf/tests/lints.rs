@@ -134,6 +134,7 @@ fn lint(file: &str, ignore_inspector: bool) -> (String, SqfReport) {
                 &processed,
                 Arc::new(Addon::test_addon()),
                 database.clone(),
+                None,
             );
 
             (

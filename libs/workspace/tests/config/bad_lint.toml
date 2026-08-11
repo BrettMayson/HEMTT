@@ -1,0 +1,6 @@
+name = "My Mod"
+prefix = "test"
+
+# lint does not exist (need full name not the number)
+[lints.config.c12]
+enabled = "pedantic"

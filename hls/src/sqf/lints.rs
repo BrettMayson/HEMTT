@@ -129,6 +129,7 @@ async fn check_sqf(
                     workspace.config().as_ref(),
                     &addon,
                     database,
+                    None,
                 );
                 if let Some(report) = checked.report {
                     let cache = SqfAnalyzer::get();
