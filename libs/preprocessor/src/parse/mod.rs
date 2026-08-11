@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_core::symbol::{Symbol, WhitespaceKind};
+use hemtt_core::symbol::{CommentKind, Symbol, WhitespaceKind};
 use hemtt_workspace::{
     SourceDatabase, WorkspacePath,
     position::{LineCol, Position},
@@ -181,7 +181,7 @@ impl Parse for Symbol {
             Rule::WHITESPACE => {
                 Self::to_symbol(pair.into_inner().next().expect("inner token should exist"))
             }
-            Rule::COMMENT => Self::Comment(pair.as_str().to_string()),
+            Rule::COMMENT => Self::Comment(pair.as_str().to_string(), CommentKind::Block),
             Rule::EOI | Rule::file => Self::Eoi,
         }
     }

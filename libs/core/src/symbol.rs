@@ -59,23 +59,14 @@ pub enum Symbol {
     /// A [`WhitespaceKind`] character
     Whitespace(WhitespaceKind),
 
-    // TODO remove and replace with TokenKind
-    Comment(String),
+    Comment(String, CommentKind),
+    Pragma(PragmaKind),
 
     /// A newline character
     Newline,
 
     /// End of input
     Eoi,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-/// A kind of comment
-pub enum CommentKind {
-    /// A single line comment, starting with `//` and ending with a newline
-    Line,
-    /// A multi line comment, starting with `/*` and ending with `*/`
-    Block,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -94,6 +85,21 @@ impl std::fmt::Display for WhitespaceKind {
             Self::Tab => write!(f, "\t"),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// A kind of comment
+pub enum CommentKind {
+    /// A single line comment, starting with `//` and ending with a newline
+    Line,
+    /// A multi line comment, starting with `/*` and ending with `*/`
+    Block,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PragmaKind {
+    pub name: String,
+    pub arguments: Vec<String>,
 }
 
 impl Symbol {
@@ -183,7 +189,7 @@ impl Symbol {
     #[must_use]
     /// Check if a symbol is a comment
     pub const fn is_comment(&self) -> bool {
-        matches!(self, Self::Comment(_))
+        matches!(self, Self::Comment(_, _))
     }
 
     #[must_use]
@@ -290,7 +296,7 @@ impl std::fmt::Display for Symbol {
                 Self::RightAngle => ">",
                 Self::Unicode(s) => s,
                 Self::Newline => "\n",
-                Self::Eoi | Self::Comment(_) => "",
+                Self::Eoi | Self::Comment(_, _) | Self::Pragma(_) => "",
                 Self::Alpha(_) | Self::Digit(_) | Self::Whitespace(_) => unreachable!(),
             }
         )
