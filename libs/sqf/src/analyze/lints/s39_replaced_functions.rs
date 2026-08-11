@@ -66,6 +66,7 @@ const REPLACED_FUNCTIONS: &[(&str, &str, ReplacedShaped)] = &[
     ("BIS_fnc_vectorDiff", "vectorDiff", ReplacedShaped::Binary),
     ("BIS_fnc_linearConversion", "linearConversion", ReplacedShaped::Unary),
     ("BIS_fnc_param", "param", ReplacedShaped::Unary),
+    ("BIS_fnc_paramIn", "param", ReplacedShaped::Unary),
     ("BIS_fnc_MP", "remoteExec", ReplacedShaped::Unary),
 ];
 
