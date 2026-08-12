@@ -183,3 +183,6 @@ private _varT = switch (test_var) do {
     default { {displayNull} };
 };
 sin (call _varT); // error rhs is object/display
+
+// these were unused after assignments; now used to ensure they don't change test results (span)
+systemChat format ["Final: %1 %2", _test9, _varN];
