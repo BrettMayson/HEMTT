@@ -7,8 +7,7 @@ use hemtt_workspace::{
 };
 
 use crate::{
-    BinaryCommand, Expression, Statements,
-    analyze::LintData,
+    BinaryCommand, Expression, Statement, Statements, analyze::LintData,
 };
 
 crate::analyze::lint!(LintS41ForeachApply);
@@ -60,7 +59,7 @@ When a `forEach` loop never uses `_forEachIndex`, it can often be replaced with 
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = crate::Expression;
+    type Target = crate::Statement;
 
     fn run(
         &self,
@@ -74,23 +73,23 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-
-        let Expression::BinaryCommand(BinaryCommand::Named(command), lhs, _, _) = target else {
+        let Statement::Expression(expression, _) = target else { // skip assignements
             return Vec::new();
         };
-        if !command.eq_ignore_ascii_case("foreach") && !command.eq_ignore_ascii_case("forEach") {
+        let Expression::BinaryCommand(BinaryCommand::Named(command), lhs, _, _) = expression else {
+            return Vec::new();
+        };
+        if !command.eq_ignore_ascii_case("foreach") {
             return Vec::new();
         }
-
         let Expression::Code(body) = lhs.as_ref() else {
             return Vec::new();
         };
         if body_uses_for_each_index(body) {
             return Vec::new();
         }
-
         vec![Arc::new(CodeS41ForeachApply::new(
-            target.span(),
+            expression.span(),
             processed,
             config.severity(),
         ))]
