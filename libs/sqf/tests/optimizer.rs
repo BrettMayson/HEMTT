@@ -23,6 +23,9 @@ optimize!(string_case);
 optimize!(chain);
 optimize!(to_string);
 
+optimize!(statement_1);
+optimize!(statement_2);
+
 const ROOT: &str = "tests/optimizer/";
 
 fn optimize(file: &str) -> Statements {
