@@ -13,7 +13,7 @@ pub fn json(url: &Url) -> Result<serde_json::Value, String> {
 }
 
 impl Backend {
-    #[expect(clippy::unused_async, reason = "required by callsite")]
+    #[expect(clippy::unused_async, clippy::unused_async_trait_impl, reason = "required by callsite")]
     pub async fn p3d_json(
         &self,
         params: JsonParams,
