@@ -68,7 +68,11 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
 }
 
 impl Backend {
-    #[expect(clippy::unused_async, reason = "required by callsite")]
+    #[expect(
+        clippy::unused_async,
+        clippy::unused_async_trait_impl,
+        reason = "required by callsite"
+    )]
     pub async fn paa_json(
         &self,
         params: JsonParams,
@@ -123,7 +127,11 @@ impl Backend {
         ))
     }
 
-    #[expect(clippy::unused_async, reason = "required by callsite")]
+    #[expect(
+        clippy::unused_async,
+        clippy::unused_async_trait_impl,
+        reason = "required by callsite"
+    )]
     pub async fn paa_convert(
         &self,
         params: ConvertParams,

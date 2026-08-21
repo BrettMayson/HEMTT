@@ -71,7 +71,11 @@ pub fn convert(
 }
 
 impl Backend {
-    #[expect(clippy::unused_async, reason = "required by callsite")]
+    #[expect(
+        clippy::unused_async,
+        clippy::unused_async_trait_impl,
+        reason = "required by callsite"
+    )]
     pub async fn audio_convert(
         &self,
         params: ConvertParams,
