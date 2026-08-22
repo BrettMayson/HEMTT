@@ -52,7 +52,7 @@ separate comparison for each."#
 
 struct Runner;
 impl LintRunner<LintData> for Runner {
-    type Target = Expression;
+    type Target = crate::Statement;
 
     fn run(
         &self,
@@ -66,7 +66,61 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        check(target, processed, config)
+
+        // Walking from the statement, rather than being handed every expression, is what lets
+        // this see whether an `||` has another `||` above it. `a || b || c` parses as
+        // `(a || b) || c`, so only the outermost node has the whole chain beneath it.
+        let mut codes = Vec::new();
+        let expression = match target {
+            crate::Statement::AssignGlobal(_, expression, _)
+            | crate::Statement::AssignLocal(_, expression, _)
+            | crate::Statement::Expression(expression, _) => expression,
+        };
+        walk(expression, false, processed, config, &mut codes);
+        codes
+    }
+}
+
+/// Visits every expression, reporting a chain only at its outermost `||`.
+fn walk(
+    expression: &Expression,
+    parent_is_or: bool,
+    processed: &Processed,
+    config: &LintConfig,
+    codes: &mut Codes,
+) {
+    if let Expression::BinaryCommand(BinaryCommand::Or, ..) = expression
+        && !parent_is_or
+    {
+        codes.extend(check(expression, processed, config));
+    }
+
+    let is_or = matches!(expression, Expression::BinaryCommand(BinaryCommand::Or, ..));
+
+    match expression {
+        Expression::BinaryCommand(_, lhs, rhs, _) => {
+            walk(lhs, is_or, processed, config, codes);
+            walk(rhs, is_or, processed, config, codes);
+        }
+        Expression::UnaryCommand(_, inner, _) => {
+            walk(inner, false, processed, config, codes);
+        }
+        Expression::Array(items, _) | Expression::ConsumeableArray(items, _) => {
+            for item in items {
+                walk(item, false, processed, config, codes);
+            }
+        }
+        Expression::Code(statements) => {
+            for statement in statements.content() {
+                let inner = match statement {
+                    crate::Statement::AssignGlobal(_, inner, _)
+                    | crate::Statement::AssignLocal(_, inner, _)
+                    | crate::Statement::Expression(inner, _) => inner,
+                };
+                walk(inner, false, processed, config, codes);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -76,15 +130,9 @@ impl LintRunner<LintData> for Runner {
 fn check(target: &Expression, processed: &Processed, config: &LintConfig) -> Vec<Arc<dyn Code>> {
     let mut codes = Vec::new();
 
-    let Expression::BinaryCommand(BinaryCommand::Or, left, _, _) = target else {
+    let Expression::BinaryCommand(BinaryCommand::Or, ..) = target else {
         return codes;
     };
-    // `a || b || c` parses as `(a || b) || c`, and every `||` in the chain is visited.
-    // Only the innermost is reported, so a chain produces one finding rather than one per link.
-    if matches!(**left, Expression::BinaryCommand(BinaryCommand::Or, ..)) {
-        return codes;
-    }
-
     let mut branches = Vec::new();
     if !flatten_or(target, &mut branches) {
         return codes;

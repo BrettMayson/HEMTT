@@ -69,7 +69,7 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
 
-        // {_x isKindOf TYPE} count ARR
+        // {side _x == SIDE} count ARR
         let Expression::BinaryCommand(BinaryCommand::Named(cmd), code, array, _) = target else {
             return Vec::new();
         };
