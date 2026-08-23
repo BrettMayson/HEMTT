@@ -47,9 +47,9 @@
         ]
     },
     {
-        "label": "cargo nextest (windoze)",
+        "label": "cargo nextest",
         "type": "shell",
-        "command": "cargo nextest run --config profile.test.opt-level=3 --config profile.test.codegen-units=1",
+        "command": "cargo nextest run",
         "problemMatcher": [
             "$rustc"
         ]
