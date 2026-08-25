@@ -78,7 +78,7 @@ exclude = ["test"]
         let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = BinarizeConfig::from(file);
         assert!(!config.enabled());
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude().as_slice(), [] as [String; 0]);
     }
 
     #[test]
@@ -87,7 +87,7 @@ exclude = ["test"]
         let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = BinarizeConfig::from(file);
         assert!(config.enabled());
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude().as_slice(), [] as [String; 0]);
     }
 
     #[test]
@@ -96,6 +96,6 @@ exclude = ["test"]
         let file: BinarizeSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = BinarizeConfig::from(file);
         assert!(config.enabled());
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude().as_slice(), [] as [String; 0]);
     }
 }

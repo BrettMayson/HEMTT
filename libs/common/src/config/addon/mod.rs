@@ -189,7 +189,7 @@ exclude = ["test"]
         assert!(config.rapify().enabled());
         assert!(config.binarize().enabled());
         assert!(config.properties().is_empty());
-        assert!(config.files().exclude().is_empty());
+        assert_eq!(config.files().exclude().as_slice(), [] as [String; 0]);
     }
 
     #[test]

@@ -63,6 +63,6 @@ exclude = ["test"]
         let file: RapifySectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = RapifyConfig::from(file);
         assert!(config.enabled());
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude().as_slice(), [] as [String; 0]);
     }
 }

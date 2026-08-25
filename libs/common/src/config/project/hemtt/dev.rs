@@ -49,6 +49,6 @@ exclude = ["test"]
         let toml = "";
         let file: DevOptionsFile = toml::from_str(toml).expect("failed to deserialize");
         let config = DevOptions::from(file);
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude(), [] as [String; 0]);
     }
 }

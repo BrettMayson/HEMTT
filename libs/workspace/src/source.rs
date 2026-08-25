@@ -491,8 +491,8 @@ mod tests {
 
         assert_eq!(db.dependencies_of(root_id), vec![included_id]);
         assert_eq!(db.dependents_of(included_id), vec![root_id]);
-        assert!(db.dependencies_of(included_id).is_empty());
-        assert!(db.dependents_of(root_id).is_empty());
+        assert_eq!(db.dependencies_of(included_id), [] as [FileId; 0]);
+        assert_eq!(db.dependents_of(root_id), [] as [FileId; 0]);
     }
 
     #[test]
@@ -536,7 +536,7 @@ mod tests {
         db.record_dependency(root_id, included_id);
         db.clear_dependencies_of(root_id);
 
-        assert!(db.dependencies_of(root_id).is_empty());
-        assert!(db.dependents_of(included_id).is_empty());
+        assert_eq!(db.dependencies_of(root_id), [] as [FileId; 0]);
+        assert_eq!(db.dependents_of(included_id), [] as [FileId; 0]);
     }
 }

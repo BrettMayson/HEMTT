@@ -56,6 +56,6 @@ exclude = ["test"]
         let toml = "";
         let file: FilesSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = FilesConfig::from(file);
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude().as_slice(), [] as [String; 0]);
     }
 }

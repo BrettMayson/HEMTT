@@ -354,12 +354,12 @@ rapify = false
         let toml = "";
         let file: LaunchOptionsFile = toml::from_str(toml).expect("failed to deserialize");
         let config = LaunchOptions::from(file);
-        assert!(config.workshop().is_empty());
-        assert!(config.dlc().is_empty());
-        assert!(config.presets().is_empty());
-        assert!(config.optionals().is_empty());
+        assert_eq!(config.workshop(), [] as [String; 0]);
+        assert_eq!(config.dlc(), [] as [DLC; 0]);
+        assert_eq!(config.presets(), [] as [String; 0]);
+        assert_eq!(config.optionals(), [] as [String; 0]);
         assert!(config.mission().is_none());
-        assert!(config.parameters().is_empty());
+        assert_eq!(config.parameters(), [] as [String; 0]);
         assert_eq!(config.executable(), "arma3_x64.exe");
         assert!(!config.binarize());
         assert!(config.file_patching());
