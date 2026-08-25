@@ -152,13 +152,18 @@ impl MipMap {
     /// Get the image from the `MipMap`
     ///
     /// # Errors
-    /// If the `MipMap` data is malformed
+    /// If the `MipMap` data is malformed, or its format is not supported
     pub fn get_image(&self) -> Result<image::DynamicImage, String> {
         #[derive(Debug, PartialEq, Eq)]
         pub enum Compression {
             None,
             Lzss,
             Lz77,
+        }
+        // `image_size` and `decompress` panic on these; the parser accepts
+        // them, so a valid file can reach here
+        if matches!(self.format, PaXType::DXT2 | PaXType::DXT4) {
+            return Err(format!("unsupported PAA format: {:?}", self.format));
         }
         let data = &*self.data;
 

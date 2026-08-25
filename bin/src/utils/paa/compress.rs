@@ -179,7 +179,9 @@ fn process_paa_file(
             let image = match mipmap.get_image() {
                 Ok(image) => image,
                 Err(e) => {
-                    error!("Failed to decode mipmap: {}", e);
+                    warn!("  Failed to decode mipmap {}x{}: {}", width, height, e);
+                    // Keep original if it cannot be decoded
+                    new_paa.push_mipmap(mipmap.clone());
                     continue;
                 }
             };
