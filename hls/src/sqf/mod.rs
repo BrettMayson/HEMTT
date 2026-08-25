@@ -83,19 +83,39 @@ impl SqfAnalyzer {
     }
 
     fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
-        if !self.databases.contains_key(workspace) {
-            let database = match Database::a3_with_workspace(workspace.root(), false) {
-                Ok(database) => database,
-                Err(e) => {
-                    error!("Failed to create database: {:?}", e);
-                    Database::a3(false)
-                }
-            };
-            self.databases.insert(workspace.clone(), Arc::new(database));
+        if let Some(database) = self.databases.get(workspace) {
+            return database.clone();
         }
+        let database = Arc::new(match Database::a3_with_workspace(workspace.root(), false) {
+            Ok(database) => database,
+            Err(e) => {
+                error!("Failed to create database: {:?}", e);
+                Database::a3(false)
+            }
+        });
         self.databases
-            .get(workspace)
-            .expect("Database not found")
-            .clone()
+            .insert(workspace.clone(), Arc::clone(&database));
+        database
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SqfAnalyzer;
+    use crate::workspace::tests::fixture;
+
+    #[test]
+    fn database_is_cached_per_workspace() {
+        let analyzer = SqfAnalyzer::get();
+        let workspace = fixture("project");
+        let first = analyzer.get_database(&workspace);
+        let second = analyzer.get_database(&workspace);
+        assert!(std::sync::Arc::ptr_eq(&first, &second));
+    }
+
+    /// A folder with no project still gets a database rather than panicking.
+    #[test]
+    fn database_without_project() {
+        let _ = SqfAnalyzer::get().get_database(&fixture("plain"));
     }
 }

@@ -121,10 +121,11 @@ impl Backend {
             tracing::warn!("Failed to read paa {:?}", params.url);
             return Ok(None);
         };
-        Ok(Some(
-            serde_json::to_value(paa.maps().first().expect("No maps found").0.json())
-                .expect("Serialization failed"),
-        ))
+        let Some(map) = paa.maps().first() else {
+            tracing::warn!("no maps in paa {:?}", params.url);
+            return Ok(None);
+        };
+        Ok(serde_json::to_value(map.0.json()).ok())
     }
 
     #[expect(

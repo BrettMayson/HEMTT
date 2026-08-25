@@ -12,7 +12,7 @@ use tower_lsp::{Client, LanguageServer, LspService, Server};
 #[allow(clippy::wildcard_imports)]
 use tower_lsp::lsp_types::*;
 
-use tracing::{Level, debug, info};
+use tracing::{Level, debug, info, warn};
 
 use crate::diag_manager::DiagManager;
 use crate::sources::SourceSync;
@@ -126,13 +126,10 @@ impl LanguageServer for Backend {
     async fn initialized(&self, _: InitializedParams) {
         info!("initializing");
         DiagManager::init(self.client.clone());
-        if let Some(folders) = self
-            .client
-            .workspace_folders()
-            .await
-            .expect("Failed to get workspace folders")
-        {
-            EditorWorkspaces::get().initialize(folders, &self.client);
+        match self.client.workspace_folders().await {
+            Ok(Some(folders)) => EditorWorkspaces::get().initialize(folders, &self.client),
+            Ok(None) => debug!("no workspace folders"),
+            Err(e) => warn!("failed to get workspace folders: {e}"),
         }
         info!("initialized");
     }
@@ -152,64 +149,20 @@ impl LanguageServer for Backend {
 
     async fn did_create_files(&self, params: CreateFilesParams) {
         for file in params.files {
-            ConfigAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
-            SqfAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
+            self.resave(&file.uri).await;
         }
     }
 
     async fn did_delete_files(&self, params: DeleteFilesParams) {
         for file in params.files {
-            ConfigAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
-            SqfAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
+            self.resave(&file.uri).await;
         }
     }
 
     async fn did_rename_files(&self, params: RenameFilesParams) {
         for file in params.files {
-            ConfigAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.old_uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
-            SqfAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.old_uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
-            ConfigAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.new_uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
-            SqfAnalyzer::get()
-                .on_save(
-                    Url::from_str(&file.new_uri).expect("Failed to parse URL"),
-                    self.client.clone(),
-                )
-                .await;
+            self.resave(&file.old_uri).await;
+            self.resave(&file.new_uri).await;
         }
     }
 
@@ -325,13 +278,29 @@ impl LanguageServer for Backend {
 }
 
 impl Backend {
+    /// Recheck a file the client told us was created, deleted, or renamed.
+    async fn resave(&self, uri: &str) {
+        let Ok(url) = Url::from_str(uri) else {
+            warn!("failed to parse url `{uri}`");
+            return;
+        };
+        ConfigAnalyzer::get()
+            .on_save(url.clone(), self.client.clone())
+            .await;
+        SqfAnalyzer::get().on_save(url, self.client.clone()).await;
+    }
+
     async fn processed(&self, params: ProviderParams) -> Result<Option<Value>> {
         let Some(res) = PreprocessorAnalyzer::get().get_processed(params.url).await else {
             return Ok(None);
         };
-        Ok(Some(
-            serde_json::to_value(res).expect("Failed to serialize processed result"),
-        ))
+        match serde_json::to_value(res) {
+            Ok(value) => Ok(Some(value)),
+            Err(e) => {
+                warn!("failed to serialize processed result: {e}");
+                Ok(None)
+            }
+        }
     }
 }
 
@@ -364,11 +333,19 @@ async fn main() {
 
 async fn server() {
     // second argument is the port
-    let port = std::env::args().nth(1).expect("port is required");
+    let Some(port) = std::env::args().nth(1) else {
+        eprintln!("usage: hemtt-language-server <port>");
+        eprintln!("started by the editor extension, not run directly");
+        std::process::exit(2);
+    };
 
-    let stream = TcpStream::connect(format!("127.0.0.1:{port}"))
-        .await
-        .expect("Failed to connect to server");
+    let stream = match TcpStream::connect(format!("127.0.0.1:{port}")).await {
+        Ok(stream) => stream,
+        Err(e) => {
+            eprintln!("failed to connect to 127.0.0.1:{port}: {e}");
+            std::process::exit(1);
+        }
+    };
 
     info!("connected to server");
 

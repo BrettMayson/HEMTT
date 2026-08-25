@@ -187,7 +187,10 @@ async fn check_sqf(
                 }
             }
             let sources = processed.included_files().to_owned();
-            if FileCache::get().is_open(&workspace.to_url(&source)) {
+            if workspace
+                .to_url(&source)
+                .is_some_and(|url| FileCache::get().is_open(&url))
+            {
                 PreprocessorAnalyzer::get().save_processed(source.clone(), processed);
             }
             sources
@@ -208,11 +211,10 @@ async fn check_sqf(
         }
     };
     for (file, diags) in lsp_diags {
-        manager.set_current(
-            format!("sqf:{}", source.as_str()),
-            &workspace.to_url(&file),
-            diags,
-        );
+        let Some(url) = workspace.to_url(&file) else {
+            continue;
+        };
+        manager.set_current(format!("sqf:{}", source.as_str()), &url, diags);
     }
     let cache = Cache::get();
     if sources.is_empty() {

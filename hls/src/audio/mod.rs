@@ -24,12 +24,11 @@ pub fn convert(
         .map_err(|()| "Only file URLs are supported".to_string())?;
     let output = out.map_or_else(|| path.with_extension(to), std::path::PathBuf::from);
     let file = fs_err::File::open(&path).map_err(|_| "File not found".to_string())?;
-    let mut wss = match path
+    let extension = path
         .extension()
-        .expect("Must have extension for command")
-        .to_str()
-        .expect("Extension must be valid")
-    {
+        .and_then(std::ffi::OsStr::to_str)
+        .ok_or_else(|| "File has no usable extension".to_string())?;
+    let mut wss = match extension {
         "wss" => hemtt_wss::Wss::read(file),
         "wav" => hemtt_wss::Wss::from_wav(file),
         "ogg" => hemtt_wss::Wss::from_ogg(file),
@@ -98,4 +97,42 @@ pub struct ConvertParams {
     to: String,
     out: Option<String>,
     compression: Option<u32>,
+}
+
+#[cfg(test)]
+mod tests {
+    use url::Url;
+
+    use super::convert;
+    use crate::workspace::tests::fixture_path;
+
+    /// `$PBOPREFIX$` has no extension at all.
+    #[test]
+    fn no_extension_is_an_error() {
+        let path = fixture_path("project").join("addons/valid/$PBOPREFIX$");
+        let url = Url::from_file_path(&path).expect("url");
+        assert_eq!(
+            convert(&url, "wav", None, None).err(),
+            Some("File has no usable extension".to_string())
+        );
+    }
+
+    #[test]
+    fn unsupported_extension_is_an_error() {
+        let path = fixture_path("project").join("addons/valid/script.sqf");
+        let url = Url::from_file_path(&path).expect("url");
+        assert_eq!(
+            convert(&url, "wav", None, None).err(),
+            Some("Unsupported file type".to_string())
+        );
+    }
+
+    #[test]
+    fn non_file_url_is_an_error() {
+        let url = Url::parse("https://example.com/a.wav").expect("url");
+        assert_eq!(
+            convert(&url, "wav", None, None).err(),
+            Some("Only file URLs are supported".to_string())
+        );
+    }
 }

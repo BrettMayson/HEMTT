@@ -42,11 +42,11 @@ impl PreprocessorAnalyzer {
             params.text_document_position_params.position,
             &processed,
         );
-        definition.map(|def| {
-            GotoDefinitionResponse::Scalar(Location {
-                uri: workspace.to_url(def.0.path()),
+        definition.and_then(|def| {
+            Some(GotoDefinitionResponse::Scalar(Location {
+                uri: workspace.to_url(def.0.path())?,
                 range: def.0.to_lsp(),
-            })
+            }))
         })
     }
 }
