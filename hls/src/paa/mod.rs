@@ -129,7 +129,11 @@ impl Backend {
             tracing::warn!("no maps in paa {:?}", params.url);
             return Ok(None);
         };
-        Ok(serde_json::to_value(map.0.json()).ok())
+        let Ok(json) = map.0.json() else {
+            tracing::warn!("failed to decode paa {:?}", params.url);
+            return Ok(None);
+        };
+        Ok(serde_json::to_value(json).ok())
     }
 
     #[expect(

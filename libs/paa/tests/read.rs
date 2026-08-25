@@ -16,7 +16,7 @@ fn read_dxt1() {
     assert!(mipmap.is_compressed());
     assert_eq!(mipmap.format(), &PaXType::DXT1);
     assert_eq!(mipmap.data().len(), 4716);
-    let _ = paa.maps()[0].0.get_image();
+    paa.maps()[0].0.get_image().expect("decodes");
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn read_dxt5() {
     assert!(!mipmap.is_compressed());
     assert_eq!(mipmap.format(), &PaXType::DXT5);
     assert_eq!(mipmap.data().len(), 4096);
-    let _ = paa.maps()[0].0.get_image();
+    paa.maps()[0].0.get_image().expect("decodes");
 }
 
 #[test]
@@ -51,5 +51,5 @@ fn read_argba5() {
     assert!(mipmap.is_compressed());
     assert_eq!(mipmap.format(), &PaXType::ARGBA5);
     assert_eq!(mipmap.data().len(), 13719);
-    let _ = paa.maps()[0].0.get_image();
+    paa.maps()[0].0.get_image().expect("decodes");
 }

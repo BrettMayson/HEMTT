@@ -186,16 +186,26 @@ impl MipMap {
             Compression::None
         };
 
-        let mut buffer: Box<[u8]> =
-            vec![
-                0;
-                self.format
-                    .image_size(actual_width as usize, self.height as usize)
-            ]
-            .into_boxed_slice();
+        let expected = self
+            .format
+            .image_size(actual_width as usize, self.height as usize);
+        // `PaXType::decompress` hands DXT data straight to the block decoder,
+        // which indexes without checking. The declared length is whatever the
+        // file said, so a truncated mipmap has to be rejected here.
+        let ensure = |data: &[u8]| -> Result<(), String> {
+            if data.len() < expected {
+                return Err(format!(
+                    "mipmap is truncated: {} bytes, expected {expected}",
+                    data.len()
+                ));
+            }
+            Ok(())
+        };
+        let mut buffer: Box<[u8]> = vec![0; expected].into_boxed_slice();
         if decompression == Compression::Lzss {
             match hemtt_lzo::lzss::decompress_to_slice(data, &mut buffer) {
                 Ok(decompressed) => {
+                    ensure(decompressed)?;
                     self.format.decompress(
                         decompressed,
                         usize::from(actual_width),
@@ -208,6 +218,7 @@ impl MipMap {
                         "Failed to decompress LZSS data for {:?} ({}x{}): {}",
                         self.format, actual_width, self.height, e
                     );
+                    ensure(data)?;
                     self.format.decompress(
                         data,
                         usize::from(actual_width),
@@ -219,6 +230,7 @@ impl MipMap {
         } else if decompression == Compression::Lz77 {
             hemtt_lzo::lz77::decompress(data, &mut buffer)
                 .map_err(|e| format!("failed to decompress LZ77 data: {e:?}"))?;
+            ensure(&buffer)?;
             self.format.decompress(
                 &buffer,
                 usize::from(actual_width),
@@ -226,6 +238,7 @@ impl MipMap {
                 &mut out_buffer,
             );
         } else {
+            ensure(data)?;
             self.format.decompress(
                 data,
                 usize::from(actual_width),
