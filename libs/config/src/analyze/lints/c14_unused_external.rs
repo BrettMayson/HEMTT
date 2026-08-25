@@ -1,11 +1,15 @@
 use std::{
-    cell::RefCell, io::Write, path::Path, rc::Rc, sync::{atomic::AtomicU16, Arc, Once, OnceLock}
+    cell::RefCell,
+    io::Write,
+    path::Path,
+    rc::Rc,
+    sync::{atomic::AtomicU16, Arc, Once},
 };
 
 use hemtt_common::config::{LintConfig, ProjectConfig, RuntimeArguments};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed, Severity},
+    reporting::{Code, Codes, Diagnostic, Mapping, Processed, Severity},
 };
 use indexmap::IndexMap;
 
@@ -90,7 +94,17 @@ impl LintRunner<LintData> for Runner {
         } else {
             None
         };
-        ClassNode::check_unused(&root, &mut Vec::new(), processed, config, &mut file, runtime)
+        // per-run, a long-lived process must not keep counting up forever
+        let count = Arc::new(AtomicU16::new(0));
+        ClassNode::check_unused(
+            &root,
+            &mut Vec::new(),
+            processed,
+            config,
+            &mut file,
+            runtime,
+            &count,
+        )
     }
 }
 struct ClassNode {
@@ -109,35 +123,47 @@ impl ClassNode {
         config: &LintConfig,
         file: &mut Option<fs_err::File>,
         runtime: &hemtt_common::config::RuntimeArguments,
+        count: &Arc<AtomicU16>,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
-        if !cfg.borrow().used && !reported.contains(&cfg.borrow().class) {
+        // a class without a name can't be reported on
+        let unused_name = {
+            let node = cfg.borrow();
+            if node.used || reported.contains(&node.class) {
+                None
+            } else {
+                node.class.name().cloned()
+            }
+        };
+        if let Some(name) = unused_name {
             reported.push(cfg.borrow().class.clone());
             codes.push(Arc::new(CodeC14UnusedExternal::new(
                 cfg.borrow().class.clone(),
+                name.value.clone(),
                 processed,
                 config.severity(),
                 runtime,
+                count,
             )));
-            let name = cfg.borrow().class.name().expect("class has a name").clone();
-            let pos = processed
-                .mapping(name.span.start)
-                .expect("start position exists")
-                .original();
             if let Some(file) = file {
-                writeln!(
-                    file,
-                    "{} - {}:{}:{}",
-                    name.as_str(),
-                    pos.path().as_str().trim_start_matches('/'),
-                    pos.start().1 .0,
-                    pos.start().1 .1 + 1,
-                )
-                .expect("Failed to write to file");
+                // best effort, the list is a convenience
+                if let Some(pos) = processed.mapping(name.span.start).map(Mapping::original)
+                    && let Err(e) = writeln!(
+                        file,
+                        "{} - {}:{}:{}",
+                        name.as_str(),
+                        pos.path().as_str().trim_start_matches('/'),
+                        pos.start().1 .0,
+                        pos.start().1 .1 + 1,
+                    )
+                {
+                    eprintln!("Failed to write to {PATH}: {e}");
+                }
             }
         }
         for subclass in cfg.borrow().subclasses.values() {
-            let inner_codes = Self::check_unused(subclass, reported, processed, config, file, runtime);
+            let inner_codes =
+                Self::check_unused(subclass, reported, processed, config, file, runtime, count);
             codes.extend(inner_codes);
         }
         codes
@@ -300,17 +326,18 @@ impl CodeC14UnusedExternal {
     #[must_use]
     pub fn new(
         class: Class,
+        class_name: String,
         processed: &Processed,
         severity: Severity,
         runtime: &RuntimeArguments,
+        count: &Arc<AtomicU16>,
     ) -> Self {
-        static COUNT: OnceLock<Arc<AtomicU16>> = OnceLock::new();
-        let count = COUNT.get_or_init(|| Arc::new(AtomicU16::new(0))).clone();
+        let count = count.clone();
         let first = count.fetch_add(1, std::sync::atomic::Ordering::Relaxed) == 0;
         Self {
             severity,
             class,
-            class_name: String::new(),
+            class_name,
             diagnostic: None,
             count,
             first,
@@ -323,11 +350,10 @@ impl CodeC14UnusedExternal {
     }
 
     fn generate_processed(mut self, processed: &Processed) -> Self {
-        let Some(name) = self.class.name() else {
-            panic!("CodeC14UnusedExternal::generate_processed called on class without name");
+        let Some(name) = self.class.name().cloned() else {
+            return self;
         };
-        self.class_name = name.value.clone();
-        self.diagnostic = Diagnostic::from_code_processed(&self, name.span.clone(), processed);
+        self.diagnostic = Diagnostic::from_code_processed(&self, name.span, processed);
         self
     }
 }

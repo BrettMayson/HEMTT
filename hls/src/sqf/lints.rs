@@ -39,6 +39,29 @@ impl Cache {
     }
 }
 
+/// The [`Addon`] a workspace path belongs to, or `None` if it belongs to none.
+fn addon_for(workspace: &EditorWorkspace, path: &WorkspacePath) -> Option<Arc<Addon>> {
+    let location = if path.as_str().starts_with("/addons/") {
+        hemtt_workspace::addons::Location::Addons
+    } else if path.as_str().starts_with("/optionals/") {
+        hemtt_workspace::addons::Location::Optionals
+    } else {
+        debug!("not linting `{path}`, not in `addons/` or `optionals/`");
+        return None;
+    };
+    let Some(name) = path.as_str().split('/').nth(2).filter(|n| !n.is_empty()) else {
+        debug!("not linting `{path}`, no addon name in path");
+        return None;
+    };
+    match Addon::new(workspace.root_disk(), name.to_string(), location) {
+        Ok(addon) => Some(Arc::new(addon)),
+        Err(e) => {
+            debug!("not linting `{path}`, failed to create addon: {e}");
+            None
+        }
+    }
+}
+
 fn check_addons(workspace: &EditorWorkspace, database: &Arc<Database>, client: Client) {
     debug!("sqf: checking addons");
     let mut futures = JoinSet::new();
@@ -47,20 +70,11 @@ fn check_addons(workspace: &EditorWorkspace, database: &Arc<Database>, client: C
             warn!("failed to join addon {:?}", addon);
             continue;
         };
-        let location = if source.as_str().starts_with("/addons/") {
-            hemtt_workspace::addons::Location::Addons
-        } else {
-            hemtt_workspace::addons::Location::Optionals
+        let Some(addon) = addon_for(workspace, &source) else {
+            continue;
         };
-        let name = source.as_str().split('/').nth(2).unwrap_or_default();
-        let addon = Arc::new(
-            Addon::new(workspace.root_disk(), name.to_string(), location)
-                .expect("failed to create addon"),
-        );
         for file in source.parent().walk_dir().unwrap_or_default() {
-            if file.extension().unwrap_or_default() == "sqf"
-                && !file.filename().contains(".inc.sqf")
-            {
+            if hemtt_sqf::is_compilation_unit(&file) {
                 futures.spawn(check_sqf(
                     file,
                     addon.clone(),
@@ -145,13 +159,17 @@ async fn check_sqf(
                         }
                     }
                     Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
-                        for error in e {
-                            let Some(diag) = error.diagnostic() else {
-                                continue;
-                            };
-                            let diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                        if hemtt_sqf::is_cba_settings(processed.as_str()) {
+                            debug!("skipping apparent CBA settings file: {}", source);
+                        } else {
+                            for error in e {
+                                let Some(diag) = error.diagnostic() else {
+                                    continue;
+                                };
+                                let diag = diag.to_lsp(&workspace_files);
+                                for (file, diag) in diag {
+                                    lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                                }
                             }
                         }
                     }
@@ -250,19 +268,10 @@ impl SqfAnalyzer {
                 })
                 .collect::<Vec<_>>();
             drop(files);
-            // `saved` is always its own compilation unit when it's a `.sqf`
-            // file, so it must always be (re)checked directly, even if it
-            // isn't yet a known cache key - e.g. a brand new file from
-            // `didCreateFiles`, the new path of a `didRenameFiles`, or the
-            // first `didSave`/`didOpen` for a file that was never linted
-            // before. `path == &saved` above already covers a previously
-            // tracked file (including one that was just deleted/renamed
-            // away, so it gets recomputed and evicted from the cache).
-            if !recheck.contains(&saved)
-                && std::path::Path::new(&saved.to_string())
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
-            {
+            // `saved` is its own compilation unit, so it is always rechecked
+            // directly, even when it isn't yet a known cache key - a new file,
+            // the new path of a rename, or a first `didOpen`.
+            if !recheck.contains(&saved) && hemtt_sqf::is_compilation_unit(&saved) {
                 recheck.push(saved);
             }
             recheck
@@ -270,22 +279,9 @@ impl SqfAnalyzer {
         let database = self.get_database(&workspace);
         let mut futures = JoinSet::new();
         for path in recheck_files {
-            let addon = Arc::new(
-                Addon::new(
-                    workspace.root_disk(),
-                    path.as_str()
-                        .split('/')
-                        .nth(2)
-                        .unwrap_or_default()
-                        .to_string(),
-                    if path.as_str().starts_with("/addons/") {
-                        hemtt_workspace::addons::Location::Addons
-                    } else {
-                        hemtt_workspace::addons::Location::Optionals
-                    },
-                )
-                .expect("failed to create addon"),
-            );
+            let Some(addon) = addon_for(&workspace, &path) else {
+                continue;
+            };
             futures.spawn(check_sqf(
                 path.clone(),
                 addon,
@@ -304,5 +300,87 @@ impl SqfAnalyzer {
                 warn!("Failed to refresh diagnostics: {:?}", e);
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use tower_lsp::lsp_types::WorkspaceFolder;
+    use url::Url;
+
+    use super::addon_for;
+    use crate::workspace::EditorWorkspace;
+
+    /// Open a fixture folder under `hls/tests/fixtures/` as an editor workspace.
+    fn fixture(name: &str) -> EditorWorkspace {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join(name);
+        assert!(root.is_dir(), "missing fixture {}", root.display());
+        EditorWorkspace::new(&WorkspaceFolder {
+            uri: Url::from_directory_path(&root).expect("failed to build fixture url"),
+            name: name.to_string(),
+        })
+        .expect("failed to open fixture workspace")
+    }
+
+    #[test]
+    fn addon_in_addons() {
+        let workspace = fixture("project");
+        let path = workspace
+            .root()
+            .join("addons/valid/script.sqf")
+            .expect("join");
+        let addon = addon_for(&workspace, &path).expect("addons/valid is a valid addon");
+        assert_eq!(addon.name(), "valid");
+        assert_eq!(addon.location(), &hemtt_workspace::addons::Location::Addons);
+    }
+
+    #[test]
+    fn addon_missing_prefix() {
+        let workspace = fixture("project");
+        let path = workspace
+            .root()
+            .join("addons/noprefix/script.sqf")
+            .expect("join");
+        assert!(addon_for(&workspace, &path).is_none());
+    }
+
+    #[test]
+    fn no_addon_for_addons_root() {
+        let workspace = fixture("project");
+        let path = workspace.root().join("addons/stray.sqf").expect("join");
+        assert!(addon_for(&workspace, &path).is_none());
+    }
+
+    /// Regression for #1307: a loose `.sqf` in an otherwise complete project.
+    #[test]
+    fn regression_1307_loose_sqf_in_valid_project() {
+        let workspace = fixture("project");
+        for file in ["tools/loose.sqf", "loose.sqf"] {
+            let path = workspace.root().join(file).expect("join");
+            assert!(
+                addon_for(&workspace, &path).is_none(),
+                "{file} should not resolve to an addon"
+            );
+        }
+    }
+
+    /// Regression for #1303: a folder that is not a HEMTT project at all.
+    #[test]
+    fn regression_1303_sqf_without_project() {
+        let workspace = fixture("plain");
+        let path = workspace.root().join("scripts/loose.sqf").expect("join");
+        assert!(addon_for(&workspace, &path).is_none());
+    }
+
+    /// Regression for #1258: the old path of a rename, which no longer exists.
+    #[test]
+    fn regression_1258_renamed_sqf() {
+        let workspace = fixture("plain");
+        let path = workspace.root().join("scripts/gone.sqf").expect("join");
+        assert!(!path.exists().expect("exists"));
+        assert!(addon_for(&workspace, &path).is_none());
     }
 }
