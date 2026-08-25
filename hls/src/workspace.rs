@@ -183,13 +183,13 @@ impl EditorWorkspace {
         self.workspace.join(path).map_err(|e| format!("{e}"))
     }
 
-    pub fn to_url(&self, path: &WorkspacePath) -> Option<Url> {
+    pub fn to_url(&self, path: &WorkspacePath) -> Url {
         let include = path.is_include();
         // trim the workspace path
-        let Some(path) = path.as_str().strip_prefix(self.workspace.as_str()) else {
-            debug!("path `{path}` is not in workspace `{}`", self.workspace);
-            return None;
-        };
+        let path = path
+            .as_str()
+            .strip_prefix(self.workspace.as_str())
+            .expect("Failed to strip workspace prefix from path");
         let path = path.replace('\\', "/");
         // url encode the path
         let path = urlencoding::encode(&path);
@@ -204,7 +204,7 @@ impl EditorWorkspace {
             )
             .as_str(),
         );
-        Some(url)
+        url
     }
 
     pub const fn root(&self) -> &WorkspacePath {
@@ -271,15 +271,14 @@ pub mod tests {
             .root()
             .join("addons/valid/script.sqf")
             .expect("join");
-        let url = workspace.to_url(&path).expect("path is in the workspace");
+        let url = workspace.to_url(&path);
         assert!(url.path().ends_with("/addons/valid/script.sqf"), "{url}");
         assert_eq!(workspace.join_url(&url).expect("join_url"), path);
     }
 
+    /// Guards the `expect` in `to_url`, which is safe only while this is empty.
     #[test]
     fn workspace_root_is_the_empty_prefix() {
-        // `to_url` strips this prefix; it being empty is why that strip
-        // cannot currently fail
         assert_eq!(fixture("project").root().as_str(), "");
     }
 }
