@@ -109,25 +109,23 @@ impl Database {
     ///
     /// # Errors
     /// [`Error::CustomCommandError`] if a custom command could not be parsed.
-    ///
-    /// # Panics
-    /// If the custom commands directory could not be read.
+    /// [`Error::CustomCommandIo`] if a custom command could not be read.
     pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
         let mut database = Self::a3(force_pull);
         let custom_root = workspace.join("/.hemtt/commands");
         if let Ok(custom_root) = custom_root
             && custom_root.exists().unwrap_or(false)
         {
-            for entry in custom_root
+            let entries = custom_root
                 .read_dir()
-                .expect("failed to read custom commands dir")
-            {
+                .map_err(|e| Error::CustomCommandIo(format!("{custom_root}: {e}")))?;
+            for entry in entries {
                 if !entry.is_file().unwrap_or(false) {
                     continue;
                 }
                 let content = entry
                     .read_to_string()
-                    .expect("failed to read custom command file");
+                    .map_err(|e| Error::CustomCommandIo(format!("{entry}: {e}")))?;
                 let command = database
                     .wiki
                     .add_custom_command_parse(&content)

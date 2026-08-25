@@ -33,8 +33,8 @@ fn regression_1281_invalid_port_does_not_panic() {
 
 #[test]
 fn unreachable_port_does_not_panic() {
-    // nothing listens on port 1
-    let (code, stderr) = run(&["1"]);
+    // port 0 is reserved, so nothing can be listening on it
+    let (code, stderr) = run(&["0"]);
     assert_eq!(code, Some(1), "{stderr}");
     assert!(!stderr.contains("panicked"), "{stderr}");
 }

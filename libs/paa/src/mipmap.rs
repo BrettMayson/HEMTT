@@ -149,12 +149,11 @@ impl MipMap {
         format!("{:?}", self.format)
     }
 
-    #[must_use]
     /// Get the image from the `MipMap`
     ///
-    /// # Panics
-    /// Panics if the `MipMap` is invalid
-    pub fn get_image(&self) -> image::DynamicImage {
+    /// # Errors
+    /// If the `MipMap` data is malformed
+    pub fn get_image(&self) -> Result<image::DynamicImage, String> {
         #[derive(Debug, PartialEq, Eq)]
         pub enum Compression {
             None,
@@ -213,7 +212,8 @@ impl MipMap {
                 }
             }
         } else if decompression == Compression::Lz77 {
-            hemtt_lzo::lz77::decompress(data, &mut buffer).expect("Failed to decompress LZ77 data");
+            hemtt_lzo::lz77::decompress(data, &mut buffer)
+                .map_err(|e| format!("failed to decompress LZ77 data: {e:?}"))?;
             self.format.decompress(
                 &buffer,
                 usize::from(actual_width),
@@ -228,24 +228,23 @@ impl MipMap {
                 &mut out_buffer,
             );
         }
-        image::DynamicImage::ImageRgba8(
+        Ok(image::DynamicImage::ImageRgba8(
             image::RgbaImage::from_raw(u32::from(actual_width), u32::from(self.height), out_buffer)
-                .expect("paa should contain valid image data"),
-        )
+                .ok_or_else(|| "paa does not contain valid image data".to_string())?,
+        ))
     }
 
     #[cfg(feature = "json")]
-    #[must_use]
     /// Returns the image as a base64 encoded string
     ///
-    /// # Panics
-    /// Panics if the image cannot be encoded
-    pub fn json(&self) -> String {
+    /// # Errors
+    /// If the `MipMap` is malformed or the image cannot be encoded
+    pub fn json(&self) -> Result<String, String> {
         use base64::Engine as _;
-        let img = self.get_image();
+        let img = self.get_image()?;
         let mut buffer = std::io::Cursor::new(Vec::new());
         img.write_to(&mut buffer, image::ImageFormat::Png)
-            .expect("Failed to write PNG");
-        base64::prelude::BASE64_STANDARD.encode(buffer.get_ref())
+            .map_err(|e| format!("failed to write PNG: {e}"))?;
+        Ok(base64::prelude::BASE64_STANDARD.encode(buffer.get_ref()))
     }
 }

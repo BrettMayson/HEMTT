@@ -33,10 +33,19 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
             .as_str(),
     ) {
         let paa = hemtt_paa::Paa::read(fs_err::File::open(from)?)?;
-        if let Err(e) = paa.maps()[0].0.get_image().save(output) {
-            error!("Failed to save image: {}", e);
-        } else {
-            info!("PAA converted");
+        let Some(map) = paa.maps().first() else {
+            error!("PAA has no maps");
+            return Ok(());
+        };
+        match map.0.get_image() {
+            Ok(image) => {
+                if let Err(e) = image.save(output) {
+                    error!("Failed to save image: {}", e);
+                } else {
+                    info!("PAA converted");
+                }
+            }
+            Err(e) => error!("Failed to decode PAA: {}", e),
         }
     } else {
         let image = image::open(from)?;

@@ -18,6 +18,7 @@ impl FromPaaResult {
         paa.maps()[0]
             .0
             .get_image()
+            .expect("Failed to decode PAA")
             .write_to(&mut buffer, image::ImageFormat::Png)
             .expect("Failed to write PNG");
 

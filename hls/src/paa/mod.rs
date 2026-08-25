@@ -36,7 +36,11 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
     ) {
         let paa = hemtt_paa::Paa::read(fs_err::File::open(path).map_err(|e| format!("{e:?}"))?)
             .map_err(|e| format!("{e:?}"))?;
-        if let Err(e) = paa.maps()[0].0.get_image().save(&output) {
+        let Some(map) = paa.maps().first() else {
+            return Err("PAA has no maps".to_string());
+        };
+        let image = map.0.get_image()?;
+        if let Err(e) = image.save(&output) {
             error!("Failed to save image: {}", e);
             return Err(format!(
                 "Failed to save image to {}: {}",

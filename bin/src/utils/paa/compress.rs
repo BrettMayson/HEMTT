@@ -176,7 +176,14 @@ fn process_paa_file(
             let original_mipmap_size = original_buffer.get_ref().len();
 
             // Try recompressing
-            match hemtt_paa::MipMap::from_rgba_image(&mipmap.get_image().to_rgba8(), format) {
+            let image = match mipmap.get_image() {
+                Ok(image) => image,
+                Err(e) => {
+                    error!("Failed to decode mipmap: {}", e);
+                    continue;
+                }
+            };
+            match hemtt_paa::MipMap::from_rgba_image(&image.to_rgba8(), format) {
                 Ok(new_mipmap) => {
                     // Get compressed mipmap size when serialized
                     let mut compressed_buffer = Cursor::new(Vec::new());
