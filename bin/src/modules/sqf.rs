@@ -51,13 +51,12 @@ impl Module for SQFCompiler {
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let sqf_ext = Some(String::from("sqf"));
         let mut entries = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
-                    if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
+                    if !hemtt_sqf::is_compilation_unit(&entry) {
                         continue;
                     }
                     entries.push((addon.clone(), entry));
@@ -117,9 +116,7 @@ impl Module for SQFCompiler {
                         Ok(report)
                     }
                     Err(ParserError::ParsingError(e)) => {
-                        if processed.as_str().starts_with("force ")
-                            || processed.as_str().contains("\nforce ")
-                        {
+                        if hemtt_sqf::is_cba_settings(processed.as_str()) {
                             debug!("skipping apparent CBA settings file: {}", entry);
                         } else {
                             for error in e {

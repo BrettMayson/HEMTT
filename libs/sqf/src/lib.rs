@@ -14,7 +14,29 @@ use analyze::inspector::Issue;
 use arma3_wiki::model::Version;
 #[doc(no_inline)]
 pub use float_ord::FloatOrd as Scalar;
+use hemtt_workspace::WorkspacePath;
 use parser::database::Database;
+
+#[must_use]
+/// Is this a `.sqf` file that can be compiled and linted on its own?
+///
+/// `.inc.sqf` files rely on the macros of whatever `#include`s them, so they
+/// are never their own compilation unit.
+pub fn is_compilation_unit(path: &WorkspacePath) -> bool {
+    path.extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+        && !path.filename().to_ascii_lowercase().ends_with(".inc.sqf")
+}
+
+#[must_use]
+/// Does this preprocessed source look like a CBA settings file?
+///
+/// They use `force` as a statement prefix, which is not valid SQF, so they
+/// never parse and are skipped rather than reported. Takes the preprocessed
+/// output because `force` lines are commonly produced by macros.
+pub fn is_cba_settings(processed: &str) -> bool {
+    processed.starts_with("force ") || processed.contains("\nforce ")
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Statements {
@@ -468,5 +490,76 @@ impl BinaryCommand {
             Self::Associate => ":",
             Self::Select => "#",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use hemtt_workspace::{Workspace, WorkspacePath};
+
+    use super::{is_cba_settings, is_compilation_unit};
+
+    /// Build an in-memory workspace holding a single file at `path`.
+    fn path(path: &str) -> WorkspacePath {
+        let workspace = Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("failed to build workspace");
+        let file = workspace.join(path).expect("failed to join path");
+        file.create_file().expect("failed to create file");
+        file
+    }
+
+    #[test]
+    fn compilation_unit_sqf() {
+        assert!(is_compilation_unit(&path("script.sqf")));
+        assert!(is_compilation_unit(&path("fnc_thing.sqf")));
+        assert!(is_compilation_unit(&path("script.SQF")));
+        assert!(is_compilation_unit(&path("script.Sqf")));
+    }
+
+    #[test]
+    fn compilation_unit_not_sqf() {
+        assert!(!is_compilation_unit(&path("config.cpp")));
+        assert!(!is_compilation_unit(&path("script.hpp")));
+        assert!(!is_compilation_unit(&path("script")));
+        assert!(!is_compilation_unit(&path("script.sqf.bak")));
+    }
+
+    /// Regression for #1308: `.inc.sqf` is not its own compilation unit.
+    #[test]
+    fn regression_1308_include_sqf() {
+        assert!(!is_compilation_unit(&path("initSettings.inc.sqf")));
+        assert!(!is_compilation_unit(&path("thing.INC.SQF")));
+        assert!(!is_compilation_unit(&path("thing.Inc.Sqf")));
+    }
+
+    #[test]
+    fn compilation_unit_inc_not_at_end() {
+        // only `.inc` directly before the extension disqualifies a file
+        assert!(is_compilation_unit(&path("thing.inc.settings.sqf")));
+        assert!(is_compilation_unit(&path("incsqf.sqf")));
+        assert!(is_compilation_unit(&path("my.inc.file.sqf")));
+    }
+
+    /// Regression for #1309: CBA settings files are skipped, not reported.
+    #[test]
+    fn regression_1309_cba_settings_detected() {
+        assert!(is_cba_settings("force ace_medical_level = 2;"));
+        assert!(is_cba_settings(
+            "// a comment\nforce ace_medical_level = 2;"
+        ));
+        assert!(is_cba_settings(
+            "ace_medical_level = 1;\nforce cba_thing = 2;\n"
+        ));
+    }
+
+    #[test]
+    fn cba_settings_not_detected() {
+        assert!(!is_cba_settings(""));
+        assert!(!is_cba_settings("private _x = 1;"));
+        assert!(!is_cba_settings("_unit forceAddUniform \"uniform\";"));
+        assert!(!is_cba_settings("private _f = force _x;"));
+        assert!(!is_cba_settings("    force ace_thing = 1;"));
     }
 }

@@ -36,6 +36,8 @@ lint!(c11_file_type);
 lint!(c12_math_could_be_unquoted);
 lint!(c13_config_this_call);
 lint!(c14_unused_external);
+lint!(c14_macro_external);
+lint!(c14_many_unused_external);
 lint!(c15_cfgpatches_scope);
 lint!(c17_extra_semicolon);
 
@@ -64,8 +66,10 @@ fn lint(file: &str) -> (String, ConfigReport) {
             config
                 .codes()
                 .iter()
-                .filter(|e| e.diagnostic().unwrap().code != "L-C16")
-                .map(|e| e.diagnostic().unwrap().to_string(&workspacefiles))
+                // a code may deliberately have no diagnostic
+                .filter_map(|e| e.diagnostic())
+                .filter(|d| d.code != "L-C16")
+                .map(|d| d.to_string(&workspacefiles))
                 .collect::<Vec<_>>()
                 .join("\n")
                 .replace('\r', ""),
@@ -86,6 +90,31 @@ fn lint(file: &str) -> (String, ConfigReport) {
 fn test_c09_magwell_missing_magazine() {
     let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
     insta::assert_compact_debug_snapshot!(report.magazine_well_info());
+}
+
+/// Regression for #1310: C14's summary count is per-run, not per-process.
+#[test]
+fn regression_1310_c14_count_is_per_run() {
+    let first = lint(stringify!(c14_many_unused_external)).0;
+    let second = lint(stringify!(c14_many_unused_external)).0;
+    assert_eq!(first, second);
+    assert!(
+        first.contains("There are 7 unused external classes"),
+        "expected a summary of all 7 unused externals, got:\n{first}"
+    );
+}
+
+/// Regression for #1310: one config's count must not leak into the next.
+#[test]
+fn regression_1310_c14_count_not_shared_between_configs() {
+    let _ = lint(stringify!(c14_many_unused_external));
+    let few = lint(stringify!(c14_macro_external)).0;
+    // under the summary threshold, so each is reported individually
+    assert!(
+        !few.contains("unused external classes"),
+        "expected individual diagnostics, got a summary:\n{few}"
+    );
+    assert_eq!(few.matches("is never used").count(), 3);
 }
 
 #[test]
