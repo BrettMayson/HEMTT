@@ -53,3 +53,20 @@ fn read_argba5() {
     assert_eq!(mipmap.data().len(), 13719);
     paa.maps()[0].0.get_image().expect("decodes");
 }
+
+/// A malformed PAA can declare the format's maximum dimensions with almost no
+/// data behind them. Decoding must fail rather than run.
+#[test]
+fn oversized_dimensions_are_rejected() {
+    use std::io::Cursor;
+
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&u16::MAX.to_le_bytes()); // width
+    bytes.extend_from_slice(&u16::MAX.to_le_bytes()); // height
+    bytes.extend_from_slice(&[8, 0, 0]); // u24 data length
+    bytes.extend_from_slice(&[0; 8]);
+
+    let mipmap =
+        hemtt_paa::MipMap::from_stream(PaXType::ARGB8, &mut Cursor::new(bytes)).expect("parses");
+    assert!(mipmap.get_image().is_err());
+}

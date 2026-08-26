@@ -174,9 +174,6 @@ impl MipMap {
             self.width
         };
 
-        // Output buffer is always RGBA8 (4 bytes per pixel)
-        let mut out_buffer = vec![0u8; 4 * (actual_width as usize) * (self.height as usize)];
-
         // Determine if we need to decompress
         let decompression = if !self.format.is_dxt() {
             Compression::Lz77
@@ -186,6 +183,18 @@ impl MipMap {
             Compression::None
         };
 
+        // Dimensions are `u16`, so the product can only overflow a 32-bit
+        // `usize` - wasm32. 4 bytes per pixel is the largest any format needs,
+        // so this also bounds `image_size` below.
+        let out_len = 4usize
+            .checked_mul(actual_width as usize)
+            .and_then(|size| size.checked_mul(self.height as usize))
+            .ok_or_else(|| {
+                format!(
+                    "mipmap dimensions too large: {actual_width}x{}",
+                    self.height
+                )
+            })?;
         let expected = self
             .format
             .image_size(actual_width as usize, self.height as usize);
@@ -201,8 +210,16 @@ impl MipMap {
             }
             Ok(())
         };
-        let mut buffer: Box<[u8]> = vec![0; expected].into_boxed_slice();
+        // Uncompressed data is its own bound: the stored length is a `u24`, so
+        // checking it here means nothing below is sized by the header alone.
+        if decompression == Compression::None {
+            ensure(data)?;
+        }
+
+        // Output buffer is always RGBA8 (4 bytes per pixel)
+        let mut out_buffer = vec![0u8; out_len];
         if decompression == Compression::Lzss {
+            let mut buffer = vec![0u8; expected];
             match hemtt_lzo::lzss::decompress_to_slice(data, &mut buffer) {
                 Ok(decompressed) => {
                     ensure(decompressed)?;
@@ -228,6 +245,7 @@ impl MipMap {
                 }
             }
         } else if decompression == Compression::Lz77 {
+            let mut buffer = vec![0u8; expected];
             hemtt_lzo::lz77::decompress(data, &mut buffer)
                 .map_err(|e| format!("failed to decompress LZ77 data: {e:?}"))?;
             ensure(&buffer)?;
