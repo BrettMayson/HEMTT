@@ -54,19 +54,50 @@ fn read_argba5() {
     paa.maps()[0].0.get_image().expect("decodes");
 }
 
+/// Build a mipmap declaring `width` x `height` with `len` bytes behind it.
+fn mipmap(format: PaXType, width: u16, height: u16, len: usize) -> hemtt_paa::MipMap {
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&width.to_le_bytes());
+    bytes.extend_from_slice(&height.to_le_bytes());
+    #[allow(clippy::cast_possible_truncation)]
+    bytes.extend_from_slice(&[len as u8, (len >> 8) as u8, (len >> 16) as u8]); // u24
+    bytes.extend_from_slice(&vec![0; len]);
+    hemtt_paa::MipMap::from_stream(format, &mut std::io::Cursor::new(bytes)).expect("parses")
+}
+
 /// A malformed PAA can declare the format's maximum dimensions with almost no
 /// data behind them. Decoding must fail rather than run.
 #[test]
 fn oversized_dimensions_are_rejected() {
-    use std::io::Cursor;
+    assert!(
+        mipmap(PaXType::ARGB8, u16::MAX, u16::MAX, 8)
+            .get_image()
+            .is_err()
+    );
+}
 
-    let mut bytes = Vec::new();
-    bytes.extend_from_slice(&u16::MAX.to_le_bytes()); // width
-    bytes.extend_from_slice(&u16::MAX.to_le_bytes()); // height
-    bytes.extend_from_slice(&[8, 0, 0]); // u24 data length
-    bytes.extend_from_slice(&[0; 8]);
+/// The block decoder indexes without bounds checks, so a mipmap declaring more
+/// pixels than it has bytes for has to be rejected before reaching it.
+#[test]
+fn truncated_mipmap_is_rejected() {
+    // DXT1 at 64x64 needs 2048 bytes
+    let err = mipmap(PaXType::DXT1, 64, 64, 8)
+        .get_image()
+        .expect_err("truncated");
+    assert!(err.contains("truncated"), "{err}");
 
-    let mipmap =
-        hemtt_paa::MipMap::from_stream(PaXType::ARGB8, &mut Cursor::new(bytes)).expect("parses");
-    assert!(mipmap.get_image().is_err());
+    // and enough bytes still decodes
+    assert!(mipmap(PaXType::DXT1, 64, 64, 2048).get_image().is_ok());
+}
+
+/// `PaXType::image_size` and `decompress` do not implement these, so they
+/// panic. The parser accepts them, so decoding has to refuse them first.
+#[test]
+fn unimplemented_formats_are_rejected() {
+    for format in [PaXType::DXT2, PaXType::DXT4] {
+        let err = mipmap(format, 64, 64, 2048)
+            .get_image()
+            .expect_err("unsupported");
+        assert!(err.contains("unsupported"), "{err}");
+    }
 }

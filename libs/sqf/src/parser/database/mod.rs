@@ -275,3 +275,42 @@ fn load_wiki(force_pull: bool) -> Wiki {
         Wiki::load_dist()
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    use hemtt_workspace::Workspace;
+
+    use super::Database;
+    use crate::Error;
+
+    /// A custom command that cannot be read used to panic, which is fatal in
+    /// the language server since this runs on a request path.
+    #[test]
+    fn unreadable_custom_command_is_an_error() {
+        let workspace = Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("workspace");
+        workspace
+            .join("/.hemtt")
+            .expect("join")
+            .create_dir()
+            .expect("mkdir");
+        let commands = workspace.join("/.hemtt/commands").expect("join");
+        commands.create_dir().expect("mkdir");
+        let mut file = commands
+            .join("bad.txt")
+            .expect("join")
+            .create_file()
+            .expect("create");
+        file.write_all(&[0xff, 0xfe, 0xff]).expect("write");
+        drop(file);
+
+        let Err(error) = Database::a3_with_workspace(&workspace, false) else {
+            panic!("expected an error for a command file that is not valid utf-8");
+        };
+        assert!(matches!(error, Error::CustomCommandIo(_)), "{error:?}");
+    }
+}
