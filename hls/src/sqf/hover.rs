@@ -26,7 +26,7 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", url);
             return None;
         };
-        let database = self.get_database(&workspace);
+        let database = self.get_database(&workspace).ok()?;
         let Some(tokens) = self.tokens.get(&url) else {
             warn!("No tokens found for {:?}", url);
             return None;

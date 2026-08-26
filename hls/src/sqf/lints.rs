@@ -228,7 +228,14 @@ async fn check_sqf(
 
 impl SqfAnalyzer {
     pub fn check_lints(&self, workspace: &EditorWorkspace, client: Client) {
-        check_addons(workspace, &self.get_database(workspace), client);
+        let database = match self.get_database(workspace) {
+            Ok(database) => database,
+            Err(e) => {
+                warn!("not linting sqf, failed to build the command database: {e}");
+                return;
+            }
+        };
+        check_addons(workspace, &database, client);
     }
 
     pub async fn partial_recheck_lints(&self, url: Url, client: Client) {
@@ -276,7 +283,13 @@ impl SqfAnalyzer {
             }
             recheck
         };
-        let database = self.get_database(&workspace);
+        let database = match self.get_database(&workspace) {
+            Ok(database) => database,
+            Err(e) => {
+                warn!("not linting sqf, failed to build the command database: {e}");
+                return;
+            }
+        };
         let mut futures = JoinSet::new();
         for path in recheck_files {
             let Some(addon) = addon_for(&workspace, &path) else {
