@@ -79,53 +79,40 @@ async fn check_addon(source: WorkspacePath, workspace: EditorWorkspace) {
         Ok(processed) => {
             {
                 let workspace_files = WorkspaceFiles::new();
-                match hemtt_config::parse(workspace.config().as_ref(), &processed) {
-                    Ok(report) => {
-                        for code in report.warnings().iter().chain(report.errors().iter()) {
-                            warn!("code: {:?}", code);
-                            let Some(diag) = code.diagnostic() else {
-                                continue;
-                            };
-                            if diag.labels.iter().all(|l| l.file().is_include()) {
-                                continue;
-                            }
-                            let lsp_diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in lsp_diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
-                            }
-                        }
-                        let config_analyzer = ConfigAnalyzer::get();
-                        config_analyzer.functions_defined.insert(
-                            {
-                                // `/folder/addon/blah` => addon
-                                let parts: Vec<&str> = source.as_str().split('/').collect();
-                                if parts.len() < 3 {
-                                    warn!("Invalid config path: {}", source.as_str());
-                                    if parts.len() == 2 {
-                                        parts[1].to_string()
-                                    } else {
-                                        source.as_str().to_string()
-                                    }
+                let checked = hemtt_config::check::check(&processed, workspace.config().as_ref());
+                for code in &checked.codes {
+                    let Some(diag) = code.diagnostic() else {
+                        continue;
+                    };
+                    // a diagnostic inside a vendored include is not actionable
+                    // from the project, so it is not shown
+                    if diag.labels.iter().all(|l| l.file().is_include()) {
+                        continue;
+                    }
+                    let lsp_diag = diag.to_lsp(&workspace_files);
+                    for (file, diag) in lsp_diag {
+                        lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                    }
+                }
+                if let Some(report) = checked.config {
+                    let config_analyzer = ConfigAnalyzer::get();
+                    config_analyzer.functions_defined.insert(
+                        {
+                            // `/folder/addon/blah` => addon
+                            let parts: Vec<&str> = source.as_str().split('/').collect();
+                            if parts.len() < 3 {
+                                warn!("Invalid config path: {}", source.as_str());
+                                if parts.len() == 2 {
+                                    parts[1].to_string()
                                 } else {
-                                    parts[2].to_string()
+                                    source.as_str().to_string()
                                 }
-                            },
-                            report.functions_defined().clone(),
-                        );
-                    }
-                    Err(err) => {
-                        warn!("failed to process config: {:?}", err);
-                        for error in err {
-                            warn!("error: {:?}", error);
-                            let Some(diag) = error.diagnostic() else {
-                                continue;
-                            };
-                            let lsp_diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in lsp_diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
+                            } else {
+                                parts[2].to_string()
                             }
-                        }
-                    }
+                        },
+                        report.functions_defined().clone(),
+                    );
                 }
             }
             let sources = processed.included_files().to_owned();

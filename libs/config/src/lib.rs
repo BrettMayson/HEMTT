@@ -10,6 +10,7 @@ use std::{
 };
 
 pub mod analyze;
+pub mod check;
 pub mod display;
 mod model;
 pub mod parse;
