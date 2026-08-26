@@ -7,7 +7,7 @@ use std::{
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::reporting::{Code, Diagnostic, Processed, Severity};
 
-use crate::Expression;
+use crate::{Expression, UnaryCommand};
 
 static IGNORED_IN_ARRAYS: OnceLock<Mutex<Vec<Range<usize>>>> = OnceLock::new();
 // Detects manual use of pi values (3.14...) and suggests using the pi command
@@ -24,26 +24,38 @@ pub fn check(target: &Expression, processed: &Processed, config: &LintConfig) ->
         false
     }
     let mut codes = Vec::new();
-    if let Expression::Array(elements, _) = target {
-        for element in elements {
-            if check_number(element) {
-                let mutex_vec = IGNORED_IN_ARRAYS.get_or_init(|| Mutex::new(Vec::new()));
-                if let Ok(mut lock) = mutex_vec.lock() {
-                    lock.push(element.full_span());
+    match target {
+        Expression::Array(elements, _) => {
+            for element in elements {
+                if check_number(element) {
+                    let mutex_vec = IGNORED_IN_ARRAYS.get_or_init(|| Mutex::new(Vec::new()));
+                    if let Ok(mut lock) = mutex_vec.lock() {
+                        lock.push(element.full_span());
+                    }
                 }
             }
         }
-    }
-    if check_number(target) {
-        let mutex_vec = IGNORED_IN_ARRAYS.get_or_init(|| Mutex::new(Vec::new()));
-        if let Ok(lock) = mutex_vec.lock()
-            && !lock.contains(&target.full_span())
-        {
-            codes.push(Arc::new(CodeS33ReimplementingCommandPi::new(
-                target.full_span(),
-                processed,
-                config.severity(),
-            )) as Arc<dyn Code>);
+        Expression::UnaryCommand(UnaryCommand::Minus, rhs, _) => {
+            if check_number(rhs) {
+                let mutex_vec = IGNORED_IN_ARRAYS.get_or_init(|| Mutex::new(Vec::new()));
+                if let Ok(mut lock) = mutex_vec.lock() {
+                    lock.push(rhs.full_span());
+                }
+            }
+        }
+        _ => {
+            if check_number(target) {
+                let mutex_vec = IGNORED_IN_ARRAYS.get_or_init(|| Mutex::new(Vec::new()));
+                if let Ok(lock) = mutex_vec.lock()
+                    && !lock.contains(&target.full_span())
+                {
+                    codes.push(Arc::new(CodeS33ReimplementingCommandPi::new(
+                        target.full_span(),
+                        processed,
+                        config.severity(),
+                    )) as Arc<dyn Code>);
+                }
+            }
         }
     }
 
