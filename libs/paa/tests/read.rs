@@ -66,14 +66,14 @@ fn mipmap(format: PaXType, width: u16, height: u16, len: usize) -> hemtt_paa::Mi
 }
 
 /// A malformed PAA can declare the format's maximum dimensions with almost no
-/// data behind them. Decoding must fail rather than run.
+/// data behind them. That has to be rejected before it reaches an allocation:
+/// the size is ~17GB, and a failed allocation aborts rather than unwinding.
 #[test]
 fn oversized_dimensions_are_rejected() {
-    assert!(
-        mipmap(PaXType::ARGB8, u16::MAX, u16::MAX, 8)
-            .get_image()
-            .is_err()
-    );
+    let err = mipmap(PaXType::ARGB8, u16::MAX, u16::MAX, 8)
+        .get_image()
+        .expect_err("too large to decode");
+    assert!(err.contains("too large"), "{err}");
 }
 
 /// The block decoder indexes without bounds checks, so a mipmap declaring more
