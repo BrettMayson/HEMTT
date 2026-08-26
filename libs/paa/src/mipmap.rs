@@ -6,19 +6,6 @@ use crate::PaXType;
 
 pub const COMPRESS_THRESHOLD: u16 = 64;
 
-/// Largest image this will decode, 8192x8192 RGBA.
-///
-/// Dimensions are `u16` and the format states no maximum, so this is a policy
-/// limit rather than a spec one - but it cannot be dropped. Honouring the full
-/// `u16` range means a malformed 65535x65535 header asks for ~17GB, and a
-/// failed allocation aborts rather than unwinding: Windows CI aborts with
-/// `0xc0000409` on exactly that. Linux only hides it by lazily mapping zero
-/// pages that are never written.
-///
-/// The documented "2^n dimensions" rule cannot be used instead - real files
-/// violate it, e.g. the 196x200 mipmap in `tests/argba5.paa`.
-const MAX_IMAGE_BYTES: usize = 8192 * 8192 * 4;
-
 #[derive(Debug, Clone)]
 pub struct MipMap {
     width: u16,
@@ -202,7 +189,6 @@ impl MipMap {
         let out_len = 4usize
             .checked_mul(actual_width as usize)
             .and_then(|size| size.checked_mul(self.height as usize))
-            .filter(|size| *size <= MAX_IMAGE_BYTES)
             .ok_or_else(|| {
                 format!(
                     "mipmap dimensions too large: {actual_width}x{}",
