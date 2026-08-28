@@ -79,7 +79,6 @@ impl LintRunner<LintData> for Runner {
             let str_len = str.len();
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let sel_len = sel_len.0.round() as usize;
-            println!("str_len: {str_len}, sel_len: {sel_len}");
             if str_len == sel_len {
                 return None;
             }
