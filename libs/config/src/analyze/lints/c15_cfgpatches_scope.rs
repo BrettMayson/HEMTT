@@ -151,8 +151,8 @@ impl LintRunner<LintData> for Runner {
     }
 }
 
-pub type DefinedMap = IndexMap<String, (bool, Range<usize>, Option<i32>, Option<i32>)>;
-pub fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
+type DefinedMap = IndexMap<String, (bool, Range<usize>, Option<i32>, Option<i32>)>;
+fn get_defined(base_path: &str, target: &Config) -> DefinedMap {
     fn get_number(properties: &[Property], key: &str) -> Option<i32> {
         if let Some(property) = properties.iter().find(|p| p.name().value.eq_ignore_ascii_case(key))
             && let Property::Entry { value, .. } = property
