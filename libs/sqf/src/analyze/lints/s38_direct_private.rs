@@ -2,7 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
-    WorkspacePath, lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, get_span_info},
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, get_span_info},
 };
 
 use crate::{

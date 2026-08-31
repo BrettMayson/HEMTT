@@ -6,7 +6,7 @@ expression: "lint(stringify! (s52_duplicate_case), true).0"
    [0m[36m┌─[0m s52_duplicate_case.sqf:14:10
    [0m[36m│[0m
 [0m[36m12[0m [0m[36m│[0m     case "a": { 1 };
-   [0m[36m│[0m          [0m[36m----[0m [0m[36mfirst case here[0m
+   [0m[36m│[0m          [0m[36m---[0m [0m[36mfirst case here[0m
 [0m[36m13[0m [0m[36m│[0m     case "b": { 2 };
 [0m[36m14[0m [0m[36m│[0m     case [0m[36m"a"[0m: { 3 };
    [0m[36m│[0m          [0m[36m^^^[0m [0m[36mduplicate case[0m
@@ -16,7 +16,7 @@ expression: "lint(stringify! (s52_duplicate_case), true).0"
    [0m[36m┌─[0m s52_duplicate_case.sqf:15:10
    [0m[36m│[0m
 [0m[36m13[0m [0m[36m│[0m     case "b": { 2 };
-   [0m[36m│[0m          [0m[36m----[0m [0m[36mfirst case here[0m
+   [0m[36m│[0m          [0m[36m---[0m [0m[36mfirst case here[0m
 [0m[36m14[0m [0m[36m│[0m     case "a": { 3 };
 [0m[36m15[0m [0m[36m│[0m     case [0m[36m"b"[0m: { 4 };
    [0m[36m│[0m          [0m[36m^^^[0m [0m[36mduplicate case[0m
@@ -26,7 +26,7 @@ expression: "lint(stringify! (s52_duplicate_case), true).0"
   [0m[36m┌─[0m s52_duplicate_case.sqf:7:10
   [0m[36m│[0m
 [0m[36m5[0m [0m[36m│[0m     case 1: { "one" };
-  [0m[36m│[0m          [0m[36m--[0m [0m[36mfirst case here[0m
+  [0m[36m│[0m          [0m[36m-[0m [0m[36mfirst case here[0m
 [0m[36m6[0m [0m[36m│[0m     case 2: { "two" };
 [0m[36m7[0m [0m[36m│[0m     case [0m[36m1[0m: { "one again" };
   [0m[36m│[0m          [0m[36m^[0m [0m[36mduplicate case[0m
@@ -36,7 +36,7 @@ expression: "lint(stringify! (s52_duplicate_case), true).0"
    [0m[36m┌─[0m s52_duplicate_case.sqf:41:10
    [0m[36m│[0m
 [0m[36m39[0m [0m[36m│[0m     case 1;
-   [0m[36m│[0m          [0m[36m--[0m [0m[36mfirst case here[0m
+   [0m[36m│[0m          [0m[36m-[0m [0m[36mfirst case here[0m
 [0m[36m40[0m [0m[36m│[0m     case 2: { "X" };
 [0m[36m41[0m [0m[36m│[0m     case [0m[36m1[0m: { "Y"};
    [0m[36m│[0m          [0m[36m^[0m [0m[36mduplicate case[0m
@@ -46,7 +46,7 @@ expression: "lint(stringify! (s52_duplicate_case), true).0"
    [0m[36m┌─[0m s52_duplicate_case.sqf:22:10
    [0m[36m│[0m
 [0m[36m20[0m [0m[36m│[0m     case _distBottom: { [_x, 0] };
-   [0m[36m│[0m          [0m[36m------------[0m [0m[36mfirst case here[0m
+   [0m[36m│[0m          [0m[36m-----------[0m [0m[36mfirst case here[0m
 [0m[36m21[0m [0m[36m│[0m     case _distRight: { [_worldSize, _y] };
 [0m[36m22[0m [0m[36m│[0m     case [0m[36m_distBottom[0m: { [_x, _worldSize] };
    [0m[36m│[0m          [0m[36m^^^^^^^^^^^[0m [0m[36mduplicate case[0m
