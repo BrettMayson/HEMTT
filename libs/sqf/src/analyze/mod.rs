@@ -72,7 +72,8 @@ pub fn analyze(
     let localizations = Arc::new(Mutex::new(vec![]));
     let functions_used = Arc::new(Mutex::new(vec![]));
     let functions_defined = Arc::new(Mutex::new(HashSet::new()));
-    let codes = statements.analyze(
+    let mut codes = manager.check_config_usage("sqf", "s");
+    codes.extend(statements.analyze(
         &LintData {
             addon: Some(addon),
             database,
@@ -83,7 +84,7 @@ pub fn analyze(
         project,
         processed,
         &manager,
-    );
+    ));
 
     let localizations = Arc::<Mutex<Localizations>>::try_unwrap(localizations)
         .expect("not poisoned")
