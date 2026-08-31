@@ -110,3 +110,18 @@ impl Debug for dyn Code {
         write!(f, "{}", self.ident())
     }
 }
+
+#[must_use]
+/// Get the original span and file for a given span in the processed source
+pub fn get_span_info(
+    span: &std::ops::Range<usize>,
+    processed: &Processed,
+) -> Option<(crate::WorkspacePath, std::ops::Range<usize>)> {
+    let map_start = processed.mapping(span.start)?;
+    let map_end = processed.mapping(span.end)?;
+    let map_file = processed.source(map_start.source())?;
+    Some((
+        map_file.0.clone(),
+        map_start.original_start()..map_end.original_start(),
+    ))
+}
