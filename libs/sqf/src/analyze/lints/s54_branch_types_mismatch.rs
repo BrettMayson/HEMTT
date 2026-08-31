@@ -9,14 +9,14 @@ use hemtt_workspace::{
 };
 use std::{ops::Range, sync::Arc};
 
-crate::analyze::lint!(LintS38BranchTypesMismatch);
+crate::analyze::lint!(LintS54BranchTypesMismatch);
 
-impl Lint<LintData> for LintS38BranchTypesMismatch {
+impl Lint<LintData> for LintS54BranchTypesMismatch {
     fn ident(&self) -> &'static str {
         "branch_types_mismatch"
     }
     fn sort(&self) -> u32 {
-        520
+        540
     }
     fn description(&self) -> &'static str {
         "Checks for branch types mismatch"
@@ -62,7 +62,7 @@ impl LintRunner<LintData> for Runner {
         let mut errors: Codes = Vec::new();
         for issue in target.issues() {
             if let Issue::MismatchedTypes { span, command } = issue {
-                errors.push(Arc::new(CodeS52BranchTypesMismatch::new(
+                errors.push(Arc::new(CodeS54BranchTypesMismatch::new(
                     span.to_owned(),
                     command.clone(),
                     config.severity(),
@@ -75,16 +75,16 @@ impl LintRunner<LintData> for Runner {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CodeS52BranchTypesMismatch {
+pub struct CodeS54BranchTypesMismatch {
     span: Range<usize>,
     command: String,
     severity: Severity,
     diagnostic: Option<Diagnostic>,
 }
 
-impl Code for CodeS52BranchTypesMismatch {
+impl Code for CodeS54BranchTypesMismatch {
     fn ident(&self) -> &'static str {
-        "L-S52"
+        "L-S54"
     }
     fn link(&self) -> Option<&str> {
         Some("/analysis/sqf.html#branch_types_mismatch")
@@ -103,7 +103,7 @@ impl Code for CodeS52BranchTypesMismatch {
     }
 }
 
-impl CodeS52BranchTypesMismatch {
+impl CodeS54BranchTypesMismatch {
     #[must_use]
     pub fn new(
         span: Range<usize>,
