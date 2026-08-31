@@ -11,7 +11,7 @@ use dashmap::DashMap;
 use hemtt_sqf::parser::database::Database;
 use hemtt_workspace::{addons::DefinedFunctions, reporting::Token};
 use tower_lsp::Client;
-use tracing::{error, warn};
+use tracing::warn;
 use url::Url;
 
 use crate::{
@@ -82,20 +82,56 @@ impl SqfAnalyzer {
         self.tokens.remove(url);
     }
 
-    fn get_database(&self, workspace: &EditorWorkspace) -> Arc<Database> {
-        if !self.databases.contains_key(workspace) {
-            let database = match Database::a3_with_workspace(workspace.root(), false) {
-                Ok(database) => database,
-                Err(e) => {
-                    error!("Failed to create database: {:?}", e);
-                    Database::a3(false)
-                }
-            };
-            self.databases.insert(workspace.clone(), Arc::new(database));
+    /// The command database for a workspace, including its custom commands.
+    ///
+    /// Falling back to [`Database::a3`] would drop the workspace's custom
+    /// commands, and the parser treats an unknown identifier as a variable, so
+    /// every use of one would produce a false diagnostic. Reporting nothing is
+    /// better than reporting wrong.
+    fn get_database(&self, workspace: &EditorWorkspace) -> Result<Arc<Database>, hemtt_sqf::Error> {
+        if let Some(database) = self.databases.get(workspace) {
+            return Ok(database.clone());
         }
+        let database = Arc::new(Database::a3_with_workspace(workspace.root(), false)?);
         self.databases
-            .get(workspace)
-            .expect("Database not found")
-            .clone()
+            .insert(workspace.clone(), Arc::clone(&database));
+        Ok(database)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SqfAnalyzer;
+    use crate::workspace::tests::fixture;
+
+    #[test]
+    fn database_is_cached_per_workspace() {
+        let analyzer = SqfAnalyzer::get();
+        let workspace = fixture("project");
+        let first = analyzer.get_database(&workspace).expect("builds");
+        let second = analyzer.get_database(&workspace).expect("builds");
+        assert!(std::sync::Arc::ptr_eq(&first, &second));
+    }
+
+    /// A folder with no project has no custom commands to load.
+    #[test]
+    fn database_without_project() {
+        SqfAnalyzer::get()
+            .get_database(&fixture("plain"))
+            .expect("builds");
+    }
+
+    /// A custom command that cannot be read used to fall back to the stock
+    /// database, which drops every custom command the project defines and so
+    /// reports uses of them as variables. Nothing must be linted instead.
+    #[test]
+    fn database_with_unreadable_custom_command() {
+        let Err(error) = SqfAnalyzer::get().get_database(&fixture("badcommands")) else {
+            panic!("bad.txt is not valid utf-8, the database should not build");
+        };
+        assert!(
+            matches!(error, hemtt_sqf::Error::CustomCommandIo(_)),
+            "{error:?}"
+        );
     }
 }

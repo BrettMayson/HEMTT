@@ -124,65 +124,35 @@ async fn check_sqf(
         Ok(processed) => {
             {
                 let workspace_files = WorkspaceFiles::new();
-                match hemtt_sqf::parser::run(&database, &processed) {
-                    Ok(sqf) => {
-                        let (codes, report) = hemtt_sqf::analyze::analyze(
-                            &sqf,
-                            workspace.config().as_ref(),
-                            &processed,
-                            addon.clone(),
-                            database,
-                        );
-                        if let Some(report) = report {
-                            let cache = SqfAnalyzer::get();
-                            let mut functions_defined = cache
-                                .functions_defined
-                                .entry(addon.name().to_string())
-                                .or_insert_with(HashMap::new);
-                            functions_defined.insert(
-                                source.as_str().to_string(),
-                                report.functions_defined().clone(),
-                            );
-                        }
-                        for code in codes {
-                            let Some(diag) = code.diagnostic() else {
-                                warn!("failed to get diagnostic");
-                                continue;
-                            };
-                            if diag.labels.iter().all(|l| l.file().is_include()) {
-                                continue;
-                            }
-                            let lsp_diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in lsp_diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
-                            }
-                        }
+                let checked = hemtt_sqf::check::check(
+                    &processed,
+                    workspace.config().as_ref(),
+                    &addon,
+                    database,
+                );
+                if let Some(report) = checked.report {
+                    let cache = SqfAnalyzer::get();
+                    let mut functions_defined = cache
+                        .functions_defined
+                        .entry(addon.name().to_string())
+                        .or_insert_with(HashMap::new);
+                    functions_defined.insert(
+                        source.as_str().to_string(),
+                        report.functions_defined().clone(),
+                    );
+                }
+                for code in checked.codes {
+                    let Some(diag) = code.diagnostic() else {
+                        continue;
+                    };
+                    // a diagnostic inside a vendored include is not actionable
+                    // from the project, so it is not shown
+                    if diag.labels.iter().all(|l| l.file().is_include()) {
+                        continue;
                     }
-                    Err(hemtt_sqf::parser::ParserError::ParsingError(e)) => {
-                        if hemtt_sqf::is_cba_settings(processed.as_str()) {
-                            debug!("skipping apparent CBA settings file: {}", source);
-                        } else {
-                            for error in e {
-                                let Some(diag) = error.diagnostic() else {
-                                    continue;
-                                };
-                                let diag = diag.to_lsp(&workspace_files);
-                                for (file, diag) in diag {
-                                    lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        for error in e.codes() {
-                            let Some(diag) = error.diagnostic() else {
-                                continue;
-                            };
-                            let diag = diag.to_lsp(&workspace_files);
-                            for (file, diag) in diag {
-                                lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
-                            }
-                        }
+                    let lsp_diag = diag.to_lsp(&workspace_files);
+                    for (file, diag) in lsp_diag {
+                        lsp_diags.entry(file).or_insert_with(Vec::new).push(diag);
                     }
                 }
             }
@@ -228,7 +198,14 @@ async fn check_sqf(
 
 impl SqfAnalyzer {
     pub fn check_lints(&self, workspace: &EditorWorkspace, client: Client) {
-        check_addons(workspace, &self.get_database(workspace), client);
+        let database = match self.get_database(workspace) {
+            Ok(database) => database,
+            Err(e) => {
+                warn!("not linting sqf, failed to build the command database: {e}");
+                return;
+            }
+        };
+        check_addons(workspace, &database, client);
     }
 
     pub async fn partial_recheck_lints(&self, url: Url, client: Client) {
@@ -276,7 +253,13 @@ impl SqfAnalyzer {
             }
             recheck
         };
-        let database = self.get_database(&workspace);
+        let database = match self.get_database(&workspace) {
+            Ok(database) => database,
+            Err(e) => {
+                warn!("not linting sqf, failed to build the command database: {e}");
+                return;
+            }
+        };
         let mut futures = JoinSet::new();
         for path in recheck_files {
             let Some(addon) = addon_for(&workspace, &path) else {

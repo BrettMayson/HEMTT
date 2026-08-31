@@ -3,12 +3,12 @@ use std::{collections::HashMap, path::PathBuf, sync::RwLock};
 use hemtt_config::{
     Config,
     analyze::{lint_all, lint_check},
-    parse,
     rapify::Rapify,
 };
 use hemtt_workspace::{
     WorkspacePath,
     addons::{Addon, Location},
+    reporting::CodesExt,
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use vfs::VfsFileType;
@@ -124,29 +124,16 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Err(e.into());
         }
     };
-    for warning in processed.warnings() {
-        report.push(warning.clone());
+    let checked = hemtt_config::check::check(&processed, Some(ctx.config()));
+    let had_errors = checked.codes.failed();
+    for code in checked.codes {
+        report.push(code);
     }
-    let configreport = match parse(Some(ctx.config()), &processed) {
-        Ok(configreport) => configreport,
-        Err(errors) => {
-            for e in &errors {
-                report.push(e.clone());
-            }
-            return Ok(report);
-        }
+    let Some(configreport) = checked.config else {
+        return Ok(report);
     };
     configreport.push_to_addon(addon);
-    configreport.notes_and_helps().into_iter().for_each(|e| {
-        report.push(e.clone());
-    });
-    configreport.warnings().into_iter().for_each(|e| {
-        report.push(e.clone());
-    });
-    configreport.errors().into_iter().for_each(|e| {
-        report.push(e.clone());
-    });
-    if !configreport.errors().is_empty() {
+    if had_errors {
         return Ok(report);
     }
     let out = if std::path::Path::new(&path.filename())
