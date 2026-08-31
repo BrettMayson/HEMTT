@@ -46,6 +46,8 @@ pub enum Error {
     Dialoguer(#[from] dialoguer::Error),
     #[error("Git Error: {0}")]
     Git(#[from] git2::Error),
+    #[error("Config file selection error: {0}")]
+    ConfigFiles(#[from] hemtt_config::files::Error),
     #[error("Glob Error: {0}")]
     GlobError(#[from] glob::GlobError),
     #[error("Glob Pattern Error: {0}")]

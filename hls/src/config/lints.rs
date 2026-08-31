@@ -4,7 +4,7 @@ use std::{
 };
 
 use hemtt_preprocessor::Processor;
-use hemtt_workspace::{WorkspacePath, reporting::WorkspaceFiles};
+use hemtt_workspace::{WorkspacePath, addons::Addon, reporting::WorkspaceFiles};
 use tokio::{sync::RwLock, task::JoinSet};
 use tower_lsp::Client;
 use tracing::{debug, warn};
@@ -38,12 +38,26 @@ impl Cache {
 
 fn check_addons(workspace: &EditorWorkspace, client: Client) {
     let mut futures = JoinSet::new();
-    for config in workspace.root().addons() {
-        let Ok(source) = workspace.root().join(config.as_str()) else {
-            warn!("failed to join config {:?}", config);
-            continue;
+    // Every rapifiable file, not just `config.cpp`, and honouring the addon's
+    // `rapify` settings - the same set the CLI checks
+    let addons = match Addon::scan(workspace.root_disk()) {
+        Ok(addons) => addons,
+        Err(e) => {
+            warn!("not checking configs, failed to scan addons: {e}");
+            return;
+        }
+    };
+    for addon in addons {
+        let files = match hemtt_config::files::checkable(workspace.root(), &addon) {
+            Ok(files) => files,
+            Err(e) => {
+                warn!("not checking `{}`: {e}", addon.folder());
+                continue;
+            }
         };
-        futures.spawn(check_addon(source, workspace.clone()));
+        for source in files {
+            futures.spawn(check_addon(source, workspace.clone()));
+        }
     }
     tokio::spawn(async move {
         futures.join_all().await;

@@ -12,6 +12,7 @@ use std::{
 pub mod analyze;
 pub mod check;
 pub mod display;
+pub mod files;
 mod model;
 pub mod parse;
 pub mod rapify;
