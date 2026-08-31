@@ -1613,6 +1613,7 @@ dependencies = [
  "byteorder",
  "chumsky",
  "fs-err",
+ "glob",
  "hemtt-common",
  "hemtt-preprocessor",
  "hemtt-workspace",
@@ -1623,7 +1624,9 @@ dependencies = [
  "paste",
  "serde",
  "serde_json",
+ "thiserror 2.0.19",
  "toml",
+ "tracing",
 ]
 
 [[package]]

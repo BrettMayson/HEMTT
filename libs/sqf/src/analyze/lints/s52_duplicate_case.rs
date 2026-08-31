@@ -2,9 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
-    WorkspacePath,
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, get_span_info},
 };
 
 use crate::{analyze::LintData, BinaryCommand, Expression, Statement, UnaryCommand};
@@ -200,7 +198,7 @@ impl CodeS52DuplicateCase {
         };
 
         // Try to get info about the first span
-        if let Some((path, span)) = get_span_info(self.first_span.clone(), processed) {
+        if let Some((path, span)) = get_span_info(&self.first_span, processed) {
             diag = diag.with_label(
                 Label::secondary(path, span)
                     .with_message("first case here"),
@@ -209,14 +207,4 @@ impl CodeS52DuplicateCase {
         self.diagnostic = Some(diag);
         self
     }
-}
-
-fn get_span_info(span: Range<usize>, processed: &Processed) -> Option<(WorkspacePath, Range<usize>)> {
-    let map_start = processed.mapping(span.start)?;
-    let map_end = processed.mapping(span.end)?;
-    let map_file = processed.source(map_start.source())?;
-    Some((
-        map_file.0.clone(),
-        map_start.original_start()..map_end.original_end(),
-    ))
 }

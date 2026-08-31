@@ -2,8 +2,7 @@ use std::{collections::HashMap, ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity}, WorkspacePath,
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, get_span_info},
 };
 
 use crate::{analyze::LintData, BinaryCommand, Expression, Statement, UnaryCommand};
@@ -233,7 +232,7 @@ impl CodeS23ReassignReservedVariable {
         diag = diag.clear_labels();
         match &self.variant {
             Variant::Overwrite(var, span) => {
-                let Some(info) = get_span_info(span.clone(), processed) else {
+                let Some(info) = get_span_info(span, processed) else {
                     return self;
                 };
                 diag = diag.with_label(Label::primary(
@@ -242,10 +241,10 @@ impl CodeS23ReassignReservedVariable {
                 ).with_message(format!("`{var}` is reserved")));
             }
             Variant::NeverRestored((saved, saved_span), (original, original_span)) => {
-                let Some(saved_info) = get_span_info(saved_span.clone(), processed) else {
+                let Some(saved_info) = get_span_info(saved_span, processed) else {
                     return self;
                 };
-                let Some(original_info) = get_span_info(original_span.clone(), processed) else {
+                let Some(original_info) = get_span_info(original_span, processed) else {
                     return self;
                 };
                 diag = diag.with_label(Label::secondary(
@@ -257,13 +256,13 @@ impl CodeS23ReassignReservedVariable {
                 ).with_message(format!("`{saved}` is never restored to `{original}`")));
             }
             Variant::SavedWhileSaved(saved, saved_span, changed_span, original, original_span) => {
-                let Some(saved_info) = get_span_info(saved_span.clone(), processed) else {
+                let Some(saved_info) = get_span_info(saved_span, processed) else {
                     return self;
                 };
-                let Some(changed_span) = get_span_info(changed_span.clone(), processed) else {
+                let Some(changed_span) = get_span_info(changed_span, processed) else {
                     return self;
                 };
-                let Some(original_info) = get_span_info(original_span.clone(), processed) else {
+                let Some(original_info) = get_span_info(original_span, processed) else {
                     return self;
                 };
                 diag = diag.with_label(Label::primary(
@@ -281,14 +280,4 @@ impl CodeS23ReassignReservedVariable {
         self.diagnostic = Some(diag);
         self
     }
-}
-
-fn get_span_info(span: Range<usize>, processed: &Processed) -> Option<(WorkspacePath, Range<usize>)> {
-    let map_start = processed.mapping(span.start)?;
-    let map_end = processed.mapping(span.end)?;
-    let map_file = processed.source(map_start.source())?;
-    Some((
-        map_file.0.clone(),
-        map_start.original_start()..map_end.original_start(),
-    ))
 }
