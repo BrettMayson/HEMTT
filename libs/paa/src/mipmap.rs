@@ -149,17 +149,21 @@ impl MipMap {
         format!("{:?}", self.format)
     }
 
-    #[must_use]
     /// Get the image from the `MipMap`
     ///
-    /// # Panics
-    /// Panics if the `MipMap` is invalid
-    pub fn get_image(&self) -> image::DynamicImage {
+    /// # Errors
+    /// If the `MipMap` data is malformed, or its format is not supported
+    pub fn get_image(&self) -> Result<image::DynamicImage, String> {
         #[derive(Debug, PartialEq, Eq)]
         pub enum Compression {
             None,
             Lzss,
             Lz77,
+        }
+        // `image_size` and `decompress` panic on these; the parser accepts
+        // them, so a valid file can reach here
+        if matches!(self.format, PaXType::DXT2 | PaXType::DXT4) {
+            return Err(format!("unsupported PAA format: {:?}", self.format));
         }
         let data = &*self.data;
 
@@ -170,9 +174,6 @@ impl MipMap {
             self.width
         };
 
-        // Output buffer is always RGBA8 (4 bytes per pixel)
-        let mut out_buffer = vec![0u8; 4 * (actual_width as usize) * (self.height as usize)];
-
         // Determine if we need to decompress
         let decompression = if !self.format.is_dxt() {
             Compression::Lz77
@@ -182,16 +183,46 @@ impl MipMap {
             Compression::None
         };
 
-        let mut buffer: Box<[u8]> =
-            vec![
-                0;
-                self.format
-                    .image_size(actual_width as usize, self.height as usize)
-            ]
-            .into_boxed_slice();
+        // Dimensions are `u16`, so the product can only overflow a 32-bit
+        // `usize` - wasm32. 4 bytes per pixel is the largest any format needs,
+        // so this also bounds `image_size` below.
+        let out_len = 4usize
+            .checked_mul(actual_width as usize)
+            .and_then(|size| size.checked_mul(self.height as usize))
+            .ok_or_else(|| {
+                format!(
+                    "mipmap dimensions too large: {actual_width}x{}",
+                    self.height
+                )
+            })?;
+        let expected = self
+            .format
+            .image_size(actual_width as usize, self.height as usize);
+        // `PaXType::decompress` hands DXT data straight to the block decoder,
+        // which indexes without checking. The declared length is whatever the
+        // file said, so a truncated mipmap has to be rejected here.
+        let ensure = |data: &[u8]| -> Result<(), String> {
+            if data.len() < expected {
+                return Err(format!(
+                    "mipmap is truncated: {} bytes, expected {expected}",
+                    data.len()
+                ));
+            }
+            Ok(())
+        };
+        // Uncompressed data is its own bound: the stored length is a `u24`, so
+        // checking it here means nothing below is sized by the header alone.
+        if decompression == Compression::None {
+            ensure(data)?;
+        }
+
+        // Output buffer is always RGBA8 (4 bytes per pixel)
+        let mut out_buffer = vec![0u8; out_len];
         if decompression == Compression::Lzss {
+            let mut buffer = vec![0u8; expected];
             match hemtt_lzo::lzss::decompress_to_slice(data, &mut buffer) {
                 Ok(decompressed) => {
+                    ensure(decompressed)?;
                     self.format.decompress(
                         decompressed,
                         usize::from(actual_width),
@@ -204,6 +235,7 @@ impl MipMap {
                         "Failed to decompress LZSS data for {:?} ({}x{}): {}",
                         self.format, actual_width, self.height, e
                     );
+                    ensure(data)?;
                     self.format.decompress(
                         data,
                         usize::from(actual_width),
@@ -213,7 +245,10 @@ impl MipMap {
                 }
             }
         } else if decompression == Compression::Lz77 {
-            hemtt_lzo::lz77::decompress(data, &mut buffer).expect("Failed to decompress LZ77 data");
+            let mut buffer = vec![0u8; expected];
+            hemtt_lzo::lz77::decompress(data, &mut buffer)
+                .map_err(|e| format!("failed to decompress LZ77 data: {e:?}"))?;
+            ensure(&buffer)?;
             self.format.decompress(
                 &buffer,
                 usize::from(actual_width),
@@ -221,6 +256,7 @@ impl MipMap {
                 &mut out_buffer,
             );
         } else {
+            ensure(data)?;
             self.format.decompress(
                 data,
                 usize::from(actual_width),
@@ -228,24 +264,23 @@ impl MipMap {
                 &mut out_buffer,
             );
         }
-        image::DynamicImage::ImageRgba8(
+        Ok(image::DynamicImage::ImageRgba8(
             image::RgbaImage::from_raw(u32::from(actual_width), u32::from(self.height), out_buffer)
-                .expect("paa should contain valid image data"),
-        )
+                .ok_or_else(|| "paa does not contain valid image data".to_string())?,
+        ))
     }
 
     #[cfg(feature = "json")]
-    #[must_use]
     /// Returns the image as a base64 encoded string
     ///
-    /// # Panics
-    /// Panics if the image cannot be encoded
-    pub fn json(&self) -> String {
+    /// # Errors
+    /// If the `MipMap` is malformed or the image cannot be encoded
+    pub fn json(&self) -> Result<String, String> {
         use base64::Engine as _;
-        let img = self.get_image();
+        let img = self.get_image()?;
         let mut buffer = std::io::Cursor::new(Vec::new());
         img.write_to(&mut buffer, image::ImageFormat::Png)
-            .expect("Failed to write PNG");
-        base64::prelude::BASE64_STANDARD.encode(buffer.get_ref())
+            .map_err(|e| format!("failed to write PNG: {e}"))?;
+        Ok(base64::prelude::BASE64_STANDARD.encode(buffer.get_ref()))
     }
 }
