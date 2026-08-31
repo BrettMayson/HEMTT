@@ -288,9 +288,6 @@ impl Code for CodeC14UnusedExternal {
     fn label_message(&self) -> String {
         "never used".to_string()
     }
-    fn help(&self) -> Option<String> {
-        None
-    }
     fn diagnostic(&self) -> Option<Diagnostic> {
         if self.explicit {
             return self.diagnostic.clone();

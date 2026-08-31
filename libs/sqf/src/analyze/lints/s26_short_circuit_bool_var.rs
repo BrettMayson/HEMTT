@@ -197,10 +197,6 @@ impl Code for CodeS26ShortCircuitBoolVar {
         Some(self.note.to_string())
     }
 
-    fn help(&self) -> Option<String> {
-        None
-    }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }

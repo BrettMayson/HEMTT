@@ -2,9 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use hemtt_common::config::LintConfig;
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Label, Processed, Severity},
-    WorkspacePath,
+    WorkspacePath, lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Label, Processed, Severity, get_span_info},
 };
 
 use crate::{
@@ -443,24 +441,14 @@ impl CodeS40StringConcatInLoop {
             return self;
         };
         diag = diag.clear_labels();
-        if let Some(span) = self.declaration_span.clone()
+        if let Some(span) = &self.declaration_span
             && let Some((file, span)) = get_span_info(span, processed) {
                 diag = diag.with_label(Label::secondary(file, span).with_message("accumulator declaration"));
             }
-        if let Some((file, span)) = get_span_info(self.concat_span.clone(), processed) {
+        if let Some((file, span)) = get_span_info(&self.concat_span, processed) {
             diag = diag.with_label(Label::primary(file, span).with_message("string concatenation in loop"));
         }
         self.diagnostic = Some(diag);
         self
     }
-}
-
-fn get_span_info(span: Range<usize>, processed: &Processed) -> Option<(WorkspacePath, Range<usize>)> {
-    let map_start = processed.mapping(span.start)?;
-    let map_end = processed.mapping(span.end)?;
-    let map_file = processed.source(map_start.source())?;
-    Some((
-        map_file.0.clone(),
-        map_start.original_start()..map_end.original_start(),
-    ))
 }

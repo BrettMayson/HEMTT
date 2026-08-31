@@ -12,7 +12,15 @@ macro_rules! lint {
         paste::paste! {
             #[test]
             fn [<config_error_ $dir>]() {
-                insta::assert_snapshot!(lint(stringify!($dir)).0);
+                insta::assert_snapshot!(lint(stringify!($dir), None).0);
+            }
+        }
+    };
+    ($dir:ident, $filter:expr) => {
+        paste::paste! {
+            #[test]
+            fn [<config_error_ $dir>]() {
+                insta::assert_snapshot!(lint(stringify!($dir), Some($filter)).0);
             }
         }
     };
@@ -40,8 +48,9 @@ lint!(c14_macro_external);
 lint!(c14_many_unused_external);
 lint!(c15_cfgpatches_scope);
 lint!(c17_extra_semicolon);
+lint!(c18_cfgpatches_duplicate_class, "L-C18");
 
-fn lint(file: &str) -> (String, ConfigReport) {
+fn lint(file: &str, filter: Option<&str>) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
@@ -69,6 +78,7 @@ fn lint(file: &str) -> (String, ConfigReport) {
                 // a code may deliberately have no diagnostic
                 .filter_map(|e| e.diagnostic())
                 .filter(|d| d.code != "L-C16")
+                .filter(|d| filter.as_ref().is_none_or(|f| d.code.contains(f)))
                 .map(|d| d.to_string(&workspacefiles))
                 .collect::<Vec<_>>()
                 .join("\n")
@@ -88,15 +98,15 @@ fn lint(file: &str) -> (String, ConfigReport) {
 #[test]
 /// Test `C09_gwell_missing_magazine` - maChecking results from the report (will not create errors directly)
 fn test_c09_magwell_missing_magazine() {
-    let (_, report) = lint(stringify!(c09_magwell_missing_magazine));
+    let (_, report) = lint(stringify!(c09_magwell_missing_magazine), None);
     insta::assert_compact_debug_snapshot!(report.magazine_well_info());
 }
 
 /// Regression for #1310: C14's summary count is per-run, not per-process.
 #[test]
 fn regression_1310_c14_count_is_per_run() {
-    let first = lint(stringify!(c14_many_unused_external)).0;
-    let second = lint(stringify!(c14_many_unused_external)).0;
+    let first = lint(stringify!(c14_many_unused_external), None).0;
+    let second = lint(stringify!(c14_many_unused_external), None).0;
     assert_eq!(first, second);
     assert!(
         first.contains("There are 7 unused external classes"),
@@ -107,8 +117,8 @@ fn regression_1310_c14_count_is_per_run() {
 /// Regression for #1310: one config's count must not leak into the next.
 #[test]
 fn regression_1310_c14_count_not_shared_between_configs() {
-    let _ = lint(stringify!(c14_many_unused_external));
-    let few = lint(stringify!(c14_macro_external)).0;
+    let _ = lint(stringify!(c14_many_unused_external), None);
+    let few = lint(stringify!(c14_macro_external), None).0;
     // under the summary threshold, so each is reported individually
     assert!(
         !few.contains("unused external classes"),
@@ -119,7 +129,7 @@ fn regression_1310_c14_count_not_shared_between_configs() {
 
 #[test]
 fn test_collect_cfgfunctions() {
-    let (_, report) = lint(stringify!(collect_cfgfunctions));
+    let (_, report) = lint(stringify!(collect_cfgfunctions), None);
     let mut functions_defined: Vec<&String> =
         report.functions_defined().iter().map(|(s, _)| s).collect();
     functions_defined.sort();
