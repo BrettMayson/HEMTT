@@ -88,6 +88,7 @@ lint!(s49_count_type, true);
 lint!(s50_count_side, true);
 lint!(s51_push_back_unique, true);
 lint!(s52_duplicate_case, true);
+lint!(s53_select_substring_len, true);
 
 #[test]
 fn test_s29_function_undefined() {
