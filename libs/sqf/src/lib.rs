@@ -442,6 +442,7 @@ pub enum BinaryCommand {
     LessEq,
     /// `>>`
     ConfigPath,
+    /// `:`
     Associate,
     Else,
     Add,
