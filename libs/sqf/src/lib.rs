@@ -1,3 +1,5 @@
+#[cfg(feature = "parser")]
+pub mod check;
 #[cfg(feature = "compiler")]
 pub mod compiler;
 #[cfg(feature = "parser")]
