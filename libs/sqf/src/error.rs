@@ -10,4 +10,6 @@ pub enum Error {
     SerializeError(#[from] crate::compiler::serializer::SerializeError),
     #[error("Custom command error: {0}")]
     CustomCommandError(String),
+    #[error("Custom command could not be read: {0}")]
+    CustomCommandIo(String),
 }

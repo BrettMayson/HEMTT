@@ -248,7 +248,11 @@ impl Paa {
     pub fn json(&self) -> Result<String, String> {
         serde_json::to_string(&PaaJson {
             format: self.format.to_string(),
-            maps: self.maps.iter().map(|(mipmap, _)| mipmap.json()).collect(),
+            maps: self
+                .maps
+                .iter()
+                .map(|(mipmap, _)| mipmap.json())
+                .collect::<Result<Vec<_>, _>>()?,
         })
         .map_err(|e| e.to_string())
     }

@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
-    analyze::{analyze, lint_all, lint_check},
-    parser::{ParserError, database::Database},
+    analyze::{lint_all, lint_check},
+    parser::database::Database,
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -90,48 +90,26 @@ impl Module for SQFCompiler {
                         return Err(e.into());
                     }
                 };
-                for warning in processed.warnings() {
-                    report.push(warning.clone());
+                let checked = hemtt_sqf::check::check(
+                    &processed,
+                    Some(ctx.config()),
+                    addon,
+                    database.clone(),
+                );
+                if let Some(sqf_report) = checked.report {
+                    sqf_report.push_to_addon(addon);
                 }
-                match hemtt_sqf::parser::run(&database, &processed) {
-                    Ok(sqf) => {
-                        let (codes, sqf_report) = analyze(
-                            &sqf,
-                            Some(ctx.config()),
-                            &processed,
-                            addon.clone(),
-                            database.clone(),
-                        );
-                        if let Some(sqf_report) = sqf_report {
-                            sqf_report.push_to_addon(addon);
-                        }
-                        if !codes.failed() {
-                            let mut out = entry.with_extension("sqfc")?.create_file()?;
-                            sqf.optimize().compile_to_writer(&processed, &mut out)?;
-                            progress.inc(1);
-                        }
-                        for code in codes {
-                            report.push(code);
-                        }
-                        Ok(report)
-                    }
-                    Err(ParserError::ParsingError(e)) => {
-                        if hemtt_sqf::is_cba_settings(processed.as_str()) {
-                            debug!("skipping apparent CBA settings file: {}", entry);
-                        } else {
-                            for error in e {
-                                report.push(error);
-                            }
-                        }
-                        Ok(report)
-                    }
-                    Err(ParserError::LexingError(e)) => {
-                        for error in e {
-                            report.push(error);
-                        }
-                        Ok(report)
-                    }
+                if let Some(sqf) = checked.statements
+                    && !checked.codes.failed()
+                {
+                    let mut out = entry.with_extension("sqfc")?.create_file()?;
+                    sqf.optimize().compile_to_writer(&processed, &mut out)?;
+                    progress.inc(1);
                 }
+                for code in checked.codes {
+                    report.push(code);
+                }
+                Ok(report)
             })
             .collect::<Result<Vec<Report>, Error>>()?;
         for new_report in reports {

@@ -147,17 +147,15 @@ pub struct EditorWorkspace {
 impl EditorWorkspace {
     pub fn new(folder: &WorkspaceFolder) -> Option<Self> {
         if folder.uri.scheme() == "file" {
-            let root = PathBuf::from(
-                urlencoding::decode(
-                    folder
-                        .uri
-                        .to_string()
-                        .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
-                        .as_str(),
-                )
-                .expect("Failed to decode URL")
-                .to_string(),
-            );
+            let raw = folder
+                .uri
+                .to_string()
+                .replace(if cfg!(windows) { "file:///" } else { "file://" }, "");
+            let Ok(decoded) = urlencoding::decode(&raw) else {
+                debug!("failed to decode workspace url {}", folder.uri);
+                return None;
+            };
+            let root = PathBuf::from(decoded.to_string());
             let mut builder = Workspace::builder().physical(&root, LayerType::Source);
             let include = root.join("include");
             if include.is_dir() {
@@ -236,5 +234,51 @@ impl EditorWorkspace {
     #[allow(dead_code)]
     pub const fn url(&self) -> &Url {
         &self.url
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use tower_lsp::lsp_types::WorkspaceFolder;
+    use url::Url;
+
+    use super::EditorWorkspace;
+
+    /// Path to a fixture folder under `hls/tests/fixtures/`.
+    pub fn fixture_path(name: &str) -> std::path::PathBuf {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join(name);
+        assert!(root.is_dir(), "missing fixture {}", root.display());
+        root
+    }
+
+    /// Open a fixture folder under `hls/tests/fixtures/` as an editor workspace.
+    pub fn fixture(name: &str) -> EditorWorkspace {
+        let root = fixture_path(name);
+        EditorWorkspace::new(&WorkspaceFolder {
+            uri: Url::from_directory_path(&root).expect("failed to build fixture url"),
+            name: name.to_string(),
+        })
+        .expect("failed to open fixture workspace")
+    }
+
+    #[test]
+    fn to_url_round_trips() {
+        let workspace = fixture("project");
+        let path = workspace
+            .root()
+            .join("addons/valid/script.sqf")
+            .expect("join");
+        let url = workspace.to_url(&path);
+        assert!(url.path().ends_with("/addons/valid/script.sqf"), "{url}");
+        assert_eq!(workspace.join_url(&url).expect("join_url"), path);
+    }
+
+    /// Guards the `expect` in `to_url`, which is safe only while this is empty.
+    #[test]
+    fn workspace_root_is_the_empty_prefix() {
+        assert_eq!(fixture("project").root().as_str(), "");
     }
 }

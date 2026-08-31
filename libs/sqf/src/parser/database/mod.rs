@@ -127,25 +127,23 @@ impl Database {
     ///
     /// # Errors
     /// [`Error::CustomCommandError`] if a custom command could not be parsed.
-    ///
-    /// # Panics
-    /// If the custom commands directory could not be read.
+    /// [`Error::CustomCommandIo`] if a custom command could not be read.
     pub fn a3_with_workspace(workspace: &WorkspacePath, force_pull: bool) -> Result<Self, Error> {
         let mut database = Self::a3(force_pull);
         let custom_root = workspace.join("/.hemtt/commands");
         if let Ok(custom_root) = custom_root
             && custom_root.exists().unwrap_or(false)
         {
-            for entry in custom_root
+            let entries = custom_root
                 .read_dir()
-                .expect("failed to read custom commands dir")
-            {
+                .map_err(|e| Error::CustomCommandIo(format!("{custom_root}: {e}")))?;
+            for entry in entries {
                 if !entry.is_file().unwrap_or(false) {
                     continue;
                 }
                 let content = entry
                     .read_to_string()
-                    .expect("failed to read custom command file");
+                    .map_err(|e| Error::CustomCommandIo(format!("{entry}: {e}")))?;
                 let command = database
                     .wiki
                     .add_custom_command_parse(&content)
@@ -308,4 +306,43 @@ fn load_wiki(force_pull: bool) -> Wiki {
         }
         Wiki::load_dist()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    use hemtt_workspace::Workspace;
+
+    use super::Database;
+    use crate::Error;
+
+    /// A custom command that cannot be read used to panic, which is fatal in
+    /// the language server since this runs on a request path.
+    #[test]
+    fn unreadable_custom_command_is_an_error() {
+        let workspace = Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("workspace");
+        workspace
+            .join("/.hemtt")
+            .expect("join")
+            .create_dir()
+            .expect("mkdir");
+        let commands = workspace.join("/.hemtt/commands").expect("join");
+        commands.create_dir().expect("mkdir");
+        let mut file = commands
+            .join("bad.txt")
+            .expect("join")
+            .create_file()
+            .expect("create");
+        file.write_all(&[0xff, 0xfe, 0xff]).expect("write");
+        drop(file);
+
+        let Err(error) = Database::a3_with_workspace(&workspace, false) else {
+            panic!("expected an error for a command file that is not valid utf-8");
+        };
+        assert!(matches!(error, Error::CustomCommandIo(_)), "{error:?}");
+    }
 }

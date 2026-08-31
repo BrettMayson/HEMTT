@@ -18,7 +18,7 @@ impl SqfAnalyzer {
             return None;
         };
         let source = workspace.join_url(&url).ok()?;
-        let database = self.get_database(&workspace);
+        let database = self.get_database(&workspace).ok()?;
         #[allow(clippy::or_fun_call)]
         match Processor::run_with_sources(
             &source,

@@ -36,7 +36,11 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
     ) {
         let paa = hemtt_paa::Paa::read(fs_err::File::open(path).map_err(|e| format!("{e:?}"))?)
             .map_err(|e| format!("{e:?}"))?;
-        if let Err(e) = paa.maps()[0].0.get_image().save(&output) {
+        let Some(map) = paa.maps().first() else {
+            return Err("PAA has no maps".to_string());
+        };
+        let image = map.0.get_image()?;
+        if let Err(e) = image.save(&output) {
             error!("Failed to save image: {}", e);
             return Err(format!(
                 "Failed to save image to {}: {}",
@@ -121,10 +125,15 @@ impl Backend {
             tracing::warn!("Failed to read paa {:?}", params.url);
             return Ok(None);
         };
-        Ok(Some(
-            serde_json::to_value(paa.maps().first().expect("No maps found").0.json())
-                .expect("Serialization failed"),
-        ))
+        let Some(map) = paa.maps().first() else {
+            tracing::warn!("no maps in paa {:?}", params.url);
+            return Ok(None);
+        };
+        let Ok(json) = map.0.json() else {
+            tracing::warn!("failed to decode paa {:?}", params.url);
+            return Ok(None);
+        };
+        Ok(serde_json::to_value(json).ok())
     }
 
     #[expect(
