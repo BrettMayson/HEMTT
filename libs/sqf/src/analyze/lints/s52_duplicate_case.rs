@@ -108,72 +108,33 @@ impl LintRunner<LintData> for Runner {
             let Statement::Expression(case_expr, _) = body_statement else {
                 continue;
             };
-
-            // Try to find case VALUE: EXPR pattern
-            // This is structured as: case VALUE : EXPR
-            // Where "case" is typically a unary command or binary command
-            // and ":" is an Associate operator
             
-            // Pattern 1: case VALUE : EXPR (where case is unary)
-            if let Expression::BinaryCommand(BinaryCommand::Associate, left, _right, _) = case_expr {
-                // Left side should be (case VALUE) - could be unary or binary
-                if let Expression::UnaryCommand(UnaryCommand::Named(name), value_expr, _) = left.as_ref() {
-                    if name.eq_ignore_ascii_case("case") {
-                        let case_source = value_expr.source(false);
-                        let case_span = value_expr.span();
-
-                        // Check if we've seen this value before
-                        for (existing_value, existing_span) in &case_values {
-                            if existing_value == &case_source {
-                                // Found a duplicate!
-                                codes.push(Arc::new(CodeS52DuplicateCase::new(
-                                    case_span.clone(),
-                                    case_source.clone(),
-                                    existing_span.clone(),
-                                    processed,
-                                    config.severity(),
-                                )));
-                            }
-                        }
-
-                        case_values.push((case_source, case_span));
-                        continue;
-                    }
-                }
-            }
-
-            // Pattern 2: case VALUE do EXPR (where case is binary)
-            if let Expression::BinaryCommand(BinaryCommand::Named(cmd_name), inner_left, _inner_right, _) =
+            let case = if let Expression::BinaryCommand(BinaryCommand::Associate, left, _right, _) = case_expr {
+                left
+            } else {
                 case_expr
-            {
-                if cmd_name.eq_ignore_ascii_case("do") {
-                    if let Expression::BinaryCommand(BinaryCommand::Named(case_name), value_expr, _, _) =
-                        inner_left.as_ref()
-                    {
-                        if case_name.eq_ignore_ascii_case("case") {
-                            let case_source = value_expr.source(false);
-                            let case_span = value_expr.span();
+            };
+            if let Expression::UnaryCommand(UnaryCommand::Named(name), value_expr, _) = case
+                && name.eq_ignore_ascii_case("case") {
+                    let case_source = value_expr.source(false);
+                    let case_span = value_expr.span();
 
-                            // Check if we've seen this value before
-                            for (existing_value, existing_span) in &case_values {
-                                if existing_value == &case_source {
-                                    // Found a duplicate!
-                                    codes.push(Arc::new(CodeS52DuplicateCase::new(
-                                        case_span.clone(),
-                                        case_source.clone(),
-                                        existing_span.clone(),
-                                        processed,
-                                        config.severity(),
-                                    )));
-                                }
-                            }
-
-                            case_values.push((case_source, case_span));
-                            continue;
+                    // Check if we've seen this value before
+                    for (existing_value, existing_span) in &case_values {
+                        if existing_value == &case_source {
+                            // Found a duplicate!
+                            codes.push(Arc::new(CodeS52DuplicateCase::new(
+                                case_span.clone(),
+                                case_source.clone(),
+                                existing_span.clone(),
+                                processed,
+                                config.severity(),
+                            )));
                         }
                     }
+
+                    case_values.push((case_source, case_span));
                 }
-            }
         }
 
         codes
@@ -192,10 +153,6 @@ pub struct CodeS52DuplicateCase {
 impl Code for CodeS52DuplicateCase {
     fn ident(&self) -> &'static str {
         "L-S52"
-    }
-
-    fn include(&self) -> bool {
-        true
     }
 
     fn link(&self) -> Option<&str> {

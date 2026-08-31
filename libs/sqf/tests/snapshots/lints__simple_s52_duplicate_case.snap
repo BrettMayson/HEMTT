@@ -1,6 +1,6 @@
 ---
 source: libs/sqf/tests/lints.rs
-expression: lint(stringify! (s52_duplicate_case), true).0
+expression: "lint(stringify! (s52_duplicate_case), true).0"
 ---
 [0m[1m[38;5;14mhelp[L-S52][0m[1m: Duplicate case `"a"` in switch statement[0m
    [0m[36m┌─[0m s52_duplicate_case.sqf:14:10
@@ -30,6 +30,16 @@ expression: lint(stringify! (s52_duplicate_case), true).0
 [0m[36m6[0m [0m[36m│[0m     case 2: { "two" };
 [0m[36m7[0m [0m[36m│[0m     case [0m[36m1[0m: { "one again" };
   [0m[36m│[0m          [0m[36m^[0m [0m[36mduplicate case[0m
+
+
+[0m[1m[38;5;14mhelp[L-S52][0m[1m: Duplicate case `1` in switch statement[0m
+   [0m[36m┌─[0m s52_duplicate_case.sqf:41:10
+   [0m[36m│[0m
+[0m[36m39[0m [0m[36m│[0m     case 1;
+   [0m[36m│[0m          [0m[36m--[0m [0m[36mfirst case here[0m
+[0m[36m40[0m [0m[36m│[0m     case 2: { "X" };
+[0m[36m41[0m [0m[36m│[0m     case [0m[36m1[0m: { "Y"};
+   [0m[36m│[0m          [0m[36m^[0m [0m[36mduplicate case[0m
 
 
 [0m[1m[38;5;14mhelp[L-S52][0m[1m: Duplicate case `_distBottom` in switch statement[0m

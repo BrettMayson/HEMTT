@@ -26,11 +26,18 @@ switch (_var) do {
 switch (_value) do {
     case 1: { "one" };
     case 2: { "two" };
-    case default { "other" };
+    default { "other" };
 };
 
 // Single case is OK
 switch (_value) do {
     case 1: { "one" };
+};
+
+// multiple cases
+switch test do {
+    case 1;
+    case 2: { "X" };
+    case 1: { "Y"};
 };
 
