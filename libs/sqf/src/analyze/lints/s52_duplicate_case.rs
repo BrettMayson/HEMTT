@@ -119,10 +119,8 @@ impl LintRunner<LintData> for Runner {
                     let case_source = value_expr.source(false);
                     let case_span = value_expr.span();
 
-                    // Check if we've seen this value before
                     for (existing_value, existing_span) in &case_values {
                         if existing_value == &case_source {
-                            // Found a duplicate!
                             codes.push(Arc::new(CodeS52DuplicateCase::new(
                                 case_span.clone(),
                                 case_source.clone(),
