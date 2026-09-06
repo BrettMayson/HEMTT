@@ -130,14 +130,6 @@ fn extract_loop_body(statement: &Statement) -> Option<(i64, &Statements)> {
                 Expression::UnaryCommand(UnaryCommand::Named(name), _, _) if name.eq_ignore_ascii_case("for") => {
                     parse_for_loop_iterations(lhs.as_ref())
                 }
-                Expression::UnaryCommand(UnaryCommand::Named(name), loop_args, _) if name.eq_ignore_ascii_case("foreach") => {
-                    #[allow(clippy::cast_possible_wrap)]
-                    let loop_count = match loop_args.as_ref() {
-                        Expression::Array(values, _) | Expression::ConsumeableArray(values, _) => Some(values.len() as i64),
-                        _ => None,
-                    }?;
-                    Some(loop_count)
-                }
                 _ => parse_for_loop_iterations(lhs.as_ref()),
             }?;
 
@@ -145,7 +137,7 @@ fn extract_loop_body(statement: &Statement) -> Option<(i64, &Statements)> {
 
             Some((loop_count, body))
         }
-        Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _) if cmd.eq_ignore_ascii_case("foreach") || cmd.eq_ignore_ascii_case("forEach") => {
+        Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _) if cmd.eq_ignore_ascii_case("forEach") => {
             let Expression::Code(body) = lhs.as_ref() else { return None };
             #[allow(clippy::cast_possible_wrap)]
             let loop_count = match rhs.as_ref() {
