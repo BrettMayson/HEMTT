@@ -1026,6 +1026,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d57d423b3c82e89b9a24ca3091fee61f456a26edbd28d26c65906f4bc1dcd8f"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
 name = "dirs-sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1506,7 +1515,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "dialoguer",
- "dirs",
+ "dirs 7.0.0",
  "enable-ansi-support",
  "fs-err",
  "fs_extra",
@@ -1816,7 +1825,7 @@ version = "1.21.1"
 dependencies = [
  "ansi_term",
  "codespan-reporting",
- "dirs",
+ "dirs 7.0.0",
  "fs-err",
  "hemtt-common",
  "hemtt-pbo",
@@ -4022,7 +4031,7 @@ version = "3.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32824fab5e16e6c4d86dc1ba84489390419a39f97699852b66480bb87d297ed8"
 dependencies = [
- "dirs",
+ "dirs 6.0.0",
 ]
 
 [[package]]
