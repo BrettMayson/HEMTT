@@ -246,19 +246,18 @@ impl<I: Seek + Read> ReadablePbo<I> {
     ///
     /// # Errors
     /// if the pbo cannot be read
-    pub fn hash_filenames(&mut self) -> Result<Checksum, Error> {
-        let mut hasher = Sha1::new();
-
-        if self.files().is_empty() {
+    pub fn hash_filenames(&self) -> Result<Checksum, Error> {
+        let files = self.files_sorted();
+        if files.is_empty() {
             return Err(Error::NoFiles);
         }
 
-        for header in &self.files_sorted() {
-            // Skip empty files
-            let Some(mut file) = self.file(header.filename())? else {
-                continue;
-            };
-            if file.read_u8().is_err() {
+        let mut hasher = Sha1::new();
+        for header in &files {
+            // Uncompressed entries often carry original_size == 0 with the
+            // real length only in data_size, so check both.
+            let is_empty = header.size() == 0 && header.original() == 0;
+            if is_empty {
                 continue;
             }
             hasher.update(header.filename().replace('/', "\\").to_lowercase());
