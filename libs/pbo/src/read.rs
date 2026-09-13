@@ -254,8 +254,6 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         let mut hasher = Sha1::new();
         for header in &files {
-            // Uncompressed entries often carry original_size == 0 with the
-            // real length only in data_size, so check both.
             let is_empty = header.size() == 0 && header.original() == 0;
             if is_empty {
                 continue;
