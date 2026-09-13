@@ -254,6 +254,8 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         let mut hasher = Sha1::new();
         for header in &files {
+            // Skip empty entries. Uncompressed headers report the length in `size`
+            // and compressed ones in `original`, so an entry is empty only if both are 0.
             let is_empty = header.size() == 0 && header.original() == 0;
             if is_empty {
                 continue;
