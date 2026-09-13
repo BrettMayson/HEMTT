@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 
 use byteorder::ReadBytesExt;
@@ -201,6 +202,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
     /// # Panics
     /// if a file does not exist, but a header for it does
     pub fn gen_checksum(&mut self) -> Result<Checksum, Error> {
+        let sorted = self.files_sorted();
         let mut headers: Cursor<Vec<u8>> = Cursor::new(Vec::new());
         if let Some(vers_header) = &self.vers_header {
             vers_header.write_pbo(&mut headers)?;
@@ -221,7 +223,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         headers.write_all(&[0])?;
 
-        for header in &self.files_sorted() {
+        for header in &sorted {
             header.write_pbo(&mut headers)?;
         }
 
@@ -231,10 +233,20 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         hasher.update(headers.get_ref());
 
-        for header in &self.files_sorted() {
-            let mut file = self
-                .file_raw(header.filename())?
+        let files = self.files();
+        let mut offsets: HashMap<&str, u64> = HashMap::with_capacity(files.len());
+        let mut offset = self.blob_start;
+        for h in &files {
+            offsets.insert(h.filename(), offset);
+            offset += u64::from(h.size());
+        }
+
+        for header in &sorted {
+            let start = *offsets
+                .get(header.filename())
                 .expect("file with header should exist");
+            self.input.seek(SeekFrom::Start(start))?;
+            let mut file = (&mut self.input).take(u64::from(header.size()));
             std::io::copy(&mut file, &mut hasher)?;
         }
 
