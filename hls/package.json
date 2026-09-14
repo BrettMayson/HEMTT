@@ -408,16 +408,16 @@
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",
-    "@types/node": "^26.3.0",
+    "@types/node": "^26.5.1",
     "@types/vscode": "1.134.0",
     "@types/ws": "8.18.1",
-    "@typescript-eslint/eslint-plugin": "8.68.0",
-    "@typescript-eslint/parser": "8.68.0",
+    "@typescript-eslint/eslint-plugin": "8.70.0",
+    "@typescript-eslint/parser": "8.70.0",
     "@vscode/test-electron": "3.1.0",
     "esbuild": "0.28.2",
-    "eslint": "10.9.1",
+    "eslint": "10.10.0",
     "glob": "13.0.6",
-    "mocha": "11.8.0",
+    "mocha": "12.0.1",
     "run-script-os": "^1.1.6",
     "ts-loader": "9.6.2",
     "typescript": "^6.0.0",
@@ -427,8 +427,8 @@
     "hemtt": "file:",
     "image-js": "1.7.0",
     "portfinder": "^1.0.38",
-    "three": "0.185.1",
+    "three": "0.186.0",
     "three-viewport-gizmo": "^2.2.0",
-    "vscode-languageclient": "^10.1.0"
+    "vscode-languageclient": "^10.1.1"
   }
 }
