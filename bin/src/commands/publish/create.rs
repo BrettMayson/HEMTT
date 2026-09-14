@@ -10,6 +10,7 @@ pub fn execute(ugc: &UGC) -> Result<Report, Error> {
         |create_result| match create_result {
             Ok((published_id, needs_to_agree_to_terms)) => {
                 store_id(published_id.0).expect("Failed to store published id");
+                info!("Created workshop item with id {:?}", published_id);
                 if needs_to_agree_to_terms {
                     warn!("You need to agree to the terms of use before you can upload any files");
                 }

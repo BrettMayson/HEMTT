@@ -51,8 +51,30 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 ///
 /// You can find your Workshop item ID in the URL on the Steam Community Hub:
 /// `https://steamcommunity.com/sharedfiles/filedetails/?id=YOUR_WORKSHOP_ID_HERE`
+/// 
+/// ## Workshop Description
+/// 
+/// The workshop item description can be set to a file path that will be updated on every release.
+/// 
+/// The file can contain Steam Workshop text formatting or markdown, which will be converted to Steam Workshop format during upload.
+/// 
+/// ```toml
+/// [hemtt.publish]
+/// description = "README.md"
+/// ```
+/// 
+/// ## Changelog
+/// 
+/// A changelog file can be set to a file path that will be used to add a changelog to each release.
+/// 
+/// The [Keep a Changelog standard](https://keepachangelog.com/en/1.0.0/) is supported and recommended for your changelog file, other similar formats may work but are not guaranteed.
+/// 
+/// ```toml
+/// [hemtt.publish]
+/// changelog = "CHANGELOG.md"
+/// ```
 ///
-/// ## Configuration
+/// ## Build Configuration
 ///
 /// `hemtt publish` uses the same build configuration as [`hemtt release`](./release.md).
 /// All signing and archiving options apply to the released build before upload.
