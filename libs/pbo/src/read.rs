@@ -194,6 +194,25 @@ impl<I: Seek + Read> ReadablePbo<I> {
         Ok(())
     }
 
+    /// Byte offset of each entry's data, keyed by ASCII-lowercased stored filename.
+    /// First occurrence wins, matching the first-match behaviour of `file()`.
+    fn data_offsets(headers: &[Header], blob_start: u64) -> HashMap<String, u64> {
+        let mut offsets = HashMap::with_capacity(headers.len());
+        let mut offset = blob_start;
+        for h in headers {
+            offsets
+                .entry(h.filename().to_ascii_lowercase())
+                .or_insert(offset);
+            offset += u64::from(h.size());
+        }
+        offsets
+    }
+
+    /// Normalise a name the way `file()` normalises its query.
+    fn lookup_key(name: &str) -> String {
+        name.replace('/', "\\").to_ascii_lowercase()
+    }
+
     /// Generate a checksum for the PBO
     ///
     /// # Errors
@@ -233,20 +252,14 @@ impl<I: Seek + Read> ReadablePbo<I> {
 
         hasher.update(headers.get_ref());
 
-        let files = self.files();
-        let mut offsets: HashMap<&str, u64> = HashMap::with_capacity(files.len());
-        let mut offset = self.blob_start;
-        for h in &files {
-            offsets.insert(h.filename(), offset);
-            offset += u64::from(h.size());
-        }
-
+        let offsets = Self::data_offsets(&self.headers, self.blob_start);
         for header in &sorted {
             let start = *offsets
-                .get(header.filename())
+                .get(&Self::lookup_key(header.filename()))
                 .expect("file with header should exist");
             self.input.seek(SeekFrom::Start(start))?;
-            let mut file = (&mut self.input).take(u64::from(header.size()));
+            let blank = header.as_blank();
+            let mut file = File::new(&blank, &mut self.input);
             std::io::copy(&mut file, &mut hasher)?;
         }
 
@@ -286,18 +299,22 @@ impl<I: Seek + Read> ReadablePbo<I> {
     /// # Errors
     /// if the pbo cannot be read
     pub fn hash_files(&mut self, version: BISignVersion) -> Result<Checksum, Error> {
+        let sorted = self.files_sorted();
+        let offsets = Self::data_offsets(&self.headers, self.blob_start);
         let mut hasher = Sha1::new();
 
         let mut nothing = true;
 
-        for header in &self.files_sorted() {
+        for header in &sorted {
             if !version.should_hash_file(header.filename()) {
                 continue;
             }
             nothing = false;
-            let Some(mut file) = self.file(header.filename())? else {
+            let Some(&start) = offsets.get(&Self::lookup_key(header.filename())) else {
                 continue;
             };
+            self.input.seek(SeekFrom::Start(start))?;
+            let mut file = File::new(header, &mut self.input);
             std::io::copy(&mut file, &mut hasher)?;
         }
 
