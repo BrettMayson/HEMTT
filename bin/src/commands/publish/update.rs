@@ -47,7 +47,10 @@ pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, 
             std::process::exit(1);
         };
 
-        Some(markdown_headings_to_steam(&format!("# Version {}\n\n{}", version, change.notes)))
+        Some(markdown_headings_to_steam(&format!(
+            "# Version {}\n\n{}",
+            version, change.notes
+        )))
     } else {
         Some(format!("Version {version}"))
     };
