@@ -2,6 +2,7 @@ pub mod build;
 pub mod check;
 pub mod dev;
 pub mod launch;
+pub mod publish;
 pub mod release;
 
 use std::{
@@ -28,6 +29,8 @@ pub struct HemttConfig {
     build: build::BuildOptions,
 
     release: release::ReleaseOptions,
+
+    publish: publish::PublishOptions,
 }
 
 impl HemttConfig {
@@ -54,6 +57,11 @@ impl HemttConfig {
     /// Get the release options
     pub const fn release(&self) -> &release::ReleaseOptions {
         &self.release
+    }
+
+    /// Get the publish options
+    pub const fn publish(&self) -> &publish::PublishOptions {
+        &self.publish
     }
 }
 
@@ -132,6 +140,9 @@ pub struct HemttSectionFile {
 
     #[serde(default)]
     release: release::ReleaseOptionsFile,
+
+    #[serde(default)]
+    publish: publish::PublishOptionsFile,
 }
 
 static DLC_CHECK: Once = Once::new();
@@ -201,6 +212,7 @@ impl HemttSectionFile {
             },
             build: self.build.into(),
             release: self.release.into_config(prefix),
+            publish: self.publish.into_config()?,
         })
     }
 }

@@ -33,6 +33,7 @@ hemtt-workspace = { path = "../libs/workspace" }
 hemtt-wss = { path = "../libs/wss" }
 
 arma3-wiki = { workspace = true }
+markdown-bbcode = { git = "https://github.com/Totodore/markdown-bbcode", rev = "3380bacd923b6f7f15e20d077f055a8427a2beb8" }
 byteorder = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 clap_complete = "4.6.7"
@@ -47,6 +48,7 @@ indicatif = "0.18.6"
 interprocess = { workspace = true }
 libc = { version = "0.2.189" }
 lzma-rust2 = "0.15.8" # TODO: remove when not needed, currently breaks build if not specified
+parse-changelog = { version = "0.6", default-features = false }
 paste = { workspace = true }
 rand = { workspace = true }
 rayon = "1.12.0"
