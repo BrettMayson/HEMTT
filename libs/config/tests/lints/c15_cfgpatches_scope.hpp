@@ -7,7 +7,7 @@ class CfgPatches {
     };
 };
 
-class cfgvehicles {
+class CfgVehicles {
     class Car;
     class abe_car1: Car { };
     class abe_car2: Car { // Missing
