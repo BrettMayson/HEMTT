@@ -73,6 +73,28 @@ impl LintRunner<LintData> for RunnerExpression {
         target: &Self::Target,
         data: &LintData,
     ) -> Codes {
+        fn use_function(name: &str, span: &std::ops::Range<usize>, processed: &hemtt_workspace::reporting::Processed, project: &ProjectConfig, data: &LintData) {
+            let name_lower = name.to_lowercase();
+            if is_project_func(&name_lower, project) {
+                let pos = if let Some(mapping) = processed.mapping(span.start) {
+                    mapping.token().position().clone()
+                } else {
+                    // No position found for token?
+                    return;
+                };
+                let mut used_functions = data.functions_used.lock().expect("mutex safety");
+                let Some(map_start) = processed.mapping(span.start) else {
+                    return;
+                };
+                let Some(map_end) = processed.mapping(span.end) else {
+                    return;
+                };
+                let Some(map_file) = processed.source(map_start.source()) else {
+                    return;
+                };
+                used_functions.push((name_lower, pos, map_start.to_owned(), map_end.to_owned(), map_file.0.clone()));
+            }
+        }
         let Some(processed) = processed else {
             return Vec::new();
         };
@@ -81,28 +103,16 @@ impl LintRunner<LintData> for RunnerExpression {
         };
         match target {
             Expression::Variable(var_name, var_span) => {
-                let var_name = var_name.to_lowercase();
-                if is_project_func(&var_name, project) {
-                    let pos = if let Some(mapping) = processed.mapping(var_span.start) {
-                        mapping.token().position().clone()
-                    } else {
-                        // No position found for token?
-                        return vec![];
-                    };
-                    let mut used_functions = data.functions_used.lock().expect("mutex safety");
-                    let Some(map_start) = processed.mapping(var_span.start) else {
-                        return vec![];
-                    };
-                    let Some(map_end) = processed.mapping(var_span.end) else {
-                        return vec![];
-                    };
-                    let Some(map_file) = processed.source(map_start.source()) else {
-                        return vec![];
-                    };
-                    used_functions.push((var_name, pos, map_start.to_owned(), map_end.to_owned(), map_file.0.clone()));
-                }
+                use_function(var_name, var_span, processed, project, data);
             }
             Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _span) => {
+                if (cmd.eq_ignore_ascii_case("remoteExec") || cmd.eq_ignore_ascii_case("remoteExecCall"))
+                    && let Expression::Array(arr, _) = rhs.as_ref()
+                    && !arr.is_empty()
+                    && let Expression::String(string_name, string_span, _) = &arr[0]
+                {
+                    use_function(string_name, string_span, processed, project, data);
+                }
                 if !cmd.eq_ignore_ascii_case("call") {
                     return vec![];
                 }
