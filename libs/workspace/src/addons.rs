@@ -13,7 +13,7 @@ use tracing::{trace, warn};
 
 use crate::WorkspacePath;
 use crate::position::Position;
-use crate::reporting::{Code, Mapping};
+use crate::reporting::{Code, Mapping, Processed};
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -250,6 +250,7 @@ pub struct BuildData {
     functions_defined: Arc<Mutex<DefinedFunctions>>,
     functions_used: Arc<Mutex<UsedFunctions>>,
     magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
+    quoted_code: Arc<Mutex<Vec<Processed>>>,
 }
 
 impl BuildData {
@@ -261,6 +262,7 @@ impl BuildData {
             functions_defined: Arc::new(Mutex::new(HashSet::new())),
             functions_used: Arc::new(Mutex::new(Vec::new())),
             magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),
+            quoted_code: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -309,6 +311,11 @@ impl BuildData {
     /// Fetches the `MagazineWellInfos` (tuple of missing mag and error)
     pub fn magazine_well_info(&self) -> Arc<Mutex<MagazineWellInfo>> {
         self.magazine_well_info.clone()
+    }
+    #[must_use]
+    /// Fetches the quoted code
+    pub fn quoted_code(&self) -> Arc<Mutex<Vec<Processed>>> {
+        self.quoted_code.clone()
     }
 }
 

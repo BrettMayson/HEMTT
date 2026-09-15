@@ -12,7 +12,7 @@ use super::{Code, Codes, Output, Token, definition::Definition};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A processed file
 pub struct Processed {
     sources: Sources,
@@ -468,6 +468,86 @@ impl Processed {
     /// Return the entire clean output
     pub fn clean_output(&self) -> &str {
         &self.clean_output
+    }
+
+    #[must_use]
+    /// Extract a sub-region of the processed output and remap its source mappings.
+    /// # Panics
+    pub fn select_sub_region(
+        &self,
+        new_output: String,
+        from_span: &Range<usize>,
+        boundaries: &[usize],
+        add_source: Option<&str>,
+    ) -> Self {
+        let mappings: Vec<Mapping> = self
+            .mappings
+            .iter()
+            .filter_map(|m| {
+                let start = m.processed_start().offset().max(from_span.start);
+                let end = m.processed_end().offset().min(from_span.end);
+                if start >= end {
+                    return None;
+                }
+                let start = boundaries[start - from_span.start];
+                let end = boundaries[end - from_span.start];
+                if start >= end {
+                    return None;
+                }
+                Some(Mapping {
+                    source: m.source,
+                    processed: (
+                        LineCol::from_content(&new_output, start),
+                        LineCol::from_content(&new_output, end),
+                    ),
+                    original: m.original.clone(),
+                    token: m.token.clone(),
+                    was_macro: m.was_macro,
+                })
+            })
+            .collect();
+
+        let mappings_interval = mappings
+            .iter()
+            .enumerate()
+            .map(|(idx, map)| {
+                (
+                    map.processed_start().offset()..map.processed_end().offset(),
+                    idx,
+                )
+            })
+            .collect();
+
+        let mut sources = self.sources.clone();
+        assert!(!sources.is_empty(), "Sources cannot be empty");
+        if let Some(add_source) = add_source
+            && !add_source.is_empty()
+            && let Some((dummy, _)) = sources.first()
+        {
+            sources.push((dummy.clone(), add_source.to_string()));
+        }
+
+        let total_chars = new_output.chars().count();
+        let mut processed = Self {
+            sources,
+            included_files: self.included_files.clone(),
+            output: new_output,
+            clean_output: String::new(),
+            clean_output_line_indexes: Vec::new(),
+            total_chars,
+            line_offsets: self.line_offsets.clone(),
+            mappings_interval,
+            mappings,
+            macros: self.macros.clone(),
+            #[cfg(feature = "lsp")]
+            usage: self.usage.clone(),
+            warnings: self.warnings.clone(),
+            no_rapify: self.no_rapify,
+            expansions: self.expansions.clone(),
+        };
+
+        clean_output(&mut processed);
+        processed
     }
 
     #[must_use]

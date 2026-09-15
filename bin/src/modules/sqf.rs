@@ -52,6 +52,7 @@ impl Module for SQFCompiler {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let mut entries = Vec::new();
+        let mut quoted_sqf = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
@@ -62,6 +63,9 @@ impl Module for SQFCompiler {
                     entries.push((addon.clone(), entry));
                 }
             }
+            let quoted_code_lock = addon.build_data().quoted_code();
+            let addon_qc = quoted_code_lock.lock().expect("mutex");
+            quoted_sqf.extend(addon_qc.iter().cloned().map(|code| (addon.clone(), code)));
         }
         let database = self
             .database
@@ -121,7 +125,34 @@ impl Module for SQFCompiler {
                 Ok(report)
             })
             .collect::<Result<Vec<Report>, Error>>()?;
+
+        trace!("Processing {} quoted sqf", quoted_sqf.len());
+        let qc_reports = quoted_sqf
+            .par_iter()
+            .map(|(addon, processed)| {
+                let mut report = Report::new();
+                let Some(source) = processed.source(0) else {
+                    return report;
+                };
+                let checked = hemtt_sqf::check::check(
+                    processed,
+                    Some(ctx.config()),
+                    addon,
+                    &source.0,
+                    database.clone(),
+                    Some(manager.clone()),
+                );
+                if let Some(sqf_report) = checked.report {
+                    sqf_report.push_to_addon(addon);
+                }
+                report.extend(checked.codes);
+                report
+            })
+            .collect::<Vec<Report>>();
         for new_report in reports {
+            report.merge(new_report);
+        }
+        for new_report in qc_reports {
             report.merge(new_report);
         }
         progress.finish_and_clear();
