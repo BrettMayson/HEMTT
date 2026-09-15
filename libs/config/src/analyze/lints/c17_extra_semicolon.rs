@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Diagnostic, Processed},
 };
 
-use crate::{analyze::LintData, Property};
+use crate::{analyze::LintData, Property, Value};
 
 crate::analyze::lint!(LintC17ExtraSemicolon);
 
@@ -82,11 +82,33 @@ impl LintRunner<LintData> for Runner {
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
         target: &crate::Property,
-        _data: &LintData,
+        data: &LintData,
     ) -> Vec<std::sync::Arc<dyn Code>> {
         let Some(processed) = processed else {
             return vec![];
         };
+
+
+        if let Property::Entry { name, value, expected_array: _ } = target
+            && let Value::Str(s) = value
+                    && (s.value().contains(" call ") 
+                    || name.as_str().eq_ignore_ascii_case("statement")
+                     || name.as_str().eq_ignore_ascii_case("condition")
+                      || name.as_str().eq_ignore_ascii_case("action"))
+                      {
+
+                    println!("found code? in value: {}", s.value());
+
+                    
+
+                    let range = s.span().clone();
+                    let processed = processed.sub_from_quote(&range);
+
+
+data.quoted_code.lock().expect("mutex").push(processed);
+
+                }
+
         if let Property::ExtraSemicolon(_, span) = target {
             vec![Arc::new(Code17ExtraSemicolon::new(
                 span.clone(),
