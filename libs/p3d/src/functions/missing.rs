@@ -152,4 +152,24 @@ impl P3D {
         }
         Ok((missing_textures, missing_materials))
     }
+
+    /// Find material and texture paths starting with backslash in the P3D
+    ///
+    /// These paths should not start with backslash.
+    #[must_use]
+    pub fn invalid_paths(&self) -> (Vec<String>, Vec<String>) {
+        let mut textures = HashSet::new();
+        let mut materials = HashSet::new();
+        for lod in &self.lods {
+            for face in &lod.faces {
+                if face.texture.starts_with('\\') {
+                    textures.insert(face.texture.clone());
+                }
+                if face.material.starts_with('\\') {
+                    materials.insert(face.material.clone());
+                }
+            }
+        }
+        (textures.into_iter().collect(), materials.into_iter().collect())
+    }
 }
