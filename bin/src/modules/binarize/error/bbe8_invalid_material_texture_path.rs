@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hemtt_workspace::reporting::{Code, Diagnostic, Severity};
+use hemtt_workspace::reporting::{Code, Diagnostic};
 
 pub struct InvalidMaterialTexturePath {
     p3d: String,
@@ -12,13 +12,9 @@ impl Code for InvalidMaterialTexturePath {
         "BBE8"
     }
 
-    fn severity(&self) -> Severity {
-        Severity::Warning
-    }
-
     fn message(&self) -> String {
         format!(
-            "{} has {} material/texture path{} starting with backslash (should not):\n  {}",
+            "{} has {} material/texture path{} starting with backslash:\n  {}",
             self.p3d,
             self.paths.len(),
             if self.paths.len() == 1 { "" } else { "s" },
