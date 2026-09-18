@@ -155,13 +155,6 @@ impl Code for CodeC19StandardCase {
         format!("should be `{}`", self.correct_case)
     }
 
-    fn help(&self) -> Option<String> {
-        Some(format!(
-            "rename this class to `{}`",
-            self.correct_case
-        ))
-    }
-
     fn suggestion(&self) -> Option<String> {
         Some(self.correct_case.clone())
     }
