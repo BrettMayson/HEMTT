@@ -18,7 +18,10 @@ use self::error::{
     bbe3_binarize_failed::BinarizeFailed, bbw1_tools_not_found::ToolsNotFound,
     bbw2_platform_not_supported::PlatformNotSupported,
 };
-use self::error::{bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive};
+use self::error::{
+    bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive,
+    bbe8_invalid_material_texture_path::InvalidMaterialTexturePath,
+};
 use super::Module;
 use crate::{
     context::Context, error::Error, link::create_link,
@@ -235,6 +238,16 @@ impl Module for Binarize {
                                 entry.as_str().to_string(),
                                 missing_materials,
                                 *pdrive_option == PDriveOption::Ignore,
+                            );
+                            report.push(diag);
+                        }
+                        let (invalid_textures, invalid_materials) = p3d.invalid_paths();
+                        let mut invalid_paths = invalid_textures;
+                        invalid_paths.extend(invalid_materials);
+                        if !invalid_paths.is_empty() {
+                            let diag = InvalidMaterialTexturePath::code(
+                                entry.as_str().to_string(),
+                                invalid_paths,
                             );
                             report.push(diag);
                         }
