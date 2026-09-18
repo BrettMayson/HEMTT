@@ -1536,7 +1536,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hemtt"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "arma3-wiki",
  "byteorder",
@@ -1602,7 +1602,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-book-gen"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "arma3-wiki",
  "clap",
@@ -1619,7 +1619,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-comm"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "arma-rs",
  "hemtt-common",
@@ -1628,7 +1628,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-common"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "codespan-reporting",
  "enable-ansi-support",
@@ -1649,7 +1649,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-config"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "automod",
  "byteorder",
@@ -1673,7 +1673,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-language-server"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "arma3-wiki",
  "clap",
@@ -1702,7 +1702,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-lzo"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "rand 0.9.5",
  "thiserror 2.0.20",
@@ -1710,7 +1710,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-p3d"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "byteorder",
  "fs-err",
@@ -1723,7 +1723,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-paa"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "base64 0.23.1",
  "byteorder",
@@ -1740,7 +1740,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-pbo"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "byteorder",
  "fs-err",
@@ -1754,7 +1754,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-preprocessor"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "automod",
  "criterion",
@@ -1774,7 +1774,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-signing"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "argon2",
  "bincode",
@@ -1796,7 +1796,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-sqf"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "arma3-wiki",
  "automod",
@@ -1821,7 +1821,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-stringtable"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "automod",
  "byteorder",
@@ -1842,7 +1842,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-test"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "fs-err",
  "fs_extra",
@@ -1851,7 +1851,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-workspace"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "ansi_term",
  "codespan-reporting",
@@ -1873,7 +1873,7 @@ dependencies = [
 
 [[package]]
 name = "hemtt-wss"
-version = "1.21.1"
+version = "1.22.0"
 dependencies = [
  "byteorder",
  "fs-err",
