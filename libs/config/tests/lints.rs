@@ -49,6 +49,7 @@ lint!(c14_many_unused_external);
 lint!(c15_cfgpatches_scope);
 lint!(c17_extra_semicolon);
 lint!(c18_cfgpatches_duplicate_class, "L-C18");
+lint!(c19_standard_case);
 
 fn lint(file: &str, filter: Option<&str>) -> (String, ConfigReport) {
     let folder = std::path::PathBuf::from(ROOT);
