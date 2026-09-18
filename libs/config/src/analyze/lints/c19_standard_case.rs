@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
-    lint::{AnyLintRunner, Lint, LintRunner},
-    reporting::{Code, Codes, Diagnostic, Processed},
+    lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
 use crate::{analyze::LintData, Class, Config, Property};
@@ -63,7 +62,7 @@ impl LintRunner<LintData> for Runner {
     fn run(
         &self,
         _project: Option<&ProjectConfig>,
-        _config: &LintConfig,
+        config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
         target: &Config,
@@ -72,17 +71,17 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
-        check(&target.0, processed)
+        check(config, &target.0, processed)
     }
 }
 
-fn check(properties: &[Property], processed: &Processed) -> Codes {
+fn check(config: &LintConfig, properties: &[Property], processed: &Processed) -> Codes {
     let mut codes = Vec::new();
     for property in properties {
         if let Property::Class(c) = property {
             match c {
                 Class::Root { properties } => {
-                    codes.extend(check(properties, processed));
+                    codes.extend(check(config, properties, processed));
                 }
                 Class::External { name } => {
                     if let Some(correct_case) =
@@ -91,6 +90,7 @@ fn check(properties: &[Property], processed: &Processed) -> Codes {
                         })
                         && &name.value != correct_case {
                             codes.push(Arc::new(CodeC19StandardCase::new(
+                                config.severity(),
                                 c.clone(),
                                 correct_case.to_string(),
                                 processed,
@@ -109,12 +109,13 @@ fn check(properties: &[Property], processed: &Processed) -> Codes {
                         })
                         && &name.value != correct_case {
                             codes.push(Arc::new(CodeC19StandardCase::new(
+                                config.severity(),
                                 c.clone(),
                                 correct_case.to_string(),
                                 processed,
                             )));
                         }
-                    codes.extend(check(properties, processed));
+                    codes.extend(check(config, properties, processed));
                 }
             }
         }
@@ -123,6 +124,7 @@ fn check(properties: &[Property], processed: &Processed) -> Codes {
 }
 
 pub struct CodeC19StandardCase {
+    severity: Severity,
     class: Class,
     correct_case: String,
     diagnostic: Option<Diagnostic>,
@@ -135,6 +137,10 @@ impl Code for CodeC19StandardCase {
 
     fn link(&self) -> Option<&str> {
         Some("/lints/config.html#standard_case")
+    }
+
+    fn severity(&self) -> Severity {
+        self.severity
     }
 
     fn message(&self) -> String {
@@ -167,8 +173,9 @@ impl Code for CodeC19StandardCase {
 
 impl CodeC19StandardCase {
     #[must_use]
-    pub fn new(class: Class, correct_case: String, processed: &Processed) -> Self {
+    pub fn new(severity: Severity, class: Class, correct_case: String, processed: &Processed) -> Self {
         Self {
+            severity,
             class,
             correct_case,
             diagnostic: None,
