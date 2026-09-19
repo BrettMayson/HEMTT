@@ -1,6 +1,4 @@
 //! Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
-//! `ToDo`: what commands consume arrays
-//!
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
 use std::{ops::Range, sync::Arc};
 #[allow(unused_imports)]
@@ -98,9 +96,27 @@ impl Expression {
                                 right_o = consumable;
                             }
                         }
-                        // commands that fully consume arrays and leave no crumbs
-                        "positioncameratoworld" | "random" => {
+                        // commands that fully consume arrays
+                        "positioncameratoworld"
+                        | "private"
+                        | "random"
+                        | "ctrlsettext"
+                        | "format"
+                        | "ppeffectcreate"
+                        | "for" => {
                             if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
+                                right_o = consumable;
+                            }
+                        }
+                        // commands that consume an outer array, but may need copy if there are sub-arrays as elements
+                        // ```sqf
+                        // addMissionEventHandler ["EachFrame", {_thisArg set [0, time]}, [1,2,3]]; // unsafe without copy
+                        // x = selectRandom [[1], [2]]; // unsafe without copy
+                        // ```
+                        "addmissioneventhandler" | "selectrandom" | "getmissionconfigvalue" => {
+                            let direct = !right_o.array_has_sub_arrays();
+                            if let Some(consumable) = right_o.get_consumable_array(direct, op_name)
+                            {
                                 right_o = consumable;
                             }
                         }
@@ -133,19 +149,72 @@ impl Expression {
                             }
                         }
                         // could return part of the rhs's default value (all use 2nd arg as default value)
-                        "param" | "getvariable" | "setvariable" | "getordefault" => {
+                        "param" | "getvariable" | "setvariable" | "getordefault"
+                        | "getordefaultcall" => {
                             let direct = right_o.is_not_array_default_value();
                             if let Some(consumable) = right_o.get_consumable_array(direct, op_name)
                             {
                                 right_o = consumable;
                             }
                         }
-                        // commands that fully consume arrays and leave no crumbs
-                        "vectoradd" | "vectordiff" | "vectorcrossproduct" | "vectordotproduct" => {
+                        // commands that fully consume arrays [Both Sides]
+                        "vectoradd"
+                        | "vectordiff"
+                        | "vectorcrossproduct"
+                        | "vectordotproduct"
+                        | "vectormultiply"
+                        | "vectorcos"
+                        | "vectorfromto"
+                        | "setvectorup"
+                        | "setvectordirandup"
+                        | "modeltoworld"
+                        | "modeltoworldvisual"
+                        | "modeltoworldworld"
+                        | "modeltoworldvisualworld"
+                        | "selectionposition"
+                        | "distance"
+                        | "isequalto" // unlikely to match because usualy empty array
+                        | "isnotequalto"
+                        | "ctrlcreate"
+                        | "ctrlsetposition"
+                        | "ctrlsettext"
+                        | "ctrlsettextcolor"
+                        | "ctrlsetbackgroundcolor"
+                        | "in"
+                        | "regexfind"
+                        | "regexreplace"
+                        | "nearentities"
+                        | "nearobjects"
+                        | "ppeffectadjust" => {
                             if let Some(consumable) = right_o.get_consumable_array(true, op_name) {
                                 right_o = consumable;
                             }
                             if let Some(consumable) = left_o.get_consumable_array(true, op_name) {
+                                left_o = consumable;
+                            }
+                        }
+                        // commands that consume an outer array, but cannot have sub-arrays inside as arguments as they may be modified (e.g. `_x resize 0`)
+                        // select syntax 1/2/6 are safe as long as the lhs elements are not arrays, syntax 4/5 are always safe
+                        "select"
+                        | "foreach"
+                        | "findif"
+                        | "find"
+                        | "apply"
+                        | "set"
+                        | "addeventhandler"
+                        | "displayaddeventhandler"
+                        | "ctrladdeventhandler" => {
+                            let direct = !right_o.array_has_sub_arrays();
+                            if let Some(consumable) = right_o.get_consumable_array(direct, op_name)
+                            {
+                                right_o = consumable;
+                            }
+                            let direct = !left_o.array_has_sub_arrays();
+                            // `set` with a rvalue for LHS makes no sense, but better to be safe
+                            if !op_type.as_str().eq_ignore_ascii_case("set")
+                                && let Some(consumable) =
+                                    left_o.get_consumable_array(direct, op_name)
+                            {
                                 left_o = consumable;
                             }
                         }
@@ -258,38 +327,52 @@ impl Expression {
         }
         true
     }
-
-    /// Trys to get a consumable array from an existing array if it can be made a constant
+    #[must_use]
+    fn array_rel_size(&self) -> usize {
+        let Self::Array(array, _) = self else {
+            return 1;
+        };
+        array.iter().fold(1, |acc, e| acc + e.array_rel_size())
+    }
+    #[must_use]
+    fn array_has_sub_arrays(&self) -> bool {
+        let Self::Array(array, _) = self else {
+            return false;
+        };
+        array.iter().any(|e| matches!(e, Self::Array(_, _)))
+    }
+    /// Trys to get a consumable array from an existing array if it can be made into a constant
     #[must_use]
     #[allow(unused_variables)]
     fn get_consumable_array(&self, direct: bool, op: &str) -> Option<Self> {
-        if let Self::Array(array, range) = &self {
-            if !self.is_constant() {
-                #[cfg(debug_assertions)]
-                trace!("not constant {op}");
-                return None;
-            }
-            if array.is_empty() {
-                #[cfg(debug_assertions)]
-                trace!("pointless to optimize {op}");
-                return None;
-            }
-            if direct {
-                #[cfg(debug_assertions)]
-                trace!("optimizing [{op}]'s arg => ConsumeableArray");
-                Some(Self::ConsumeableArray(array.clone(), range.clone()))
-            } else {
-                #[cfg(debug_assertions)]
-                trace!("optimizing [{op}]'s arg => +ConsumeableArray (copy)");
-                // make a copy of the array so the original cannot be modified
-                Some(Self::UnaryCommand(
-                    UnaryCommand::Plus,
-                    Box::new(Self::ConsumeableArray(array.clone(), range.clone())),
-                    range.clone(),
-                ))
-            }
+        let Self::Array(array, range) = &self else {
+            return None;
+        };
+        if !self.is_constant() {
+            #[cfg(debug_assertions)]
+            trace!("not constant {op}");
+            return None;
+        }
+        // It becomes slower to copy very small arrays instead of just making them natively
+        let min_size = if direct { 2 } else { 3 };
+        if self.array_rel_size() < min_size {
+            #[cfg(debug_assertions)]
+            trace!("too small to optimize {op} size {}", self.array_rel_size());
+            return None;
+        }
+        if direct {
+            #[cfg(debug_assertions)]
+            trace!("optimizing [{op}]'s arg => ConsumeableArray");
+            Some(Self::ConsumeableArray(array.clone(), range.clone()))
         } else {
-            None
+            #[cfg(debug_assertions)]
+            trace!("optimizing [{op}]'s arg => +ConsumeableArray (copy)");
+            // make a copy of the array so the original cannot be modified
+            Some(Self::UnaryCommand(
+                UnaryCommand::Plus,
+                Box::new(Self::ConsumeableArray(array.clone(), range.clone())),
+                range.clone(),
+            ))
         }
     }
 
