@@ -265,12 +265,7 @@ impl SqfAnalyzer {
             let Some(addon) = addon_for(&workspace, &path) else {
                 continue;
             };
-            futures.spawn(check_sqf(
-                path.clone(),
-                addon,
-                workspace.clone(),
-                database.clone(),
-            ));
+            futures.spawn(check_sqf(path, addon, workspace.clone(), database.clone()));
         }
         tokio::spawn(async move {
             futures.join_all().await;

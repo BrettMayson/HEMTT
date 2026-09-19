@@ -146,7 +146,7 @@ impl Statements {
             {
                 command.clone_from(&used_command);
                 version = command_version;
-                span = command_span.clone();
+                span = command_span;
             }
         }
         (command, version, span)

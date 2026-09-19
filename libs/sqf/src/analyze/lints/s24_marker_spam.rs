@@ -83,7 +83,7 @@ impl LintRunner<LintData> for Runner {
                     let Some(name) = marker_name(name) else {
                         continue;
                     };
-                    pending.entry(name.clone()).or_default().push((cmd.clone(), cmd_span.clone()));
+                    pending.entry(name).or_default().push((cmd.clone(), cmd_span.clone()));
                 }
                 Statement::Expression(Expression::UnaryCommand(UnaryCommand::Named(cmd), _, _), _) => {
                     if cmd.eq_ignore_ascii_case("sleep") || cmd.eq_ignore_ascii_case("uiSleep") {

@@ -257,7 +257,7 @@ impl Module for Binarize {
                         entry
                             .as_str()
                             .trim_start_matches('/')
-                            .trim_start_matches(&addon.folder().clone())
+                            .trim_start_matches(&addon.folder())
                             .trim_start_matches('/')
                             .trim_end_matches(&entry.filename()),
                     );

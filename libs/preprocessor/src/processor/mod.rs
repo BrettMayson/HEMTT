@@ -528,7 +528,13 @@ pub mod tests {
             &sources,
         )
         .unwrap();
-        assert!(sources.dependencies_of(root_id).is_empty());
-        assert!(sources.dependents_of(included_id).is_empty());
+        assert_eq!(
+            sources.dependencies_of(root_id),
+            [] as [hemtt_workspace::FileId; 0]
+        );
+        assert_eq!(
+            sources.dependents_of(included_id),
+            [] as [hemtt_workspace::FileId; 0]
+        );
     }
 }
