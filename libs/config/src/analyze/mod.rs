@@ -24,6 +24,7 @@ pub struct LintData {
     pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
     pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
+    pub(crate) quoted_code: Arc<Mutex<Vec<Processed>>>,
 }
 
 lint_manager!(config, vec![]);
@@ -93,6 +94,7 @@ impl Analyze for Class {
                     localizations: data.localizations.clone(),
                     functions_defined: data.functions_defined.clone(),
                     magazine_well_info: data.magazine_well_info.clone(),
+                    quoted_code: data.quoted_code.clone(),
                 };
                 properties
                     .iter()
@@ -121,6 +123,7 @@ impl Analyze for Property {
                     localizations: data.localizations.clone(),
                     functions_defined: data.functions_defined.clone(),
                     magazine_well_info: data.magazine_well_info.clone(),
+                    quoted_code: data.quoted_code.clone(),
                 };
                 value.analyze(&data, project, processed, manager)
             }
@@ -221,6 +224,7 @@ pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
             localizations: Arc::new(Mutex::new(vec![])),
             functions_defined: Arc::new(Mutex::new(HashSet::new())),
             magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),
+            quoted_code: Arc::new(Mutex::new(Vec::new())),
         },
         project,
         None,
