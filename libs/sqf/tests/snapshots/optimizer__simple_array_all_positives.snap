@@ -9,7 +9,7 @@ Statements {
                 Named(
                     "params",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         String(
                             "_array",
@@ -33,7 +33,7 @@ Statements {
                     "_array",
                     25..31,
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -66,7 +66,7 @@ Statements {
                 Named(
                     "selectRandom",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -99,7 +99,7 @@ Statements {
                 Named(
                     "findIf",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(

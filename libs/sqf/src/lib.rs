@@ -219,7 +219,7 @@ pub enum Expression {
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
-    ConsumeableArray(Vec<Self>, Range<usize>),
+    ConsumableArray(Vec<Self>, Range<usize>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
@@ -242,7 +242,7 @@ impl Expression {
             }
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
-            Self::ConsumeableArray(array, _) | Self::Array(array, _) => {
+            Self::ConsumableArray(array, _) | Self::Array(array, _) => {
                 let mut out = String::new();
                 out.push('[');
                 for (i, element) in array.iter().enumerate() {
@@ -327,7 +327,7 @@ impl Expression {
         match self {
             Self::Code(code) => code.span().clone(),
             #[allow(clippy::range_plus_one)]
-            Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
+            Self::ConsumableArray(items, span) | Self::Array(items, span) => {
                 if items.is_empty() {
                     span.start - 1..span.end
                 } else {
@@ -348,7 +348,7 @@ impl Expression {
     pub fn full_span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span().clone(),
-            Self::ConsumeableArray(_, _) | Self::Array(_, _) => self.span(),
+            Self::ConsumableArray(_, _) | Self::Array(_, _) => self.span(),
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)

@@ -9,7 +9,7 @@ Statements {
                 Named(
                     "select",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -61,7 +61,7 @@ Statements {
                     "something",
                     29..38,
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -89,7 +89,7 @@ Statements {
                 ),
                 UnaryCommand(
                     Plus,
-                    ConsumeableArray(
+                    ConsumableArray(
                         [
                             Array(
                                 [

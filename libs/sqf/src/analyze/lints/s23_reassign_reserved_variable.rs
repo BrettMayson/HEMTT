@@ -141,7 +141,7 @@ impl LintRunner<LintData> for ExpressionRunner {
             _ => return Vec::new(),
         };
 
-        if let Expression::Array(values, _) | Expression::ConsumeableArray(values, _) = &**exp {
+        if let Expression::Array(values, _) | Expression::ConsumableArray(values, _) = &**exp {
             for param in values {
                 let (name, span) = match &param {
                     Expression::String(name, span, _) => (name, span),

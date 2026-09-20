@@ -274,8 +274,8 @@ impl Expression {
                     BinaryCommand::Else => {
                         if let (Self::Code(_), Self::Code(_)) = (&left_o, &right_o) {
                             #[cfg(debug_assertions)]
-                            trace!("optimizing [B:{}] => ConsumeableArray", op_type.as_str());
-                            return Self::ConsumeableArray(vec![left_o, right_o], range.clone());
+                            trace!("optimizing [B:{}] => ConsumableArray", op_type.as_str());
+                            return Self::ConsumableArray(vec![left_o, right_o], range.clone());
                         }
                     }
                     _ => {}
@@ -298,7 +298,7 @@ impl Expression {
             Self::Code(..) | Self::String(..) | Self::Number(..) | Self::Boolean(..) => true,
             Self::NularCommand(command, ..) => command.is_constant(),
             Self::Array(array, ..) => array.iter().all(Self::is_constant), // true on empty
-            Self::ConsumeableArray(..) => {
+            Self::ConsumableArray(..) => {
                 unreachable!("should not be reachable");
             }
             _ => false,
@@ -362,15 +362,15 @@ impl Expression {
         }
         if direct {
             #[cfg(debug_assertions)]
-            trace!("optimizing [{op}]'s arg => ConsumeableArray");
-            Some(Self::ConsumeableArray(array.clone(), range.clone()))
+            trace!("optimizing [{op}]'s arg => ConsumableArray");
+            Some(Self::ConsumableArray(array.clone(), range.clone()))
         } else {
             #[cfg(debug_assertions)]
-            trace!("optimizing [{op}]'s arg => +ConsumeableArray (copy)");
+            trace!("optimizing [{op}]'s arg => +ConsumableArray (copy)");
             // make a copy of the array so the original cannot be modified
             Some(Self::UnaryCommand(
                 UnaryCommand::Plus,
-                Box::new(Self::ConsumeableArray(array.clone(), range.clone())),
+                Box::new(Self::ConsumableArray(array.clone(), range.clone())),
                 range.clone(),
             ))
         }

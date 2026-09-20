@@ -105,7 +105,7 @@ fn walk(
         Expression::UnaryCommand(_, inner, _) => {
             walk(inner, false, processed, config, codes);
         }
-        Expression::Array(items, _) | Expression::ConsumeableArray(items, _) => {
+        Expression::Array(items, _) | Expression::ConsumableArray(items, _) => {
             for item in items {
                 walk(item, false, processed, config, codes);
             }
