@@ -1,4 +1,4 @@
-// all arrays should be convertable to statics
+// all arrays should be convertible to statics
 
 params ["_array"];
 a = _array vectorAdd [1,2,3];

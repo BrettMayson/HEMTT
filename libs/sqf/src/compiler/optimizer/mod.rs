@@ -1,4 +1,4 @@
-//! Optimizes sqf by evaulating expressions when possible and looking for arrays that can be consumed
+//! Optimizes sqf by evaluating expressions when possible and looking for arrays that can be consumed
 use crate::{BinaryCommand, Expression, Statement, Statements, UnaryCommand};
 use std::{ops::Range, sync::Arc};
 #[allow(unused_imports)]
