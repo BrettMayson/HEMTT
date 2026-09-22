@@ -60,7 +60,7 @@ CfgArmorSimulations
 CfgBleeding
 CfgBrains
 CfgBreathing
-cfgBuldozer
+CfgBuldozer
 CfgBushNoMipmapTextures
 CfgCameraEffects
 CfgCameraShake
@@ -116,13 +116,13 @@ CfgFiringDrills
 CfgFirstAid
 CfgFontFamilies
 CfgFonts
-cfgFormations
+CfgFormations
 CfgFSMs
 CfgFunctions
 CfgGesturesMale
 CfgGlasses
 CfgGroundSupportRequestTypes
-cfgGroupIcons
+CfgGroupIcons
 CfgGroups
 CfgHeads
 CfgHintCategories
@@ -245,7 +245,7 @@ CfgVoiceMask
 CfgVoiceTypes
 CfgVRCourses
 CfgVRNoMipmapTextures
-cfgWaypoints
+CfgWaypoints
 CfgWeaponCursors
 CfgWeaponHandling
 CfgWeaponIcons
