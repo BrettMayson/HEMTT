@@ -1,7 +1,8 @@
 use hemtt_workspace::{WorkspacePath, reporting::Code};
 use image::GenericImageView;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, report::Report};
+use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 use std::{io::BufReader, sync::Arc};
 
 use super::Module;
@@ -18,7 +19,6 @@ impl Module for Convert {
     }
 
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
-        println!("DEBUG: Convert Module: Check");
         let mut report = Report::new();
 
         let mut paths = Vec::new();
@@ -36,14 +36,18 @@ impl Module for Convert {
                     .filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("png"))), // CTX->options here for what file types
             );
         }
-
-        for path in paths {
-            // multithread?
-            if let Err(e) = convert_image(&path) {
-                report.push(ConvertError::code(&path, &e));
-            }
-        }
-
+        let progress = progress_bar(paths.len() as u64).with_message("Converting");
+        let results = paths
+            .par_iter()
+            .map(|path| {
+                let res = convert_image(path).map_err(|e| ConvertError::code(path, e));
+                progress.inc(1);
+                res
+            })
+            .filter_map(Result::err)
+            .collect::<Vec<_>>();
+        report.extend(results);
+        progress.finish_and_clear();
         Ok(report)
     }
 }
@@ -97,10 +101,10 @@ impl Code for ConvertError {
 }
 impl ConvertError {
     #[must_use]
-    pub fn code(path: &WorkspacePath, reason: &str) -> Arc<dyn Code> {
+    pub fn code(path: &WorkspacePath, reason: String) -> Arc<dyn Code> {
         Arc::new(Self {
             file: path.as_str().to_string(),
-            reason: reason.to_string(),
+            reason,
         })
     }
 }
